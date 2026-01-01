@@ -1,0 +1,211 @@
+/**
+ * PropertyMap Component - Web Version
+ *
+ * Web-compatible version that displays properties on a static map.
+ * Uses OpenStreetMap static images instead of react-native-maps.
+ */
+
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { MapPin, Navigation, Layers, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { Property } from '../types';
+import { formatCurrency } from '../utils/formatters';
+
+interface PropertyMapProps {
+  properties: Property[];
+  onPropertyPress?: (property: Property) => void;
+  selectedPropertyId?: string | null;
+  initialRegion?: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
+  showUserLocation?: boolean;
+  style?: any;
+}
+
+export function PropertyMap({
+  properties,
+  onPropertyPress,
+  selectedPropertyId,
+  style,
+}: PropertyMapProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Filter properties with valid coordinates
+  const propertiesWithCoords = useMemo(() => {
+    return properties.filter(property => {
+      if (!property.geo_point) return false;
+      const { lat, lng } = property.geo_point;
+      return typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
+    });
+  }, [properties]);
+
+  const handlePropertyPress = useCallback((property: Property) => {
+    onPropertyPress?.(property);
+  }, [onPropertyPress]);
+
+  const openInMaps = useCallback((property: Property) => {
+    if (!property.geo_point) return;
+    const { lat, lng } = property.geo_point;
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    window.open(url, '_blank');
+  }, []);
+
+  const getStatusColor = useCallback((status?: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active': return '#22c55e';
+      case 'pending': return '#f59e0b';
+      case 'sold': return '#ef4444';
+      default: return '#6366f1';
+    }
+  }, []);
+
+  const nextProperty = useCallback(() => {
+    setCurrentIndex(i => (i + 1) % propertiesWithCoords.length);
+  }, [propertiesWithCoords.length]);
+
+  const prevProperty = useCallback(() => {
+    setCurrentIndex(i => (i - 1 + propertiesWithCoords.length) % propertiesWithCoords.length);
+  }, [propertiesWithCoords.length]);
+
+  // Generate static map URL for current property cluster
+  const mapImageUrl = useMemo(() => {
+    if (propertiesWithCoords.length === 0) return null;
+
+    // For web, show a map centered on first property or center of all
+    const lats = propertiesWithCoords.map(p => p.geo_point.lat);
+    const lngs = propertiesWithCoords.map(p => p.geo_point.lng);
+    const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+    const centerLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+
+    // Calculate zoom level based on spread
+    const latSpread = Math.max(...lats) - Math.min(...lats);
+    const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+    const maxSpread = Math.max(latSpread, lngSpread);
+
+    let zoom = 12;
+    if (maxSpread > 5) zoom = 5;
+    else if (maxSpread > 2) zoom = 7;
+    else if (maxSpread > 0.5) zoom = 9;
+    else if (maxSpread > 0.1) zoom = 11;
+    else zoom = 14;
+
+    // OpenStreetMap static image
+    return `https://staticmap.openstreetmap.de/staticmap.php?center=${centerLat},${centerLng}&zoom=${zoom}&size=600x400&maptype=mapnik`;
+  }, [propertiesWithCoords]);
+
+  if (propertiesWithCoords.length === 0) {
+    return (
+      <View className="flex-1 bg-muted items-center justify-center" style={style}>
+        <MapPin size={48} className="text-muted-foreground mb-4" />
+        <Text className="text-muted-foreground text-center px-8">
+          No properties with location data to display on the map.
+        </Text>
+        <Text className="text-xs text-muted-foreground mt-2">
+          Add geo coordinates to your properties to see them here.
+        </Text>
+      </View>
+    );
+  }
+
+  const currentProperty = propertiesWithCoords[currentIndex];
+
+  return (
+    <View className="flex-1" style={style}>
+      {/* Map Image */}
+      <View className="flex-1 relative">
+        {mapImageUrl && (
+          <TouchableOpacity
+            onPress={() => openInMaps(currentProperty)}
+            activeOpacity={0.9}
+            style={{ flex: 1 }}
+          >
+            <img
+              src={mapImageUrl}
+              alt="Property locations map"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </TouchableOpacity>
+        )}
+
+        {/* Property Count Badge */}
+        <View className="absolute top-4 left-4 bg-card px-3 py-2 rounded-full shadow-md">
+          <Text className="text-foreground font-medium text-sm">
+            {propertiesWithCoords.length} {propertiesWithCoords.length === 1 ? 'property' : 'properties'}
+          </Text>
+        </View>
+
+        {/* Open in Maps Button */}
+        <TouchableOpacity
+          onPress={() => openInMaps(currentProperty)}
+          className="absolute top-4 right-4 bg-card px-3 py-2 rounded-full shadow-md flex-row items-center"
+          activeOpacity={0.7}
+        >
+          <Navigation size={16} className="text-foreground" />
+          <Text className="text-foreground text-sm ml-2">Open in Maps</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Property Cards Carousel */}
+      <View className="bg-card border-t border-border">
+        <View className="flex-row items-center px-4 py-3">
+          {/* Previous Button */}
+          <TouchableOpacity
+            onPress={prevProperty}
+            className="w-10 h-10 rounded-full bg-muted items-center justify-center"
+            disabled={propertiesWithCoords.length <= 1}
+            activeOpacity={0.7}
+          >
+            <ChevronLeft
+              size={20}
+              color={propertiesWithCoords.length <= 1 ? '#d1d5db' : '#374151'}
+            />
+          </TouchableOpacity>
+
+          {/* Property Info */}
+          <TouchableOpacity
+            onPress={() => handlePropertyPress(currentProperty)}
+            className="flex-1 mx-3 p-3 rounded-lg"
+            style={{
+              borderLeftWidth: 4,
+              borderLeftColor: getStatusColor(currentProperty.status),
+              backgroundColor: selectedPropertyId === currentProperty.id ? '#f0f9ff' : '#f9fafb',
+            }}
+            activeOpacity={0.7}
+          >
+            <Text className="text-foreground font-semibold" numberOfLines={1}>
+              {currentProperty.address || 'Address not specified'}
+            </Text>
+            <Text className="text-muted-foreground text-sm" numberOfLines={1}>
+              {currentProperty.city}, {currentProperty.state}
+            </Text>
+            <View className="flex-row items-center justify-between mt-2">
+              {currentProperty.arv && (
+                <Text className="text-primary font-bold">
+                  {formatCurrency(currentProperty.arv)}
+                </Text>
+              )}
+              <Text className="text-xs text-muted-foreground">
+                {currentIndex + 1} of {propertiesWithCoords.length}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Next Button */}
+          <TouchableOpacity
+            onPress={nextProperty}
+            className="w-10 h-10 rounded-full bg-muted items-center justify-center"
+            disabled={propertiesWithCoords.length <= 1}
+            activeOpacity={0.7}
+          >
+            <ChevronRight
+              size={20}
+              color={propertiesWithCoords.length <= 1 ? '#d1d5db' : '#374151'}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}
