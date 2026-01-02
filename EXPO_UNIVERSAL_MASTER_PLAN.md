@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**Goal:** Combine `doughy-ai` (React + Vite web app) and `doughy-ai-mobile` (Expo mobile app) into a **single Expo Universal codebase** that deploys to iOS, Android, and Web from one source.
+**Goal:** Combine `doughy-ai` (React + Vite web app) and `doughy-ai` (Expo mobile app) into a **single Expo Universal codebase** that deploys to iOS, Android, and Web from one source.
 
-**Source Web App:** `/Users/dinosaur/Documents/doughy-ai` (172,255 LOC, 788 files)
-**Target Universal App:** `/Users/dinosaur/Documents/doughy-ai-mobile`
+**Source Web App:** `/Users/dinosaur/Documents/doughy-ai-vite-old` (172,255 LOC, 788 files)
+**Target Universal App:** `/Users/dinosaur/Documents/doughy-ai`
 
 ---
 
@@ -25,7 +25,7 @@
 ## Architecture Overview
 
 ```
-doughy-ai-mobile/                    # Expo Universal Project
+doughy-ai/                    # Expo Universal Project
 ├── src/
 │   ├── components/
 │   │   └── ui/                      # ZONE A: Universal UI components
@@ -385,7 +385,7 @@ Update your zone document's status section when:
 
 ```bash
 # Navigate to project
-cd /Users/dinosaur/Documents/doughy-ai-mobile
+cd /Users/dinosaur/Documents/doughy-ai
 
 # Install dependencies
 npm install
@@ -414,8 +414,8 @@ Copy-paste to activate each Claude instance:
 You are Instance 1, the Zone A Lead for UI Components.
 
 Read these files in order:
-1. /Users/dinosaur/Documents/doughy-ai-mobile/EXPO_UNIVERSAL_MASTER_PLAN.md
-2. /Users/dinosaur/Documents/doughy-ai-mobile/ZONE_A_STAGE3.md
+1. /Users/dinosaur/Documents/doughy-ai/EXPO_UNIVERSAL_MASTER_PLAN.md
+2. /Users/dinosaur/Documents/doughy-ai/ZONE_A_STAGE3.md
 
 Your job: Build the universal UI component library that all other zones depend on.
 Priority: CRITICAL - other zones are blocked until you deliver core components.
@@ -429,8 +429,8 @@ Document your progress in ZONE_A_STAGE3.md.
 You are Instance 2, the Zone B Lead for Auth & Admin.
 
 Read these files in order:
-1. /Users/dinosaur/Documents/doughy-ai-mobile/EXPO_UNIVERSAL_MASTER_PLAN.md
-2. /Users/dinosaur/Documents/doughy-ai-mobile/ZONE_B_STAGE3.md
+1. /Users/dinosaur/Documents/doughy-ai/EXPO_UNIVERSAL_MASTER_PLAN.md
+2. /Users/dinosaur/Documents/doughy-ai/ZONE_B_STAGE3.md
 
 Your job: Complete all authentication, admin, settings, billing, and team features.
 
@@ -443,8 +443,8 @@ Document your progress in ZONE_B_STAGE3.md.
 You are Instance 3, the Zone C Lead for Real Estate.
 
 Read these files in order:
-1. /Users/dinosaur/Documents/doughy-ai-mobile/EXPO_UNIVERSAL_MASTER_PLAN.md
-2. /Users/dinosaur/Documents/doughy-ai-mobile/ZONE_C_STAGE3.md
+1. /Users/dinosaur/Documents/doughy-ai/EXPO_UNIVERSAL_MASTER_PLAN.md
+2. /Users/dinosaur/Documents/doughy-ai/ZONE_C_STAGE3.md
 
 Your job: Implement all property management, comps, analysis, and financing features.
 
@@ -457,8 +457,8 @@ Document your progress in ZONE_C_STAGE3.md.
 You are Instance 4, the Zone D Lead for Dashboard & Leads.
 
 Read these files in order:
-1. /Users/dinosaur/Documents/doughy-ai-mobile/EXPO_UNIVERSAL_MASTER_PLAN.md
-2. /Users/dinosaur/Documents/doughy-ai-mobile/ZONE_D_STAGE3.md
+1. /Users/dinosaur/Documents/doughy-ai/EXPO_UNIVERSAL_MASTER_PLAN.md
+2. /Users/dinosaur/Documents/doughy-ai/ZONE_D_STAGE3.md
 
 Your job: Implement dashboard, leads management, AI conversations, and analytics.
 

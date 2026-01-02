@@ -27,12 +27,12 @@ Implement dashboard, leads management, AI conversations, and analytics features 
 
 | Feature | Web Source | File Count |
 |---------|------------|------------|
-| Dashboard | `/Users/dinosaur/Documents/doughy-ai/src/features/dashboard/` | 7 files |
-| Leads | `/Users/dinosaur/Documents/doughy-ai/src/features/leads/` | 95 files |
-| Conversations | `/Users/dinosaur/Documents/doughy-ai/src/features/conversations/` | 39 files |
-| Analytics | `/Users/dinosaur/Documents/doughy-ai/src/features/analytics/` | 23 files |
-| Assistant | `/Users/dinosaur/Documents/doughy-ai/src/features/assistant/` | 81 files |
-| Layout | `/Users/dinosaur/Documents/doughy-ai/src/features/layout/` | 16 files |
+| Dashboard | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/dashboard/` | 7 files |
+| Leads | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/leads/` | 95 files |
+| Conversations | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/conversations/` | 39 files |
+| Analytics | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/analytics/` | 23 files |
+| Assistant | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/assistant/` | 81 files |
+| Layout | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/layout/` | 16 files |
 
 ---
 

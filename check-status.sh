@@ -8,7 +8,7 @@ echo "  EXPO UNIVERSAL MIGRATION - STATUS CHECK"
 echo "=============================================="
 echo ""
 
-cd /Users/dinosaur/Documents/doughy-ai-mobile
+cd /Users/dinosaur/Documents/doughy-ai
 
 # Git Status
 echo "📦 GIT STATUS"

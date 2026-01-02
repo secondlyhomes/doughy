@@ -14,9 +14,9 @@ This document helps any Claude instance (or human) assess the current migration 
 I'm recovering from an interrupted Expo Universal migration.
 
 Please read these files in order:
-1. /Users/dinosaur/Documents/doughy-ai-mobile/RECOVERY.md
-2. /Users/dinosaur/Documents/doughy-ai-mobile/EXPO_UNIVERSAL_MASTER_PLAN.md
-3. /Users/dinosaur/Documents/doughy-ai-mobile/MIGRATION_STATUS.md
+1. /Users/dinosaur/Documents/doughy-ai/RECOVERY.md
+2. /Users/dinosaur/Documents/doughy-ai/EXPO_UNIVERSAL_MASTER_PLAN.md
+3. /Users/dinosaur/Documents/doughy-ai/MIGRATION_STATUS.md
 
 Then run the status assessment to see what's been completed and what needs to be done next.
 ```
@@ -28,7 +28,7 @@ Then run the status assessment to see what's been completed and what needs to be
 ### Step 1: Check Git Status
 
 ```bash
-cd /Users/dinosaur/Documents/doughy-ai-mobile
+cd /Users/dinosaur/Documents/doughy-ai
 git status
 git log --oneline -20
 ```
@@ -40,7 +40,7 @@ Look for:
 
 ### Step 2: Check Migration Status File
 
-Read `/Users/dinosaur/Documents/doughy-ai-mobile/MIGRATION_STATUS.md` for the latest recorded progress.
+Read `/Users/dinosaur/Documents/doughy-ai/MIGRATION_STATUS.md` for the latest recorded progress.
 
 ### Step 3: Verify File Existence
 
@@ -214,7 +214,7 @@ This will show:
 Run this to get a quick status:
 
 ```bash
-cd /Users/dinosaur/Documents/doughy-ai-mobile
+cd /Users/dinosaur/Documents/doughy-ai
 
 echo "=== Git Status ==="
 git status --short

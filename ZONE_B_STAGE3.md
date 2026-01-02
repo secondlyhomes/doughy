@@ -28,13 +28,13 @@ You need these components from Zone A:
 
 | Feature | Web Source | File Count |
 |---------|------------|------------|
-| Auth | `/Users/dinosaur/Documents/doughy-ai/src/features/auth/` | 81 files |
-| Admin | `/Users/dinosaur/Documents/doughy-ai/src/features/admin/` | 58 files |
-| Settings | `/Users/dinosaur/Documents/doughy-ai/src/features/settings/` | 7 files |
-| Billing | `/Users/dinosaur/Documents/doughy-ai/src/features/billing/` | 20 files |
-| Teams | `/Users/dinosaur/Documents/doughy-ai/src/features/teams/` | 8 files |
-| Pricing | `/Users/dinosaur/Documents/doughy-ai/src/features/pricing/` | 8 files |
-| Notifications | `/Users/dinosaur/Documents/doughy-ai/src/features/notifications/` | 1 file |
+| Auth | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/auth/` | 81 files |
+| Admin | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/admin/` | 58 files |
+| Settings | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/settings/` | 7 files |
+| Billing | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/billing/` | 20 files |
+| Teams | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/teams/` | 8 files |
+| Pricing | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/pricing/` | 8 files |
+| Notifications | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/notifications/` | 1 file |
 
 ---
 

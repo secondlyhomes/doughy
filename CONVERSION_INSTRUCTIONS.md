@@ -7,7 +7,7 @@ This document provides instructions for converting the Doughy AI React web appli
 The work is divided into **4 zones** for parallel development by 4 Claude instances.
 
 **Source (web backup):** `/Users/dinosaur/Documents/doughy-ai-web-backup`
-**Target (Expo Universal project):** `/Users/dinosaur/Documents/doughy-ai-mobile`
+**Target (Expo Universal project):** `/Users/dinosaur/Documents/doughy-ai`
 
 ### Platform Commands
 ```bash
@@ -228,7 +228,7 @@ onChangeText={(text) => setValue(text)}
 ## File Structure (Target)
 
 ```
-doughy-ai-mobile/
+doughy-ai/
 ├── app/                    # Expo Router (file-based routing)
 │   ├── (auth)/            # Auth group (login, signup)
 │   ├── (tabs)/            # Main tab navigation
@@ -353,7 +353,7 @@ doughy-ai-mobile/
 ## Conversion Workflow for Each Instance
 
 1. **Read source file** from `doughy-ai-web-backup`
-2. **Create target file** in `doughy-ai-mobile/src/`
+2. **Create target file** in `doughy-ai/src/`
 3. **Apply transformations:**
    - Replace DOM elements with RN components
    - Convert CSS/Tailwind to NativeWind
@@ -392,7 +392,7 @@ doughy-ai-mobile/
 
 ```bash
 # Start development
-cd /Users/dinosaur/Documents/doughy-ai-mobile
+cd /Users/dinosaur/Documents/doughy-ai
 npx expo start
 
 # iOS simulator
@@ -417,7 +417,7 @@ Each instance should:
 2. Create placeholder imports for cross-zone dependencies
 3. Use TypeScript interfaces for shared types
 4. Comment `// TODO: Integrate with Zone X` for cross-dependencies
-5. Check `doughy-ai-mobile/src/types/` for shared type definitions
+5. Check `doughy-ai/src/types/` for shared type definitions
 
 **Shared Types File:** Create types in `src/types/index.ts` that all zones can import.
 
@@ -431,7 +431,7 @@ I am Instance [1-4], working on Zone [A-D].
 My task is to convert the Doughy AI web app to React Native.
 
 Source files: /Users/dinosaur/Documents/doughy-ai-web-backup
-Target project: /Users/dinosaur/Documents/doughy-ai-mobile
+Target project: /Users/dinosaur/Documents/doughy-ai
 
 I will read CONVERSION_INSTRUCTIONS.md for guidance and work only on my assigned directories.
 

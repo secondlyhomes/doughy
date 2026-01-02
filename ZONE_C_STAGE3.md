@@ -26,7 +26,7 @@ Implement all real estate property management features: property CRUD, comps ana
 
 | Feature | Web Source | File Count |
 |---------|------------|------------|
-| Real Estate | `/Users/dinosaur/Documents/doughy-ai/src/features/real-estate/` | 254 files |
+| Real Estate | `/Users/dinosaur/Documents/doughy-ai-vite-old/src/features/real-estate/` | 254 files |
 
 This is the largest feature module. Key subdirectories:
 - `components/` - UI components for properties

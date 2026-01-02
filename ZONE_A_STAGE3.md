@@ -52,8 +52,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.1 Button (Enhance)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/button.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Button.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/button.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Button.tsx`
 
 **Requirements:**
 - All variants: `default`, `destructive`, `outline`, `secondary`, `ghost`, `link`
@@ -79,8 +79,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.2 Input (Enhance)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/input.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Input.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/input.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Input.tsx`
 
 **Requirements:**
 - Text, email, password, number, phone types
@@ -108,8 +108,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.3 Select (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/select.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Select.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/select.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Select.tsx`
 
 **Requirements:**
 - Opens Modal with FlatList on mobile
@@ -141,8 +141,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.4 Textarea (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/textarea.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Textarea.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/textarea.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Textarea.tsx`
 
 **Requirements:**
 - Multi-line TextInput
@@ -167,7 +167,7 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.5 Checkbox (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Checkbox.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Checkbox.tsx`
 
 **Requirements:**
 - Match web styling exactly
@@ -183,8 +183,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.6 RadioGroup (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/radio-group.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/RadioGroup.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/radio-group.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/RadioGroup.tsx`
 
 **Requirements:**
 - Radio button group
@@ -210,8 +210,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.7 Switch (Create/Enhance)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/switch.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Switch.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/switch.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Switch.tsx`
 
 **Requirements:**
 - Toggle switch
@@ -227,8 +227,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.8 Label (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/label.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Label.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/label.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Label.tsx`
 
 **Requirements:**
 - Text wrapper for form labels
@@ -246,8 +246,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 1.9 Form (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/form.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Form.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/form.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Form.tsx`
 
 **Requirements:**
 - React Hook Form integration
@@ -284,8 +284,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.1 Dialog/Modal (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/dialog.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Dialog.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/dialog.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Dialog.tsx`
 
 **Requirements:**
 - Modal overlay
@@ -318,8 +318,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.2 Sheet/BottomSheet (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/sheet.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Sheet.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/sheet.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Sheet.tsx`
 
 **Requirements:**
 - Slides up from bottom
@@ -347,8 +347,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.3 AlertDialog (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/alert-dialog.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/AlertDialog.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/alert-dialog.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/AlertDialog.tsx`
 
 **Requirements:**
 - Confirmation dialog
@@ -362,7 +362,7 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.4 Card (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Card.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Card.tsx`
 
 **Requirements:**
 - CardHeader, CardTitle, CardDescription, CardContent, CardFooter
@@ -375,8 +375,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.5 Accordion (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/accordion.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Accordion.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/accordion.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Accordion.tsx`
 
 **Requirements:**
 - Collapsible sections
@@ -390,8 +390,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.6 Collapsible (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/collapsible.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Collapsible.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/collapsible.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Collapsible.tsx`
 
 **Requirements:**
 - Simple expand/collapse container
@@ -403,7 +403,7 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.7 Tabs (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Tabs.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Tabs.tsx`
 
 **Requirements:**
 - TabsList, TabsTrigger, TabsContent
@@ -418,8 +418,8 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.8 Separator (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/separator.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Separator.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/separator.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Separator.tsx`
 
 **Requirements:**
 - Horizontal and vertical orientations
@@ -431,7 +431,7 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 2.9 ScrollArea (Create)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/ScrollArea.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/ScrollArea.tsx`
 
 **Requirements:**
 - Wrapper for ScrollView
@@ -447,7 +447,7 @@ Build the universal UI component library that works identically on iOS, Android,
 
 ### 3.1 Toast (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Toast.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Toast.tsx`
 
 **Requirements:**
 - Success, error, warning, info variants
@@ -469,7 +469,7 @@ toast.error('Something went wrong');
 
 ### 3.2 Alert (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Alert.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Alert.tsx`
 
 **Requirements:**
 - Success, error, warning, info variants
@@ -483,7 +483,7 @@ toast.error('Something went wrong');
 
 ### 3.3 Skeleton (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Skeleton.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Skeleton.tsx`
 
 **Requirements:**
 - Animated shimmer effect
@@ -497,7 +497,7 @@ toast.error('Something went wrong');
 
 ### 3.4 LoadingSpinner (Create)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/LoadingSpinner.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/LoadingSpinner.tsx`
 
 **Requirements:**
 - Spinning indicator
@@ -511,7 +511,7 @@ toast.error('Something went wrong');
 
 ### 3.5 EmptyState (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/EmptyState.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/EmptyState.tsx`
 
 **Requirements:**
 - Icon + title + description + action button
@@ -528,8 +528,8 @@ toast.error('Something went wrong');
 
 ### 4.1 DropdownMenu (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/dropdown-menu.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/DropdownMenu.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/dropdown-menu.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/DropdownMenu.tsx`
 
 **Requirements:**
 - Menu items with icons
@@ -545,8 +545,8 @@ toast.error('Something went wrong');
 
 ### 4.2 Popover (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/popover.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Popover.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/popover.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Popover.tsx`
 
 **Requirements:**
 - Floating content near trigger
@@ -560,8 +560,8 @@ toast.error('Something went wrong');
 
 ### 4.3 Breadcrumb (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/breadcrumb.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Breadcrumb.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/breadcrumb.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Breadcrumb.tsx`
 
 **Requirements:**
 - Navigation breadcrumbs
@@ -575,8 +575,8 @@ toast.error('Something went wrong');
 
 ### 4.4 Pagination (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/pagination.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Pagination.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/pagination.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Pagination.tsx`
 
 **Requirements:**
 - Page numbers
@@ -594,8 +594,8 @@ toast.error('Something went wrong');
 
 ### 5.1 Table (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/table.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Table.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/table.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Table.tsx`
 
 **Requirements:**
 - FlatList-based table
@@ -613,7 +613,7 @@ toast.error('Something went wrong');
 
 ### 5.2 Avatar (Enhance)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Avatar.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Avatar.tsx`
 
 **Requirements:**
 - Image with fallback to initials
@@ -627,8 +627,8 @@ toast.error('Something went wrong');
 
 ### 5.3 Tooltip (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/tooltip.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Tooltip.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/tooltip.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Tooltip.tsx`
 
 **Requirements:**
 - Shows on long press (mobile) or hover (web)
@@ -642,8 +642,8 @@ toast.error('Something went wrong');
 
 ### 5.4 Calendar (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/calendar.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Calendar.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/calendar.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Calendar.tsx`
 
 **Requirements:**
 - Month view calendar
@@ -658,8 +658,8 @@ toast.error('Something went wrong');
 
 ### 5.5 DatePicker (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/date-picker.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/DatePicker.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/date-picker.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/DatePicker.tsx`
 
 **Requirements:**
 - Input that opens date picker
@@ -673,8 +673,8 @@ toast.error('Something went wrong');
 
 ### 5.6 Carousel (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/carousel.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/Carousel.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/carousel.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/Carousel.tsx`
 
 **Requirements:**
 - Horizontal swipeable list
@@ -692,7 +692,7 @@ toast.error('Something went wrong');
 
 ### 6.1 FileUpload (Create)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/FileUpload.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/FileUpload.tsx`
 
 **Requirements:**
 - Uses expo-document-picker
@@ -706,7 +706,7 @@ toast.error('Something went wrong');
 
 ### 6.2 ImagePicker (Create)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/ImagePicker.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/ImagePicker.tsx`
 
 **Requirements:**
 - Uses expo-image-picker
@@ -722,7 +722,7 @@ toast.error('Something went wrong');
 
 ### 6.3 AddressAutocomplete (Create)
 
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/AddressAutocomplete.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/AddressAutocomplete.tsx`
 
 **Requirements:**
 - Google Places API integration
@@ -736,8 +736,8 @@ toast.error('Something went wrong');
 
 ### 6.4 OTPInput (Create)
 
-**Source:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/input-otp.tsx`
-**Target:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/OTPInput.tsx`
+**Source:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/input-otp.tsx`
+**Target:** `/Users/dinosaur/Documents/doughy-ai/src/components/ui/OTPInput.tsx`
 
 **Requirements:**
 - Fixed-length code input
@@ -755,7 +755,7 @@ toast.error('Something went wrong');
 
 ### 7.1 Theme Configuration
 
-**File:** `/Users/dinosaur/Documents/doughy-ai-mobile/tailwind.config.js`
+**File:** `/Users/dinosaur/Documents/doughy-ai/tailwind.config.js`
 
 **Requirements:**
 - Match all colors from web app
@@ -778,7 +778,7 @@ toast.error('Something went wrong');
 
 ### 7.2 Theme Provider
 
-**File:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/context/ThemeContext.tsx`
+**File:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/context/ThemeContext.tsx`
 
 **Requirements:**
 - Light/dark/system modes
@@ -820,7 +820,7 @@ npx expo install react-native-toast-message
 
 After completing components, update the export index:
 
-**File:** `/Users/dinosaur/Documents/doughy-ai-mobile/src/components/ui/index.ts`
+**File:** `/Users/dinosaur/Documents/doughy-ai-vite-old/src/components/ui/index.ts`
 
 ```tsx
 // Form Components
