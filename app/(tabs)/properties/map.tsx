@@ -1,3 +1,2 @@
 // app/(tabs)/properties/map.tsx
-import PropertyMapScreen from '@/features/real-estate/screens/PropertyMapScreen';
-export default PropertyMapScreen;
+export { PropertyMapScreen as default } from '@/features/real-estate/screens/PropertyMapScreen';

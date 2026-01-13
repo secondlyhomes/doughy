@@ -1,3 +1,2 @@
 // app/(admin)/integrations.tsx
-import IntegrationsScreen from '@/features/admin/screens/IntegrationsScreen';
-export default IntegrationsScreen;
+export { IntegrationsScreen as default } from '@/features/admin/screens/IntegrationsScreen';

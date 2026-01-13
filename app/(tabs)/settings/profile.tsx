@@ -1,3 +1,2 @@
 // app/(tabs)/settings/profile.tsx
-import ProfileScreen from '@/features/settings/screens/ProfileScreen';
-export default ProfileScreen;
+export { ProfileScreen as default } from '@/features/settings/screens/ProfileScreen';

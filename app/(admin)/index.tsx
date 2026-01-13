@@ -1,3 +1,2 @@
 // app/(admin)/index.tsx
-import AdminDashboardScreen from '@/features/admin/screens/AdminDashboardScreen';
-export default AdminDashboardScreen;
+export { AdminDashboardScreen as default } from '@/features/admin/screens/AdminDashboardScreen';

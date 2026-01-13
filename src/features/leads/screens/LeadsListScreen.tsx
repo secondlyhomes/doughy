@@ -144,7 +144,11 @@ export function LeadsListScreen() {
               autoCorrect={false}
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <TouchableOpacity
+                onPress={() => setSearchQuery('')}
+                accessibilityLabel="Clear search"
+                accessibilityRole="button"
+              >
                 <X size={18} color="#6b7280" />
               </TouchableOpacity>
             )}
@@ -152,6 +156,8 @@ export function LeadsListScreen() {
           <TouchableOpacity
             className="bg-muted p-2.5 rounded-lg relative"
             onPress={() => setShowFiltersSheet(true)}
+            accessibilityLabel={`Open filters${activeFiltersCount > 0 ? `, ${activeFiltersCount} active` : ''}`}
+            accessibilityRole="button"
           >
             <SlidersHorizontal size={20} color="#6b7280" />
             {activeFiltersCount > 0 && (
@@ -180,6 +186,9 @@ export function LeadsListScreen() {
                   : 'bg-muted'
               }`}
               onPress={() => setActiveFilter(item.key)}
+              accessibilityLabel={`Filter by ${item.label}${activeFilter === item.key ? ', selected' : ''}`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: activeFilter === item.key }}
             >
               <Text
                 className={`text-sm font-medium ${
@@ -229,6 +238,8 @@ export function LeadsListScreen() {
               <TouchableOpacity
                 className="mt-4 bg-primary px-4 py-2 rounded-lg"
                 onPress={() => router.push('/(tabs)/leads/add')}
+                accessibilityLabel="Add your first lead"
+                accessibilityRole="button"
               >
                 <Text className="text-primary-foreground font-medium">Add First Lead</Text>
               </TouchableOpacity>
@@ -248,6 +259,8 @@ export function LeadsListScreen() {
           elevation: 5,
         }}
         onPress={() => router.push('/(tabs)/leads/add')}
+        accessibilityLabel="Add new lead"
+        accessibilityRole="button"
       >
         <Plus size={24} color="white" />
       </TouchableOpacity>

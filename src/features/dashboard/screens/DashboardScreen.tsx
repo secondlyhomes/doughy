@@ -159,18 +159,26 @@ export function DashboardScreen() {
                   <TouchableOpacity
                     className="border border-border rounded-md px-3 py-2"
                     onPress={() => router.push('/(tabs)/leads')}
+                    accessibilityLabel="View leads requiring attention"
+                    accessibilityRole="button"
                   >
                     <Text className="text-sm text-foreground">View Leads</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     className="px-3 py-2"
                     onPress={() => setShowAlert(false)}
+                    accessibilityLabel="Dismiss alert"
+                    accessibilityRole="button"
                   >
                     <Text className="text-sm text-muted-foreground">Dismiss</Text>
                   </TouchableOpacity>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => setShowAlert(false)}>
+              <TouchableOpacity
+                onPress={() => setShowAlert(false)}
+                accessibilityLabel="Close alert"
+                accessibilityRole="button"
+              >
                 <X size={18} color="#6b7280" />
               </TouchableOpacity>
             </View>
@@ -218,6 +226,9 @@ export function DashboardScreen() {
               key={index}
               className="bg-primary/10 rounded-lg p-3 mb-2"
               onPress={() => router.push(`/(tabs)/leads/${String(index + 1)}`)}
+              accessibilityLabel={`${lead.status} lead: ${lead.name} from ${lead.company}, value ${lead.value}`}
+              accessibilityRole="button"
+              accessibilityHint="Opens lead details"
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
@@ -242,6 +253,8 @@ export function DashboardScreen() {
           <TouchableOpacity
             className="flex-row items-center justify-center mt-3 py-2"
             onPress={() => router.push('/(tabs)/leads')}
+            accessibilityLabel="View all leads"
+            accessibilityRole="button"
           >
             <Text className="text-sm text-primary mr-1">View All Leads</Text>
             <ArrowRight size={14} color="#3b82f6" />
@@ -255,6 +268,8 @@ export function DashboardScreen() {
             <TouchableOpacity
               className="flex-1 bg-primary rounded-lg p-4 items-center"
               onPress={() => router.push('/(tabs)/leads/add')}
+              accessibilityLabel="Add new lead"
+              accessibilityRole="button"
             >
               <Users size={24} color="white" />
               <Text className="text-white font-medium mt-2">Add Lead</Text>
@@ -262,6 +277,8 @@ export function DashboardScreen() {
             <TouchableOpacity
               className="flex-1 bg-secondary rounded-lg p-4 items-center"
               onPress={() => router.push('/assistant')}
+              accessibilityLabel="Open AI assistant"
+              accessibilityRole="button"
             >
               <TrendingUp size={24} color="#1f2937" />
               <Text className="text-secondary-foreground font-medium mt-2">AI Assistant</Text>

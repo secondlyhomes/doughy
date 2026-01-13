@@ -48,6 +48,4 @@ export {
 // Export utilities
 export * from './utils';
 
-// Export navigation
-export { RealEstateNavigator } from './navigation';
-export type { RealEstateStackParamList } from './navigation';
+// Note: Navigation is now handled by Expo Router (see app/(tabs)/properties/)

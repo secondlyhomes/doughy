@@ -1,3 +1,2 @@
 // app/(admin)/users/[userId].tsx
-import UserDetailScreen from '@/features/admin/screens/UserDetailScreen';
-export default UserDetailScreen;
+export { UserDetailScreen as default } from '@/features/admin/screens/UserDetailScreen';

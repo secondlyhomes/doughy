@@ -1,3 +1,2 @@
 // app/(auth)/forgot-password.tsx
-import ForgotPasswordScreen from '@/features/auth/screens/ForgotPasswordScreen';
-export default ForgotPasswordScreen;
+export { ForgotPasswordScreen as default } from '@/features/auth/screens/ForgotPasswordScreen';

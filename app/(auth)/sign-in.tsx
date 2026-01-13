@@ -1,3 +1,2 @@
 // app/(auth)/sign-in.tsx
-import LoginScreen from '@/features/auth/screens/LoginScreen';
-export default LoginScreen;
+export { LoginScreen as default } from '@/features/auth/screens/LoginScreen';

@@ -66,6 +66,9 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
       className="bg-card rounded-xl p-4 mb-3"
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityLabel={`Conversation: ${conversation.title || 'Untitled'}, ${conversation.message_count} messages`}
+      accessibilityRole="button"
+      accessibilityHint="Opens conversation"
     >
       <View className="flex-row items-start">
         <View className="bg-primary/10 rounded-full p-2 mr-3">
@@ -101,10 +104,12 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
             className="p-2"
             onPress={handleDelete}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel={`Delete conversation: ${conversation.title || 'Untitled'}`}
+            accessibilityRole="button"
           >
             <Trash2 size={18} color="#9ca3af" />
           </TouchableOpacity>
-          <ChevronRight size={18} color="#9ca3af" />
+          <ChevronRight size={18} color="#9ca3af" accessibilityElementsHidden />
         </View>
       </View>
     </TouchableOpacity>
@@ -191,6 +196,8 @@ export function ConversationsListScreen() {
               <TouchableOpacity
                 className="bg-primary px-6 py-3 rounded-lg"
                 onPress={handleNewConversation}
+                accessibilityLabel="Start a new conversation"
+                accessibilityRole="button"
               >
                 <Text className="text-primary-foreground font-medium">Start Chatting</Text>
               </TouchableOpacity>
@@ -212,6 +219,8 @@ export function ConversationsListScreen() {
         }}
         onPress={handleNewConversation}
         disabled={createConversation.isPending}
+        accessibilityLabel="Start new conversation"
+        accessibilityRole="button"
       >
         {createConversation.isPending ? (
           <ActivityIndicator color="white" />

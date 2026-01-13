@@ -88,7 +88,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
     });
 
     return (
-      <View className="flex-row">
+      <View className="flex-row" accessibilityRole="menubar">
         {/* Star Action */}
         <RectButton
           style={{
@@ -98,6 +98,8 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
             width: 80,
           }}
           onPress={handleToggleStar}
+          accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`}
+          accessibilityRole="button"
         >
           <Animated.View style={{ transform: [{ scale }] }}>
             <Star
@@ -125,7 +127,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
     });
 
     return (
-      <View className="flex-row">
+      <View className="flex-row" accessibilityRole="menubar">
         {/* Call Action */}
         <RectButton
           style={{
@@ -135,6 +137,8 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
             width: 80,
           }}
           onPress={handleCall}
+          accessibilityLabel={`Call ${lead.name}`}
+          accessibilityRole="button"
         >
           <Animated.View style={{ transform: [{ scale }] }}>
             <Phone size={24} color="white" />
@@ -151,6 +155,8 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
             width: 80,
           }}
           onPress={handleText}
+          accessibilityLabel={`Send text message to ${lead.name}`}
+          accessibilityRole="button"
         >
           <Animated.View style={{ transform: [{ scale }] }}>
             <MessageSquare size={24} color="white" />
@@ -167,6 +173,8 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
             width: 80,
           }}
           onPress={handleArchive}
+          accessibilityLabel={`Archive ${lead.name}`}
+          accessibilityRole="button"
         >
           <Animated.View style={{ transform: [{ scale }] }}>
             <Archive size={24} color="white" />
@@ -188,6 +196,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
       overshootLeft={false}
       overshootRight={false}
       friction={2}
+      accessibilityHint="Swipe left for call, text, archive actions. Swipe right to star."
     >
       <LeadCard lead={lead} onPress={onPress} />
     </Swipeable>

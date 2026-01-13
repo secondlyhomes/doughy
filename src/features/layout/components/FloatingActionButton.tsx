@@ -56,7 +56,9 @@ export function FloatingActionButton({
     ]);
     anim.start();
     return () => anim.stop();
-  }, [isOpen, animation, rotateAnimation]);
+    // animation and rotateAnimation are stable refs, only isOpen triggers the effect
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -96,6 +98,8 @@ export function FloatingActionButton({
           <Pressable
             style={StyleSheet.absoluteFillObject}
             onPress={() => setIsOpen(false)}
+            accessibilityLabel="Close quick actions menu"
+            accessibilityRole="button"
           />
         </Animated.View>
       )}
@@ -151,6 +155,8 @@ export function FloatingActionButton({
                   }}
                   onPress={() => handleActionPress(action)}
                   activeOpacity={0.8}
+                  accessibilityLabel={action.label}
+                  accessibilityRole="button"
                 >
                   {action.icon}
                 </TouchableOpacity>
@@ -173,6 +179,9 @@ export function FloatingActionButton({
             }}
             onPress={toggleMenu}
             activeOpacity={0.8}
+            accessibilityLabel={isOpen ? 'Close quick actions' : 'Open quick actions'}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: isOpen }}
           >
             {isOpen ? (
               <X size={24} color="white" />

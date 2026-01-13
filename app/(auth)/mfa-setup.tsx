@@ -1,3 +1,2 @@
 // app/(auth)/mfa-setup.tsx
-import MFASetupScreen from '@/features/auth/screens/MFASetupScreen';
-export default MFASetupScreen;
+export { MFASetupScreen as default } from '@/features/auth/screens/MFASetupScreen';
