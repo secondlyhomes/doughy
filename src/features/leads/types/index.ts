@@ -1,7 +1,8 @@
 // Lead types for React Native
 // Converted from web app src/features/leads/hooks/types.ts
 
-export type LeadStatus = 'active' | 'inactive' | 'do_not_contact' | 'new' | 'follow-up' | 'prospect';
+// LeadStatus aligned with Supabase database schema
+export type LeadStatus = 'active' | 'inactive' | 'new' | 'closed' | 'won' | 'lost';
 export type OptStatus = 'opted_in' | 'opted_out' | 'pending' | 'new';
 
 export interface ContactMethod {
@@ -13,7 +14,7 @@ export interface ContactMethod {
 export interface Lead {
   id: string;
   name: string;
-  status: LeadStatus | string;
+  status: LeadStatus;
   phone?: string;
   email?: string;
   company?: string;

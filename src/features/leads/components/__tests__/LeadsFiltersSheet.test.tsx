@@ -49,10 +49,10 @@ describe('LeadsFiltersSheet', () => {
     expect(getByText('All Statuses')).toBeTruthy();
     expect(getByText('New')).toBeTruthy();
     expect(getByText('Active')).toBeTruthy();
-    expect(getByText('Follow-up')).toBeTruthy();
-    expect(getByText('Prospect')).toBeTruthy();
+    expect(getByText('Won')).toBeTruthy();
+    expect(getByText('Lost')).toBeTruthy();
+    expect(getByText('Closed')).toBeTruthy();
     expect(getByText('Inactive')).toBeTruthy();
-    expect(getByText('Do Not Contact')).toBeTruthy();
   });
 
   it('should render all source options', () => {

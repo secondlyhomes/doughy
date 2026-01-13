@@ -163,7 +163,7 @@ export function ConversionChart({
     labels: chartData.map(d => d.label),
     datasets: [
       {
-        data: chartData.map(d => Math.round((d.converted / d.total) * 100)),
+        data: chartData.map(d => d.total > 0 ? Math.round((d.converted / d.total) * 100) : 0),
       },
     ],
   };

@@ -22,10 +22,10 @@ import { Lead, LeadStatus } from '../types';
 const STATUS_OPTIONS: { label: string; value: LeadStatus }[] = [
   { label: 'New', value: 'new' },
   { label: 'Active', value: 'active' },
-  { label: 'Follow-up', value: 'follow-up' },
-  { label: 'Prospect', value: 'prospect' },
+  { label: 'Won', value: 'won' },
+  { label: 'Lost', value: 'lost' },
+  { label: 'Closed', value: 'closed' },
   { label: 'Inactive', value: 'inactive' },
-  { label: 'Do Not Contact', value: 'do_not_contact' },
 ];
 
 interface FormData {

@@ -30,7 +30,6 @@ import { LeadsFiltersSheet } from '../components/LeadsFiltersSheet';
 export interface LeadFilters {
   status: LeadStatus | 'all';
   source: string | 'all';
-  priority: string | 'all';
   starred: boolean | null;
   sortBy: 'name' | 'created_at' | 'score';
   sortOrder: 'asc' | 'desc';
@@ -39,7 +38,6 @@ export interface LeadFilters {
 const defaultFilters: LeadFilters = {
   status: 'all',
   source: 'all',
-  priority: 'all',
   starred: null,
   sortBy: 'created_at',
   sortOrder: 'desc',
@@ -100,7 +98,7 @@ export function LeadsListScreen() {
     { key: 'all', label: 'All' },
     { key: 'new', label: 'New' },
     { key: 'active', label: 'Active' },
-    { key: 'follow-up', label: 'Follow-up' },
+    { key: 'won', label: 'Won' },
     { key: 'starred', label: 'Starred' },
   ];
 

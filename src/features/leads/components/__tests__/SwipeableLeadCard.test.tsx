@@ -195,7 +195,7 @@ describe('SwipeableLeadCard', () => {
     const leads: Lead[] = [
       { ...mockLead, status: 'new' },
       { ...mockLead, status: 'active' },
-      { ...mockLead, status: 'follow-up' },
+      { ...mockLead, status: 'won' },
       { ...mockLead, status: 'inactive' },
     ];
 

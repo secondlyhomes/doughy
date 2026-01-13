@@ -27,10 +27,10 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
     switch (status) {
       case 'new': return 'bg-green-500';
       case 'active': return 'bg-blue-500';
-      case 'follow-up': return 'bg-amber-500';
-      case 'prospect': return 'bg-purple-500';
+      case 'won': return 'bg-emerald-500';
+      case 'lost': return 'bg-red-500';
+      case 'closed': return 'bg-purple-500';
       case 'inactive': return 'bg-gray-400';
-      case 'do_not_contact': return 'bg-red-500';
       default: return 'bg-gray-400';
     }
   };
@@ -115,7 +115,8 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
               variant={
                 lead.status === 'new' ? 'default' :
                 lead.status === 'active' ? 'secondary' :
-                lead.status === 'follow-up' ? 'outline' :
+                lead.status === 'won' ? 'default' :
+                lead.status === 'lost' ? 'destructive' :
                 'default'
               }
             >

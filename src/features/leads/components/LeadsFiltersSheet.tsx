@@ -28,10 +28,10 @@ const STATUS_OPTIONS: { label: string; value: LeadStatus | 'all' }[] = [
   { label: 'All Statuses', value: 'all' },
   { label: 'New', value: 'new' },
   { label: 'Active', value: 'active' },
-  { label: 'Follow-up', value: 'follow-up' },
-  { label: 'Prospect', value: 'prospect' },
+  { label: 'Won', value: 'won' },
+  { label: 'Lost', value: 'lost' },
+  { label: 'Closed', value: 'closed' },
   { label: 'Inactive', value: 'inactive' },
-  { label: 'Do Not Contact', value: 'do_not_contact' },
 ];
 
 const SOURCE_OPTIONS: { label: string; value: string }[] = [
@@ -123,7 +123,6 @@ export function LeadsFiltersSheet({
     const defaultFilters: LeadFilters = {
       status: 'all',
       source: 'all',
-      priority: 'all',
       starred: null,
       sortBy: 'created_at',
       sortOrder: 'desc',
