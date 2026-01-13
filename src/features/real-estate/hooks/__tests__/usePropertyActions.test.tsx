@@ -8,6 +8,9 @@ import { usePropertyActions } from '../usePropertyActions';
 import { PropertyStatus } from '../../types/constants';
 import { Property } from '../../types';
 
+// Get the new API mocks exposed from jest.setup.js
+const mockFileWrite = (FileSystem as any).__mockFileWrite as jest.Mock;
+
 // Mock supabase
 const mockSupabaseUpdate = jest.fn();
 jest.mock('@/lib/supabase', () => ({
@@ -43,6 +46,8 @@ describe('usePropertyActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSupabaseUpdate.mockResolvedValue({ error: null });
+    // Reset the new API mocks
+    mockFileWrite?.mockClear();
   });
 
   // Note: shareProperty tests are skipped because react-native Share mock
@@ -59,7 +64,8 @@ describe('usePropertyActions', () => {
         exportResult = await result.current.exportPropertySummary(property);
       });
 
-      expect(FileSystem.writeAsStringAsync).toHaveBeenCalled();
+      // Uses new File API (file.write())
+      expect(mockFileWrite).toHaveBeenCalled();
       expect(Sharing.shareAsync).toHaveBeenCalled();
       expect(exportResult).toBeTruthy();
     });
@@ -89,9 +95,8 @@ describe('usePropertyActions', () => {
     });
 
     it('should handle export error', async () => {
-      (FileSystem.writeAsStringAsync as jest.Mock).mockRejectedValueOnce(
-        new Error('Write failed')
-      );
+      // Mock the new File.write method to reject
+      mockFileWrite.mockRejectedValueOnce(new Error('Write failed'));
 
       const { result } = renderHook(() => usePropertyActions());
       const property = createMockProperty();
@@ -109,12 +114,13 @@ describe('usePropertyActions', () => {
       const { result } = renderHook(() => usePropertyActions());
       const property = createMockProperty({ id: 'property-abc-123' });
 
+      let exportResult;
       await act(async () => {
-        await result.current.exportPropertySummary(property);
+        exportResult = await result.current.exportPropertySummary(property);
       });
 
-      const writeCall = (FileSystem.writeAsStringAsync as jest.Mock).mock.calls[0];
-      expect(writeCall[0]).toContain('property-');
+      // The file uri should contain property- prefix
+      expect(exportResult).toContain('property-');
     });
   });
 

@@ -299,19 +299,47 @@ jest.mock('expo-document-picker', () => ({
   ),
 }));
 
-// Mock expo-file-system
-jest.mock('expo-file-system', () => ({
-  cacheDirectory: 'file:///cache/',
-  documentDirectory: 'file:///documents/',
-  EncodingType: {
-    UTF8: 'utf8',
-    Base64: 'base64',
-  },
-  readAsStringAsync: jest.fn(() => Promise.resolve('base64encodedcontent')),
-  writeAsStringAsync: jest.fn(() => Promise.resolve()),
-  deleteAsync: jest.fn(() => Promise.resolve()),
-  getInfoAsync: jest.fn(() => Promise.resolve({ exists: true, size: 1024 })),
-}));
+// Mock expo-file-system (supporting both old and new APIs)
+const mockFileWrite = jest.fn(() => Promise.resolve());
+const mockFileRead = jest.fn(() => Promise.resolve('base64encodedcontent'));
+const mockFileDelete = jest.fn(() => Promise.resolve());
+
+jest.mock('expo-file-system', () => {
+  // Mock File class for new API (expo-file-system v19+)
+  class MockFile {
+    constructor(directory, filename) {
+      this.directory = directory;
+      this.filename = filename;
+      this.uri = `${directory}${filename}`;
+    }
+    write = mockFileWrite;
+    text = mockFileRead;
+    delete = mockFileDelete;
+  }
+
+  return {
+    // Legacy API (for backwards compatibility)
+    cacheDirectory: 'file:///cache/',
+    documentDirectory: 'file:///documents/',
+    EncodingType: {
+      UTF8: 'utf8',
+      Base64: 'base64',
+    },
+    readAsStringAsync: jest.fn(() => Promise.resolve('base64encodedcontent')),
+    writeAsStringAsync: jest.fn(() => Promise.resolve()),
+    deleteAsync: jest.fn(() => Promise.resolve()),
+    getInfoAsync: jest.fn(() => Promise.resolve({ exists: true, size: 1024 })),
+    // New API (expo-file-system v19+)
+    File: MockFile,
+    Paths: {
+      cache: 'file:///cache/',
+      document: 'file:///documents/',
+    },
+    // Expose mocks for testing
+    __mockFileWrite: mockFileWrite,
+    __mockFileRead: mockFileRead,
+  };
+});
 
 // Mock expo-sharing
 jest.mock('expo-sharing', () => ({
