@@ -15,12 +15,14 @@ interface AuthProviderProps {
 
 /**
  * Normalize role string to UserRole type
+ * Must match Database["public"]["Enums"]["user_role"]: admin | standard | user | support
  */
 function normalizeRole(role: string | null | undefined): UserRole {
   if (!role) return 'user';
-  const normalized = role.toLowerCase();
-  if (normalized === 'admin' || normalized === 'super_admin') {
-    return normalized as UserRole;
+  const normalized = role.toLowerCase() as UserRole;
+  // Validate against known DB enum values
+  if (['admin', 'standard', 'user', 'support'].includes(normalized)) {
+    return normalized;
   }
   return 'user';
 }
@@ -37,7 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   /**
    * Fetch user profile from Supabase
    */
-  const fetchProfile = useCallback(async (userId: string, userEmail?: string) => {
+  const fetchProfile = useCallback(async (userId: string, authUser?: User) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -45,21 +47,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         .eq('id', userId)
         .single();
 
+      // Get email verification status from Supabase auth user
+      const emailVerified = !!authUser?.email_confirmed_at;
+
       if (error) {
         console.warn('[auth] Error fetching profile:', error.message);
         // Set default profile on error
         setProfile({
           id: userId,
-          email: userEmail || '',
+          email: authUser?.email || '',
           role: 'user',
-          email_verified: false,
+          email_verified: emailVerified,
           onboarding_complete: false,
         });
         return;
       }
 
       // Map database fields to our Profile type
-      // Database has: first_name, last_name, name (not full_name, avatar_url, email_verified)
+      // Database has: first_name, last_name, name (not full_name, avatar_url)
       const fullName = data.name ||
         [data.first_name, data.last_name].filter(Boolean).join(' ') ||
         undefined;
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email: data.email,
         role: normalizeRole(data.role),
         workspace_id: data.workspace_id,
-        email_verified: false, // Not in DB schema, default to false
+        email_verified: emailVerified, // From Supabase auth user.email_confirmed_at
         onboarding_complete: false, // Not in DB schema, default to false
         full_name: fullName,
         avatar_url: undefined, // Not in DB schema
@@ -78,9 +83,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('[auth] Exception fetching profile:', error);
       setProfile({
         id: userId,
-        email: userEmail || '',
+        email: authUser?.email || '',
         role: 'user',
-        email_verified: false,
+        email_verified: !!authUser?.email_confirmed_at,
         onboarding_complete: false,
       });
     }
@@ -91,7 +96,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   const refetchProfile = useCallback(async () => {
     if (user?.id) {
-      await fetchProfile(user.id, user.email);
+      await fetchProfile(user.id, user);
     }
   }, [user, fetchProfile]);
 
@@ -201,11 +206,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
+
         if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
-          await fetchProfile(initialSession.user.id, initialSession.user.email);
+          await fetchProfile(initialSession.user.id, initialSession.user);
         }
       } catch (error) {
         console.error('[auth] Error initializing auth:', error);
@@ -224,7 +229,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (newSession) {
           setSession(newSession);
           setUser(newSession.user);
-          await fetchProfile(newSession.user.id, newSession.user.email);
+          await fetchProfile(newSession.user.id, newSession.user);
         } else {
           setSession(null);
           setUser(null);

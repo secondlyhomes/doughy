@@ -8,7 +8,7 @@ import type { UserRole } from '../types';
 export interface Permissions {
   // Role checks
   isAdmin: boolean;
-  isSuperAdmin: boolean;
+  isSupport: boolean;
   isUser: boolean;
   role: UserRole;
 
@@ -38,9 +38,11 @@ export function usePermissions(): Permissions {
 
   return useMemo(() => {
     const role = profile?.role || 'user';
-    const isAdmin = role === 'admin' || role === 'super_admin';
-    const isSuperAdmin = role === 'super_admin';
-    const isUser = role === 'user';
+    // Role hierarchy: admin > support > standard/user
+    const isAdmin = role === 'admin';
+    const isSupport = role === 'support';
+    const isUser = role === 'user' || role === 'standard';
+    const hasAdminAccess = isAdmin || isSupport;
 
     // Status from profile
     const isEmailVerified = profile?.email_verified ?? false;
@@ -49,16 +51,17 @@ export function usePermissions(): Permissions {
     return {
       // Role checks
       isAdmin,
-      isSuperAdmin,
+      isSupport,
       isUser,
       role,
 
       // Feature permissions - based on role hierarchy
-      canManageUsers: isSuperAdmin,
-      canViewAdminPanel: isAdmin,
+      // admin can manage users, support can view admin panel but not manage users
+      canManageUsers: isAdmin,
+      canViewAdminPanel: hasAdminAccess,
       canManageBilling: isAdmin,
       canManageTeam: isAdmin,
-      canInviteMembers: isAdmin,
+      canInviteMembers: hasAdminAccess,
       canViewAnalytics: isAuthenticated,
       canManageProperties: isAuthenticated,
       canManageLeads: isAuthenticated,

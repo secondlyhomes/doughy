@@ -55,10 +55,13 @@ export function ProfileScreen() {
     try {
       const fullName = `${firstName} ${lastName}`.trim();
 
+      // DB schema has: name, first_name, last_name (not full_name)
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName,
+          name: fullName,
+          first_name: firstName.trim() || null,
+          last_name: lastName.trim() || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);

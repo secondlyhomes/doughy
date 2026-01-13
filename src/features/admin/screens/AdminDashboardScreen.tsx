@@ -29,6 +29,7 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { AdminStackParamList } from '@/routes/types';
 import {
   getAdminStats,
@@ -41,7 +42,8 @@ type AdminDashboardNavigationProp = NativeStackNavigationProp<AdminStackParamLis
 
 export function AdminDashboardScreen() {
   const navigation = useNavigation<AdminDashboardNavigationProp>();
-  const { profile } = useAuth();
+  const { isLoading: authLoading } = useAuth();
+  const { canViewAdminPanel } = usePermissions();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -104,8 +106,8 @@ export function AdminDashboardScreen() {
     }
   };
 
-  // Check if user has admin access
-  if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+  // Check if user has admin access (uses consistent permission check)
+  if (!authLoading && !canViewAdminPanel) {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center p-6">

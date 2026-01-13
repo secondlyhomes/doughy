@@ -180,8 +180,8 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        {/* Admin Section - Only visible to admin users */}
-        {(profile?.role === 'admin' || profile?.role === 'super_admin') && (
+        {/* Admin Section - Only visible to admin/support users */}
+        {(profile?.role === 'admin' || profile?.role === 'support') && (
           <View className="p-4">
             <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
               ADMINISTRATION

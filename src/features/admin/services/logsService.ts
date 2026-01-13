@@ -5,6 +5,15 @@ import { supabase } from '@/lib/supabase';
 
 export type LogLevel = 'info' | 'warning' | 'error' | 'debug';
 
+/**
+ * Sanitize search input to prevent injection
+ */
+function sanitizeSearchInput(input: string): string {
+  // Remove special characters that could affect the query
+  // Allow alphanumeric, spaces, @, ., -, _
+  return input.replace(/[^a-zA-Z0-9\s@.\-_]/g, '').trim();
+}
+
 export interface LogEntry {
   id: string;
   level: LogLevel;
@@ -70,9 +79,12 @@ export async function getLogs(filters: LogFilters = {}): Promise<LogsResult> {
       query = query.eq('user_id', userId);
     }
 
-    // Apply search
+    // Apply search with sanitized input
     if (search) {
-      query = query.ilike('message', `%${search}%`);
+      const sanitized = sanitizeSearchInput(search);
+      if (sanitized.length > 0) {
+        query = query.ilike('message', `%${sanitized}%`);
+      }
     }
 
     // Apply date range

@@ -37,19 +37,26 @@ export function useCurrentUser() {
 
 /**
  * Hook to check if user has a specific role
+ * Roles: admin > support > standard/user
  */
-export function useHasRole(role: 'user' | 'admin' | 'super_admin'): boolean {
+export function useHasRole(role: 'user' | 'admin' | 'support'): boolean {
   const { profile } = useAuth();
-  
+
   if (!profile) return false;
-  
-  // Admin roles have higher permissions
+
+  // Role hierarchy check
   if (role === 'user') {
-    return ['user', 'admin', 'super_admin'].includes(profile.role);
+    // Everyone has at least user-level access
+    return ['user', 'standard', 'support', 'admin'].includes(profile.role);
+  }
+  if (role === 'support') {
+    // Support and admin have support-level access
+    return ['support', 'admin'].includes(profile.role);
   }
   if (role === 'admin') {
-    return ['admin', 'super_admin'].includes(profile.role);
+    // Only admin has admin-level access
+    return profile.role === 'admin';
   }
-  
+
   return profile.role === role;
 }

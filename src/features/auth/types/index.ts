@@ -3,7 +3,8 @@
 
 import { Session, User } from '@supabase/supabase-js';
 
-export type UserRole = 'user' | 'admin' | 'super_admin';
+// Must match Database["public"]["Enums"]["user_role"]
+export type UserRole = 'admin' | 'standard' | 'user' | 'support';
 
 export interface Profile {
   id: string;

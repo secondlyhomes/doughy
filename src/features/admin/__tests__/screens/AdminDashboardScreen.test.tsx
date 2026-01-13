@@ -27,6 +27,12 @@ jest.mock('@/features/auth/hooks/useAuth', () => ({
   useAuth: () => mockUseAuth(),
 }));
 
+// Mock usePermissions
+const mockUsePermissions = jest.fn();
+jest.mock('@/features/auth/hooks/usePermissions', () => ({
+  usePermissions: () => mockUsePermissions(),
+}));
+
 describe('AdminDashboardScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,6 +40,11 @@ describe('AdminDashboardScreen', () => {
       user: { id: 'test-user', email: 'admin@test.com' },
       profile: { id: 'test-user', role: 'admin', name: 'Test Admin' },
       isLoading: false,
+    });
+    mockUsePermissions.mockReturnValue({
+      canViewAdminPanel: true,
+      isAdmin: true,
+      isSupport: false,
     });
 
     mockAdminService.getAdminStats.mockResolvedValue({
@@ -193,6 +204,11 @@ describe('AdminDashboardScreen', () => {
       profile: { id: 'test-user', role: 'user', name: 'Test User' },
       isLoading: false,
     });
+    mockUsePermissions.mockReturnValue({
+      canViewAdminPanel: false,
+      isAdmin: false,
+      isSupport: false,
+    });
 
     const { getByText } = render(<AdminDashboardScreen />);
 
@@ -206,6 +222,11 @@ describe('AdminDashboardScreen', () => {
       profile: { id: 'test-user', role: 'user', name: 'Test User' },
       isLoading: false,
     });
+    mockUsePermissions.mockReturnValue({
+      canViewAdminPanel: false,
+      isAdmin: false,
+      isSupport: false,
+    });
 
     const { getByText } = render(<AdminDashboardScreen />);
 
@@ -213,11 +234,16 @@ describe('AdminDashboardScreen', () => {
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it('allows super_admin role to access', async () => {
+  it('allows support role to access', async () => {
     mockUseAuth.mockReturnValue({
-      user: { id: 'test-user', email: 'superadmin@test.com' },
-      profile: { id: 'test-user', role: 'super_admin', name: 'Super Admin' },
+      user: { id: 'test-user', email: 'support@test.com' },
+      profile: { id: 'test-user', role: 'support', name: 'Support User' },
       isLoading: false,
+    });
+    mockUsePermissions.mockReturnValue({
+      canViewAdminPanel: true,
+      isAdmin: false,
+      isSupport: true,
     });
 
     const { getByText, queryByText } = render(<AdminDashboardScreen />);
