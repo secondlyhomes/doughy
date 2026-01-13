@@ -1,0 +1,129 @@
+// src/features/real-estate/components/FinancingScenarioCard.tsx
+// Individual financing scenario card display
+
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Edit2, Trash2 } from 'lucide-react-native';
+import { FinancingScenario, ScenarioDetails } from '../types';
+import { FinancingScenarioWithCalcs, LOAN_TYPES, LoanType } from '../hooks/useFinancingScenarios';
+import { formatCurrency, formatPercentage } from '../utils/formatters';
+
+// Default empty scenario details for safe property access
+const EMPTY_SCENARIO_DETAILS: ScenarioDetails = {
+  purchasePrice: null,
+  loanAmount: null,
+  interestRate: null,
+};
+
+interface FinancingScenarioCardProps {
+  scenario: FinancingScenarioWithCalcs;
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function getLoanTypeLabel(type: string | null | undefined): string {
+  if (!type) return 'Unknown';
+  return LOAN_TYPES.find(t => t.id === type)?.label || type;
+}
+
+export function FinancingScenarioCard({
+  scenario,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete,
+}: FinancingScenarioCardProps) {
+  const input: ScenarioDetails = scenario.input_json || EMPTY_SCENARIO_DETAILS;
+
+  return (
+    <TouchableOpacity
+      onPress={onSelect}
+      className={`bg-card rounded-xl border overflow-hidden ${
+        isSelected ? 'border-primary border-2' : 'border-border'
+      }`}
+    >
+      {/* Header */}
+      <View className="flex-row items-center justify-between p-4 border-b border-border">
+        <View className="flex-1">
+          <View className="flex-row items-center">
+            <Text className="text-foreground font-semibold">{scenario.name}</Text>
+            {isSelected && (
+              <View className="ml-2 bg-primary px-2 py-0.5 rounded">
+                <Text className="text-xs text-primary-foreground">Selected</Text>
+              </View>
+            )}
+          </View>
+          <Text className="text-xs text-muted-foreground">
+            {getLoanTypeLabel(scenario.scenario_type)} • {input.loanTerm || 30} years
+          </Text>
+        </View>
+
+        <View className="flex-row gap-1">
+          <TouchableOpacity onPress={onEdit} className="p-2 bg-muted rounded-lg">
+            <Edit2 size={14} className="text-muted-foreground" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onDelete} className="p-2 bg-destructive/10 rounded-lg">
+            <Trash2 size={14} className="text-destructive" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Payment Highlight */}
+      <View className="p-4 bg-primary/5">
+        <View className="flex-row justify-between items-center">
+          <View>
+            <Text className="text-xs text-muted-foreground">Monthly Payment</Text>
+            <Text className="text-2xl font-bold text-primary">
+              {formatCurrency(scenario.calculatedPayment)}
+            </Text>
+          </View>
+          <View className="items-end">
+            <Text className="text-xs text-muted-foreground">Interest Rate</Text>
+            <Text className="text-lg font-semibold text-foreground">
+              {formatPercentage(input.interestRate || 0)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Details */}
+      <View className="p-4">
+        <View className="flex-row flex-wrap gap-x-4 gap-y-2">
+          <View className="min-w-[45%]">
+            <Text className="text-xs text-muted-foreground">Loan Amount</Text>
+            <Text className="text-sm text-foreground font-medium">
+              {formatCurrency(input.loanAmount || 0)}
+            </Text>
+          </View>
+          <View className="min-w-[45%]">
+            <Text className="text-xs text-muted-foreground">Down Payment</Text>
+            <Text className="text-sm text-foreground font-medium">
+              {formatCurrency(input.downPayment || 0)}
+            </Text>
+          </View>
+          <View className="min-w-[45%]">
+            <Text className="text-xs text-muted-foreground">Total Interest</Text>
+            <Text className="text-sm text-foreground font-medium">
+              {formatCurrency(scenario.totalInterest)}
+            </Text>
+          </View>
+          <View className="min-w-[45%]">
+            <Text className="text-xs text-muted-foreground">Cash Required</Text>
+            <Text className="text-sm text-foreground font-medium">
+              {formatCurrency(scenario.cashRequired)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Notes */}
+        {scenario.description && (
+          <Text className="text-xs text-muted-foreground mt-3">
+            {scenario.description}
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}

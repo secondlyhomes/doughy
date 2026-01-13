@@ -3,35 +3,12 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import {
-  CreditCard,
-  Plus,
-  Calculator,
-  Percent,
-  RefreshCw,
-  Edit2,
-  Trash2,
-  TrendingUp,
-  DollarSign,
-} from 'lucide-react-native';
-import { Property, FinancingScenario, ScenarioDetails } from '../types';
-import {
-  useFinancingScenarios,
-  useFinancingScenarioMutations,
-  LOAN_TYPES,
-  LoanType,
-  FinancingScenarioWithCalcs,
-} from '../hooks/useFinancingScenarios';
-
+import { CreditCard, Plus, Calculator, RefreshCw } from 'lucide-react-native';
+import { Property, FinancingScenario } from '../types';
+import { useFinancingScenarios, useFinancingScenarioMutations, LoanType } from '../hooks/useFinancingScenarios';
 import { AddFinancingSheet } from './AddFinancingSheet';
-import { formatCurrency, formatPercentage } from '../utils/formatters';
-
-// Default empty scenario details for safe property access
-const EMPTY_SCENARIO_DETAILS: ScenarioDetails = {
-  purchasePrice: null,
-  loanAmount: null,
-  interestRate: null,
-};
+import { FinancingScenarioCard } from './FinancingScenarioCard';
+import { FinancingComparisonTable } from './FinancingComparisonTable';
 
 interface PropertyFinancingTabProps {
   property: Property;
@@ -92,9 +69,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
           style: 'destructive',
           onPress: async () => {
             const success = await deleteScenario(scenario.id);
-            if (success) {
-              refetch();
-            }
+            if (success) refetch();
           },
         },
       ]
@@ -112,17 +87,11 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
       if (next.has(scenarioId)) {
         next.delete(scenarioId);
       } else if (next.size < 3) {
-        // Limit comparison to 3 scenarios
         next.add(scenarioId);
       }
       return next;
     });
   }, []);
-
-  const getLoanTypeLabel = (type: string | null | undefined): string => {
-    if (!type) return 'Unknown';
-    return LOAN_TYPES.find(t => t.id === type)?.label || type;
-  };
 
   if (isLoading) {
     return (
@@ -137,10 +106,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
     return (
       <View className="flex-1 items-center justify-center py-12">
         <Text className="text-destructive mb-4">Failed to load scenarios</Text>
-        <TouchableOpacity
-          onPress={refetch}
-          className="flex-row items-center bg-muted px-4 py-2 rounded-lg"
-        >
+        <TouchableOpacity onPress={refetch} className="flex-row items-center bg-muted px-4 py-2 rounded-lg">
           <RefreshCw size={16} className="text-foreground" />
           <Text className="text-foreground font-medium ml-2">Try Again</Text>
         </TouchableOpacity>
@@ -148,15 +114,10 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
     );
   }
 
-  // Get selected scenarios for comparison
   const comparisonScenarios = scenarios.filter(s => selectedScenarios.has(s.id));
 
   return (
-    <ScrollView
-      className="flex-1"
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 20 }}
-    >
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
       <View className="gap-4">
         {/* Header */}
         <View className="flex-row justify-between items-center">
@@ -166,82 +127,14 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
               {scenarios.length} scenario{scenarios.length !== 1 ? 's' : ''}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => setShowAddSheet(true)}
-            className="flex-row items-center bg-primary px-3 py-2 rounded-lg"
-          >
+          <TouchableOpacity onPress={() => setShowAddSheet(true)} className="flex-row items-center bg-primary px-3 py-2 rounded-lg">
             <Plus size={16} color="white" />
             <Text className="text-primary-foreground font-medium ml-1">Add</Text>
           </TouchableOpacity>
         </View>
 
         {/* Comparison Panel */}
-        {comparisonScenarios.length > 1 && (
-          <View className="bg-card rounded-xl border border-border overflow-hidden">
-            <View className="px-4 py-3 bg-primary/5 border-b border-border">
-              <Text className="text-sm font-semibold text-foreground">Comparison</Text>
-              <Text className="text-xs text-muted-foreground">
-                Comparing {comparisonScenarios.length} scenarios
-              </Text>
-            </View>
-
-            {/* Comparison Header */}
-            <View className="flex-row border-b border-border">
-              <View className="flex-1 p-3 border-r border-border">
-                <Text className="text-xs text-muted-foreground text-center">Metric</Text>
-              </View>
-              {comparisonScenarios.map((scenario, index) => (
-                <View key={scenario.id} className={`flex-1 p-3 ${index < comparisonScenarios.length - 1 ? 'border-r border-border' : ''}`}>
-                  <Text className="text-xs text-foreground text-center font-medium" numberOfLines={1}>
-                    {scenario.name}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Monthly Payment Row */}
-            <View className="flex-row border-b border-border">
-              <View className="flex-1 p-3 border-r border-border bg-muted/30">
-                <Text className="text-xs text-muted-foreground">Monthly</Text>
-              </View>
-              {comparisonScenarios.map((scenario, index) => (
-                <View key={scenario.id} className={`flex-1 p-3 ${index < comparisonScenarios.length - 1 ? 'border-r border-border' : ''}`}>
-                  <Text className="text-xs text-foreground text-center font-medium">
-                    {formatCurrency(scenario.calculatedPayment)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Total Interest Row */}
-            <View className="flex-row border-b border-border">
-              <View className="flex-1 p-3 border-r border-border bg-muted/30">
-                <Text className="text-xs text-muted-foreground">Total Interest</Text>
-              </View>
-              {comparisonScenarios.map((scenario, index) => (
-                <View key={scenario.id} className={`flex-1 p-3 ${index < comparisonScenarios.length - 1 ? 'border-r border-border' : ''}`}>
-                  <Text className="text-xs text-foreground text-center font-medium">
-                    {formatCurrency(scenario.totalInterest)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Cash Required Row */}
-            <View className="flex-row">
-              <View className="flex-1 p-3 border-r border-border bg-muted/30">
-                <Text className="text-xs text-muted-foreground">Cash Needed</Text>
-              </View>
-              {comparisonScenarios.map((scenario, index) => (
-                <View key={scenario.id} className={`flex-1 p-3 ${index < comparisonScenarios.length - 1 ? 'border-r border-border' : ''}`}>
-                  <Text className="text-xs text-foreground text-center font-medium">
-                    {formatCurrency(scenario.cashRequired)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
+        <FinancingComparisonTable scenarios={comparisonScenarios} />
 
         {/* Empty State */}
         {!hasScenarios && (
@@ -253,10 +146,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
             <Text className="text-muted-foreground text-center px-8 mb-4">
               Create financing scenarios to compare different loan options and calculate monthly payments.
             </Text>
-            <TouchableOpacity
-              onPress={() => setShowAddSheet(true)}
-              className="flex-row items-center bg-muted px-4 py-2 rounded-lg"
-            >
+            <TouchableOpacity onPress={() => setShowAddSheet(true)} className="flex-row items-center bg-muted px-4 py-2 rounded-lg">
               <Plus size={16} className="text-foreground" />
               <Text className="text-foreground font-medium ml-2">Create First Scenario</Text>
             </TouchableOpacity>
@@ -269,112 +159,20 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
             <Text className="text-xs text-muted-foreground">
               Tap to select scenarios for comparison (max 3)
             </Text>
-
-            {scenarios.map((scenario) => {
-              const input: ScenarioDetails = scenario.input_json || EMPTY_SCENARIO_DETAILS;
-              const isSelected = selectedScenarios.has(scenario.id);
-
-              return (
-                <TouchableOpacity
-                  key={scenario.id}
-                  onPress={() => toggleScenarioSelection(scenario.id)}
-                  className={`bg-card rounded-xl border overflow-hidden ${
-                    isSelected ? 'border-primary border-2' : 'border-border'
-                  }`}
-                >
-                  {/* Header */}
-                  <View className="flex-row items-center justify-between p-4 border-b border-border">
-                    <View className="flex-1">
-                      <View className="flex-row items-center">
-                        <Text className="text-foreground font-semibold">{scenario.name}</Text>
-                        {isSelected && (
-                          <View className="ml-2 bg-primary px-2 py-0.5 rounded">
-                            <Text className="text-xs text-primary-foreground">Selected</Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text className="text-xs text-muted-foreground">
-                        {getLoanTypeLabel(scenario.scenario_type)} • {input.loanTerm || 30} years
-                      </Text>
-                    </View>
-
-                    <View className="flex-row gap-1">
-                      <TouchableOpacity
-                        onPress={() => handleEditScenario(scenario)}
-                        className="p-2 bg-muted rounded-lg"
-                      >
-                        <Edit2 size={14} className="text-muted-foreground" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleDeleteScenario(scenario)}
-                        className="p-2 bg-destructive/10 rounded-lg"
-                      >
-                        <Trash2 size={14} className="text-destructive" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  {/* Payment Highlight */}
-                  <View className="p-4 bg-primary/5">
-                    <View className="flex-row justify-between items-center">
-                      <View>
-                        <Text className="text-xs text-muted-foreground">Monthly Payment</Text>
-                        <Text className="text-2xl font-bold text-primary">
-                          {formatCurrency(scenario.calculatedPayment)}
-                        </Text>
-                      </View>
-                      <View className="items-end">
-                        <Text className="text-xs text-muted-foreground">Interest Rate</Text>
-                        <Text className="text-lg font-semibold text-foreground">
-                          {formatPercentage(input.interestRate || 0)}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Details */}
-                  <View className="p-4">
-                    <View className="flex-row flex-wrap gap-x-4 gap-y-2">
-                      <View className="min-w-[45%]">
-                        <Text className="text-xs text-muted-foreground">Loan Amount</Text>
-                        <Text className="text-sm text-foreground font-medium">
-                          {formatCurrency(input.loanAmount || 0)}
-                        </Text>
-                      </View>
-                      <View className="min-w-[45%]">
-                        <Text className="text-xs text-muted-foreground">Down Payment</Text>
-                        <Text className="text-sm text-foreground font-medium">
-                          {formatCurrency(input.downPayment || 0)}
-                        </Text>
-                      </View>
-                      <View className="min-w-[45%]">
-                        <Text className="text-xs text-muted-foreground">Total Interest</Text>
-                        <Text className="text-sm text-foreground font-medium">
-                          {formatCurrency(scenario.totalInterest)}
-                        </Text>
-                      </View>
-                      <View className="min-w-[45%]">
-                        <Text className="text-xs text-muted-foreground">Cash Required</Text>
-                        <Text className="text-sm text-foreground font-medium">
-                          {formatCurrency(scenario.cashRequired)}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Notes */}
-                    {scenario.description && (
-                      <Text className="text-xs text-muted-foreground mt-3">
-                        {scenario.description}
-                      </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            {scenarios.map((scenario) => (
+              <FinancingScenarioCard
+                key={scenario.id}
+                scenario={scenario}
+                isSelected={selectedScenarios.has(scenario.id)}
+                onSelect={() => toggleScenarioSelection(scenario.id)}
+                onEdit={() => handleEditScenario(scenario)}
+                onDelete={() => handleDeleteScenario(scenario)}
+              />
+            ))}
           </View>
         )}
 
-        {/* Quick Calculator Info */}
+        {/* Tips */}
         <View className="bg-muted rounded-xl p-4">
           <View className="flex-row items-center mb-2">
             <Calculator size={16} className="text-muted-foreground" />
