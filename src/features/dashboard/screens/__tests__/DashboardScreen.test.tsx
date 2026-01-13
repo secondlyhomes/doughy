@@ -194,7 +194,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByText('Sarah Johnson'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('LeadDetail', { id: '1' });
+      expect(mockNavigate).toHaveBeenCalledWith('LeadDetail', { leadId: '1' });
     });
 
     it('should navigate to Leads when View All Leads is pressed', () => {
