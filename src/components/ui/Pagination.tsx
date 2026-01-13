@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, ViewProps } from 'react-native';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Simple API for pagination
 export interface PaginationProps extends ViewProps {
@@ -106,6 +107,9 @@ function PaginationLink({ page, isActive, onPress }: PaginationLinkProps) {
       )}
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`Page ${page}`}
+      accessibilityState={{ selected: isActive }}
     >
       <Text
         className={cn(
@@ -126,6 +130,7 @@ interface PaginationPreviousProps {
 }
 
 function PaginationPrevious({ onPress, disabled }: PaginationPreviousProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={cn(
@@ -135,8 +140,11 @@ function PaginationPrevious({ onPress, disabled }: PaginationPreviousProps) {
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel="Previous page"
+      accessibilityState={{ disabled }}
     >
-      <ChevronLeft size={16} color={disabled ? '#94a3b8' : '#0f172a'} />
+      <ChevronLeft size={16} color={disabled ? colors.mutedForeground : colors.foreground} />
     </TouchableOpacity>
   );
 }
@@ -148,6 +156,7 @@ interface PaginationNextProps {
 }
 
 function PaginationNext({ onPress, disabled }: PaginationNextProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={cn(
@@ -157,17 +166,21 @@ function PaginationNext({ onPress, disabled }: PaginationNextProps) {
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel="Next page"
+      accessibilityState={{ disabled }}
     >
-      <ChevronRight size={16} color={disabled ? '#94a3b8' : '#0f172a'} />
+      <ChevronRight size={16} color={disabled ? colors.mutedForeground : colors.foreground} />
     </TouchableOpacity>
   );
 }
 
 // Ellipsis
 function PaginationEllipsis() {
+  const colors = useThemeColors();
   return (
-    <View className="h-10 w-10 items-center justify-center">
-      <MoreHorizontal size={16} color="#94a3b8" />
+    <View className="h-10 w-10 items-center justify-center" accessibilityLabel="More pages">
+      <MoreHorizontal size={16} color={colors.mutedForeground} />
     </View>
   );
 }

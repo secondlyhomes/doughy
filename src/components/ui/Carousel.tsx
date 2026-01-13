@@ -17,6 +17,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Carousel Root
 export interface CarouselProps extends ViewProps {
@@ -43,6 +44,7 @@ export function Carousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [containerWidth, setContainerWidth] = useState(Dimensions.get('window').width);
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
+  const colors = useThemeColors();
 
   const items = React.Children.toArray(children);
   const itemCount = items.length;
@@ -78,20 +80,28 @@ export function Carousel({
     [containerWidth, itemCount, loop]
   );
 
-  // Auto play
+  // Auto play - use functional update to avoid recreating interval on every slide
   useEffect(() => {
-    if (autoPlay && itemCount > 1) {
-      autoPlayRef.current = setInterval(() => {
-        scrollToIndex(currentIndex + 1);
-      }, autoPlayInterval);
+    if (!autoPlay || itemCount <= 1) return;
 
-      return () => {
-        if (autoPlayRef.current) {
-          clearInterval(autoPlayRef.current);
-        }
-      };
-    }
-  }, [autoPlay, autoPlayInterval, currentIndex, itemCount, scrollToIndex]);
+    autoPlayRef.current = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const next = prev + 1;
+        const targetIndex = loop ? (next >= itemCount ? 0 : next) : Math.min(next, itemCount - 1);
+        scrollViewRef.current?.scrollTo({
+          x: targetIndex * containerWidth,
+          animated: true,
+        });
+        return targetIndex;
+      });
+    }, autoPlayInterval);
+
+    return () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current);
+      }
+    };
+  }, [autoPlay, autoPlayInterval, itemCount, loop, containerWidth]);
 
   // Stop auto play on interaction
   const handleScrollBeginDrag = useCallback(() => {
@@ -138,8 +148,11 @@ export function Carousel({
             onPress={() => scrollToIndex(currentIndex - 1)}
             disabled={currentIndex === 0 && !loop}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Previous slide"
+            accessibilityState={{ disabled: currentIndex === 0 && !loop }}
           >
-            <ChevronLeft size={20} color="#0f172a" />
+            <ChevronLeft size={20} color={colors.foreground} />
           </TouchableOpacity>
           <TouchableOpacity
             className={cn(
@@ -149,8 +162,11 @@ export function Carousel({
             onPress={() => scrollToIndex(currentIndex + 1)}
             disabled={currentIndex === itemCount - 1 && !loop}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Next slide"
+            accessibilityState={{ disabled: currentIndex === itemCount - 1 && !loop }}
           >
-            <ChevronRight size={20} color="#0f172a" />
+            <ChevronRight size={20} color={colors.foreground} />
           </TouchableOpacity>
         </>
       )}

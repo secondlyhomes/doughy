@@ -3,6 +3,7 @@
 import React from 'react';
 import { ActivityIndicator, View, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface LoadingSpinnerProps extends ViewProps {
   size?: 'small' | 'large';
@@ -12,10 +13,11 @@ export interface LoadingSpinnerProps extends ViewProps {
 
 export function LoadingSpinner({
   size = 'large',
-  color = '#2563eb', // primary color
+  color,
   className,
   ...props
 }: LoadingSpinnerProps) {
+  const colors = useThemeColors();
   return (
     <View
       className={cn('items-center justify-center', className)}
@@ -23,7 +25,7 @@ export function LoadingSpinner({
       accessibilityRole="progressbar"
       {...props}
     >
-      <ActivityIndicator size={size} color={color} />
+      <ActivityIndicator size={size} color={color ?? colors.primary} />
     </View>
   );
 }

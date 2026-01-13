@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Modal Root
 export interface ModalProps {
@@ -71,6 +72,7 @@ export function ModalContent({
   onClose,
   ...props
 }: ModalContentProps) {
+  const colors = useThemeColors();
   return (
     <View
       className={cn(
@@ -85,8 +87,10 @@ export function ModalContent({
           className="absolute right-4 top-4 rounded-sm opacity-70"
           onPress={onClose}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Close modal"
         >
-          <X size={16} color="#64748b" />
+          <X size={16} color={colors.mutedForeground} />
         </TouchableOpacity>
       )}
     </View>

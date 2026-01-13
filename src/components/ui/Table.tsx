@@ -1,7 +1,7 @@
 // src/components/ui/Table.tsx
 // FlatList-based table with sticky header
 import React from 'react';
-import { View, Text, FlatList, ScrollView, ViewProps, TextProps } from 'react-native';
+import { View, Text, FlatList, ScrollView, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
 
 // Simple Table API with columns configuration

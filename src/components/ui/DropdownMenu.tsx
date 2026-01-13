@@ -8,8 +8,6 @@ import {
   TouchableOpacity,
   Modal as RNModal,
   TouchableWithoutFeedback,
-  FlatList,
-  Platform,
   ViewProps,
   TextProps,
 } from 'react-native';

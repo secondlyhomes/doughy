@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ViewProps } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import {
   format,
   startOfMonth,
@@ -49,6 +50,7 @@ export function Calendar({
   ...props
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(value || new Date());
+  const colors = useThemeColors();
 
   // Generate days for the calendar grid
   const calendarDays = useMemo(() => {
@@ -103,18 +105,22 @@ export function Calendar({
           onPress={goToPreviousMonth}
           className="h-8 w-8 items-center justify-center rounded-md"
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Previous month"
         >
-          <ChevronLeft size={20} color="#64748b" />
+          <ChevronLeft size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
-        <Text className="text-sm font-semibold text-foreground">
+        <Text className="text-sm font-semibold text-foreground" accessibilityRole="header">
           {format(currentMonth, 'MMMM yyyy')}
         </Text>
         <TouchableOpacity
           onPress={goToNextMonth}
           className="h-8 w-8 items-center justify-center rounded-md"
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Next month"
         >
-          <ChevronRight size={20} color="#64748b" />
+          <ChevronRight size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
       </View>
 
@@ -148,6 +154,9 @@ export function Calendar({
                   isDisabled && 'opacity-30'
                 )}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={format(date, 'EEEE, MMMM d, yyyy')}
+                accessibilityState={{ selected: isSelected, disabled: isDisabled }}
               >
                 <Text
                   className={cn(

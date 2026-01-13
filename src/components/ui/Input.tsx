@@ -3,6 +3,7 @@
 import React from 'react';
 import { TextInput, TextInputProps, View, Text } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface InputProps extends TextInputProps {
   className?: string;
@@ -17,6 +18,7 @@ export function Input({
   editable = true,
   ...props
 }: InputProps) {
+  const colors = useThemeColors();
   return (
     <View className="w-full">
       {label && (
@@ -32,7 +34,7 @@ export function Input({
           error && 'border-destructive',
           className
         )}
-        placeholderTextColor="#64748b"
+        placeholderTextColor={colors.mutedForeground}
         editable={editable}
         {...props}
       />

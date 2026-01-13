@@ -14,6 +14,7 @@ import { Calendar as CalendarIcon, X } from 'lucide-react-native';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar } from './Calendar';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface DatePickerProps {
   value?: Date;
@@ -44,6 +45,7 @@ export function DatePicker({
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(value || new Date());
+  const colors = useThemeColors();
 
   // Format display value
   const displayValue = value ? format(value, dateFormat) : '';
@@ -176,9 +178,11 @@ export function DatePicker({
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={displayValue ? `Selected date: ${displayValue}` : placeholder}
       >
         <View className="flex-1 flex-row items-center gap-2">
-          <CalendarIcon size={16} color="#64748b" />
+          <CalendarIcon size={16} color={colors.mutedForeground} />
           <Text
             className={cn(
               'text-sm',
@@ -193,8 +197,10 @@ export function DatePicker({
           <TouchableOpacity
             onPress={handleClear}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Clear date"
           >
-            <X size={16} color="#94a3b8" />
+            <X size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
       </TouchableOpacity>

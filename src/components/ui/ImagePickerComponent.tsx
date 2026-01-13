@@ -1,10 +1,11 @@
 // src/components/ui/ImagePickerComponent.tsx
 // Image picker using expo-image-picker
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, FlatList, ViewProps, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, FlatList, ViewProps } from 'react-native';
 import * as ExpoImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, X, Plus, AlertCircle } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface ImagePickerProps extends ViewProps {
   value?: ExpoImagePicker.ImagePickerAsset[];
@@ -39,6 +40,7 @@ export function ImagePickerComponent({
   ...props
 }: ImagePickerProps) {
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const colors = useThemeColors();
 
   // Request permissions
   const requestPermission = useCallback(async (type: 'camera' | 'library') => {
@@ -141,8 +143,10 @@ export function ImagePickerComponent({
         <TouchableOpacity
           className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-destructive"
           onPress={() => handleRemove(index)}
+          accessibilityRole="button"
+          accessibilityLabel="Remove image"
         >
-          <X size={12} color="#fff" />
+          <X size={12} color={colors.destructiveForeground} />
         </TouchableOpacity>
       )}
     </View>
@@ -182,8 +186,10 @@ export function ImagePickerComponent({
               onPress={handleCamera}
               disabled={disabled}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Take photo with camera"
             >
-              <Camera size={20} color="#64748b" />
+              <Camera size={20} color={colors.mutedForeground} />
               <Text className="text-sm font-medium text-foreground">Camera</Text>
             </TouchableOpacity>
           )}
@@ -198,8 +204,10 @@ export function ImagePickerComponent({
               onPress={handleGallery}
               disabled={disabled}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Select photo from gallery"
             >
-              <ImageIcon size={20} color="#64748b" />
+              <ImageIcon size={20} color={colors.mutedForeground} />
               <Text className="text-sm font-medium text-foreground">Gallery</Text>
             </TouchableOpacity>
           )}
@@ -216,15 +224,17 @@ export function ImagePickerComponent({
           onPress={handleGallery}
           disabled={disabled}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Add more images"
         >
-          <Plus size={16} color="#64748b" />
+          <Plus size={16} color={colors.mutedForeground} />
           <Text className="text-sm text-muted-foreground">Add more</Text>
         </TouchableOpacity>
       )}
 
       {/* Permission error */}
       {permissionError && (
-        <View className="mt-2 flex-row items-center gap-1">
+        <View className="mt-2 flex-row items-center gap-1" accessibilityRole="alert">
           <AlertCircle size={14} color="#f59e0b" />
           <Text className="text-sm text-amber-600">{permissionError}</Text>
         </View>
@@ -232,8 +242,8 @@ export function ImagePickerComponent({
 
       {/* Error message */}
       {error && (
-        <View className="mt-2 flex-row items-center gap-1">
-          <AlertCircle size={14} color="#ef4444" />
+        <View className="mt-2 flex-row items-center gap-1" accessibilityRole="alert">
+          <AlertCircle size={14} color={colors.destructive} />
           <Text className="text-sm text-destructive">{error}</Text>
         </View>
       )}

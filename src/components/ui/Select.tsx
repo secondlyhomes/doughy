@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { ChevronDown, Check } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface SelectOption {
   label: string;
@@ -41,6 +42,7 @@ export function Select({
   ...props
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const colors = useThemeColors();
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -79,7 +81,7 @@ export function Select({
         >
           {selectedOption?.label || placeholder}
         </Text>
-        <ChevronDown size={16} color="#64748b" />
+        <ChevronDown size={16} color={colors.mutedForeground} />
       </TouchableOpacity>
 
       {error && (
@@ -114,7 +116,7 @@ export function Select({
                 >
                   <View className="mr-2 h-4 w-4 items-center justify-center">
                     {item.value === value && (
-                      <Check size={16} color="#2563eb" />
+                      <Check size={16} color={colors.primary} />
                     )}
                   </View>
                   <Text

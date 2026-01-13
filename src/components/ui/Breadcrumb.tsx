@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ViewProps, TextProps } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Breadcrumb Root
 export interface BreadcrumbProps extends ViewProps {
@@ -80,9 +81,10 @@ export function BreadcrumbLink({
       className={cn(className)}
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityRole="link"
     >
       {typeof children === 'string' ? (
-        <Text className={cn('text-sm text-muted-foreground hover:text-foreground', textClassName)}>
+        <Text className={cn('text-sm text-muted-foreground', textClassName)}>
           {children}
         </Text>
       ) : (
@@ -123,9 +125,10 @@ export function BreadcrumbSeparator({
   children,
   className,
 }: BreadcrumbSeparatorProps) {
+  const colors = useThemeColors();
   return (
-    <View className={cn('mx-2', className)}>
-      {children || <ChevronRight size={14} color="#94a3b8" />}
+    <View className={cn('mx-2', className)} accessible={false} importantForAccessibility="no-hide-descendants">
+      {children || <ChevronRight size={14} color={colors.mutedForeground} />}
     </View>
   );
 }

@@ -2,6 +2,7 @@
 // Accordion component - multiple collapsible sections
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { View, TouchableOpacity, Text, ViewProps, LayoutChangeEvent } from 'react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -172,6 +173,7 @@ export function AccordionTrigger({
 }: AccordionTriggerProps) {
   const { onValueChange } = useAccordionContext();
   const { value, isOpen, disabled } = useAccordionItemContext();
+  const colors = useThemeColors();
 
   const rotation = useSharedValue(isOpen ? 180 : 0);
 
@@ -196,6 +198,9 @@ export function AccordionTrigger({
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: isOpen, disabled }}
+      accessibilityLabel={typeof children === 'string' ? children : undefined}
     >
       {typeof children === 'string' ? (
         <Text className={cn('flex-1 text-sm font-medium text-foreground', textClassName)}>
@@ -205,7 +210,7 @@ export function AccordionTrigger({
         <View className="flex-1">{children}</View>
       )}
       <Animated.View style={iconStyle}>
-        <ChevronDown size={16} color="#64748b" />
+        <ChevronDown size={16} color={colors.mutedForeground} />
       </Animated.View>
     </TouchableOpacity>
   );

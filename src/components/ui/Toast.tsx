@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { View, Text, Animated, TouchableOpacity, Platform } from 'react-native';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Toast types
 export type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info';
@@ -39,6 +40,7 @@ interface ToastItemProps extends ToastMessage {
 function ToastItem({ id, title, description, type = 'default', duration = 4000, onDismiss }: ToastItemProps) {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const colors = useThemeColors();
 
   useEffect(() => {
     // Animate in
@@ -78,17 +80,25 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
     ]).start(() => onDismiss());
   };
 
+  // Semantic colors that work in both light and dark modes
+  const toastColors = {
+    success: '#22c55e', // green-500 - good contrast in both modes
+    error: colors.destructive,
+    warning: '#f59e0b', // amber-500 - good contrast in both modes
+    info: colors.primary,
+  };
+
   const getIcon = () => {
     const iconProps = { size: 20 };
     switch (type) {
       case 'success':
-        return <CheckCircle {...iconProps} color="#22c55e" />;
+        return <CheckCircle {...iconProps} color={toastColors.success} />;
       case 'error':
-        return <AlertCircle {...iconProps} color="#ef4444" />;
+        return <AlertCircle {...iconProps} color={toastColors.error} />;
       case 'warning':
-        return <AlertTriangle {...iconProps} color="#f59e0b" />;
+        return <AlertTriangle {...iconProps} color={toastColors.warning} />;
       case 'info':
-        return <Info {...iconProps} color="#3b82f6" />;
+        return <Info {...iconProps} color={toastColors.info} />;
       default:
         return null;
     }
@@ -129,8 +139,8 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
           <Text className="text-sm text-muted-foreground">{description}</Text>
         )}
       </View>
-      <TouchableOpacity onPress={animateOut} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <X size={16} color="#64748b" />
+      <TouchableOpacity onPress={animateOut} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityRole="button" accessibilityLabel="Dismiss">
+        <X size={16} color={colors.mutedForeground} />
       </TouchableOpacity>
     </Animated.View>
   );

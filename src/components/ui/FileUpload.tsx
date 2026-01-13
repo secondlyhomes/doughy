@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity, FlatList, ViewProps } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker';
 import { Upload, File, X, AlertCircle } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface FileUploadProps extends ViewProps {
   value?: DocumentPicker.DocumentPickerAsset[];
@@ -32,6 +33,8 @@ export function FileUpload({
   className,
   ...props
 }: FileUploadProps) {
+  const colors = useThemeColors();
+
   // Format file size
   const formatSize = useCallback((bytes?: number) => {
     if (!bytes) return '';
@@ -95,7 +98,7 @@ export function FileUpload({
     index: number;
   }) => (
     <View className="flex-row items-center gap-3 rounded-md border border-border bg-muted/30 p-3">
-      <File size={20} color="#64748b" />
+      <File size={20} color={colors.mutedForeground} />
       <View className="flex-1">
         <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
           {item.name}
@@ -108,8 +111,10 @@ export function FileUpload({
         <TouchableOpacity
           onPress={() => handleRemove(index)}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel={`Remove ${item.name}`}
         >
-          <X size={16} color="#94a3b8" />
+          <X size={16} color={colors.mutedForeground} />
         </TouchableOpacity>
       )}
     </View>
@@ -134,8 +139,10 @@ export function FileUpload({
           onPress={handlePick}
           disabled={disabled}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`Select ${multiple ? 'files' : 'a file'}`}
         >
-          <Upload size={24} color="#64748b" />
+          <Upload size={24} color={colors.mutedForeground} />
           <Text className="mt-2 text-sm font-medium text-foreground">
             Tap to select {multiple ? 'files' : 'a file'}
           </Text>
@@ -165,8 +172,8 @@ export function FileUpload({
 
       {/* Error message */}
       {error && (
-        <View className="mt-2 flex-row items-center gap-1">
-          <AlertCircle size={14} color="#ef4444" />
+        <View className="mt-2 flex-row items-center gap-1" accessibilityRole="alert">
+          <AlertCircle size={14} color={colors.destructive} />
           <Text className="text-sm text-destructive">{error}</Text>
         </View>
       )}

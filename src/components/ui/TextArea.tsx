@@ -3,6 +3,7 @@
 import React from 'react';
 import { TextInput, TextInputProps, View, Text } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface TextAreaProps extends TextInputProps {
   className?: string;
@@ -18,6 +19,7 @@ export function TextArea({
   numberOfLines = 4,
   ...props
 }: TextAreaProps) {
+  const colors = useThemeColors();
   return (
     <View className="w-full">
       {label && (
@@ -33,7 +35,7 @@ export function TextArea({
           error && 'border-destructive',
           className
         )}
-        placeholderTextColor="#64748b"
+        placeholderTextColor={colors.mutedForeground}
         editable={editable}
         multiline
         numberOfLines={numberOfLines}

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Switch as RNSwitch, SwitchProps as RNSwitchProps, View, Text } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface SwitchProps extends Omit<RNSwitchProps, 'value' | 'onValueChange'> {
   checked?: boolean;
@@ -20,6 +21,7 @@ export function Switch({
   disabled,
   ...props
 }: SwitchProps) {
+  const colors = useThemeColors();
   return (
     <View className={cn('flex-row items-center gap-2', className)}>
       <RNSwitch
@@ -27,11 +29,13 @@ export function Switch({
         onValueChange={onCheckedChange}
         disabled={disabled}
         trackColor={{
-          false: '#e2e8f0', // input color
-          true: '#2563eb', // primary color
+          false: colors.input,
+          true: colors.primary,
         }}
-        thumbColor={checked ? '#ffffff' : '#ffffff'}
-        ios_backgroundColor="#e2e8f0"
+        thumbColor="#ffffff"
+        ios_backgroundColor={colors.input}
+        accessibilityRole="switch"
+        accessibilityState={{ checked, disabled }}
         {...props}
       />
       {label && (

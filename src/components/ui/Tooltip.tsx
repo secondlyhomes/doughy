@@ -17,7 +17,6 @@ import Animated, {
   withTiming,
   withDelay,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 import { cn } from '@/lib/utils';
 
@@ -152,13 +151,18 @@ export function TooltipTrigger({ children, asChild, className }: TooltipTriggerP
     }
   }, [onOpenChange]);
 
+  // Clear timeout when tooltip closes or component unmounts
   React.useEffect(() => {
+    if (!open && timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
+  }, [open]);
 
   const pressableProps = {
     onLongPress: Platform.OS !== 'web' ? handleLongPress : undefined,

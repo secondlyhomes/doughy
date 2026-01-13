@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -24,6 +25,8 @@ export interface BottomSheetProps {
   closeOnBackdropPress?: boolean;
   title?: string;
   maxHeight?: number | 'auto';
+  /** Snap points as percentage strings (e.g., ['50%', '85%']). First value is used for maxHeight. */
+  snapPoints?: string[];
 }
 
 export function BottomSheet({
@@ -33,7 +36,20 @@ export function BottomSheet({
   closeOnBackdropPress = true,
   title,
   maxHeight = SCREEN_HEIGHT * 0.7,
+  snapPoints,
 }: BottomSheetProps) {
+  const colors = useThemeColors();
+  // Calculate maxHeight from snapPoints if provided
+  const calculatedMaxHeight = React.useMemo(() => {
+    if (snapPoints && snapPoints.length > 0) {
+      const firstPoint = snapPoints[0];
+      const percentage = parseInt(firstPoint.replace('%', ''), 10);
+      if (!isNaN(percentage)) {
+        return SCREEN_HEIGHT * (percentage / 100);
+      }
+    }
+    return maxHeight;
+  }, [snapPoints, maxHeight]);
   return (
     <RNModal
       visible={visible}
@@ -52,7 +68,7 @@ export function BottomSheet({
             <TouchableWithoutFeedback>
               <View
                 className="bg-background rounded-t-3xl border-t border-border"
-                style={{ maxHeight: maxHeight === 'auto' ? undefined : maxHeight }}
+                style={{ maxHeight: calculatedMaxHeight === 'auto' ? undefined : calculatedMaxHeight }}
               >
                 {/* Handle Bar */}
                 <View className="items-center pt-3 pb-2">
@@ -69,8 +85,10 @@ export function BottomSheet({
                       onPress={onClose}
                       className="p-2 -mr-2 rounded-full"
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Close"
                     >
-                      <X size={20} color="#64748b" />
+                      <X size={20} color={colors.mutedForeground} />
                     </TouchableOpacity>
                   </View>
                 )}

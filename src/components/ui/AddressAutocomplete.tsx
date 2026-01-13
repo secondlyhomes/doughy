@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   FlatList,
   Modal as RNModal,
-  TouchableWithoutFeedback,
   ActivityIndicator,
   ViewProps,
 } from 'react-native';
@@ -17,6 +16,7 @@ import { MapPin, Search, X, Navigation } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Address value structure
 export interface AddressValue {
@@ -43,7 +43,7 @@ interface PlacePrediction {
 
 export interface AddressAutocompleteProps extends ViewProps {
   value?: AddressValue;
-  onChange?: (address: AddressValue) => void;
+  onChange?: (address: AddressValue | undefined) => void;
   placeholder?: string;
   label?: string;
   error?: string;
@@ -234,8 +234,10 @@ export function AddressAutocomplete({
 
   // Clear value
   const handleClear = useCallback(() => {
-    onChange?.(undefined as unknown as AddressValue);
+    onChange?.(undefined);
   }, [onChange]);
+
+  const colors = useThemeColors();
 
   // Render prediction item
   const renderPrediction = ({ item }: { item: PlacePrediction }) => (
@@ -244,7 +246,7 @@ export function AddressAutocomplete({
       onPress={() => handleSelectPrediction(item)}
       activeOpacity={0.7}
     >
-      <MapPin size={16} color="#64748b" />
+      <MapPin size={16} color={colors.mutedForeground} />
       <View className="flex-1">
         <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
           {item.structured_formatting?.main_text || item.description}
@@ -275,7 +277,7 @@ export function AddressAutocomplete({
         disabled={disabled}
         activeOpacity={0.7}
       >
-        <MapPin size={16} color="#64748b" />
+        <MapPin size={16} color={colors.mutedForeground} />
         <Text
           className={cn(
             'ml-2 flex-1 text-sm',
@@ -290,7 +292,7 @@ export function AddressAutocomplete({
             onPress={handleClear}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <X size={16} color="#94a3b8" />
+            <X size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
       </TouchableOpacity>
@@ -309,19 +311,19 @@ export function AddressAutocomplete({
           {/* Header */}
           <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
             <View className="flex-1 flex-row items-center rounded-md border border-input bg-muted/30 px-3 py-2">
-              <Search size={16} color="#64748b" />
+              <Search size={16} color={colors.mutedForeground} />
               <TextInput
                 ref={inputRef}
                 className="ml-2 flex-1 text-sm text-foreground"
                 placeholder="Search address..."
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.mutedForeground}
                 value={searchText}
                 onChangeText={setSearchText}
                 autoFocus
                 returnKeyType="search"
                 onSubmitEditing={handleManualEntry}
               />
-              {isLoading && <ActivityIndicator size="small" color="#64748b" />}
+              {isLoading && <ActivityIndicator size="small" color={colors.mutedForeground} />}
             </View>
             <TouchableOpacity onPress={() => setIsOpen(false)}>
               <Text className="text-sm font-medium text-primary">Cancel</Text>
@@ -337,9 +339,9 @@ export function AddressAutocomplete({
               activeOpacity={0.7}
             >
               {locationLoading ? (
-                <ActivityIndicator size="small" color="#3b82f6" />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Navigation size={16} color="#3b82f6" />
+                <Navigation size={16} color={colors.primary} />
               )}
               <Text className="text-sm font-medium text-primary">
                 {locationLoading ? 'Getting location...' : 'Use current location'}
