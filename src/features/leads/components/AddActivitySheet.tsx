@@ -22,7 +22,9 @@ import {
   Home,
   Check,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { Button } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 
 import { ActivityType } from './LeadTimeline';
 
@@ -38,13 +40,22 @@ interface AddActivitySheetProps {
   }) => void;
 }
 
-const ACTIVITY_TYPES: { type: ActivityType; label: string; icon: React.ReactNode; color: string }[] = [
-  { type: 'call', label: 'Phone Call', icon: <Phone size={20} color="#3b82f6" />, color: 'bg-blue-100' },
-  { type: 'email', label: 'Email', icon: <Mail size={20} color="#22c55e" />, color: 'bg-green-100' },
-  { type: 'text', label: 'Text Message', icon: <MessageSquare size={20} color="#8b5cf6" />, color: 'bg-purple-100' },
-  { type: 'meeting', label: 'Meeting', icon: <Calendar size={20} color="#f59e0b" />, color: 'bg-amber-100' },
-  { type: 'note', label: 'Note', icon: <FileText size={20} color="#6b7280" />, color: 'bg-gray-100' },
-  { type: 'property_shown', label: 'Property Shown', icon: <Home size={20} color="#06b6d4" />, color: 'bg-cyan-100' },
+// Activity types configuration - icons will be colored dynamically
+interface ActivityTypeConfig {
+  type: ActivityType;
+  label: string;
+  iconComponent: typeof Phone;
+  colorKey: 'info' | 'success' | 'primary' | 'warning' | 'mutedForeground';
+  bgClass: string;
+}
+
+const ACTIVITY_TYPE_CONFIG: ActivityTypeConfig[] = [
+  { type: 'call', label: 'Phone Call', iconComponent: Phone, colorKey: 'info', bgClass: 'bg-info/20' },
+  { type: 'email', label: 'Email', iconComponent: Mail, colorKey: 'success', bgClass: 'bg-success/20' },
+  { type: 'text', label: 'Text Message', iconComponent: MessageSquare, colorKey: 'primary', bgClass: 'bg-primary/20' },
+  { type: 'meeting', label: 'Meeting', iconComponent: Calendar, colorKey: 'warning', bgClass: 'bg-warning/20' },
+  { type: 'note', label: 'Note', iconComponent: FileText, colorKey: 'mutedForeground', bgClass: 'bg-muted' },
+  { type: 'property_shown', label: 'Property Shown', iconComponent: Home, colorKey: 'info', bgClass: 'bg-info/20' },
 ];
 
 const DURATION_OPTIONS = ['5 min', '10 min', '15 min', '30 min', '45 min', '1 hour', '2+ hours'];
@@ -64,6 +75,7 @@ export function AddActivitySheet({
   onClose,
   onSave,
 }: AddActivitySheetProps) {
+  const colors = useThemeColors();
   const [selectedType, setSelectedType] = useState<ActivityType>('call');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState<string | null>(null);
@@ -108,7 +120,7 @@ export function AddActivitySheet({
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
-      <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
+      <ThemedSafeAreaView className="flex-1" edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1"
@@ -116,21 +128,19 @@ export function AddActivitySheet({
           {/* Header */}
           <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
             <TouchableOpacity onPress={handleClose} className="p-1">
-              <X size={24} color="#6b7280" />
+              <X size={24} color={colors.mutedForeground} />
             </TouchableOpacity>
             <View className="flex-1 items-center">
               <Text className="text-lg font-semibold text-foreground">Log Activity</Text>
               <Text className="text-sm text-muted-foreground">{leadName}</Text>
             </View>
-            <TouchableOpacity
+            <Button
               onPress={handleSave}
               disabled={!description.trim()}
-              className={`px-4 py-2 rounded-lg ${description.trim() ? 'bg-primary' : 'bg-muted'}`}
+              size="sm"
             >
-              <Text className={`font-medium ${description.trim() ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
-                Save
-              </Text>
-            </TouchableOpacity>
+              Save
+            </Button>
           </View>
 
           <ScrollView className="flex-1 px-4 pt-4">
@@ -140,33 +150,37 @@ export function AddActivitySheet({
                 Activity Type
               </Text>
               <View className="flex-row flex-wrap gap-2">
-                {ACTIVITY_TYPES.map((activity) => (
-                  <TouchableOpacity
-                    key={activity.type}
-                    className={`flex-row items-center px-4 py-3 rounded-lg ${
-                      selectedType === activity.type
-                        ? 'bg-primary/10 border border-primary'
-                        : 'bg-muted'
-                    }`}
-                    onPress={() => setSelectedType(activity.type)}
-                  >
-                    <View className={`${activity.color} p-1.5 rounded-full mr-2`}>
-                      {activity.icon}
-                    </View>
-                    <Text
-                      className={`text-sm ${
+                {ACTIVITY_TYPE_CONFIG.map((activity) => {
+                  const IconComponent = activity.iconComponent;
+                  const iconColor = colors[activity.colorKey];
+                  return (
+                    <TouchableOpacity
+                      key={activity.type}
+                      className={`flex-row items-center px-4 py-3 rounded-lg ${
                         selectedType === activity.type
-                          ? 'text-primary font-medium'
-                          : 'text-foreground'
+                          ? 'bg-primary/10 border border-primary'
+                          : 'bg-muted'
                       }`}
+                      onPress={() => setSelectedType(activity.type)}
                     >
-                      {activity.label}
-                    </Text>
-                    {selectedType === activity.type && (
-                      <Check size={16} color="#3b82f6" className="ml-2" />
-                    )}
-                  </TouchableOpacity>
-                ))}
+                      <View className={`${activity.bgClass} p-1.5 rounded-full mr-2`}>
+                        <IconComponent size={20} color={iconColor} />
+                      </View>
+                      <Text
+                        className={`text-sm ${
+                          selectedType === activity.type
+                            ? 'text-primary font-medium'
+                            : 'text-foreground'
+                        }`}
+                      >
+                        {activity.label}
+                      </Text>
+                      {selectedType === activity.type && (
+                        <Check size={16} color={colors.primary} className="ml-2" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
 
@@ -178,7 +192,7 @@ export function AddActivitySheet({
               <TextInput
                 className="bg-muted rounded-lg px-4 py-3 text-foreground min-h-[100px]"
                 placeholder="What happened? Add details about the interaction..."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={description}
                 onChangeText={setDescription}
                 multiline
@@ -256,7 +270,7 @@ export function AddActivitySheet({
             <View className="h-8" />
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </ThemedSafeAreaView>
     </Modal>
   );
 }

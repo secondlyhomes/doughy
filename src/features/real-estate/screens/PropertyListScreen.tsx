@@ -2,10 +2,12 @@
 // Main screen for displaying the list of properties
 
 import React, { useCallback, useState } from 'react';
-import { View, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { Plus } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyFiltersSheet } from '../components/PropertyFiltersSheet';
 import { PropertySortSheet } from '../components/PropertySortSheet';
@@ -18,6 +20,7 @@ import { usePropertyListSearch } from '../hooks/usePropertyListSearch';
 
 export function PropertyListScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { properties, isLoading, error, refetch } = useProperties();
   const {
     filters,
@@ -67,7 +70,10 @@ export function PropertyListScreen() {
   ), [viewMode]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      {/* Header */}
+      <ScreenHeader title="Properties" subtitle="Manage your properties" />
+
       <FlatList
         data={filteredProperties}
         renderItem={renderPropertyItem}
@@ -106,7 +112,7 @@ export function PropertyListScreen() {
           />
         }
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor="#6366f1" />
+          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
         }
         showsVerticalScrollIndicator={false}
         initialNumToRender={10}
@@ -119,14 +125,14 @@ export function PropertyListScreen() {
         onPress={handleAddProperty}
         className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
         style={{
-          shadowColor: '#6366f1',
+          shadowColor: colors.primary,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,
           elevation: 8,
         }}
       >
-        <Plus size={28} color="white" />
+        <Plus size={28} color={colors.primaryForeground} />
       </TouchableOpacity>
 
       <PropertyFiltersSheet
@@ -143,6 +149,6 @@ export function PropertyListScreen() {
         sortBy={sortBy}
         onSortChange={(newSort: SortOption) => setSortBy(newSort)}
       />
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

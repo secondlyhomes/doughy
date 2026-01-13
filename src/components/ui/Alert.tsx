@@ -10,9 +10,9 @@ const alertVariants = cva('relative w-full rounded-lg border p-4', {
     variant: {
       default: 'bg-background border-border',
       destructive: 'bg-destructive/10 border-destructive/50',
-      success: 'bg-green-50 border-green-200',
-      warning: 'bg-yellow-50 border-yellow-200',
-      info: 'bg-blue-50 border-blue-200',
+      success: 'bg-success/10 border-success/50',
+      warning: 'bg-warning/10 border-warning/50',
+      info: 'bg-info/10 border-info/50',
     },
   },
   defaultVariants: {
@@ -25,9 +25,9 @@ const alertTextVariants = cva('', {
     variant: {
       default: 'text-foreground',
       destructive: 'text-destructive',
-      success: 'text-green-800',
-      warning: 'text-yellow-800',
-      info: 'text-blue-800',
+      success: 'text-success-foreground',
+      warning: 'text-warning-foreground',
+      info: 'text-info-foreground',
     },
   },
   defaultVariants: {

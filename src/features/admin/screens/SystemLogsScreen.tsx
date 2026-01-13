@@ -8,7 +8,6 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -20,11 +19,14 @@ import {
   Bug,
   ChevronDown,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
 
 export function SystemLogsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -80,26 +82,26 @@ export function SystemLogsScreen() {
   const getLevelIcon = (level: LogLevel) => {
     switch (level) {
       case 'error':
-        return <AlertCircle size={16} color="#ef4444" />;
+        return <AlertCircle size={16} color={colors.destructive} />;
       case 'warning':
-        return <AlertTriangle size={16} color="#f59e0b" />;
+        return <AlertTriangle size={16} color={colors.warning} />;
       case 'info':
-        return <Info size={16} color="#3b82f6" />;
+        return <Info size={16} color={colors.info} />;
       case 'debug':
-        return <Bug size={16} color="#6b7280" />;
+        return <Bug size={16} color={colors.mutedForeground} />;
     }
   };
 
   const getLevelColor = (level: LogLevel) => {
     switch (level) {
       case 'error':
-        return 'bg-red-50 border-red-200';
+        return 'bg-destructive/10 border-destructive/30';
       case 'warning':
-        return 'bg-amber-50 border-amber-200';
+        return 'bg-warning/10 border-warning/30';
       case 'info':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-info/10 border-info/30';
       case 'debug':
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-muted border-border';
     }
   };
 
@@ -154,7 +156,7 @@ export function SystemLogsScreen() {
           </View>
           <ChevronDown
             size={16}
-            color="#6b7280"
+            color={colors.mutedForeground}
             style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }}
           />
         </View>
@@ -163,22 +165,21 @@ export function SystemLogsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          System Logs
-        </Text>
-        <TouchableOpacity
-          className="p-2"
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Filter size={20} color={showFilters ? '#3b82f6' : '#6b7280'} />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title="System Logs"
+        backButton
+        bordered
+        rightAction={
+          <TouchableOpacity
+            className="p-2"
+            onPress={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={20} color={showFilters ? colors.info : colors.mutedForeground} />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Filters */}
       {showFilters && (
@@ -196,25 +197,25 @@ export function SystemLogsScreen() {
               label="Error"
               active={filters.level === 'error'}
               onPress={() => handleFilterChange('error')}
-              color="#ef4444"
+              color={colors.destructive}
             />
             <FilterPill
               label="Warning"
               active={filters.level === 'warning'}
               onPress={() => handleFilterChange('warning')}
-              color="#f59e0b"
+              color={colors.warning}
             />
             <FilterPill
               label="Info"
               active={filters.level === 'info'}
               onPress={() => handleFilterChange('info')}
-              color="#3b82f6"
+              color={colors.info}
             />
             <FilterPill
               label="Debug"
               active={filters.level === 'debug'}
               onPress={() => handleFilterChange('debug')}
-              color="#6b7280"
+              color={colors.mutedForeground}
             />
           </View>
         </View>
@@ -232,9 +233,7 @@ export function SystemLogsScreen() {
 
       {/* Logs List */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
+        <LoadingSpinner fullScreen />
       ) : (
         <FlatList
           data={logs}
@@ -248,13 +247,13 @@ export function SystemLogsScreen() {
           contentContainerStyle={{ paddingVertical: 8 }}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-12">
-              <Info size={48} color="#9ca3af" />
+              <Info size={48} color={colors.mutedForeground} />
               <Text className="text-muted-foreground mt-4">No logs found</Text>
             </View>
           }
         />
       )}
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }
 

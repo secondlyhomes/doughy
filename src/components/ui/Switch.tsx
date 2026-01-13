@@ -32,7 +32,7 @@ export function Switch({
           false: colors.input,
           true: colors.primary,
         }}
-        thumbColor="#ffffff"
+        thumbColor={colors.background}
         ios_backgroundColor={colors.input}
         accessibilityRole="switch"
         accessibilityState={{ checked, disabled }}

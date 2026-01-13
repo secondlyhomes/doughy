@@ -18,6 +18,7 @@ import {
   MessageCircle,
   FileText,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface FABAction {
   icon: React.ReactNode;
@@ -33,8 +34,10 @@ interface FloatingActionButtonProps {
 
 export function FloatingActionButton({
   actions,
-  mainColor = '#3b82f6',
+  mainColor,
 }: FloatingActionButtonProps) {
+  const colors = useThemeColors();
+  const fabColor = mainColor ?? colors.primary;
   const [isOpen, setIsOpen] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
   const rotateAnimation = useRef(new Animated.Value(0)).current;
@@ -84,7 +87,7 @@ export function FloatingActionButton({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - using black for overlay is standard UX */}
       {isOpen && (
         <Animated.View
           style={[
@@ -136,7 +139,7 @@ export function FloatingActionButton({
             >
               <View className="flex-row items-center">
                 {/* Label */}
-                <View className="bg-card rounded-lg px-3 py-2 mr-3 shadow-sm">
+                <View className="rounded-lg px-3 py-2 mr-3 shadow-sm" style={{ backgroundColor: colors.card }}>
                   <Text className="text-foreground text-sm font-medium">
                     {action.label}
                   </Text>
@@ -146,7 +149,7 @@ export function FloatingActionButton({
                 <TouchableOpacity
                   className="w-12 h-12 rounded-full items-center justify-center shadow-lg"
                   style={{
-                    backgroundColor: action.color || '#6b7280',
+                    backgroundColor: action.color || colors.mutedForeground,
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.25,
@@ -170,7 +173,7 @@ export function FloatingActionButton({
           <TouchableOpacity
             className="w-14 h-14 rounded-full items-center justify-center shadow-lg"
             style={{
-              backgroundColor: mainColor,
+              backgroundColor: fabColor,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.25,
@@ -184,9 +187,9 @@ export function FloatingActionButton({
             accessibilityState={{ expanded: isOpen }}
           >
             {isOpen ? (
-              <X size={24} color="white" />
+              <X size={24} color={colors.primaryForeground} />
             ) : (
-              <Plus size={24} color="white" />
+              <Plus size={24} color={colors.primaryForeground} />
             )}
           </TouchableOpacity>
         </Animated.View>
@@ -209,33 +212,35 @@ export function QuickActionFAB({
   onStartChat,
   onAddNote,
 }: QuickActionFABProps) {
+  const colors = useThemeColors();
+
   const actions: FABAction[] = [
     {
-      icon: <Users size={20} color="white" />,
+      icon: <Users size={20} color={colors.primaryForeground} />,
       label: 'Add Lead',
       onPress: onAddLead,
-      color: '#3b82f6',
+      color: colors.info,
     },
     {
-      icon: <Building2 size={20} color="white" />,
+      icon: <Building2 size={20} color={colors.primaryForeground} />,
       label: 'Add Property',
       onPress: onAddProperty,
-      color: '#22c55e',
+      color: colors.success,
     },
     {
-      icon: <MessageCircle size={20} color="white" />,
+      icon: <MessageCircle size={20} color={colors.primaryForeground} />,
       label: 'Start Chat',
       onPress: onStartChat,
-      color: '#8b5cf6',
+      color: colors.primary,
     },
   ];
 
   if (onAddNote) {
     actions.push({
-      icon: <FileText size={20} color="white" />,
+      icon: <FileText size={20} color={colors.primaryForeground} />,
       label: 'Add Note',
       onPress: onAddNote,
-      color: '#f59e0b',
+      color: colors.warning,
     });
   }
 

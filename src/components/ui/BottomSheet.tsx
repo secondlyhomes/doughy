@@ -1,5 +1,5 @@
 // src/components/ui/BottomSheet.tsx
-// React Native Bottom Sheet component with NativeWind styling
+// React Native Bottom Sheet component with NativeWind styling and glass effects
 import React from 'react';
 import {
   Modal as RNModal,
@@ -11,10 +11,12 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  StyleSheet,
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { GlassBackdrop, GlassView } from './GlassView';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -27,6 +29,10 @@ export interface BottomSheetProps {
   maxHeight?: number | 'auto';
   /** Snap points as percentage strings (e.g., ['50%', '85%']). First value is used for maxHeight. */
   snapPoints?: string[];
+  /** Use glass effect for the sheet content. Default: true */
+  useGlass?: boolean;
+  /** Use glass blur effect for backdrop. Default: true */
+  useGlassBackdrop?: boolean;
 }
 
 export function BottomSheet({
@@ -37,6 +43,8 @@ export function BottomSheet({
   title,
   maxHeight = SCREEN_HEIGHT * 0.7,
   snapPoints,
+  useGlass = true,
+  useGlassBackdrop = true,
 }: BottomSheetProps) {
   const colors = useThemeColors();
   // Calculate maxHeight from snapPoints if provided
@@ -50,6 +58,111 @@ export function BottomSheet({
     }
     return maxHeight;
   }, [snapPoints, maxHeight]);
+
+  const sheetContent = (
+    <>
+      {/* Handle Bar */}
+      <View style={bottomSheetStyles.handleContainer}>
+        <View style={[bottomSheetStyles.handle, { backgroundColor: colors.mutedForeground }]} />
+      </View>
+
+      {/* Header */}
+      {title && (
+        <View
+          style={[bottomSheetStyles.header, { borderBottomColor: colors.border }]}
+        >
+          <Text style={{ fontSize: 18, fontWeight: '600', color: colors.foreground }}>
+            {title}
+          </Text>
+          <TouchableOpacity
+            onPress={onClose}
+            style={bottomSheetStyles.closeButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
+            <X size={20} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Content */}
+      <ScrollView
+        style={bottomSheetStyles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        {children}
+      </ScrollView>
+    </>
+  );
+
+  const renderSheet = () => {
+    const sheetStyle = {
+      maxHeight: calculatedMaxHeight === 'auto' ? undefined : calculatedMaxHeight,
+    };
+
+    if (useGlass) {
+      return (
+        <TouchableWithoutFeedback>
+          <GlassView
+            intensity={80}
+            style={[
+              bottomSheetStyles.sheet,
+              sheetStyle,
+              { borderTopColor: colors.border },
+            ]}
+          >
+            {sheetContent}
+          </GlassView>
+        </TouchableWithoutFeedback>
+      );
+    }
+
+    return (
+      <TouchableWithoutFeedback>
+        <View
+          style={[
+            bottomSheetStyles.sheet,
+            sheetStyle,
+            {
+              backgroundColor: colors.background,
+              borderTopColor: colors.border,
+            },
+          ]}
+        >
+          {sheetContent}
+        </View>
+      </TouchableWithoutFeedback>
+    );
+  };
+
+  const renderBackdrop = () => {
+    const content = (
+      <TouchableWithoutFeedback
+        onPress={closeOnBackdropPress ? onClose : undefined}
+      >
+        <View style={bottomSheetStyles.backdropContent}>
+          {renderSheet()}
+        </View>
+      </TouchableWithoutFeedback>
+    );
+
+    if (useGlassBackdrop) {
+      return (
+        <GlassBackdrop intensity={20} style={bottomSheetStyles.backdrop}>
+          {content}
+        </GlassBackdrop>
+      );
+    }
+
+    return (
+      <View style={[bottomSheetStyles.backdrop, bottomSheetStyles.solidBackdrop]}>
+        {content}
+      </View>
+    );
+  };
+
   return (
     <RNModal
       visible={visible}
@@ -59,56 +172,62 @@ export function BottomSheet({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        style={bottomSheetStyles.container}
       >
-        <TouchableWithoutFeedback
-          onPress={closeOnBackdropPress ? onClose : undefined}
-        >
-          <View className="flex-1 justify-end bg-black/50">
-            <TouchableWithoutFeedback>
-              <View
-                className="bg-background rounded-t-3xl border-t border-border"
-                style={{ maxHeight: calculatedMaxHeight === 'auto' ? undefined : calculatedMaxHeight }}
-              >
-                {/* Handle Bar */}
-                <View className="items-center pt-3 pb-2">
-                  <View className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-                </View>
-
-                {/* Header */}
-                {title && (
-                  <View className="flex-row items-center justify-between px-4 pb-4 border-b border-border">
-                    <Text className="text-lg font-semibold text-foreground">
-                      {title}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={onClose}
-                      className="p-2 -mr-2 rounded-full"
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      accessibilityRole="button"
-                      accessibilityLabel="Close"
-                    >
-                      <X size={20} color={colors.mutedForeground} />
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {/* Content */}
-                <ScrollView
-                  className="px-4"
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ paddingBottom: 40 }}
-                >
-                  {children}
-                </ScrollView>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
+        {renderBackdrop()}
       </KeyboardAvoidingView>
     </RNModal>
   );
 }
+
+const bottomSheetStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  backdrop: {
+    flex: 1,
+  },
+  solidBackdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  backdropContent: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    overflow: 'hidden',
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.3,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+  },
+  closeButton: {
+    padding: 8,
+    marginRight: -8,
+    borderRadius: 20,
+  },
+  scrollView: {
+    paddingHorizontal: 16,
+  },
+});
 
 // Bottom Sheet Section component for grouping content
 export interface BottomSheetSectionProps {

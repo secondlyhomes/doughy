@@ -20,6 +20,7 @@ import {
   Home,
   MapPin,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property, PropertyImage } from '../types';
 import { formatCurrency, formatPropertyType, getPropertyTypeBadgeColor } from '../utils/formatters';
 
@@ -42,6 +43,7 @@ export function PropertyHeader({
   onMore,
   isFavorite = false,
 }: PropertyHeaderProps) {
+  const colors = useThemeColors();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = property.images || [];
   const hasImages = images.length > 0;
@@ -112,7 +114,7 @@ export function PropertyHeader({
               <Heart
                 size={24}
                 color="white"
-                fill={isFavorite ? '#ef4444' : 'transparent'}
+                fill={isFavorite ? colors.destructive : 'transparent'}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={onShare} className="bg-black/30 rounded-full p-2">

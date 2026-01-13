@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   CheckCircle,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { formatCurrency, formatNumber, formatPropertyType } from '../utils/formatters';
 import { Step1Data } from './PropertyFormStep1';
 import { Step2Data } from './PropertyFormStep2';
@@ -42,6 +43,7 @@ export function PropertyFormStep5({
   step4Data,
   onChange,
 }: PropertyFormStep5Props) {
+  const colors = useThemeColors();
   // Calculate completeness
   const sections = [
     { name: 'Address', complete: !!(step1Data.address && step1Data.city && step1Data.state && step1Data.zip) },
@@ -77,7 +79,7 @@ Examples:
 - Needs new roof
 - Good school district
 - Cash only deal"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.mutedForeground}
             multiline
             numberOfLines={6}
             textAlignVertical="top"
@@ -110,8 +112,8 @@ Examples:
                 <View key={section.name} className="flex-row items-center">
                   <CheckCircle
                     size={12}
-                    color={section.complete ? '#6366f1' : '#9CA3AF'}
-                    fill={section.complete ? '#6366f1' : 'transparent'}
+                    color={section.complete ? colors.primary : colors.mutedForeground}
+                    fill={section.complete ? colors.primary : 'transparent'}
                   />
                   <Text className={`text-xs ml-1 ${section.complete ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {section.name}

@@ -1,31 +1,47 @@
 // src/components/ui/LoadingSpinner.tsx
 // React Native Loading Spinner component
 import React from 'react';
-import { ActivityIndicator, View, ViewProps } from 'react-native';
+import { ActivityIndicator, View, Text, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
 
 export interface LoadingSpinnerProps extends ViewProps {
+  /** Spinner size */
   size?: 'small' | 'large';
+  /** Custom spinner color (defaults to theme primary) */
   color?: string;
+  /** Optional loading text */
+  text?: string;
+  /** Full screen centered mode */
+  fullScreen?: boolean;
+  /** Container className */
   className?: string;
 }
 
 export function LoadingSpinner({
   size = 'large',
   color,
+  text,
+  fullScreen = false,
   className,
   ...props
 }: LoadingSpinnerProps) {
   const colors = useThemeColors();
   return (
     <View
-      className={cn('items-center justify-center', className)}
-      accessibilityLabel="Loading"
+      className={cn(
+        'items-center justify-center',
+        fullScreen && 'flex-1',
+        className
+      )}
+      accessibilityLabel={text || 'Loading'}
       accessibilityRole="progressbar"
       {...props}
     >
       <ActivityIndicator size={size} color={color ?? colors.primary} />
+      {text && (
+        <Text className="text-muted-foreground mt-2">{text}</Text>
+      )}
     </View>
   );
 }

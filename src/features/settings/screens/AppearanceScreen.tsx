@@ -1,7 +1,7 @@
 // src/features/settings/screens/AppearanceScreen.tsx
 // Theme and appearance settings
 
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Sun, Moon, Smartphone, Check } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-type ThemeMode = 'light' | 'dark' | 'system';
-
-const THEME_STORAGE_KEY = '@doughy_theme';
+import { useTheme, ThemeMode, useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader } from '@/components/ui';
 
 interface ThemeOption {
   value: ThemeMode;
@@ -47,44 +44,25 @@ const themeOptions: ThemeOption[] = [
 
 export function AppearanceScreen() {
   const router = useRouter();
-  const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('system');
+  const colors = useThemeColors();
+  const { mode, setMode } = useTheme();
 
-  // Load saved theme on mount
-  React.useEffect(() => {
-    const loadTheme = async () => {
-      const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      if (saved && ['light', 'dark', 'system'].includes(saved)) {
-        setSelectedTheme(saved as ThemeMode);
-      }
-    };
-    loadTheme();
-  }, []);
-
-  const handleSelectTheme = useCallback(async (theme: ThemeMode) => {
-    setSelectedTheme(theme);
-    await AsyncStorage.setItem(THEME_STORAGE_KEY, theme);
-    // In a real app, this would update the theme context/provider
-  }, []);
+  const handleSelectTheme = (theme: ThemeMode) => {
+    setMode(theme);
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          Appearance
-        </Text>
-      </View>
+      <ScreenHeader title="Appearance" backButton bordered />
 
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-4">
         {/* Theme Selection */}
         <Text className="text-sm font-medium text-muted-foreground mb-3">
           THEME
         </Text>
 
-        <View className="bg-card rounded-lg overflow-hidden">
+        <View className="rounded-lg overflow-hidden" style={{ backgroundColor: colors.card }}>
           {themeOptions.map((option, index) => (
             <TouchableOpacity
               key={option.value}
@@ -102,8 +80,8 @@ export function AppearanceScreen() {
                   {option.description}
                 </Text>
               </View>
-              {selectedTheme === option.value && (
-                <Check size={20} color="#22c55e" />
+              {mode === option.value && (
+                <Check size={20} color={colors.success} />
               )}
             </TouchableOpacity>
           ))}
@@ -115,7 +93,7 @@ export function AppearanceScreen() {
             PREVIEW
           </Text>
 
-          <View className="bg-card rounded-lg p-4">
+          <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row gap-4">
               {/* Light Preview */}
               <View className="flex-1 rounded-lg overflow-hidden border border-border">
@@ -147,6 +125,6 @@ export function AppearanceScreen() {
           Theme changes will apply immediately across the app.
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

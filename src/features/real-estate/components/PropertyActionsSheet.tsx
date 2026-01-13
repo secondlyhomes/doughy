@@ -37,12 +37,12 @@ type ActionView = 'main' | 'share' | 'status';
 
 // Status badge colors
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active: { bg: 'bg-green-500/10', text: 'text-green-600' },
-  Pending: { bg: 'bg-yellow-500/10', text: 'text-yellow-600' },
-  Sold: { bg: 'bg-blue-500/10', text: 'text-blue-600' },
-  Withdrawn: { bg: 'bg-gray-500/10', text: 'text-gray-600' },
-  Expired: { bg: 'bg-red-500/10', text: 'text-red-600' },
-  'Off Market': { bg: 'bg-purple-500/10', text: 'text-purple-600' },
+  Active: { bg: 'bg-success/10', text: 'text-success' },
+  Pending: { bg: 'bg-warning/10', text: 'text-warning' },
+  Sold: { bg: 'bg-info/10', text: 'text-info' },
+  Withdrawn: { bg: 'bg-muted', text: 'text-muted-foreground' },
+  Expired: { bg: 'bg-destructive/10', text: 'text-destructive' },
+  'Off Market': { bg: 'bg-primary/10', text: 'text-primary' },
 };
 
 export function PropertyActionsSheet({

@@ -15,9 +15,12 @@ import {
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
 
 export function LoginScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { signIn, isLoading, devBypassAuth } = useAuth();
 
   // Form state
@@ -63,11 +66,12 @@ export function LoginScreen() {
   const loading = isLoading || isSubmitting;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-background"
-    >
-      <ScrollView
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -85,7 +89,7 @@ export function LoginScreen() {
           {/* Error Message */}
           {error && (
             <View className="flex-row items-center bg-destructive/10 rounded-lg p-4 mb-6">
-              <AlertCircle size={20} color="#ef4444" />
+              <AlertCircle size={20} color={colors.destructive} />
               <Text className="text-destructive ml-2 flex-1">{error}</Text>
             </View>
           )}
@@ -95,12 +99,12 @@ export function LoginScreen() {
             <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Mail size={20} color="#6b7280" />
+                <Mail size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="name@example.com"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -117,12 +121,12 @@ export function LoginScreen() {
             <Text className="text-sm font-medium text-foreground mb-2">Password</Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Lock size={20} color="#6b7280" />
+                <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="Enter your password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -136,9 +140,9 @@ export function LoginScreen() {
                 disabled={loading}
               >
                 {showPassword ? (
-                  <EyeOff size={20} color="#6b7280" />
+                  <EyeOff size={20} color={colors.mutedForeground} />
                 ) : (
-                  <Eye size={20} color="#6b7280" />
+                  <Eye size={20} color={colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -161,7 +165,7 @@ export function LoginScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <Text className="text-primary-foreground font-semibold text-base">
                 Sign In
@@ -183,22 +187,40 @@ export function LoginScreen() {
               <Text className="text-xs text-muted-foreground text-center mb-3">
                 Development Mode
               </Text>
-              <TouchableOpacity
-                className="bg-green-600 rounded-lg py-3 items-center mb-3"
-                onPress={devBypassAuth}
-                disabled={loading}
-              >
-                <Text className="text-white font-semibold text-sm">
-                  Skip Login (Dev Mode)
-                </Text>
-              </TouchableOpacity>
-              <Text className="text-xs text-muted-foreground text-center">
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  className="flex-1 bg-primary rounded-lg py-3 items-center"
+                  onPress={async () => {
+                    await devBypassAuth();
+                    router.replace('/(tabs)');
+                  }}
+                  disabled={loading}
+                >
+                  <Text className="text-primary-foreground font-semibold text-sm">
+                    User Console
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 bg-warning rounded-lg py-3 items-center"
+                  onPress={async () => {
+                    await devBypassAuth();
+                    router.replace('/(admin)');
+                  }}
+                  disabled={loading}
+                >
+                  <Text className="text-white font-semibold text-sm">
+                    Admin Console
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text className="text-xs text-muted-foreground text-center mt-3">
                 Bypasses auth with mock admin user
               </Text>
             </View>
           )}
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ThemedSafeAreaView>
   );
 }

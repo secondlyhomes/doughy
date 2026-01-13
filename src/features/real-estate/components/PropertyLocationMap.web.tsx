@@ -8,6 +8,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MapPin, Navigation, ExternalLink, AlertCircle } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface PropertyLocationMapProps {
   address: string;
@@ -28,6 +29,7 @@ export function PropertyLocationMap({
   height = 200,
   showDirectionsButton = true,
 }: PropertyLocationMapProps) {
+  const colors = useThemeColors();
   // Check if we have valid coordinates
   const hasValidCoords = useMemo(() => {
     if (!geoPoint) return false;
@@ -106,7 +108,7 @@ export function PropertyLocationMap({
               className="flex-row items-center bg-primary px-4 py-2 rounded-lg mt-4"
               activeOpacity={0.7}
             >
-              <Navigation size={16} color="white" />
+              <Navigation size={16} color={colors.primaryForeground} />
               <Text className="text-primary-foreground font-medium ml-2">
                 Get Directions
               </Text>
@@ -164,7 +166,7 @@ export function PropertyLocationMap({
               className="bg-white/20 px-3 py-2 rounded-lg flex-row items-center"
               activeOpacity={0.7}
             >
-              <Navigation size={14} color="white" />
+              <Navigation size={14} color={colors.primaryForeground} />
               <Text className="text-white text-xs font-medium ml-1">
                 Directions
               </Text>
@@ -179,8 +181,8 @@ export function PropertyLocationMap({
         className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded-md flex-row items-center"
         activeOpacity={0.7}
       >
-        <ExternalLink size={12} className="text-gray-600" />
-        <Text className="text-xs text-gray-600 ml-1">Open in Maps</Text>
+        <ExternalLink size={12} className="text-muted-foreground" />
+        <Text className="text-xs text-muted-foreground ml-1">Open in Maps</Text>
       </TouchableOpacity>
     </View>
   );

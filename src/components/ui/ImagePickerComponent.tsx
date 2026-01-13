@@ -235,8 +235,8 @@ export function ImagePickerComponent({
       {/* Permission error */}
       {permissionError && (
         <View className="mt-2 flex-row items-center gap-1" accessibilityRole="alert">
-          <AlertCircle size={14} color="#f59e0b" />
-          <Text className="text-sm text-amber-600">{permissionError}</Text>
+          <AlertCircle size={14} color={colors.warning} />
+          <Text className="text-sm text-warning">{permissionError}</Text>
         </View>
       )}
 

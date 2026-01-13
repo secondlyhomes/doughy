@@ -8,9 +8,10 @@
  */
 
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Linking, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Linking, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import { MapPin, Navigation, ExternalLink, AlertCircle } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface PropertyLocationMapProps {
   address: string;
@@ -31,6 +32,7 @@ export function PropertyLocationMap({
   height = 200,
   showDirectionsButton = true,
 }: PropertyLocationMapProps) {
+  const colors = useThemeColors();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,7 +142,7 @@ export function PropertyLocationMap({
               className="flex-row items-center bg-primary px-4 py-2 rounded-lg mt-4"
               activeOpacity={0.7}
             >
-              <Navigation size={16} color="white" />
+              <Navigation size={16} color={colors.primaryForeground} />
               <Text className="text-primary-foreground font-medium ml-2">
                 Get Directions
               </Text>

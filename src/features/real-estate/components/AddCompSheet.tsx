@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { X, MapPin, Home, DollarSign, Calendar, Info } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { PropertyComp } from '../types';
 
@@ -76,6 +77,7 @@ export function AddCompSheet({
   isLoading = false,
   editComp,
 }: AddCompSheetProps) {
+  const colors = useThemeColors();
   const [formData, setFormData] = useState<FormData>(() => buildFormDataFromComp(editComp));
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -167,7 +169,7 @@ export function AddCompSheet({
           value={formData[field]}
           onChangeText={(value) => updateField(field, value)}
           placeholder={options.placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.mutedForeground}
           keyboardType={options.keyboardType || 'default'}
           className="flex-1 py-3 text-foreground"
         />
@@ -319,7 +321,7 @@ export function AddCompSheet({
             className="bg-primary py-3.5 rounded-xl flex-row items-center justify-center"
           >
             {isLoading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <Text className="text-primary-foreground font-semibold">
                 {editComp ? 'Save Changes' : 'Add Comparable'}

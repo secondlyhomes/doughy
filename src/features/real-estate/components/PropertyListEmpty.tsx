@@ -2,8 +2,10 @@
 // Empty state components for property list
 
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text } from 'react-native';
 import { Search, Plus } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Button, LoadingSpinner } from '@/components/ui';
 
 interface PropertyListEmptyProps {
   isLoading: boolean;
@@ -22,12 +24,11 @@ export function PropertyListEmpty({
   onAddProperty,
   onClearFilters,
 }: PropertyListEmptyProps) {
+  const colors = useThemeColors();
+
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center py-20">
-        <ActivityIndicator size="large" className="text-primary" />
-        <Text className="text-muted-foreground mt-4">Loading properties...</Text>
-      </View>
+      <LoadingSpinner fullScreen text="Loading properties..." className="py-20" />
     );
   }
 
@@ -35,9 +36,7 @@ export function PropertyListEmpty({
     return (
       <View className="flex-1 items-center justify-center py-20 px-4">
         <Text className="text-destructive text-center mb-4">Error loading properties</Text>
-        <TouchableOpacity onPress={onRetry} className="bg-primary px-4 py-2 rounded-lg">
-          <Text className="text-primary-foreground font-medium">Try Again</Text>
-        </TouchableOpacity>
+        <Button onPress={onRetry}>Try Again</Button>
       </View>
     );
   }
@@ -50,9 +49,7 @@ export function PropertyListEmpty({
         <Text className="text-muted-foreground text-center mb-6 px-8">
           Try adjusting your search or filters to find what you're looking for.
         </Text>
-        <TouchableOpacity onPress={onClearFilters} className="bg-muted px-4 py-2 rounded-lg">
-          <Text className="text-foreground font-medium">Clear All Filters</Text>
-        </TouchableOpacity>
+        <Button variant="secondary" onPress={onClearFilters}>Clear All Filters</Button>
       </View>
     );
   }
@@ -63,13 +60,10 @@ export function PropertyListEmpty({
       <Text className="text-muted-foreground text-center mb-6 px-8">
         Add your first property to get started tracking your real estate investments.
       </Text>
-      <TouchableOpacity
-        onPress={onAddProperty}
-        className="bg-primary px-6 py-3 rounded-lg flex-row items-center"
-      >
-        <Plus size={20} color="white" />
+      <Button onPress={onAddProperty} size="lg">
+        <Plus size={20} color={colors.primaryForeground} />
         <Text className="text-primary-foreground font-semibold ml-2">Add Property</Text>
-      </TouchableOpacity>
+      </Button>
     </View>
   );
 }

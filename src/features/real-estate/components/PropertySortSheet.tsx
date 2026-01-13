@@ -4,6 +4,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Check } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SortOption, SORT_OPTIONS } from '../hooks/usePropertyFilters';
 
@@ -20,6 +21,7 @@ export function PropertySortSheet({
   sortBy,
   onSortChange,
 }: PropertySortSheetProps) {
+  const colors = useThemeColors();
   const handleSortChange = useCallback((option: SortOption) => {
     onSortChange(option);
     onClose();
@@ -51,7 +53,7 @@ export function PropertySortSheet({
               {option.label}
             </Text>
             {sortBy === option.value && (
-              <Check size={20} color="#6366f1" />
+              <Check size={20} color={colors.primary} />
             )}
           </TouchableOpacity>
         ))}

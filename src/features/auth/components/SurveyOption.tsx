@@ -4,6 +4,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface SurveyOptionProps {
   label: string;
@@ -18,6 +19,7 @@ export function SurveyOption({
   onPress,
   disabled = false,
 }: SurveyOptionProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={`flex-row items-center p-4 rounded-lg border mb-3 ${
@@ -34,7 +36,7 @@ export function SurveyOption({
           selected ? 'border-primary bg-primary' : 'border-muted-foreground'
         }`}
       >
-        {selected && <Check size={14} color="#ffffff" />}
+        {selected && <Check size={14} color={colors.primaryForeground} />}
       </View>
       <Text
         className={`flex-1 text-base ${

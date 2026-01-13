@@ -7,20 +7,14 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  TextInput,
   RefreshControl,
-  ActivityIndicator,
-  Modal,
 } from 'react-native';
+import { ThemedSafeAreaView } from '@/components';
+import { SearchBar, ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {
-  Search,
-  Plus,
-  Filter,
-  X,
-  SlidersHorizontal,
-} from 'lucide-react-native';
+import { Plus, SlidersHorizontal } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 import { Lead, LeadStatus } from '../types';
 import { useLeads } from '../hooks/useLeads';
@@ -45,6 +39,7 @@ const defaultFilters: LeadFilters = {
 
 export function LeadsListScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
@@ -126,38 +121,27 @@ export function LeadsListScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      {/* Header */}
+      <ScreenHeader title="Leads" subtitle="Track your prospects" />
+
       {/* Search Bar */}
       <View className="px-4 pt-2 pb-2">
         <View className="flex-row items-center gap-2">
-          <View className="flex-1 flex-row items-center bg-muted rounded-lg px-3 py-2.5">
-            <Search size={18} color="#6b7280" />
-            <TextInput
-              className="flex-1 ml-2 text-foreground text-base"
-              placeholder="Search leads..."
-              placeholderTextColor="#9ca3af"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery('')}
-                accessibilityLabel="Clear search"
-                accessibilityRole="button"
-              >
-                <X size={18} color="#6b7280" />
-              </TouchableOpacity>
-            )}
-          </View>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search leads..."
+            size="md"
+            className="flex-1"
+          />
           <TouchableOpacity
             className="bg-muted p-2.5 rounded-lg relative"
             onPress={() => setShowFiltersSheet(true)}
             accessibilityLabel={`Open filters${activeFiltersCount > 0 ? `, ${activeFiltersCount} active` : ''}`}
             accessibilityRole="button"
           >
-            <SlidersHorizontal size={20} color="#6b7280" />
+            <SlidersHorizontal size={20} color={colors.mutedForeground} />
             {activeFiltersCount > 0 && (
               <View className="absolute -top-1 -right-1 bg-primary w-5 h-5 rounded-full items-center justify-center">
                 <Text className="text-primary-foreground text-xs font-bold">
@@ -211,9 +195,7 @@ export function LeadsListScreen() {
 
       {/* Leads List */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
+        <LoadingSpinner fullScreen />
       ) : (
         <FlatList
           data={filteredLeads}
@@ -225,7 +207,7 @@ export function LeadsListScreen() {
             <RefreshControl
               refreshing={isLoading}
               onRefresh={refetch}
-              tintColor="#3b82f6"
+              tintColor={colors.info}
             />
           }
           ListEmptyComponent={
@@ -260,7 +242,7 @@ export function LeadsListScreen() {
         accessibilityLabel="Add new lead"
         accessibilityRole="button"
       >
-        <Plus size={24} color="white" />
+        <Plus size={24} color={colors.primaryForeground} />
       </TouchableOpacity>
 
       {/* Filters Sheet */}
@@ -271,7 +253,7 @@ export function LeadsListScreen() {
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
       />
-    </View>
+    </ThemedSafeAreaView>
     </GestureHandlerRootView>
   );
 }

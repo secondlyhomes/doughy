@@ -2,8 +2,10 @@
 // Financing scenarios tab content for property detail
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { CreditCard, Plus, Calculator, RefreshCw } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Button, LoadingSpinner } from '@/components/ui';
 import { Property, FinancingScenario } from '../types';
 import { useFinancingScenarios, useFinancingScenarioMutations, LoanType } from '../hooks/useFinancingScenarios';
 import { AddFinancingSheet } from './AddFinancingSheet';
@@ -15,6 +17,7 @@ interface PropertyFinancingTabProps {
 }
 
 export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
+  const colors = useThemeColors();
   const { scenarios, isLoading, error, refetch } = useFinancingScenarios({ propertyId: property.id });
   const { createScenario, updateScenario, deleteScenario, isLoading: isMutating } =
     useFinancingScenarioMutations();
@@ -95,9 +98,8 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center py-12">
-        <ActivityIndicator size="large" className="text-primary" />
-        <Text className="text-muted-foreground mt-2">Loading scenarios...</Text>
+      <View className="flex-1 py-12">
+        <LoadingSpinner fullScreen text="Loading scenarios..." />
       </View>
     );
   }
@@ -106,10 +108,10 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
     return (
       <View className="flex-1 items-center justify-center py-12">
         <Text className="text-destructive mb-4">Failed to load scenarios</Text>
-        <TouchableOpacity onPress={refetch} className="flex-row items-center bg-muted px-4 py-2 rounded-lg">
-          <RefreshCw size={16} className="text-foreground" />
-          <Text className="text-foreground font-medium ml-2">Try Again</Text>
-        </TouchableOpacity>
+        <Button variant="secondary" onPress={refetch}>
+          <RefreshCw size={16} color={colors.foreground} />
+          Try Again
+        </Button>
       </View>
     );
   }
@@ -127,10 +129,10 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
               {scenarios.length} scenario{scenarios.length !== 1 ? 's' : ''}
             </Text>
           </View>
-          <TouchableOpacity onPress={() => setShowAddSheet(true)} className="flex-row items-center bg-primary px-3 py-2 rounded-lg">
-            <Plus size={16} color="white" />
-            <Text className="text-primary-foreground font-medium ml-1">Add</Text>
-          </TouchableOpacity>
+          <Button onPress={() => setShowAddSheet(true)} size="sm">
+            <Plus size={16} color={colors.primaryForeground} />
+            Add
+          </Button>
         </View>
 
         {/* Comparison Panel */}
@@ -146,10 +148,10 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
             <Text className="text-muted-foreground text-center px-8 mb-4">
               Create financing scenarios to compare different loan options and calculate monthly payments.
             </Text>
-            <TouchableOpacity onPress={() => setShowAddSheet(true)} className="flex-row items-center bg-muted px-4 py-2 rounded-lg">
-              <Plus size={16} className="text-foreground" />
-              <Text className="text-foreground font-medium ml-2">Create First Scenario</Text>
-            </TouchableOpacity>
+            <Button variant="secondary" onPress={() => setShowAddSheet(true)}>
+              <Plus size={16} color={colors.foreground} />
+              Create First Scenario
+            </Button>
           </View>
         )}
 

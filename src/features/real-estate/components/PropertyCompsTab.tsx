@@ -2,8 +2,10 @@
 // Comparable properties tab content for property detail
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { MapPin, Plus, RefreshCw } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Button, LoadingSpinner } from '@/components/ui';
 import { Property, PropertyComp } from '../types';
 import { useComps, useCompMutations } from '../hooks/useComps';
 import { usePropertyMutations } from '../hooks/useProperties';
@@ -17,6 +19,7 @@ interface PropertyCompsTabProps {
 }
 
 export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTabProps) {
+  const colors = useThemeColors();
   const { comps, isLoading, error, refetch } = useComps({ propertyId: property.id });
   const { createComp, updateComp, deleteComp, isLoading: isMutating } = useCompMutations();
   const { updateProperty } = usePropertyMutations();
@@ -95,9 +98,8 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center py-12">
-        <ActivityIndicator size="large" className="text-primary" />
-        <Text className="text-muted-foreground mt-2">Loading comparables...</Text>
+      <View className="flex-1 py-12">
+        <LoadingSpinner fullScreen text="Loading comparables..." />
       </View>
     );
   }
@@ -106,13 +108,10 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
     return (
       <View className="flex-1 items-center justify-center py-12">
         <Text className="text-destructive mb-4">Failed to load comparables</Text>
-        <TouchableOpacity
-          onPress={refetch}
-          className="flex-row items-center bg-muted px-4 py-2 rounded-lg"
-        >
-          <RefreshCw size={16} className="text-foreground" />
-          <Text className="text-foreground font-medium ml-2">Try Again</Text>
-        </TouchableOpacity>
+        <Button variant="secondary" onPress={refetch}>
+          <RefreshCw size={16} color={colors.foreground} />
+          Try Again
+        </Button>
       </View>
     );
   }
@@ -136,7 +135,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
             onPress={() => setShowAddSheet(true)}
             className="flex-row items-center bg-primary px-3 py-2 rounded-lg"
           >
-            <Plus size={16} color="white" />
+            <Plus size={16} color={colors.primaryForeground} />
             <Text className="text-primary-foreground font-medium ml-1">Add Comp</Text>
           </TouchableOpacity>
         </View>

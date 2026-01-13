@@ -23,6 +23,59 @@ interface UseFinancingScenariosReturn {
   refetch: () => Promise<void>;
 }
 
+// Default scenario details for fallback
+const DEFAULT_SCENARIO_DETAILS: ScenarioDetails = {
+  purchasePrice: null,
+  loanAmount: null,
+  interestRate: null,
+};
+
+/**
+ * Validates that the input is a valid ScenarioDetails object.
+ * Returns the validated object or a default if invalid.
+ */
+function validateScenarioDetails(input: unknown): ScenarioDetails {
+  if (typeof input !== 'object' || input === null) {
+    return { ...DEFAULT_SCENARIO_DETAILS };
+  }
+
+  const obj = input as Record<string, unknown>;
+
+  // Helper to safely extract nullable number
+  const getNumber = (key: string): number | null => {
+    const val = obj[key];
+    if (val === null || val === undefined) return null;
+    if (typeof val === 'number' && !Number.isNaN(val)) return val;
+    return null;
+  };
+
+  return {
+    purchasePrice: getNumber('purchasePrice'),
+    loanAmount: getNumber('loanAmount'),
+    interestRate: getNumber('interestRate'),
+    downPayment: getNumber('downPayment'),
+    loanTerm: getNumber('loanTerm'),
+    monthlyPayment: getNumber('monthlyPayment'),
+    closingCosts: getNumber('closingCosts'),
+    currentMortgageBalance: getNumber('currentMortgageBalance'),
+    currentInterestRate: getNumber('currentInterestRate'),
+    currentMonthlyPayment: getNumber('currentMonthlyPayment'),
+    term: getNumber('term'),
+    sellerIncentive: getNumber('sellerIncentive'),
+    remainingYears: getNumber('remainingYears'),
+    balloonPayment: getNumber('balloonPayment'),
+    monthlyRent: getNumber('monthlyRent'),
+    repairs: getNumber('repairs'),
+    holdingCosts: getNumber('holdingCosts'),
+    miscCosts: getNumber('miscCosts'),
+    investorDiscount: getNumber('investorDiscount'),
+    wholesaleFee: getNumber('wholesaleFee'),
+    optionPrice: getNumber('optionPrice'),
+    optionFee: getNumber('optionFee'),
+    leaseTerm: getNumber('leaseTerm'),
+  };
+}
+
 // Loan type options
 export const LOAN_TYPES = [
   { id: 'conventional', label: 'Conventional' },
@@ -246,31 +299,8 @@ export function useFinancingScenarioMutations() {
 
       if (fetchError) throw fetchError;
 
-      // ============================================================================
-      // TODO: ZONE C CODE REVIEW - UNSAFE JSON PARSING
-      // ============================================================================
-      // This type assertion doesn't validate the actual structure of input_json.
-      // If the JSON has an unexpected shape, subsequent code may fail silently.
-      //
-      // Suggested fix: Use zod or io-ts for runtime validation:
-      //
-      //   import { z } from 'zod';
-      //   const ScenarioDetailsSchema = z.object({
-      //     purchasePrice: z.number().nullable(),
-      //     loanAmount: z.number().nullable(),
-      //     interestRate: z.number().nullable(),
-      //     downPayment: z.number().nullable().optional(),
-      //     loanTerm: z.number().nullable().optional(),
-      //     closingCosts: z.number().nullable().optional(),
-      //     monthlyPayment: z.number().nullable().optional(),
-      //   });
-      //   const parsed = ScenarioDetailsSchema.safeParse(existing.input_json);
-      //   const existingInput = parsed.success ? parsed.data : defaultScenarioDetails;
-      //
-      // ============================================================================
-      const existingInput: ScenarioDetails = (typeof existing.input_json === 'object' && existing.input_json !== null)
-        ? existing.input_json as ScenarioDetails
-        : { purchasePrice: null, loanAmount: null, interestRate: null };
+      // Safely validate and extract scenario details from JSON
+      const existingInput = validateScenarioDetails(existing.input_json);
 
       const updatedInput: ScenarioDetails = {
         ...existingInput,

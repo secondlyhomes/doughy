@@ -4,9 +4,10 @@ import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 const buttonVariants = cva(
-  'flex-row items-center justify-center gap-2 rounded-md',
+  'flex-row items-center justify-center gap-2 rounded-lg',
   {
     variants: {
       variant: {
@@ -66,7 +67,15 @@ export function Button({
   className,
   textClassName,
 }: ButtonProps) {
+  const colors = useThemeColors();
   const isDisabled = disabled || loading;
+
+  // Determine spinner color based on variant
+  const getSpinnerColor = () => {
+    if (variant === 'default') return colors.primaryForeground;
+    if (variant === 'destructive') return colors.destructiveForeground;
+    return colors.foreground;
+  };
 
   return (
     <TouchableOpacity
@@ -78,10 +87,12 @@ export function Button({
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'default' || variant === 'destructive' ? '#fff' : '#000'}
+          color={getSpinnerColor()}
           size="small"
         />
       ) : typeof children === 'string' ? (

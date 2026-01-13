@@ -5,6 +5,7 @@ import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert, Animated } from 'react-native';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { Phone, MessageSquare, Archive, Star } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 import { Lead } from '../types';
 import { LeadCard } from './LeadCard';
@@ -18,6 +19,7 @@ interface SwipeableLeadCardProps {
 
 export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
   const swipeableRef = useRef<Swipeable>(null);
+  const colors = useThemeColors();
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
 
@@ -92,7 +94,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
         {/* Star Action */}
         <RectButton
           style={{
-            backgroundColor: lead.starred ? '#6b7280' : '#f59e0b',
+            backgroundColor: lead.starred ? colors.mutedForeground : colors.warning,
             justifyContent: 'center',
             alignItems: 'center',
             width: 80,
@@ -131,7 +133,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
         {/* Call Action */}
         <RectButton
           style={{
-            backgroundColor: '#3b82f6',
+            backgroundColor: colors.info,
             justifyContent: 'center',
             alignItems: 'center',
             width: 80,
@@ -149,7 +151,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
         {/* Text Action */}
         <RectButton
           style={{
-            backgroundColor: '#22c55e',
+            backgroundColor: colors.success,
             justifyContent: 'center',
             alignItems: 'center',
             width: 80,
@@ -167,7 +169,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
         {/* Archive Action */}
         <RectButton
           style={{
-            backgroundColor: '#ef4444',
+            backgroundColor: colors.destructive,
             justifyContent: 'center',
             alignItems: 'center',
             width: 80,

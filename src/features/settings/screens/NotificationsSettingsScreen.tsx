@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Bell, MessageCircle, TrendingUp, AlertTriangle, Settings } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPermissionsAsync, requestPermissionsAsync } from '@/utils/notifications';
 
@@ -42,6 +44,7 @@ const defaultSettings: NotificationSettings = {
 
 export function NotificationsSettingsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
@@ -104,30 +107,23 @@ export function NotificationsSettingsScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          Notifications
-        </Text>
-      </View>
+      <ScreenHeader title="Notifications" backButton bordered />
 
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-4">
         {/* Permission Banner */}
         {hasPermission === false && (
           <TouchableOpacity
-            className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex-row items-center"
+            className="bg-warning/10 border border-warning/30 rounded-lg p-4 mb-6 flex-row items-center"
             onPress={handleRequestPermission}
           >
-            <AlertTriangle size={24} color="#f59e0b" />
+            <AlertTriangle size={24} color={colors.warning} />
             <View className="flex-1 ml-3">
-              <Text className="text-amber-800 font-medium">
+              <Text className="text-warning font-medium">
                 Notifications Disabled
               </Text>
-              <Text className="text-amber-700 text-sm">
+              <Text className="text-warning/80 text-sm">
                 Tap to enable push notifications
               </Text>
             </View>
@@ -139,10 +135,10 @@ export function NotificationsSettingsScreen() {
           PUSH NOTIFICATIONS
         </Text>
 
-        <View className="bg-card rounded-lg mb-6">
+        <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center p-4">
             <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-              <Bell size={20} color="#3b82f6" />
+              <Bell size={20} color={colors.info} />
             </View>
             <View className="flex-1 ml-4">
               <Text className="text-foreground font-medium">Push Notifications</Text>
@@ -153,8 +149,8 @@ export function NotificationsSettingsScreen() {
             <Switch
               value={settings.pushEnabled}
               onValueChange={() => handleToggle('pushEnabled')}
-              trackColor={{ false: '#767577', true: '#3b82f6' }}
-              thumbColor="#ffffff"
+              trackColor={{ false: colors.muted, true: colors.info }}
+              thumbColor={colors.background}
             />
           </View>
         </View>
@@ -164,9 +160,9 @@ export function NotificationsSettingsScreen() {
           NOTIFICATION TYPES
         </Text>
 
-        <View className="bg-card rounded-lg mb-6">
+        <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <NotificationToggle
-            icon={<MessageCircle size={20} color="#22c55e" />}
+            icon={<MessageCircle size={20} color={colors.success} />}
             title="New Leads"
             description="When new leads are assigned to you"
             value={settings.newLeads}
@@ -174,7 +170,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<Bell size={20} color="#3b82f6" />}
+            icon={<Bell size={20} color={colors.info} />}
             title="Lead Updates"
             description="Status changes and activity on your leads"
             value={settings.leadUpdates}
@@ -182,7 +178,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<TrendingUp size={20} color="#8b5cf6" />}
+            icon={<TrendingUp size={20} color={colors.primary} />}
             title="Property Alerts"
             description="Price changes and new listings"
             value={settings.propertyAlerts}
@@ -190,7 +186,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<TrendingUp size={20} color="#f59e0b" />}
+            icon={<TrendingUp size={20} color={colors.warning} />}
             title="Deal Analysis"
             description="AI insights and recommendations"
             value={settings.dealAnalysis}
@@ -205,9 +201,9 @@ export function NotificationsSettingsScreen() {
           OTHER
         </Text>
 
-        <View className="bg-card rounded-lg">
+        <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
           <NotificationToggle
-            icon={<MessageCircle size={20} color="#6b7280" />}
+            icon={<MessageCircle size={20} color={colors.mutedForeground} />}
             title="Team Updates"
             description="Messages from team members"
             value={settings.teamUpdates}
@@ -215,7 +211,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<Settings size={20} color="#6b7280" />}
+            icon={<Settings size={20} color={colors.mutedForeground} />}
             title="Marketing Emails"
             description="Tips, updates, and promotions"
             value={settings.marketingEmails}
@@ -224,7 +220,7 @@ export function NotificationsSettingsScreen() {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }
 
@@ -247,6 +243,7 @@ function NotificationToggle({
   disabled = false,
   hideBorder = false,
 }: NotificationToggleProps) {
+  const colors = useThemeColors();
   return (
     <View
       className={`flex-row items-center p-4 ${
@@ -264,8 +261,8 @@ function NotificationToggle({
         value={value}
         onValueChange={onValueChange}
         disabled={disabled}
-        trackColor={{ false: '#767577', true: '#3b82f6' }}
-        thumbColor="#ffffff"
+        trackColor={{ false: colors.muted, true: colors.info }}
+        thumbColor={value ? colors.card : colors.mutedForeground}
       />
     </View>
   );

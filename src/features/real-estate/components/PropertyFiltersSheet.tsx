@@ -4,6 +4,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { BottomSheet, BottomSheetSection } from '@/components/ui/BottomSheet';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { PropertyStatus, PropertyType, PropertyConstants } from '../types';
@@ -24,6 +25,7 @@ export function PropertyFiltersSheet({
   onApply,
   onReset,
 }: PropertyFiltersSheetProps) {
+  const colors = useThemeColors();
   // Local state for editing filters before applying
   const [localFilters, setLocalFilters] = useState<PropertyFilters>(filters);
 
@@ -151,7 +153,7 @@ export function PropertyFiltersSheet({
                 setLocalFilters(prev => ({ ...prev, priceMin: value }));
               }}
               placeholder="$0"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className="bg-muted rounded-lg px-4 py-3 text-foreground"
             />
@@ -165,7 +167,7 @@ export function PropertyFiltersSheet({
                 setLocalFilters(prev => ({ ...prev, priceMax: value }));
               }}
               placeholder="No max"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className="bg-muted rounded-lg px-4 py-3 text-foreground"
             />
@@ -185,7 +187,7 @@ export function PropertyFiltersSheet({
                 setLocalFilters(prev => ({ ...prev, arvMin: value }));
               }}
               placeholder="$0"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className="bg-muted rounded-lg px-4 py-3 text-foreground"
             />
@@ -199,7 +201,7 @@ export function PropertyFiltersSheet({
                 setLocalFilters(prev => ({ ...prev, arvMax: value }));
               }}
               placeholder="No max"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className="bg-muted rounded-lg px-4 py-3 text-foreground"
             />
@@ -219,7 +221,7 @@ export function PropertyFiltersSheet({
                 setLocalFilters(prev => ({ ...prev, bedroomsMin: value }));
               }}
               placeholder="Any"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className="bg-muted rounded-lg px-4 py-3 text-foreground"
             />
@@ -233,7 +235,7 @@ export function PropertyFiltersSheet({
                 setLocalFilters(prev => ({ ...prev, bedroomsMax: value }));
               }}
               placeholder="Any"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className="bg-muted rounded-lg px-4 py-3 text-foreground"
             />
@@ -250,7 +252,7 @@ export function PropertyFiltersSheet({
               value={localFilters.city}
               onChangeText={text => setLocalFilters(prev => ({ ...prev, city: text }))}
               placeholder="Any city"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               className="bg-muted rounded-lg px-4 py-3 text-foreground"
             />
           </View>
@@ -260,7 +262,7 @@ export function PropertyFiltersSheet({
               value={localFilters.state}
               onChangeText={text => setLocalFilters(prev => ({ ...prev, state: text }))}
               placeholder="Any state"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               maxLength={2}
               autoCapitalize="characters"
               className="bg-muted rounded-lg px-4 py-3 text-foreground"

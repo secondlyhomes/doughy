@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Check,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { PropertyComp, Property } from '../types';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 
@@ -31,6 +32,7 @@ interface ARVStats {
 }
 
 export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorProps) {
+  const colors = useThemeColors();
   const subjectSqft = property.square_feet || property.sqft || 0;
   const currentARV = property.arv;
 
@@ -193,7 +195,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
             </View>
             <View className="flex-row justify-between items-center">
               <Text className="text-sm text-muted-foreground">Difference</Text>
-              <Text className={`text-sm font-semibold ${arvDifference && arvDifference > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <Text className={`text-sm font-semibold ${arvDifference && arvDifference > 0 ? 'text-success' : 'text-destructive'}`}>
                 {arvDifference && arvDifference > 0 ? '+' : ''}{formatCurrency(arvDifference || 0)}
               </Text>
             </View>
@@ -208,7 +210,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
             onPress={() => onUpdateARV(stats.calculatedARV)}
             className="bg-primary py-3 rounded-xl flex-row items-center justify-center"
           >
-            <TrendingUp size={18} color="white" />
+            <TrendingUp size={18} color={colors.primaryForeground} />
             <Text className="text-primary-foreground font-semibold ml-2">
               Update ARV to {formatCurrency(stats.calculatedARV)}
             </Text>

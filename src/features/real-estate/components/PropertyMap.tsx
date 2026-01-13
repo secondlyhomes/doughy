@@ -11,6 +11,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import MapView, { Marker, Callout, Region, PROVIDER_DEFAULT } from 'react-native-maps';
 import { MapPin, Navigation, Layers, X } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property, GeoPoint } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
@@ -52,6 +53,7 @@ export function PropertyMap({
   style,
 }: PropertyMapProps) {
   const mapRef = useRef<MapView>(null);
+  const colors = useThemeColors();
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
 
   // Filter properties with valid coordinates
@@ -123,16 +125,16 @@ export function PropertyMap({
 
   const getMarkerColor = useCallback((property: Property) => {
     if (property.id === selectedPropertyId) {
-      return '#6366f1'; // Primary color for selected
+      return colors.primary; // Primary color for selected
     }
     // Color based on property status or type
     switch (property.status?.toLowerCase()) {
-      case 'active': return '#22c55e'; // Green
-      case 'pending': return '#f59e0b'; // Amber
-      case 'sold': return '#ef4444'; // Red
-      default: return '#6366f1'; // Primary
+      case 'active': return colors.success; // Green
+      case 'pending': return colors.warning; // Amber
+      case 'sold': return colors.destructive; // Red
+      default: return colors.primary; // Primary
     }
-  }, [selectedPropertyId]);
+  }, [selectedPropertyId, colors]);
 
   if (propertiesWithCoords.length === 0) {
     return (

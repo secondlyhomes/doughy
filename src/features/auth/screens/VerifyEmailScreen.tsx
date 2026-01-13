@@ -14,6 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
 import {
   resendVerificationEmail,
   pollEmailVerification,
@@ -23,6 +25,7 @@ const RESEND_COOLDOWN = 60; // seconds
 
 export function VerifyEmailScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { user, signOut, refetchProfile } = useAuth();
 
   const [isResending, setIsResending] = useState(false);
@@ -86,10 +89,10 @@ export function VerifyEmailScreen() {
 
   if (isVerified) {
     return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
+      <ThemedSafeAreaView className="flex-1 items-center justify-center px-6" edges={['top']}>
         <View className="items-center">
-          <View className="w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-6">
-            <CheckCircle size={48} color="#22c55e" />
+          <View className="w-20 h-20 rounded-full bg-success/20 items-center justify-center mb-6">
+            <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-foreground text-center">
             Email Verified!
@@ -97,18 +100,19 @@ export function VerifyEmailScreen() {
           <Text className="text-muted-foreground text-center mt-2">
             Redirecting you to the app...
           </Text>
-          <ActivityIndicator size="small" color="#3b82f6" className="mt-4" />
+          <ActivityIndicator size="small" color={colors.info} className="mt-4" />
         </View>
-      </View>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-background"
-    >
-      <ScrollView
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -116,7 +120,7 @@ export function VerifyEmailScreen() {
           {/* Header */}
           <View className="items-center mb-8">
             <View className="w-20 h-20 rounded-full bg-primary/10 items-center justify-center mb-6">
-              <Mail size={40} color="#3b82f6" />
+              <Mail size={40} color={colors.info} />
             </View>
             <Text className="text-2xl font-bold text-foreground text-center">
               Verify Your Email
@@ -141,12 +145,12 @@ export function VerifyEmailScreen() {
           {message && (
             <View
               className={`rounded-lg p-4 mb-6 ${
-                message.type === 'success' ? 'bg-green-100' : 'bg-destructive/10'
+                message.type === 'success' ? 'bg-success/20' : 'bg-destructive/10'
               }`}
             >
               <Text
                 className={`text-sm text-center ${
-                  message.type === 'success' ? 'text-green-700' : 'text-destructive'
+                  message.type === 'success' ? 'text-success' : 'text-destructive'
                 }`}
               >
                 {message.text}
@@ -165,12 +169,12 @@ export function VerifyEmailScreen() {
             disabled={resendCooldown > 0 || isResending}
           >
             {isResending ? (
-              <ActivityIndicator size="small" color="#ffffff" />
+              <ActivityIndicator size="small" color={colors.primaryForeground} />
             ) : (
               <>
                 <RefreshCw
                   size={20}
-                  color={resendCooldown > 0 ? '#9ca3af' : '#ffffff'}
+                  color={resendCooldown > 0 ? colors.mutedForeground : colors.primaryForeground}
                 />
                 <Text
                   className={`ml-2 font-semibold ${
@@ -189,7 +193,7 @@ export function VerifyEmailScreen() {
 
           {/* Checking status indicator */}
           <View className="flex-row items-center justify-center mt-6">
-            <ActivityIndicator size="small" color="#3b82f6" />
+            <ActivityIndicator size="small" color={colors.info} />
             <Text className="text-sm text-muted-foreground ml-2">
               Waiting for verification...
             </Text>
@@ -200,13 +204,14 @@ export function VerifyEmailScreen() {
             className="flex-row items-center justify-center mt-8"
             onPress={handleSignOut}
           >
-            <ArrowLeft size={16} color="#6b7280" />
+            <ArrowLeft size={16} color={colors.mutedForeground} />
             <Text className="text-muted-foreground ml-1">
               Sign in with a different account
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ThemedSafeAreaView>
   );
 }

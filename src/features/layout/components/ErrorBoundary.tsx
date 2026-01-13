@@ -3,6 +3,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { AlertTriangle, RefreshCw } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface Props {
   children: ReactNode;
@@ -16,6 +17,52 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+}
+
+// Functional component for the default error UI that can use hooks
+interface DefaultErrorUIProps {
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  onReset: () => void;
+}
+
+function DefaultErrorUI({ error, errorInfo, onReset }: DefaultErrorUIProps) {
+  const colors = useThemeColors();
+
+  return (
+    <View className="flex-1 items-center justify-center bg-background p-6">
+      <View className="items-center mb-6">
+        <AlertTriangle size={48} color={colors.destructive} />
+        <Text className="text-xl font-semibold text-foreground mt-4">
+          Something went wrong
+        </Text>
+        <Text className="text-muted-foreground text-center mt-2">
+          An unexpected error occurred. Please try again.
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        onPress={onReset}
+        className="flex-row items-center bg-primary px-6 py-3 rounded-lg"
+      >
+        <RefreshCw size={20} color={colors.primaryForeground} />
+        <Text className="text-white font-medium ml-2">Try Again</Text>
+      </TouchableOpacity>
+
+      {__DEV__ && error && (
+        <ScrollView className="mt-6 max-h-48 w-full bg-muted/50 rounded-lg p-4">
+          <Text className="text-sm font-mono text-destructive">
+            {error.toString()}
+          </Text>
+          {errorInfo && (
+            <Text className="text-xs font-mono text-muted-foreground mt-2">
+              {errorInfo.componentStack}
+            </Text>
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
 }
 
 /**
@@ -62,40 +109,13 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      // Default error UI
+      // Default error UI using functional component with hooks
       return (
-        <View className="flex-1 items-center justify-center bg-background p-6">
-          <View className="items-center mb-6">
-            <AlertTriangle size={48} color="#ef4444" />
-            <Text className="text-xl font-semibold text-foreground mt-4">
-              Something went wrong
-            </Text>
-            <Text className="text-muted-foreground text-center mt-2">
-              An unexpected error occurred. Please try again.
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={this.handleReset}
-            className="flex-row items-center bg-primary px-6 py-3 rounded-lg"
-          >
-            <RefreshCw size={20} color="#ffffff" />
-            <Text className="text-white font-medium ml-2">Try Again</Text>
-          </TouchableOpacity>
-
-          {__DEV__ && this.state.error && (
-            <ScrollView className="mt-6 max-h-48 w-full bg-muted/50 rounded-lg p-4">
-              <Text className="text-sm font-mono text-destructive">
-                {this.state.error.toString()}
-              </Text>
-              {this.state.errorInfo && (
-                <Text className="text-xs font-mono text-muted-foreground mt-2">
-                  {this.state.errorInfo.componentStack}
-                </Text>
-              )}
-            </ScrollView>
-          )}
-        </View>
+        <DefaultErrorUI
+          error={this.state.error}
+          errorInfo={this.state.errorInfo}
+          onReset={this.handleReset}
+        />
       );
     }
 

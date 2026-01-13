@@ -32,7 +32,7 @@ export function RepairSummaryCard({
           </View>
           <View className="items-end">
             <Text className="text-xs text-muted-foreground">Completed</Text>
-            <Text className="text-lg font-semibold text-green-600">{formatCurrency(totalCompleted)}</Text>
+            <Text className="text-lg font-semibold text-success">{formatCurrency(totalCompleted)}</Text>
           </View>
         </View>
 
@@ -41,7 +41,7 @@ export function RepairSummaryCard({
           <View className="mt-3">
             <View className="h-2 bg-muted rounded-full overflow-hidden">
               <View
-                className="h-full bg-green-500 rounded-full"
+                className="h-full bg-success rounded-full"
                 style={{ width: `${Math.min(completionPercentage, 100)}%` }}
               />
             </View>
@@ -56,10 +56,10 @@ export function RepairSummaryCard({
       {showSyncWarning && (
         <TouchableOpacity
           onPress={onSyncRepairCost}
-          className="flex-row items-center justify-center py-3 border-t border-border bg-yellow-50"
+          className="flex-row items-center justify-center py-3 border-t border-border bg-warning/10"
         >
-          <AlertCircle size={14} className="text-yellow-600" />
-          <Text className="text-sm text-yellow-700 font-medium ml-2">
+          <AlertCircle size={14} className="text-warning" />
+          <Text className="text-sm text-warning font-medium ml-2">
             Update property repair cost to {formatCurrency(totalEstimate)}
           </Text>
         </TouchableOpacity>

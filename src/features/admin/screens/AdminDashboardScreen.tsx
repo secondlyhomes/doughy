@@ -8,7 +8,6 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -24,9 +23,10 @@ import {
   XCircle,
   Link,
   FileText,
-  ArrowLeft,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import {
@@ -38,6 +38,7 @@ import {
 
 export function AdminDashboardScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { isLoading: authLoading } = useAuth();
   const { canViewAdminPanel } = usePermissions();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -79,73 +80,59 @@ export function AdminDashboardScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'operational':
-        return '#22c55e';
+        return colors.success;
       case 'degraded':
-        return '#f59e0b';
+        return colors.warning;
       case 'outage':
-        return '#ef4444';
+        return colors.destructive;
       default:
-        return '#6b7280';
+        return colors.mutedForeground;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'operational':
-        return <CheckCircle size={16} color="#22c55e" />;
+        return <CheckCircle size={16} color={colors.success} />;
       case 'degraded':
-        return <AlertTriangle size={16} color="#f59e0b" />;
+        return <AlertTriangle size={16} color={colors.warning} />;
       case 'outage':
-        return <XCircle size={16} color="#ef4444" />;
+        return <XCircle size={16} color={colors.destructive} />;
       default:
-        return <Activity size={16} color="#6b7280" />;
+        return <Activity size={16} color={colors.mutedForeground} />;
     }
   };
 
   // Check if user has admin access (uses consistent permission check)
   if (!authLoading && !canViewAdminPanel) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center p-6">
-          <AlertTriangle size={48} color="#ef4444" />
+          <AlertTriangle size={48} color={colors.destructive} />
           <Text className="text-xl font-semibold text-foreground mt-4">Access Denied</Text>
           <Text className="text-muted-foreground text-center mt-2">
             You don't have permission to access the admin dashboard.
           </Text>
-          <TouchableOpacity
-            className="bg-primary rounded-lg py-3 px-6 mt-6"
-            onPress={() => router.back()}
-          >
-            <Text className="text-primary-foreground font-semibold">Go Back</Text>
-          </TouchableOpacity>
+          <Button onPress={() => router.back()} className="mt-6">
+            Go Back
+          </Button>
         </View>
-      </SafeAreaView>
+      </ThemedSafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-          <Text className="text-muted-foreground mt-4">Loading dashboard...</Text>
-        </View>
-      </SafeAreaView>
+      <ThemedSafeAreaView className="flex-1">
+        <LoadingSpinner fullScreen text="Loading dashboard..." />
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <View className="flex-1 ml-2">
-          <Text className="text-lg font-semibold text-foreground">Admin Dashboard</Text>
-          <Text className="text-xs text-muted-foreground">System overview and management</Text>
-        </View>
-      </View>
+      <ScreenHeader title="Admin Dashboard" subtitle="System overview and management" bordered />
 
       <ScrollView
         className="flex-1"
@@ -160,29 +147,33 @@ export function AdminDashboardScreen() {
           </Text>
           <View className="flex-row flex-wrap">
             <StatCard
-              icon={<Users size={24} color="#3b82f6" />}
+              icon={<Users size={24} color={colors.info} />}
               title="Total Users"
               value={stats?.totalUsers.toString() || '0'}
               subtitle={`${stats?.activeUsers || 0} active`}
               onPress={() => router.push('/(admin)/users')}
+              cardColor={colors.card}
             />
             <StatCard
-              icon={<TrendingUp size={24} color="#22c55e" />}
+              icon={<TrendingUp size={24} color={colors.success} />}
               title="Total Leads"
               value={stats?.totalLeads.toString() || '0'}
               subtitle="All time"
+              cardColor={colors.card}
             />
             <StatCard
-              icon={<Database size={24} color="#f59e0b" />}
+              icon={<Database size={24} color={colors.warning} />}
               title="Properties"
               value={stats?.totalProperties.toString() || '0'}
               subtitle="In database"
+              cardColor={colors.card}
             />
             <StatCard
-              icon={<Activity size={24} color="#8b5cf6" />}
+              icon={<Activity size={24} color={colors.primary} />}
               title="New This Week"
               value={stats?.newUsersThisWeek.toString() || '0'}
               subtitle="Users"
+              cardColor={colors.card}
             />
           </View>
         </View>
@@ -192,7 +183,7 @@ export function AdminDashboardScreen() {
           <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
             SYSTEM STATUS
           </Text>
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             {systems.map((system, index) => (
               <View
                 key={system.name}
@@ -200,10 +191,10 @@ export function AdminDashboardScreen() {
                   index !== systems.length - 1 ? 'border-b border-border' : ''
                 }`}
               >
-                <Server size={20} color="#6b7280" />
+                <Server size={20} color={colors.mutedForeground} />
                 <View className="flex-1 ml-3">
                   <Text className="text-foreground font-medium">{system.name}</Text>
-                  {system.latency && (
+                  {system.latency != null && (
                     <Text className="text-xs text-muted-foreground">
                       Response: {system.latency}ms
                     </Text>
@@ -228,21 +219,21 @@ export function AdminDashboardScreen() {
           <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
             QUICK ACTIONS
           </Text>
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <AdminActionItem
-              icon={<Users size={20} color="#6b7280" />}
+              icon={<Users size={20} color={colors.mutedForeground} />}
               title="Manage Users"
               subtitle="View and manage user accounts"
               onPress={() => router.push('/(admin)/users')}
             />
             <AdminActionItem
-              icon={<Link size={20} color="#6b7280" />}
+              icon={<Link size={20} color={colors.mutedForeground} />}
               title="Integrations"
               subtitle="Manage external integrations"
               onPress={() => router.push('/(admin)/integrations')}
             />
             <AdminActionItem
-              icon={<FileText size={20} color="#6b7280" />}
+              icon={<FileText size={20} color={colors.mutedForeground} />}
               title="System Logs"
               subtitle="View system and error logs"
               onPress={() => router.push('/(admin)/logs')}
@@ -253,16 +244,13 @@ export function AdminDashboardScreen() {
 
         {/* Refresh Button */}
         <View className="p-4 pb-8">
-          <TouchableOpacity
-            className="bg-card border border-border rounded-lg py-3 flex-row items-center justify-center"
-            onPress={handleRefresh}
-          >
-            <RefreshCw size={18} color="#6b7280" />
-            <Text className="text-foreground font-medium ml-2">Refresh Data</Text>
-          </TouchableOpacity>
+          <Button variant="outline" onPress={handleRefresh}>
+            <RefreshCw size={18} color={colors.mutedForeground} />
+            Refresh Data
+          </Button>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }
 
@@ -273,11 +261,12 @@ interface StatCardProps {
   value: string;
   subtitle: string;
   onPress?: () => void;
+  cardColor?: string;
 }
 
-function StatCard({ icon, title, value, subtitle, onPress }: StatCardProps) {
+function StatCard({ icon, title, value, subtitle, onPress, cardColor }: StatCardProps) {
   const content = (
-    <View className="bg-card rounded-lg p-4">
+    <View className="rounded-lg p-4" style={{ backgroundColor: cardColor }}>
       {icon}
       <Text className="text-2xl font-bold text-foreground mt-2">{value}</Text>
       <Text className="text-sm text-foreground">{title}</Text>
@@ -305,6 +294,7 @@ interface AdminActionItemProps {
 }
 
 function AdminActionItem({ icon, title, subtitle, onPress, hideBorder }: AdminActionItemProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}
@@ -315,7 +305,7 @@ function AdminActionItem({ icon, title, subtitle, onPress, hideBorder }: AdminAc
         <Text className="text-foreground font-medium">{title}</Text>
         <Text className="text-sm text-muted-foreground">{subtitle}</Text>
       </View>
-      <ChevronRight size={20} color="#6b7280" />
+      <ChevronRight size={20} color={colors.mutedForeground} />
     </TouchableOpacity>
   );
 }

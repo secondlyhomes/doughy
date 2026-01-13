@@ -2,10 +2,12 @@
 // User detail and edit screen for admin
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Mail, Shield, Calendar, Clock, MoreVertical, Trash2, RotateCcw } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { getUserById, updateUserRole, restoreUser, deleteUser, getRoleLabel, type AdminUser, type UserRole } from '../services/userService';
 import { UserProfileHeader } from '../components/UserProfileHeader';
@@ -14,6 +16,7 @@ import { UserRoleButton } from '../components/UserRoleButton';
 
 export function UserDetailScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const params = useLocalSearchParams();
   const userId = params.userId as string;
   const { user: currentUser } = useAuth();
@@ -117,46 +120,42 @@ export function UserDetailScreen() {
 
   if (isLoading || !user) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-row items-center px-4 py-3 border-b border-border">
-          <TouchableOpacity onPress={() => router.back()} className="p-2">
-            <ArrowLeft size={24} color="#6b7280" />
-          </TouchableOpacity>
-          <Text className="flex-1 text-lg font-semibold text-foreground ml-2">User Details</Text>
-        </View>
+      <ThemedSafeAreaView className="flex-1">
+        <ScreenHeader title="User Details" backButton bordered />
         <View className="flex-1 items-center justify-center">
-          {isLoading ? <ActivityIndicator size="large" color="#3b82f6" /> : <Text className="text-muted-foreground">User not found</Text>}
+          {isLoading ? <LoadingSpinner fullScreen /> : <Text className="text-muted-foreground">User not found</Text>}
         </View>
-      </SafeAreaView>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">User Details</Text>
-        {!isSelf && (
-          <TouchableOpacity className="p-2" onPress={() => setShowActions(!showActions)}>
-            <MoreVertical size={20} color="#6b7280" />
-          </TouchableOpacity>
-        )}
-      </View>
+      <ScreenHeader
+        title="User Details"
+        backButton
+        bordered
+        rightAction={
+          !isSelf ? (
+            <TouchableOpacity className="p-2" onPress={() => setShowActions(!showActions)}>
+              <MoreVertical size={20} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
 
       {/* Actions Menu */}
       {showActions && !isSelf && (
         <View className="absolute top-16 right-4 bg-card border border-border rounded-lg shadow-lg z-10">
           {user.isDeleted ? (
             <TouchableOpacity className="flex-row items-center px-4 py-3" onPress={() => { setShowActions(false); handleRestoreUser(); }}>
-              <RotateCcw size={18} color="#22c55e" />
-              <Text className="ml-3 text-green-600">Restore User</Text>
+              <RotateCcw size={18} color={colors.success} />
+              <Text className="ml-3 text-success">Restore User</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity className="flex-row items-center px-4 py-3" onPress={() => { setShowActions(false); handleDeleteUser(); }}>
-              <Trash2 size={18} color="#ef4444" />
+              <Trash2 size={18} color={colors.destructive} />
               <Text className="ml-3 text-destructive">Delete User</Text>
             </TouchableOpacity>
           )}
@@ -165,8 +164,8 @@ export function UserDetailScreen() {
 
       <ScrollView className="flex-1">
         {isSelf && (
-          <View className="mx-4 mt-4 p-3 bg-blue-50 rounded-lg">
-            <Text className="text-blue-700 text-sm">This is your account. Some actions are restricted.</Text>
+          <View className="mx-4 mt-4 p-3 bg-info/10 rounded-lg">
+            <Text className="text-info text-sm">This is your account. Some actions are restricted.</Text>
           </View>
         )}
 
@@ -177,10 +176,10 @@ export function UserDetailScreen() {
         <View className="p-4">
           <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">ACCOUNT INFORMATION</Text>
           <View className="bg-card rounded-lg">
-            <UserInfoRow icon={<Mail size={20} color="#6b7280" />} label="Email" value={user.email} />
-            <UserInfoRow icon={<Shield size={20} color="#6b7280" />} label="Role" value={getRoleLabel(user.role)} />
-            <UserInfoRow icon={<Calendar size={20} color="#6b7280" />} label="Joined" value={formatDate(user.createdAt)} />
-            <UserInfoRow icon={<Clock size={20} color="#6b7280" />} label="Last Updated" value={formatDate(user.updatedAt)} hideBorder />
+            <UserInfoRow icon={<Mail size={20} color={colors.mutedForeground} />} label="Email" value={user.email} />
+            <UserInfoRow icon={<Shield size={20} color={colors.mutedForeground} />} label="Role" value={getRoleLabel(user.role)} />
+            <UserInfoRow icon={<Calendar size={20} color={colors.mutedForeground} />} label="Joined" value={formatDate(user.createdAt)} />
+            <UserInfoRow icon={<Clock size={20} color={colors.mutedForeground} />} label="Last Updated" value={formatDate(user.updatedAt)} hideBorder />
           </View>
         </View>
 
@@ -197,12 +196,11 @@ export function UserDetailScreen() {
         )}
 
         {isUpdating && (
-          <View className="items-center py-4">
-            <ActivityIndicator size="small" color="#3b82f6" />
-            <Text className="text-sm text-muted-foreground mt-2">Updating...</Text>
+          <View className="py-4">
+            <LoadingSpinner text="Updating..." />
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

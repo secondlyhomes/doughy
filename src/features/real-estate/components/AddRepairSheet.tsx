@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { X, Wrench, DollarSign, FileText, AlertCircle } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { RepairEstimate, RepairCategory } from '../types';
 import { REPAIR_CATEGORIES } from '../hooks/useRepairEstimate';
@@ -42,11 +43,9 @@ const initialFormData: FormData = {
   priority: 'medium',
 };
 
-// Priority colors: Using Tailwind classes that work in both light/dark mode
-// Note: Theme could add success/warning colors in the future for better consistency
 const PRIORITY_OPTIONS: { value: 'low' | 'medium' | 'high'; label: string; color: string }[] = [
-  { value: 'low', label: 'Low', color: 'text-green-500' },
-  { value: 'medium', label: 'Medium', color: 'text-yellow-500' },
+  { value: 'low', label: 'Low', color: 'text-success' },
+  { value: 'medium', label: 'Medium', color: 'text-warning' },
   { value: 'high', label: 'High', color: 'text-destructive' },
 ];
 
@@ -58,6 +57,7 @@ export function AddRepairSheet({
   editRepair,
   preselectedCategory,
 }: AddRepairSheetProps) {
+  const colors = useThemeColors();
   const [formData, setFormData] = useState<FormData>(() => {
     if (editRepair) {
       return {
@@ -220,7 +220,7 @@ export function AddRepairSheet({
                 value={formData.description}
                 onChangeText={(value) => updateField('description', value)}
                 placeholder="e.g., Replace kitchen cabinets"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.mutedForeground}
                 className="flex-1 py-3 ml-2 text-foreground"
               />
             </View>
@@ -238,7 +238,7 @@ export function AddRepairSheet({
                 value={formData.estimate}
                 onChangeText={(value) => updateField('estimate', value)}
                 placeholder="0"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.mutedForeground}
                 keyboardType="numeric"
                 className="flex-1 py-3 text-foreground text-lg font-semibold"
               />
@@ -283,7 +283,7 @@ export function AddRepairSheet({
               value={formData.notes}
               onChangeText={(value) => updateField('notes', value)}
               placeholder="Additional details, contractor info, etc."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -302,10 +302,10 @@ export function AddRepairSheet({
             className="bg-primary py-3.5 rounded-xl flex-row items-center justify-center"
           >
             {isLoading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <>
-                <Wrench size={18} color="white" />
+                <Wrench size={18} color={colors.primaryForeground} />
                 <Text className="text-primary-foreground font-semibold ml-2">
                   {editRepair ? 'Save Changes' : 'Add Repair'}
                 </Text>

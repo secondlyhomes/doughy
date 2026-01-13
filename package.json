@@ -4,8 +4,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "postinstall": "patch-package",
     "test": "jest",
@@ -14,6 +14,7 @@
     "test:admin": "jest --coverage --collectCoverageFrom='src/features/admin/**/*.{ts,tsx}' --collectCoverageFrom='src/routes/AdminNavigator.tsx'"
   },
   "dependencies": {
+    "@callstack/liquid-glass": "^0.7.0",
     "@expo/metro-runtime": "~6.1.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
@@ -25,11 +26,14 @@
     "date-fns": "^4.1.0",
     "expo": "~54.0.31",
     "expo-auth-session": "~7.0.10",
+    "expo-blur": "~15.0.8",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "^18.0.13",
     "expo-crypto": "~15.0.8",
+    "expo-dev-client": "~6.0.20",
     "expo-document-picker": "~14.0.8",
     "expo-file-system": "~19.0.21",
+    "expo-haptics": "~15.0.8",
     "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
@@ -60,6 +64,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.2.0",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "29.5.14",
@@ -74,5 +79,6 @@
     "react-native-worklets": "0.5.1",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

@@ -2,8 +2,10 @@
 // Header component for property list with search, filters, and view toggle
 
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { Search, Plus, Filter, Grid, List, ArrowUpDown, X } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Filter, Grid, List, ArrowUpDown, X } from 'lucide-react-native';
+import { SearchBar } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import { PropertyFilters, SORT_OPTIONS, SortOption } from '../hooks/usePropertyFilters';
 
 interface PropertyListHeaderProps {
@@ -39,6 +41,7 @@ export function PropertyListHeader({
   totalCount,
   filteredCount,
 }: PropertyListHeaderProps) {
+  const colors = useThemeColors();
   const getCurrentSortLabel = () => {
     const option = SORT_OPTIONS.find(o => o.value === sortBy);
     return option?.label || 'Newest First';
@@ -47,23 +50,13 @@ export function PropertyListHeader({
   return (
     <View className="mb-4">
       {/* Search Bar */}
-      <View className="flex-row items-center bg-muted rounded-xl px-4 py-2">
-        <Search size={20} className="text-muted-foreground" />
-        <TextInput
-          value={searchQuery}
-          onChangeText={onSearchChange}
-          placeholder="Search properties..."
-          placeholderTextColor="#9CA3AF"
-          className="flex-1 ml-2 text-foreground text-base"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={onClearSearch} className="p-1">
-            <X size={18} color="#9CA3AF" />
-          </TouchableOpacity>
-        )}
-      </View>
+      <SearchBar
+        value={searchQuery}
+        onChangeText={onSearchChange}
+        onClear={onClearSearch}
+        placeholder="Search properties..."
+        size="md"
+      />
 
       {/* Filter, Sort, and View Toggle */}
       <View className="flex-row justify-between items-center mt-4">
@@ -74,7 +67,7 @@ export function PropertyListHeader({
               hasActiveFilters ? 'bg-primary' : 'bg-muted'
             }`}
           >
-            <Filter size={16} color={hasActiveFilters ? 'white' : '#9CA3AF'} />
+            <Filter size={16} color={hasActiveFilters ? colors.primaryForeground : colors.mutedForeground} />
             <Text className={`ml-2 font-medium ${
               hasActiveFilters ? 'text-primary-foreground' : 'text-muted-foreground'
             }`}>
@@ -98,13 +91,13 @@ export function PropertyListHeader({
             onPress={() => onViewModeChange('list')}
             className={`px-3 py-2 rounded-lg ${viewMode === 'list' ? 'bg-primary' : ''}`}
           >
-            <List size={18} color={viewMode === 'list' ? 'white' : '#9CA3AF'} />
+            <List size={18} color={viewMode === 'list' ? colors.primaryForeground : colors.mutedForeground} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onViewModeChange('grid')}
             className={`px-3 py-2 rounded-lg ${viewMode === 'grid' ? 'bg-primary' : ''}`}
           >
-            <Grid size={18} color={viewMode === 'grid' ? 'white' : '#9CA3AF'} />
+            <Grid size={18} color={viewMode === 'grid' ? colors.primaryForeground : colors.mutedForeground} />
           </TouchableOpacity>
         </View>
       </View>
@@ -142,7 +135,7 @@ export function PropertyListHeader({
             </View>
           )}
           <TouchableOpacity onPress={onResetFilters} className="flex-row items-center px-3 py-1">
-            <X size={14} color="#6366f1" />
+            <X size={14} color={colors.primary} />
             <Text className="text-primary text-sm font-medium ml-1">Clear</Text>
           </TouchableOpacity>
         </View>

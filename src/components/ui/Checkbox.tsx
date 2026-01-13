@@ -4,6 +4,7 @@ import React from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface CheckboxProps {
   checked?: boolean;
@@ -22,6 +23,7 @@ export function Checkbox({
   className,
   testID,
 }: CheckboxProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={cn('flex-row items-center', className)}
@@ -29,6 +31,9 @@ export function Checkbox({
       disabled={disabled}
       activeOpacity={0.7}
       testID={testID}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked, disabled }}
+      accessibilityLabel={label}
     >
       <View
         className={cn(
@@ -37,7 +42,7 @@ export function Checkbox({
           disabled && 'opacity-50'
         )}
       >
-        {checked && <Check size={14} color="#fff" strokeWidth={3} />}
+        {checked && <Check size={14} color={colors.primaryForeground} strokeWidth={3} />}
       </View>
       {label && (
         <Text

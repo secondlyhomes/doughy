@@ -7,7 +7,8 @@
 import React, { useCallback } from 'react';
 import { View, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader } from '@/components/ui';
 import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { usePropertyMutations } from '../hooks/useProperties';
 import { Property } from '../types';
@@ -47,14 +48,13 @@ export function AddPropertyScreen() {
   }, [router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="px-4 py-3 bg-background border-b border-border">
-        <Text className="text-2xl font-bold text-foreground">Add Property</Text>
-        <Text className="text-muted-foreground mt-0.5">
-          Add a new property to your portfolio
-        </Text>
-      </View>
+      <ScreenHeader
+        title="Add Property"
+        subtitle="Add a new property to your portfolio"
+        bordered
+      />
 
       <PropertyFormWizard
         onSubmit={handleSubmit}
@@ -62,6 +62,6 @@ export function AddPropertyScreen() {
         isLoading={isLoading}
         submitLabel="Create Property"
       />
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

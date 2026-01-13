@@ -1,7 +1,7 @@
 // src/components/ui/OTPInput.tsx
 // Fixed-length code input with individual boxes
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ViewProps, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
 
 export interface OTPInputProps extends ViewProps {

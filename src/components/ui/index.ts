@@ -10,6 +10,9 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Input } from './Input';
 export type { InputProps } from './Input';
 
+export { SearchBar } from './SearchBar';
+export type { SearchBarProps } from './SearchBar';
+
 export { TextArea } from './TextArea';
 export type { TextAreaProps } from './TextArea';
 
@@ -185,3 +188,15 @@ export type { AddressAutocompleteProps, AddressValue } from './AddressAutocomple
 // Bottom Sheet
 export { BottomSheet, BottomSheetSection } from './BottomSheet';
 export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';
+
+// Screen Header
+export { ScreenHeader } from './ScreenHeader';
+export type { ScreenHeaderProps } from './ScreenHeader';
+
+// Glass components
+export { GlassView, GlassBackdrop, isLiquidGlassSupported } from './GlassView';
+export type { GlassViewProps, GlassBackdropProps } from './GlassView';
+
+// Navigation components
+export { FloatingGlassTabBar } from './FloatingGlassTabBar';
+export type { FloatingGlassTabBarProps } from './FloatingGlassTabBar';

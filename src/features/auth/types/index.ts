@@ -37,7 +37,7 @@ export interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
   refetchProfile: () => Promise<void>;
-  devBypassAuth: () => void; // Dev only - bypasses auth for testing
+  devBypassAuth: () => Promise<void>; // Dev only - bypasses auth for testing
 }
 
 export interface LoginFormData {

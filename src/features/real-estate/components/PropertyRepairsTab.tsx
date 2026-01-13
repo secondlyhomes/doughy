@@ -2,8 +2,10 @@
 // Repair estimates tab content for property detail
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Alert } from 'react-native';
 import { Wrench, Plus, RefreshCw } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Button, LoadingSpinner } from '@/components/ui';
 import { Property, RepairEstimate, RepairCategory } from '../types';
 import { useRepairEstimate, useRepairEstimateMutations, REPAIR_CATEGORIES } from '../hooks/useRepairEstimate';
 import { usePropertyMutations } from '../hooks/useProperties';
@@ -18,6 +20,7 @@ interface PropertyRepairsTabProps {
 }
 
 export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepairsTabProps) {
+  const colors = useThemeColors();
   const { repairs, isLoading, error, refetch, totalEstimate, totalCompleted, categorySummaries } =
     useRepairEstimate({ propertyId: property.id });
   const { createRepair, updateRepair, deleteRepair, toggleCompleted, isLoading: isMutating } =
@@ -118,9 +121,8 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center py-12">
-        <ActivityIndicator size="large" className="text-primary" />
-        <Text className="text-muted-foreground mt-2">Loading repairs...</Text>
+      <View className="flex-1 py-12">
+        <LoadingSpinner fullScreen text="Loading repairs..." />
       </View>
     );
   }
@@ -129,10 +131,10 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
     return (
       <View className="flex-1 items-center justify-center py-12">
         <Text className="text-destructive mb-4">Failed to load repairs</Text>
-        <TouchableOpacity onPress={refetch} className="flex-row items-center bg-muted px-4 py-2 rounded-lg">
-          <RefreshCw size={16} className="text-foreground" />
-          <Text className="text-foreground font-medium ml-2">Try Again</Text>
-        </TouchableOpacity>
+        <Button variant="secondary" onPress={refetch}>
+          <RefreshCw size={16} color={colors.foreground} />
+          Try Again
+        </Button>
       </View>
     );
   }
@@ -148,10 +150,10 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
               {repairs.length} item{repairs.length !== 1 ? 's' : ''} • {formatCurrency(totalEstimate)} total
             </Text>
           </View>
-          <TouchableOpacity onPress={() => setShowAddSheet(true)} className="flex-row items-center bg-primary px-3 py-2 rounded-lg">
-            <Plus size={16} color="white" />
-            <Text className="text-primary-foreground font-medium ml-1">Add</Text>
-          </TouchableOpacity>
+          <Button onPress={() => setShowAddSheet(true)} size="sm">
+            <Plus size={16} color={colors.primaryForeground} />
+            Add
+          </Button>
         </View>
 
         {/* Total Summary Card */}
@@ -180,14 +182,15 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
               <Text className="text-sm font-medium text-foreground mb-3">Quick Add by Category</Text>
               <View className="flex-row flex-wrap gap-2">
                 {REPAIR_CATEGORIES.map(category => (
-                  <TouchableOpacity
+                  <Button
                     key={category.id}
+                    variant="secondary"
+                    size="sm"
                     onPress={() => handleAddToCategory(category.id)}
-                    className="flex-row items-center bg-muted px-3 py-2 rounded-lg"
                   >
-                    <Plus size={12} className="text-muted-foreground" />
-                    <Text className="text-foreground text-sm ml-1">{category.label}</Text>
-                  </TouchableOpacity>
+                    <Plus size={12} color={colors.mutedForeground} />
+                    {category.label}
+                  </Button>
                 ))}
               </View>
             </View>

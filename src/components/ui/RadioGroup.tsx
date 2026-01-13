@@ -67,6 +67,9 @@ export function RadioGroupItem({
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
       activeOpacity={0.7}
+      accessibilityRole="radio"
+      accessibilityState={{ selected: isSelected, disabled }}
+      accessibilityLabel={label}
     >
       <View
         className={cn(

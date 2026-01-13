@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { DollarSign, TrendingUp, Wrench, Target } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { formatCurrency } from '../utils/formatters';
 
 export interface Step3Data {
@@ -19,6 +20,7 @@ interface PropertyFormStep3Props {
 }
 
 export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3Props) {
+  const colors = useThemeColors();
   // Calculate deal metrics
   const arv = parseFloat(data.arv) || 0;
   const purchasePrice = parseFloat(data.purchase_price) || 0;
@@ -60,7 +62,7 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
               value={data.arv}
               onChangeText={(value) => onChange({ arv: formatInputCurrency(value) })}
               placeholder="350,000"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className={`flex-1 py-3 ml-1 text-foreground text-lg ${
                 errors.arv ? 'border-b border-destructive' : ''
@@ -110,7 +112,7 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
               value={data.purchase_price}
               onChangeText={(value) => onChange({ purchase_price: formatInputCurrency(value) })}
               placeholder="280,000"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className={`flex-1 py-3 ml-1 text-foreground text-lg ${
                 errors.purchase_price ? 'border-b border-destructive' : ''
@@ -139,7 +141,7 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
               value={data.repair_cost}
               onChangeText={(value) => onChange({ repair_cost: formatInputCurrency(value) })}
               placeholder="25,000"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
               className={`flex-1 py-3 ml-1 text-foreground text-lg ${
                 errors.repair_cost ? 'border-b border-destructive' : ''
@@ -195,13 +197,13 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-foreground">Gross Profit</Text>
-                <Text className={`font-semibold ${grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <Text className={`font-semibold ${grossProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {formatCurrency(grossProfit)}
                 </Text>
               </View>
               <View className="flex-row justify-between">
                 <Text className="text-foreground">ROI</Text>
-                <Text className={`font-semibold ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <Text className={`font-semibold ${roi >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {roi.toFixed(1)}%
                 </Text>
               </View>

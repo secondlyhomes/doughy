@@ -23,6 +23,8 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
 
 interface TeamMember {
   id: string;
@@ -35,6 +37,7 @@ interface TeamMember {
 
 export function TeamSettingsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { profile, user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -163,9 +166,9 @@ export function TeamSettingsScreen() {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Crown size={14} color="#f59e0b" />;
+        return <Crown size={14} color={colors.warning} />;
       case 'admin':
-        return <Shield size={14} color="#6366f1" />;
+        return <Shield size={14} color={colors.primary} />;
       default:
         return null;
     }
@@ -184,19 +187,19 @@ export function TeamSettingsScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#6366f1" />
-      </View>
+      <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={['top']}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
       <View className="flex-row items-center justify-between p-4 border-b border-border">
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft size={24} color="#374151" />
+            <ArrowLeft size={24} color={colors.mutedForeground} />
           </TouchableOpacity>
           <Text className="text-xl font-semibold text-foreground">Team</Text>
         </View>
@@ -204,7 +207,7 @@ export function TeamSettingsScreen() {
           className="bg-primary rounded-lg px-4 py-2 flex-row items-center"
           onPress={() => setShowInviteModal(true)}
         >
-          <UserPlus size={18} color="#ffffff" />
+          <UserPlus size={18} color={colors.primaryForeground} />
           <Text className="text-primary-foreground font-medium ml-2">Invite</Text>
         </TouchableOpacity>
       </View>
@@ -215,7 +218,7 @@ export function TeamSettingsScreen() {
           <View className="bg-card rounded-lg p-4">
             <View className="flex-row items-center">
               <View className="w-12 h-12 rounded-full bg-primary items-center justify-center">
-                <Users size={24} color="#ffffff" />
+                <Users size={24} color={colors.primaryForeground} />
               </View>
               <View className="ml-4">
                 <Text className="text-lg font-semibold text-foreground">My Workspace</Text>
@@ -283,7 +286,7 @@ export function TeamSettingsScreen() {
                       );
                     }}
                   >
-                    <MoreVertical size={20} color="#6b7280" />
+                    <MoreVertical size={20} color={colors.mutedForeground} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -312,12 +315,12 @@ export function TeamSettingsScreen() {
               <Text className="text-sm font-medium text-foreground mb-2">Email Address</Text>
               <View className="flex-row items-center border border-input rounded-lg bg-background">
                 <View className="pl-4">
-                  <Mail size={20} color="#6b7280" />
+                  <Mail size={20} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3 text-foreground"
                   placeholder="colleague@example.com"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.mutedForeground}
                   value={inviteEmail}
                   onChangeText={setInviteEmail}
                   keyboardType="email-address"
@@ -343,7 +346,7 @@ export function TeamSettingsScreen() {
                 disabled={isInviting}
               >
                 {isInviting ? (
-                  <ActivityIndicator color="#ffffff" size="small" />
+                  <ActivityIndicator color={colors.primaryForeground} size="small" />
                 ) : (
                   <Text className="text-primary-foreground font-medium">Send Invite</Text>
                 )}
@@ -352,6 +355,6 @@ export function TeamSettingsScreen() {
           </View>
         </View>
       )}
-    </View>
+    </ThemedSafeAreaView>
   );
 }

@@ -1,3 +1,62 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* NativeWind CSS Variables for dark mode */
+:root {
+  --color-background: #fafafa;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-primary: #4d7c5f;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #4d7c5f;
+  /* Semantic status colors */
+  --color-success: #22c55e;
+  --color-success-foreground: #14532d;
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #78350f;
+  --color-info: #3b82f6;
+  --color-info-foreground: #1e3a8a;
+}
+
+.dark {
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-card: #1e293b;
+  --color-card-foreground: #f8fafc;
+  --color-popover: #1e293b;
+  --color-popover-foreground: #f8fafc;
+  --color-primary: #6b9b7e;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #334155;
+  --color-secondary-foreground: #f8fafc;
+  --color-muted: #334155;
+  --color-muted-foreground: #94a3b8;
+  --color-accent: #334155;
+  --color-accent-foreground: #f8fafc;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #334155;
+  --color-input: #334155;
+  --color-ring: #6b9b7e;
+  /* Semantic status colors (lighter for dark mode) */
+  --color-success: #4ade80;
+  --color-success-foreground: #052e16;
+  --color-warning: #fbbf24;
+  --color-warning-foreground: #451a03;
+  --color-info: #60a5fa;
+  --color-info-foreground: #172554;
+}

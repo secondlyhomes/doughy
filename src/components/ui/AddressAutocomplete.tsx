@@ -2,11 +2,12 @@
 // Address input with autocomplete suggestions
 // Supports manual entry and optional Google Places API integration
 
-import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal as RNModal, ActivityIndicator, ViewProps } from 'react-native';
-import { MapPin, Search, X } from 'lucide-react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Modal as RNModal, ViewProps } from 'react-native';
+import { MapPin, X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { SearchBar } from './SearchBar';
 import { useAddressSearch, AddressValue, PlacePrediction } from './hooks/useAddressSearch';
 import { AddressSuggestionList } from './AddressSuggestionList';
 
@@ -37,7 +38,6 @@ export function AddressAutocomplete({
   ...props
 }: AddressAutocompleteProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const inputRef = useRef<TextInput>(null);
   const colors = useThemeColors();
 
   const {
@@ -115,21 +115,16 @@ export function AddressAutocomplete({
         <View className="flex-1 bg-background">
           {/* Header */}
           <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
-            <View className="flex-1 flex-row items-center rounded-md border border-input bg-muted/30 px-3 py-2">
-              <Search size={16} color={colors.mutedForeground} />
-              <TextInput
-                ref={inputRef}
-                className="ml-2 flex-1 text-sm text-foreground"
-                placeholder="Search address..."
-                placeholderTextColor={colors.mutedForeground}
-                value={searchText}
-                onChangeText={setSearchText}
-                autoFocus
-                returnKeyType="search"
-                onSubmitEditing={handleManualEntry}
-              />
-              {isLoading && <ActivityIndicator size="small" color={colors.mutedForeground} />}
-            </View>
+            <SearchBar
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholder="Search address..."
+              size="sm"
+              autoFocus
+              isLoading={isLoading}
+              onSubmit={handleManualEntry}
+              className="flex-1"
+            />
             <TouchableOpacity onPress={() => setIsOpen(false)}>
               <Text className="text-sm font-medium text-primary">Cancel</Text>
             </TouchableOpacity>

@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface FormStep {
   id: string;
@@ -17,6 +18,7 @@ interface FormStepProgressProps {
 }
 
 export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressProps) {
+  const colors = useThemeColors();
   return (
     <View className="px-4 py-4">
       {/* Step indicators */}
@@ -40,7 +42,7 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
                   }`}
                 >
                   {isCompleted ? (
-                    <Check size={16} color="white" strokeWidth={3} />
+                    <Check size={16} color={colors.primaryForeground} strokeWidth={3} />
                   ) : (
                     <Text
                       className={`text-sm font-semibold ${

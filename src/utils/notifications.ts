@@ -20,7 +20,10 @@ try {
   Notifications = require('expo-notifications');
 } catch {
   // Native module not available - will use mocks below
-  console.warn('expo-notifications native module not available. Using mock implementation.');
+  // This is expected in Expo Go; use a development build for real notifications
+  if (__DEV__) {
+    console.info('[Notifications] Using mock implementation (Expo Go detected). Build a development build for real push notifications.');
+  }
 }
 
 export async function getPermissionsAsync(): Promise<PermissionResponse> {
@@ -40,7 +43,9 @@ export async function requestPermissionsAsync(): Promise<PermissionResponse> {
     return Notifications.requestPermissionsAsync();
   }
   // Mock: Simulate permission grant in Expo Go for development
-  console.log('[Mock] Simulating notification permission request');
+  if (__DEV__) {
+    console.info('[Notifications] Simulating permission request (mock mode)');
+  }
   return {
     status: 'granted',
     canAskAgain: true,

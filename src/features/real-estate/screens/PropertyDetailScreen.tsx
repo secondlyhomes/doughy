@@ -12,11 +12,13 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Edit2, Trash2, MoreHorizontal } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { Button, LoadingSpinner } from '@/components/ui';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import {
   PropertyHeader,
@@ -42,6 +44,7 @@ const TAB_IDS = {
 
 export function PropertyDetailScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const params = useLocalSearchParams();
   const propertyId = params.id as string;
 
@@ -118,32 +121,29 @@ export function PropertyDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" className="text-primary" />
-        <Text className="text-muted-foreground mt-4">Loading property...</Text>
-      </View>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        <LoadingSpinner fullScreen text="Loading property..." />
+      </ThemedSafeAreaView>
     );
   }
 
   if (error || !property) {
     return (
-      <View className="flex-1 bg-background items-center justify-center px-4">
+      <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
         <Text className="text-destructive text-center mb-4">
           {error?.message || 'Property not found'}
         </Text>
-        <TouchableOpacity onPress={handleBack} className="bg-primary px-4 py-2 rounded-lg">
-          <Text className="text-primary-foreground font-medium">Go Back</Text>
-        </TouchableOpacity>
-      </View>
+        <Button onPress={handleBack}>Go Back</Button>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor="#6366f1" />
+          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
         }
         stickyHeaderIndices={[1]} // Make tabs sticky
       >
@@ -207,30 +207,22 @@ export function PropertyDetailScreen() {
 
       {/* Bottom Action Bar */}
       <View className="flex-row gap-3 p-4 bg-background border-t border-border">
-        <TouchableOpacity
-          onPress={handleEdit}
-          className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center"
-        >
-          <Edit2 size={20} color="white" />
-          <Text className="text-primary-foreground font-semibold ml-2">Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setShowActionsSheet(true)}
-          className="bg-muted py-3 px-4 rounded-xl"
-        >
-          <MoreHorizontal size={20} className="text-foreground" />
-        </TouchableOpacity>
-        <TouchableOpacity
+        <Button onPress={handleEdit} className="flex-1">
+          <Edit2 size={20} color={colors.primaryForeground} />
+          Edit
+        </Button>
+        <Button variant="secondary" onPress={() => setShowActionsSheet(true)} size="icon">
+          <MoreHorizontal size={20} color={colors.foreground} />
+        </Button>
+        <Button
+          variant="destructive"
           onPress={handleDelete}
           disabled={isDeleting}
-          className="bg-destructive py-3 px-4 rounded-xl"
+          loading={isDeleting}
+          size="icon"
         >
-          {isDeleting ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Trash2 size={20} color="white" />
-          )}
-        </TouchableOpacity>
+          {!isDeleting && <Trash2 size={20} color={colors.destructiveForeground} />}
+        </Button>
       </View>
 
       {/* Property Actions Sheet */}
@@ -242,6 +234,6 @@ export function PropertyDetailScreen() {
         onDelete={handleDelete}
         onStatusChange={handleStatusChange}
       />
-    </View>
+    </ThemedSafeAreaView>
   );
 }

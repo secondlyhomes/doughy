@@ -5,13 +5,13 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Button } from '@/components/ui';
 import { FormStepProgress, PROPERTY_FORM_STEPS } from './FormStepProgress';
 import { PropertyFormStep1, Step1Data } from './PropertyFormStep1';
 import { PropertyFormStep2, Step2Data } from './PropertyFormStep2';
@@ -68,6 +68,7 @@ export function PropertyFormWizard({
   isLoading = false,
   submitLabel = 'Create Property',
 }: PropertyFormWizardProps) {
+  const colors = useThemeColors();
   const [currentStep, setCurrentStep] = useState(0);
   const [step1Data, setStep1Data] = useState<Step1Data>(() => ({
     ...initialStep1Data,
@@ -270,49 +271,46 @@ export function PropertyFormWizard({
       {/* Navigation Buttons */}
       <View className="flex-row gap-3 p-4 bg-background border-t border-border">
         {currentStep === 0 ? (
-          <TouchableOpacity
+          <Button
+            variant="secondary"
             onPress={handleCancel}
             disabled={isLoading}
-            className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center"
+            className="flex-1"
           >
-            <X size={20} className="text-foreground" />
-            <Text className="text-foreground font-semibold ml-2">Cancel</Text>
-          </TouchableOpacity>
+            <X size={20} color={colors.foreground} />
+            Cancel
+          </Button>
         ) : (
-          <TouchableOpacity
+          <Button
+            variant="secondary"
             onPress={handleBack}
             disabled={isLoading}
-            className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center"
+            className="flex-1"
           >
-            <ArrowLeft size={20} className="text-foreground" />
-            <Text className="text-foreground font-semibold ml-2">Back</Text>
-          </TouchableOpacity>
+            <ArrowLeft size={20} color={colors.foreground} />
+            Back
+          </Button>
         )}
 
         {isLastStep ? (
-          <TouchableOpacity
+          <Button
             onPress={handleSubmit}
             disabled={isLoading}
-            className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center"
+            loading={isLoading}
+            className="flex-1"
           >
-            {isLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Check size={20} color="white" />
-                <Text className="text-primary-foreground font-semibold ml-2">{submitLabel}</Text>
-              </>
-            )}
-          </TouchableOpacity>
+            {!isLoading && <Check size={20} color={colors.primaryForeground} />}
+            {submitLabel}
+          </Button>
         ) : (
-          <TouchableOpacity
+          <Button
             onPress={handleNext}
             disabled={isLoading}
-            className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center"
+            className="flex-1"
           >
-            <Text className="text-primary-foreground font-semibold mr-2">Next</Text>
-            <ArrowRight size={20} color="white" />
-          </TouchableOpacity>
+            Next
+            <ArrowRight size={20} color={colors.primaryForeground} />
+          </Button>
         )}
       </View>
     </KeyboardAvoidingView>

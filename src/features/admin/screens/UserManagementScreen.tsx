@@ -7,25 +7,18 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  TextInput,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  ArrowLeft,
-  Search,
-  Filter,
-  User,
-  Shield,
-  ChevronRight,
-  X,
-} from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, Filter, User, Shield, ChevronRight } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { SearchBar, ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { getUsers, getRoleLabel, isAdminRole, type AdminUser, type UserFilters, type UserRole } from '../services/userService';
 
 export function UserManagementScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
@@ -90,7 +83,7 @@ export function UserManagementScreen() {
   }, [router]);
 
   const getStatusColor = (isDeleted: boolean) => {
-    return isDeleted ? '#ef4444' : '#22c55e';
+    return isDeleted ? colors.destructive : colors.success;
   };
 
   const renderUser = ({ item }: { item: AdminUser }) => (
@@ -99,7 +92,7 @@ export function UserManagementScreen() {
       onPress={() => handleUserPress(item)}
     >
       <View className="w-12 h-12 rounded-full bg-primary/10 items-center justify-center">
-        <User size={24} color="#3b82f6" />
+        <User size={24} color={colors.info} />
       </View>
       <View className="flex-1 ml-3">
         <View className="flex-row items-center">
@@ -107,7 +100,7 @@ export function UserManagementScreen() {
             {item.name || 'No Name'}
           </Text>
           {isAdminRole(item.role) && (
-            <Shield size={14} color="#8b5cf6" style={{ marginLeft: 4 }} />
+            <Shield size={14} color={colors.primary} style={{ marginLeft: 4 }} />
           )}
         </View>
         <Text className="text-sm text-muted-foreground">{item.email}</Text>
@@ -125,47 +118,36 @@ export function UserManagementScreen() {
           </Text>
         </View>
       </View>
-      <ChevronRight size={20} color="#6b7280" />
+      <ChevronRight size={20} color={colors.mutedForeground} />
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          User Management
-        </Text>
-        <TouchableOpacity
-          className="p-2"
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Filter size={20} color={showFilters ? '#3b82f6' : '#6b7280'} />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title="User Management"
+        backButton
+        bordered
+        rightAction={
+          <TouchableOpacity
+            className="p-2"
+            onPress={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={20} color={showFilters ? colors.info : colors.mutedForeground} />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Search Bar */}
       <View className="px-4 py-3 border-b border-border">
-        <View className="flex-row items-center bg-muted rounded-lg px-3">
-          <Search size={20} color="#6b7280" />
-          <TextInput
-            className="flex-1 py-3 px-2 text-foreground"
-            placeholder="Search users..."
-            placeholderTextColor="#9ca3af"
-            value={search}
-            onChangeText={setSearch}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
-              <X size={18} color="#6b7280" />
-            </TouchableOpacity>
-          )}
-        </View>
+        <SearchBar
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search users..."
+          size="lg"
+          onSubmit={handleSearch}
+        />
 
         {/* Filter Pills */}
         {showFilters && (
@@ -215,9 +197,7 @@ export function UserManagementScreen() {
 
       {/* User List */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
+        <LoadingSpinner fullScreen />
       ) : (
         <FlatList
           data={users}
@@ -230,13 +210,13 @@ export function UserManagementScreen() {
           onEndReachedThreshold={0.5}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-12">
-              <User size={48} color="#9ca3af" />
+              <User size={48} color={colors.mutedForeground} />
               <Text className="text-muted-foreground mt-4">No users found</Text>
             </View>
           }
         />
       )}
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }
 

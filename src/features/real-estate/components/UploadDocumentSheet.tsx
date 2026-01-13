@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { FileText, Upload, X, Check, AlertCircle } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import * as DocumentPicker from 'expo-document-picker';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useDocumentMutations, DOCUMENT_CATEGORIES, DocumentCategory } from '../hooks/usePropertyDocuments';
@@ -29,6 +30,7 @@ export function UploadDocumentSheet({
   onClose,
   onSuccess,
 }: UploadDocumentSheetProps) {
+  const colors = useThemeColors();
   const { pickDocument, uploadDocument, isLoading, error, uploadProgress } = useDocumentMutations();
 
   const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
@@ -176,7 +178,7 @@ export function UploadDocumentSheet({
             value={title}
             onChangeText={setTitle}
             placeholder="Document title"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.mutedForeground}
             className="bg-input border border-border rounded-xl px-4 py-3 text-foreground"
             editable={!isLoading}
           />
@@ -216,7 +218,7 @@ export function UploadDocumentSheet({
             value={description}
             onChangeText={setDescription}
             placeholder="Add notes about this document"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.mutedForeground}
             className="bg-input border border-border rounded-xl px-4 py-3 text-foreground"
             multiline
             numberOfLines={3}
@@ -270,10 +272,10 @@ export function UploadDocumentSheet({
             }`}
           >
             {isLoading ? (
-              <ActivityIndicator color="white" size="small" />
+              <ActivityIndicator color={colors.primaryForeground} size="small" />
             ) : (
               <>
-                <Upload size={18} color="white" />
+                <Upload size={18} color={colors.primaryForeground} />
                 <Text className="text-primary-foreground font-semibold ml-2">Upload</Text>
               </>
             )}

@@ -75,7 +75,7 @@ export function PropertyAnalysisTab({ property }: PropertyAnalysisTabProps) {
                 {/* Net Profit */}
                 <View className="flex-1 min-w-[45%] bg-muted rounded-lg p-3">
                   <Text className="text-xs text-muted-foreground uppercase">Net Profit</Text>
-                  <Text className={`text-xl font-bold ${metrics.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <Text className={`text-xl font-bold ${metrics.netProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {formatCurrency(metrics.netProfit)}
                   </Text>
                 </View>
@@ -83,7 +83,7 @@ export function PropertyAnalysisTab({ property }: PropertyAnalysisTabProps) {
                 {/* ROI */}
                 <View className="flex-1 min-w-[45%] bg-muted rounded-lg p-3">
                   <Text className="text-xs text-muted-foreground uppercase">ROI</Text>
-                  <Text className={`text-xl font-bold ${metrics.roi >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <Text className={`text-xl font-bold ${metrics.roi >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {formatPercentage(metrics.roi)}
                   </Text>
                 </View>
@@ -161,19 +161,19 @@ export function PropertyAnalysisTab({ property }: PropertyAnalysisTabProps) {
                 <View className="h-px bg-border my-1" />
                 <View className="flex-row justify-between">
                   <Text className="text-muted-foreground">Gross Profit</Text>
-                  <Text className={`font-medium ${metrics.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <Text className={`font-medium ${metrics.grossProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {formatCurrency(metrics.grossProfit)}
                   </Text>
                 </View>
                 <View className="flex-row justify-between">
                   <Text className="text-foreground font-semibold">Net Profit</Text>
-                  <Text className={`font-bold ${metrics.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <Text className={`font-bold ${metrics.netProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {formatCurrency(metrics.netProfit)}
                   </Text>
                 </View>
                 <View className="flex-row justify-between">
                   <Text className="text-foreground font-semibold">Return on Investment</Text>
-                  <Text className={`font-bold ${metrics.roi >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <Text className={`font-bold ${metrics.roi >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {formatPercentage(metrics.roi)}
                   </Text>
                 </View>

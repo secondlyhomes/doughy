@@ -2,9 +2,10 @@
 // Bottom sheet for adding/editing financing scenarios
 
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { X, CreditCard } from 'lucide-react-native';
-import { BottomSheet } from '@/components/ui/BottomSheet';
+import { useThemeColors } from '@/context/ThemeContext';
+import { BottomSheet, Button } from '@/components/ui';
 import { FinancingScenario } from '../types';
 import { LoanType } from '../hooks/useFinancingScenarios';
 import { useFinancingForm } from '../hooks/useFinancingForm';
@@ -38,6 +39,7 @@ export function AddFinancingSheet({
   editScenario,
   defaultPurchasePrice,
 }: AddFinancingSheetProps) {
+  const colors = useThemeColors();
   const { formData, errors, calculations, updateField, validate, reset } = useFinancingForm(
     editScenario,
     defaultPurchasePrice
@@ -98,22 +100,16 @@ export function AddFinancingSheet({
 
         {/* Submit Button */}
         <View className="p-4 border-t border-border">
-          <TouchableOpacity
+          <Button
             onPress={handleSubmit}
             disabled={isLoading}
-            className="bg-primary py-3.5 rounded-xl flex-row items-center justify-center"
+            loading={isLoading}
+            size="lg"
+            className="w-full"
           >
-            {isLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <CreditCard size={18} color="white" />
-                <Text className="text-primary-foreground font-semibold ml-2">
-                  {editScenario ? 'Save Changes' : 'Create Scenario'}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
+            {!isLoading && <CreditCard size={18} color={colors.primaryForeground} />}
+            {editScenario ? 'Save Changes' : 'Create Scenario'}
+          </Button>
         </View>
       </KeyboardAvoidingView>
     </BottomSheet>

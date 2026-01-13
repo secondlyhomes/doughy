@@ -1,23 +1,37 @@
 // src/lib/supabase.ts
 // Supabase client configured for React Native / Expo
+// Supports mock data mode for local development (EXPO_PUBLIC_USE_MOCK_DATA=true)
+
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import type { Database } from '@/integrations/supabase/types';
+import { DEV_MODE_CONFIG } from '@/config/devMode';
 
-// Supabase configuration - NEW PROJECT (Dec 2024)
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://vpqglbaedcpeprnlnfxd.supabase.co";
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_4EljjR3n77Td4W28TF4ptQ_81KxP3xi";
+// Supabase configuration
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-// Warn if using fallback values (development only)
+// Check if we're in mock data mode
+const USE_MOCK_DATA = DEV_MODE_CONFIG.useMockData;
+
+// Validate required environment variables (skip in mock mode)
+if (!USE_MOCK_DATA && (!SUPABASE_URL || !SUPABASE_ANON_KEY)) {
+  throw new Error(
+    '[Supabase] Missing required environment variables. ' +
+    'Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env file. ' +
+    'Or set EXPO_PUBLIC_USE_MOCK_DATA=true to use mock data.'
+  );
+}
+
+// Log mode on startup
 if (__DEV__) {
-  if (!process.env.EXPO_PUBLIC_SUPABASE_URL) {
-    console.warn('[Supabase] Using fallback URL. Set EXPO_PUBLIC_SUPABASE_URL in your environment.');
-  }
-  if (!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
-    console.warn('[Supabase] Using fallback anon key. Set EXPO_PUBLIC_SUPABASE_ANON_KEY in your environment.');
-  }
+  console.log(
+    USE_MOCK_DATA
+      ? '[Supabase] Running in MOCK DATA mode - no database connection'
+      : `[Supabase] Connected to ${SUPABASE_URL}`
+  );
 }
 
 // Custom storage adapter that uses SecureStore for sensitive auth data
@@ -68,20 +82,48 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
-// Initialize Supabase client for React Native with Database types
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    storage: ExpoSecureStoreAdapter,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false, // Important: disable for mobile
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'doughy-ai-mobile',
-    },
-  },
-});
+// Initialize real Supabase client for React Native with Database types
+// Only create if we have valid credentials (not in mock mode with placeholders)
+const realSupabase = (!USE_MOCK_DATA && SUPABASE_URL && SUPABASE_ANON_KEY)
+  ? createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        storage: ExpoSecureStoreAdapter,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false, // Important: disable for mobile
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'doughy-ai-mobile',
+        },
+      },
+    })
+  : null;
+
+// Import mock client lazily to avoid circular dependencies
+let mockClientInstance: ReturnType<typeof import('./mockData').createMockClient> | null = null;
+
+function getMockClient() {
+  if (!mockClientInstance) {
+    // Dynamic import to avoid circular dependency
+    const { createMockClient } = require('./mockData');
+    mockClientInstance = createMockClient();
+  }
+  return mockClientInstance;
+}
+
+/**
+ * Main Supabase client export
+ *
+ * In mock mode: Uses in-memory mock data (fast, no network)
+ * In normal mode: Uses real Supabase connection
+ *
+ * Usage is identical - call supabase.from('table').select() etc.
+ */
+// Type assertion to maintain compatibility - mock client implements same interface
+export const supabase = (USE_MOCK_DATA
+  ? getMockClient()
+  : realSupabase!) as ReturnType<typeof createClient<Database>>;
 
 // Helper functions to access real_estate schema tables
 export const realEstateDB = {
@@ -99,3 +141,6 @@ export const realEstateDB = {
 
 // Export URL for deep linking configuration
 export { SUPABASE_URL };
+
+// Export mock mode status for conditional logic elsewhere
+export { USE_MOCK_DATA };

@@ -20,7 +20,9 @@ import {
   Star,
   Info,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import Constants from 'expo-constants';
 
 const APP_VERSION = Constants.expoConfig?.version || '1.0.0';
@@ -28,6 +30,7 @@ const BUILD_NUMBER = Constants.expoConfig?.ios?.buildNumber || '1';
 
 export function AboutScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -52,18 +55,11 @@ export function AboutScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          About
-        </Text>
-      </View>
+      <ScreenHeader title="About" backButton bordered />
 
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-4">
         {/* App Logo and Info */}
         <View className="items-center mb-8">
           <View className="w-24 h-24 rounded-2xl bg-primary items-center justify-center mb-4">
@@ -81,7 +77,7 @@ export function AboutScreen() {
         </View>
 
         {/* App Description */}
-        <View className="bg-card rounded-lg p-4 mb-6">
+        <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: colors.card }}>
           <Text className="text-foreground leading-6">
             Doughy AI helps real estate investors analyze deals, manage leads,
             and make smarter investment decisions with AI-powered insights.
@@ -93,19 +89,19 @@ export function AboutScreen() {
           RESOURCES
         </Text>
 
-        <View className="bg-card rounded-lg mb-6">
+        <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <AboutLink
-            icon={<FileText size={20} color="#6b7280" />}
+            icon={<FileText size={20} color={colors.mutedForeground} />}
             title="Terms of Service"
             onPress={() => handleOpenLink('https://doughy.ai/terms')}
           />
           <AboutLink
-            icon={<Shield size={20} color="#6b7280" />}
+            icon={<Shield size={20} color={colors.mutedForeground} />}
             title="Privacy Policy"
             onPress={() => handleOpenLink('https://doughy.ai/privacy')}
           />
           <AboutLink
-            icon={<Info size={20} color="#6b7280" />}
+            icon={<Info size={20} color={colors.mutedForeground} />}
             title="Help Center"
             onPress={() => handleOpenLink('https://doughy.ai/help')}
             hideBorder
@@ -117,15 +113,15 @@ export function AboutScreen() {
           SUPPORT
         </Text>
 
-        <View className="bg-card rounded-lg mb-6">
+        <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <AboutLink
-            icon={<Mail size={20} color="#6b7280" />}
+            icon={<Mail size={20} color={colors.mutedForeground} />}
             title="Contact Support"
             subtitle="support@doughy.ai"
             onPress={handleContactSupport}
           />
           <AboutLink
-            icon={<Star size={20} color="#f59e0b" />}
+            icon={<Star size={20} color={colors.warning} />}
             title="Rate the App"
             subtitle="Help us improve"
             onPress={handleRateApp}
@@ -143,7 +139,7 @@ export function AboutScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }
 
@@ -156,6 +152,7 @@ interface AboutLinkProps {
 }
 
 function AboutLink({ icon, title, subtitle, onPress, hideBorder }: AboutLinkProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={`flex-row items-center p-4 ${
@@ -172,7 +169,7 @@ function AboutLink({ icon, title, subtitle, onPress, hideBorder }: AboutLinkProp
           <Text className="text-sm text-muted-foreground">{subtitle}</Text>
         )}
       </View>
-      <ExternalLink size={18} color="#6b7280" />
+      <ExternalLink size={18} color={colors.mutedForeground} />
     </TouchableOpacity>
   );
 }

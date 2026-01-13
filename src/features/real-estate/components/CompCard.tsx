@@ -147,7 +147,7 @@ export function CompCard({ comp, onEdit, onDelete, subjectSqft }: CompCardProps)
               <Text className="text-xs text-muted-foreground">
                 Size Adjustment ({sizeDiff > 0 ? '+' : ''}{formatNumber(sizeDiff)} sf)
               </Text>
-              <Text className={`text-xs font-medium ${sizeAdjustment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <Text className={`text-xs font-medium ${sizeAdjustment >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {sizeAdjustment >= 0 ? '+' : ''}{formatCurrency(Math.round(sizeAdjustment))}
               </Text>
             </View>

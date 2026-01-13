@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   RefreshControl
 } from 'react-native';
+import { ThemedSafeAreaView } from '@/components';
 import { useRouter } from 'expo-router';
 import {
   TrendingUp,
@@ -23,9 +24,9 @@ import {
 } from 'lucide-react-native';
 
 // Zone A UI Components
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
-import { Badge } from '@/components/ui';
-import { Progress } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Progress, ScreenHeader } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
+import { getTrendColor } from '@/utils';
 
 // Zone D Components
 import { QuickActionFAB } from '@/features/layout';
@@ -43,8 +44,9 @@ interface StatCardProps {
 }
 
 function StatCard({ title, value, icon, trend }: StatCardProps) {
+  const colors = useThemeColors();
   return (
-    <View className="bg-card rounded-xl p-4 flex-1 min-w-[45%]">
+    <View className="rounded-xl p-4 flex-1 min-w-[45%]" style={{ backgroundColor: colors.card }}>
       <View className="flex-row items-center justify-between mb-2">
         <Text className="text-sm text-muted-foreground">{title}</Text>
         {icon}
@@ -55,8 +57,7 @@ function StatCard({ title, value, icon, trend }: StatCardProps) {
           {/* Determine if trend is positive - default to direction=up being positive */}
           {(() => {
             const isPositive = trend.isPositive ?? (trend.direction === 'up');
-            const trendColor = isPositive ? '#22c55e' : '#ef4444';
-            const textClass = isPositive ? 'text-green-500' : 'text-red-500';
+            const trendColor = getTrendColor(isPositive, colors);
             return (
               <>
                 {trend.direction === 'up' ? (
@@ -64,7 +65,7 @@ function StatCard({ title, value, icon, trend }: StatCardProps) {
                 ) : (
                   <ArrowDown size={12} color={trendColor} />
                 )}
-                <Text className={`text-xs ml-1 ${textClass}`}>{trend.value}</Text>
+                <Text style={{ color: trendColor }} className="text-xs ml-1">{trend.value}</Text>
               </>
             );
           })()}
@@ -84,6 +85,7 @@ interface PriorityLead {
 
 export function DashboardScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [refreshing, setRefreshing] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
 
@@ -106,10 +108,10 @@ export function DashboardScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Hot': return 'bg-red-500';
-      case 'Warm': return 'bg-amber-500';
-      case 'Cold': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'Hot': return 'bg-destructive';
+      case 'Warm': return 'bg-warning';
+      case 'Cold': return 'bg-info';
+      default: return 'bg-muted';
     }
   };
 
@@ -129,7 +131,7 @@ export function DashboardScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         className="flex-1"
         refreshControl={
@@ -138,17 +140,14 @@ export function DashboardScreen() {
       >
         <View className="p-4">
           {/* Header */}
-        <View className="mb-4">
-          <Text className="text-2xl font-bold text-foreground">Dashboard</Text>
-          <Text className="text-muted-foreground">Your business at a glance</Text>
-        </View>
+        <ScreenHeader title="Dashboard" subtitle="Your business at a glance" className="px-0 pt-0" />
 
         {/* Alert Banner */}
         {showAlert && (
-          <View className="bg-card border-l-4 border-l-amber-500 rounded-lg p-4 mb-4">
+          <View className="border-l-4 border-l-warning rounded-lg p-4 mb-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-start">
-              <View className="bg-amber-500/20 rounded-full p-2 mr-3">
-                <AlertTriangle size={20} color="#f59e0b" />
+              <View className="bg-warning/20 rounded-full p-2 mr-3">
+                <AlertTriangle size={20} color={colors.warning} />
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-medium text-foreground">Response Time Alert</Text>
@@ -179,7 +178,7 @@ export function DashboardScreen() {
                 accessibilityLabel="Close alert"
                 accessibilityRole="button"
               >
-                <X size={18} color="#6b7280" />
+                <X size={18} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
           </View>
@@ -190,31 +189,31 @@ export function DashboardScreen() {
           <StatCard
             title="Conversion Rate"
             value={`${conversionRate}%`}
-            icon={<TrendingUp size={16} color="#3b82f6" />}
+            icon={<TrendingUp size={16} color={colors.info} />}
             trend={{ direction: 'up', value: '+2.3% from last month' }}
           />
           <StatCard
             title="Avg. Response Time"
             value={`${responseTime}h`}
-            icon={<Clock size={16} color="#3b82f6" />}
+            icon={<Clock size={16} color={colors.info} />}
             trend={{ direction: 'down', value: '-18% from last week', isPositive: true }}
           />
           <StatCard
             title="Credits Used"
             value="750"
-            icon={<CreditCard size={16} color="#3b82f6" />}
+            icon={<CreditCard size={16} color={colors.info} />}
           />
           <StatCard
             title="Active Leads"
             value={activeLeads}
-            icon={<Users size={16} color="#3b82f6" />}
+            icon={<Users size={16} color={colors.info} />}
           />
         </View>
 
         {/* Priority Leads */}
-        <View className="bg-card rounded-xl p-4 mb-4">
+        <View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center mb-2">
-            <AlertTriangle size={20} color="#3b82f6" />
+            <AlertTriangle size={20} color={colors.primary} />
             <Text className="text-lg font-semibold text-foreground ml-2">Priority Leads</Text>
           </View>
           <Text className="text-sm text-muted-foreground mb-4">
@@ -244,7 +243,7 @@ export function DashboardScreen() {
                 </View>
                 <View className="items-end">
                   <Text className="text-xs text-muted-foreground">Last: {lead.lastContact}</Text>
-                  <ArrowRight size={16} color="#6b7280" />
+                  <ArrowRight size={16} color={colors.mutedForeground} />
                 </View>
               </View>
             </TouchableOpacity>
@@ -257,12 +256,12 @@ export function DashboardScreen() {
             accessibilityRole="button"
           >
             <Text className="text-sm text-primary mr-1">View All Leads</Text>
-            <ArrowRight size={14} color="#3b82f6" />
+            <ArrowRight size={14} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         {/* Quick Actions */}
-        <View className="bg-card rounded-xl p-4">
+        <View className="rounded-xl p-4" style={{ backgroundColor: colors.card }}>
           <Text className="text-lg font-semibold text-foreground mb-4">Quick Actions</Text>
           <View className="flex-row gap-3">
             <TouchableOpacity
@@ -271,8 +270,8 @@ export function DashboardScreen() {
               accessibilityLabel="Add new lead"
               accessibilityRole="button"
             >
-              <Users size={24} color="white" />
-              <Text className="text-white font-medium mt-2">Add Lead</Text>
+              <Users size={24} color={colors.primaryForeground} />
+              <Text className="text-primary-foreground font-medium mt-2">Add Lead</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="flex-1 bg-secondary rounded-lg p-4 items-center"
@@ -280,7 +279,7 @@ export function DashboardScreen() {
               accessibilityLabel="Open AI assistant"
               accessibilityRole="button"
             >
-              <TrendingUp size={24} color="#1f2937" />
+              <TrendingUp size={24} color={colors.secondaryForeground} />
               <Text className="text-secondary-foreground font-medium mt-2">AI Assistant</Text>
             </TouchableOpacity>
           </View>
@@ -297,7 +296,7 @@ export function DashboardScreen() {
         onAddProperty={handleAddProperty}
         onStartChat={handleStartChat}
       />
-    </View>
+    </ThemedSafeAreaView>
   );
 }
 

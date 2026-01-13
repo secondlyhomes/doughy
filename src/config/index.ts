@@ -10,6 +10,13 @@ export {
   AUTH_SCREENS,
 } from './auth.constants';
 
+export {
+  DEV_MODE_CONFIG,
+  isMockMode,
+  simulateNetworkDelay,
+  logMockOperation,
+} from './devMode';
+
 // App configuration
 export const APP_CONFIG = {
   // App name

@@ -2,7 +2,7 @@
 // Documents tab content for property detail
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Linking } from 'react-native';
 import {
   FileText,
   Upload,
@@ -16,6 +16,8 @@ import {
   ChevronDown,
   ChevronRight,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Button, LoadingSpinner } from '@/components/ui';
 import { Property, Document } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
 import {
@@ -41,6 +43,7 @@ const DOC_TYPE_ICONS: Record<string, any> = {
 };
 
 export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
+  const colors = useThemeColors();
   const { documents, isLoading, error, refetch, documentsByCategory } = usePropertyDocuments({
     propertyId: property.id,
   });
@@ -167,17 +170,16 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
             >
               <Download size={16} className="text-muted-foreground" />
             </TouchableOpacity>
-            <TouchableOpacity
+            <Button
+              variant="ghost"
+              size="icon"
               onPress={() => handleDeleteDocument(doc)}
-              className="bg-destructive/10 p-2 rounded-lg"
               disabled={isDeletingDoc}
+              loading={isDeletingDoc}
+              className="bg-destructive/10"
             >
-              {isDeletingDoc ? (
-                <ActivityIndicator size="small" color="#ef4444" />
-              ) : (
-                <Trash2 size={16} className="text-destructive" />
-              )}
-            </TouchableOpacity>
+              {!isDeletingDoc && <Trash2 size={16} color={colors.destructive} />}
+            </Button>
           </View>
         </View>
       </View>
@@ -187,9 +189,8 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
   // Loading state
   if (isLoading && documents.length === 0) {
     return (
-      <View className="gap-4 py-8 items-center">
-        <ActivityIndicator size="large" className="text-primary" />
-        <Text className="text-muted-foreground">Loading documents...</Text>
+      <View className="py-8">
+        <LoadingSpinner fullScreen text="Loading documents..." />
       </View>
     );
   }
@@ -199,9 +200,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
     return (
       <View className="gap-4 py-8 items-center">
         <Text className="text-destructive">{error.message}</Text>
-        <TouchableOpacity onPress={refetch} className="bg-primary px-4 py-2 rounded-lg">
-          <Text className="text-primary-foreground font-medium">Retry</Text>
-        </TouchableOpacity>
+        <Button onPress={refetch}>Retry</Button>
       </View>
     );
   }
@@ -218,13 +217,10 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
             </View>
           )}
         </View>
-        <TouchableOpacity
-          onPress={() => setShowUploadSheet(true)}
-          className="flex-row items-center bg-primary px-3 py-2 rounded-lg"
-        >
-          <Upload size={16} color="white" />
-          <Text className="text-primary-foreground font-medium ml-1">Upload</Text>
-        </TouchableOpacity>
+        <Button onPress={() => setShowUploadSheet(true)} size="sm">
+          <Upload size={16} color={colors.primaryForeground} />
+          Upload
+        </Button>
       </View>
 
       {/* Empty State */}
@@ -239,13 +235,10 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
               Upload contracts, inspections, appraisals, and other documents related to this
               property.
             </Text>
-            <TouchableOpacity
-              onPress={() => setShowUploadSheet(true)}
-              className="flex-row items-center bg-muted px-4 py-2 rounded-lg"
-            >
-              <Upload size={16} className="text-foreground" />
-              <Text className="text-foreground font-medium ml-2">Upload First Document</Text>
-            </TouchableOpacity>
+            <Button variant="secondary" onPress={() => setShowUploadSheet(true)}>
+              <Upload size={16} color={colors.foreground} />
+              Upload First Document
+            </Button>
           </View>
 
           {/* Document Types Quick Info */}

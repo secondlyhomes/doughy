@@ -173,7 +173,7 @@ export function Calendar({
                 {markedInfo?.marked && !isSelected && (
                   <View
                     className="absolute bottom-1 h-1 w-1 rounded-full"
-                    style={{ backgroundColor: markedInfo.dotColor || '#3b82f6' }}
+                    style={{ backgroundColor: markedInfo.dotColor || colors.info }}
                   />
                 )}
               </TouchableOpacity>

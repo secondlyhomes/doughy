@@ -16,9 +16,9 @@ import { RepairEstimate, RepairCategory } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
 const PRIORITY_COLORS = {
-  low: 'bg-green-100 text-green-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  high: 'bg-red-100 text-red-700',
+  low: 'bg-success/20 text-success',
+  medium: 'bg-warning/20 text-warning',
+  high: 'bg-destructive/20 text-destructive',
 };
 
 interface CategorySummary {
@@ -93,7 +93,7 @@ export function RepairCategorySection({
                   onPress={() => onToggleCompleted(repair)}
                   className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3 ${
                     repair.completed
-                      ? 'bg-green-500 border-green-500'
+                      ? 'bg-success border-success'
                       : 'border-muted-foreground'
                   }`}
                 >

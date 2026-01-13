@@ -4,6 +4,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { ChevronDown, MapPin } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { PropertyConstants } from '../types';
 import { AddressAutocomplete, AddressResult } from './AddressAutocomplete';
 
@@ -26,6 +27,7 @@ interface PropertyFormStep1Props {
 }
 
 export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1Props) {
+  const colors = useThemeColors();
   const [showPropertyTypePicker, setShowPropertyTypePicker] = useState(false);
   const [useAutocomplete, setUseAutocomplete] = useState(true);
 
@@ -98,7 +100,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                   value={data.address}
                   onChangeText={(value) => onChange({ address: value })}
                   placeholder="123 Main Street"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.mutedForeground}
                   className={`bg-muted rounded-lg px-4 py-3 text-foreground ${
                     errors.address ? 'border border-destructive' : ''
                   }`}
@@ -114,7 +116,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                   value={data.address_line_2}
                   onChangeText={(value) => onChange({ address_line_2: value })}
                   placeholder="Apt 4B"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.mutedForeground}
                   className="bg-muted rounded-lg px-4 py-3 text-foreground"
                 />
               </View>
@@ -126,7 +128,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                     value={data.city}
                     onChangeText={(value) => onChange({ city: value })}
                     placeholder="City"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.mutedForeground}
                     className={`bg-muted rounded-lg px-4 py-3 text-foreground ${
                       errors.city ? 'border border-destructive' : ''
                     }`}
@@ -141,7 +143,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                     value={data.state}
                     onChangeText={(value) => onChange({ state: value.toUpperCase() })}
                     placeholder="CA"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.mutedForeground}
                     maxLength={2}
                     autoCapitalize="characters"
                     className={`bg-muted rounded-lg px-4 py-3 text-foreground ${
@@ -161,7 +163,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                     value={data.zip}
                     onChangeText={(value) => onChange({ zip: value })}
                     placeholder="12345"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.mutedForeground}
                     keyboardType="numeric"
                     maxLength={10}
                     className={`bg-muted rounded-lg px-4 py-3 text-foreground ${
@@ -178,7 +180,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                     value={data.county}
                     onChangeText={(value) => onChange({ county: value })}
                     placeholder="County (optional)"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.mutedForeground}
                     className="bg-muted rounded-lg px-4 py-3 text-foreground"
                   />
                 </View>

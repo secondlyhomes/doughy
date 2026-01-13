@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { FileText } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface LeadNote {
   content: string;
@@ -16,11 +17,13 @@ interface LeadNotesSectionProps {
 }
 
 export function LeadNotesSection({ notes, onAddNote }: LeadNotesSectionProps) {
+  const colors = useThemeColors();
+
   return (
     <View className="bg-card p-4 mb-4">
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center">
-          <FileText size={18} color="#6b7280" />
+          <FileText size={18} color={colors.mutedForeground} />
           <Text className="text-lg font-semibold text-foreground ml-2">Notes</Text>
         </View>
         <TouchableOpacity onPress={onAddNote} accessibilityLabel="Add note" accessibilityRole="button">

@@ -15,9 +15,12 @@ import {
 import { useRouter } from 'expo-router';
 import { Mail, AlertCircle, Check, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
 
 export function ForgotPasswordScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { resetPassword, isLoading } = useAuth();
 
   // Form state
@@ -63,9 +66,9 @@ export function ForgotPasswordScreen() {
   // Success screen
   if (success) {
     return (
-      <View className="flex-1 bg-background justify-center items-center px-6">
+      <ThemedSafeAreaView className="flex-1 justify-center items-center px-6" edges={['top']}>
         <View className="bg-primary/10 rounded-full p-6 mb-6">
-          <Check size={48} color="#22c55e" />
+          <Check size={48} color={colors.success} />
         </View>
         <Text className="text-2xl font-bold text-foreground text-center mb-4">
           Check Your Email
@@ -81,16 +84,17 @@ export function ForgotPasswordScreen() {
             Back to Sign In
           </Text>
         </TouchableOpacity>
-      </View>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-background"
-    >
-      <ScrollView
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -100,7 +104,7 @@ export function ForgotPasswordScreen() {
             className="flex-row items-center mb-8"
             onPress={handleBackToLogin}
           >
-            <ArrowLeft size={20} color="#6b7280" />
+            <ArrowLeft size={20} color={colors.mutedForeground} />
             <Text className="text-muted-foreground ml-2">Back to Sign In</Text>
           </TouchableOpacity>
 
@@ -117,7 +121,7 @@ export function ForgotPasswordScreen() {
           {/* Error Message */}
           {error && (
             <View className="flex-row items-center bg-destructive/10 rounded-lg p-4 mb-6">
-              <AlertCircle size={20} color="#ef4444" />
+              <AlertCircle size={20} color={colors.destructive} />
               <Text className="text-destructive ml-2 flex-1">{error}</Text>
             </View>
           )}
@@ -127,12 +131,12 @@ export function ForgotPasswordScreen() {
             <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Mail size={20} color="#6b7280" />
+                <Mail size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="name@example.com"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -152,7 +156,7 @@ export function ForgotPasswordScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <Text className="text-primary-foreground font-semibold text-base">
                 Reset Password
@@ -168,7 +172,8 @@ export function ForgotPasswordScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ThemedSafeAreaView>
   );
 }

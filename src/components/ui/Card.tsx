@@ -1,27 +1,71 @@
 // src/components/ui/Card.tsx
-// React Native Card components with NativeWind styling
+// React Native Card components with NativeWind styling and glass effects
 import React from 'react';
-import { View, Text, ViewProps, TextProps } from 'react-native';
+import { View, Text, ViewProps, TextProps, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
+import { GlassView } from './GlassView';
 
 interface CardProps extends ViewProps {
   className?: string;
   children?: React.ReactNode;
+  /** Card variant: 'default' for solid background, 'glass' for glass effect. Default: 'default' */
+  variant?: 'default' | 'glass';
+  /** Blur intensity for glass variant (0-100). Default: 60 */
+  glassIntensity?: number;
 }
 
-export function Card({ className, children, ...props }: CardProps) {
+export function Card({
+  className,
+  children,
+  style,
+  variant = 'default',
+  glassIntensity = 60,
+  ...props
+}: CardProps) {
+  const colors = useThemeColors();
+
+  if (variant === 'glass') {
+    return (
+      <GlassView
+        intensity={glassIntensity}
+        style={[
+          cardStyles.base,
+          { borderColor: colors.border },
+          style,
+        ]}
+        {...props}
+      >
+        {children}
+      </GlassView>
+    );
+  }
+
   return (
     <View
-      className={cn(
-        'rounded-lg border border-border bg-card shadow-md',
-        className
-      )}
+      className={cn('rounded-lg shadow-md', className)}
+      style={[
+        {
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        style,
+      ]}
       {...props}
     >
       {children}
     </View>
   );
 }
+
+const cardStyles = StyleSheet.create({
+  base: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+});
 
 interface CardHeaderProps extends ViewProps {
   className?: string;
@@ -41,10 +85,12 @@ interface CardTitleProps extends TextProps {
   children?: React.ReactNode;
 }
 
-export function CardTitle({ className, children, ...props }: CardTitleProps) {
+export function CardTitle({ className, children, style, ...props }: CardTitleProps) {
+  const colors = useThemeColors();
   return (
     <Text
-      className={cn('text-2xl font-semibold text-card-foreground', className)}
+      className={cn('text-2xl font-semibold', className)}
+      style={[{ color: colors.cardForeground }, style]}
       {...props}
     >
       {children}
@@ -57,10 +103,12 @@ interface CardDescriptionProps extends TextProps {
   children?: React.ReactNode;
 }
 
-export function CardDescription({ className, children, ...props }: CardDescriptionProps) {
+export function CardDescription({ className, children, style, ...props }: CardDescriptionProps) {
+  const colors = useThemeColors();
   return (
     <Text
-      className={cn('text-sm text-muted-foreground', className)}
+      className={cn('text-sm', className)}
+      style={[{ color: colors.mutedForeground }, style]}
       {...props}
     >
       {children}

@@ -15,6 +15,7 @@ import {
   PieChart,
   Home,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface MetricCardProps {
   label: string;
@@ -26,14 +27,14 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, icon, trend = 'neutral', subtitle }: MetricCardProps) {
   const trendColors = {
-    positive: 'bg-green-50 border-green-200',
-    negative: 'bg-red-50 border-red-200',
+    positive: 'bg-success/10 border-success/30',
+    negative: 'bg-destructive/10 border-destructive/30',
     neutral: 'bg-card border-border',
   };
 
   const textColors = {
-    positive: 'text-green-700',
-    negative: 'text-red-700',
+    positive: 'text-success',
+    negative: 'text-destructive',
     neutral: 'text-foreground',
   };
 
@@ -85,6 +86,7 @@ export function PropertyAnalytics({
   profitPotential,
   equityPosition,
 }: PropertyAnalyticsProps) {
+  const colors = useThemeColors();
   // Calculate derived values if not provided
   const calculatedCashFlow = monthlyCashFlow ?? (monthlyRent - monthlyExpenses);
   const calculatedProfitPotential = profitPotential ?? (arv - purchasePrice - totalRepairCost);
@@ -112,21 +114,21 @@ export function PropertyAnalytics({
             <MetricCard
               label="Purchase Price"
               value={formatCurrency(purchasePrice)}
-              icon={<Home size={18} color="#6b7280" />}
+              icon={<Home size={18} color={colors.mutedForeground} />}
             />
           </View>
           <View className="flex-1 min-w-[45%]">
             <MetricCard
               label="ARV"
               value={formatCurrency(arv)}
-              icon={<TrendingUp size={18} color="#6b7280" />}
+              icon={<TrendingUp size={18} color={colors.mutedForeground} />}
             />
           </View>
           <View className="flex-1 min-w-[45%]">
             <MetricCard
               label="Repair Costs"
               value={formatCurrency(totalRepairCost)}
-              icon={<DollarSign size={18} color="#6b7280" />}
+              icon={<DollarSign size={18} color={colors.mutedForeground} />}
               trend={totalRepairCost > 50000 ? 'negative' : 'neutral'}
             />
           </View>
@@ -136,9 +138,9 @@ export function PropertyAnalytics({
               value={formatCurrency(calculatedProfitPotential)}
               icon={
                 calculatedProfitPotential >= 0 ? (
-                  <TrendingUp size={18} color="#16a34a" />
+                  <TrendingUp size={18} color={colors.success} />
                 ) : (
-                  <TrendingDown size={18} color="#dc2626" />
+                  <TrendingDown size={18} color={colors.destructive} />
                 )
               }
               trend={calculatedProfitPotential >= 0 ? 'positive' : 'negative'}
@@ -155,7 +157,7 @@ export function PropertyAnalytics({
             <MetricCard
               label="Monthly Rent"
               value={formatCurrency(monthlyRent)}
-              icon={<DollarSign size={18} color="#16a34a" />}
+              icon={<DollarSign size={18} color={colors.success} />}
               trend="positive"
             />
           </View>
@@ -163,7 +165,7 @@ export function PropertyAnalytics({
             <MetricCard
               label="Monthly Expenses"
               value={formatCurrency(monthlyExpenses)}
-              icon={<DollarSign size={18} color="#dc2626" />}
+              icon={<DollarSign size={18} color={colors.destructive} />}
               trend="negative"
             />
           </View>
@@ -173,9 +175,9 @@ export function PropertyAnalytics({
               value={formatCurrency(calculatedCashFlow)}
               icon={
                 calculatedCashFlow >= 0 ? (
-                  <TrendingUp size={18} color="#16a34a" />
+                  <TrendingUp size={18} color={colors.success} />
                 ) : (
-                  <TrendingDown size={18} color="#dc2626" />
+                  <TrendingDown size={18} color={colors.destructive} />
                 )
               }
               trend={calculatedCashFlow >= 0 ? 'positive' : 'negative'}
@@ -193,7 +195,7 @@ export function PropertyAnalytics({
             <MetricCard
               label="Cash on Cash"
               value={formatPercent(cashOnCashReturn)}
-              icon={<Percent size={18} color="#6b7280" />}
+              icon={<Percent size={18} color={colors.mutedForeground} />}
               trend={cashOnCashReturn >= 8 ? 'positive' : cashOnCashReturn >= 5 ? 'neutral' : 'negative'}
               subtitle={cashOnCashReturn >= 8 ? 'Good' : cashOnCashReturn >= 5 ? 'Fair' : 'Below target'}
             />
@@ -202,7 +204,7 @@ export function PropertyAnalytics({
             <MetricCard
               label="Cap Rate"
               value={formatPercent(capRate)}
-              icon={<PieChart size={18} color="#6b7280" />}
+              icon={<PieChart size={18} color={colors.mutedForeground} />}
               trend={capRate >= 6 ? 'positive' : capRate >= 4 ? 'neutral' : 'negative'}
               subtitle={capRate >= 6 ? 'Good' : capRate >= 4 ? 'Fair' : 'Below target'}
             />
@@ -211,7 +213,7 @@ export function PropertyAnalytics({
             <MetricCard
               label="LTV Ratio"
               value={formatPercent(ltvRatio)}
-              icon={<Percent size={18} color="#6b7280" />}
+              icon={<Percent size={18} color={colors.mutedForeground} />}
               trend={ltvRatio <= 75 ? 'positive' : ltvRatio <= 85 ? 'neutral' : 'negative'}
               subtitle={ltvRatio <= 75 ? 'Conservative' : ltvRatio <= 85 ? 'Moderate' : 'High leverage'}
             />
@@ -220,7 +222,7 @@ export function PropertyAnalytics({
             <MetricCard
               label="Equity Position"
               value={formatPercent(calculatedEquity)}
-              icon={<TrendingUp size={18} color="#6b7280" />}
+              icon={<TrendingUp size={18} color={colors.mutedForeground} />}
               trend={calculatedEquity >= 20 ? 'positive' : calculatedEquity >= 10 ? 'neutral' : 'negative'}
             />
           </View>

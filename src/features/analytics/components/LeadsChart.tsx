@@ -2,27 +2,18 @@
 // Displays lead analytics using react-native-chart-kit
 
 import React from 'react';
-import { View, Text, Dimensions } from 'react-native';
+import { View, Text, useWindowDimensions } from 'react-native';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { TrendingUp } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
-const screenWidth = Dimensions.get('window').width;
-
-const chartConfig = {
-  backgroundColor: '#ffffff',
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#ffffff',
-  decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
-  style: {
-    borderRadius: 16,
-  },
-  propsForDots: {
-    r: '4',
-    strokeWidth: '2',
-    stroke: '#3b82f6',
-  },
+// Helper to convert hex to rgba
+const hexToRgba = (hex: string, opacity: number) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (result) {
+    return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${opacity})`;
+  }
+  return `rgba(0, 0, 0, ${opacity})`;
 };
 
 interface LeadsOverTimeChartProps {
@@ -34,6 +25,26 @@ export function LeadsOverTimeChart({
   data,
   title = 'Leads Over Time'
 }: LeadsOverTimeChartProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  const colors = useThemeColors();
+
+  const chartConfig = {
+    backgroundColor: colors.card,
+    backgroundGradientFrom: colors.card,
+    backgroundGradientTo: colors.card,
+    decimalPlaces: 0,
+    color: (opacity = 1) => hexToRgba(colors.info, opacity),
+    labelColor: (opacity = 1) => hexToRgba(colors.mutedForeground, opacity),
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: '4',
+      strokeWidth: '2',
+      stroke: colors.info,
+    },
+  };
+
   // Default mock data
   const chartData = data || [
     { label: 'Mon', value: 12 },
@@ -58,7 +69,7 @@ export function LeadsOverTimeChart({
   return (
     <View className="bg-card rounded-xl p-4">
       <View className="flex-row items-center mb-4">
-        <TrendingUp size={20} color="#3b82f6" />
+        <TrendingUp size={20} color={colors.info} />
         <Text className="text-lg font-semibold text-foreground ml-2">{title}</Text>
       </View>
       <LineChart
@@ -85,34 +96,49 @@ export function LeadSourceChart({
   data,
   title = 'Lead Sources'
 }: LeadSourceChartProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  const colors = useThemeColors();
+
+  const chartConfig = {
+    backgroundColor: colors.card,
+    backgroundGradientFrom: colors.card,
+    backgroundGradientTo: colors.card,
+    decimalPlaces: 0,
+    color: (opacity = 1) => hexToRgba(colors.info, opacity),
+    labelColor: (opacity = 1) => hexToRgba(colors.mutedForeground, opacity),
+    style: {
+      borderRadius: 16,
+    },
+  };
+
   // Default mock data
   const pieData = data || [
     {
       name: 'Website',
       count: 45,
-      color: '#3b82f6',
-      legendFontColor: '#6b7280',
+      color: colors.info,
+      legendFontColor: colors.mutedForeground,
       legendFontSize: 12,
     },
     {
       name: 'Referral',
       count: 28,
-      color: '#22c55e',
-      legendFontColor: '#6b7280',
+      color: colors.success,
+      legendFontColor: colors.mutedForeground,
       legendFontSize: 12,
     },
     {
       name: 'Social',
       count: 15,
-      color: '#f59e0b',
-      legendFontColor: '#6b7280',
+      color: colors.warning,
+      legendFontColor: colors.mutedForeground,
       legendFontSize: 12,
     },
     {
       name: 'Cold Call',
       count: 12,
-      color: '#8b5cf6',
-      legendFontColor: '#6b7280',
+      color: colors.primary,
+      legendFontColor: colors.mutedForeground,
       legendFontSize: 12,
     },
   ];
@@ -121,7 +147,7 @@ export function LeadSourceChart({
     name: item.name,
     population: item.count,
     color: item.color,
-    legendFontColor: '#6b7280',
+    legendFontColor: colors.mutedForeground,
     legendFontSize: 12,
   }));
 
@@ -151,6 +177,21 @@ export function ConversionChart({
   data,
   title = 'Conversion Rate'
 }: ConversionChartProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  const colors = useThemeColors();
+
+  const chartConfig = {
+    backgroundColor: colors.card,
+    backgroundGradientFrom: colors.card,
+    backgroundGradientTo: colors.card,
+    decimalPlaces: 0,
+    color: (opacity = 1) => hexToRgba(colors.success, opacity),
+    labelColor: (opacity = 1) => hexToRgba(colors.mutedForeground, opacity),
+    style: {
+      borderRadius: 16,
+    },
+  };
+
   // Default mock data
   const chartData = data || [
     { label: 'Week 1', converted: 8, total: 32 },
@@ -177,10 +218,7 @@ export function ConversionChart({
         height={200}
         yAxisLabel=""
         yAxisSuffix="%"
-        chartConfig={{
-          ...chartConfig,
-          color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`,
-        }}
+        chartConfig={chartConfig}
         style={{
           marginVertical: 8,
           borderRadius: 16,

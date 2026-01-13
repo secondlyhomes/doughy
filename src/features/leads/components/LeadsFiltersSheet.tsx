@@ -11,7 +11,9 @@ import {
   Pressable,
 } from 'react-native';
 import { X, Check, ChevronDown, RotateCcw } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { Button } from '@/components/ui';
 
 import { LeadStatus } from '../types';
 import { LeadFilters } from '../screens/LeadsListScreen';
@@ -80,6 +82,7 @@ interface OptionButtonProps {
 }
 
 function OptionButton({ label, selected, onPress }: OptionButtonProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={`flex-row items-center justify-between px-4 py-3 rounded-lg mb-2 ${
@@ -94,7 +97,7 @@ function OptionButton({ label, selected, onPress }: OptionButtonProps) {
       >
         {label}
       </Text>
-      {selected && <Check size={18} color="#3b82f6" />}
+      {selected && <Check size={18} color={colors.info} />}
     </TouchableOpacity>
   );
 }
@@ -106,6 +109,7 @@ export function LeadsFiltersSheet({
   onApply,
   onReset,
 }: LeadsFiltersSheetProps) {
+  const colors = useThemeColors();
   const [localFilters, setLocalFilters] = useState<LeadFilters>(filters);
 
   // Reset local filters when sheet opens
@@ -142,15 +146,15 @@ export function LeadsFiltersSheet({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
+      <ThemedSafeAreaView className="flex-1" edges={['top', 'bottom']}>
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
           <TouchableOpacity onPress={onClose} className="p-1">
-            <X size={24} color="#6b7280" />
+            <X size={24} color={colors.mutedForeground} />
           </TouchableOpacity>
           <Text className="text-lg font-semibold text-foreground">Filters</Text>
           <TouchableOpacity onPress={handleReset} className="flex-row items-center">
-            <RotateCcw size={16} color="#3b82f6" />
+            <RotateCcw size={16} color={colors.info} />
             <Text className="text-primary ml-1">Reset</Text>
           </TouchableOpacity>
         </View>
@@ -183,9 +187,9 @@ export function LeadsFiltersSheet({
 
           {/* Starred Filter */}
           <FilterSection title="Starred">
-            {STARRED_OPTIONS.map((option, index) => (
+            {STARRED_OPTIONS.map((option) => (
               <OptionButton
-                key={index}
+                key={String(option.value)}
                 label={option.label}
                 selected={localFilters.starred === option.value}
                 onPress={() => updateFilter('starred', option.value)}
@@ -253,16 +257,11 @@ export function LeadsFiltersSheet({
 
         {/* Apply Button */}
         <View className="px-4 pb-4 pt-2 border-t border-border">
-          <TouchableOpacity
-            className="bg-primary py-4 rounded-lg items-center"
-            onPress={handleApply}
-          >
-            <Text className="text-primary-foreground font-semibold text-base">
-              Apply Filters
-            </Text>
-          </TouchableOpacity>
+          <Button onPress={handleApply} size="lg" className="w-full">
+            Apply Filters
+          </Button>
         </View>
-      </SafeAreaView>
+      </ThemedSafeAreaView>
     </Modal>
   );
 }

@@ -15,6 +15,7 @@ import {
   Clock,
   Plus,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export type ActivityType =
   | 'call'
@@ -40,45 +41,56 @@ interface LeadTimelineProps {
   onAddActivity?: () => void;
 }
 
-function getActivityIcon(type: ActivityType) {
+interface ThemeColors {
+  info: string;
+  success: string;
+  primary: string;
+  warning: string;
+  mutedForeground: string;
+  destructive: string;
+  accent: string;
+  border: string;
+}
+
+function getActivityIcon(type: ActivityType, colors: ThemeColors) {
   switch (type) {
     case 'call':
-      return <Phone size={16} color="#3b82f6" />;
+      return <Phone size={16} color={colors.info} />;
     case 'email':
-      return <Mail size={16} color="#22c55e" />;
+      return <Mail size={16} color={colors.success} />;
     case 'text':
-      return <MessageSquare size={16} color="#8b5cf6" />;
+      return <MessageSquare size={16} color={colors.primary} />;
     case 'meeting':
-      return <Calendar size={16} color="#f59e0b" />;
+      return <Calendar size={16} color={colors.warning} />;
     case 'note':
-      return <FileText size={16} color="#6b7280" />;
+      return <FileText size={16} color={colors.mutedForeground} />;
     case 'status_change':
-      return <RefreshCw size={16} color="#ef4444" />;
+      return <RefreshCw size={16} color={colors.destructive} />;
     case 'property_shown':
-      return <Home size={16} color="#06b6d4" />;
+      return <Home size={16} color={colors.accent} />;
     default:
-      return <Clock size={16} color="#6b7280" />;
+      return <Clock size={16} color={colors.mutedForeground} />;
   }
 }
 
 function getActivityColor(type: ActivityType) {
   switch (type) {
     case 'call':
-      return 'bg-blue-100';
+      return 'bg-info/20';
     case 'email':
-      return 'bg-green-100';
+      return 'bg-success/20';
     case 'text':
-      return 'bg-purple-100';
+      return 'bg-primary/20';
     case 'meeting':
-      return 'bg-amber-100';
+      return 'bg-warning/20';
     case 'note':
-      return 'bg-gray-100';
+      return 'bg-muted';
     case 'status_change':
-      return 'bg-red-100';
+      return 'bg-destructive/20';
     case 'property_shown':
-      return 'bg-cyan-100';
+      return 'bg-info/20';
     default:
-      return 'bg-gray-100';
+      return 'bg-muted';
   }
 }
 
@@ -127,15 +139,16 @@ function formatTimeAgo(dateString: string): string {
 interface TimelineItemProps {
   activity: LeadActivity;
   isLast: boolean;
+  colors: ThemeColors;
 }
 
-function TimelineItem({ activity, isLast }: TimelineItemProps) {
+function TimelineItem({ activity, isLast, colors }: TimelineItemProps) {
   return (
     <View className="flex-row">
       {/* Timeline connector */}
       <View className="items-center mr-3">
         <View className={`w-8 h-8 rounded-full ${getActivityColor(activity.type)} items-center justify-center`}>
-          {getActivityIcon(activity.type)}
+          {getActivityIcon(activity.type, colors)}
         </View>
         {!isLast && (
           <View className="w-0.5 flex-1 bg-border my-1" />
@@ -157,7 +170,7 @@ function TimelineItem({ activity, isLast }: TimelineItemProps) {
         </Text>
         {activity.metadata && 'duration' in activity.metadata && Boolean(activity.metadata.duration) ? (
           <View className="flex-row items-center mt-1">
-            <Clock size={12} color="#9ca3af" />
+            <Clock size={12} color={colors.mutedForeground} />
             <Text className="text-xs text-muted-foreground ml-1">
               Duration: {String(activity.metadata.duration)}
             </Text>
@@ -209,12 +222,14 @@ const mockActivities: LeadActivity[] = [
 ];
 
 export function LeadTimeline({ activities, onAddActivity }: LeadTimelineProps) {
+  const colors = useThemeColors();
+
   return (
     <View>
       {/* Header with Add Button */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center">
-          <Calendar size={18} color="#6b7280" />
+          <Calendar size={18} color={colors.mutedForeground} />
           <Text className="text-lg font-semibold text-foreground ml-2">Activity</Text>
         </View>
         {onAddActivity && (
@@ -222,7 +237,7 @@ export function LeadTimeline({ activities, onAddActivity }: LeadTimelineProps) {
             className="flex-row items-center bg-primary/10 px-3 py-1.5 rounded-lg"
             onPress={onAddActivity}
           >
-            <Plus size={14} color="#3b82f6" />
+            <Plus size={14} color={colors.info} />
             <Text className="text-primary text-sm ml-1">Log Activity</Text>
           </TouchableOpacity>
         )}
@@ -236,12 +251,13 @@ export function LeadTimeline({ activities, onAddActivity }: LeadTimelineProps) {
               key={activity.id}
               activity={activity}
               isLast={index === activities.length - 1}
+              colors={colors}
             />
           ))}
         </View>
       ) : (
         <View className="py-8 items-center">
-          <Clock size={32} color="#d1d5db" />
+          <Clock size={32} color={colors.border} />
           <Text className="text-muted-foreground text-center mt-2">
             No activity recorded yet
           </Text>

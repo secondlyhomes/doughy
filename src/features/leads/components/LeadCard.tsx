@@ -11,6 +11,7 @@ import {
   ChevronRight,
   MapPin
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Zone A UI Components
 import { Card, Badge } from '@/components/ui';
@@ -23,15 +24,17 @@ interface LeadCardProps {
 }
 
 export function LeadCard({ lead, onPress }: LeadCardProps) {
+  const colors = useThemeColors();
+
   const getStatusColor = (status: string | undefined) => {
     switch (status) {
-      case 'new': return 'bg-green-500';
-      case 'active': return 'bg-blue-500';
-      case 'won': return 'bg-emerald-500';
-      case 'lost': return 'bg-red-500';
-      case 'closed': return 'bg-purple-500';
-      case 'inactive': return 'bg-gray-400';
-      default: return 'bg-gray-400';
+      case 'new': return 'bg-success';
+      case 'active': return 'bg-info';
+      case 'won': return 'bg-success';
+      case 'lost': return 'bg-destructive';
+      case 'closed': return 'bg-primary';
+      case 'inactive': return 'bg-muted-foreground';
+      default: return 'bg-muted-foreground';
     }
   };
 
@@ -44,10 +47,10 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
   };
 
   const getScoreColor = (score: number | undefined) => {
-    if (!score) return 'text-gray-400';
-    if (score >= 80) return 'text-green-500';
-    if (score >= 50) return 'text-amber-500';
-    return 'text-red-500';
+    if (!score) return 'text-muted-foreground';
+    if (score >= 80) return 'text-success';
+    if (score >= 50) return 'text-warning';
+    return 'text-destructive';
   };
 
   return (
@@ -64,26 +67,26 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
               {lead.name || 'Unnamed Lead'}
             </Text>
             {lead.starred && (
-              <Star size={16} color="#f59e0b" fill="#f59e0b" />
+              <Star size={16} color={colors.warning} fill={colors.warning} />
             )}
           </View>
           {lead.company && (
             <View className="flex-row items-center mt-1">
-              <Building2 size={12} color="#6b7280" />
+              <Building2 size={12} color={colors.mutedForeground} />
               <Text className="text-sm text-muted-foreground ml-1" numberOfLines={1}>
                 {lead.company}
               </Text>
             </View>
           )}
         </View>
-        <ChevronRight size={20} color="#9ca3af" />
+        <ChevronRight size={20} color={colors.mutedForeground} />
       </View>
 
       {/* Contact Info */}
       <View className="mb-3">
         {lead.email && (
           <View className="flex-row items-center mb-1">
-            <Mail size={12} color="#6b7280" />
+            <Mail size={12} color={colors.mutedForeground} />
             <Text className="text-sm text-muted-foreground ml-2" numberOfLines={1}>
               {lead.email}
             </Text>
@@ -91,7 +94,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
         )}
         {lead.phone && (
           <View className="flex-row items-center mb-1">
-            <Phone size={12} color="#6b7280" />
+            <Phone size={12} color={colors.mutedForeground} />
             <Text className="text-sm text-muted-foreground ml-2">
               {lead.phone}
             </Text>
@@ -99,7 +102,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
         )}
         {(lead.city || lead.state) && (
           <View className="flex-row items-center">
-            <MapPin size={12} color="#6b7280" />
+            <MapPin size={12} color={colors.mutedForeground} />
             <Text className="text-sm text-muted-foreground ml-2" numberOfLines={1}>
               {[lead.city, lead.state].filter(Boolean).join(', ')}
             </Text>

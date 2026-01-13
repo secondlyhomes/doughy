@@ -7,9 +7,8 @@ import {
   Text,
   ScrollView,
   Switch,
-  TouchableOpacity,
   Alert,
-  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -22,7 +21,9 @@ import {
   Smartphone,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { APP_NAME } from '@/config';
+import { ThemedSafeAreaView } from '@/components';
+import { Button } from '@/components/ui';
+import { APP_CONFIG } from '@/config';
 
 interface NotificationSetting {
   id: string;
@@ -60,7 +61,7 @@ export function NotificationSettingsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
       <View className="flex-row items-center p-4 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
@@ -152,30 +153,25 @@ export function NotificationSettingsScreen() {
               Need to manage permissions?
             </Text>
             <Text className="text-sm text-muted-foreground">
-              To change push notification permissions, go to your device Settings {'>'} {APP_NAME} {'>'} Notifications.
+              To change push notification permissions, go to your device Settings {'>'} {APP_CONFIG.APP_NAME} {'>'} Notifications.
             </Text>
           </View>
         </View>
 
         {/* Save Button */}
         <View className="p-4">
-          <TouchableOpacity
-            className="bg-primary rounded-lg py-4 items-center"
-            style={{ opacity: isSaving ? 0.5 : 1 }}
+          <Button
             onPress={handleSave}
             disabled={isSaving}
+            loading={isSaving}
+            size="lg"
+            className="w-full"
           >
-            {isSaving ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text className="text-primary-foreground font-semibold text-base">
-                Save Preferences
-              </Text>
-            )}
-          </TouchableOpacity>
+            Save Preferences
+          </Button>
         </View>
       </ScrollView>
-    </View>
+    </ThemedSafeAreaView>
   );
 }
 
@@ -215,7 +211,7 @@ function NotificationToggle({
         onValueChange={onValueChange}
         disabled={disabled}
         trackColor={{ false: colors.input, true: colors.primary }}
-        thumbColor="#ffffff"
+        thumbColor={colors.primaryForeground}
       />
     </View>
   );

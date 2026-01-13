@@ -18,6 +18,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { ChevronDown, Save, X } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property, PropertyType, PropertyConstants } from '../types';
 import { PropertyImagePicker } from './PropertyImagePicker';
 
@@ -74,6 +75,7 @@ export function PropertyForm({
   isLoading = false,
   submitLabel = 'Save Property',
 }: PropertyFormProps) {
+  const colors = useThemeColors();
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [showPropertyTypePicker, setShowPropertyTypePicker] = useState(false);
@@ -191,7 +193,7 @@ export function PropertyForm({
         value={formData[field] as string}
         onChangeText={(value) => updateField(field, value)}
         placeholder={options.placeholder}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={colors.mutedForeground}
         keyboardType={options.keyboardType || 'default'}
         multiline={options.multiline}
         numberOfLines={options.numberOfLines}
@@ -357,10 +359,10 @@ export function PropertyForm({
           className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center"
         >
           {isLoading ? (
-            <ActivityIndicator color="white" />
+            <ActivityIndicator color={colors.primaryForeground} />
           ) : (
             <>
-              <Save size={20} color="white" />
+              <Save size={20} color={colors.primaryForeground} />
               <Text className="text-primary-foreground font-semibold ml-2">{submitLabel}</Text>
             </>
           )}

@@ -8,9 +8,10 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import {
   MessageCircle,
@@ -23,6 +24,7 @@ import {
 
 import { useConversations, useCreateConversation, useDeleteConversation } from '../hooks/useConversations';
 import { Conversation } from '../types';
+import { useThemeColors } from '@/context/ThemeContext';
 
 function formatTimeAgo(dateString: string | undefined): string {
   if (!dateString) return '';
@@ -50,6 +52,7 @@ interface ConversationCardProps {
 }
 
 function ConversationCard({ conversation, onPress, onDelete }: ConversationCardProps) {
+  const colors = useThemeColors();
   const handleDelete = () => {
     Alert.alert(
       'Delete Conversation',
@@ -63,7 +66,8 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
 
   return (
     <TouchableOpacity
-      className="bg-card rounded-xl p-4 mb-3"
+      className="rounded-xl p-4 mb-3"
+      style={{ backgroundColor: colors.card }}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityLabel={`Conversation: ${conversation.title || 'Untitled'}, ${conversation.message_count} messages`}
@@ -72,7 +76,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
     >
       <View className="flex-row items-start">
         <View className="bg-primary/10 rounded-full p-2 mr-3">
-          <MessageCircle size={20} color="#3b82f6" />
+          <MessageCircle size={20} color={colors.info} />
         </View>
 
         <View className="flex-1">
@@ -87,7 +91,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
           )}
 
           <View className="flex-row items-center">
-            <Clock size={12} color="#9ca3af" />
+            <Clock size={12} color={colors.mutedForeground} />
             <Text className="text-xs text-muted-foreground ml-1">
               {formatTimeAgo(conversation.last_message_at)}
             </Text>
@@ -107,9 +111,9 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
             accessibilityLabel={`Delete conversation: ${conversation.title || 'Untitled'}`}
             accessibilityRole="button"
           >
-            <Trash2 size={18} color="#9ca3af" />
+            <Trash2 size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
-          <ChevronRight size={18} color="#9ca3af" accessibilityElementsHidden />
+          <ChevronRight size={18} color={colors.mutedForeground} accessibilityElementsHidden />
         </View>
       </View>
     </TouchableOpacity>
@@ -118,6 +122,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
 
 export function ConversationsListScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { conversations, isLoading, refetch } = useConversations();
   const createConversation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
@@ -158,17 +163,12 @@ export function ConversationsListScreen() {
   const keyExtractor = useCallback((item: Conversation) => item.id, []);
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="px-4 pt-4 pb-2">
-        <Text className="text-2xl font-bold text-foreground">Conversations</Text>
-        <Text className="text-muted-foreground">Your AI chat history</Text>
-      </View>
+      <ScreenHeader title="Conversations" subtitle="Your AI chat history" />
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
+        <LoadingSpinner fullScreen color={colors.info} />
       ) : (
         <FlatList
           data={conversations}
@@ -179,13 +179,13 @@ export function ConversationsListScreen() {
             <RefreshControl
               refreshing={isLoading}
               onRefresh={refetch}
-              tintColor="#3b82f6"
+              tintColor={colors.info}
             />
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <View className="bg-primary/10 rounded-full p-4 mb-4">
-                <Sparkles size={32} color="#3b82f6" />
+                <Sparkles size={32} color={colors.info} />
               </View>
               <Text className="text-lg font-semibold text-foreground mb-2">
                 No conversations yet
@@ -223,12 +223,12 @@ export function ConversationsListScreen() {
         accessibilityRole="button"
       >
         {createConversation.isPending ? (
-          <ActivityIndicator color="white" />
+          <LoadingSpinner size="small" color={colors.primaryForeground} />
         ) : (
-          <Plus size={24} color="white" />
+          <Plus size={24} color={colors.primaryForeground} />
         )}
       </TouchableOpacity>
-    </View>
+    </ThemedSafeAreaView>
   );
 }
 

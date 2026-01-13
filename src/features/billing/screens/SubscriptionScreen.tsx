@@ -7,7 +7,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
   Linking,
 } from 'react-native';
@@ -23,6 +22,9 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { ThemedSafeAreaView } from '@/components';
+import { Button, LoadingSpinner } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface Plan {
   id: string;
@@ -42,43 +44,44 @@ interface Subscription {
   cancelAtPeriodEnd: boolean;
 }
 
-const plans: Plan[] = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    price: 0,
-    interval: 'month',
-    features: ['100 credits/month', 'Basic analytics', 'Email support'],
-    icon: <Zap size={24} color="#6b7280" />,
-  },
-  {
-    id: 'personal',
-    name: 'Personal',
-    price: 29,
-    interval: 'month',
-    features: ['1,000 credits/month', 'Advanced analytics', 'Priority support', 'API access'],
-    popular: true,
-    icon: <Star size={24} color="#f59e0b" />,
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    price: 99,
-    interval: 'month',
-    features: [
-      '5,000 credits/month',
-      'Full analytics suite',
-      '24/7 support',
-      'API access',
-      'Custom integrations',
-    ],
-    icon: <Crown size={24} color="#8b5cf6" />,
-  },
-];
-
 export function SubscriptionScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { profile } = useAuth();
+
+  const plans: Plan[] = [
+    {
+      id: 'starter',
+      name: 'Starter',
+      price: 0,
+      interval: 'month',
+      features: ['100 credits/month', 'Basic analytics', 'Email support'],
+      icon: <Zap size={24} color={colors.mutedForeground} />,
+    },
+    {
+      id: 'personal',
+      name: 'Personal',
+      price: 29,
+      interval: 'month',
+      features: ['1,000 credits/month', 'Advanced analytics', 'Priority support', 'API access'],
+      popular: true,
+      icon: <Star size={24} color={colors.warning} />,
+    },
+    {
+      id: 'professional',
+      name: 'Professional',
+      price: 99,
+      interval: 'month',
+      features: [
+        '5,000 credits/month',
+        'Full analytics suite',
+        '24/7 support',
+        'API access',
+        'Custom integrations',
+      ],
+      icon: <Crown size={24} color={colors.primary} />,
+    },
+  ];
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [creditsUsed, setCreditsUsed] = useState(0);
@@ -149,30 +152,30 @@ export function SubscriptionScreen() {
     switch (status) {
       case 'active':
       case 'trialing':
-        return '#22c55e';
+        return colors.success;
       case 'canceled':
-        return '#6b7280';
+        return colors.mutedForeground;
       case 'past_due':
-        return '#ef4444';
+        return colors.destructive;
       default:
-        return '#6b7280';
+        return colors.mutedForeground;
     }
   };
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#6366f1" />
-      </View>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        <LoadingSpinner fullScreen />
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
       <View className="flex-row items-center p-4 border-b border-border">
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
-          <ArrowLeft size={24} color="#374151" />
+          <ArrowLeft size={24} color={colors.mutedForeground} />
         </TouchableOpacity>
         <Text className="text-xl font-semibold text-foreground">Subscription</Text>
       </View>
@@ -187,7 +190,7 @@ export function SubscriptionScreen() {
             <View className="bg-card rounded-lg p-4">
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center">
-                  <CreditCard size={24} color="#6366f1" />
+                  <CreditCard size={24} color={colors.primary} />
                   <Text className="text-lg font-semibold text-foreground ml-3">
                     {subscription.planName}
                   </Text>
@@ -228,13 +231,14 @@ export function SubscriptionScreen() {
                 </Text>
               </View>
 
-              <TouchableOpacity
-                className="flex-row items-center justify-center bg-primary/10 rounded-lg py-3 mt-4"
+              <Button
+                variant="ghost"
                 onPress={handleManageBilling}
+                className="mt-4"
               >
-                <Text className="text-primary font-medium">Manage Billing</Text>
-                <ExternalLink size={16} color="#6366f1" className="ml-2" />
-              </TouchableOpacity>
+                Manage Billing
+                <ExternalLink size={16} color={colors.primary} />
+              </Button>
             </View>
           </View>
         )}
@@ -274,35 +278,20 @@ export function SubscriptionScreen() {
               <View className="mb-4">
                 {plan.features.map((feature, index) => (
                   <View key={index} className="flex-row items-center mb-2">
-                    <CheckCircle size={16} color="#22c55e" />
+                    <CheckCircle size={16} color={colors.success} />
                     <Text className="text-sm text-muted-foreground ml-2">{feature}</Text>
                   </View>
                 ))}
               </View>
 
-              <TouchableOpacity
-                className={`rounded-lg py-3 items-center ${
-                  subscription?.planId === plan.id
-                    ? 'bg-muted'
-                    : plan.popular
-                    ? 'bg-primary'
-                    : 'bg-card border border-primary'
-                }`}
+              <Button
+                variant={subscription?.planId === plan.id ? 'secondary' : plan.popular ? 'default' : 'outline'}
                 onPress={() => handleUpgrade(plan.id)}
                 disabled={subscription?.planId === plan.id}
+                className="w-full"
               >
-                <Text
-                  className={`font-semibold ${
-                    subscription?.planId === plan.id
-                      ? 'text-muted-foreground'
-                      : plan.popular
-                      ? 'text-primary-foreground'
-                      : 'text-primary'
-                  }`}
-                >
-                  {subscription?.planId === plan.id ? 'Current Plan' : 'Upgrade'}
-                </Text>
-              </TouchableOpacity>
+                {subscription?.planId === plan.id ? 'Current Plan' : 'Upgrade'}
+              </Button>
             </View>
           ))}
         </View>
@@ -310,7 +299,7 @@ export function SubscriptionScreen() {
         {/* Help Section */}
         <View className="p-4 pb-8">
           <View className="bg-primary/10 rounded-lg p-4 flex-row">
-            <AlertCircle size={20} color="#6366f1" />
+            <AlertCircle size={20} color={colors.primary} />
             <View className="flex-1 ml-3">
               <Text className="text-sm text-primary font-medium">Need help with billing?</Text>
               <Text className="text-sm text-muted-foreground mt-1">
@@ -320,6 +309,6 @@ export function SubscriptionScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </ThemedSafeAreaView>
   );
 }

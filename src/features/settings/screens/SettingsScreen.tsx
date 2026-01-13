@@ -8,7 +8,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -24,11 +23,14 @@ import {
   BarChart3,
   Settings,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView, ThemedView } from '@/components';
+import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export function SettingsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { user, profile, signOut, isLoading } = useAuth();
 
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -92,24 +94,23 @@ export function SettingsScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#6366f1" />
-      </View>
+      <ThemedView className="flex-1">
+        <LoadingSpinner fullScreen />
+      </ThemedView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView className="flex-1">
         {/* Header */}
-        <View className="px-6 pt-4 pb-2">
-          <Text className="text-2xl font-bold text-foreground">Settings</Text>
-        </View>
+        <ScreenHeader title="Settings" subtitle="Customize your experience" />
 
         {/* Profile Section */}
         <View className="px-4 py-2">
           <TouchableOpacity
-            className="flex-row items-center bg-card rounded-lg p-4"
+            className="flex-row items-center rounded-lg p-4"
+            style={{ backgroundColor: colors.card }}
             onPress={() => router.push('/(tabs)/settings/profile')}
           >
             {/* Avatar */}
@@ -130,7 +131,7 @@ export function SettingsScreen() {
               </Text>
             </View>
 
-            <ChevronRight size={20} color="#6b7280" />
+            <ChevronRight size={20} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
@@ -140,14 +141,14 @@ export function SettingsScreen() {
             ACCOUNT
           </Text>
 
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <SettingsItem
-              icon={<User size={20} color="#6b7280" />}
+              icon={<User size={20} color={colors.mutedForeground} />}
               title="Edit Profile"
               onPress={() => router.push('/(tabs)/settings/profile')}
             />
             <SettingsItem
-              icon={<Lock size={20} color="#6b7280" />}
+              icon={<Lock size={20} color={colors.mutedForeground} />}
               title="Change Password"
               onPress={() => router.push('/(tabs)/settings/change-password')}
               hideBorder
@@ -161,9 +162,9 @@ export function SettingsScreen() {
             SECURITY
           </Text>
 
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <SettingsItem
-              icon={<Shield size={20} color="#6b7280" />}
+              icon={<Shield size={20} color={colors.mutedForeground} />}
               title="Security Settings"
               subtitle="Two-factor authentication"
               onPress={() => router.push('/(tabs)/settings/security')}
@@ -172,46 +173,27 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        {/* Admin Section - Only visible to admin/support users */}
-        {(profile?.role === 'admin' || profile?.role === 'support') && (
-          <View className="p-4">
-            <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
-              ADMINISTRATION
-            </Text>
-
-            <View className="bg-card rounded-lg">
-              <SettingsItem
-                icon={<Settings size={20} color="#8b5cf6" />}
-                title="Admin Dashboard"
-                subtitle="Manage users, integrations, and logs"
-                onPress={() => router.push('/(admin)')}
-                hideBorder
-              />
-            </View>
-          </View>
-        )}
-
         {/* Preferences */}
         <View className="p-4">
           <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
             PREFERENCES
           </Text>
 
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <SettingsItem
-              icon={<Bell size={20} color="#6b7280" />}
+              icon={<Bell size={20} color={colors.mutedForeground} />}
               title="Notifications"
               subtitle="Push and email preferences"
               onPress={() => router.push('/(tabs)/settings/notifications')}
             />
             <SettingsItem
-              icon={<Palette size={20} color="#6b7280" />}
+              icon={<Palette size={20} color={colors.mutedForeground} />}
               title="Appearance"
               subtitle="Theme settings"
               onPress={() => router.push('/(tabs)/settings/appearance')}
             />
             <SettingsItem
-              icon={<BarChart3 size={20} color="#6b7280" />}
+              icon={<BarChart3 size={20} color={colors.mutedForeground} />}
               title="Analytics"
               subtitle="View your performance metrics"
               onPress={() => router.push('/(tabs)/settings/analytics')}
@@ -226,9 +208,9 @@ export function SettingsScreen() {
             ABOUT
           </Text>
 
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <SettingsItem
-              icon={<Info size={20} color="#6b7280" />}
+              icon={<Info size={20} color={colors.mutedForeground} />}
               title="About Doughy AI"
               subtitle="Version, terms, privacy"
               onPress={() => router.push('/(tabs)/settings/about')}
@@ -243,24 +225,24 @@ export function SettingsScreen() {
             ACCOUNT ACTIONS
           </Text>
 
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <TouchableOpacity
               className="flex-row items-center p-4 border-b border-border"
               onPress={handleSignOut}
               disabled={isSigningOut}
             >
-              <LogOut size={20} color="#ef4444" />
+              <LogOut size={20} color={colors.destructive} />
               <Text className="flex-1 ml-3 text-destructive font-medium">
                 {isSigningOut ? 'Signing out...' : 'Sign Out'}
               </Text>
-              {isSigningOut && <ActivityIndicator size="small" color="#ef4444" />}
+              {isSigningOut && <LoadingSpinner size="small" color={colors.destructive} />}
             </TouchableOpacity>
 
             <TouchableOpacity
               className="flex-row items-center p-4"
               onPress={handleDeleteAccount}
             >
-              <Trash2 size={20} color="#ef4444" />
+              <Trash2 size={20} color={colors.destructive} />
               <Text className="flex-1 ml-3 text-destructive font-medium">
                 Delete Account
               </Text>
@@ -271,7 +253,7 @@ export function SettingsScreen() {
         {/* Bottom padding */}
         <View className="h-8" />
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }
 
@@ -285,6 +267,7 @@ interface SettingsItemProps {
 }
 
 function SettingsItem({ icon, title, subtitle, onPress, hideBorder }: SettingsItemProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}
@@ -295,7 +278,7 @@ function SettingsItem({ icon, title, subtitle, onPress, hideBorder }: SettingsIt
         <Text className="text-foreground">{title}</Text>
         {subtitle && <Text className="text-sm text-muted-foreground">{subtitle}</Text>}
       </View>
-      <ChevronRight size={20} color="#6b7280" />
+      <ChevronRight size={20} color={colors.mutedForeground} />
     </TouchableOpacity>
   );
 }

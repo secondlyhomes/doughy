@@ -7,6 +7,7 @@ import { Redirect } from 'expo-router';
 import { ShieldAlert } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ export function AdminGuard({
 }: AdminGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const { canViewAdminPanel } = usePermissions();
+  const colors = useThemeColors();
 
   // Still loading
   if (isLoading) {
@@ -43,7 +45,7 @@ export function AdminGuard({
     }
     return fallback ?? (
       <View className="flex-1 items-center justify-center bg-background p-6">
-        <ShieldAlert size={64} color="#ef4444" />
+        <ShieldAlert size={64} color={colors.destructive} />
         <Text className="text-xl font-semibold text-foreground mt-4">
           Access Denied
         </Text>

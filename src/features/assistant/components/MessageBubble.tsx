@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Bot, User } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 import { Message } from '../hooks/useChat';
 
@@ -12,6 +13,7 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ message }: MessageBubbleProps) {
+  const colors = useThemeColors();
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
@@ -31,7 +33,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {/* Avatar for Assistant */}
         {!isUser && (
           <View className="bg-primary/10 rounded-full p-1.5 mb-1">
-            <Bot size={14} color="#3b82f6" />
+            <Bot size={14} color={colors.info} />
           </View>
         )}
 
@@ -55,7 +57,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {/* Avatar for User */}
         {isUser && (
           <View className="bg-secondary rounded-full p-1.5 mb-1">
-            <User size={14} color="#6b7280" />
+            <User size={14} color={colors.mutedForeground} />
           </View>
         )}
       </View>

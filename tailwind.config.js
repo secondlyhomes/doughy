@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     "./App.{js,jsx,ts,tsx}",
     "./app/**/*.{js,jsx,ts,tsx}",
@@ -9,39 +10,50 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Matching the web app's color scheme
-        border: "hsl(214.3 31.8% 91.4%)",
-        input: "hsl(214.3 31.8% 91.4%)",
-        ring: "hsl(221.2 83.2% 53.3%)",
-        background: "hsl(0 0% 100%)",
-        foreground: "hsl(222.2 84% 4.9%)",
+        border: "var(--color-border)",
+        input: "var(--color-input)",
+        ring: "var(--color-ring)",
+        background: "var(--color-background)",
+        foreground: "var(--color-foreground)",
         primary: {
-          DEFAULT: "hsl(221.2 83.2% 53.3%)",
-          foreground: "hsl(210 40% 98%)",
+          DEFAULT: "var(--color-primary)",
+          foreground: "var(--color-primary-foreground)",
         },
         secondary: {
-          DEFAULT: "hsl(210 40% 96.1%)",
-          foreground: "hsl(222.2 47.4% 11.2%)",
+          DEFAULT: "var(--color-secondary)",
+          foreground: "var(--color-secondary-foreground)",
         },
         destructive: {
-          DEFAULT: "hsl(0 84.2% 60.2%)",
-          foreground: "hsl(210 40% 98%)",
+          DEFAULT: "var(--color-destructive)",
+          foreground: "var(--color-destructive-foreground)",
         },
         muted: {
-          DEFAULT: "hsl(210 40% 96.1%)",
-          foreground: "hsl(215.4 16.3% 46.9%)",
+          DEFAULT: "var(--color-muted)",
+          foreground: "var(--color-muted-foreground)",
         },
         accent: {
-          DEFAULT: "hsl(210 40% 96.1%)",
-          foreground: "hsl(222.2 47.4% 11.2%)",
+          DEFAULT: "var(--color-accent)",
+          foreground: "var(--color-accent-foreground)",
         },
         popover: {
-          DEFAULT: "hsl(0 0% 100%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          DEFAULT: "var(--color-popover)",
+          foreground: "var(--color-popover-foreground)",
         },
         card: {
-          DEFAULT: "hsl(0 0% 100%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          DEFAULT: "var(--color-card)",
+          foreground: "var(--color-card-foreground)",
+        },
+        success: {
+          DEFAULT: "var(--color-success)",
+          foreground: "var(--color-success-foreground)",
+        },
+        warning: {
+          DEFAULT: "var(--color-warning)",
+          foreground: "var(--color-warning-foreground)",
+        },
+        info: {
+          DEFAULT: "var(--color-info)",
+          foreground: "var(--color-info-foreground)",
         },
       },
       borderRadius: {

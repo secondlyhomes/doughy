@@ -122,7 +122,7 @@ export function DropdownMenuContent({
           <TouchableWithoutFeedback>
             <View
               className={cn(
-                'rounded-t-xl border-t border-border bg-background pb-8 pt-2',
+                'rounded-t-3xl border-t border-border bg-background pb-8 pt-2',
                 className
               )}
               {...props}

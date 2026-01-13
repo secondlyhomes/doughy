@@ -2,9 +2,12 @@
 // Converted from web app src/features/leads/pages/LeadsDetailView.tsx
 
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { LoadingSpinner, Button } from '@/components/ui';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { LeadTimeline, LeadActivity, ActivityType } from '../components/LeadTimeline';
@@ -15,6 +18,7 @@ import { LeadNotesSection } from '../components/LeadNotesSection';
 
 export function LeadDetailScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const params = useLocalSearchParams();
   const leadId = params.leadId as string;
 
@@ -78,15 +82,15 @@ export function LeadDetailScreen() {
   };
 
   const getStatusColor = (status: string | undefined) => {
-    const colors: Record<string, string> = {
-      new: 'bg-green-500',
-      active: 'bg-blue-500',
-      won: 'bg-emerald-500',
-      lost: 'bg-red-500',
-      closed: 'bg-purple-500',
-      inactive: 'bg-gray-400',
+    const statusColors: Record<string, string> = {
+      new: 'bg-success',
+      active: 'bg-info',
+      won: 'bg-success',
+      lost: 'bg-destructive',
+      closed: 'bg-primary',
+      inactive: 'bg-muted-foreground',
     };
-    return colors[status || ''] || 'bg-gray-400';
+    return statusColors[status || ''] || 'bg-muted-foreground';
   };
 
   const formatStatus = (status: string | undefined) => {
@@ -99,47 +103,40 @@ export function LeadDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#3b82f6" />
-      </View>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        <LoadingSpinner fullScreen />
+      </ThemedSafeAreaView>
     );
   }
 
   if (!lead) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-muted-foreground">Lead not found</Text>
-        <TouchableOpacity
-          className="mt-4 bg-primary px-4 py-2 rounded-lg"
-          onPress={() => router.back()}
-          accessibilityLabel="Go back to leads list"
-          accessibilityRole="button"
-        >
-          <Text className="text-primary-foreground">Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={['top']}>
+        <Text className="text-muted-foreground mb-4">Lead not found</Text>
+        <Button onPress={() => router.back()}>Go Back</Button>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
       <View className="bg-card border-b border-border px-4 py-3">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity className="flex-row items-center" onPress={() => router.back()} accessibilityLabel="Go back" accessibilityRole="button">
-            <ArrowLeft size={24} color="#6b7280" />
+            <ArrowLeft size={24} color={colors.mutedForeground} />
             <Text className="text-muted-foreground ml-2">Back</Text>
           </TouchableOpacity>
 
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={handleToggleStar} accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`} accessibilityRole="button">
-              <Star size={24} color={lead.starred ? '#f59e0b' : '#9ca3af'} fill={lead.starred ? '#f59e0b' : 'transparent'} />
+              <Star size={24} color={lead.starred ? colors.warning : colors.mutedForeground} fill={lead.starred ? colors.warning : 'transparent'} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)} accessibilityLabel={`Edit ${lead.name}`} accessibilityRole="button">
-              <Edit2 size={22} color="#6b7280" />
+              <Edit2 size={22} color={colors.mutedForeground} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDelete} disabled={isDeleting} accessibilityLabel={`Delete ${lead.name}`} accessibilityRole="button">
-              {isDeleting ? <ActivityIndicator size="small" color="#ef4444" /> : <Trash2 size={22} color="#ef4444" />}
+              {isDeleting ? <ActivityIndicator size="small" color={colors.destructive} /> : <Trash2 size={22} color={colors.destructive} />}
             </TouchableOpacity>
           </View>
         </View>
@@ -153,7 +150,7 @@ export function LeadDetailScreen() {
               <Text className="text-2xl font-bold text-foreground">{lead.name || 'Unnamed Lead'}</Text>
               {lead.company && (
                 <View className="flex-row items-center mt-1">
-                  <Building2 size={14} color="#6b7280" />
+                  <Building2 size={14} color={colors.mutedForeground} />
                   <Text className="text-muted-foreground ml-1">{lead.company}</Text>
                 </View>
               )}
@@ -192,7 +189,7 @@ export function LeadDetailScreen() {
         {lead.tags && lead.tags.length > 0 && (
           <View className="bg-card p-4 mb-4">
             <View className="flex-row items-center mb-3">
-              <Tag size={18} color="#6b7280" />
+              <Tag size={18} color={colors.mutedForeground} />
               <Text className="text-lg font-semibold text-foreground ml-2">Tags</Text>
             </View>
             <View className="flex-row flex-wrap gap-2">
@@ -222,7 +219,7 @@ export function LeadDetailScreen() {
         onClose={() => setShowActivitySheet(false)}
         onSave={handleAddActivity}
       />
-    </View>
+    </ThemedSafeAreaView>
   );
 }
 

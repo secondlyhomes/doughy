@@ -6,14 +6,15 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { Button } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import { OnboardingProgress } from '../components/OnboardingProgress';
 import { SurveyOption } from '../components/SurveyOption';
@@ -29,6 +30,7 @@ const STEPS: SurveyStep[] = ['referralSource', 'primaryUseCase', 'experienceLeve
 
 export function OnboardingScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { refetchProfile } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -98,7 +100,7 @@ export function OnboardingScreen() {
   }, [refetchProfile, router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -111,7 +113,7 @@ export function OnboardingScreen() {
               disabled={currentStep === 0 || isSubmitting}
               className={currentStep === 0 ? 'opacity-0' : ''}
             >
-              <ArrowLeft size={24} color="#6b7280" />
+              <ArrowLeft size={24} color={colors.mutedForeground} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSkip}
@@ -132,7 +134,7 @@ export function OnboardingScreen() {
           {currentStep === 0 && (
             <View className="items-center mb-6 mt-4">
               <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center mb-4">
-                <Sparkles size={32} color="#3b82f6" />
+                <Sparkles size={32} color={colors.info} />
               </View>
               <Text className="text-xl font-semibold text-foreground text-center">
                 Let's personalize your experience
@@ -175,25 +177,17 @@ export function OnboardingScreen() {
         </ScrollView>
 
         {/* Footer */}
-        <View className="px-6 pb-6">
-          <TouchableOpacity
-            className={`flex-row items-center justify-center py-4 rounded-lg ${
-              isSubmitting ? 'bg-primary/50' : 'bg-primary'
-            }`}
+        <View className="px-4 pb-6">
+          <Button
             onPress={handleNext}
             disabled={isSubmitting}
+            loading={isSubmitting}
+            size="lg"
+            className="w-full"
           >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <>
-                <Text className="text-primary-foreground font-semibold mr-2">
-                  {isLastStep ? 'Get Started' : 'Continue'}
-                </Text>
-                {!isLastStep && <ArrowRight size={20} color="#ffffff" />}
-              </>
-            )}
-          </TouchableOpacity>
+            {isLastStep ? 'Get Started' : 'Continue'}
+            {!isLastStep && !isSubmitting && <ArrowRight size={20} color={colors.primaryForeground} />}
+          </Button>
 
           {/* Step indicator text */}
           <Text className="text-muted-foreground text-sm text-center mt-3">
@@ -201,6 +195,6 @@ export function OnboardingScreen() {
           </Text>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

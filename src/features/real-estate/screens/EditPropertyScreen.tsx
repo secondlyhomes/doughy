@@ -5,9 +5,10 @@
  */
 
 import React, { useCallback } from 'react';
-import { View, Text, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
 import { Property } from '../types';
@@ -45,10 +46,9 @@ export function EditPropertyScreen() {
 
   if (isLoadingProperty) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" className="text-primary" />
-        <Text className="text-muted-foreground mt-4">Loading property...</Text>
-      </View>
+      <ThemedSafeAreaView className="flex-1">
+        <LoadingSpinner fullScreen text="Loading property..." />
+      </ThemedSafeAreaView>
     );
   }
 
@@ -63,14 +63,13 @@ export function EditPropertyScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="px-4 py-3 bg-background border-b border-border">
-        <Text className="text-2xl font-bold text-foreground">Edit Property</Text>
-        <Text className="text-muted-foreground mt-0.5" numberOfLines={1}>
-          {property.address || 'Unknown address'}
-        </Text>
-      </View>
+      <ScreenHeader
+        title="Edit Property"
+        subtitle={property.address || 'Unknown address'}
+        bordered
+      />
 
       <PropertyFormWizard
         initialData={property}
@@ -79,6 +78,6 @@ export function EditPropertyScreen() {
         isLoading={isUpdating}
         submitLabel="Save Changes"
       />
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

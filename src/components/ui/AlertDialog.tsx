@@ -1,5 +1,5 @@
 // src/components/ui/AlertDialog.tsx
-// Confirmation dialog that cannot be dismissed by tapping outside
+// Confirmation dialog that cannot be dismissed by tapping outside, with glass effects
 import React from 'react';
 import {
   Modal as RNModal,
@@ -11,17 +11,49 @@ import {
   Platform,
   ViewProps,
   TextProps,
+  StyleSheet,
 } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
+import { GlassBackdrop } from './GlassView';
 
 // AlertDialog Root
 export interface AlertDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children?: React.ReactNode;
+  /** Use glass blur effect for backdrop. Default: true */
+  useGlassBackdrop?: boolean;
 }
 
-export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) {
+export function AlertDialog({ open, onOpenChange, children, useGlassBackdrop = true }: AlertDialogProps) {
+  const renderBackdrop = () => {
+    if (useGlassBackdrop) {
+      return (
+        <GlassBackdrop
+          intensity={40}
+          style={alertDialogStyles.backdrop}
+        >
+          {/* No backdrop press handler - intentionally blocks outside taps */}
+          <View style={alertDialogStyles.content}>
+            <TouchableWithoutFeedback>
+              <View>{children}</View>
+            </TouchableWithoutFeedback>
+          </View>
+        </GlassBackdrop>
+      );
+    }
+
+    // Fallback to original solid backdrop
+    return (
+      <View className="flex-1 items-center justify-center bg-black/80 px-4">
+        <TouchableWithoutFeedback>
+          <View>{children}</View>
+        </TouchableWithoutFeedback>
+      </View>
+    );
+  };
+
   return (
     <RNModal
       visible={open}
@@ -31,18 +63,28 @@ export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) 
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        style={alertDialogStyles.container}
       >
-        {/* No backdrop press handler - intentionally blocks outside taps */}
-        <View className="flex-1 items-center justify-center bg-black/80 px-4">
-          <TouchableWithoutFeedback>
-            <View>{children}</View>
-          </TouchableWithoutFeedback>
-        </View>
+        {renderBackdrop()}
       </KeyboardAvoidingView>
     </RNModal>
   );
 }
+
+const alertDialogStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  backdrop: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+});
 
 // AlertDialog Content
 export interface AlertDialogContentProps extends ViewProps {
@@ -55,12 +97,15 @@ export function AlertDialogContent({
   children,
   ...props
 }: AlertDialogContentProps) {
+  const colors = useThemeColors();
   return (
     <View
-      className={cn(
-        'w-full max-w-lg rounded-lg border border-border bg-background p-6 shadow-lg',
-        className
-      )}
+      className={cn('w-full max-w-lg rounded-lg p-6 shadow-lg', className)}
+      style={{
+        backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: colors.border,
+      }}
       {...props}
     >
       {children}
@@ -116,11 +161,14 @@ export interface AlertDialogTitleProps extends TextProps {
 export function AlertDialogTitle({
   className,
   children,
+  style,
   ...props
 }: AlertDialogTitleProps) {
+  const colors = useThemeColors();
   return (
     <Text
-      className={cn('text-lg font-semibold text-foreground', className)}
+      className={cn('text-lg font-semibold', className)}
+      style={[{ color: colors.foreground }, style]}
       {...props}
     >
       {children}
@@ -137,10 +185,16 @@ export interface AlertDialogDescriptionProps extends TextProps {
 export function AlertDialogDescription({
   className,
   children,
+  style,
   ...props
 }: AlertDialogDescriptionProps) {
+  const colors = useThemeColors();
   return (
-    <Text className={cn('text-sm text-muted-foreground', className)} {...props}>
+    <Text
+      className={cn('text-sm', className)}
+      style={[{ color: colors.mutedForeground }, style]}
+      {...props}
+    >
       {children}
     </Text>
   );
@@ -200,19 +254,28 @@ export function AlertDialogCancel({
   textClassName,
   children,
 }: AlertDialogCancelProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={cn(
-        'h-10 items-center justify-center rounded-md border border-input bg-background px-4',
+        'h-10 items-center justify-center rounded-md px-4',
         disabled && 'opacity-50',
         className
       )}
+      style={{
+        backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: colors.input,
+      }}
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
     >
       {typeof children === 'string' ? (
-        <Text className={cn('text-sm font-medium text-foreground', textClassName)}>
+        <Text
+          className={cn('text-sm font-medium', textClassName)}
+          style={{ color: colors.foreground }}
+        >
           {children}
         </Text>
       ) : (

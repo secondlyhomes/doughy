@@ -16,30 +16,43 @@ export function Input({
   error,
   label,
   editable = true,
+  style,
   ...props
 }: InputProps) {
   const colors = useThemeColors();
   return (
     <View className="w-full">
       {label && (
-        <Text className="mb-1.5 text-sm font-medium text-foreground">
+        <Text
+          className="mb-1.5 text-sm font-medium"
+          style={{ color: colors.foreground }}
+        >
           {label}
         </Text>
       )}
       <TextInput
         className={cn(
-          'h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground',
-          'placeholder:text-muted-foreground',
+          'h-10 w-full rounded-md px-3 py-2 text-base',
           !editable && 'opacity-50',
-          error && 'border-destructive',
           className
         )}
+        style={[
+          {
+            backgroundColor: colors.background,
+            color: colors.foreground,
+            borderWidth: 1,
+            borderColor: error ? colors.destructive : colors.input,
+          },
+          style,
+        ]}
         placeholderTextColor={colors.mutedForeground}
         editable={editable}
         {...props}
       />
       {error && (
-        <Text className="mt-1 text-sm text-destructive">{error}</Text>
+        <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>
+          {error}
+        </Text>
       )}
     </View>
   );

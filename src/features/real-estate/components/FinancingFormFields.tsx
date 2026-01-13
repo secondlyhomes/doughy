@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { DollarSign, Percent } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { LOAN_TYPES, LoanType } from '../hooks/useFinancingScenarios';
 import { FinancingFormData, FinancingCalculations } from '../hooks/useFinancingForm';
 import { formatCurrency } from '../utils/formatters';
@@ -23,6 +24,7 @@ export function FinancingFormFields({
   calculations,
   onUpdateField,
 }: FinancingFormFieldsProps) {
+  const colors = useThemeColors();
   return (
     <>
       {/* Scenario Name */}
@@ -32,7 +34,7 @@ export function FinancingFormFields({
           value={formData.name}
           onChangeText={(value) => onUpdateField('name', value)}
           placeholder="e.g., Conventional 20% Down"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.mutedForeground}
           className="bg-muted rounded-lg px-3 py-3 text-foreground"
         />
         {errors.name && <Text className="text-xs text-destructive mt-1">{errors.name}</Text>}
@@ -73,7 +75,7 @@ export function FinancingFormFields({
             value={formData.purchasePrice}
             onChangeText={(value) => onUpdateField('purchasePrice', value)}
             placeholder="350000"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.mutedForeground}
             keyboardType="numeric"
             className="flex-1 py-3 text-foreground text-lg font-semibold"
           />
@@ -91,7 +93,7 @@ export function FinancingFormFields({
             value={formData.downPaymentPercent}
             onChangeText={(value) => onUpdateField('downPaymentPercent', value)}
             placeholder="20"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.mutedForeground}
             keyboardType="decimal-pad"
             className="flex-1 py-3 text-foreground"
           />
@@ -114,7 +116,7 @@ export function FinancingFormFields({
               value={formData.interestRate}
               onChangeText={(value) => onUpdateField('interestRate', value)}
               placeholder="7"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.mutedForeground}
               keyboardType="decimal-pad"
               className="flex-1 py-3 text-foreground ml-1"
             />
@@ -157,7 +159,7 @@ export function FinancingFormFields({
             value={formData.closingCosts}
             onChangeText={(value) => onUpdateField('closingCosts', value)}
             placeholder="0"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.mutedForeground}
             keyboardType="numeric"
             className="flex-1 py-3 text-foreground"
           />
@@ -171,7 +173,7 @@ export function FinancingFormFields({
           value={formData.notes}
           onChangeText={(value) => onUpdateField('notes', value)}
           placeholder="Additional notes about this scenario..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.mutedForeground}
           multiline
           numberOfLines={2}
           textAlignVertical="top"

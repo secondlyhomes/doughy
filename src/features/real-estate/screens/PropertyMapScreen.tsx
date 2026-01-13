@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, List, X, MapPin, Bed, Bath, Square } from 'lucide-react-native';
+import { ThemedSafeAreaView } from '@/components';
 import { PropertyMap } from '../components/PropertyMap';
 import { useProperties } from '../hooks/useProperties';
 import { Property } from '../types';
@@ -56,9 +57,9 @@ export function PropertyMapScreen() {
   }, [router]);
 
   return (
-    <View className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="absolute top-0 left-0 right-0 z-10 pt-12 px-4 pb-4">
+      <View className="absolute top-0 left-0 right-0 z-10 px-4 pb-4">
         <View className="flex-row justify-between items-center">
           <TouchableOpacity
             onPress={handleBack}
@@ -200,6 +201,6 @@ export function PropertyMapScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ThemedSafeAreaView>
   );
 }

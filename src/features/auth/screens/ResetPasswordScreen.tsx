@@ -7,14 +7,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { Button, LoadingSpinner } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import {
   updatePassword,
   calculatePasswordStrength,
@@ -24,6 +25,7 @@ import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicat
 
 export function ResetPasswordScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const params = useLocalSearchParams();
 
   const [password, setPassword] = useState('');
@@ -73,26 +75,26 @@ export function ResetPasswordScreen() {
 
   if (success) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-6">
-            <CheckCircle size={48} color="#22c55e" />
+          <View className="w-20 h-20 rounded-full bg-success/20 items-center justify-center mb-6">
+            <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-foreground text-center">
             Password Reset!
           </Text>
-          <Text className="text-muted-foreground text-center mt-2">
+          <Text className="text-muted-foreground text-center mt-2 mb-4">
             Your password has been successfully updated.
             {'\n'}Redirecting to sign in...
           </Text>
-          <ActivityIndicator size="small" color="#3b82f6" className="mt-4" />
+          <LoadingSpinner size="small" />
         </View>
-      </SafeAreaView>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -105,7 +107,7 @@ export function ResetPasswordScreen() {
             {/* Header */}
             <View className="items-center mb-8">
               <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center mb-4">
-                <Lock size={32} color="#3b82f6" />
+                <Lock size={32} color={colors.info} />
               </View>
               <Text className="text-2xl font-bold text-foreground text-center">
                 Set New Password
@@ -118,7 +120,7 @@ export function ResetPasswordScreen() {
             {/* Error Message */}
             {error && (
               <View className="flex-row items-center bg-destructive/10 rounded-lg p-4 mb-6">
-                <AlertCircle size={20} color="#ef4444" />
+                <AlertCircle size={20} color={colors.destructive} />
                 <Text className="text-destructive ml-2 flex-1">{error}</Text>
               </View>
             )}
@@ -130,12 +132,12 @@ export function ResetPasswordScreen() {
               </Text>
               <View className="flex-row items-center border border-input rounded-lg bg-background">
                 <View className="pl-4">
-                  <Lock size={20} color="#6b7280" />
+                  <Lock size={20} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3 text-foreground"
                   placeholder="Enter new password"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.mutedForeground}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -149,9 +151,9 @@ export function ResetPasswordScreen() {
                   disabled={isSubmitting}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color="#6b7280" />
+                    <EyeOff size={20} color={colors.mutedForeground} />
                   ) : (
-                    <Eye size={20} color="#6b7280" />
+                    <Eye size={20} color={colors.mutedForeground} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -167,12 +169,12 @@ export function ResetPasswordScreen() {
               </Text>
               <View className="flex-row items-center border border-input rounded-lg bg-background">
                 <View className="pl-4">
-                  <Lock size={20} color="#6b7280" />
+                  <Lock size={20} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3 text-foreground"
                   placeholder="Confirm new password"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.mutedForeground}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showConfirmPassword}
@@ -186,9 +188,9 @@ export function ResetPasswordScreen() {
                   disabled={isSubmitting}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff size={20} color="#6b7280" />
+                    <EyeOff size={20} color={colors.mutedForeground} />
                   ) : (
-                    <Eye size={20} color="#6b7280" />
+                    <Eye size={20} color={colors.mutedForeground} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -198,28 +200,22 @@ export function ResetPasswordScreen() {
                 </Text>
               )}
               {confirmPassword.length > 0 && password === confirmPassword && (
-                <Text className="text-xs text-green-600 mt-1">
+                <Text className="text-xs mt-1" style={{ color: colors.success }}>
                   Passwords match
                 </Text>
               )}
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity
-              className={`py-4 rounded-lg items-center ${
-                isSubmitting ? 'bg-primary/50' : 'bg-primary'
-              }`}
+            <Button
               onPress={handleResetPassword}
               disabled={isSubmitting}
+              loading={isSubmitting}
+              size="lg"
+              className="w-full"
             >
-              {isSubmitting ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text className="text-primary-foreground font-semibold text-base">
-                  Reset Password
-                </Text>
-              )}
-            </TouchableOpacity>
+              Reset Password
+            </Button>
 
             {/* Back to Sign In */}
             <TouchableOpacity
@@ -234,6 +230,6 @@ export function ResetPasswordScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

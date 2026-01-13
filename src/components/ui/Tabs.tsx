@@ -104,6 +104,8 @@ export function TabsTrigger({
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
       activeOpacity={0.7}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive, disabled }}
     >
       {typeof children === 'string' ? (
         <Text

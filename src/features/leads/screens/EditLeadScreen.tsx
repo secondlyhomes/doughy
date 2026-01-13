@@ -9,12 +9,14 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { LoadingSpinner, Button } from '@/components/ui';
 
 import { useLead, useUpdateLead } from '../hooks/useLeads';
 import { Lead, LeadStatus } from '../types';
@@ -38,10 +40,21 @@ interface FormData {
   notes: string;
 }
 
+const VALID_STATUSES: LeadStatus[] = ['new', 'active', 'won', 'lost', 'closed', 'inactive'];
+
+function isValidStatus(status: unknown): status is LeadStatus {
+  return typeof status === 'string' && VALID_STATUSES.includes(status as LeadStatus);
+}
+
 export function EditLeadScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const params = useLocalSearchParams();
-  const leadId = params.leadId as string;
+
+  // Validate route param
+  const leadId = typeof params.leadId === 'string' && params.leadId.length > 0
+    ? params.leadId
+    : '';
 
   const { lead, isLoading: isLoadingLead } = useLead(leadId);
   const updateLead = useUpdateLead();
@@ -66,7 +79,7 @@ export function EditLeadScreen() {
         email: lead.email || '',
         phone: lead.phone || '',
         company: lead.company || '',
-        status: (lead.status as LeadStatus) || 'new',
+        status: isValidStatus(lead.status) ? lead.status : 'new',
         tags: lead.tags || [],
         notes: lead.notes?.[0]?.content || '',
       });
@@ -139,32 +152,27 @@ export function EditLeadScreen() {
 
   if (isLoadingLead) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-muted-foreground mt-4">Loading lead...</Text>
-      </View>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        <LoadingSpinner fullScreen text="Loading lead..." />
+      </ThemedSafeAreaView>
     );
   }
 
   if (!lead) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-muted-foreground">Lead not found</Text>
-        <TouchableOpacity
-          className="mt-4 bg-primary px-4 py-2 rounded-lg"
-          onPress={() => router.back()}
-        >
-          <Text className="text-primary-foreground">Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={['top']}>
+        <Text className="text-muted-foreground mb-4">Lead not found</Text>
+        <Button onPress={() => router.back()}>Go Back</Button>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-background"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
         {/* Name */}
         <View className="mb-4">
@@ -172,11 +180,11 @@ export function EditLeadScreen() {
             Name <Text className="text-destructive">*</Text>
           </Text>
           <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
-            <User size={18} color="#6b7280" />
+            <User size={18} color={colors.mutedForeground} />
             <TextInput
               className="flex-1 ml-3 text-foreground text-base"
               placeholder="Enter lead name"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.mutedForeground}
               value={formData.name}
               onChangeText={(text) => handleChange('name', text)}
               autoCapitalize="words"
@@ -188,11 +196,11 @@ export function EditLeadScreen() {
         <View className="mb-4">
           <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
           <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
-            <Mail size={18} color="#6b7280" />
+            <Mail size={18} color={colors.mutedForeground} />
             <TextInput
               className="flex-1 ml-3 text-foreground text-base"
               placeholder="email@example.com"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.mutedForeground}
               value={formData.email}
               onChangeText={(text) => handleChange('email', text)}
               keyboardType="email-address"
@@ -206,11 +214,11 @@ export function EditLeadScreen() {
         <View className="mb-4">
           <Text className="text-sm font-medium text-foreground mb-2">Phone</Text>
           <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
-            <Phone size={18} color="#6b7280" />
+            <Phone size={18} color={colors.mutedForeground} />
             <TextInput
               className="flex-1 ml-3 text-foreground text-base"
               placeholder="(555) 123-4567"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.mutedForeground}
               value={formData.phone}
               onChangeText={(text) => handleChange('phone', text)}
               keyboardType="phone-pad"
@@ -222,11 +230,11 @@ export function EditLeadScreen() {
         <View className="mb-4">
           <Text className="text-sm font-medium text-foreground mb-2">Company</Text>
           <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
-            <Building2 size={18} color="#6b7280" />
+            <Building2 size={18} color={colors.mutedForeground} />
             <TextInput
               className="flex-1 ml-3 text-foreground text-base"
               placeholder="Company name"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.mutedForeground}
               value={formData.company}
               onChangeText={(text) => handleChange('company', text)}
               autoCapitalize="words"
@@ -244,7 +252,7 @@ export function EditLeadScreen() {
             <Text className="text-foreground text-base">
               {getStatusLabel(formData.status)}
             </Text>
-            <ChevronDown size={18} color="#6b7280" />
+            <ChevronDown size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
 
           {showStatusPicker && (
@@ -276,11 +284,11 @@ export function EditLeadScreen() {
         <View className="mb-4">
           <Text className="text-sm font-medium text-foreground mb-2">Tags</Text>
           <View className="flex-row items-center bg-muted rounded-lg px-3 py-2">
-            <Tag size={18} color="#6b7280" />
+            <Tag size={18} color={colors.mutedForeground} />
             <TextInput
               className="flex-1 ml-3 text-foreground text-base"
               placeholder="Add a tag"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.mutedForeground}
               value={tagInput}
               onChangeText={setTagInput}
               onSubmitEditing={handleAddTag}
@@ -306,7 +314,7 @@ export function EditLeadScreen() {
                     className="ml-2"
                     onPress={() => handleRemoveTag(tag)}
                   >
-                    <X size={14} color="#6b7280" />
+                    <X size={14} color={colors.mutedForeground} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -319,11 +327,11 @@ export function EditLeadScreen() {
           <Text className="text-sm font-medium text-foreground mb-2">Notes</Text>
           <View className="bg-muted rounded-lg px-3 py-3">
             <View className="flex-row items-start">
-              <FileText size={18} color="#6b7280" className="mt-0.5" />
+              <FileText size={18} color={colors.mutedForeground} className="mt-0.5" />
               <TextInput
                 className="flex-1 ml-3 text-foreground text-base min-h-[100px]"
                 placeholder="Add notes about this lead..."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={formData.notes}
                 onChangeText={(text) => handleChange('notes', text)}
                 multiline
@@ -334,31 +342,28 @@ export function EditLeadScreen() {
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity
-          className={`rounded-lg py-4 items-center ${
-            updateLead.isPending ? 'bg-primary/50' : 'bg-primary'
-          }`}
+        <Button
           onPress={handleSubmit}
           disabled={updateLead.isPending}
+          loading={updateLead.isPending}
+          size="lg"
+          className="w-full"
         >
-          {updateLead.isPending ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-primary-foreground font-semibold text-base">
-              Save Changes
-            </Text>
-          )}
-        </TouchableOpacity>
+          Save Changes
+        </Button>
 
         {/* Cancel Button */}
-        <TouchableOpacity
-          className="rounded-lg py-4 items-center mt-3"
+        <Button
+          variant="ghost"
           onPress={() => router.back()}
+          size="lg"
+          className="w-full mt-3"
         >
-          <Text className="text-muted-foreground font-medium text-base">Cancel</Text>
-        </TouchableOpacity>
+          Cancel
+        </Button>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </ThemedSafeAreaView>
   );
 }
 

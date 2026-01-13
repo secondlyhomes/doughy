@@ -9,7 +9,6 @@ import {
   ScrollView,
   Switch,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -22,7 +21,9 @@ import {
   XCircle,
   Trash2,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import {
   listMFAFactors,
   unenrollMFA,
@@ -32,6 +33,7 @@ import {
 
 export function SecurityScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [mfaFactors, setMfaFactors] = useState<MFAFactor[]>([]);
@@ -92,44 +94,28 @@ export function SecurityScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-row items-center px-4 py-3 border-b border-border">
-          <TouchableOpacity onPress={() => router.back()} className="p-2">
-            <ArrowLeft size={24} color="#6b7280" />
-          </TouchableOpacity>
-          <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-            Security
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
-      </SafeAreaView>
+      <ThemedSafeAreaView className="flex-1">
+        <ScreenHeader title="Security" backButton bordered />
+        <LoadingSpinner fullScreen />
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          Security
-        </Text>
-      </View>
+      <ScreenHeader title="Security" backButton bordered />
 
-      <ScrollView className="flex-1 p-6">
+      <ScrollView className="flex-1 p-4">
         {/* Two-Factor Authentication */}
         <Text className="text-sm font-medium text-muted-foreground mb-3">
           TWO-FACTOR AUTHENTICATION
         </Text>
 
-        <View className="bg-card rounded-lg mb-6">
+        <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center p-4 border-b border-border">
             <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
-              <Shield size={20} color="#3b82f6" />
+              <Shield size={20} color={colors.info} />
             </View>
             <View className="flex-1 ml-4">
               <Text className="text-foreground font-medium">
@@ -138,12 +124,12 @@ export function SecurityScreen() {
               <View className="flex-row items-center mt-1">
                 {mfaEnabled ? (
                   <>
-                    <CheckCircle size={14} color="#22c55e" />
-                    <Text className="text-sm text-green-600 ml-1">Enabled</Text>
+                    <CheckCircle size={14} color={colors.success} />
+                    <Text className="text-sm text-success ml-1">Enabled</Text>
                   </>
                 ) : (
                   <>
-                    <XCircle size={14} color="#ef4444" />
+                    <XCircle size={14} color={colors.destructive} />
                     <Text className="text-sm text-destructive ml-1">Not enabled</Text>
                   </>
                 )}
@@ -158,7 +144,7 @@ export function SecurityScreen() {
               className="flex-row items-center p-4 border-b border-border"
             >
               <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
-                <Smartphone size={20} color="#6b7280" />
+                <Smartphone size={20} color={colors.mutedForeground} />
               </View>
               <View className="flex-1 ml-4">
                 <Text className="text-foreground">
@@ -168,16 +154,15 @@ export function SecurityScreen() {
                   Added {new Date(factor.createdAt).toLocaleDateString()}
                 </Text>
               </View>
-              <TouchableOpacity
+              <Button
+                variant="ghost"
+                size="icon"
                 onPress={() => handleRemoveMFA(factor.id)}
                 disabled={isRemoving}
+                loading={isRemoving}
               >
-                {isRemoving ? (
-                  <ActivityIndicator size="small" color="#ef4444" />
-                ) : (
-                  <Trash2 size={20} color="#ef4444" />
-                )}
-              </TouchableOpacity>
+                {!isRemoving && <Trash2 size={20} color={colors.destructive} />}
+              </Button>
             </View>
           ))}
 
@@ -186,19 +171,19 @@ export function SecurityScreen() {
             className="flex-row items-center p-4"
             onPress={handleSetupMFA}
           >
-            <View className="w-10 h-10 rounded-full bg-green-100 items-center justify-center">
-              <Shield size={20} color="#22c55e" />
+            <View className="w-10 h-10 rounded-full bg-success/20 items-center justify-center">
+              <Shield size={20} color={colors.success} />
             </View>
             <Text className="flex-1 ml-4 text-primary font-medium">
               {mfaEnabled ? 'Add Another Device' : 'Set Up 2FA'}
             </Text>
-            <ChevronRight size={20} color="#6b7280" />
+            <ChevronRight size={20} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
         {/* Info */}
-        <View className="bg-blue-50 rounded-lg p-4 mb-6">
-          <Text className="text-blue-800 text-sm">
+        <View className="bg-info/10 rounded-lg p-4 mb-6">
+          <Text className="text-info-foreground text-sm">
             Two-factor authentication adds an extra layer of security to your account
             by requiring a code from your authenticator app when signing in.
           </Text>
@@ -209,13 +194,13 @@ export function SecurityScreen() {
           PASSWORD
         </Text>
 
-        <View className="bg-card rounded-lg">
+        <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
           <TouchableOpacity
             className="flex-row items-center p-4"
             onPress={handleChangePassword}
           >
             <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
-              <Key size={20} color="#6b7280" />
+              <Key size={20} color={colors.mutedForeground} />
             </View>
             <View className="flex-1 ml-4">
               <Text className="text-foreground font-medium">Change Password</Text>
@@ -223,7 +208,7 @@ export function SecurityScreen() {
                 Update your account password
               </Text>
             </View>
-            <ChevronRight size={20} color="#6b7280" />
+            <ChevronRight size={20} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
@@ -232,7 +217,7 @@ export function SecurityScreen() {
           <Text className="text-sm font-medium text-muted-foreground mb-3">
             SECURITY TIPS
           </Text>
-          <View className="bg-card rounded-lg p-4">
+          <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
             <Text className="text-sm text-foreground mb-2">
               • Use a unique, strong password
             </Text>
@@ -248,6 +233,6 @@ export function SecurityScreen() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

@@ -12,6 +12,7 @@ import {
   Info,
   Calculator,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property } from '../types';
 import { useDealAnalysis, RentalAssumptions, DEFAULT_RENTAL_ASSUMPTIONS } from '../hooks/useDealAnalysis';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
@@ -21,6 +22,7 @@ interface CashFlowAnalysisProps {
 }
 
 export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
+  const colors = useThemeColors();
   const [expanded, setExpanded] = useState(false);
   const [assumptions, setAssumptions] = useState<RentalAssumptions>(() => ({
     ...DEFAULT_RENTAL_ASSUMPTIONS,
@@ -56,7 +58,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
           value={assumptions[key]?.toString() || ''}
           onChangeText={(value) => updateAssumption(key, value)}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.mutedForeground}
           keyboardType="numeric"
           className="flex-1 py-2 text-foreground text-sm"
         />
@@ -90,7 +92,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
             value={assumptions.monthlyRent?.toString() || ''}
             onChangeText={(value) => updateAssumption('monthlyRent', value)}
             placeholder="0"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.mutedForeground}
             keyboardType="numeric"
             className="flex-1 py-3 text-lg font-semibold text-foreground"
           />
@@ -105,7 +107,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
             {/* Monthly Cash Flow */}
             <View className="flex-1 min-w-[45%] bg-muted rounded-lg p-3">
               <Text className="text-xs text-muted-foreground uppercase">Monthly Cash Flow</Text>
-              <Text className={`text-xl font-bold ${metrics.monthlyCashFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <Text className={`text-xl font-bold ${metrics.monthlyCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(metrics.monthlyCashFlow)}
               </Text>
             </View>
@@ -113,7 +115,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
             {/* Cash on Cash */}
             <View className="flex-1 min-w-[45%] bg-muted rounded-lg p-3">
               <Text className="text-xs text-muted-foreground uppercase">Cash-on-Cash</Text>
-              <Text className={`text-xl font-bold ${metrics.cashOnCashReturn >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <Text className={`text-xl font-bold ${metrics.cashOnCashReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatPercentage(metrics.cashOnCashReturn)}
               </Text>
             </View>
@@ -135,7 +137,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
             </View>
             <View className="flex-1 min-w-[30%] bg-muted/50 rounded-lg p-2">
               <Text className="text-xs text-muted-foreground">Annual</Text>
-              <Text className={`text-sm font-semibold ${metrics.annualCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <Text className={`text-sm font-semibold ${metrics.annualCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(metrics.annualCashFlow)}
               </Text>
             </View>
@@ -149,18 +151,18 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
           <View className="border-t border-border pt-4">
             {/* Income */}
             <Text className="text-sm font-medium text-foreground mb-2">Income</Text>
-            {renderMetricRow('Gross Rent', formatCurrency(metrics.monthlyRent), 'text-green-600')}
+            {renderMetricRow('Gross Rent', formatCurrency(metrics.monthlyRent), 'text-success')}
 
             {/* Expenses */}
             <Text className="text-sm font-medium text-foreground mt-3 mb-2">Expenses</Text>
-            {renderMetricRow('Operating Expenses', `-${formatCurrency(metrics.monthlyExpenses)}`, 'text-red-500')}
-            {renderMetricRow('Mortgage (P&I)', `-${formatCurrency(metrics.monthlyMortgage)}`, 'text-red-500')}
+            {renderMetricRow('Operating Expenses', `-${formatCurrency(metrics.monthlyExpenses)}`, 'text-destructive')}
+            {renderMetricRow('Mortgage (P&I)', `-${formatCurrency(metrics.monthlyMortgage)}`, 'text-destructive')}
 
             {/* Net */}
             <View className="h-px bg-border my-2" />
             <View className="flex-row justify-between items-center py-2">
               <Text className="text-sm font-semibold text-foreground">Net Cash Flow</Text>
-              <Text className={`text-base font-bold ${metrics.monthlyCashFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <Text className={`text-base font-bold ${metrics.monthlyCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(metrics.monthlyCashFlow)}/mo
               </Text>
             </View>

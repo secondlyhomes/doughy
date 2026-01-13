@@ -1,5 +1,5 @@
 // src/components/ui/Modal.tsx
-// React Native Modal/Dialog component with NativeWind styling
+// React Native Modal/Dialog component with NativeWind styling and glass effects
 import React from 'react';
 import {
   Modal as RNModal,
@@ -11,10 +11,12 @@ import {
   Platform,
   ViewProps,
   TextProps,
+  StyleSheet,
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { GlassBackdrop } from './GlassView';
 
 // Modal Root
 export interface ModalProps {
@@ -23,6 +25,8 @@ export interface ModalProps {
   children?: React.ReactNode;
   closeOnBackdropPress?: boolean;
   animationType?: 'none' | 'slide' | 'fade';
+  /** Use glass blur effect for backdrop. Default: true */
+  useGlassBackdrop?: boolean;
 }
 
 export function Modal({
@@ -31,7 +35,42 @@ export function Modal({
   children,
   closeOnBackdropPress = true,
   animationType = 'fade',
+  useGlassBackdrop = true,
 }: ModalProps) {
+  const renderBackdrop = () => {
+    if (useGlassBackdrop) {
+      return (
+        <GlassBackdrop
+          intensity={30}
+          style={styles.backdrop}
+        >
+          <TouchableWithoutFeedback
+            onPress={closeOnBackdropPress ? onClose : undefined}
+          >
+            <View style={styles.backdropTouchable}>
+              <TouchableWithoutFeedback>
+                <View>{children}</View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </GlassBackdrop>
+      );
+    }
+
+    // Fallback to original solid backdrop
+    return (
+      <TouchableWithoutFeedback
+        onPress={closeOnBackdropPress ? onClose : undefined}
+      >
+        <View className="flex-1 items-center justify-center bg-black/80 px-4">
+          <TouchableWithoutFeedback>
+            <View>{children}</View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    );
+  };
+
   return (
     <RNModal
       visible={visible}
@@ -41,21 +80,28 @@ export function Modal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        style={styles.container}
       >
-        <TouchableWithoutFeedback
-          onPress={closeOnBackdropPress ? onClose : undefined}
-        >
-          <View className="flex-1 items-center justify-center bg-black/80 px-4">
-            <TouchableWithoutFeedback>
-              <View>{children}</View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
+        {renderBackdrop()}
       </KeyboardAvoidingView>
     </RNModal>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  backdrop: {
+    flex: 1,
+  },
+  backdropTouchable: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+});
 
 // Modal Content
 export interface ModalContentProps extends ViewProps {
@@ -75,10 +121,12 @@ export function ModalContent({
   const colors = useThemeColors();
   return (
     <View
-      className={cn(
-        'w-full max-w-lg rounded-lg border border-border bg-background p-6 shadow-lg',
-        className
-      )}
+      className={cn('w-full max-w-lg rounded-lg p-6 shadow-lg', className)}
+      style={{
+        backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: colors.border,
+      }}
       {...props}
     >
       {children}
@@ -134,10 +182,12 @@ export interface ModalTitleProps extends TextProps {
   children?: React.ReactNode;
 }
 
-export function ModalTitle({ className, children, ...props }: ModalTitleProps) {
+export function ModalTitle({ className, children, style, ...props }: ModalTitleProps) {
+  const colors = useThemeColors();
   return (
     <Text
-      className={cn('text-lg font-semibold text-foreground', className)}
+      className={cn('text-lg font-semibold', className)}
+      style={[{ color: colors.foreground }, style]}
       {...props}
     >
       {children}
@@ -154,10 +204,16 @@ export interface ModalDescriptionProps extends TextProps {
 export function ModalDescription({
   className,
   children,
+  style,
   ...props
 }: ModalDescriptionProps) {
+  const colors = useThemeColors();
   return (
-    <Text className={cn('text-sm text-muted-foreground', className)} {...props}>
+    <Text
+      className={cn('text-sm', className)}
+      style={[{ color: colors.mutedForeground }, style]}
+      {...props}
+    >
       {children}
     </Text>
   );

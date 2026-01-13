@@ -8,18 +8,21 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, User, Mail, Save, Camera } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
+import { ThemedSafeAreaView } from '@/components';
+import { Button, LoadingSpinner } from '@/components/ui';
 
 export function ProfileScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { user, profile, refetchProfile, isLoading: authLoading } = useAuth();
 
   // Form state
@@ -88,22 +91,23 @@ export function ProfileScreen() {
 
   if (authLoading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#6366f1" />
-      </View>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        <LoadingSpinner fullScreen />
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-background"
-    >
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="flex-row items-center p-4 border-b border-border">
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft size={24} color="#374151" />
+            <ArrowLeft size={24} color={colors.mutedForeground} />
           </TouchableOpacity>
           <Text className="text-xl font-semibold text-foreground">Edit Profile</Text>
         </View>
@@ -121,7 +125,7 @@ export function ProfileScreen() {
                 className="absolute bottom-0 right-0 bg-card border border-border rounded-full p-2"
                 onPress={() => Alert.alert('Coming Soon', 'Avatar upload will be available soon.')}
               >
-                <Camera size={16} color="#6b7280" />
+                <Camera size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
             <Text className="text-sm text-muted-foreground mt-2">Tap to change photo</Text>
@@ -134,12 +138,12 @@ export function ProfileScreen() {
               <Text className="text-sm font-medium text-foreground mb-2">First Name</Text>
               <View className="flex-row items-center border border-input rounded-lg bg-background">
                 <View className="pl-4">
-                  <User size={20} color="#6b7280" />
+                  <User size={20} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3 text-foreground"
                   placeholder="Enter first name"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.mutedForeground}
                   value={firstName}
                   onChangeText={setFirstName}
                   autoCapitalize="words"
@@ -153,12 +157,12 @@ export function ProfileScreen() {
               <Text className="text-sm font-medium text-foreground mb-2">Last Name</Text>
               <View className="flex-row items-center border border-input rounded-lg bg-background">
                 <View className="pl-4">
-                  <User size={20} color="#6b7280" />
+                  <User size={20} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3 text-foreground"
                   placeholder="Enter last name"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={colors.mutedForeground}
                   value={lastName}
                   onChangeText={setLastName}
                   autoCapitalize="words"
@@ -172,7 +176,7 @@ export function ProfileScreen() {
               <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
               <View className="flex-row items-center border border-input rounded-lg bg-muted">
                 <View className="pl-4">
-                  <Mail size={20} color="#6b7280" />
+                  <Mail size={20} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3 text-muted-foreground"
@@ -213,25 +217,19 @@ export function ProfileScreen() {
           </View>
 
           {/* Save Button */}
-          <TouchableOpacity
-            className="bg-primary rounded-lg py-4 items-center flex-row justify-center mt-8"
-            style={{ opacity: !hasChanges || isSaving ? 0.5 : 1 }}
+          <Button
             onPress={handleSave}
             disabled={!hasChanges || isSaving}
+            loading={isSaving}
+            size="lg"
+            className="w-full mt-8"
           >
-            {isSaving ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <>
-                <Save size={20} color="#ffffff" />
-                <Text className="text-primary-foreground font-semibold text-base ml-2">
-                  Save Changes
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
+            {!isSaving && <Save size={20} color={colors.primaryForeground} />}
+            Save Changes
+          </Button>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </ThemedSafeAreaView>
   );
 }

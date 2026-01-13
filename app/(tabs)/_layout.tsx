@@ -1,10 +1,10 @@
 // app/(tabs)/_layout.tsx
-// Bottom tab navigator layout
+// Bottom tab navigator layout with floating glass tab bar
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
 import { Home, Building, Users, MessageCircle, Settings } from 'lucide-react-native';
 import { useUnreadCounts, formatBadgeCount } from '@/features/layout';
 import { useThemeColors } from '@/context/ThemeContext';
+import { FloatingGlassTabBar } from '@/components/ui/FloatingGlassTabBar';
 
 export default function TabLayout() {
   const { counts } = useUnreadCounts();
@@ -12,29 +12,15 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <FloatingGlassTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          paddingTop: 8,
-          height: Platform.OS === 'ios' ? 80 : 60,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
-        tabBarBadgeStyle: {
-          backgroundColor: colors.destructive,
-          fontSize: 10,
-          fontWeight: '600',
-          minWidth: 18,
-          height: 18,
-          borderRadius: 9,
-        },
+      }}
+      sceneContainerStyle={{
+        // Add bottom padding so content doesn't hide behind floating tab bar
+        paddingBottom: 72,
       }}
     >
       <Tabs.Screen

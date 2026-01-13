@@ -8,10 +8,12 @@ export interface PasswordResetResult {
   error?: string;
 }
 
+export type PasswordStrengthColorKey = 'destructive' | 'warning' | 'success';
+
 export interface PasswordStrength {
   score: number; // 0-4
   label: 'weak' | 'fair' | 'good' | 'strong';
-  color: string;
+  colorKey: PasswordStrengthColorKey; // Semantic color key - resolve using theme colors
   suggestions: string[];
 }
 
@@ -119,18 +121,18 @@ export function calculatePasswordStrength(password: string): PasswordStrength {
     4: 'strong',
   };
 
-  const colors: Record<number, string> = {
-    0: '#ef4444', // red
-    1: '#ef4444', // red
-    2: '#f59e0b', // amber
-    3: '#22c55e', // green
-    4: '#22c55e', // green
+  const colorKeys: Record<number, PasswordStrengthColorKey> = {
+    0: 'destructive', // weak
+    1: 'destructive', // weak
+    2: 'warning',     // fair
+    3: 'success',     // good
+    4: 'success',     // strong
   };
 
   return {
     score: normalizedScore,
     label: labels[normalizedScore],
-    color: colors[normalizedScore],
+    colorKey: colorKeys[normalizedScore],
     suggestions: suggestions.slice(0, 2), // Show max 2 suggestions
   };
 }

@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TextInput, ScrollView } from 'react-native';
 import { Bed, Bath, Square, Ruler, Calendar } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface Step2Data {
   bedrooms: string;
@@ -20,6 +21,7 @@ interface PropertyFormStep2Props {
 }
 
 export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2Props) {
+  const colors = useThemeColors();
   return (
     <ScrollView
       className="flex-1"
@@ -41,7 +43,7 @@ export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2P
                 value={data.bedrooms}
                 onChangeText={(value) => onChange({ bedrooms: value.replace(/[^0-9]/g, '') })}
                 placeholder="3"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.mutedForeground}
                 keyboardType="numeric"
                 className={`bg-muted rounded-lg px-4 py-3 text-foreground text-center text-lg ${
                   errors.bedrooms ? 'border border-destructive' : ''
@@ -61,7 +63,7 @@ export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2P
                 value={data.bathrooms}
                 onChangeText={(value) => onChange({ bathrooms: value.replace(/[^0-9.]/g, '') })}
                 placeholder="2"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.mutedForeground}
                 keyboardType="decimal-pad"
                 className={`bg-muted rounded-lg px-4 py-3 text-foreground text-center text-lg ${
                   errors.bathrooms ? 'border border-destructive' : ''
@@ -103,7 +105,7 @@ export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2P
                 value={data.square_feet}
                 onChangeText={(value) => onChange({ square_feet: value.replace(/[^0-9]/g, '') })}
                 placeholder="1,500"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.mutedForeground}
                 keyboardType="numeric"
                 className={`bg-muted rounded-lg px-4 py-3 text-foreground ${
                   errors.square_feet ? 'border border-destructive' : ''
@@ -123,7 +125,7 @@ export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2P
                 value={data.lot_size}
                 onChangeText={(value) => onChange({ lot_size: value.replace(/[^0-9]/g, '') })}
                 placeholder="5,000"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.mutedForeground}
                 keyboardType="numeric"
                 className={`bg-muted rounded-lg px-4 py-3 text-foreground ${
                   errors.lot_size ? 'border border-destructive' : ''
@@ -147,7 +149,7 @@ export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2P
             value={data.year_built}
             onChangeText={(value) => onChange({ year_built: value.replace(/[^0-9]/g, '') })}
             placeholder="1990"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.mutedForeground}
             keyboardType="numeric"
             maxLength={4}
             className={`bg-muted rounded-lg px-4 py-3 text-foreground ${

@@ -42,6 +42,21 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
   const opacity = useRef(new Animated.Value(0)).current;
   const colors = useThemeColors();
 
+  const animateOut = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -100,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => onDismiss());
+  }, [translateY, opacity, onDismiss]);
+
   useEffect(() => {
     // Animate in
     Animated.parallel([
@@ -63,29 +78,14 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
     }, duration);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  const animateOut = () => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: -100,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => onDismiss());
-  };
+  }, [duration, translateY, opacity, animateOut]);
 
   // Semantic colors that work in both light and dark modes
   const toastColors = {
-    success: '#22c55e', // green-500 - good contrast in both modes
+    success: colors.success,
     error: colors.destructive,
-    warning: '#f59e0b', // amber-500 - good contrast in both modes
-    info: colors.primary,
+    warning: colors.warning,
+    info: colors.info,
   };
 
   const getIcon = () => {
@@ -107,13 +107,13 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
   const getBorderColor = () => {
     switch (type) {
       case 'success':
-        return 'border-green-500';
+        return 'border-success';
       case 'error':
-        return 'border-red-500';
+        return 'border-destructive';
       case 'warning':
-        return 'border-yellow-500';
+        return 'border-warning';
       case 'info':
-        return 'border-blue-500';
+        return 'border-info';
       default:
         return 'border-border';
     }

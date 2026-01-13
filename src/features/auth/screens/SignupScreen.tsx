@@ -15,9 +15,12 @@ import {
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Check } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
 
 export function SignupScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { signUp, isLoading } = useAuth();
 
   // Form state
@@ -88,9 +91,9 @@ export function SignupScreen() {
   // Success screen
   if (success) {
     return (
-      <View className="flex-1 bg-background justify-center items-center px-6">
+      <ThemedSafeAreaView className="flex-1 justify-center items-center px-6" edges={['top']}>
         <View className="bg-primary/10 rounded-full p-6 mb-6">
-          <Check size={48} color="#22c55e" />
+          <Check size={48} color={colors.success} />
         </View>
         <Text className="text-2xl font-bold text-foreground text-center mb-4">
           Check Your Email
@@ -106,16 +109,17 @@ export function SignupScreen() {
             Back to Sign In
           </Text>
         </TouchableOpacity>
-      </View>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-background"
-    >
-      <ScrollView
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -133,7 +137,7 @@ export function SignupScreen() {
           {/* Error Message */}
           {error && (
             <View className="flex-row items-center bg-destructive/10 rounded-lg p-4 mb-6">
-              <AlertCircle size={20} color="#ef4444" />
+              <AlertCircle size={20} color={colors.destructive} />
               <Text className="text-destructive ml-2 flex-1">{error}</Text>
             </View>
           )}
@@ -143,12 +147,12 @@ export function SignupScreen() {
             <Text className="text-sm font-medium text-foreground mb-2">Full Name</Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <User size={20} color="#6b7280" />
+                <User size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="John Doe"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={fullName}
                 onChangeText={setFullName}
                 autoCapitalize="words"
@@ -163,12 +167,12 @@ export function SignupScreen() {
             <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Mail size={20} color="#6b7280" />
+                <Mail size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="name@example.com"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -185,12 +189,12 @@ export function SignupScreen() {
             <Text className="text-sm font-medium text-foreground mb-2">Password</Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Lock size={20} color="#6b7280" />
+                <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="Create a password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -204,9 +208,9 @@ export function SignupScreen() {
                 disabled={loading}
               >
                 {showPassword ? (
-                  <EyeOff size={20} color="#6b7280" />
+                  <EyeOff size={20} color={colors.mutedForeground} />
                 ) : (
-                  <Eye size={20} color="#6b7280" />
+                  <Eye size={20} color={colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -239,12 +243,12 @@ export function SignupScreen() {
             <Text className="text-sm font-medium text-foreground mb-2">Confirm Password</Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Lock size={20} color="#6b7280" />
+                <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="Confirm your password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
@@ -258,9 +262,9 @@ export function SignupScreen() {
                 disabled={loading}
               >
                 {showConfirmPassword ? (
-                  <EyeOff size={20} color="#6b7280" />
+                  <EyeOff size={20} color={colors.mutedForeground} />
                 ) : (
-                  <Eye size={20} color="#6b7280" />
+                  <Eye size={20} color={colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -277,7 +281,7 @@ export function SignupScreen() {
                 agreeToTerms ? 'bg-primary border-primary' : 'border-input'
               }`}
             >
-              {agreeToTerms && <Check size={14} color="#ffffff" />}
+              {agreeToTerms && <Check size={14} color={colors.primaryForeground} />}
             </View>
             <Text className="text-sm text-muted-foreground flex-1">
               I agree to the Terms of Service and Privacy Policy
@@ -292,7 +296,7 @@ export function SignupScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <Text className="text-primary-foreground font-semibold text-base">
                 Create Account
@@ -308,22 +312,25 @@ export function SignupScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ThemedSafeAreaView>
   );
 }
 
 // Helper component for password requirements
 function PasswordRequirement({ met, text }: { met: boolean; text: string }) {
+  const colors = useThemeColors();
   return (
     <View className="flex-row items-center mt-1">
       {met ? (
-        <Check size={14} color="#22c55e" />
+        <Check size={14} color={colors.success} />
       ) : (
         <View className="w-3.5 h-3.5 rounded-full border border-muted-foreground" />
       )}
       <Text
-        className={`ml-2 text-sm ${met ? 'text-green-600' : 'text-muted-foreground'}`}
+        className="ml-2 text-sm"
+        style={{ color: met ? colors.success : colors.mutedForeground }}
       >
         {text}
       </Text>

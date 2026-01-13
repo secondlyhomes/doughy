@@ -4,6 +4,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Edit2, Trash2 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { Button } from '@/components/ui';
 import { FinancingScenario, ScenarioDetails } from '../types';
 import { FinancingScenarioWithCalcs, LOAN_TYPES, LoanType } from '../hooks/useFinancingScenarios';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
@@ -35,6 +37,7 @@ export function FinancingScenarioCard({
   onEdit,
   onDelete,
 }: FinancingScenarioCardProps) {
+  const colors = useThemeColors();
   const input: ScenarioDetails = scenario.input_json || EMPTY_SCENARIO_DETAILS;
 
   return (
@@ -61,12 +64,12 @@ export function FinancingScenarioCard({
         </View>
 
         <View className="flex-row gap-1">
-          <TouchableOpacity onPress={onEdit} className="p-2 bg-muted rounded-lg">
-            <Edit2 size={14} className="text-muted-foreground" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onDelete} className="p-2 bg-destructive/10 rounded-lg">
-            <Trash2 size={14} className="text-destructive" />
-          </TouchableOpacity>
+          <Button variant="ghost" size="icon" onPress={onEdit} className="bg-muted">
+            <Edit2 size={14} color={colors.mutedForeground} />
+          </Button>
+          <Button variant="ghost" size="icon" onPress={onDelete} className="bg-destructive/10">
+            <Trash2 size={14} color={colors.destructive} />
+          </Button>
         </View>
       </View>
 

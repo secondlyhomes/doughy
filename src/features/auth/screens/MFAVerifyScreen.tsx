@@ -6,13 +6,14 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Shield, ArrowLeft } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { LoadingSpinner } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import { MFACodeInput } from '../components/MFACodeInput';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -23,6 +24,7 @@ import {
 
 export function MFAVerifyScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const params = useLocalSearchParams<{ factorId?: string }>();
 
   const [code, setCode] = useState('');
@@ -103,19 +105,14 @@ export function MFAVerifyScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-          <Text className="text-muted-foreground mt-4">
-            Preparing verification...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <ThemedSafeAreaView className="flex-1">
+        <LoadingSpinner fullScreen text="Preparing verification..." />
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
@@ -123,7 +120,7 @@ export function MFAVerifyScreen() {
         {/* Header */}
         <View className="flex-row items-center px-4 py-3">
           <TouchableOpacity onPress={handleBack} className="p-2">
-            <ArrowLeft size={24} color="#6b7280" />
+            <ArrowLeft size={24} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
@@ -131,7 +128,7 @@ export function MFAVerifyScreen() {
           {/* Icon */}
           <View className="items-center mb-6">
             <View className="w-20 h-20 rounded-full bg-primary/10 items-center justify-center">
-              <Shield size={40} color="#3b82f6" />
+              <Shield size={40} color={colors.info} />
             </View>
           </View>
 
@@ -162,10 +159,7 @@ export function MFAVerifyScreen() {
 
           {/* Verifying indicator */}
           {isVerifying && (
-            <View className="flex-row items-center justify-center">
-              <ActivityIndicator size="small" color="#3b82f6" />
-              <Text className="text-muted-foreground ml-2">Verifying...</Text>
-            </View>
+            <LoadingSpinner text="Verifying..." />
           )}
 
           {/* Help text */}
@@ -175,6 +169,6 @@ export function MFAVerifyScreen() {
           </Text>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

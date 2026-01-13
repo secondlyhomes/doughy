@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import { Phone, Mail, MessageSquare } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { sanitizePhone } from '@/utils/sanitize';
 
 interface LeadQuickActionsProps {
@@ -13,6 +14,8 @@ interface LeadQuickActionsProps {
 }
 
 export function LeadQuickActions({ name, phone, email }: LeadQuickActionsProps) {
+  const colors = useThemeColors();
+
   const handleCall = () => {
     if (phone) {
       Linking.openURL(`tel:${sanitizePhone(phone)}`);
@@ -40,7 +43,7 @@ export function LeadQuickActions({ name, phone, email }: LeadQuickActionsProps) 
           accessibilityLabel={`Call ${name}`}
           accessibilityRole="button"
         >
-          <Phone size={18} color="white" />
+          <Phone size={18} color={colors.primaryForeground} />
           <Text className="text-primary-foreground font-medium ml-2">Call</Text>
         </TouchableOpacity>
       )}
@@ -51,19 +54,21 @@ export function LeadQuickActions({ name, phone, email }: LeadQuickActionsProps) 
           accessibilityLabel={`Email ${name}`}
           accessibilityRole="button"
         >
-          <Mail size={18} color="#1f2937" />
+          <Mail size={18} color={colors.secondaryForeground} />
           <Text className="text-secondary-foreground font-medium ml-2">Email</Text>
         </TouchableOpacity>
       )}
-      <TouchableOpacity
-        className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
-        onPress={handleSMS}
-        accessibilityLabel={`Send SMS to ${name}`}
-        accessibilityRole="button"
-      >
-        <MessageSquare size={18} color="#6b7280" />
-        <Text className="text-muted-foreground font-medium ml-2">SMS</Text>
-      </TouchableOpacity>
+      {phone && (
+        <TouchableOpacity
+          className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
+          onPress={handleSMS}
+          accessibilityLabel={`Send SMS to ${name}`}
+          accessibilityRole="button"
+        >
+          <MessageSquare size={18} color={colors.mutedForeground} />
+          <Text className="text-muted-foreground font-medium ml-2">SMS</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

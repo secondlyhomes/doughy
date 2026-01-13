@@ -7,7 +7,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,7 +14,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, Button } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import { changePassword } from '../services/profileService';
 import {
   calculatePasswordStrength,
@@ -25,6 +26,7 @@ import { PasswordStrengthIndicator } from '@/features/auth/components/PasswordSt
 
 export function ChangePasswordScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -81,10 +83,10 @@ export function ChangePasswordScreen() {
 
   if (success) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-6">
-            <CheckCircle size={48} color="#22c55e" />
+          <View className="w-20 h-20 rounded-full bg-success/20 items-center justify-center mb-6">
+            <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-foreground text-center">
             Password Changed!
@@ -92,35 +94,25 @@ export function ChangePasswordScreen() {
           <Text className="text-muted-foreground text-center mt-2 mb-8">
             Your password has been successfully updated.
           </Text>
-          <TouchableOpacity
-            className="bg-primary py-4 px-8 rounded-lg"
-            onPress={() => router.back()}
-          >
-            <Text className="text-primary-foreground font-semibold">Done</Text>
-          </TouchableOpacity>
+          <Button onPress={() => router.back()} size="lg">
+            Done
+          </Button>
         </View>
-      </SafeAreaView>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          Change Password
-        </Text>
-      </View>
+      <ScreenHeader title="Change Password" backButton bordered />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
         <ScrollView
-          className="flex-1 px-6"
+          className="flex-1 px-4"
           contentContainerStyle={{ paddingVertical: 24 }}
           keyboardShouldPersistTaps="handled"
         >
@@ -131,12 +123,12 @@ export function ChangePasswordScreen() {
             </Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Lock size={20} color="#6b7280" />
+                <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="Enter current password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 secureTextEntry={!showCurrentPassword}
@@ -148,9 +140,9 @@ export function ChangePasswordScreen() {
                 onPress={() => setShowCurrentPassword(!showCurrentPassword)}
               >
                 {showCurrentPassword ? (
-                  <EyeOff size={20} color="#6b7280" />
+                  <EyeOff size={20} color={colors.mutedForeground} />
                 ) : (
-                  <Eye size={20} color="#6b7280" />
+                  <Eye size={20} color={colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -163,12 +155,12 @@ export function ChangePasswordScreen() {
             </Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Lock size={20} color="#6b7280" />
+                <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="Enter new password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 secureTextEntry={!showNewPassword}
@@ -181,9 +173,9 @@ export function ChangePasswordScreen() {
                 onPress={() => setShowNewPassword(!showNewPassword)}
               >
                 {showNewPassword ? (
-                  <EyeOff size={20} color="#6b7280" />
+                  <EyeOff size={20} color={colors.mutedForeground} />
                 ) : (
-                  <Eye size={20} color="#6b7280" />
+                  <Eye size={20} color={colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -199,12 +191,12 @@ export function ChangePasswordScreen() {
             </Text>
             <View className="flex-row items-center border border-input rounded-lg bg-background">
               <View className="pl-4">
-                <Lock size={20} color="#6b7280" />
+                <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
                 className="flex-1 px-4 py-3 text-foreground"
                 placeholder="Confirm new password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
@@ -217,9 +209,9 @@ export function ChangePasswordScreen() {
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
-                  <EyeOff size={20} color="#6b7280" />
+                  <EyeOff size={20} color={colors.mutedForeground} />
                 ) : (
-                  <Eye size={20} color="#6b7280" />
+                  <Eye size={20} color={colors.mutedForeground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -229,30 +221,24 @@ export function ChangePasswordScreen() {
               </Text>
             )}
             {confirmPassword.length > 0 && newPassword === confirmPassword && (
-              <Text className="text-xs text-green-600 mt-1">
+              <Text className="text-xs text-success mt-1">
                 Passwords match
               </Text>
             )}
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity
-            className={`py-4 rounded-lg items-center ${
-              isSubmitting ? 'bg-primary/50' : 'bg-primary'
-            }`}
+          <Button
             onPress={handleChangePassword}
             disabled={isSubmitting}
+            loading={isSubmitting}
+            size="lg"
+            className="w-full"
           >
-            {isSubmitting ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text className="text-primary-foreground font-semibold text-base">
-                Change Password
-              </Text>
-            )}
-          </TouchableOpacity>
+            Change Password
+          </Button>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

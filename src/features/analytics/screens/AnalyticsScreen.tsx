@@ -19,6 +19,8 @@ import {
   Calendar,
   ChevronDown,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
 
 import { LeadsOverTimeChart, LeadSourceChart, ConversionChart } from '../components/LeadsChart';
 
@@ -33,6 +35,7 @@ interface MetricCardProps {
 }
 
 function MetricCard({ title, value, change, icon, suffix }: MetricCardProps) {
+  const colors = useThemeColors();
   const isPositive = change && change > 0;
   const isNegative = change && change < 0;
 
@@ -48,16 +51,16 @@ function MetricCard({ title, value, change, icon, suffix }: MetricCardProps) {
       {change !== undefined && (
         <View className="flex-row items-center mt-1">
           {isPositive ? (
-            <TrendingUp size={12} color="#22c55e" />
+            <TrendingUp size={12} color={colors.success} />
           ) : isNegative ? (
-            <TrendingDown size={12} color="#ef4444" />
+            <TrendingDown size={12} color={colors.destructive} />
           ) : null}
           <Text
             className={`text-xs ml-1 ${
               isPositive
-                ? 'text-green-500'
+                ? 'text-success'
                 : isNegative
-                ? 'text-red-500'
+                ? 'text-destructive'
                 : 'text-muted-foreground'
             }`}
           >
@@ -77,6 +80,7 @@ const DATE_RANGES: { label: string; value: DateRange }[] = [
 ];
 
 export function AnalyticsScreen() {
+  const colors = useThemeColors();
   const [dateRange, setDateRange] = useState<DateRange>('30d');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -105,12 +109,13 @@ export function AnalyticsScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <ScrollView
+        className="flex-1"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
       <View className="p-4">
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
@@ -125,9 +130,9 @@ export function AnalyticsScreen() {
               className="flex-row items-center bg-muted px-3 py-2 rounded-lg"
               onPress={() => setShowDatePicker(!showDatePicker)}
             >
-              <Calendar size={16} color="#6b7280" />
+              <Calendar size={16} color={colors.mutedForeground} />
               <Text className="text-sm text-foreground ml-2">{getDateRangeLabel()}</Text>
-              <ChevronDown size={16} color="#6b7280" className="ml-1" />
+              <ChevronDown size={16} color={colors.mutedForeground} className="ml-1" />
             </TouchableOpacity>
 
             {showDatePicker && (
@@ -165,27 +170,27 @@ export function AnalyticsScreen() {
             title="Total Leads"
             value={metrics.totalLeads}
             change={metrics.totalLeadsChange}
-            icon={<Users size={16} color="#3b82f6" />}
+            icon={<Users size={16} color={colors.info} />}
           />
           <MetricCard
             title="Active Properties"
             value={metrics.activeProperties}
             change={metrics.activePropertiesChange}
-            icon={<Building2 size={16} color="#3b82f6" />}
+            icon={<Building2 size={16} color={colors.info} />}
           />
           <MetricCard
             title="Conversion Rate"
             value={metrics.conversionRate}
             suffix="%"
             change={metrics.conversionRateChange}
-            icon={<Target size={16} color="#22c55e" />}
+            icon={<Target size={16} color={colors.success} />}
           />
           <MetricCard
             title="Avg. Response"
             value={metrics.avgResponseTime}
             suffix="h"
             change={metrics.avgResponseTimeChange}
-            icon={<Clock size={16} color="#f59e0b" />}
+            icon={<Clock size={16} color={colors.warning} />}
           />
         </View>
 
@@ -221,7 +226,8 @@ export function AnalyticsScreen() {
           </View>
         </View>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </ThemedSafeAreaView>
   );
 }
 

@@ -27,6 +27,13 @@ export interface ThemeColors {
   border: string;
   input: string;
   ring: string;
+  // Semantic status colors
+  success: string;
+  successForeground: string;
+  warning: string;
+  warningForeground: string;
+  info: string;
+  infoForeground: string;
 }
 
 // Light theme colors
@@ -50,6 +57,13 @@ const lightColors: ThemeColors = {
   border: '#e2e8f0',
   input: '#e2e8f0',
   ring: '#4d7c5f',
+  // Semantic status colors
+  success: '#22c55e',           // green-500
+  successForeground: '#14532d', // green-900
+  warning: '#f59e0b',           // amber-500
+  warningForeground: '#78350f', // amber-900
+  info: '#3b82f6',              // blue-500
+  infoForeground: '#1e3a8a',    // blue-900
 };
 
 // Dark theme colors
@@ -73,6 +87,13 @@ const darkColors: ThemeColors = {
   border: '#334155',
   input: '#334155',
   ring: '#6b9b7e',
+  // Semantic status colors (lighter for dark mode)
+  success: '#4ade80',           // green-400
+  successForeground: '#052e16', // green-950
+  warning: '#fbbf24',           // amber-400
+  warningForeground: '#451a03', // amber-950
+  info: '#60a5fa',              // blue-400
+  infoForeground: '#172554',    // blue-950
 };
 
 // Context type

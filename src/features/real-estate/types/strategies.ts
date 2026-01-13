@@ -101,8 +101,8 @@ export const STRATEGY_PATHS: Record<StrategyType, string> = {
  * Risk display configuration
  */
 export const RISK_CONFIG: Record<RiskLevel, { label: string; color: string }> = {
-  'low': { label: 'Low Risk', color: 'bg-green-500' },
-  'medium': { label: 'Medium Risk', color: 'bg-yellow-500' },
-  'high': { label: 'High Risk', color: 'bg-orange-500' },
-  'very-high': { label: 'Very High Risk', color: 'bg-red-500' }
+  'low': { label: 'Low Risk', color: 'bg-success' },
+  'medium': { label: 'Medium Risk', color: 'bg-warning' },
+  'high': { label: 'High Risk', color: 'bg-warning' },
+  'very-high': { label: 'Very High Risk', color: 'bg-destructive' }
 };

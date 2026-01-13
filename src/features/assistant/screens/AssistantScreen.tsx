@@ -12,8 +12,9 @@ import {
   Platform,
   ActivityIndicator
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
 import { Send, Sparkles, RefreshCw } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Zone A UI Components
 import { LoadingSpinner } from '@/components/ui';
@@ -24,6 +25,7 @@ import { useChat, Message } from '../hooks/useChat';
 
 export function AssistantScreen() {
   const flatListRef = useRef<FlatList>(null);
+  const colors = useThemeColors();
   const [input, setInput] = useState('');
   const { messages, sendMessage, isLoading, clearMessages } = useChat();
 
@@ -59,7 +61,7 @@ export function AssistantScreen() {
   const keyExtractor = useCallback((item: Message) => item.id, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
+    <ThemedSafeAreaView className="flex-1" edges={['bottom']}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -79,7 +81,7 @@ export function AssistantScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-8">
               <View className="bg-primary/10 rounded-full p-4 mb-4">
-                <Sparkles size={32} color="#3b82f6" />
+                <Sparkles size={32} color={colors.info} />
               </View>
               <Text className="text-lg font-semibold text-foreground mb-2">
                 AI Assistant
@@ -100,7 +102,7 @@ export function AssistantScreen() {
               <View className="flex-row items-center py-4">
                 <View className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3">
                   <View className="flex-row items-center">
-                    <ActivityIndicator size="small" color="#3b82f6" />
+                    <ActivityIndicator size="small" color={colors.info} />
                     <Text className="text-muted-foreground ml-2">Thinking...</Text>
                   </View>
                 </View>
@@ -127,7 +129,7 @@ export function AssistantScreen() {
               <TextInput
                 className="text-foreground text-base leading-5"
                 placeholder="Ask me anything..."
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.mutedForeground}
                 value={input}
                 onChangeText={setInput}
                 multiline
@@ -147,13 +149,13 @@ export function AssistantScreen() {
             >
               <Send
                 size={20}
-                color={input.trim() && !isLoading ? 'white' : '#9ca3af'}
+                color={input.trim() && !isLoading ? colors.primaryForeground : colors.mutedForeground}
               />
             </TouchableOpacity>
           </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }
 

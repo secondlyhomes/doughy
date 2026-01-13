@@ -9,6 +9,7 @@ import React, { useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImagePlus, X, Image as ImageIcon } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface PropertyImagePickerProps {
   images: string[];
@@ -23,6 +24,8 @@ export function PropertyImagePicker({
   maxImages = 10,
   disabled = false,
 }: PropertyImagePickerProps) {
+  const colors = useThemeColors();
+
   const requestPermissions = useCallback(async () => {
     const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
     const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -177,7 +180,7 @@ export function PropertyImagePicker({
                   className="absolute -top-2 -right-2 bg-destructive rounded-full w-6 h-6 items-center justify-center shadow-sm"
                   activeOpacity={0.7}
                 >
-                  <X size={14} color="white" />
+                  <X size={14} color={colors.destructiveForeground} />
                 </TouchableOpacity>
               )}
               {index === 0 && (

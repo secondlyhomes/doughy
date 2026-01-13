@@ -2,10 +2,11 @@
 // Guard component that requires completed onboarding
 
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
+import { LoadingSpinner } from '@/components/ui';
 
 interface OnboardingGuardProps {
   children: React.ReactNode;
@@ -23,8 +24,8 @@ export function OnboardingGuard({ children, fallback }: OnboardingGuardProps) {
   // Still loading
   if (isLoading) {
     return fallback ?? (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#3b82f6" />
+      <View className="flex-1 bg-background">
+        <LoadingSpinner fullScreen />
       </View>
     );
   }

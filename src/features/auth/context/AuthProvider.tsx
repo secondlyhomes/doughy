@@ -4,6 +4,7 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { DEV_MODE_CONFIG } from '@/config/devMode';
 import type { AuthContextType, Profile, UserRole } from '../types';
 
 // Create the context with undefined default
@@ -174,13 +175,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   /**
    * Dev bypass - skip authentication for testing (only works in __DEV__)
    */
-  const devBypassAuth = useCallback(() => {
+  const devBypassAuth = useCallback(async () => {
     if (!__DEV__) {
       console.warn('[auth] devBypassAuth only works in development mode');
       return;
     }
 
     console.log('[auth] Dev bypass: Setting mock authenticated state');
+
+    // If using mock data, update the mock auth state
+    if (DEV_MODE_CONFIG.useMockData) {
+      const { mockSignIn } = await import('@/lib/mockData');
+      mockSignIn();
+    }
 
     // Create mock user and session for development
     const mockUser = {

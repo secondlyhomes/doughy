@@ -6,13 +6,14 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Shield, Copy, CheckCircle, ArrowLeft } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 import * as Clipboard from 'expo-clipboard';
 import { MFACodeInput } from '../components/MFACodeInput';
 import {
@@ -25,6 +26,7 @@ type SetupStep = 'loading' | 'scan' | 'verify' | 'success';
 
 export function MFASetupScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   const [step, setStep] = useState<SetupStep>('loading');
   const [enrollmentData, setEnrollmentData] = useState<MFAEnrollResult | null>(null);
@@ -97,22 +99,19 @@ export function MFASetupScreen() {
   // Loading state
   if (step === 'loading') {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-          <Text className="text-muted-foreground mt-4">Setting up MFA...</Text>
-        </View>
-      </SafeAreaView>
+      <ThemedSafeAreaView className="flex-1">
+        <LoadingSpinner fullScreen text="Setting up MFA..." />
+      </ThemedSafeAreaView>
     );
   }
 
   // Success state
   if (step === 'success') {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-green-100 items-center justify-center mb-6">
-            <CheckCircle size={48} color="#22c55e" />
+          <View className="w-20 h-20 rounded-full bg-success/20 items-center justify-center mb-6">
+            <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-foreground text-center">
             MFA Enabled!
@@ -120,31 +119,21 @@ export function MFASetupScreen() {
           <Text className="text-muted-foreground text-center mt-2 mb-8">
             Your account is now protected with two-factor authentication.
           </Text>
-          <TouchableOpacity
-            className="bg-primary py-4 px-8 rounded-lg"
-            onPress={handleDone}
-          >
-            <Text className="text-primary-foreground font-semibold">Done</Text>
-          </TouchableOpacity>
+          <Button onPress={handleDone} size="lg">
+            Done
+          </Button>
         </View>
-      </SafeAreaView>
+      </ThemedSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={handleBack} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground text-center mr-10">
-          Set Up MFA
-        </Text>
-      </View>
+      <ScreenHeader title="Set Up MFA" backButton bordered onBack={handleBack} />
 
       <ScrollView
-        className="flex-1 px-6"
+        className="flex-1 px-4"
         contentContainerStyle={{ paddingVertical: 24 }}
       >
         {step === 'scan' && (
@@ -152,7 +141,7 @@ export function MFASetupScreen() {
             {/* Icon */}
             <View className="items-center mb-6">
               <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
-                <Shield size={32} color="#3b82f6" />
+                <Shield size={32} color={colors.info} />
               </View>
             </View>
 
@@ -188,23 +177,18 @@ export function MFASetupScreen() {
                 </Text>
                 <TouchableOpacity onPress={handleCopySecret}>
                   {copiedSecret ? (
-                    <CheckCircle size={18} color="#22c55e" />
+                    <CheckCircle size={18} color={colors.success} />
                   ) : (
-                    <Copy size={18} color="#6b7280" />
+                    <Copy size={18} color={colors.mutedForeground} />
                   )}
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Continue button */}
-            <TouchableOpacity
-              className="bg-primary py-4 rounded-lg items-center"
-              onPress={handleContinueToVerify}
-            >
-              <Text className="text-primary-foreground font-semibold">
-                Continue
-              </Text>
-            </TouchableOpacity>
+            <Button onPress={handleContinueToVerify} size="lg" className="w-full">
+              Continue
+            </Button>
           </>
         )}
 
@@ -213,7 +197,7 @@ export function MFASetupScreen() {
             {/* Icon */}
             <View className="items-center mb-6">
               <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
-                <Shield size={32} color="#3b82f6" />
+                <Shield size={32} color={colors.info} />
               </View>
             </View>
 
@@ -244,9 +228,8 @@ export function MFASetupScreen() {
 
             {/* Verifying indicator */}
             {isVerifying && (
-              <View className="flex-row items-center justify-center mb-6">
-                <ActivityIndicator size="small" color="#3b82f6" />
-                <Text className="text-muted-foreground ml-2">Verifying...</Text>
+              <View className="mb-6">
+                <LoadingSpinner text="Verifying..." />
               </View>
             )}
 
@@ -261,6 +244,6 @@ export function MFASetupScreen() {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

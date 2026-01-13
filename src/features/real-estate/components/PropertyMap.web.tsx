@@ -8,6 +8,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { MapPin, Navigation, Layers, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property, GeoPoint } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
@@ -36,6 +37,7 @@ export function PropertyMap({
   selectedPropertyId,
   style,
 }: PropertyMapProps) {
+  const colors = useThemeColors();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Filter properties with valid coordinates
@@ -56,12 +58,12 @@ export function PropertyMap({
 
   const getStatusColor = useCallback((status?: string) => {
     switch (status?.toLowerCase()) {
-      case 'active': return '#22c55e';
-      case 'pending': return '#f59e0b';
-      case 'sold': return '#ef4444';
-      default: return '#6366f1';
+      case 'active': return colors.success;
+      case 'pending': return colors.warning;
+      case 'sold': return colors.destructive;
+      default: return colors.primary;
     }
-  }, []);
+  }, [colors]);
 
   const nextProperty = useCallback(() => {
     setCurrentIndex(i => (i + 1) % propertiesWithCoords.length);
@@ -165,7 +167,7 @@ export function PropertyMap({
           >
             <ChevronLeft
               size={20}
-              color={propertiesWithCoords.length <= 1 ? '#d1d5db' : '#374151'}
+              color={propertiesWithCoords.length <= 1 ? colors.muted : colors.mutedForeground}
             />
           </TouchableOpacity>
 
@@ -176,7 +178,7 @@ export function PropertyMap({
             style={{
               borderLeftWidth: 4,
               borderLeftColor: getStatusColor(currentProperty.status),
-              backgroundColor: selectedPropertyId === currentProperty.id ? '#f0f9ff' : '#f9fafb',
+              backgroundColor: selectedPropertyId === currentProperty.id ? colors.accent : colors.muted,
             }}
             activeOpacity={0.7}
           >
@@ -207,7 +209,7 @@ export function PropertyMap({
           >
             <ChevronRight
               size={20}
-              color={propertiesWithCoords.length <= 1 ? '#d1d5db' : '#374151'}
+              color={propertiesWithCoords.length <= 1 ? colors.muted : colors.mutedForeground}
             />
           </TouchableOpacity>
         </View>

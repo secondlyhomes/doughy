@@ -8,7 +8,6 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   Switch,
   Alert,
 } from 'react-native';
@@ -30,7 +29,9 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColors } from '@/context/ThemeContext';
+import { ThemedSafeAreaView } from '@/components';
+import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
 import {
   getIntegrations,
   toggleIntegration,
@@ -41,6 +42,7 @@ import {
 
 export function IntegrationsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,7 +116,7 @@ export function IntegrationsScreen() {
   }, []);
 
   const getIcon = (iconName: string) => {
-    const iconProps = { size: 24, color: '#3b82f6' };
+    const iconProps = { size: 24, color: colors.info };
     switch (iconName) {
       case 'home':
         return <Home {...iconProps} />;
@@ -140,26 +142,26 @@ export function IntegrationsScreen() {
   const getStatusIcon = (status: IntegrationStatus) => {
     switch (status) {
       case 'active':
-        return <CheckCircle size={16} color="#22c55e" />;
+        return <CheckCircle size={16} color={colors.success} />;
       case 'inactive':
-        return <XCircle size={16} color="#6b7280" />;
+        return <XCircle size={16} color={colors.mutedForeground} />;
       case 'error':
-        return <AlertCircle size={16} color="#ef4444" />;
+        return <AlertCircle size={16} color={colors.destructive} />;
       case 'pending':
-        return <Clock size={16} color="#f59e0b" />;
+        return <Clock size={16} color={colors.warning} />;
     }
   };
 
   const getStatusColor = (status: IntegrationStatus) => {
     switch (status) {
       case 'active':
-        return 'text-green-600';
+        return 'text-success';
       case 'inactive':
-        return 'text-gray-500';
+        return 'text-muted-foreground';
       case 'error':
-        return 'text-red-600';
+        return 'text-destructive';
       case 'pending':
-        return 'text-amber-600';
+        return 'text-warning';
     }
   };
 
@@ -177,19 +179,10 @@ export function IntegrationsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-row items-center px-4 py-3 border-b border-border">
-          <TouchableOpacity onPress={() => router.back()} className="p-2">
-            <ArrowLeft size={24} color="#6b7280" />
-          </TouchableOpacity>
-          <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-            Integrations
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
-      </SafeAreaView>
+      <ThemedSafeAreaView className="flex-1">
+        <ScreenHeader title="Integrations" backButton bordered />
+        <LoadingSpinner fullScreen />
+      </ThemedSafeAreaView>
     );
   }
 
@@ -197,29 +190,22 @@ export function IntegrationsScreen() {
   const errorCount = integrations.filter((i) => i.status === 'error').length;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <ThemedSafeAreaView className="flex-1">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#6b7280" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
-          Integrations
-        </Text>
-      </View>
+      <ScreenHeader title="Integrations" backButton bordered />
 
       {/* Stats */}
       <View className="flex-row px-4 py-3 bg-muted/50 gap-4">
         <View className="flex-row items-center">
-          <CheckCircle size={16} color="#22c55e" />
+          <CheckCircle size={16} color={colors.success} />
           <Text className="text-sm text-muted-foreground ml-1">
             {activeCount} Active
           </Text>
         </View>
         {errorCount > 0 && (
           <View className="flex-row items-center">
-            <AlertCircle size={16} color="#ef4444" />
-            <Text className="text-sm text-red-600 ml-1">
+            <AlertCircle size={16} color={colors.destructive} />
+            <Text className="text-sm text-destructive ml-1">
               {errorCount} Error{errorCount !== 1 ? 's' : ''}
             </Text>
           </View>
@@ -268,8 +254,8 @@ export function IntegrationsScreen() {
               <Switch
                 value={integration.status === 'active'}
                 onValueChange={(enabled) => handleToggle(integration, enabled)}
-                trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                thumbColor={integration.status === 'active' ? '#3b82f6' : '#f4f4f5'}
+                trackColor={{ false: colors.muted, true: colors.info }}
+                thumbColor={integration.status === 'active' ? colors.primary : colors.mutedForeground}
                 disabled={integration.status === 'pending'}
               />
             </View>
@@ -277,26 +263,24 @@ export function IntegrationsScreen() {
             {/* Action Buttons */}
             {integration.status === 'active' && (
               <View className="flex-row mt-3 pt-3 border-t border-border">
-                <TouchableOpacity
-                  className="flex-row items-center px-3 py-2 bg-muted rounded-lg"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onPress={() => handleSync(integration)}
                   disabled={syncingId === integration.id}
+                  loading={syncingId === integration.id}
                 >
-                  {syncingId === integration.id ? (
-                    <ActivityIndicator size="small" color="#3b82f6" />
-                  ) : (
-                    <RefreshCw size={16} color="#6b7280" />
+                  {syncingId !== integration.id && (
+                    <RefreshCw size={16} color={colors.mutedForeground} />
                   )}
-                  <Text className="text-sm text-muted-foreground ml-2">
-                    {syncingId === integration.id ? 'Syncing...' : 'Sync Now'}
-                  </Text>
-                </TouchableOpacity>
+                  {syncingId === integration.id ? 'Syncing...' : 'Sync Now'}
+                </Button>
               </View>
             )}
 
             {integration.status === 'error' && (
-              <View className="mt-3 p-2 bg-red-50 rounded">
-                <Text className="text-xs text-red-600">
+              <View className="mt-3 p-2 bg-destructive/10 rounded">
+                <Text className="text-xs text-destructive">
                   Connection error. Please check your API credentials and try again.
                 </Text>
               </View>
@@ -304,6 +288,6 @@ export function IntegrationsScreen() {
           </View>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </ThemedSafeAreaView>
   );
 }

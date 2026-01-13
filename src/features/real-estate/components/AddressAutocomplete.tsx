@@ -17,6 +17,7 @@ import {
   Modal,
 } from 'react-native';
 import { MapPin, X, ChevronDown } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { supabase, SUPABASE_URL } from '@/lib/supabase';
 
 export interface AddressResult {
@@ -67,6 +68,7 @@ export function AddressAutocomplete({
   placeholder = 'Enter an address...',
   disabled = false,
 }: AddressAutocompleteProps) {
+  const colors = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AddressResult[]>([]);
@@ -280,7 +282,7 @@ export function AddressAutocomplete({
         onPress={() => handleAddressSelect(item)}
         className="flex-row items-start p-3 border-b border-border"
       >
-        <MapPin size={16} color="#6b7280" className="mt-1 mr-2" />
+        <MapPin size={16} color={colors.mutedForeground} className="mt-1 mr-2" />
         <View className="flex-1">
           <Text className="text-foreground font-medium">{item.address}</Text>
           <Text className="text-muted-foreground text-sm">
@@ -296,25 +298,25 @@ export function AddressAutocomplete({
     <View>
       {/* Input Field */}
       <View className="flex-row items-center bg-input border border-border rounded-lg">
-        <MapPin size={18} color="#6b7280" className="ml-3" />
+        <MapPin size={18} color={colors.mutedForeground} className="ml-3" />
         <TextInput
           value={value}
           onChangeText={handleInputChange}
           placeholder={placeholder}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.mutedForeground}
           editable={!disabled}
           className="flex-1 px-3 py-3 text-foreground"
           autoCapitalize="words"
           autoCorrect={false}
         />
         {isLoading ? (
-          <ActivityIndicator size="small" color="#6b7280" className="mr-3" />
+          <ActivityIndicator size="small" color={colors.mutedForeground} className="mr-3" />
         ) : results.length > 0 ? (
           <TouchableOpacity
             onPress={() => setIsOpen(!isOpen)}
             className="mr-3"
           >
-            <ChevronDown size={18} color="#6b7280" />
+            <ChevronDown size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         ) : null}
       </View>
