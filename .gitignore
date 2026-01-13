@@ -44,3 +44,6 @@ coverage/
 /ios
 /android
 .env
+.env.dev
+.env.stage
+.env.example
