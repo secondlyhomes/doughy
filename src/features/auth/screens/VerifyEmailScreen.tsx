@@ -11,7 +11,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -22,7 +22,7 @@ import {
 const RESEND_COOLDOWN = 60; // seconds
 
 export function VerifyEmailScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const { user, signOut, refetchProfile } = useAuth();
 
   const [isResending, setIsResending] = useState(false);
@@ -38,17 +38,12 @@ export function VerifyEmailScreen() {
       await refetchProfile();
       // Navigate to main app after short delay
       setTimeout(() => {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'Main' }],
-          })
-        );
+        router.replace('/(tabs)');
       }, 2000);
     });
 
     return stopPolling;
-  }, [navigation, refetchProfile]);
+  }, [router, refetchProfile]);
 
   // Cooldown timer
   useEffect(() => {
@@ -86,13 +81,8 @@ export function VerifyEmailScreen() {
 
   const handleSignOut = useCallback(async () => {
     await signOut();
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'Auth', params: { screen: 'SignIn' } }],
-      })
-    );
-  }, [signOut, navigation]);
+    router.replace('/(auth)/sign-in');
+  }, [signOut, router]);
 
   if (isVerified) {
     return (

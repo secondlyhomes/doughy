@@ -1,9 +1,9 @@
 // src/features/auth/guards/AuthGuard.tsx
 // Guard component that requires authentication
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 
 interface AuthGuardProps {
@@ -17,19 +17,6 @@ interface AuthGuardProps {
  */
 export function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      // Reset navigation to auth stack
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }],
-        })
-      );
-    }
-  }, [isAuthenticated, isLoading, navigation]);
 
   // Show loading state
   if (isLoading) {
@@ -40,9 +27,9 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
     );
   }
 
-  // Not authenticated - will redirect
+  // Not authenticated - redirect to sign in
   if (!isAuthenticated) {
-    return fallback ?? null;
+    return <Redirect href="/(auth)/sign-in" />;
   }
 
   return <>{children}</>;

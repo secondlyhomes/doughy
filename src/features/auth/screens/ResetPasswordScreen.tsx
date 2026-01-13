@@ -12,10 +12,9 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useNavigation, useRoute, CommonActions, RouteProp } from '@react-navigation/native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AuthStackParamList } from '@/routes/types';
 import {
   updatePassword,
   calculatePasswordStrength,
@@ -23,11 +22,9 @@ import {
 } from '../services/passwordResetService';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 
-type ResetPasswordRouteProp = RouteProp<AuthStackParamList, 'ResetPassword'>;
-
 export function ResetPasswordScreen() {
-  const navigation = useNavigation();
-  const route = useRoute<ResetPasswordRouteProp>();
+  const router = useRouter();
+  const params = useLocalSearchParams();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -66,18 +63,13 @@ export function ResetPasswordScreen() {
       setSuccess(true);
       // Redirect to login after delay
       setTimeout(() => {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'SignIn' }],
-          })
-        );
+        router.replace('/(auth)/sign-in');
       }, 2000);
     } else {
       setError(result.error || 'Failed to reset password');
       setIsSubmitting(false);
     }
-  }, [password, confirmPassword, navigation]);
+  }, [password, confirmPassword, router]);
 
   if (success) {
     return (
@@ -232,14 +224,7 @@ export function ResetPasswordScreen() {
             {/* Back to Sign In */}
             <TouchableOpacity
               className="mt-6"
-              onPress={() =>
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: 'SignIn' }],
-                  })
-                )
-              }
+              onPress={() => router.replace('/(auth)/sign-in')}
               disabled={isSubmitting}
             >
               <Text className="text-muted-foreground text-center">

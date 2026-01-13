@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react';
 import { Platform, Share } from 'react-native';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from '@/lib/supabase';
 import { Property } from '../types';
@@ -233,22 +233,20 @@ export function usePropertyActions(): UsePropertyActionsReturn {
         }
         return filename;
       } else {
-        // On native, save to file system and share
-        const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-        await FileSystem.writeAsStringAsync(fileUri, summary, {
-          encoding: FileSystem.EncodingType.UTF8,
-        });
+        // On native, save to file system and share using new expo-file-system API
+        const file = new File(Paths.cache, filename);
+        await file.write(summary);
 
         // Check if sharing is available
         const isAvailable = await Sharing.isAvailableAsync();
         if (isAvailable) {
-          await Sharing.shareAsync(fileUri, {
+          await Sharing.shareAsync(file.uri, {
             mimeType: 'text/plain',
             dialogTitle: 'Export Property Summary',
           });
         }
 
-        return fileUri;
+        return file.uri;
       }
     } catch (err) {
       console.error('Error exporting property:', err);

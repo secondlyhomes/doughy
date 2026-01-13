@@ -10,8 +10,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import {
   Users,
   Database,
@@ -30,7 +29,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
-import { AdminStackParamList } from '@/routes/types';
 import {
   getAdminStats,
   getSystemHealth,
@@ -38,10 +36,8 @@ import {
   type SystemHealth,
 } from '../services/adminService';
 
-type AdminDashboardNavigationProp = NativeStackNavigationProp<AdminStackParamList, 'AdminDashboard'>;
-
 export function AdminDashboardScreen() {
-  const navigation = useNavigation<AdminDashboardNavigationProp>();
+  const router = useRouter();
   const { isLoading: authLoading } = useAuth();
   const { canViewAdminPanel } = usePermissions();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -118,7 +114,7 @@ export function AdminDashboardScreen() {
           </Text>
           <TouchableOpacity
             className="bg-primary rounded-lg py-3 px-6 mt-6"
-            onPress={() => navigation.goBack()}
+            onPress={() => router.back()}
           >
             <Text className="text-primary-foreground font-semibold">Go Back</Text>
           </TouchableOpacity>
@@ -142,7 +138,7 @@ export function AdminDashboardScreen() {
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#6b7280" />
         </TouchableOpacity>
         <View className="flex-1 ml-2">
@@ -168,7 +164,7 @@ export function AdminDashboardScreen() {
               title="Total Users"
               value={stats?.totalUsers.toString() || '0'}
               subtitle={`${stats?.activeUsers || 0} active`}
-              onPress={() => navigation.navigate('AdminUsers')}
+              onPress={() => router.push('/(admin)/users')}
             />
             <StatCard
               icon={<TrendingUp size={24} color="#22c55e" />}
@@ -237,19 +233,19 @@ export function AdminDashboardScreen() {
               icon={<Users size={20} color="#6b7280" />}
               title="Manage Users"
               subtitle="View and manage user accounts"
-              onPress={() => navigation.navigate('AdminUsers')}
+              onPress={() => router.push('/(admin)/users')}
             />
             <AdminActionItem
               icon={<Link size={20} color="#6b7280" />}
               title="Integrations"
               subtitle="Manage external integrations"
-              onPress={() => navigation.navigate('AdminIntegrations')}
+              onPress={() => router.push('/(admin)/integrations')}
             />
             <AdminActionItem
               icon={<FileText size={20} color="#6b7280" />}
               title="System Logs"
               subtitle="View system and error logs"
-              onPress={() => navigation.navigate('AdminLogs')}
+              onPress={() => router.push('/(admin)/logs')}
               hideBorder
             />
           </View>

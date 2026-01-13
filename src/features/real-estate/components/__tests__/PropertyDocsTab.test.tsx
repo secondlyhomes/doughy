@@ -39,10 +39,13 @@ jest.mock('../../hooks/usePropertyDocuments', () => ({
 jest.spyOn(Alert, 'alert');
 
 // Mock UploadDocumentSheet
-jest.mock('../UploadDocumentSheet', () => ({
-  UploadDocumentSheet: ({ isOpen }: { isOpen: boolean }) =>
-    isOpen ? <mock-upload-sheet testID="upload-sheet" /> : null,
-}));
+jest.mock('../UploadDocumentSheet', () => {
+  const { View } = require('react-native');
+  return {
+    UploadDocumentSheet: ({ isOpen }: { isOpen: boolean }) =>
+      isOpen ? <View testID="upload-sheet" /> : null,
+  };
+});
 
 const createMockProperty = (overrides: Partial<Property> = {}): Property => ({
   id: 'prop-123',

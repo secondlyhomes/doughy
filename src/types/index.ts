@@ -2,18 +2,10 @@
 // All zones should import types from this file
 
 // ============================================
-// Navigation Types (re-exported from routes/types.ts)
+// Navigation Types
 // ============================================
-export type {
-  AuthStackParamList,
-  MainTabParamList,
-  PropertiesStackParamList,
-  LeadsStackParamList,
-  ConversationsStackParamList,
-  SettingsStackParamList,
-  AdminStackParamList,
-  RootStackParamList,
-} from '@/routes/types';
+// Note: With Expo Router, navigation types are auto-generated
+// See .expo/types/router.d.ts for typed routes
 
 // ============================================
 // User & Auth Types

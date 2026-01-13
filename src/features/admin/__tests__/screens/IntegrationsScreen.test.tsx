@@ -13,14 +13,17 @@ const mockIntegrationsService = integrationsService as jest.Mocked<typeof integr
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 
-// Mock navigation
-const mockGoBack = jest.fn();
+// Mock expo-router navigation
+const mockBack = jest.fn();
 
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({
-    goBack: mockGoBack,
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: mockBack,
   }),
+  useLocalSearchParams: () => ({}),
+  useFocusEffect: jest.fn(),
 }));
 
 describe('IntegrationsScreen', () => {
@@ -115,6 +118,7 @@ describe('IntegrationsScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockBack.mockClear();
 
     mockIntegrationsService.getIntegrations.mockResolvedValue({
       success: true,
@@ -173,7 +177,7 @@ describe('IntegrationsScreen', () => {
     });
 
     fireEvent.press(getByTestId('icon-ArrowLeft'));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('prompts for confirmation when toggling integration', async () => {

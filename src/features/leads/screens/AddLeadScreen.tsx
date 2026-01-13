@@ -13,15 +13,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown } from 'lucide-react-native';
 
 import { useCreateLead } from '../hooks/useLeads';
 import { LeadFormData, LeadStatus } from '../types';
-import { LeadsStackParamList } from '@/routes/types';
-
-type AddLeadNavigationProp = NativeStackNavigationProp<LeadsStackParamList, 'AddLead'>;
 
 const STATUS_OPTIONS: { label: string; value: LeadStatus }[] = [
   { label: 'New', value: 'new' },
@@ -32,7 +28,7 @@ const STATUS_OPTIONS: { label: string; value: LeadStatus }[] = [
 ];
 
 export function AddLeadScreen() {
-  const navigation = useNavigation<AddLeadNavigationProp>();
+  const router = useRouter();
   const createLead = useCreateLead();
 
   const [formData, setFormData] = useState<LeadFormData>({
@@ -90,7 +86,7 @@ export function AddLeadScreen() {
 
     try {
       await createLead.mutateAsync(formData);
-      navigation.goBack();
+      router.back();
     } catch (error) {
       Alert.alert('Error', 'Failed to create lead. Please try again.');
     }
@@ -294,7 +290,7 @@ export function AddLeadScreen() {
         {/* Cancel Button */}
         <TouchableOpacity
           className="rounded-lg py-4 items-center mt-3"
-          onPress={() => navigation.goBack()}
+          onPress={() => router.back()}
         >
           <Text className="text-muted-foreground font-medium text-base">Cancel</Text>
         </TouchableOpacity>

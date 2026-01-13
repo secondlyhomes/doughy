@@ -14,8 +14,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { ArrowLeft, List, X, MapPin, Bed, Bath, Square } from 'lucide-react-native';
 import { PropertyMap } from '../components/PropertyMap';
 import { useProperties } from '../hooks/useProperties';
@@ -24,24 +23,16 @@ import { formatCurrency, formatPropertyType } from '../utils/formatters';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-type RootStackParamList = {
-  PropertyList: undefined;
-  PropertyDetail: { id: string };
-  PropertyMap: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PropertyMap'>;
-
 export function PropertyMapScreen() {
-  const navigation = useNavigation<NavigationProp>();
+  const router = useRouter();
   const { properties, isLoading } = useProperties();
 
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showPropertyModal, setShowPropertyModal] = useState(false);
 
   const handleBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    router.back();
+  }, [router]);
 
   const handlePropertyPress = useCallback((property: Property) => {
     setSelectedProperty(property);
@@ -51,9 +42,9 @@ export function PropertyMapScreen() {
   const handleViewDetails = useCallback(() => {
     if (selectedProperty) {
       setShowPropertyModal(false);
-      navigation.navigate('PropertyDetail', { id: selectedProperty.id });
+      router.push(`/(tabs)/properties/${selectedProperty.id}`);
     }
-  }, [selectedProperty, navigation]);
+  }, [selectedProperty, router]);
 
   const handleCloseModal = useCallback(() => {
     setShowPropertyModal(false);
@@ -61,8 +52,8 @@ export function PropertyMapScreen() {
   }, []);
 
   const handleGoToList = useCallback(() => {
-    navigation.navigate('PropertyList');
-  }, [navigation]);
+    router.push('/(tabs)/properties');
+  }, [router]);
 
   return (
     <View className="flex-1 bg-background">

@@ -13,16 +13,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown } from 'lucide-react-native';
 
 import { useLead, useUpdateLead } from '../hooks/useLeads';
 import { Lead, LeadStatus } from '../types';
-import { LeadsStackParamList } from '@/routes/types';
-
-type EditLeadRouteProp = RouteProp<LeadsStackParamList, 'LeadEdit'>;
-type EditLeadNavigationProp = NativeStackNavigationProp<LeadsStackParamList, 'LeadEdit'>;
 
 const STATUS_OPTIONS: { label: string; value: LeadStatus }[] = [
   { label: 'New', value: 'new' },
@@ -44,9 +39,9 @@ interface FormData {
 }
 
 export function EditLeadScreen() {
-  const navigation = useNavigation<EditLeadNavigationProp>();
-  const route = useRoute<EditLeadRouteProp>();
-  const { leadId } = route.params;
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const leadId = params.leadId as string;
 
   const { lead, isLoading: isLoadingLead } = useLead(leadId);
   const updateLead = useUpdateLead();
@@ -131,7 +126,7 @@ export function EditLeadScreen() {
           tags: formData.tags,
         },
       });
-      navigation.goBack();
+      router.back();
     } catch (error) {
       Alert.alert('Error', 'Failed to update lead. Please try again.');
     }
@@ -157,7 +152,7 @@ export function EditLeadScreen() {
         <Text className="text-muted-foreground">Lead not found</Text>
         <TouchableOpacity
           className="mt-4 bg-primary px-4 py-2 rounded-lg"
-          onPress={() => navigation.goBack()}
+          onPress={() => router.back()}
         >
           <Text className="text-primary-foreground">Go Back</Text>
         </TouchableOpacity>
@@ -358,7 +353,7 @@ export function EditLeadScreen() {
         {/* Cancel Button */}
         <TouchableOpacity
           className="rounded-lg py-4 items-center mt-3"
-          onPress={() => navigation.goBack()}
+          onPress={() => router.back()}
         >
           <Text className="text-muted-foreground font-medium text-base">Cancel</Text>
         </TouchableOpacity>

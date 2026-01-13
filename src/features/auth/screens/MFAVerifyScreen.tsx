@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation, useRoute, CommonActions, RouteProp } from '@react-navigation/native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Shield, ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MFACodeInput } from '../components/MFACodeInput';
@@ -21,19 +21,15 @@ import {
   listMFAFactors,
 } from '../services/mfaService';
 
-interface MFAVerifyRouteParams {
-  factorId?: string;
-}
-
 export function MFAVerifyScreen() {
-  const navigation = useNavigation();
-  const route = useRoute<RouteProp<{ params: MFAVerifyRouteParams }, 'params'>>();
+  const router = useRouter();
+  const params = useLocalSearchParams<{ factorId?: string }>();
 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [factorId, setFactorId] = useState<string | null>(route.params?.factorId || null);
+  const [factorId, setFactorId] = useState<string | null>(params.factorId || null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
 
   // Initialize MFA challenge
@@ -86,18 +82,13 @@ export function MFAVerifyScreen() {
 
     if (result.success) {
       // MFA verification successful - navigate to main app
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Main' }],
-        })
-      );
+      router.replace('/(tabs)');
     } else {
       setError(result.error || 'Invalid code. Please try again.');
       setCode('');
       setIsVerifying(false);
     }
-  }, [code, factorId, challengeId, navigation]);
+  }, [code, factorId, challengeId, router]);
 
   // Auto-verify when code is complete
   useEffect(() => {
@@ -107,7 +98,7 @@ export function MFAVerifyScreen() {
   }, [code, isVerifying, challengeId, handleVerify]);
 
   const handleBack = () => {
-    navigation.goBack();
+    router.back();
   };
 
   if (isLoading) {

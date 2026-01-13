@@ -11,7 +11,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   Shield,
@@ -31,7 +31,7 @@ import {
 } from '@/features/auth/services/mfaService';
 
 export function SecurityScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [mfaFactors, setMfaFactors] = useState<MFAFactor[]>([]);
@@ -56,13 +56,8 @@ export function SecurityScreen() {
   }, []);
 
   const handleSetupMFA = useCallback(() => {
-    navigation.dispatch(
-      CommonActions.navigate({
-        name: 'Auth',
-        params: { screen: 'MFASetup' },
-      })
-    );
-  }, [navigation]);
+    router.push('/(auth)/mfa-setup');
+  }, [router]);
 
   const handleRemoveMFA = useCallback(async (factorId: string) => {
     Alert.alert(
@@ -92,14 +87,14 @@ export function SecurityScreen() {
   }, []);
 
   const handleChangePassword = useCallback(() => {
-    navigation.navigate('ChangePassword' as never);
-  }, [navigation]);
+    router.push('/(tabs)/settings/change-password');
+  }, [router]);
 
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-row items-center px-4 py-3 border-b border-border">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+          <TouchableOpacity onPress={() => router.back()} className="p-2">
             <ArrowLeft size={24} color="#6b7280" />
           </TouchableOpacity>
           <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
@@ -117,7 +112,7 @@ export function SecurityScreen() {
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#6b7280" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-semibold text-foreground ml-2">

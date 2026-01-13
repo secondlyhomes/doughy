@@ -2,7 +2,7 @@ module.exports = {
   preset: 'react-native',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|expo|@expo|expo-modules-core|@react-navigation|@supabase|nativewind|react-native-css-interop|react-native-safe-area-context|react-native-gesture-handler|lucide-react-native|react-native-reanimated|react-native-screens|react-native-svg|react-native-worklets)/)',
+    'node_modules/(?!(react-native|@react-native|expo|@expo|expo-modules-core|expo-router|expo-linking|expo-constants|expo-web-browser|expo-auth-session|expo-crypto|@react-navigation|@supabase|nativewind|react-native-css-interop|react-native-safe-area-context|react-native-gesture-handler|lucide-react-native|react-native-reanimated|react-native-screens|react-native-svg|react-native-worklets)/)',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

@@ -10,8 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import {
   User,
   Shield,
@@ -27,16 +26,9 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { SettingsStackParamList, RootStackParamList } from '@/routes/types';
-import { CompositeNavigationProp } from '@react-navigation/native';
-
-type SettingsScreenNavigationProp = CompositeNavigationProp<
-  NativeStackNavigationProp<SettingsStackParamList, 'SettingsHome'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
 
 export function SettingsScreen() {
-  const navigation = useNavigation<SettingsScreenNavigationProp>();
+  const router = useRouter();
   const { user, profile, signOut, isLoading } = useAuth();
 
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -118,7 +110,7 @@ export function SettingsScreen() {
         <View className="px-4 py-2">
           <TouchableOpacity
             className="flex-row items-center bg-card rounded-lg p-4"
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => router.push('/(tabs)/settings/profile')}
           >
             {/* Avatar */}
             <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
@@ -152,12 +144,12 @@ export function SettingsScreen() {
             <SettingsItem
               icon={<User size={20} color="#6b7280" />}
               title="Edit Profile"
-              onPress={() => navigation.navigate('Profile')}
+              onPress={() => router.push('/(tabs)/settings/profile')}
             />
             <SettingsItem
               icon={<Lock size={20} color="#6b7280" />}
               title="Change Password"
-              onPress={() => navigation.navigate('ChangePassword')}
+              onPress={() => router.push('/(tabs)/settings/change-password')}
               hideBorder
             />
           </View>
@@ -174,7 +166,7 @@ export function SettingsScreen() {
               icon={<Shield size={20} color="#6b7280" />}
               title="Security Settings"
               subtitle="Two-factor authentication"
-              onPress={() => navigation.navigate('Security')}
+              onPress={() => router.push('/(tabs)/settings/security')}
               hideBorder
             />
           </View>
@@ -192,7 +184,7 @@ export function SettingsScreen() {
                 icon={<Settings size={20} color="#8b5cf6" />}
                 title="Admin Dashboard"
                 subtitle="Manage users, integrations, and logs"
-                onPress={() => navigation.navigate('Admin')}
+                onPress={() => router.push('/(admin)')}
                 hideBorder
               />
             </View>
@@ -210,19 +202,19 @@ export function SettingsScreen() {
               icon={<Bell size={20} color="#6b7280" />}
               title="Notifications"
               subtitle="Push and email preferences"
-              onPress={() => navigation.navigate('NotificationsSettings')}
+              onPress={() => router.push('/(tabs)/settings/notifications')}
             />
             <SettingsItem
               icon={<Palette size={20} color="#6b7280" />}
               title="Appearance"
               subtitle="Theme settings"
-              onPress={() => navigation.navigate('Appearance')}
+              onPress={() => router.push('/(tabs)/settings/appearance')}
             />
             <SettingsItem
               icon={<BarChart3 size={20} color="#6b7280" />}
               title="Analytics"
               subtitle="View your performance metrics"
-              onPress={() => navigation.navigate('Analytics')}
+              onPress={() => router.push('/(tabs)/settings/analytics')}
               hideBorder
             />
           </View>
@@ -239,7 +231,7 @@ export function SettingsScreen() {
               icon={<Info size={20} color="#6b7280" />}
               title="About Doughy AI"
               subtitle="Version, terms, privacy"
-              onPress={() => navigation.navigate('About')}
+              onPress={() => router.push('/(tabs)/settings/about')}
               hideBorder
             />
           </View>

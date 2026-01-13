@@ -1,7 +1,45 @@
 // src/store/googleStore.ts
-// Google integration store for React Native
+// Google integration store for React Native with proper mobile OAuth
 import { create } from 'zustand';
+import { Platform } from 'react-native';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/lib/supabase';
+
+// Required for web OAuth completion
+WebBrowser.maybeCompleteAuthSession();
+
+// Google OAuth configuration
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID_IOS = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS || '';
+const GOOGLE_CLIENT_ID_ANDROID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID || '';
+
+// Get the appropriate client ID for the current platform
+function getClientId(): string {
+  if (Platform.OS === 'ios' && GOOGLE_CLIENT_ID_IOS) {
+    return GOOGLE_CLIENT_ID_IOS;
+  }
+  if (Platform.OS === 'android' && GOOGLE_CLIENT_ID_ANDROID) {
+    return GOOGLE_CLIENT_ID_ANDROID;
+  }
+  return GOOGLE_CLIENT_ID;
+}
+
+// Google OAuth discovery document
+const discovery: AuthSession.DiscoveryDocument = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+};
+
+// OAuth scopes for Google services
+const SCOPES = [
+  'openid',
+  'profile',
+  'email',
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/gmail.send',
+];
 
 export interface GoogleEvent {
   id: string;
@@ -40,7 +78,9 @@ export interface GoogleState {
 
   // Actions
   checkAuthStatus: () => Promise<boolean>;
-  getAuthUrl: () => Promise<string>;
+  promptGoogleAuth: () => Promise<boolean>;
+  handleOAuthCallback: (code: string) => Promise<boolean>;
+  disconnectGoogle: () => Promise<void>;
   listEvents: (params: {
     leadId?: string;
     timeMin?: string;
@@ -123,9 +163,10 @@ export const useGoogleStore = create<GoogleState>((set, get) => ({
     }
   },
 
-  // Get the Google OAuth URL
-  // TODO: Implement deep linking for mobile OAuth flow
-  getAuthUrl: async () => {
+  // Prompt the user for Google authorization using expo-auth-session
+  promptGoogleAuth: async () => {
+    set({ isLoading: true, error: null });
+
     try {
       const { data: user } = await supabase.auth.getUser();
 
@@ -133,13 +174,156 @@ export const useGoogleStore = create<GoogleState>((set, get) => ({
         throw new Error('User not authenticated');
       }
 
-      // For React Native, we need to use deep linking
-      // This would need to be configured with your OAuth provider
-      // For now, throw an error indicating this needs to be implemented
-      throw new Error('Google OAuth not yet configured for mobile. Please set up deep linking.');
+      const clientId = getClientId();
+      if (!clientId) {
+        throw new Error('Google OAuth not configured. Please set EXPO_PUBLIC_GOOGLE_CLIENT_ID in your environment.');
+      }
 
+      // Create redirect URI based on platform
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: 'doughy',
+        path: 'oauth/google',
+      });
+
+      // Create the auth request
+      const request = new AuthSession.AuthRequest({
+        clientId,
+        scopes: SCOPES,
+        redirectUri,
+        usePKCE: true,
+      });
+
+      // Prompt the user for authorization
+      const result = await request.promptAsync(discovery);
+
+      if (result.type === 'success' && result.params.code) {
+        // Exchange the authorization code for tokens
+        const success = await get().handleOAuthCallback(result.params.code);
+        set({ isLoading: false });
+        return success;
+      } else if (result.type === 'cancel') {
+        set({ isLoading: false, error: 'Authorization was cancelled' });
+        return false;
+      } else if (result.type === 'error') {
+        throw new Error(result.params?.error_description || 'Authorization failed');
+      }
+
+      set({ isLoading: false });
+      return false;
     } catch (error: any) {
+      console.error('Google OAuth error:', error);
+      set({ error: error.message, isLoading: false });
+      return false;
+    }
+  },
+
+  // Handle the OAuth callback by exchanging the code for tokens
+  handleOAuthCallback: async (code: string) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+
+      if (!user.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const clientId = getClientId();
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: 'doughy',
+        path: 'oauth/google',
+      });
+
+      // Exchange authorization code for tokens via Supabase Edge Function
+      // This keeps the client secret secure on the server
+      const { data, error } = await supabase.functions.invoke('google_oauth_exchange', {
+        body: {
+          code,
+          redirectUri,
+          clientId,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.access_token) {
+        throw new Error('Failed to obtain access token');
+      }
+
+      // Store the tokens in the oauth_tokens table
+      const { error: tokenError } = await supabase
+        .from('oauth_tokens')
+        .upsert({
+          user_id: user.user.id,
+          provider: 'google',
+          access_token: data.access_token,
+          refresh_token: data.refresh_token || null,
+          expiry_date: data.expires_in
+            ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+            : null,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,provider',
+        });
+
+      if (tokenError) {
+        throw tokenError;
+      }
+
+      set({ isAuthorized: true });
+      return true;
+    } catch (error: any) {
+      console.error('OAuth callback error:', error);
       set({ error: error.message });
+      return false;
+    }
+  },
+
+  // Disconnect Google account by removing stored tokens
+  disconnectGoogle: async () => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const { data: user } = await supabase.auth.getUser();
+
+      if (!user.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get the access token to revoke it
+      const { data: token } = await supabase
+        .from('oauth_tokens')
+        .select('access_token')
+        .eq('user_id', user.user.id)
+        .eq('provider', 'google')
+        .maybeSingle();
+
+      // Revoke the token if it exists
+      if (token?.access_token) {
+        try {
+          await fetch(`https://oauth2.googleapis.com/revoke?token=${token.access_token}`, {
+            method: 'POST',
+          });
+        } catch {
+          // Ignore revocation errors - token may already be invalid
+        }
+      }
+
+      // Delete the token from the database
+      const { error } = await supabase
+        .from('oauth_tokens')
+        .delete()
+        .eq('user_id', user.user.id)
+        .eq('provider', 'google');
+
+      if (error) {
+        throw error;
+      }
+
+      set({ isAuthorized: false, events: [], isLoading: false });
+    } catch (error: any) {
+      console.error('Disconnect error:', error);
+      set({ error: error.message, isLoading: false });
       throw error;
     }
   },

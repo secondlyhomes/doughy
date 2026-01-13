@@ -13,21 +13,20 @@ const mockUserService = userService as jest.Mocked<typeof userService>;
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 
-// Mock navigation
-const mockNavigate = jest.fn();
-const mockGoBack = jest.fn();
+// Mock expo-router navigation
+const mockPush = jest.fn();
+const mockBack = jest.fn();
 
-let mockRouteParams = { userId: 'user-1' };
+let mockRouteParams: { userId?: string } = { userId: 'user-1' };
 
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({
-    navigate: mockNavigate,
-    goBack: mockGoBack,
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: jest.fn(),
+    back: mockBack,
   }),
-  useRoute: () => ({
-    params: mockRouteParams,
-  }),
+  useLocalSearchParams: () => mockRouteParams,
+  useFocusEffect: jest.fn(),
 }));
 
 // Mock useAuth
@@ -49,6 +48,8 @@ describe('UserDetailScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPush.mockClear();
+    mockBack.mockClear();
     mockRouteParams = { userId: 'user-1' };
 
     mockUseAuth.mockReturnValue({
@@ -144,7 +145,7 @@ describe('UserDetailScreen', () => {
     });
 
     fireEvent.press(getByTestId('icon-ArrowLeft'));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('displays role buttons for non-self users', async () => {
@@ -309,7 +310,7 @@ describe('UserDetailScreen', () => {
     await deleteButton.onPress();
 
     expect(mockUserService.deleteUser).toHaveBeenCalledWith('user-1');
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('shows error when delete fails', async () => {

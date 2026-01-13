@@ -1,9 +1,9 @@
 // src/features/auth/guards/OnboardingGuard.tsx
 // Guard component that requires completed onboarding
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 
@@ -19,40 +19,6 @@ interface OnboardingGuardProps {
 export function OnboardingGuard({ children, fallback }: OnboardingGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const { isOnboardingComplete, isEmailVerified } = usePermissions();
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }],
-        })
-      );
-    } else if (!isLoading && isAuthenticated && !isOnboardingComplete) {
-      // Navigate to onboarding survey
-      // Note: Email verification should happen first
-      if (!isEmailVerified) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              { name: 'Auth', params: { screen: 'VerifyEmail' } },
-            ],
-          })
-        );
-      } else {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              { name: 'Auth', params: { screen: 'OnboardingSurvey' } },
-            ],
-          })
-        );
-      }
-    }
-  }, [isAuthenticated, isLoading, isOnboardingComplete, isEmailVerified, navigation]);
 
   // Still loading
   if (isLoading) {
@@ -63,9 +29,19 @@ export function OnboardingGuard({ children, fallback }: OnboardingGuardProps) {
     );
   }
 
-  // Not authenticated or onboarding incomplete - will redirect
-  if (!isAuthenticated || !isOnboardingComplete) {
-    return fallback ?? null;
+  // Not authenticated - redirect to sign in
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
+  // Email verification should happen first
+  if (!isEmailVerified) {
+    return <Redirect href="/(auth)/verify-email" />;
+  }
+
+  // Onboarding not complete - redirect to onboarding survey
+  if (!isOnboardingComplete) {
+    return <Redirect href="/(auth)/onboarding" />;
   }
 
   return <>{children}</>;

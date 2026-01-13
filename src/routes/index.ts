@@ -1,37 +1,18 @@
 // src/routes/index.ts
-// Export all navigation components and types
+// Re-export Expo Router hooks for backward compatibility
+// All navigation now uses Expo Router's file-based routing
 
-// Navigators
-export { RootNavigator } from './RootNavigator';
-export { AuthNavigator } from './AuthNavigator';
-export { MainNavigator } from './MainNavigator';
-export { LeadsNavigator } from './LeadsNavigator';
-export { ConversationsNavigator } from './ConversationsNavigator';
-export { AdminNavigator } from './AdminNavigator';
-export { SettingsNavigator } from './SettingsNavigator';
-
-// Types
-export type {
-  RootStackParamList,
-  AuthStackParamList,
-  MainTabParamList,
-  PropertiesStackParamList,
-  LeadsStackParamList,
-  ConversationsStackParamList,
-  SettingsStackParamList,
-  AdminStackParamList,
-} from './types';
-
-// Navigation hooks (re-export from react-navigation)
+// Expo Router hooks
 export {
-  useNavigation,
-  useRoute,
-  useFocusEffect,
-  useIsFocused,
-  useNavigationState,
-} from '@react-navigation/native';
+  useRouter,
+  useLocalSearchParams,
+  useGlobalSearchParams,
+  useSegments,
+  usePathname,
+  useNavigationContainerRef,
+  Link,
+  Redirect,
+} from 'expo-router';
 
-export type {
-  NavigationProp,
-  RouteProp,
-} from '@react-navigation/native';
+// Note: useFocusEffect is now from expo-router
+export { useFocusEffect } from 'expo-router';

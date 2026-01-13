@@ -179,6 +179,7 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
 
   return (
     <Swipeable
+      testID="swipeable"
       ref={swipeableRef}
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}

@@ -12,8 +12,7 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Search,
@@ -27,9 +26,6 @@ import { Lead, LeadStatus } from '../types';
 import { useLeads } from '../hooks/useLeads';
 import { SwipeableLeadCard } from '../components/SwipeableLeadCard';
 import { LeadsFiltersSheet } from '../components/LeadsFiltersSheet';
-import { LeadsStackParamList } from '@/routes/types';
-
-type LeadsNavigationProp = NativeStackNavigationProp<LeadsStackParamList>;
 
 export interface LeadFilters {
   status: LeadStatus | 'all';
@@ -50,7 +46,7 @@ const defaultFilters: LeadFilters = {
 };
 
 export function LeadsListScreen() {
-  const navigation = useNavigation<LeadsNavigationProp>();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
@@ -109,8 +105,8 @@ export function LeadsListScreen() {
   ];
 
   const handleLeadPress = useCallback((lead: Lead) => {
-    navigation.navigate('LeadDetail', { leadId: lead.id });
-  }, [navigation]);
+    router.push(`/(tabs)/leads/${lead.id}`);
+  }, [router]);
 
   const handleApplyFilters = (newFilters: LeadFilters) => {
     setAdvancedFilters(newFilters);
@@ -232,7 +228,7 @@ export function LeadsListScreen() {
               </Text>
               <TouchableOpacity
                 className="mt-4 bg-primary px-4 py-2 rounded-lg"
-                onPress={() => navigation.navigate('AddLead')}
+                onPress={() => router.push('/(tabs)/leads/add')}
               >
                 <Text className="text-primary-foreground font-medium">Add First Lead</Text>
               </TouchableOpacity>
@@ -251,7 +247,7 @@ export function LeadsListScreen() {
           shadowRadius: 4,
           elevation: 5,
         }}
-        onPress={() => navigation.navigate('AddLead')}
+        onPress={() => router.push('/(tabs)/leads/add')}
       >
         <Plus size={24} color="white" />
       </TouchableOpacity>

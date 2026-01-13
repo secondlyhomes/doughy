@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { ArrowLeft, Sun, Moon, Smartphone, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -46,7 +46,7 @@ const themeOptions: ThemeOption[] = [
 ];
 
 export function AppearanceScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>('system');
 
   // Load saved theme on mount
@@ -70,7 +70,7 @@ export function AppearanceScreen() {
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#6b7280" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-semibold text-foreground ml-2">

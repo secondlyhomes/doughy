@@ -123,7 +123,7 @@ export function CompCard({ comp, onEdit, onDelete, subjectSqft }: CompCardProps)
               <Text className="text-xs text-foreground ml-1">{yearBuilt}</Text>
             </View>
           )}
-          {distance !== undefined && distance > 0 && (
+          {distance != null && distance > 0 && (
             <View className="flex-row items-center">
               <MapPin size={12} className="text-muted-foreground" />
               <Text className="text-xs text-foreground ml-1">{distance.toFixed(2)} mi</Text>

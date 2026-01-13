@@ -12,7 +12,7 @@ import {
   Linking,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { ArrowLeft, Bell, MessageCircle, TrendingUp, AlertTriangle, Settings } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
@@ -41,7 +41,7 @@ const defaultSettings: NotificationSettings = {
 };
 
 export function NotificationsSettingsScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
@@ -107,7 +107,7 @@ export function NotificationsSettingsScreen() {
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#6b7280" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-semibold text-foreground ml-2">

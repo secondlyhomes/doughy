@@ -43,7 +43,7 @@ export type LeadsStackParamList = {
 // Conversations Stack (nested in Main)
 export type ConversationsStackParamList = {
   ConversationList: undefined;
-  ConversationDetail: { leadId: string };
+  ConversationDetail: { conversationId: string };
 };
 
 // Settings Stack (nested in Main)

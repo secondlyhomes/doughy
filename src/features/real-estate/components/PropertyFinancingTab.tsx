@@ -14,7 +14,7 @@ import {
   TrendingUp,
   DollarSign,
 } from 'lucide-react-native';
-import { Property, FinancingScenario } from '../types';
+import { Property, FinancingScenario, ScenarioDetails } from '../types';
 import {
   useFinancingScenarios,
   useFinancingScenarioMutations,
@@ -22,8 +22,16 @@ import {
   LoanType,
   FinancingScenarioWithCalcs,
 } from '../hooks/useFinancingScenarios';
+
 import { AddFinancingSheet } from './AddFinancingSheet';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
+
+// Default empty scenario details for safe property access
+const EMPTY_SCENARIO_DETAILS: ScenarioDetails = {
+  purchasePrice: null,
+  loanAmount: null,
+  interestRate: null,
+};
 
 interface PropertyFinancingTabProps {
   property: Property;
@@ -111,7 +119,8 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
     });
   }, []);
 
-  const getLoanTypeLabel = (type: string): string => {
+  const getLoanTypeLabel = (type: string | null | undefined): string => {
+    if (!type) return 'Unknown';
     return LOAN_TYPES.find(t => t.id === type)?.label || type;
   };
 
@@ -262,7 +271,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
             </Text>
 
             {scenarios.map((scenario) => {
-              const input = scenario.input_json || {};
+              const input: ScenarioDetails = scenario.input_json || EMPTY_SCENARIO_DETAILS;
               const isSelected = selectedScenarios.has(scenario.id);
 
               return (

@@ -15,8 +15,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Edit2, Trash2, MoreHorizontal } from 'lucide-react-native';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import {
@@ -32,15 +31,6 @@ import {
 } from '../components';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
 
-type RootStackParamList = {
-  PropertyList: undefined;
-  PropertyDetail: { id: string };
-  EditProperty: { id: string };
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PropertyDetail'>;
-type PropertyDetailRouteProp = RouteProp<RootStackParamList, 'PropertyDetail'>;
-
 const TAB_IDS = {
   OVERVIEW: 'overview',
   ANALYSIS: 'analysis',
@@ -51,9 +41,9 @@ const TAB_IDS = {
 } as const;
 
 export function PropertyDetailScreen() {
-  const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<PropertyDetailRouteProp>();
-  const { id: propertyId } = route.params;
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const propertyId = params.id as string;
 
   const { property, isLoading, error, refetch } = useProperty(propertyId);
   const { deleteProperty, isLoading: isDeleting } = usePropertyMutations();
@@ -63,12 +53,12 @@ export function PropertyDetailScreen() {
   const [showActionsSheet, setShowActionsSheet] = useState(false);
 
   const handleBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    router.back();
+  }, [router]);
 
   const handleEdit = useCallback(() => {
-    navigation.navigate('EditProperty', { id: propertyId });
-  }, [navigation, propertyId]);
+    router.push(`/(tabs)/properties/edit/${propertyId}`);
+  }, [router, propertyId]);
 
   const handleDelete = useCallback(() => {
     Alert.alert(
@@ -82,7 +72,7 @@ export function PropertyDetailScreen() {
           onPress: async () => {
             const success = await deleteProperty(propertyId);
             if (success) {
-              navigation.goBack();
+              router.back();
             } else {
               Alert.alert('Error', 'Failed to delete property. Please try again.');
             }
@@ -90,7 +80,7 @@ export function PropertyDetailScreen() {
         },
       ]
     );
-  }, [deleteProperty, propertyId, navigation]);
+  }, [deleteProperty, propertyId, router]);
 
   const handleShare = useCallback(() => {
     setShowActionsSheet(true);

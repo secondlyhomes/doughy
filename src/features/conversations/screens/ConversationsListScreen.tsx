@@ -11,8 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import {
   MessageCircle,
   Plus,
@@ -24,9 +23,6 @@ import {
 
 import { useConversations, useCreateConversation, useDeleteConversation } from '../hooks/useConversations';
 import { Conversation } from '../types';
-import { ConversationsStackParamList } from '@/routes/types';
-
-type ConversationsNavigationProp = NativeStackNavigationProp<ConversationsStackParamList>;
 
 function formatTimeAgo(dateString: string | undefined): string {
   if (!dateString) return '';
@@ -101,6 +97,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
 
         <View className="flex-row items-center">
           <TouchableOpacity
+            testID="delete-conversation-button"
             className="p-2"
             onPress={handleDelete}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -115,7 +112,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
 }
 
 export function ConversationsListScreen() {
-  const navigation = useNavigation<ConversationsNavigationProp>();
+  const router = useRouter();
   const { conversations, isLoading, refetch } = useConversations();
   const createConversation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
@@ -124,15 +121,15 @@ export function ConversationsListScreen() {
     try {
       const newConversation = await createConversation.mutateAsync('New Conversation');
       // Navigate to the chat screen with the new conversation
-      navigation.navigate('ConversationDetail', { leadId: newConversation.id });
+      router.push(`/(tabs)/conversations/${newConversation.id}`);
     } catch (error) {
       Alert.alert('Error', 'Failed to create conversation');
     }
   };
 
   const handleConversationPress = useCallback((conversation: Conversation) => {
-    navigation.navigate('ConversationDetail', { leadId: conversation.id });
-  }, [navigation]);
+    router.push(`/(tabs)/conversations/${conversation.id}`);
+  }, [router]);
 
   const handleDeleteConversation = useCallback(async (id: string) => {
     try {
@@ -204,6 +201,7 @@ export function ConversationsListScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity
+        testID="new-conversation-fab"
         className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
         style={{
           shadowColor: '#000',

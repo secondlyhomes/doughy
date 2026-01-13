@@ -11,8 +11,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   Bell,
@@ -22,12 +21,8 @@ import {
   AlertCircle,
   Smartphone,
 } from 'lucide-react-native';
-import { SettingsStackParamList } from '@/types';
-
-type NotificationSettingsScreenNavigationProp = NativeStackNavigationProp<
-  SettingsStackParamList,
-  'NotificationsSettings'
->;
+import { useThemeColors } from '@/context/ThemeContext';
+import { APP_NAME } from '@/config';
 
 interface NotificationSetting {
   id: string;
@@ -38,7 +33,8 @@ interface NotificationSetting {
 }
 
 export function NotificationSettingsScreen() {
-  const navigation = useNavigation<NotificationSettingsScreenNavigationProp>();
+  const router = useRouter();
+  const colors = useThemeColors();
   const [isSaving, setIsSaving] = useState(false);
 
   // Notification settings state
@@ -47,6 +43,7 @@ export function NotificationSettingsScreen() {
   const [newLeadAlerts, setNewLeadAlerts] = useState(true);
   const [conversationUpdates, setConversationUpdates] = useState(true);
   const [creditAlerts, setCreditAlerts] = useState(true);
+  const [weeklySummary, setWeeklySummary] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
 
   const handleSave = async () => {
@@ -66,8 +63,8 @@ export function NotificationSettingsScreen() {
     <View className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center p-4 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <ArrowLeft size={24} color="#374151" />
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <ArrowLeft size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text className="text-xl font-semibold text-foreground">Notifications</Text>
       </View>
@@ -81,14 +78,14 @@ export function NotificationSettingsScreen() {
 
           <View className="bg-card rounded-lg">
             <NotificationToggle
-              icon={<Smartphone size={20} color="#6b7280" />}
+              icon={<Smartphone size={20} color={colors.mutedForeground} />}
               title="Push Notifications"
               description="Receive push notifications on your device"
               value={pushEnabled}
               onValueChange={setPushEnabled}
             />
             <NotificationToggle
-              icon={<Bell size={20} color="#6b7280" />}
+              icon={<Bell size={20} color={colors.mutedForeground} />}
               title="New Lead Alerts"
               description="Get notified when you receive a new lead"
               value={newLeadAlerts}
@@ -96,7 +93,7 @@ export function NotificationSettingsScreen() {
               disabled={!pushEnabled}
             />
             <NotificationToggle
-              icon={<MessageSquare size={20} color="#6b7280" />}
+              icon={<MessageSquare size={20} color={colors.mutedForeground} />}
               title="Conversation Updates"
               description="Notifications for new messages and responses"
               value={conversationUpdates}
@@ -104,7 +101,7 @@ export function NotificationSettingsScreen() {
               disabled={!pushEnabled}
             />
             <NotificationToggle
-              icon={<AlertCircle size={20} color="#6b7280" />}
+              icon={<AlertCircle size={20} color={colors.mutedForeground} />}
               title="Credit Usage Alerts"
               description="Get alerted when credits are running low"
               value={creditAlerts}
@@ -123,22 +120,22 @@ export function NotificationSettingsScreen() {
 
           <View className="bg-card rounded-lg">
             <NotificationToggle
-              icon={<Mail size={20} color="#6b7280" />}
+              icon={<Mail size={20} color={colors.mutedForeground} />}
               title="Email Notifications"
               description="Receive important updates via email"
               value={emailEnabled}
               onValueChange={setEmailEnabled}
             />
             <NotificationToggle
-              icon={<TrendingUp size={20} color="#6b7280" />}
+              icon={<TrendingUp size={20} color={colors.mutedForeground} />}
               title="Weekly Summary"
               description="Get a weekly summary of your activity"
-              value={emailEnabled}
-              onValueChange={() => {}}
+              value={weeklySummary}
+              onValueChange={setWeeklySummary}
               disabled={!emailEnabled}
             />
             <NotificationToggle
-              icon={<Mail size={20} color="#6b7280" />}
+              icon={<Mail size={20} color={colors.mutedForeground} />}
               title="Marketing Emails"
               description="Receive tips, updates, and promotions"
               value={marketingEmails}
@@ -155,7 +152,7 @@ export function NotificationSettingsScreen() {
               Need to manage permissions?
             </Text>
             <Text className="text-sm text-muted-foreground">
-              To change push notification permissions, go to your device Settings {'>'} Doughy AI {'>'} Notifications.
+              To change push notification permissions, go to your device Settings {'>'} {APP_NAME} {'>'} Notifications.
             </Text>
           </View>
         </View>
@@ -202,6 +199,7 @@ function NotificationToggle({
   disabled = false,
   hideBorder = false,
 }: NotificationToggleProps) {
+  const colors = useThemeColors();
   return (
     <View
       className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}
@@ -216,8 +214,8 @@ function NotificationToggle({
         value={value}
         onValueChange={onValueChange}
         disabled={disabled}
-        trackColor={{ false: '#767577', true: '#6366f1' }}
-        thumbColor={value ? '#ffffff' : '#f4f3f4'}
+        trackColor={{ false: colors.input, true: colors.primary }}
+        thumbColor="#ffffff"
       />
     </View>
   );

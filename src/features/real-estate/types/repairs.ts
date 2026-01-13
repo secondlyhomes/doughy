@@ -12,17 +12,18 @@ export interface RepairItemInput {
 }
 
 // Add the RepairEstimate interface
+// Note: Nullable fields match Supabase database types
 export interface RepairEstimate {
   id: string;
   property_id: string;
   category: RepairCategory;
   description: string; // This matches what's in the database
   estimate: number;    // This matches what's in the database
-  notes?: string;
+  notes?: string | null;
   completed: boolean;
   priority: 'low' | 'medium' | 'high';
-  created_by?: string;
-  created_at?: string;
-  updated_at?: string;
-  workspace_id?: string;
+  created_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  workspace_id?: string | null;
 }

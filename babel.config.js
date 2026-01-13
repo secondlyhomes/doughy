@@ -12,6 +12,7 @@ module.exports = function (api) {
     plugins: [
       // Transform import.meta for web compatibility
       ['babel-plugin-transform-import-meta', { module: 'ES6' }],
+      // Note: expo-router/babel is now included in babel-preset-expo (SDK 50+)
     ],
     // Transform node_modules that use import.meta
     overrides: [

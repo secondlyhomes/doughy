@@ -1,9 +1,9 @@
 // src/features/auth/guards/AdminGuard.tsx
 // Guard component that requires admin role
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { Redirect } from 'expo-router';
 import { ShieldAlert } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
@@ -25,38 +25,22 @@ export function AdminGuard({
 }: AdminGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const { canViewAdminPanel } = usePermissions();
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }],
-        })
-      );
-    } else if (!isLoading && isAuthenticated && !canViewAdminPanel && redirectOnFail) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Main' }],
-        })
-      );
-    }
-  }, [isAuthenticated, isLoading, canViewAdminPanel, redirectOnFail, navigation]);
 
   // Still loading
   if (isLoading) {
     return fallback ?? null;
   }
 
-  // Not authenticated - will redirect
+  // Not authenticated - redirect to sign in
   if (!isAuthenticated) {
-    return fallback ?? null;
+    return <Redirect href="/(auth)/sign-in" />;
   }
 
-  // Not admin - show access denied
+  // Not admin - redirect to main if redirectOnFail, otherwise show access denied
   if (!canViewAdminPanel) {
+    if (redirectOnFail) {
+      return <Redirect href="/(tabs)" />;
+    }
     return fallback ?? (
       <View className="flex-1 items-center justify-center bg-background p-6">
         <ShieldAlert size={64} color="#ef4444" />

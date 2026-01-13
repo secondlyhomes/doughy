@@ -14,8 +14,8 @@ export interface FinancingScenario {
   created_by?: string | null;
   workspace_id?: string | null;
   is_primary?: boolean | null;
-  input_json?: unknown;
-  result_json?: unknown;
+  input_json?: ScenarioDetails | null;
+  result_json?: Record<string, unknown> | null;
   // For compatibility with hooks
   details?: ScenarioDetails;
 }

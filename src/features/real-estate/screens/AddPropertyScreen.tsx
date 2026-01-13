@@ -6,23 +6,14 @@
 
 import React, { useCallback } from 'react';
 import { View, Text, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { usePropertyMutations } from '../hooks/useProperties';
 import { Property } from '../types';
 
-type RootStackParamList = {
-  PropertyList: undefined;
-  PropertyDetail: { id: string };
-  AddProperty: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddProperty'>;
-
 export function AddPropertyScreen() {
-  const navigation = useNavigation<NavigationProp>();
+  const router = useRouter();
   const { createProperty, isLoading, error } = usePropertyMutations();
 
   const handleSubmit = useCallback(async (data: Partial<Property>) => {
@@ -35,7 +26,7 @@ export function AddPropertyScreen() {
         [
           {
             text: 'View Property',
-            onPress: () => navigation.replace('PropertyDetail', { id: newProperty.id }),
+            onPress: () => router.replace(`/(tabs)/properties/${newProperty.id}`),
           },
           {
             text: 'Add Another',
@@ -49,11 +40,11 @@ export function AddPropertyScreen() {
     } else if (error) {
       Alert.alert('Error', error.message || 'Failed to create property. Please try again.');
     }
-  }, [createProperty, error, navigation]);
+  }, [createProperty, error, router]);
 
   const handleCancel = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    router.back();
+  }, [router]);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>

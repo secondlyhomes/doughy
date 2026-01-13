@@ -10,7 +10,7 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   ExternalLink,
@@ -27,7 +27,7 @@ const APP_VERSION = Constants.expoConfig?.version || '1.0.0';
 const BUILD_NUMBER = Constants.expoConfig?.ios?.buildNumber || '1';
 
 export function AboutScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -55,7 +55,7 @@ export function AboutScreen() {
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#6b7280" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-semibold text-foreground ml-2">

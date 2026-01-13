@@ -12,7 +12,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   Home,
@@ -40,7 +40,7 @@ import {
 } from '../services/integrationsService';
 
 export function IntegrationsScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,7 +179,7 @@ export function IntegrationsScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-row items-center px-4 py-3 border-b border-border">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+          <TouchableOpacity onPress={() => router.back()} className="p-2">
             <ArrowLeft size={24} color="#6b7280" />
           </TouchableOpacity>
           <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
@@ -200,7 +200,7 @@ export function IntegrationsScreen() {
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#6b7280" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-semibold text-foreground ml-2">

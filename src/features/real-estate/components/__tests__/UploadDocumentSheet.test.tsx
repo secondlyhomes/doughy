@@ -26,15 +26,18 @@ jest.mock('../../hooks/usePropertyDocuments', () => ({
 }));
 
 // Mock BottomSheet
-jest.mock('@/components/ui/BottomSheet', () => ({
-  BottomSheet: ({ children, visible, title }: any) =>
-    visible ? (
-      <mock-bottom-sheet testID="bottom-sheet">
-        <mock-title testID="sheet-title">{title}</mock-title>
-        {children}
-      </mock-bottom-sheet>
-    ) : null,
-}));
+jest.mock('@/components/ui/BottomSheet', () => {
+  const { View, Text } = require('react-native');
+  return {
+    BottomSheet: ({ children, visible, title }: { children: React.ReactNode; visible: boolean; title: string }) =>
+      visible ? (
+        <View testID="bottom-sheet">
+          <Text testID="sheet-title">{title}</Text>
+          {children}
+        </View>
+      ) : null,
+  };
+});
 
 describe('UploadDocumentSheet', () => {
   const defaultProps = {

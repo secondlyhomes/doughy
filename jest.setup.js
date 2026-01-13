@@ -38,6 +38,36 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
+// Mock expo-router
+jest.mock('expo-router', () => {
+  const React = require('react');
+  const { View, Text } = require('react-native');
+  return {
+    useRouter: () => ({
+      push: jest.fn(),
+      replace: jest.fn(),
+      back: jest.fn(),
+      canGoBack: jest.fn(() => true),
+      setParams: jest.fn(),
+    }),
+    useLocalSearchParams: () => ({}),
+    useGlobalSearchParams: () => ({}),
+    useSegments: () => [],
+    usePathname: () => '/',
+    useNavigationContainerRef: () => ({ current: null }),
+    useFocusEffect: jest.fn(),
+    Link: ({ children, href, ...props }) => React.createElement(Text, props, children),
+    Redirect: ({ href }) => React.createElement(View, { testID: `redirect-${href}` }),
+    Stack: {
+      Screen: () => null,
+    },
+    Tabs: {
+      Screen: () => null,
+    },
+    Slot: ({ children }) => React.createElement(View, null, children),
+  };
+});
+
 // Mock @react-navigation/native
 jest.mock('@react-navigation/native', () => {
   const actualNav = jest.requireActual('@react-navigation/native');

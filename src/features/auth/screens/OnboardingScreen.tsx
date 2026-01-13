@@ -11,7 +11,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
@@ -28,7 +28,7 @@ import {
 const STEPS: SurveyStep[] = ['referralSource', 'primaryUseCase', 'experienceLevel', 'companySize'];
 
 export function OnboardingScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const { refetchProfile } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -65,12 +65,7 @@ export function OnboardingScreen() {
 
       if (result.success) {
         await refetchProfile();
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'Main' }],
-          })
-        );
+        router.replace('/(tabs)');
       } else {
         setError(result.error || 'Failed to save responses');
         setIsSubmitting(false);
@@ -80,7 +75,7 @@ export function OnboardingScreen() {
       setCurrentStep(prev => prev + 1);
       setError(null);
     }
-  }, [currentStep, currentValue, isLastStep, isOptional, responses, refetchProfile, navigation]);
+  }, [currentStep, currentValue, isLastStep, isOptional, responses, refetchProfile, router]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 0) {
@@ -95,17 +90,12 @@ export function OnboardingScreen() {
 
     if (result.success) {
       await refetchProfile();
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Main' }],
-        })
-      );
+      router.replace('/(tabs)');
     } else {
       setError(result.error || 'Failed to skip onboarding');
       setIsSubmitting(false);
     }
-  }, [refetchProfile, navigation]);
+  }, [refetchProfile, router]);
 
   return (
     <SafeAreaView className="flex-1 bg-background">

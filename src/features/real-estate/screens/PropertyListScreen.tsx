@@ -16,8 +16,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { Search, Plus, Filter, Grid, List, ArrowUpDown, X } from 'lucide-react-native';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyFiltersSheet } from '../components/PropertyFiltersSheet';
@@ -26,16 +25,8 @@ import { Property } from '../types';
 import { useProperties } from '../hooks/useProperties';
 import { usePropertyFilters, PropertyFilters, SortOption, SORT_OPTIONS } from '../hooks/usePropertyFilters';
 
-type RootStackParamList = {
-  PropertyList: undefined;
-  PropertyDetail: { id: string };
-  AddProperty: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PropertyList'>;
-
 export function PropertyListScreen() {
-  const navigation = useNavigation<NavigationProp>();
+  const router = useRouter();
   const { properties, isLoading, error, refetch } = useProperties();
 
   // Filter and sort state
@@ -171,12 +162,12 @@ export function PropertyListScreen() {
 
   const handlePropertyPress = useCallback((property: Property) => {
     setSelectedPropertyId(property.id);
-    navigation.navigate('PropertyDetail', { id: property.id });
-  }, [navigation]);
+    router.push(`/(tabs)/properties/${property.id}`);
+  }, [router]);
 
   const handleAddProperty = useCallback(() => {
-    navigation.navigate('AddProperty');
-  }, [navigation]);
+    router.push('/(tabs)/properties/add');
+  }, [router]);
 
   const handleApplyFilters = useCallback((newFilters: PropertyFilters) => {
     setFilters(newFilters);

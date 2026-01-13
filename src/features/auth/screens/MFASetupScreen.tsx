@@ -10,7 +10,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { Shield, Copy, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
@@ -24,7 +24,7 @@ import {
 type SetupStep = 'loading' | 'scan' | 'verify' | 'success';
 
 export function MFASetupScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const [step, setStep] = useState<SetupStep>('loading');
   const [enrollmentData, setEnrollmentData] = useState<MFAEnrollResult | null>(null);
@@ -82,7 +82,7 @@ export function MFASetupScreen() {
   }, [code, step, handleVerify]);
 
   const handleBack = () => {
-    navigation.goBack();
+    router.back();
   };
 
   const handleContinueToVerify = () => {
@@ -91,7 +91,7 @@ export function MFASetupScreen() {
   };
 
   const handleDone = () => {
-    navigation.goBack();
+    router.back();
   };
 
   // Loading state

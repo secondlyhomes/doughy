@@ -6,26 +6,16 @@
 
 import React, { useCallback } from 'react';
 import { View, Text, ActivityIndicator, Alert } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
 import { Property } from '../types';
 
-type RootStackParamList = {
-  PropertyList: undefined;
-  PropertyDetail: { id: string };
-  EditProperty: { id: string };
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'EditProperty'>;
-type EditPropertyRouteProp = RouteProp<RootStackParamList, 'EditProperty'>;
-
 export function EditPropertyScreen() {
-  const navigation = useNavigation<NavigationProp>();
-  const route = useRoute<EditPropertyRouteProp>();
-  const { id: propertyId } = route.params;
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const propertyId = params.id as string;
 
   const { property, isLoading: isLoadingProperty, error: loadError } = useProperty(propertyId);
   const { updateProperty, isLoading: isUpdating, error: updateError } = usePropertyMutations();
@@ -40,18 +30,18 @@ export function EditPropertyScreen() {
         [
           {
             text: 'View Property',
-            onPress: () => navigation.replace('PropertyDetail', { id: propertyId }),
+            onPress: () => router.replace(`/(tabs)/properties/${propertyId}`),
           },
         ]
       );
     } else if (updateError) {
       Alert.alert('Error', updateError.message || 'Failed to update property. Please try again.');
     }
-  }, [updateProperty, propertyId, updateError, navigation]);
+  }, [updateProperty, propertyId, updateError, router]);
 
   const handleCancel = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    router.back();
+  }, [router]);
 
   if (isLoadingProperty) {
     return (

@@ -9,9 +9,7 @@ import {
   TouchableOpacity,
   RefreshControl
 } from 'react-native';
-import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useRouter } from 'expo-router';
 import {
   TrendingUp,
   Clock,
@@ -32,13 +30,6 @@ import { Progress } from '@/components/ui';
 // Zone D Components
 import { QuickActionFAB } from '@/features/layout';
 
-import { RootStackParamList, MainTabParamList, LeadsStackParamList } from '@/types';
-
-// Composite navigation type for dashboard - can navigate to tabs and modals
-type DashboardNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'Dashboard'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
 
 interface StatCardProps {
   title: string;
@@ -47,6 +38,7 @@ interface StatCardProps {
   trend?: {
     direction: 'up' | 'down';
     value: string;
+    isPositive?: boolean; // Whether this trend is good (green) or bad (red), defaults to direction=up being positive
   };
 }
 
@@ -60,12 +52,22 @@ function StatCard({ title, value, icon, trend }: StatCardProps) {
       <Text className="text-2xl font-bold text-foreground">{value}</Text>
       {trend && (
         <View className="flex-row items-center mt-1">
-          {trend.direction === 'up' ? (
-            <ArrowUp size={12} color="#22c55e" />
-          ) : (
-            <ArrowDown size={12} color="#22c55e" />
-          )}
-          <Text className="text-xs text-green-500 ml-1">{trend.value}</Text>
+          {/* Determine if trend is positive - default to direction=up being positive */}
+          {(() => {
+            const isPositive = trend.isPositive ?? (trend.direction === 'up');
+            const trendColor = isPositive ? '#22c55e' : '#ef4444';
+            const textClass = isPositive ? 'text-green-500' : 'text-red-500';
+            return (
+              <>
+                {trend.direction === 'up' ? (
+                  <ArrowUp size={12} color={trendColor} />
+                ) : (
+                  <ArrowDown size={12} color={trendColor} />
+                )}
+                <Text className={`text-xs ml-1 ${textClass}`}>{trend.value}</Text>
+              </>
+            );
+          })()}
         </View>
       )}
     </View>
@@ -81,7 +83,7 @@ interface PriorityLead {
 }
 
 export function DashboardScreen() {
-  const navigation = useNavigation<DashboardNavigationProp>();
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
 
@@ -113,17 +115,17 @@ export function DashboardScreen() {
 
   const handleAddLead = () => {
     // Navigate to Leads tab, then to AddLead screen
-    navigation.navigate('Leads', { screen: 'AddLead' } as any);
+    router.push('/(tabs)/leads/add');
   };
 
   const handleAddProperty = () => {
     // Navigate to Properties tab
-    navigation.navigate('Properties');
+    router.push('/(tabs)/properties');
   };
 
   const handleStartChat = () => {
     // Navigate to the assistant modal
-    navigation.navigate('AssistantModal');
+    router.push('/assistant');
   };
 
   return (
@@ -156,7 +158,7 @@ export function DashboardScreen() {
                 <View className="flex-row mt-3 gap-2">
                   <TouchableOpacity
                     className="border border-border rounded-md px-3 py-2"
-                    onPress={() => navigation.navigate('Leads', { screen: 'LeadList' } as any)}
+                    onPress={() => router.push('/(tabs)/leads')}
                   >
                     <Text className="text-sm text-foreground">View Leads</Text>
                   </TouchableOpacity>
@@ -187,7 +189,7 @@ export function DashboardScreen() {
             title="Avg. Response Time"
             value={`${responseTime}h`}
             icon={<Clock size={16} color="#3b82f6" />}
-            trend={{ direction: 'down', value: '-18% from last week' }}
+            trend={{ direction: 'down', value: '-18% from last week', isPositive: true }}
           />
           <StatCard
             title="Credits Used"
@@ -215,7 +217,7 @@ export function DashboardScreen() {
             <TouchableOpacity
               key={index}
               className="bg-primary/10 rounded-lg p-3 mb-2"
-              onPress={() => navigation.navigate('LeadDetailModal', { leadId: String(index + 1) })}
+              onPress={() => router.push(`/(tabs)/leads/${String(index + 1)}`)}
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
@@ -239,7 +241,7 @@ export function DashboardScreen() {
 
           <TouchableOpacity
             className="flex-row items-center justify-center mt-3 py-2"
-            onPress={() => navigation.navigate('Leads', { screen: 'LeadList' } as any)}
+            onPress={() => router.push('/(tabs)/leads')}
           >
             <Text className="text-sm text-primary mr-1">View All Leads</Text>
             <ArrowRight size={14} color="#3b82f6" />
@@ -252,14 +254,14 @@ export function DashboardScreen() {
           <View className="flex-row gap-3">
             <TouchableOpacity
               className="flex-1 bg-primary rounded-lg p-4 items-center"
-              onPress={() => navigation.navigate('Leads', { screen: 'AddLead' } as any)}
+              onPress={() => router.push('/(tabs)/leads/add')}
             >
               <Users size={24} color="white" />
               <Text className="text-white font-medium mt-2">Add Lead</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="flex-1 bg-secondary rounded-lg p-4 items-center"
-              onPress={() => navigation.navigate('AssistantModal')}
+              onPress={() => router.push('/assistant')}
             >
               <TrendingUp size={24} color="#1f2937" />
               <Text className="text-secondary-foreground font-medium mt-2">AI Assistant</Text>

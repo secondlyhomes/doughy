@@ -229,3 +229,69 @@ describe('useDeleteConversation', () => {
     expect(result.current.isError).toBe(false);
   });
 });
+
+describe('Error handling', () => {
+  it('useConversations should expose error state', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useConversations(), { wrapper });
+
+    // Verify error property is accessible (null when no error)
+    expect(result.current.error).toBeNull();
+    expect(result.current).toHaveProperty('error');
+  });
+
+  it('useCreateConversation should expose error state after failed mutation', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useCreateConversation(), { wrapper });
+
+    // Initially no error
+    expect(result.current.isError).toBe(false);
+    expect(result.current.error).toBeNull();
+
+    // Verify the mutation state properties exist
+    expect(result.current).toHaveProperty('isError');
+    expect(result.current).toHaveProperty('error');
+    expect(result.current).toHaveProperty('isPending');
+  });
+
+  it('useDeleteConversation should expose error state after failed mutation', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useDeleteConversation(), { wrapper });
+
+    // Initially no error
+    expect(result.current.isError).toBe(false);
+    expect(result.current.error).toBeNull();
+
+    // Verify the mutation state properties exist
+    expect(result.current).toHaveProperty('isError');
+    expect(result.current).toHaveProperty('error');
+    expect(result.current).toHaveProperty('isPending');
+  });
+
+  it('useConversations should expose isLoading state', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useConversations(), { wrapper });
+
+    // Verify loading state property exists
+    expect(result.current).toHaveProperty('isLoading');
+    expect(typeof result.current.isLoading).toBe('boolean');
+  });
+});

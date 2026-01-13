@@ -1,9 +1,9 @@
 // src/features/auth/guards/EmailVerifiedGuard.tsx
 // Guard component that requires email verification
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 
@@ -19,28 +19,6 @@ interface EmailVerifiedGuardProps {
 export function EmailVerifiedGuard({ children, fallback }: EmailVerifiedGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const { isEmailVerified } = usePermissions();
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Auth' }],
-        })
-      );
-    } else if (!isLoading && isAuthenticated && !isEmailVerified) {
-      // Navigate to verify email screen
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            { name: 'Auth', params: { screen: 'VerifyEmail' } },
-          ],
-        })
-      );
-    }
-  }, [isAuthenticated, isLoading, isEmailVerified, navigation]);
 
   // Still loading
   if (isLoading) {
@@ -51,9 +29,14 @@ export function EmailVerifiedGuard({ children, fallback }: EmailVerifiedGuardPro
     );
   }
 
-  // Not authenticated or not verified - will redirect
-  if (!isAuthenticated || !isEmailVerified) {
-    return fallback ?? null;
+  // Not authenticated - redirect to sign in
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
+  // Not verified - redirect to verify email
+  if (!isEmailVerified) {
+    return <Redirect href="/(auth)/verify-email" />;
   }
 
   return <>{children}</>;

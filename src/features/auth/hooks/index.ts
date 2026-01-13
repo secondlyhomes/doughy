@@ -9,3 +9,4 @@ export {
   useHasAllPermissions,
   type Permissions,
 } from './usePermissions';
+export { useGoogleAuth, type UseGoogleAuthResult } from './useGoogleAuth';

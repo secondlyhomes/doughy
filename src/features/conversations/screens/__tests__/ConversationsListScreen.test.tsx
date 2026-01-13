@@ -5,12 +5,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Alert } from 'react-native';
 import { ConversationsListScreen } from '../ConversationsListScreen';
 
-// Mock navigation
-const mockNavigate = jest.fn();
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({
-    navigate: mockNavigate,
+// Mock expo-router
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
   }),
 }));
 
@@ -122,14 +121,14 @@ describe('ConversationsListScreen', () => {
 
     fireEvent.press(getByText('Market Analysis'));
 
-    expect(mockNavigate).toHaveBeenCalledWith('ConversationDetail', { leadId: '1' });
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/conversations/1');
   });
 
   it('should show delete confirmation when delete button is pressed', () => {
     const { getAllByTestId } = renderWithQueryClient();
 
-    const deleteButtons = getAllByTestId('icon-Trash2');
-    fireEvent.press(deleteButtons[0].parent!);
+    const deleteButtons = getAllByTestId('delete-conversation-button');
+    fireEvent.press(deleteButtons[0]);
 
     expect(Alert.alert).toHaveBeenCalledWith(
       'Delete Conversation',
@@ -144,8 +143,8 @@ describe('ConversationsListScreen', () => {
   it('should delete conversation when confirmed', async () => {
     const { getAllByTestId } = renderWithQueryClient();
 
-    const deleteButtons = getAllByTestId('icon-Trash2');
-    fireEvent.press(deleteButtons[0].parent!);
+    const deleteButtons = getAllByTestId('delete-conversation-button');
+    fireEvent.press(deleteButtons[0]);
 
     // Get the delete callback from Alert.alert
     const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
@@ -159,14 +158,14 @@ describe('ConversationsListScreen', () => {
   it('should render FAB for new conversation', () => {
     const { getByTestId } = renderWithQueryClient();
 
-    expect(getByTestId('icon-Plus')).toBeTruthy();
+    expect(getByTestId('new-conversation-fab')).toBeTruthy();
   });
 
   it('should create new conversation when FAB is pressed', async () => {
     const { getByTestId } = renderWithQueryClient();
 
-    const fab = getByTestId('icon-Plus').parent;
-    fireEvent.press(fab!);
+    const fab = getByTestId('new-conversation-fab');
+    fireEvent.press(fab);
 
     await waitFor(() => {
       expect(mockCreateConversation.mutateAsync).toHaveBeenCalledWith('New Conversation');
@@ -176,11 +175,11 @@ describe('ConversationsListScreen', () => {
   it('should navigate to new conversation after creation', async () => {
     const { getByTestId } = renderWithQueryClient();
 
-    const fab = getByTestId('icon-Plus').parent;
-    fireEvent.press(fab!);
+    const fab = getByTestId('new-conversation-fab');
+    fireEvent.press(fab);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('ConversationDetail', { leadId: 'new-conv' });
+      expect(mockPush).toHaveBeenCalledWith('/(tabs)/conversations/new-conv');
     });
   });
 
@@ -189,8 +188,8 @@ describe('ConversationsListScreen', () => {
 
     const { getByTestId } = renderWithQueryClient();
 
-    const fab = getByTestId('icon-Plus').parent;
-    fireEvent.press(fab!);
+    const fab = getByTestId('new-conversation-fab');
+    fireEvent.press(fab);
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to create conversation');
@@ -202,8 +201,8 @@ describe('ConversationsListScreen', () => {
 
     const { getAllByTestId } = renderWithQueryClient();
 
-    const deleteButtons = getAllByTestId('icon-Trash2');
-    fireEvent.press(deleteButtons[0].parent!);
+    const deleteButtons = getAllByTestId('delete-conversation-button');
+    fireEvent.press(deleteButtons[0]);
 
     // Get the delete callback
     const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
@@ -324,7 +323,15 @@ describe('ConversationsListScreen', () => {
   });
 
   it('should handle conversation without last_message', () => {
-    const { last_message, ...conversationWithoutMessage } = mockConversations[0];
+    const conversationWithoutMessage = {
+      id: '1',
+      user_id: 'user-1',
+      title: 'Market Analysis',
+      last_message: '', // Empty string instead of missing
+      last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      message_count: 8,
+      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    };
     mockUseConversations.conversations = [conversationWithoutMessage];
 
     const { getByText, queryByText } = renderWithQueryClient();
@@ -334,7 +341,15 @@ describe('ConversationsListScreen', () => {
   });
 
   it('should handle conversation without title', () => {
-    const { title, ...conversationWithoutTitle } = mockConversations[0];
+    const conversationWithoutTitle = {
+      id: '1',
+      user_id: 'user-1',
+      title: '', // Empty string instead of missing
+      last_message: 'The downtown area shows strong potential...',
+      last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      message_count: 8,
+      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    };
     mockUseConversations.conversations = [conversationWithoutTitle];
 
     const { getByText } = renderWithQueryClient();

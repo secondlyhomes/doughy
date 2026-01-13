@@ -9,14 +9,17 @@ jest.mock('../../services/logsService');
 
 const mockLogsService = logsService as jest.Mocked<typeof logsService>;
 
-// Mock navigation
-const mockGoBack = jest.fn();
+// Mock expo-router navigation
+const mockBack = jest.fn();
 
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({
-    goBack: mockGoBack,
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: mockBack,
   }),
+  useLocalSearchParams: () => ({}),
+  useFocusEffect: jest.fn(),
 }));
 
 describe('SystemLogsScreen', () => {
@@ -55,6 +58,7 @@ describe('SystemLogsScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockBack.mockClear();
 
     mockLogsService.getLogs.mockResolvedValue({
       success: true,
@@ -115,7 +119,7 @@ describe('SystemLogsScreen', () => {
     });
 
     fireEvent.press(getByTestId('icon-ArrowLeft'));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('toggles filter panel when filter button is pressed', async () => {

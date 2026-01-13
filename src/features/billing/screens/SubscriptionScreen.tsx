@@ -11,8 +11,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   CreditCard,
@@ -24,9 +23,6 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { RootStackParamList } from '@/types';
-
-type SubscriptionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface Plan {
   id: string;
@@ -81,7 +77,7 @@ const plans: Plan[] = [
 ];
 
 export function SubscriptionScreen() {
-  const navigation = useNavigation<SubscriptionScreenNavigationProp>();
+  const router = useRouter();
   const { profile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -175,7 +171,7 @@ export function SubscriptionScreen() {
     <View className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center p-4 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
         <Text className="text-xl font-semibold text-foreground">Subscription</Text>

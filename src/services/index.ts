@@ -1,14 +1,16 @@
 // src/services/index.ts
-// Services placeholder for Zone A
-// Most services depend on specific feature implementations (Zone B, C, D)
+// Shared services for Doughy AI Mobile
 
-// TODO: Zone D - Import conversation deletion service when converted
-// export { conversationDeletionService } from './conversationDeletionService';
+// Zone D: Conversation management
+export { conversationDeletionService } from './conversationDeletionService';
+export type {
+  DeleteConversationResult,
+  DeleteMultipleResult,
+} from './conversationDeletionService';
 
-// TODO: Zone D - Import import service when converted
-// export { importService } from './importService';
-
-// Placeholder exports for other zones to reference
-export const placeholder = {
-  note: 'Services will be implemented by feature zones (B, C, D)',
-};
+// Zone D: Import service for bulk data operations
+export { importService } from './importService';
+export type {
+  ImportResult,
+  ImportOptions,
+} from './importService';

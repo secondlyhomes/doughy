@@ -4,13 +4,17 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DashboardScreen } from '../DashboardScreen';
 
-// Mock navigation
-const mockNavigate = jest.fn();
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({
-    navigate: mockNavigate,
+// Mock expo-router navigation
+const mockPush = jest.fn();
+const mockReplace = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: jest.fn(),
   }),
+  useLocalSearchParams: () => ({}),
+  useFocusEffect: jest.fn(),
 }));
 
 // Mock QuickActionFAB
@@ -61,6 +65,8 @@ describe('DashboardScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPush.mockClear();
+    mockReplace.mockClear();
   });
 
   describe('Header', () => {
@@ -129,7 +135,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByText('View Leads'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('Leads');
+      expect(mockPush).toHaveBeenCalledWith('/(tabs)/leads');
     });
 
     it('should dismiss alert when Dismiss is pressed', () => {
@@ -194,7 +200,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByText('Sarah Johnson'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('LeadDetail', { leadId: '1' });
+      expect(mockPush).toHaveBeenCalledWith('/(tabs)/leads/1');
     });
 
     it('should navigate to Leads when View All Leads is pressed', () => {
@@ -202,7 +208,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByText('View All Leads'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('Leads');
+      expect(mockPush).toHaveBeenCalledWith('/(tabs)/leads');
     });
   });
 
@@ -221,7 +227,7 @@ describe('DashboardScreen', () => {
       // First one should be from QuickActions, second from FAB mock
       fireEvent.press(addLeadButtons[0]);
 
-      expect(mockNavigate).toHaveBeenCalledWith('AddLead');
+      expect(mockPush).toHaveBeenCalledWith('/(tabs)/leads/add');
     });
 
     it('should navigate to Assistant when AI Assistant button is pressed', () => {
@@ -229,7 +235,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByText('AI Assistant'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('Assistant');
+      expect(mockPush).toHaveBeenCalledWith('/assistant');
     });
   });
 
@@ -245,7 +251,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByTestId('fab-add-lead'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('AddLead');
+      expect(mockPush).toHaveBeenCalledWith('/(tabs)/leads/add');
     });
 
     it('should navigate to Properties when FAB add property is pressed', () => {
@@ -253,7 +259,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByTestId('fab-add-property'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('Properties');
+      expect(mockPush).toHaveBeenCalledWith('/(tabs)/properties');
     });
 
     it('should navigate to Assistant when FAB start chat is pressed', () => {
@@ -261,7 +267,7 @@ describe('DashboardScreen', () => {
 
       fireEvent.press(getByTestId('fab-start-chat'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('Assistant');
+      expect(mockPush).toHaveBeenCalledWith('/assistant');
     });
   });
 

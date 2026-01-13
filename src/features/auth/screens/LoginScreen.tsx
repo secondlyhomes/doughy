@@ -12,16 +12,12 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
-import { AuthStackParamList } from '@/routes/types';
-
-type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 
 export function LoginScreen() {
-  const navigation = useNavigation<LoginScreenNavigationProp>();
+  const router = useRouter();
   const { signIn, isLoading } = useAuth();
 
   // Form state
@@ -57,11 +53,11 @@ export function LoginScreen() {
   };
 
   const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
+    router.push('/(auth)/forgot-password');
   };
 
   const handleSignUp = () => {
-    navigation.navigate('SignUp');
+    router.push('/(auth)/sign-up');
   };
 
   const loading = isLoading || isSubmitting;

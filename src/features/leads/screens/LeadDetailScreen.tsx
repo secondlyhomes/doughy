@@ -11,8 +11,7 @@ import {
   Alert,
   Linking
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
   Star,
@@ -35,16 +34,12 @@ import { Card, CardContent, CardHeader, CardTitle, Button, Badge, LoadingSpinner
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { LeadTimeline, LeadActivity, ActivityType } from '../components/LeadTimeline';
 import { AddActivitySheet } from '../components/AddActivitySheet';
-import { LeadsStackParamList } from '@/routes/types';
 import { sanitizePhone } from '@/utils/sanitize';
 
-type LeadDetailRouteProp = RouteProp<LeadsStackParamList, 'LeadDetail'>;
-type LeadDetailNavigationProp = NativeStackNavigationProp<LeadsStackParamList>;
-
 export function LeadDetailScreen() {
-  const navigation = useNavigation<LeadDetailNavigationProp>();
-  const route = useRoute<LeadDetailRouteProp>();
-  const { leadId } = route.params;
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const leadId = params.leadId as string;
 
   const { lead, isLoading } = useLead(leadId);
   const updateLead = useUpdateLead();
@@ -120,7 +115,7 @@ export function LeadDetailScreen() {
             setIsDeleting(true);
             try {
               await deleteLead.mutateAsync(leadId);
-              navigation.goBack();
+              router.back();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete lead');
             } finally {
@@ -166,7 +161,7 @@ export function LeadDetailScreen() {
         <Text className="text-muted-foreground">Lead not found</Text>
         <TouchableOpacity
           className="mt-4 bg-primary px-4 py-2 rounded-lg"
-          onPress={() => navigation.goBack()}
+          onPress={() => router.back()}
         >
           <Text className="text-primary-foreground">Go Back</Text>
         </TouchableOpacity>
@@ -181,7 +176,7 @@ export function LeadDetailScreen() {
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             className="flex-row items-center"
-            onPress={() => navigation.goBack()}
+            onPress={() => router.back()}
           >
             <ArrowLeft size={24} color="#6b7280" />
             <Text className="text-muted-foreground ml-2">Back</Text>
@@ -195,7 +190,7 @@ export function LeadDetailScreen() {
                 fill={lead.starred ? '#f59e0b' : 'transparent'}
               />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('LeadEdit', { leadId: lead.id })}>
+            <TouchableOpacity onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)}>
               <Edit2 size={22} color="#6b7280" />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDelete} disabled={isDeleting}>

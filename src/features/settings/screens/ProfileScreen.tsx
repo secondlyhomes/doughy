@@ -13,17 +13,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { ArrowLeft, User, Mail, Save, Camera } from 'lucide-react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { RootStackParamList } from '@/types';
-
-type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 
 export function ProfileScreen() {
-  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const router = useRouter();
   const { user, profile, refetchProfile, isLoading: authLoading } = useAuth();
 
   // Form state
@@ -106,7 +102,7 @@ export function ProfileScreen() {
       <ScrollView className="flex-1">
         {/* Header */}
         <View className="flex-row items-center p-4 border-b border-border">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
+          <TouchableOpacity onPress={() => router.back()} className="mr-4">
             <ArrowLeft size={24} color="#374151" />
           </TouchableOpacity>
           <Text className="text-xl font-semibold text-foreground">Edit Profile</Text>

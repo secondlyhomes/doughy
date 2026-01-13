@@ -9,16 +9,18 @@ jest.mock('../../services/adminService');
 
 const mockAdminService = adminService as jest.Mocked<typeof adminService>;
 
-// Mock navigation
-const mockNavigate = jest.fn();
-const mockGoBack = jest.fn();
+// Mock expo-router navigation
+const mockPush = jest.fn();
+const mockBack = jest.fn();
 
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({
-    navigate: mockNavigate,
-    goBack: mockGoBack,
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: jest.fn(),
+    back: mockBack,
   }),
+  useLocalSearchParams: () => ({}),
+  useFocusEffect: jest.fn(),
 }));
 
 // Mock useAuth
@@ -36,6 +38,8 @@ jest.mock('@/features/auth/hooks/usePermissions', () => ({
 describe('AdminDashboardScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPush.mockClear();
+    mockBack.mockClear();
     mockUseAuth.mockReturnValue({
       user: { id: 'test-user', email: 'admin@test.com' },
       profile: { id: 'test-user', role: 'admin', name: 'Test Admin' },
@@ -133,7 +137,7 @@ describe('AdminDashboardScreen', () => {
     });
 
     fireEvent.press(getByText('Total Users'));
-    expect(mockNavigate).toHaveBeenCalledWith('AdminUsers');
+    expect(mockPush).toHaveBeenCalledWith('/(admin)/users');
   });
 
   it('navigates to user management from quick actions', async () => {
@@ -144,7 +148,7 @@ describe('AdminDashboardScreen', () => {
     });
 
     fireEvent.press(getByText('Manage Users'));
-    expect(mockNavigate).toHaveBeenCalledWith('AdminUsers');
+    expect(mockPush).toHaveBeenCalledWith('/(admin)/users');
   });
 
   it('navigates to integrations from quick actions', async () => {
@@ -155,7 +159,7 @@ describe('AdminDashboardScreen', () => {
     });
 
     fireEvent.press(getByText('Integrations'));
-    expect(mockNavigate).toHaveBeenCalledWith('AdminIntegrations');
+    expect(mockPush).toHaveBeenCalledWith('/(admin)/integrations');
   });
 
   it('navigates to system logs from quick actions', async () => {
@@ -166,7 +170,7 @@ describe('AdminDashboardScreen', () => {
     });
 
     fireEvent.press(getByText('System Logs'));
-    expect(mockNavigate).toHaveBeenCalledWith('AdminLogs');
+    expect(mockPush).toHaveBeenCalledWith('/(admin)/logs');
   });
 
   it('goes back when back button is pressed', async () => {
@@ -177,7 +181,7 @@ describe('AdminDashboardScreen', () => {
     });
 
     fireEvent.press(getByTestId('icon-ArrowLeft'));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('refreshes data when refresh button is pressed', async () => {
@@ -231,7 +235,7 @@ describe('AdminDashboardScreen', () => {
     const { getByText } = render(<AdminDashboardScreen />);
 
     fireEvent.press(getByText('Go Back'));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('allows support role to access', async () => {

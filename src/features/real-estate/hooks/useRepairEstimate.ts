@@ -39,6 +39,19 @@ export const REPAIR_CATEGORY_LABELS: Record<RepairCategory, string> = {
   other: 'Other',
 };
 
+// Valid repair categories for type checking
+const VALID_CATEGORIES: RepairCategory[] = ['interior', 'exterior', 'structural', 'electrical', 'plumbing', 'hvac', 'systems', 'other'];
+
+/**
+ * Safely convert a string to RepairCategory, defaulting to 'other'
+ */
+function toRepairCategory(value: string | null | undefined): RepairCategory {
+  if (value && VALID_CATEGORIES.includes(value as RepairCategory)) {
+    return value as RepairCategory;
+  }
+  return 'other';
+}
+
 // Extended category list for UI
 export const REPAIR_CATEGORIES: { id: RepairCategory; label: string }[] = [
   { id: 'interior', label: 'Interior' },
@@ -80,7 +93,14 @@ export function useRepairEstimate({ propertyId }: UseRepairEstimateOptions): Use
         throw queryError;
       }
 
-      setRepairs(data || []);
+      // Convert database records to typed RepairEstimate
+      const typedRepairs: RepairEstimate[] = (data || []).map(record => ({
+        ...record,
+        category: toRepairCategory(record.category),
+        completed: record.completed ?? false,
+        priority: (record.priority as RepairEstimate['priority']) || 'medium',
+      }));
+      setRepairs(typedRepairs);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error fetching repair estimates:', errorMessage);
@@ -188,7 +208,13 @@ export function useRepairEstimateMutations() {
         throw insertError;
       }
 
-      return data;
+      // Convert to typed RepairEstimate
+      return {
+        ...data,
+        category: toRepairCategory(data.category),
+        completed: data.completed ?? false,
+        priority: (data.priority as RepairEstimate['priority']) || 'medium',
+      };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error creating repair estimate:', errorMessage);
@@ -207,7 +233,7 @@ export function useRepairEstimateMutations() {
       setIsLoading(true);
       setError(null);
 
-      const updateData: any = {
+      const updateData: Partial<RepairEstimate> & { updated_at: string } = {
         updated_at: new Date().toISOString(),
       };
 
@@ -229,7 +255,13 @@ export function useRepairEstimateMutations() {
         throw updateError;
       }
 
-      return data;
+      // Convert to typed RepairEstimate
+      return {
+        ...data,
+        category: toRepairCategory(data.category),
+        completed: data.completed ?? false,
+        priority: (data.priority as RepairEstimate['priority']) || 'medium',
+      };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error updating repair estimate:', errorMessage);

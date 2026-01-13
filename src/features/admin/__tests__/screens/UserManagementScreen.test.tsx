@@ -9,16 +9,18 @@ jest.mock('../../services/userService');
 
 const mockUserService = userService as jest.Mocked<typeof userService>;
 
-// Mock navigation
-const mockNavigate = jest.fn();
-const mockGoBack = jest.fn();
+// Mock expo-router navigation
+const mockPush = jest.fn();
+const mockBack = jest.fn();
 
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({
-    navigate: mockNavigate,
-    goBack: mockGoBack,
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: jest.fn(),
+    back: mockBack,
   }),
+  useLocalSearchParams: () => ({}),
+  useFocusEffect: jest.fn(),
 }));
 
 describe('UserManagementScreen', () => {
@@ -54,6 +56,8 @@ describe('UserManagementScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPush.mockClear();
+    mockBack.mockClear();
 
     mockUserService.getUsers.mockResolvedValue({
       success: true,
@@ -129,7 +133,7 @@ describe('UserManagementScreen', () => {
     });
 
     fireEvent.press(getByText('Admin User'));
-    expect(mockNavigate).toHaveBeenCalledWith('UserDetail', { userId: 'user-1' });
+    expect(mockPush).toHaveBeenCalledWith('/(admin)/users/user-1');
   });
 
   it('goes back when back button is pressed', async () => {
@@ -140,7 +144,7 @@ describe('UserManagementScreen', () => {
     });
 
     fireEvent.press(getByTestId('icon-ArrowLeft'));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('toggles filter panel when filter button is pressed', async () => {

@@ -3,6 +3,7 @@
     "name": "doughy-ai-mobile",
     "slug": "doughy-ai-mobile",
     "version": "1.0.0",
+    "scheme": "doughy",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -39,7 +40,19 @@
         "googleMaps": {
           "apiKey": ""
         }
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "doughy"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -61,7 +74,9 @@
           "locationWhenInUsePermission": "Allow Doughy AI to use your location to show nearby properties."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-router",
+      "expo-web-browser"
     ]
   }
 }

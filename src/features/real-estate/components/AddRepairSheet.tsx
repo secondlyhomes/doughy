@@ -42,10 +42,12 @@ const initialFormData: FormData = {
   priority: 'medium',
 };
 
+// Priority colors: Using Tailwind classes that work in both light/dark mode
+// Note: Theme could add success/warning colors in the future for better consistency
 const PRIORITY_OPTIONS: { value: 'low' | 'medium' | 'high'; label: string; color: string }[] = [
-  { value: 'low', label: 'Low', color: 'text-green-600' },
-  { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
-  { value: 'high', label: 'High', color: 'text-red-600' },
+  { value: 'low', label: 'Low', color: 'text-green-500' },
+  { value: 'medium', label: 'Medium', color: 'text-yellow-500' },
+  { value: 'high', label: 'High', color: 'text-destructive' },
 ];
 
 export function AddRepairSheet({

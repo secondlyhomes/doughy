@@ -11,8 +11,7 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   Users,
@@ -24,9 +23,6 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { RootStackParamList } from '@/types';
-
-type TeamSettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface TeamMember {
   id: string;
@@ -38,7 +34,7 @@ interface TeamMember {
 }
 
 export function TeamSettingsScreen() {
-  const navigation = useNavigation<TeamSettingsScreenNavigationProp>();
+  const router = useRouter();
   const { profile, user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -199,7 +195,7 @@ export function TeamSettingsScreen() {
       {/* Header */}
       <View className="flex-row items-center justify-between p-4 border-b border-border">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
+          <TouchableOpacity onPress={() => router.back()} className="mr-4">
             <ArrowLeft size={24} color="#374151" />
           </TouchableOpacity>
           <Text className="text-xl font-semibold text-foreground">Team</Text>

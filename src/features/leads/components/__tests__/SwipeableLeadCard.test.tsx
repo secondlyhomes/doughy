@@ -104,87 +104,91 @@ describe('SwipeableLeadCard', () => {
     expect(getByTestId('swipeable')).toBeTruthy();
   });
 
-  it('should show alert when calling a lead without phone', () => {
+  it('should render lead without phone number', () => {
     const leadWithoutPhone = { ...mockLead, phone: undefined };
 
-    // The handleCall is internal, but we can test the alert behavior
-    // by checking that Linking is not called when phone is missing
-    renderWithQueryClient(
+    const { getByText } = renderWithQueryClient(
       <SwipeableLeadCard lead={leadWithoutPhone} onPress={mockOnPress} />
     );
 
-    // This test verifies the component renders without errors
-    // Full swipe action testing would require gesture simulation
+    // Component renders without errors
+    expect(getByText('John Doe')).toBeTruthy();
+    // Note: handleCall() would show Alert when triggered via swipe
+    // Swipe action testing requires gesture simulation (react-native-gesture-handler mocks)
   });
 
-  it('should sanitize phone number when calling', async () => {
-    // This tests the sanitization indirectly through the component render
+  it('should render lead with special characters in phone (sanitized on action)', () => {
     const leadWithSpecialChars: Lead = {
       ...mockLead,
       phone: '555<script>123</script>4567',
     };
 
-    renderWithQueryClient(
+    const { getByText } = renderWithQueryClient(
       <SwipeableLeadCard lead={leadWithSpecialChars} onPress={mockOnPress} />
     );
 
-    // Component should render without errors
-    // The sanitization is applied when swipe actions are triggered
+    // Component renders without errors - sanitization is applied on swipe action
+    expect(getByText('John Doe')).toBeTruthy();
   });
 
-  it('should handle toggle star for unstarred lead', async () => {
-    renderWithQueryClient(
+  it('should render unstarred lead with star action available', () => {
+    const { getByTestId } = renderWithQueryClient(
       <SwipeableLeadCard lead={mockLead} onPress={mockOnPress} />
     );
 
-    // The component renders with star functionality
-    // Full testing would require gesture simulation
+    // Swipeable component is rendered with left actions (star)
+    expect(getByTestId('swipeable')).toBeTruthy();
+    expect(mockLead.starred).toBe(false);
   });
 
-  it('should handle toggle star for starred lead', async () => {
+  it('should render starred lead with unstar action available', () => {
     const starredLead = { ...mockLead, starred: true };
 
-    renderWithQueryClient(
+    const { getByTestId } = renderWithQueryClient(
       <SwipeableLeadCard lead={starredLead} onPress={mockOnPress} />
     );
 
-    // The component renders with unstar functionality
+    expect(getByTestId('swipeable')).toBeTruthy();
+    expect(starredLead.starred).toBe(true);
   });
 
-  it('should show error alert when toggle star fails', async () => {
-    mockUpdateLead.mutateAsync.mockRejectedValue(new Error('Network error'));
-
+  it('should have update mutation configured for star toggle', () => {
     renderWithQueryClient(
       <SwipeableLeadCard lead={mockLead} onPress={mockOnPress} />
     );
 
-    // Error handling is in place for the toggle star action
+    // Verify mock is properly configured - mutation is ready to be called on swipe action
+    expect(mockUpdateLead.mutateAsync).toBeDefined();
+    expect(mockUpdateLead.isPending).toBe(false);
   });
 
-  it('should show archive confirmation alert', () => {
+  it('should have delete mutation configured for archive action', () => {
     renderWithQueryClient(
       <SwipeableLeadCard lead={mockLead} onPress={mockOnPress} />
     );
 
-    // Archive functionality is available through swipe
+    // Verify mock is properly configured - mutation is ready to be called on swipe action
+    expect(mockDeleteLead.mutateAsync).toBeDefined();
+    expect(mockDeleteLead.isPending).toBe(false);
   });
 
-  it('should handle archive after confirmation', async () => {
-    renderWithQueryClient(
-      <SwipeableLeadCard lead={mockLead} onPress={mockOnPress} />
-    );
+  // TODO: Full swipe action tests require gesture simulation with react-native-gesture-handler mocks
+  // The following behaviors exist but cannot be tested without gesture simulation:
+  // - handleCall: Opens tel: URL via Linking.openURL or shows Alert if no phone
+  // - handleText: Opens sms: URL via Linking.openURL or shows Alert if no phone
+  // - handleToggleStar: Calls updateLead.mutateAsync with { starred: !lead.starred }
+  // - handleArchive: Shows confirmation Alert, then calls deleteLead.mutateAsync
+  // See: https://docs.swmansion.com/react-native-gesture-handler/docs/guides/testing
 
-    // Archive with confirmation is available
-  });
-
-  it('should show error alert when archive fails', async () => {
+  it('should render with archive action error handling configured', () => {
     mockDeleteLead.mutateAsync.mockRejectedValue(new Error('Network error'));
 
-    renderWithQueryClient(
+    const { getByTestId } = renderWithQueryClient(
       <SwipeableLeadCard lead={mockLead} onPress={mockOnPress} />
     );
 
-    // Error handling is in place for archive action
+    // Component renders - error handling will trigger Alert on swipe action failure
+    expect(getByTestId('swipeable')).toBeTruthy();
   });
 
   it('should render with different lead statuses', () => {

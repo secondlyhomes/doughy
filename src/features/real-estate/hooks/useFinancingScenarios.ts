@@ -85,7 +85,13 @@ export function useFinancingScenarios({ propertyId }: UseFinancingScenariosOptio
         throw queryError;
       }
 
-      setScenarios(data || []);
+      // Convert Supabase records to typed FinancingScenario
+      const typedScenarios: FinancingScenario[] = (data || []).map(record => ({
+        ...record,
+        input_json: record.input_json as ScenarioDetails | null,
+        result_json: record.result_json as Record<string, unknown> | null,
+      }));
+      setScenarios(typedScenarios);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error fetching financing scenarios:', errorMessage);
@@ -102,7 +108,11 @@ export function useFinancingScenarios({ propertyId }: UseFinancingScenariosOptio
   // Add calculations to each scenario
   const scenariosWithCalcs = useMemo((): FinancingScenarioWithCalcs[] => {
     return scenarios.map(scenario => {
-      const details = scenario.input_json || scenario.details || {};
+      const details: ScenarioDetails = scenario.input_json || scenario.details || {
+        purchasePrice: null,
+        loanAmount: null,
+        interestRate: null,
+      };
       const loanAmount = details.loanAmount || 0;
       const interestRate = details.interestRate || 0;
       const loanTerm = details.loanTerm || details.term || 30;
@@ -193,7 +203,12 @@ export function useFinancingScenarioMutations() {
         throw insertError;
       }
 
-      return result;
+      // Convert to typed FinancingScenario
+      return {
+        ...result,
+        input_json: result.input_json as ScenarioDetails | null,
+        result_json: result.result_json as Record<string, unknown> | null,
+      };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error creating financing scenario:', errorMessage);
@@ -231,13 +246,13 @@ export function useFinancingScenarioMutations() {
 
       if (fetchError) throw fetchError;
 
-      // Safely parse existing input_json as an object
-      const existingInput = (typeof existing.input_json === 'object' && existing.input_json !== null)
-        ? existing.input_json as Record<string, unknown>
-        : {};
+      // Safely parse existing input_json as ScenarioDetails
+      const existingInput: ScenarioDetails = (typeof existing.input_json === 'object' && existing.input_json !== null)
+        ? existing.input_json as ScenarioDetails
+        : { purchasePrice: null, loanAmount: null, interestRate: null };
 
       const updatedInput: ScenarioDetails = {
-        ...(existingInput as Partial<ScenarioDetails>),
+        ...existingInput,
         purchasePrice: data.purchasePrice ?? existingInput.purchasePrice,
         loanAmount: data.loanAmount ?? existingInput.loanAmount,
         interestRate: data.interestRate ?? existingInput.interestRate,
@@ -253,7 +268,7 @@ export function useFinancingScenarioMutations() {
         updatedInput.loanTerm || 30
       );
 
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
         input_json: updatedInput,
       };
@@ -273,7 +288,12 @@ export function useFinancingScenarioMutations() {
         throw updateError;
       }
 
-      return result;
+      // Convert to typed FinancingScenario
+      return {
+        ...result,
+        input_json: result.input_json as ScenarioDetails | null,
+        result_json: result.result_json as Record<string, unknown> | null,
+      };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error updating financing scenario:', errorMessage);

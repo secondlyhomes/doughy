@@ -10,7 +10,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
   Filter,
@@ -24,7 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
 
 export function SystemLogsScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -166,7 +166,7 @@ export function SystemLogsScreen() {
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-border">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#6b7280" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-semibold text-foreground ml-2">
