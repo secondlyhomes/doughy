@@ -247,7 +247,7 @@ export const importService = {
           .eq('user_id', userId)
           .in('email', emails as string[]);
 
-        const existingEmails = new Set(existingLeads?.map(l => l.email) || []);
+        const existingEmails = new Set((existingLeads as Array<{ email: string }> | null)?.map(l => l.email) || []);
 
         const filteredLeads = leadsToInsert.filter(l => {
           if (!l.email || !existingEmails.has(l.email)) return true;
@@ -347,7 +347,7 @@ export const importService = {
         .eq('user_id', userId)
         .in('address', addresses);
 
-      const existingAddresses = new Set(existingProperties?.map(p => p.address) || []);
+      const existingAddresses = new Set((existingProperties as Array<{ address: string }> | null)?.map(p => p.address) || []);
 
       const filteredProperties = propertiesToInsert.filter(p => {
         if (!existingAddresses.has(p.address)) return true;

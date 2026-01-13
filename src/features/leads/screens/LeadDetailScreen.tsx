@@ -162,6 +162,8 @@ export function LeadDetailScreen() {
         <TouchableOpacity
           className="mt-4 bg-primary px-4 py-2 rounded-lg"
           onPress={() => router.back()}
+          accessibilityLabel="Go back to leads list"
+          accessibilityRole="button"
         >
           <Text className="text-primary-foreground">Go Back</Text>
         </TouchableOpacity>
@@ -177,23 +179,38 @@ export function LeadDetailScreen() {
           <TouchableOpacity
             className="flex-row items-center"
             onPress={() => router.back()}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <ArrowLeft size={24} color="#6b7280" />
             <Text className="text-muted-foreground ml-2">Back</Text>
           </TouchableOpacity>
 
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={handleToggleStar}>
+            <TouchableOpacity
+              onPress={handleToggleStar}
+              accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`}
+              accessibilityRole="button"
+            >
               <Star
                 size={24}
                 color={lead.starred ? '#f59e0b' : '#9ca3af'}
                 fill={lead.starred ? '#f59e0b' : 'transparent'}
               />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)}>
+            <TouchableOpacity
+              onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)}
+              accessibilityLabel={`Edit ${lead.name}`}
+              accessibilityRole="button"
+            >
               <Edit2 size={22} color="#6b7280" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleDelete} disabled={isDeleting}>
+            <TouchableOpacity
+              onPress={handleDelete}
+              disabled={isDeleting}
+              accessibilityLabel={`Delete ${lead.name}`}
+              accessibilityRole="button"
+            >
               {isDeleting ? (
                 <ActivityIndicator size="small" color="#ef4444" />
               ) : (
@@ -242,6 +259,8 @@ export function LeadDetailScreen() {
               <TouchableOpacity
                 className="flex-1 bg-primary rounded-lg py-3 flex-row items-center justify-center"
                 onPress={handleCall}
+                accessibilityLabel={`Call ${lead.name}`}
+                accessibilityRole="button"
               >
                 <Phone size={18} color="white" />
                 <Text className="text-primary-foreground font-medium ml-2">Call</Text>
@@ -251,6 +270,8 @@ export function LeadDetailScreen() {
               <TouchableOpacity
                 className="flex-1 bg-secondary rounded-lg py-3 flex-row items-center justify-center"
                 onPress={handleEmail}
+                accessibilityLabel={`Email ${lead.name}`}
+                accessibilityRole="button"
               >
                 <Mail size={18} color="#1f2937" />
                 <Text className="text-secondary-foreground font-medium ml-2">Email</Text>
@@ -259,6 +280,8 @@ export function LeadDetailScreen() {
             <TouchableOpacity
               className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
               onPress={handleSMS}
+              accessibilityLabel={`Send SMS to ${lead.name}`}
+              accessibilityRole="button"
             >
               <MessageSquare size={18} color="#6b7280" />
               <Text className="text-muted-foreground font-medium ml-2">SMS</Text>
@@ -326,7 +349,11 @@ export function LeadDetailScreen() {
               <FileText size={18} color="#6b7280" />
               <Text className="text-lg font-semibold text-foreground ml-2">Notes</Text>
             </View>
-            <TouchableOpacity onPress={handleAddNote}>
+            <TouchableOpacity
+              onPress={handleAddNote}
+              accessibilityLabel="Add note"
+              accessibilityRole="button"
+            >
               <Text className="text-primary text-sm">Add Note</Text>
             </TouchableOpacity>
           </View>

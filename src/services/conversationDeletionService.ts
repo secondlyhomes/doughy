@@ -194,7 +194,7 @@ export const conversationDeletionService = {
         return result;
       }
 
-      const ids = conversationsToDelete.map(c => c.id);
+      const ids = (conversationsToDelete as unknown as Array<{ id: string }>).map(c => c.id);
       return this.deleteMultiple(ids);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error purging conversations';

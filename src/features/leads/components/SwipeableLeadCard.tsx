@@ -186,20 +186,21 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
   };
 
   return (
-    <Swipeable
-      testID="swipeable"
-      ref={swipeableRef}
-      renderLeftActions={renderLeftActions}
-      renderRightActions={renderRightActions}
-      leftThreshold={40}
-      rightThreshold={40}
-      overshootLeft={false}
-      overshootRight={false}
-      friction={2}
-      accessibilityHint="Swipe left for call, text, archive actions. Swipe right to star."
-    >
-      <LeadCard lead={lead} onPress={onPress} />
-    </Swipeable>
+    <View accessibilityHint="Swipe left for call, text, archive actions. Swipe right to star.">
+      <Swipeable
+        testID="swipeable"
+        ref={swipeableRef}
+        renderLeftActions={renderLeftActions}
+        renderRightActions={renderRightActions}
+        leftThreshold={40}
+        rightThreshold={40}
+        overshootLeft={false}
+        overshootRight={false}
+        friction={2}
+      >
+        <LeadCard lead={lead} onPress={onPress} />
+      </Swipeable>
+    </View>
   );
 }
 

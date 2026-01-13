@@ -1,8 +1,8 @@
 // Layout Feature - Index
 // Export navigation and layout components
+// Note: Tab navigation is now handled by Expo Router in app/(tabs)/_layout.tsx
 
 // Components
-export { MainTabs } from './components/BottomTabs';
 export { FloatingActionButton, QuickActionFAB } from './components/FloatingActionButton';
 export type { FABAction } from './components/FloatingActionButton';
 
