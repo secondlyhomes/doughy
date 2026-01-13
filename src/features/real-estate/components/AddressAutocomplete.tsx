@@ -29,6 +29,29 @@ export interface AddressResult {
   displayName?: string;
 }
 
+// Geocoding API response types
+interface GeocodingAddress {
+  house_number?: string;
+  road?: string;
+  street?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  hamlet?: string;
+  neighbourhood?: string;
+  state?: string;
+  postcode?: string;
+  county?: string;
+  country?: string;
+}
+
+interface GeocodingResult {
+  address?: GeocodingAddress;
+  lat?: string;
+  lon?: string;
+  display_name?: string;
+}
+
 interface AddressAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
@@ -122,9 +145,9 @@ export function AddressAutocomplete({
       const data = result.data;
 
       // Transform the data into our expected format
-      const transformedResults = data
-        .filter((item: any) => item.address)
-        .map((item: any) => {
+      const transformedResults = (data as GeocodingResult[])
+        .filter((item) => item.address)
+        .map((item) => {
           const address = item.address || {};
 
           const street = [address.house_number, address.road || address.street]
@@ -161,36 +184,42 @@ export function AddressAutocomplete({
               .join(' ')
               .trim();
 
-          return {
+          const addressResult: AddressResult = {
             address: finalStreet,
             city,
             state,
             zip: postcode,
-            lat: parseFloat(item.lat),
-            lon: parseFloat(item.lon),
+            lat: parseFloat(item.lat || '0'),
+            lon: parseFloat(item.lon || '0'),
             displayName: item.display_name,
           };
-        })
-        .filter(Boolean)
-        .sort((a: AddressResult, b: AddressResult) => {
-          const scoreA =
-            (a.address.length > 0 ? 2 : 0) +
-            (a.city.length > 0 ? 1 : 0) +
-            (a.state.length > 0 ? 1 : 0) +
-            (a.zip.length > 0 ? 1 : 0);
-
-          const scoreB =
-            (b.address.length > 0 ? 2 : 0) +
-            (b.city.length > 0 ? 1 : 0) +
-            (b.state.length > 0 ? 1 : 0) +
-            (b.zip.length > 0 ? 1 : 0);
-
-          return scoreB - scoreA;
+          return addressResult;
         });
 
-      setResults(transformedResults);
+      // Filter out nulls and sort by completeness
+      const validResults: AddressResult[] = transformedResults.filter(
+        (item): item is AddressResult => item !== null
+      );
 
-      if (transformedResults.length > 0) {
+      validResults.sort((a, b) => {
+        const scoreA =
+          (a.address.length > 0 ? 2 : 0) +
+          (a.city.length > 0 ? 1 : 0) +
+          (a.state.length > 0 ? 1 : 0) +
+          (a.zip.length > 0 ? 1 : 0);
+
+        const scoreB =
+          (b.address.length > 0 ? 2 : 0) +
+          (b.city.length > 0 ? 1 : 0) +
+          (b.state.length > 0 ? 1 : 0) +
+          (b.zip.length > 0 ? 1 : 0);
+
+        return scoreB - scoreA;
+      });
+
+      setResults(validResults);
+
+      if (validResults.length > 0) {
         setIsOpen(true);
       }
     } catch (error) {

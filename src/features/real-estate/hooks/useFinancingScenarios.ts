@@ -246,7 +246,28 @@ export function useFinancingScenarioMutations() {
 
       if (fetchError) throw fetchError;
 
-      // Safely parse existing input_json as ScenarioDetails
+      // ============================================================================
+      // TODO: ZONE C CODE REVIEW - UNSAFE JSON PARSING
+      // ============================================================================
+      // This type assertion doesn't validate the actual structure of input_json.
+      // If the JSON has an unexpected shape, subsequent code may fail silently.
+      //
+      // Suggested fix: Use zod or io-ts for runtime validation:
+      //
+      //   import { z } from 'zod';
+      //   const ScenarioDetailsSchema = z.object({
+      //     purchasePrice: z.number().nullable(),
+      //     loanAmount: z.number().nullable(),
+      //     interestRate: z.number().nullable(),
+      //     downPayment: z.number().nullable().optional(),
+      //     loanTerm: z.number().nullable().optional(),
+      //     closingCosts: z.number().nullable().optional(),
+      //     monthlyPayment: z.number().nullable().optional(),
+      //   });
+      //   const parsed = ScenarioDetailsSchema.safeParse(existing.input_json);
+      //   const existingInput = parsed.success ? parsed.data : defaultScenarioDetails;
+      //
+      // ============================================================================
       const existingInput: ScenarioDetails = (typeof existing.input_json === 'object' && existing.input_json !== null)
         ? existing.input_json as ScenarioDetails
         : { purchasePrice: null, loanAmount: null, interestRate: null };

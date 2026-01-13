@@ -9,6 +9,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -44,7 +46,7 @@ export function PropertyHeader({
   const images = property.images || [];
   const hasImages = images.length > 0;
 
-  const handleScroll = useCallback((e: any) => {
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
     setCurrentImageIndex(index);
   }, []);

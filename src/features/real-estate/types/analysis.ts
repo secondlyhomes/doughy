@@ -6,8 +6,8 @@ export interface PropertyAnalysis {
   property_id: string;
   name?: string;
   analysis_type?: string;
-  input_json: any;
-  result_json: any;
+  input_json: Record<string, unknown> | null;
+  result_json: Record<string, unknown> | null;
   created_at?: string;
 }
 

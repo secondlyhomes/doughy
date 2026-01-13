@@ -7,6 +7,14 @@ import { PropertyComp } from './comps';
 import { RepairEstimate } from './repairs';
 import { FinancingScenario } from './financing';
 
+/**
+ * Geographic point for map display
+ */
+export interface GeoPoint {
+  lat: number;
+  lng: number;
+}
+
 export interface DBProperty {
   id: string;
   address_line_1: string;
@@ -28,7 +36,7 @@ export interface DBProperty {
   status?: string;
   tags?: string[];
   mls_id?: string;
-  geo_point?: any;
+  geo_point?: GeoPoint | null;
   created_at?: string;
   updated_at?: string;
   created_by?: string;
@@ -36,8 +44,6 @@ export interface DBProperty {
   owner_occupied?: boolean;
   vacant?: boolean;
   hoa?: boolean;
-
-  [key: string]: any;
 }
 
 export interface Property {
@@ -66,7 +72,7 @@ export interface Property {
   status?: string;
   tags?: string[];
   mls_id?: string;
-  geo_point?: any;
+  geo_point?: GeoPoint | null;
   lead_id?: string;
   profile_id?: string;
   created_at?: string;
@@ -113,7 +119,7 @@ export interface DBPropertyInsert {
   status?: string;
   created_at: string;
   updated_at: string;
-  geo_point?: any;
+  geo_point?: GeoPoint | null;
   profile_id?: string;
 }
 
@@ -128,7 +134,6 @@ export interface PropertyImage {
 }
 
 export interface EnhancedPropertyInfo {
-  [key: string]: any;
   schoolDistrict?: string;
   floodZone?: string;
   hoaInfo?: {
@@ -152,10 +157,10 @@ export interface EnhancedPropertyInfo {
 // Helper functions for property conversion
 export const dbToFeatureProperty = (dbProperty: DBProperty): Property => {
   // Determine address from either field for maximum compatibility
-  const address = dbProperty.address_line_1 || (dbProperty as any).address || '';
+  const address = dbProperty.address_line_1 || dbProperty.address || '';
 
   // Create base property with required fields
-  const result: any = {
+  const result: Partial<Property> = {
     id: dbProperty.id,
     address: address,
     address_line_1: address,
@@ -211,7 +216,7 @@ export const dbToFeatureProperty = (dbProperty: DBProperty): Property => {
   if (dbProperty.vacant !== undefined) result.vacant = dbProperty.vacant;
   if (dbProperty.hoa !== undefined) result.hoa = dbProperty.hoa;
 
-  return result;
+  return result as Property;
 };
 
 export const featureToDbProperty = (property: Property): DBProperty => {
@@ -219,7 +224,7 @@ export const featureToDbProperty = (property: Property): DBProperty => {
   const addressValue = property.address || property.address_line_1 || '';
 
   // Start with only the ID
-  const result: any = {
+  const result: Partial<DBProperty> = {
     id: property.id
   };
 
@@ -275,5 +280,5 @@ export const featureToDbProperty = (property: Property): DBProperty => {
   if (property.vacant !== undefined) result.vacant = property.vacant;
   if (property.hoa !== undefined) result.hoa = property.hoa;
 
-  return result;
+  return result as DBProperty;
 };

@@ -11,10 +11,20 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import MapView, { Marker, Callout, Region, PROVIDER_DEFAULT } from 'react-native-maps';
 import { MapPin, Navigation, Layers, X } from 'lucide-react-native';
-import { Property } from '../types';
+import { Property, GeoPoint } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Type for properties with valid geo_point
+type PropertyWithCoords = Property & { geo_point: GeoPoint };
+
+// Type guard to check if property has valid coordinates
+function hasValidCoords(property: Property): property is PropertyWithCoords {
+  if (!property.geo_point) return false;
+  const { lat, lng } = property.geo_point;
+  return typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
+}
 
 interface PropertyMapProps {
   properties: Property[];
@@ -46,11 +56,7 @@ export function PropertyMap({
 
   // Filter properties with valid coordinates
   const propertiesWithCoords = useMemo(() => {
-    return properties.filter(property => {
-      if (!property.geo_point) return false;
-      const { lat, lng } = property.geo_point;
-      return typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
-    });
+    return properties.filter(hasValidCoords);
   }, [properties]);
 
   // Calculate initial region based on properties

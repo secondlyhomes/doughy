@@ -29,8 +29,13 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
   const mao = arv * 0.7 - repairCost; // Maximum Allowable Offer (70% rule)
 
   const formatInputCurrency = (value: string): string => {
-    // Remove non-numeric characters except decimal
-    const cleanValue = value.replace(/[^0-9]/g, '');
+    // Remove non-numeric characters except decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, '');
+    // Prevent multiple decimal points
+    const parts = cleanValue.split('.');
+    if (parts.length > 2) {
+      return parts[0] + '.' + parts.slice(1).join('');
+    }
     if (!cleanValue) return '';
     return cleanValue;
   };

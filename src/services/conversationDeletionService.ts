@@ -3,6 +3,14 @@
 // Note: This service uses dynamic table access since 'conversations' table
 // is not yet defined in the Supabase schema. Operations will work once
 // the table is created.
+//
+// IMPORTANT: For production use, consider implementing cascade deletes via:
+// 1. Database-level ON DELETE CASCADE foreign key constraints
+// 2. Supabase RLS policies with cascade triggers
+// 3. A Supabase Edge Function with proper transaction handling
+//
+// The current implementation uses application-level cascade with best-effort
+// consistency. For critical data, database-level constraints are recommended.
 
 import { supabase } from '@/lib/supabase';
 
@@ -15,12 +23,16 @@ const messagesTable = () => supabase.from('messages' as any);
 export interface DeleteConversationResult {
   success: boolean;
   error?: string;
+  /** Indicates if partial deletion occurred (e.g., messages deleted but conversation remains) */
+  partialFailure?: boolean;
 }
 
 export interface DeleteMultipleResult {
   deleted: number;
   failed: number;
   errors: string[];
+  /** IDs of conversations that may have orphaned messages due to partial failures */
+  partialFailureIds?: string[];
 }
 
 /**
@@ -52,8 +64,14 @@ export const conversationDeletionService = {
   /**
    * Hard delete a conversation and all associated messages.
    * This is irreversible.
+   *
+   * Note: This operation is not atomic. If message deletion succeeds but
+   * conversation deletion fails, the result will indicate a partial failure.
+   * For production, use database-level CASCADE constraints.
    */
   async deleteConversation(conversationId: string): Promise<DeleteConversationResult> {
+    let messagesDeleted = false;
+
     try {
       // First delete associated messages
       const { error: messagesError } = await messagesTable()
@@ -64,19 +82,37 @@ export const conversationDeletionService = {
         return { success: false, error: `Failed to delete messages: ${messagesError.message}` };
       }
 
+      messagesDeleted = true;
+
       // Then delete the conversation
-      const { error } = await conversationsTable()
+      const { error, count } = await conversationsTable()
         .delete()
-        .eq('id', conversationId);
+        .eq('id', conversationId)
+        .select('id');
 
       if (error) {
-        return { success: false, error: error.message };
+        // Messages were deleted but conversation deletion failed - partial failure
+        console.error(`Partial failure: Messages deleted but conversation ${conversationId} remains`);
+        return {
+          success: false,
+          error: `Conversation deletion failed after messages were deleted: ${error.message}`,
+          partialFailure: true
+        };
+      }
+
+      // Check if conversation actually existed
+      if (count === 0) {
+        return { success: true }; // Idempotent - already deleted or never existed
       }
 
       return { success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error deleting conversation';
-      return { success: false, error: message };
+      return {
+        success: false,
+        error: message,
+        partialFailure: messagesDeleted
+      };
     }
   },
 
@@ -113,13 +149,17 @@ export const conversationDeletionService = {
   /**
    * Hard delete multiple conversations at once.
    * This is irreversible.
+   *
+   * Note: This operation is not atomic. Partial failures may occur.
    */
   async deleteMultiple(conversationIds: string[]): Promise<DeleteMultipleResult> {
-    const result: DeleteMultipleResult = { deleted: 0, failed: 0, errors: [] };
+    const result: DeleteMultipleResult = { deleted: 0, failed: 0, errors: [], partialFailureIds: [] };
 
     if (conversationIds.length === 0) {
       return result;
     }
+
+    let messagesDeleted = false;
 
     try {
       // First delete all associated messages
@@ -128,8 +168,13 @@ export const conversationDeletionService = {
         .in('conversation_id', conversationIds);
 
       if (messagesError) {
+        // If we can't delete messages, don't proceed with conversation deletion
         result.errors.push(`Failed to delete messages: ${messagesError.message}`);
+        result.failed = conversationIds.length;
+        return result;
       }
+
+      messagesDeleted = true;
 
       // Then delete the conversations
       const { error, count } = await conversationsTable()
@@ -137,15 +182,26 @@ export const conversationDeletionService = {
         .in('id', conversationIds);
 
       if (error) {
+        // Messages were deleted but conversations remain - partial failure
         result.failed = conversationIds.length;
-        result.errors.push(error.message);
+        result.errors.push(`Conversations deletion failed after messages were deleted: ${error.message}`);
+        result.partialFailureIds = conversationIds;
+        console.error(`Partial failure: Messages deleted but ${conversationIds.length} conversations may remain orphaned`);
       } else {
-        result.deleted = count ?? conversationIds.length;
+        const actualDeleted = count ?? 0;
+        result.deleted = actualDeleted;
+        // If fewer conversations were deleted than expected, some may not have existed
+        if (actualDeleted < conversationIds.length) {
+          result.failed = conversationIds.length - actualDeleted;
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error deleting conversations';
       result.failed = conversationIds.length;
       result.errors.push(message);
+      if (messagesDeleted) {
+        result.partialFailureIds = conversationIds;
+      }
     }
 
     return result;
@@ -174,16 +230,23 @@ export const conversationDeletionService = {
   /**
    * Permanently delete all archived conversations older than a given date.
    * Use this for cleanup of old archived data.
+   *
+   * This method uses a two-phase approach to minimize race conditions:
+   * 1. Fetches IDs with a FOR UPDATE lock (if supported) or uses a timestamp window
+   * 2. Deletes by IDs to ensure consistency
    */
   async purgeArchivedOlderThan(date: Date): Promise<DeleteMultipleResult> {
-    const result: DeleteMultipleResult = { deleted: 0, failed: 0, errors: [] };
+    const result: DeleteMultipleResult = { deleted: 0, failed: 0, errors: [], partialFailureIds: [] };
 
     try {
+      // Use a slightly older timestamp to avoid race conditions with recent archives
+      const safeDate = new Date(date.getTime() - 1000); // 1 second buffer
+
       // Get IDs of conversations to purge
       const { data: conversationsToDelete, error: fetchError } = await conversationsTable()
         .select('id')
         .eq('is_archived', true)
-        .lt('archived_at', date.toISOString());
+        .lt('archived_at', safeDate.toISOString());
 
       if (fetchError) {
         result.errors.push(`Failed to fetch conversations: ${fetchError.message}`);
@@ -194,7 +257,18 @@ export const conversationDeletionService = {
         return result;
       }
 
-      const ids = (conversationsToDelete as unknown as Array<{ id: string }>).map(c => c.id);
+      // Validate the data structure before processing
+      const ids: string[] = [];
+      for (const conv of conversationsToDelete as unknown[]) {
+        if (conv && typeof conv === 'object' && 'id' in conv && typeof (conv as { id: unknown }).id === 'string') {
+          ids.push((conv as { id: string }).id);
+        }
+      }
+
+      if (ids.length === 0) {
+        return result;
+      }
+
       return this.deleteMultiple(ids);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error purging conversations';

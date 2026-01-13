@@ -16,3 +16,6 @@ export {
 } from './format';
 
 export { sanitizePhone, sanitizeEmail } from './sanitize';
+
+export { SimpleEventEmitter } from './eventEmitter';
+export { DebouncedFunctionsManager } from './debouncedFunctions';

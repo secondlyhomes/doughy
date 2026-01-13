@@ -94,9 +94,25 @@ export function PropertyDetailScreen() {
     refetch();
   }, [refetch]);
 
+  // ============================================================================
+  // TODO: ZONE C CODE REVIEW - NON-FUNCTIONAL FAVORITE FEATURE
+  // ============================================================================
+  // This feature only updates local state - favorites are lost on refresh.
+  // Either implement persistence or remove the feature to avoid user confusion.
+  //
+  // Option A - Implement persistence:
+  //   1. Add 'is_favorite' boolean column to re_properties table
+  //   2. Create updateFavorite mutation in usePropertyActions hook
+  //   3. Call mutation here and update local state on success
+  //
+  // Option B - Remove feature:
+  //   1. Remove isFavorite state and toggleFavorite callback
+  //   2. Remove Heart icon from PropertyHeader component
+  //
+  // ============================================================================
   const toggleFavorite = useCallback(() => {
     setIsFavorite(prev => !prev);
-    // TODO: Persist favorite status
+    // WARNING: This only updates local state - not persisted!
   }, []);
 
 

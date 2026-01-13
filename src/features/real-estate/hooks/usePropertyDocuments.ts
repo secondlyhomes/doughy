@@ -8,6 +8,26 @@ import * as FileSystem from 'expo-file-system';
 import { supabase } from '@/lib/supabase';
 import { Document } from '../types';
 
+// Type helper for re_documents table that isn't in generated types yet
+// TODO: Add re_documents to database types generation
+type SupabaseDocumentsClient = {
+  from: (table: 're_documents') => {
+    select: (columns: string) => {
+      eq: (field: string, value: string) => {
+        order: (column: string, opts: { ascending: boolean }) => Promise<{ data: Document[] | null; error: Error | null }>;
+      };
+    };
+    insert: (data: Record<string, unknown>) => {
+      select: () => {
+        single: () => Promise<{ data: Document | null; error: Error | null }>;
+      };
+    };
+    delete: () => {
+      eq: (field: string, value: string) => Promise<{ error: Error | null }>;
+    };
+  };
+};
+
 interface UsePropertyDocumentsOptions {
   propertyId: string | null;
 }
@@ -50,7 +70,7 @@ export function usePropertyDocuments({ propertyId }: UsePropertyDocumentsOptions
       setError(null);
 
       // Use type assertion for table that may not be in generated types yet
-      const { data, error: queryError } = await (supabase as any)
+      const { data, error: queryError } = await (supabase as unknown as SupabaseDocumentsClient)
         .from('re_documents')
         .select('*')
         .eq('property_id', propertyId)
@@ -200,7 +220,7 @@ export function useDocumentMutations() {
       };
 
       // Use type assertion for table that may not be in generated types yet
-      const { data: docData, error: insertError } = await (supabase as any)
+      const { data: docData, error: insertError } = await (supabase as unknown as SupabaseDocumentsClient)
         .from('re_documents')
         .insert(insertData)
         .select()
@@ -235,20 +255,21 @@ export function useDocumentMutations() {
         const urlParts = url.split('/property-documents/');
         if (urlParts.length > 1) {
           // Remove query params if present (e.g., ?token=xxx)
-          let filePath = urlParts[1].split('?')[0];
+          const filePath = urlParts[1].split('?')[0];
 
           const { error: removeError } = await supabase.storage
             .from('property-documents')
             .remove([filePath]);
 
           if (removeError) {
-            console.warn('Failed to remove file from storage:', removeError);
+            // Fail the entire operation to avoid orphaned DB records
+            throw new Error(`Failed to remove file from storage: ${removeError.message}`);
           }
         }
       }
 
       // Delete database record - use type assertion for table not in generated types yet
-      const { error: deleteError } = await (supabase as any)
+      const { error: deleteError } = await (supabase as unknown as SupabaseDocumentsClient)
         .from('re_documents')
         .delete()
         .eq('id', document.id);

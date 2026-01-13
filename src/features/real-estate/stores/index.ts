@@ -1,6 +1,9 @@
 // src/features/real-estate/stores/index.ts
 
-export { usePropertyStore, propertyEvents, PROPERTY_EVENTS } from './propertyStore';
+export { usePropertyStore, propertyEvents } from './propertyStore';
+export { useDrawerStore } from './drawerStore';
+
+// Re-export types from centralized types location
 export type {
   IPropertyBasicInfo,
   IPropertyRepairItem,
@@ -8,6 +11,7 @@ export type {
   IPropertyFinancials,
   IBuyingCriteria,
   IProperty,
-  KeyPropertyValues
-} from './propertyStore';
-export { useDrawerStore } from './drawerStore';
+  KeyPropertyValues,
+} from '../types';
+
+export { PROPERTY_EVENTS } from '../types';

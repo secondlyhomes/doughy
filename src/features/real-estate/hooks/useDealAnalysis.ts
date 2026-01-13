@@ -100,22 +100,34 @@ export function useDealAnalysis(
     const repairCost = property.repair_cost || 0;
     const arv = property.arv || 0;
 
-    // Estimate closing/holding costs (typically ~3% of purchase price)
-    const closingCosts = purchasePrice * 0.03;
-    const holdingCosts = purchasePrice * 0.02; // ~2% for holding during rehab
+    // ============================================================================
+    // TODO: ZONE C CODE REVIEW - HARD-CODED CALCULATION CONSTANTS
+    // ============================================================================
+    // These percentages should be configurable via user settings or buying criteria.
+    // Current hard-coded values may not match user's actual costs.
+    //
+    // Suggested fix: Accept these as parameters from buyingCriteria or a config:
+    //   - closingCostsPct: number (default 0.03)
+    //   - holdingCostsPct: number (default 0.02)
+    //   - sellingCostsPct: number (default 0.08)
+    //   - maoRulePct: number (default 0.70)
+    //
+    // See: src/features/real-estate/types/store.ts IBuyingCriteria for related fields
+    // ============================================================================
+    const closingCosts = purchasePrice * 0.03;       // Hard-coded 3%
+    const holdingCosts = purchasePrice * 0.02;       // Hard-coded 2%
 
     // Total investment
     const totalInvestment = purchasePrice + repairCost + closingCosts + holdingCosts;
 
     // === FLIP ANALYSIS ===
-    // Selling costs (typically ~8% for agent fees + closing)
-    const sellingCosts = arv * 0.08;
+    const sellingCosts = arv * 0.08;                 // Hard-coded 8%
     const grossProfit = arv - totalInvestment;
     const netProfit = arv - totalInvestment - sellingCosts;
     const roi = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
 
     // MAO (Maximum Allowable Offer) using 70% rule
-    const mao = arv > 0 ? arv * 0.7 - repairCost : 0;
+    const mao = arv > 0 ? arv * 0.7 - repairCost : 0; // Hard-coded 70% rule
 
     // === RENTAL ANALYSIS ===
     const monthlyRent = assumptions.monthlyRent || 0;

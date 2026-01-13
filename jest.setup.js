@@ -68,46 +68,7 @@ jest.mock('expo-router', () => {
   };
 });
 
-// Mock @react-navigation/native
-jest.mock('@react-navigation/native', () => {
-  const actualNav = jest.requireActual('@react-navigation/native');
-  return {
-    ...actualNav,
-    useNavigation: () => ({
-      navigate: jest.fn(),
-      goBack: jest.fn(),
-      setOptions: jest.fn(),
-      addListener: jest.fn(() => jest.fn()),
-    }),
-    useRoute: () => ({
-      params: {},
-    }),
-    useFocusEffect: jest.fn(),
-    NavigationContainer: ({ children }) => children,
-  };
-});
-
-// Mock @react-navigation/native-stack
-jest.mock('@react-navigation/native-stack', () => {
-  const React = require('react');
-  return {
-    createNativeStackNavigator: () => ({
-      Navigator: ({ children }) => React.createElement('View', null, children),
-      Screen: () => null,
-    }),
-  };
-});
-
-// Mock @react-navigation/bottom-tabs
-jest.mock('@react-navigation/bottom-tabs', () => {
-  const React = require('react');
-  return {
-    createBottomTabNavigator: () => ({
-      Navigator: ({ children }) => React.createElement('View', null, children),
-      Screen: () => null,
-    }),
-  };
-});
+// Note: React Navigation mocks removed - project now uses Expo Router exclusively
 
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {
@@ -351,6 +312,34 @@ jest.mock('expo-sharing', () => ({
 jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn(() => Promise.resolve()),
   getStringAsync: jest.fn(() => Promise.resolve('')),
+}));
+
+// Mock papaparse for CSV parsing
+jest.mock('papaparse', () => ({
+  parse: jest.fn((csvString, options) => {
+    // Simple mock implementation
+    const lines = csvString.trim().split('\n');
+    if (lines.length < 2) return { data: [], errors: [] };
+
+    const headers = lines[0].split(',').map(h =>
+      options?.transformHeader ? options.transformHeader(h) : h.trim()
+    );
+    const data = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      if (options?.skipEmptyLines && !lines[i].trim()) continue;
+      const values = lines[i].split(',').map(v =>
+        options?.transform ? options.transform(v) : v.trim()
+      );
+      const row = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index] || '';
+      });
+      data.push(row);
+    }
+
+    return { data, errors: [] };
+  }),
 }));
 
 // Silence console errors in tests
