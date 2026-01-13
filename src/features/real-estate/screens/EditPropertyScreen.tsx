@@ -1,14 +1,15 @@
 /**
  * EditPropertyScreen
  *
- * Screen for editing an existing property.
+ * Screen for editing an existing property using the multi-step form wizard.
  */
 
 import React, { useCallback } from 'react';
 import { View, Text, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { PropertyForm } from '../components/PropertyForm';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
 import { Property } from '../types';
 
@@ -34,8 +35,8 @@ export function EditPropertyScreen() {
 
     if (updatedProperty) {
       Alert.alert(
-        'Success',
-        'Property updated successfully!',
+        'Property Updated!',
+        'Your changes have been saved.',
         [
           {
             text: 'View Property',
@@ -72,22 +73,22 @@ export function EditPropertyScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
-      <View className="px-4 pt-12 pb-4 bg-background border-b border-border">
+      <View className="px-4 py-3 bg-background border-b border-border">
         <Text className="text-2xl font-bold text-foreground">Edit Property</Text>
-        <Text className="text-muted-foreground mt-1" numberOfLines={1}>
+        <Text className="text-muted-foreground mt-0.5" numberOfLines={1}>
           {property.address || 'Unknown address'}
         </Text>
       </View>
 
-      <PropertyForm
+      <PropertyFormWizard
         initialData={property}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isLoading={isUpdating}
         submitLabel="Save Changes"
       />
-    </View>
+    </SafeAreaView>
   );
 }

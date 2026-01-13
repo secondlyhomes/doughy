@@ -2,28 +2,19 @@
 // Authentication flow navigator
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text } from 'react-native';
 import { AuthStackParamList } from './types';
 
-// Zone B: Import real auth screens
-import { LoginScreen } from '@/features/auth/screens/LoginScreen';
-import { SignupScreen } from '@/features/auth/screens/SignupScreen';
-import { ForgotPasswordScreen } from '@/features/auth/screens/ForgotPasswordScreen';
-
-// Placeholder screens for screens not yet implemented
-const VerifyEmailScreen = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <Text className="text-foreground">Verify Email Screen</Text>
-    <Text className="text-muted-foreground">Check your email for verification link</Text>
-  </View>
-);
-
-const OnboardingSurveyScreen = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <Text className="text-foreground">Onboarding Survey Screen</Text>
-    <Text className="text-muted-foreground">TODO: Implement onboarding</Text>
-  </View>
-);
+// Zone B: Import all auth screens
+import {
+  LoginScreen,
+  SignupScreen,
+  ForgotPasswordScreen,
+  VerifyEmailScreen,
+  OnboardingScreen,
+  ResetPasswordScreen,
+  MFASetupScreen,
+  MFAVerifyScreen,
+} from '@/features/auth/screens';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -39,7 +30,10 @@ export function AuthNavigator() {
       <Stack.Screen name="SignUp" component={SignupScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
-      <Stack.Screen name="OnboardingSurvey" component={OnboardingSurveyScreen} />
+      <Stack.Screen name="OnboardingSurvey" component={OnboardingScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+      <Stack.Screen name="MFASetup" component={MFASetupScreen} />
+      <Stack.Screen name="MFAVerify" component={MFAVerifyScreen} />
     </Stack.Navigator>
   );
 }

@@ -1,5 +1,8 @@
 // Analytics Feature - Index
-// Export all analytics components
+// Export all analytics components and screens
+
+// Screens
+export { AnalyticsScreen } from './screens/AnalyticsScreen';
 
 // Components
 export {

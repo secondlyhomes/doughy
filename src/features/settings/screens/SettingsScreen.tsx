@@ -7,7 +7,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Alert,
   ActivityIndicator,
 } from 'react-native';
@@ -17,25 +16,29 @@ import {
   User,
   Shield,
   Bell,
-  Moon,
   LogOut,
   ChevronRight,
-  Mail,
   Lock,
   Trash2,
+  Info,
+  Palette,
+  BarChart3,
+  Settings,
 } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { RootStackParamList } from '@/types';
+import { SettingsStackParamList, RootStackParamList } from '@/routes/types';
+import { CompositeNavigationProp } from '@react-navigation/native';
 
-type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
+type SettingsScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<SettingsStackParamList, 'SettingsHome'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 export function SettingsScreen() {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { user, profile, signOut, isLoading } = useAuth();
 
-  // Local state for settings
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
@@ -104,136 +107,179 @@ export function SettingsScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-background">
-      {/* Profile Section */}
-      <View className="p-6 border-b border-border">
-        <TouchableOpacity
-          className="flex-row items-center"
-          onPress={() => navigation.navigate('Profile')}
-        >
-          {/* Avatar */}
-          <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
-            <Text className="text-primary-foreground text-xl font-bold">
-              {getInitials(profile?.full_name, user?.email)}
-            </Text>
-          </View>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <ScrollView className="flex-1">
+        {/* Header */}
+        <View className="px-6 pt-4 pb-2">
+          <Text className="text-2xl font-bold text-foreground">Settings</Text>
+        </View>
 
-          {/* User Info */}
-          <View className="flex-1 ml-4">
-            <Text className="text-lg font-semibold text-foreground">
-              {profile?.full_name || 'User'}
-            </Text>
-            <Text className="text-sm text-muted-foreground">{user?.email}</Text>
-            <Text className="text-xs text-primary capitalize mt-1">
-              {profile?.role || 'user'} account
-            </Text>
-          </View>
-
-          <ChevronRight size={20} color="#6b7280" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Account Settings */}
-      <View className="p-4">
-        <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
-          ACCOUNT
-        </Text>
-
-        <View className="bg-card rounded-lg">
-          <SettingsItem
-            icon={<User size={20} color="#6b7280" />}
-            title="Edit Profile"
+        {/* Profile Section */}
+        <View className="px-4 py-2">
+          <TouchableOpacity
+            className="flex-row items-center bg-card rounded-lg p-4"
             onPress={() => navigation.navigate('Profile')}
-          />
-          <SettingsItem
-            icon={<Mail size={20} color="#6b7280" />}
-            title="Email Preferences"
-            onPress={() => Alert.alert('Coming Soon', 'Email preferences will be available soon.')}
-          />
-          <SettingsItem
-            icon={<Lock size={20} color="#6b7280" />}
-            title="Change Password"
-            onPress={() => Alert.alert('Coming Soon', 'Password change will be available soon.')}
-            hideBorder
-          />
-        </View>
-      </View>
-
-      {/* Security */}
-      <View className="p-4">
-        <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
-          SECURITY
-        </Text>
-
-        <View className="bg-card rounded-lg">
-          <SettingsItem
-            icon={<Shield size={20} color="#6b7280" />}
-            title="Two-Factor Authentication"
-            onPress={() => Alert.alert('Coming Soon', '2FA will be available soon.')}
-            hideBorder
-          />
-        </View>
-      </View>
-
-      {/* Preferences */}
-      <View className="p-4">
-        <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
-          PREFERENCES
-        </Text>
-
-        <View className="bg-card rounded-lg">
-          <SettingsToggle
-            icon={<Bell size={20} color="#6b7280" />}
-            title="Push Notifications"
-            value={pushNotifications}
-            onValueChange={setPushNotifications}
-          />
-          <SettingsToggle
-            icon={<Moon size={20} color="#6b7280" />}
-            title="Dark Mode"
-            value={darkMode}
-            onValueChange={setDarkMode}
-            hideBorder
-          />
-        </View>
-      </View>
-
-      {/* Danger Zone */}
-      <View className="p-4">
-        <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
-          DANGER ZONE
-        </Text>
-
-        <View className="bg-card rounded-lg">
-          <TouchableOpacity
-            className="flex-row items-center p-4 border-b border-border"
-            onPress={handleSignOut}
-            disabled={isSigningOut}
           >
-            <LogOut size={20} color="#ef4444" />
-            <Text className="flex-1 ml-3 text-destructive font-medium">
-              {isSigningOut ? 'Signing out...' : 'Sign Out'}
-            </Text>
-            {isSigningOut && <ActivityIndicator size="small" color="#ef4444" />}
-          </TouchableOpacity>
+            {/* Avatar */}
+            <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
+              <Text className="text-primary-foreground text-xl font-bold">
+                {getInitials(profile?.full_name, user?.email)}
+              </Text>
+            </View>
 
-          <TouchableOpacity
-            className="flex-row items-center p-4"
-            onPress={handleDeleteAccount}
-          >
-            <Trash2 size={20} color="#ef4444" />
-            <Text className="flex-1 ml-3 text-destructive font-medium">
-              Delete Account
-            </Text>
+            {/* User Info */}
+            <View className="flex-1 ml-4">
+              <Text className="text-lg font-semibold text-foreground">
+                {profile?.full_name || 'User'}
+              </Text>
+              <Text className="text-sm text-muted-foreground">{user?.email}</Text>
+              <Text className="text-xs text-primary capitalize mt-1">
+                {profile?.role || 'user'} account
+              </Text>
+            </View>
+
+            <ChevronRight size={20} color="#6b7280" />
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Version Info */}
-      <View className="p-4 items-center">
-        <Text className="text-xs text-muted-foreground">Doughy AI v1.0.0</Text>
-      </View>
-    </ScrollView>
+        {/* Account Settings */}
+        <View className="p-4">
+          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+            ACCOUNT
+          </Text>
+
+          <View className="bg-card rounded-lg">
+            <SettingsItem
+              icon={<User size={20} color="#6b7280" />}
+              title="Edit Profile"
+              onPress={() => navigation.navigate('Profile')}
+            />
+            <SettingsItem
+              icon={<Lock size={20} color="#6b7280" />}
+              title="Change Password"
+              onPress={() => navigation.navigate('ChangePassword')}
+              hideBorder
+            />
+          </View>
+        </View>
+
+        {/* Security */}
+        <View className="p-4">
+          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+            SECURITY
+          </Text>
+
+          <View className="bg-card rounded-lg">
+            <SettingsItem
+              icon={<Shield size={20} color="#6b7280" />}
+              title="Security Settings"
+              subtitle="Two-factor authentication"
+              onPress={() => navigation.navigate('Security')}
+              hideBorder
+            />
+          </View>
+        </View>
+
+        {/* Admin Section - Only visible to admin users */}
+        {(profile?.role === 'admin' || profile?.role === 'super_admin') && (
+          <View className="p-4">
+            <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+              ADMINISTRATION
+            </Text>
+
+            <View className="bg-card rounded-lg">
+              <SettingsItem
+                icon={<Settings size={20} color="#8b5cf6" />}
+                title="Admin Dashboard"
+                subtitle="Manage users, integrations, and logs"
+                onPress={() => navigation.navigate('Admin')}
+                hideBorder
+              />
+            </View>
+          </View>
+        )}
+
+        {/* Preferences */}
+        <View className="p-4">
+          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+            PREFERENCES
+          </Text>
+
+          <View className="bg-card rounded-lg">
+            <SettingsItem
+              icon={<Bell size={20} color="#6b7280" />}
+              title="Notifications"
+              subtitle="Push and email preferences"
+              onPress={() => navigation.navigate('NotificationsSettings')}
+            />
+            <SettingsItem
+              icon={<Palette size={20} color="#6b7280" />}
+              title="Appearance"
+              subtitle="Theme settings"
+              onPress={() => navigation.navigate('Appearance')}
+            />
+            <SettingsItem
+              icon={<BarChart3 size={20} color="#6b7280" />}
+              title="Analytics"
+              subtitle="View your performance metrics"
+              onPress={() => navigation.navigate('Analytics')}
+              hideBorder
+            />
+          </View>
+        </View>
+
+        {/* About */}
+        <View className="p-4">
+          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+            ABOUT
+          </Text>
+
+          <View className="bg-card rounded-lg">
+            <SettingsItem
+              icon={<Info size={20} color="#6b7280" />}
+              title="About Doughy AI"
+              subtitle="Version, terms, privacy"
+              onPress={() => navigation.navigate('About')}
+              hideBorder
+            />
+          </View>
+        </View>
+
+        {/* Danger Zone */}
+        <View className="p-4">
+          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+            ACCOUNT ACTIONS
+          </Text>
+
+          <View className="bg-card rounded-lg">
+            <TouchableOpacity
+              className="flex-row items-center p-4 border-b border-border"
+              onPress={handleSignOut}
+              disabled={isSigningOut}
+            >
+              <LogOut size={20} color="#ef4444" />
+              <Text className="flex-1 ml-3 text-destructive font-medium">
+                {isSigningOut ? 'Signing out...' : 'Sign Out'}
+              </Text>
+              {isSigningOut && <ActivityIndicator size="small" color="#ef4444" />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-row items-center p-4"
+              onPress={handleDeleteAccount}
+            >
+              <Trash2 size={20} color="#ef4444" />
+              <Text className="flex-1 ml-3 text-destructive font-medium">
+                Delete Account
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Bottom padding */}
+        <View className="h-8" />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -262,25 +308,3 @@ function SettingsItem({ icon, title, subtitle, onPress, hideBorder }: SettingsIt
   );
 }
 
-interface SettingsToggleProps {
-  icon: React.ReactNode;
-  title: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-  hideBorder?: boolean;
-}
-
-function SettingsToggle({ icon, title, value, onValueChange, hideBorder }: SettingsToggleProps) {
-  return (
-    <View className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}>
-      {icon}
-      <Text className="flex-1 ml-3 text-foreground">{title}</Text>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ false: '#767577', true: '#6366f1' }}
-        thumbColor={value ? '#ffffff' : '#f4f3f4'}
-      />
-    </View>
-  );
-}

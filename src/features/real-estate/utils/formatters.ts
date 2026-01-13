@@ -171,3 +171,17 @@ export function formatAddress(property: {
 
   return parts.join('\n') || 'Address not specified';
 }
+
+/**
+ * Format file size for display
+ */
+export function formatFileSize(bytes: number | undefined | null): string {
+  if (bytes === undefined || bytes === null || bytes <= 0) return '0 B';
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const k = 1024;
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const size = bytes / Math.pow(k, i);
+
+  return `${size.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}

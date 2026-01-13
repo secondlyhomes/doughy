@@ -78,3 +78,7 @@ export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from './Avata
 
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
+
+// Bottom Sheet
+export { BottomSheet, BottomSheetSection } from './BottomSheet';
+export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';

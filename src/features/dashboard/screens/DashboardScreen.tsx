@@ -28,6 +28,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { Badge } from '@/components/ui';
 import { Progress } from '@/components/ui';
 
+// Zone D Components
+import { QuickActionFAB } from '@/features/layout';
+
 import { RootStackParamList } from '@/types';
 
 type DashboardNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -103,15 +106,28 @@ export function DashboardScreen() {
     }
   };
 
+  const handleAddLead = () => {
+    navigation.navigate('AddLead');
+  };
+
+  const handleAddProperty = () => {
+    navigation.navigate('Properties');
+  };
+
+  const handleStartChat = () => {
+    navigation.navigate('Assistant');
+  };
+
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View className="p-4">
-        {/* Header */}
+    <View className="flex-1 bg-background">
+      <ScrollView
+        className="flex-1"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View className="p-4">
+          {/* Header */}
         <View className="mb-4">
           <Text className="text-2xl font-bold text-foreground">Dashboard</Text>
           <Text className="text-muted-foreground">Your business at a glance</Text>
@@ -132,7 +148,7 @@ export function DashboardScreen() {
                 <View className="flex-row mt-3 gap-2">
                   <TouchableOpacity
                     className="border border-border rounded-md px-3 py-2"
-                    onPress={() => navigation.navigate('Leads' as any)}
+                    onPress={() => navigation.navigate('Leads')}
                   >
                     <Text className="text-sm text-foreground">View Leads</Text>
                   </TouchableOpacity>
@@ -191,7 +207,7 @@ export function DashboardScreen() {
             <TouchableOpacity
               key={index}
               className="bg-primary/10 rounded-lg p-3 mb-2"
-              onPress={() => navigation.navigate('LeadDetail', { id: String(index + 1) })}
+              onPress={() => navigation.navigate('LeadDetail', { leadId: String(index + 1) })}
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
@@ -215,7 +231,7 @@ export function DashboardScreen() {
 
           <TouchableOpacity
             className="flex-row items-center justify-center mt-3 py-2"
-            onPress={() => navigation.navigate('Leads' as any)}
+            onPress={() => navigation.navigate('Leads')}
           >
             <Text className="text-sm text-primary mr-1">View All Leads</Text>
             <ArrowRight size={14} color="#3b82f6" />
@@ -242,8 +258,19 @@ export function DashboardScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </ScrollView>
+
+        {/* Bottom padding for FAB */}
+        <View className="h-20" />
+        </View>
+      </ScrollView>
+
+      {/* Floating Action Button */}
+      <QuickActionFAB
+        onAddLead={handleAddLead}
+        onAddProperty={handleAddProperty}
+        onStartChat={handleStartChat}
+      />
+    </View>
   );
 }
 

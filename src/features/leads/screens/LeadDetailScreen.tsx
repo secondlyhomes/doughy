@@ -33,40 +33,77 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, LoadingSpinner } from '@/components/ui';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
-import { RootStackParamList } from '@/types';
+import { LeadTimeline, LeadActivity, ActivityType } from '../components/LeadTimeline';
+import { AddActivitySheet } from '../components/AddActivitySheet';
+import { LeadsStackParamList } from '@/routes/types';
+import { sanitizePhone } from '@/utils/sanitize';
 
-type LeadDetailRouteProp = RouteProp<RootStackParamList, 'LeadDetail'>;
-type LeadDetailNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type LeadDetailRouteProp = RouteProp<LeadsStackParamList, 'LeadDetail'>;
+type LeadDetailNavigationProp = NativeStackNavigationProp<LeadsStackParamList>;
 
 export function LeadDetailScreen() {
   const navigation = useNavigation<LeadDetailNavigationProp>();
   const route = useRoute<LeadDetailRouteProp>();
-  const { id } = route.params;
+  const { leadId } = route.params;
 
-  const { lead, isLoading } = useLead(id);
+  const { lead, isLoading } = useLead(leadId);
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showActivitySheet, setShowActivitySheet] = useState(false);
+  const [activities, setActivities] = useState<LeadActivity[]>([]);
 
   const handleCall = () => {
     if (lead?.phone) {
-      Linking.openURL(`tel:${lead.phone}`);
+      Linking.openURL(`tel:${sanitizePhone(lead.phone)}`);
     }
   };
 
   const handleEmail = () => {
     if (lead?.email) {
-      Linking.openURL(`mailto:${lead.email}`);
+      Linking.openURL(`mailto:${encodeURIComponent(lead.email)}`);
     }
+  };
+
+  const handleSMS = () => {
+    if (lead?.phone) {
+      Linking.openURL(`sms:${sanitizePhone(lead.phone)}`);
+    }
+  };
+
+  const handleAddActivity = (activityData: {
+    type: ActivityType;
+    description: string;
+    metadata?: Record<string, unknown>;
+  }) => {
+    const newActivity: LeadActivity = {
+      id: Date.now().toString(),
+      lead_id: leadId,
+      type: activityData.type,
+      description: activityData.description,
+      metadata: activityData.metadata,
+      created_at: new Date().toISOString(),
+    };
+    setActivities(prev => [newActivity, ...prev]);
+    // In a real app, you'd save this to the backend here
+  };
+
+  const handleAddNote = () => {
+    // Open activity sheet pre-configured for notes
+    setShowActivitySheet(true);
   };
 
   const handleToggleStar = async () => {
     if (lead) {
-      await updateLead.mutateAsync({
-        id: lead.id,
-        data: { starred: !lead.starred }
-      });
+      try {
+        await updateLead.mutateAsync({
+          id: lead.id,
+          data: { starred: !lead.starred }
+        });
+      } catch (error) {
+        Alert.alert('Error', 'Failed to update lead');
+      }
     }
   };
 
@@ -82,7 +119,7 @@ export function LeadDetailScreen() {
           onPress: async () => {
             setIsDeleting(true);
             try {
-              await deleteLead.mutateAsync(id);
+              await deleteLead.mutateAsync(leadId);
               navigation.goBack();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete lead');
@@ -158,7 +195,7 @@ export function LeadDetailScreen() {
                 fill={lead.starred ? '#f59e0b' : 'transparent'}
               />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('EditLead', { id: lead.id })}>
+            <TouchableOpacity onPress={() => navigation.navigate('LeadEdit', { leadId: lead.id })}>
               <Edit2 size={22} color="#6b7280" />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDelete} disabled={isDeleting}>
@@ -226,7 +263,7 @@ export function LeadDetailScreen() {
             )}
             <TouchableOpacity
               className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
-              onPress={() => {/* TODO: Open SMS */}}
+              onPress={handleSMS}
             >
               <MessageSquare size={18} color="#6b7280" />
               <Text className="text-muted-foreground font-medium ml-2">SMS</Text>
@@ -294,7 +331,7 @@ export function LeadDetailScreen() {
               <FileText size={18} color="#6b7280" />
               <Text className="text-lg font-semibold text-foreground ml-2">Notes</Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleAddNote}>
               <Text className="text-primary text-sm">Add Note</Text>
             </TouchableOpacity>
           </View>
@@ -317,18 +354,21 @@ export function LeadDetailScreen() {
 
         {/* Activity Timeline */}
         <View className="bg-card p-4 mb-8">
-          <View className="flex-row items-center mb-3">
-            <Calendar size={18} color="#6b7280" />
-            <Text className="text-lg font-semibold text-foreground ml-2">Activity</Text>
-          </View>
-
-          <View className="py-4">
-            <Text className="text-muted-foreground text-center">
-              Activity timeline coming soon
-            </Text>
-          </View>
+          <LeadTimeline
+            activities={activities}
+            onAddActivity={() => setShowActivitySheet(true)}
+          />
         </View>
       </ScrollView>
+
+      {/* Add Activity Sheet */}
+      <AddActivitySheet
+        visible={showActivitySheet}
+        leadId={leadId}
+        leadName={lead.name || 'Lead'}
+        onClose={() => setShowActivitySheet(false)}
+        onSave={handleAddActivity}
+      />
     </View>
   );
 }

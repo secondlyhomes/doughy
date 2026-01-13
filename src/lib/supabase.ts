@@ -10,6 +10,16 @@ import type { Database } from '@/integrations/supabase/types';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://vpqglbaedcpeprnlnfxd.supabase.co";
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_4EljjR3n77Td4W28TF4ptQ_81KxP3xi";
 
+// Warn if using fallback values (development only)
+if (__DEV__) {
+  if (!process.env.EXPO_PUBLIC_SUPABASE_URL) {
+    console.warn('[Supabase] Using fallback URL. Set EXPO_PUBLIC_SUPABASE_URL in your environment.');
+  }
+  if (!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
+    console.warn('[Supabase] Using fallback anon key. Set EXPO_PUBLIC_SUPABASE_ANON_KEY in your environment.');
+  }
+}
+
 // Custom storage adapter that uses SecureStore for sensitive auth data
 // and AsyncStorage for general storage
 const ExpoSecureStoreAdapter = {

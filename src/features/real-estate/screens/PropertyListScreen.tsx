@@ -1,7 +1,7 @@
 /**
  * PropertyListScreen
  *
- * Main screen for displaying the list of properties.
+ * Main screen for displaying the list of properties with search, filter, and sort capabilities.
  * Uses FlatList for performant scrolling of large lists.
  */
 
@@ -18,10 +18,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Search, Plus, Filter, Grid, List } from 'lucide-react-native';
+import { Search, Plus, Filter, Grid, List, ArrowUpDown, X } from 'lucide-react-native';
 import { PropertyCard } from '../components/PropertyCard';
+import { PropertyFiltersSheet } from '../components/PropertyFiltersSheet';
+import { PropertySortSheet } from '../components/PropertySortSheet';
 import { Property } from '../types';
 import { useProperties } from '../hooks/useProperties';
+import { usePropertyFilters, PropertyFilters, SortOption, SORT_OPTIONS } from '../hooks/usePropertyFilters';
 
 type RootStackParamList = {
   PropertyList: undefined;
@@ -35,22 +38,136 @@ export function PropertyListScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { properties, isLoading, error, refetch } = useProperties();
 
+  // Filter and sort state
+  const {
+    filters,
+    sortBy,
+    activeFilterCount,
+    setFilters,
+    setSortBy,
+    resetFilters,
+    hasActiveFilters,
+  } = usePropertyFilters();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [showFiltersSheet, setShowFiltersSheet] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
 
-  // Filter properties based on search query
-  const filteredProperties = useMemo(() => {
-    if (!searchQuery.trim()) return properties;
+  // Apply all filters (search + advanced filters + sort)
+  const filteredAndSortedProperties = useMemo(() => {
+    let result = [...properties];
 
-    const query = searchQuery.toLowerCase();
-    return properties.filter(property =>
-      property.address?.toLowerCase().includes(query) ||
-      property.city?.toLowerCase().includes(query) ||
-      property.state?.toLowerCase().includes(query) ||
-      property.zip?.includes(query)
-    );
-  }, [properties, searchQuery]);
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(property =>
+        property.address?.toLowerCase().includes(query) ||
+        property.city?.toLowerCase().includes(query) ||
+        property.state?.toLowerCase().includes(query) ||
+        property.zip?.includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (filters.status.length > 0) {
+      result = result.filter(property =>
+        property.status && filters.status.includes(property.status as any)
+      );
+    }
+
+    // Apply property type filter
+    if (filters.propertyType.length > 0) {
+      result = result.filter(property =>
+        property.propertyType && filters.propertyType.includes(property.propertyType as any)
+      );
+    }
+
+    // Apply price range filter
+    if (filters.priceMin !== null) {
+      result = result.filter(property =>
+        property.purchase_price && property.purchase_price >= filters.priceMin!
+      );
+    }
+    if (filters.priceMax !== null) {
+      result = result.filter(property =>
+        property.purchase_price && property.purchase_price <= filters.priceMax!
+      );
+    }
+
+    // Apply ARV range filter
+    if (filters.arvMin !== null) {
+      result = result.filter(property =>
+        property.arv && property.arv >= filters.arvMin!
+      );
+    }
+    if (filters.arvMax !== null) {
+      result = result.filter(property =>
+        property.arv && property.arv <= filters.arvMax!
+      );
+    }
+
+    // Apply bedrooms filter
+    if (filters.bedroomsMin !== null) {
+      result = result.filter(property =>
+        property.bedrooms && property.bedrooms >= filters.bedroomsMin!
+      );
+    }
+    if (filters.bedroomsMax !== null) {
+      result = result.filter(property =>
+        property.bedrooms && property.bedrooms <= filters.bedroomsMax!
+      );
+    }
+
+    // Apply bathrooms filter
+    if (filters.bathroomsMin !== null) {
+      result = result.filter(property =>
+        property.bathrooms && property.bathrooms >= filters.bathroomsMin!
+      );
+    }
+    if (filters.bathroomsMax !== null) {
+      result = result.filter(property =>
+        property.bathrooms && property.bathrooms <= filters.bathroomsMax!
+      );
+    }
+
+    // Apply location filters
+    if (filters.city.trim()) {
+      const cityQuery = filters.city.toLowerCase();
+      result = result.filter(property =>
+        property.city?.toLowerCase().includes(cityQuery)
+      );
+    }
+    if (filters.state.trim()) {
+      const stateQuery = filters.state.toLowerCase();
+      result = result.filter(property =>
+        property.state?.toLowerCase() === stateQuery
+      );
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'created_desc':
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        case 'created_asc':
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        case 'price_desc':
+          return (b.purchase_price || 0) - (a.purchase_price || 0);
+        case 'price_asc':
+          return (a.purchase_price || 0) - (b.purchase_price || 0);
+        case 'arv_desc':
+          return (b.arv || 0) - (a.arv || 0);
+        case 'arv_asc':
+          return (a.arv || 0) - (b.arv || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [properties, searchQuery, filters, sortBy]);
 
   const handlePropertyPress = useCallback((property: Property) => {
     setSelectedPropertyId(property.id);
@@ -60,6 +177,23 @@ export function PropertyListScreen() {
   const handleAddProperty = useCallback(() => {
     navigation.navigate('AddProperty');
   }, [navigation]);
+
+  const handleApplyFilters = useCallback((newFilters: PropertyFilters) => {
+    setFilters(newFilters);
+  }, [setFilters]);
+
+  const handleSortChange = useCallback((newSortBy: SortOption) => {
+    setSortBy(newSortBy);
+  }, [setSortBy]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
+  const getCurrentSortLabel = () => {
+    const option = SORT_OPTIONS.find(o => o.value === sortBy);
+    return option?.label || 'Newest First';
+  };
 
   const renderPropertyItem = useCallback(({ item }: { item: Property }) => (
     <PropertyCard
@@ -102,13 +236,27 @@ export function PropertyListScreen() {
       );
     }
 
-    if (searchQuery.trim()) {
+    if (searchQuery.trim() || hasActiveFilters) {
       return (
         <View className="flex-1 items-center justify-center py-20">
           <Search size={48} className="text-muted-foreground mb-4" />
-          <Text className="text-muted-foreground text-center">
-            No properties found matching "{searchQuery}"
+          <Text className="text-lg font-semibold text-foreground mb-2">
+            No Results Found
           </Text>
+          <Text className="text-muted-foreground text-center mb-6 px-8">
+            Try adjusting your search or filters to find what you're looking for.
+          </Text>
+          {hasActiveFilters && (
+            <TouchableOpacity
+              onPress={() => {
+                resetFilters();
+                setSearchQuery('');
+              }}
+              className="bg-muted px-4 py-2 rounded-lg"
+            >
+              <Text className="text-foreground font-medium">Clear All Filters</Text>
+            </TouchableOpacity>
+          )}
         </View>
       );
     }
@@ -132,7 +280,7 @@ export function PropertyListScreen() {
         </TouchableOpacity>
       </View>
     );
-  }, [isLoading, error, searchQuery, refetch, handleAddProperty]);
+  }, [isLoading, error, searchQuery, hasActiveFilters, refetch, handleAddProperty, resetFilters]);
 
   const ListHeaderComponent = useCallback(() => (
     <View className="mb-4">
@@ -148,15 +296,44 @@ export function PropertyListScreen() {
           autoCapitalize="none"
           autoCorrect={false}
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={clearSearch} className="p-1">
+            <X size={18} color="#9CA3AF" />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Filter and View Toggle */}
+      {/* Filter, Sort, and View Toggle */}
       <View className="flex-row justify-between items-center mt-4">
-        <TouchableOpacity className="flex-row items-center bg-muted px-3 py-2 rounded-lg">
-          <Filter size={16} className="text-muted-foreground" />
-          <Text className="text-muted-foreground ml-2">Filters</Text>
-        </TouchableOpacity>
+        <View className="flex-row gap-2">
+          {/* Filter Button */}
+          <TouchableOpacity
+            onPress={() => setShowFiltersSheet(true)}
+            className={`flex-row items-center px-3 py-2 rounded-lg ${
+              hasActiveFilters ? 'bg-primary' : 'bg-muted'
+            }`}
+          >
+            <Filter size={16} color={hasActiveFilters ? 'white' : '#9CA3AF'} />
+            <Text className={`ml-2 font-medium ${
+              hasActiveFilters ? 'text-primary-foreground' : 'text-muted-foreground'
+            }`}>
+              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            </Text>
+          </TouchableOpacity>
 
+          {/* Sort Button */}
+          <TouchableOpacity
+            onPress={() => setShowSortSheet(true)}
+            className="flex-row items-center bg-muted px-3 py-2 rounded-lg"
+          >
+            <ArrowUpDown size={16} className="text-muted-foreground" />
+            <Text className="text-muted-foreground ml-2 font-medium">
+              {getCurrentSortLabel()}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* View Toggle */}
         <View className="flex-row bg-muted rounded-lg">
           <TouchableOpacity
             onPress={() => setViewMode('list')}
@@ -179,17 +356,72 @@ export function PropertyListScreen() {
         </View>
       </View>
 
+      {/* Active Filters Pills */}
+      {hasActiveFilters && (
+        <View className="flex-row flex-wrap gap-2 mt-3">
+          {filters.status.length > 0 && (
+            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
+              <Text className="text-primary text-sm font-medium">
+                Status: {filters.status.length}
+              </Text>
+            </View>
+          )}
+          {filters.propertyType.length > 0 && (
+            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
+              <Text className="text-primary text-sm font-medium">
+                Type: {filters.propertyType.length}
+              </Text>
+            </View>
+          )}
+          {(filters.priceMin !== null || filters.priceMax !== null) && (
+            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
+              <Text className="text-primary text-sm font-medium">Price Range</Text>
+            </View>
+          )}
+          {(filters.arvMin !== null || filters.arvMax !== null) && (
+            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
+              <Text className="text-primary text-sm font-medium">ARV Range</Text>
+            </View>
+          )}
+          {(filters.city || filters.state) && (
+            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
+              <Text className="text-primary text-sm font-medium">Location</Text>
+            </View>
+          )}
+          <TouchableOpacity
+            onPress={resetFilters}
+            className="flex-row items-center px-3 py-1"
+          >
+            <X size={14} color="#6366f1" />
+            <Text className="text-primary text-sm font-medium ml-1">Clear</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Results Count */}
       <Text className="text-muted-foreground text-sm mt-4">
-        {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'}
+        {filteredAndSortedProperties.length} {filteredAndSortedProperties.length === 1 ? 'property' : 'properties'}
+        {(searchQuery || hasActiveFilters) && properties.length !== filteredAndSortedProperties.length
+          ? ` of ${properties.length}`
+          : ''}
       </Text>
     </View>
-  ), [searchQuery, viewMode, filteredProperties.length]);
+  ), [
+    searchQuery,
+    viewMode,
+    filteredAndSortedProperties.length,
+    properties.length,
+    hasActiveFilters,
+    activeFilterCount,
+    filters,
+    resetFilters,
+    clearSearch,
+  ]);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <FlatList
-        data={filteredProperties}
+        data={filteredAndSortedProperties}
         renderItem={renderPropertyItem}
         keyExtractor={keyExtractor}
         numColumns={viewMode === 'grid' ? 2 : 1}
@@ -230,6 +462,23 @@ export function PropertyListScreen() {
       >
         <Plus size={28} color="white" />
       </TouchableOpacity>
+
+      {/* Filter Sheet */}
+      <PropertyFiltersSheet
+        visible={showFiltersSheet}
+        onClose={() => setShowFiltersSheet(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+        onReset={resetFilters}
+      />
+
+      {/* Sort Sheet */}
+      <PropertySortSheet
+        visible={showSortSheet}
+        onClose={() => setShowSortSheet(false)}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
+      />
     </SafeAreaView>
   );
 }

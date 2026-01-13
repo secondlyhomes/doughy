@@ -1,8 +1,8 @@
 /**
  * PropertyDetailScreen
  *
- * Detailed view of a single property with all its information.
- * Uses ScrollView with sections for different property aspects.
+ * Detailed view of a single property with tabbed navigation for different sections:
+ * Overview, Analysis, Comps, Financing, Repairs, and Documents.
  */
 
 import React, { useCallback, useState } from 'react';
@@ -10,33 +10,27 @@ import {
   View,
   Text,
   ScrollView,
-  Image,
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Edit2, Trash2, MoreHorizontal } from 'lucide-react-native';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import {
-  ArrowLeft,
-  Edit2,
-  Trash2,
-  MapPin,
-  Bed,
-  Bath,
-  Square,
-  Calendar,
-  DollarSign,
-  FileText,
-  Home,
-  Share2,
-  Heart,
-  MoreVertical,
-} from 'lucide-react-native';
+  PropertyHeader,
+  PropertyQuickStats,
+  PropertyOverviewTab,
+  PropertyAnalysisTab,
+  PropertyCompsTab,
+  PropertyFinancingTab,
+  PropertyRepairsTab,
+  PropertyDocsTab,
+  PropertyActionsSheet,
+} from '../components';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
-import { formatCurrency, formatNumber, formatPropertyType, getPropertyTypeBadgeColor } from '../utils/formatters';
 
 type RootStackParamList = {
   PropertyList: undefined;
@@ -47,7 +41,14 @@ type RootStackParamList = {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PropertyDetail'>;
 type PropertyDetailRouteProp = RouteProp<RootStackParamList, 'PropertyDetail'>;
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const TAB_IDS = {
+  OVERVIEW: 'overview',
+  ANALYSIS: 'analysis',
+  COMPS: 'comps',
+  FINANCING: 'financing',
+  REPAIRS: 'repairs',
+  DOCS: 'docs',
+} as const;
 
 export function PropertyDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -58,7 +59,8 @@ export function PropertyDetailScreen() {
   const { deleteProperty, isLoading: isDeleting } = usePropertyMutations();
 
   const [isFavorite, setIsFavorite] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<string>(TAB_IDS.OVERVIEW);
+  const [showActionsSheet, setShowActionsSheet] = useState(false);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
@@ -91,14 +93,22 @@ export function PropertyDetailScreen() {
   }, [deleteProperty, propertyId, navigation]);
 
   const handleShare = useCallback(() => {
-    // TODO: Implement share functionality
-    Alert.alert('Share', 'Share functionality coming soon!');
+    setShowActionsSheet(true);
   }, []);
+
+  const handleMore = useCallback(() => {
+    setShowActionsSheet(true);
+  }, []);
+
+  const handleStatusChange = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const toggleFavorite = useCallback(() => {
     setIsFavorite(prev => !prev);
     // TODO: Persist favorite status
   }, []);
+
 
   if (isLoading) {
     return (
@@ -122,9 +132,6 @@ export function PropertyDetailScreen() {
     );
   }
 
-  const images = property.images || [];
-  const hasImages = images.length > 0;
-
   return (
     <View className="flex-1 bg-background">
       <ScrollView
@@ -132,196 +139,63 @@ export function PropertyDetailScreen() {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor="#6366f1" />
         }
+        stickyHeaderIndices={[1]} // Make tabs sticky
       >
-        {/* Hero Image Section */}
-        <View className="relative">
-          {hasImages ? (
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(e) => {
-                const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-                setCurrentImageIndex(index);
-              }}
-            >
-              {images.map((image, index) => (
-                <Image
-                  key={image.id || index}
-                  source={{ uri: image.url }}
-                  style={{ width: SCREEN_WIDTH, height: 280 }}
-                  resizeMode="cover"
-                />
-              ))}
+        {/* Property Header with Image and Basic Info */}
+        <PropertyHeader
+          property={property}
+          onBack={handleBack}
+          onShare={handleShare}
+          onFavorite={toggleFavorite}
+          onMore={handleMore}
+          isFavorite={isFavorite}
+        />
+
+        {/* Tabs Navigation - Sticky */}
+        <View className="bg-background px-4 pt-2 pb-0">
+          <PropertyQuickStats property={property} />
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TabsList className="flex-row bg-muted">
+                <TabsTrigger value={TAB_IDS.OVERVIEW}>Overview</TabsTrigger>
+                <TabsTrigger value={TAB_IDS.ANALYSIS}>Analysis</TabsTrigger>
+                <TabsTrigger value={TAB_IDS.COMPS}>Comps</TabsTrigger>
+                <TabsTrigger value={TAB_IDS.FINANCING}>Financing</TabsTrigger>
+                <TabsTrigger value={TAB_IDS.REPAIRS}>Repairs</TabsTrigger>
+                <TabsTrigger value={TAB_IDS.DOCS}>Docs</TabsTrigger>
+              </TabsList>
             </ScrollView>
-          ) : (
-            <View
-              className="bg-muted items-center justify-center"
-              style={{ width: SCREEN_WIDTH, height: 280 }}
-            >
-              <Home size={64} className="text-muted-foreground" />
-              <Text className="text-muted-foreground mt-2">No Images</Text>
-            </View>
-          )}
-
-          {/* Image Pagination Dots */}
-          {hasImages && images.length > 1 && (
-            <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
-              {images.map((_, index) => (
-                <View
-                  key={index}
-                  className={`w-2 h-2 rounded-full mx-1 ${
-                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </View>
-          )}
-
-          {/* Header Overlay */}
-          <View className="absolute top-0 left-0 right-0 flex-row justify-between items-start p-4 pt-12">
-            <TouchableOpacity
-              onPress={handleBack}
-              className="bg-black/30 rounded-full p-2"
-            >
-              <ArrowLeft size={24} color="white" />
-            </TouchableOpacity>
-
-            <View className="flex-row gap-2">
-              <TouchableOpacity
-                onPress={toggleFavorite}
-                className="bg-black/30 rounded-full p-2"
-              >
-                <Heart
-                  size={24}
-                  color="white"
-                  fill={isFavorite ? '#ef4444' : 'transparent'}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleShare} className="bg-black/30 rounded-full p-2">
-                <Share2 size={24} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity className="bg-black/30 rounded-full p-2">
-                <MoreVertical size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          </Tabs>
         </View>
 
-        {/* Property Info */}
-        <View className="p-4">
-          {/* Price and Type */}
-          <View className="flex-row justify-between items-start mb-4">
-            <View>
-              <Text className="text-2xl font-bold text-foreground">
-                {property.arv ? formatCurrency(property.arv) : 'Price TBD'}
-              </Text>
-              {property.purchase_price && (
-                <Text className="text-sm text-muted-foreground">
-                  Purchase: {formatCurrency(property.purchase_price)}
-                </Text>
-              )}
-            </View>
-            <View className={`px-3 py-1.5 rounded-lg ${getPropertyTypeBadgeColor(property.propertyType)}`}>
-              <Text className="text-white font-medium">
-                {formatPropertyType(property.propertyType)}
-              </Text>
-            </View>
-          </View>
+        {/* Tab Content */}
+        <View className="px-4 pb-24">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value={TAB_IDS.OVERVIEW}>
+              <PropertyOverviewTab property={property} />
+            </TabsContent>
 
-          {/* Address */}
-          <View className="mb-4">
-            <Text className="text-lg font-semibold text-foreground">
-              {property.address || 'Address not specified'}
-            </Text>
-            <View className="flex-row items-center mt-1">
-              <MapPin size={16} className="text-muted-foreground" />
-              <Text className="text-muted-foreground ml-1">
-                {property.city && property.state
-                  ? `${property.city}, ${property.state} ${property.zip || ''}`
-                  : 'Location not specified'}
-              </Text>
-            </View>
-          </View>
+            <TabsContent value={TAB_IDS.ANALYSIS}>
+              <PropertyAnalysisTab property={property} />
+            </TabsContent>
 
-          {/* Property Stats */}
-          <View className="flex-row justify-around bg-muted rounded-xl p-4 mb-4">
-            <View className="items-center">
-              <Bed size={24} className="text-primary mb-1" />
-              <Text className="text-lg font-semibold text-foreground">
-                {property.bedrooms ?? 'N/A'}
-              </Text>
-              <Text className="text-xs text-muted-foreground">Beds</Text>
-            </View>
-            <View className="items-center">
-              <Bath size={24} className="text-primary mb-1" />
-              <Text className="text-lg font-semibold text-foreground">
-                {property.bathrooms ?? 'N/A'}
-              </Text>
-              <Text className="text-xs text-muted-foreground">Baths</Text>
-            </View>
-            <View className="items-center">
-              <Square size={24} className="text-primary mb-1" />
-              <Text className="text-lg font-semibold text-foreground">
-                {property.square_feet ? formatNumber(property.square_feet) : 'N/A'}
-              </Text>
-              <Text className="text-xs text-muted-foreground">Sqft</Text>
-            </View>
-            <View className="items-center">
-              <Calendar size={24} className="text-primary mb-1" />
-              <Text className="text-lg font-semibold text-foreground">
-                {property.year_built ?? 'N/A'}
-              </Text>
-              <Text className="text-xs text-muted-foreground">Built</Text>
-            </View>
-          </View>
+            <TabsContent value={TAB_IDS.COMPS}>
+              <PropertyCompsTab property={property} onPropertyUpdate={refetch} />
+            </TabsContent>
 
-          {/* Additional Details */}
-          <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-            <Text className="text-lg font-semibold text-foreground mb-3">
-              Property Details
-            </Text>
+            <TabsContent value={TAB_IDS.FINANCING}>
+              <PropertyFinancingTab property={property} />
+            </TabsContent>
 
-            <View className="gap-3">
-              {property.lot_size && (
-                <View className="flex-row justify-between">
-                  <Text className="text-muted-foreground">Lot Size</Text>
-                  <Text className="text-foreground font-medium">
-                    {formatNumber(property.lot_size)} sqft
-                  </Text>
-                </View>
-              )}
-              {property.county && (
-                <View className="flex-row justify-between">
-                  <Text className="text-muted-foreground">County</Text>
-                  <Text className="text-foreground font-medium">{property.county}</Text>
-                </View>
-              )}
-              {property.status && (
-                <View className="flex-row justify-between">
-                  <Text className="text-muted-foreground">Status</Text>
-                  <Text className="text-foreground font-medium">{property.status}</Text>
-                </View>
-              )}
-              {property.mls_id && (
-                <View className="flex-row justify-between">
-                  <Text className="text-muted-foreground">MLS ID</Text>
-                  <Text className="text-foreground font-medium">{property.mls_id}</Text>
-                </View>
-              )}
-            </View>
-          </View>
+            <TabsContent value={TAB_IDS.REPAIRS}>
+              <PropertyRepairsTab property={property} onPropertyUpdate={refetch} />
+            </TabsContent>
 
-          {/* Notes */}
-          {property.notes && (
-            <View className="bg-card rounded-xl p-4 mb-4 border border-border">
-              <View className="flex-row items-center mb-2">
-                <FileText size={18} className="text-primary" />
-                <Text className="text-lg font-semibold text-foreground ml-2">Notes</Text>
-              </View>
-              <Text className="text-foreground leading-6">{property.notes}</Text>
-            </View>
-          )}
+            <TabsContent value={TAB_IDS.DOCS}>
+              <PropertyDocsTab property={property} />
+            </TabsContent>
+          </Tabs>
         </View>
       </ScrollView>
 
@@ -335,6 +209,12 @@ export function PropertyDetailScreen() {
           <Text className="text-primary-foreground font-semibold ml-2">Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          onPress={() => setShowActionsSheet(true)}
+          className="bg-muted py-3 px-4 rounded-xl"
+        >
+          <MoreHorizontal size={20} className="text-foreground" />
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={handleDelete}
           disabled={isDeleting}
           className="bg-destructive py-3 px-4 rounded-xl"
@@ -346,6 +226,16 @@ export function PropertyDetailScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Property Actions Sheet */}
+      <PropertyActionsSheet
+        property={property}
+        isOpen={showActionsSheet}
+        onClose={() => setShowActionsSheet(false)}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onStatusChange={handleStatusChange}
+      />
     </View>
   );
 }

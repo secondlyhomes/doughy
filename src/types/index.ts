@@ -2,35 +2,18 @@
 // All zones should import types from this file
 
 // ============================================
-// Navigation Types
+// Navigation Types (re-exported from routes/types.ts)
 // ============================================
-export type RootStackParamList = {
-  // Auth Stack
-  Login: undefined;
-  Signup: undefined;
-  ForgotPassword: undefined;
-
-  // Main Stack
-  Main: undefined;
-
-  // Property Screens
-  PropertyDetail: { id: string };
-  AddProperty: undefined;
-  EditProperty: { id: string };
-
-  // Lead Screens
-  LeadDetail: { id: string };
-  AddLead: undefined;
-  EditLead: { id: string };
-
-  // Settings
-  Settings: undefined;
-  Profile: undefined;
-
-  // Assistant
-  Assistant: undefined;
-  Conversation: { id: string };
-};
+export type {
+  AuthStackParamList,
+  MainTabParamList,
+  PropertiesStackParamList,
+  LeadsStackParamList,
+  ConversationsStackParamList,
+  SettingsStackParamList,
+  AdminStackParamList,
+  RootStackParamList,
+} from '@/routes/types';
 
 // ============================================
 // User & Auth Types

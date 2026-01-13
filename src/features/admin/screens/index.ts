@@ -2,3 +2,7 @@
 // Export all admin screens
 
 export { AdminDashboardScreen } from './AdminDashboardScreen';
+export { UserManagementScreen } from './UserManagementScreen';
+export { UserDetailScreen } from './UserDetailScreen';
+export { SystemLogsScreen } from './SystemLogsScreen';
+export { IntegrationsScreen } from './IntegrationsScreen';

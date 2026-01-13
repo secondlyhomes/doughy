@@ -1,49 +1,23 @@
 // src/routes/MainNavigator.tsx
-// Main app tab navigator
+// Main app tab navigator - Zone D implementation
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { Home, Building, Users, MessageCircle, Settings } from 'lucide-react-native';
 import { MainTabParamList } from './types';
 
-// TODO: Import actual screens from features when converted
-// Zone D: Dashboard
-// Zone C: Properties
+// Zone D: Dashboard (COMPLETE)
+import { DashboardScreen } from '@/features/dashboard/screens/DashboardScreen';
+// Zone C: Properties (COMPLETE)
 import { RealEstateNavigator } from '@/features/real-estate';
-// Zone D: Leads
-// Zone D: Conversations
-// Zone B: Settings
-
-// Placeholder screens
-const DashboardScreen = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <Text className="text-xl font-bold text-foreground">Dashboard</Text>
-    <Text className="text-muted-foreground">TODO: Zone D - Implement dashboard</Text>
-  </View>
-);
-
-// PropertiesScreen now uses RealEstateNavigator (Zone C complete)
-
-const LeadsScreen = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <Text className="text-xl font-bold text-foreground">Leads</Text>
-    <Text className="text-muted-foreground">TODO: Zone D - Implement leads</Text>
-  </View>
-);
-
-const ConversationsScreen = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <Text className="text-xl font-bold text-foreground">Conversations</Text>
-    <Text className="text-muted-foreground">TODO: Zone D - Implement conversations</Text>
-  </View>
-);
-
-const SettingsScreen = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <Text className="text-xl font-bold text-foreground">Settings</Text>
-    <Text className="text-muted-foreground">TODO: Zone B - Implement settings</Text>
-  </View>
-);
+// Zone D: Leads (COMPLETE)
+import { LeadsNavigator } from './LeadsNavigator';
+// Zone D: Conversations/Assistant (COMPLETE)
+import { ConversationsNavigator } from './ConversationsNavigator';
+// Zone B: Settings Navigator (COMPLETE)
+import { SettingsNavigator } from './SettingsNavigator';
+// Zone D: Badge support
+import { useUnreadCounts, formatBadgeCount } from '@/features/layout';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -52,6 +26,8 @@ const PRIMARY_COLOR = '#2563eb';
 const MUTED_COLOR = '#64748b';
 
 export function MainNavigator() {
+  const { counts } = useUnreadCounts();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -68,6 +44,14 @@ export function MainNavigator() {
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
+        },
+        tabBarBadgeStyle: {
+          backgroundColor: '#ef4444',
+          fontSize: 10,
+          fontWeight: '600',
+          minWidth: 18,
+          height: 18,
+          borderRadius: 9,
         },
       }}
     >
@@ -88,22 +72,28 @@ export function MainNavigator() {
       />
       <Tab.Screen
         name="Leads"
-        component={LeadsScreen}
+        component={LeadsNavigator}
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
+          tabBarBadge: formatBadgeCount(counts.leads),
         }}
       />
       <Tab.Screen
         name="Conversations"
-        component={ConversationsScreen}
+        component={ConversationsNavigator}
         options={{
+          headerShown: false,
+          title: 'AI Chat',
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
+          tabBarBadge: formatBadgeCount(counts.conversations),
         }}
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsNavigator}
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />

@@ -5,6 +5,10 @@
 export { RootNavigator } from './RootNavigator';
 export { AuthNavigator } from './AuthNavigator';
 export { MainNavigator } from './MainNavigator';
+export { LeadsNavigator } from './LeadsNavigator';
+export { ConversationsNavigator } from './ConversationsNavigator';
+export { AdminNavigator } from './AdminNavigator';
+export { SettingsNavigator } from './SettingsNavigator';
 
 // Types
 export type {
@@ -14,6 +18,7 @@ export type {
   PropertiesStackParamList,
   LeadsStackParamList,
   ConversationsStackParamList,
+  SettingsStackParamList,
   AdminStackParamList,
 } from './types';
 

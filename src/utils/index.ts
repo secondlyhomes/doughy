@@ -14,3 +14,5 @@ export {
   formatPhoneNumber,
   truncateText,
 } from './format';
+
+export { sanitizePhone, sanitizeEmail } from './sanitize';

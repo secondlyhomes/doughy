@@ -10,6 +10,9 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   VerifyEmail: undefined;
   OnboardingSurvey: undefined;
+  ResetPassword: { token?: string } | undefined;
+  MFASetup: undefined;
+  MFAVerify: { factorId?: string } | undefined;
 };
 
 // Main Tab Navigator
@@ -43,10 +46,23 @@ export type ConversationsStackParamList = {
   ConversationDetail: { leadId: string };
 };
 
+// Settings Stack (nested in Main)
+export type SettingsStackParamList = {
+  SettingsHome: undefined;
+  Profile: undefined;
+  ChangePassword: undefined;
+  Appearance: undefined;
+  NotificationsSettings: undefined;
+  Security: undefined;
+  About: undefined;
+  Analytics: undefined;
+};
+
 // Admin Stack
 export type AdminStackParamList = {
-  AdminOverview: undefined;
+  AdminDashboard: undefined;
   AdminUsers: undefined;
+  UserDetail: { userId: string };
   AdminIntegrations: undefined;
   AdminLogs: undefined;
   AdminAnalytics: undefined;

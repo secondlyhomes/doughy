@@ -3,3 +3,8 @@
 
 export { SettingsScreen } from './SettingsScreen';
 export { ProfileScreen } from './ProfileScreen';
+export { ChangePasswordScreen } from './ChangePasswordScreen';
+export { AppearanceScreen } from './AppearanceScreen';
+export { NotificationsSettingsScreen } from './NotificationsSettingsScreen';
+export { SecurityScreen } from './SecurityScreen';
+export { AboutScreen } from './AboutScreen';

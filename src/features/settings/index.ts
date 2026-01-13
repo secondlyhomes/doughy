@@ -1,4 +1,25 @@
 // src/features/settings/index.ts
 // Main settings feature exports
 
-export { SettingsScreen, ProfileScreen } from './screens';
+// Screens
+export {
+  SettingsScreen,
+  ProfileScreen,
+  ChangePasswordScreen,
+  AppearanceScreen,
+  NotificationsSettingsScreen,
+  SecurityScreen,
+  AboutScreen,
+} from './screens';
+
+// Services
+export {
+  updateProfile,
+  pickAvatar,
+  uploadAvatar,
+  deleteAvatar,
+  changePassword,
+  type ProfileUpdateData,
+  type ProfileResult,
+  type AvatarUploadResult,
+} from './services';

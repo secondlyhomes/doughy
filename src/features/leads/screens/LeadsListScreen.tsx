@@ -9,32 +9,52 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Search,
   Plus,
   Filter,
-  Star,
-  Phone,
-  Mail,
-  Building2,
-  ChevronRight
+  X,
+  SlidersHorizontal,
 } from 'lucide-react-native';
 
-import { Lead } from '../types';
+import { Lead, LeadStatus } from '../types';
 import { useLeads } from '../hooks/useLeads';
-import { LeadCard } from '../components/LeadCard';
-import { RootStackParamList } from '@/types';
+import { SwipeableLeadCard } from '../components/SwipeableLeadCard';
+import { LeadsFiltersSheet } from '../components/LeadsFiltersSheet';
+import { LeadsStackParamList } from '@/routes/types';
 
-type LeadsNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type LeadsNavigationProp = NativeStackNavigationProp<LeadsStackParamList>;
+
+export interface LeadFilters {
+  status: LeadStatus | 'all';
+  source: string | 'all';
+  priority: string | 'all';
+  starred: boolean | null;
+  sortBy: 'name' | 'created_at' | 'score';
+  sortOrder: 'asc' | 'desc';
+}
+
+const defaultFilters: LeadFilters = {
+  status: 'all',
+  source: 'all',
+  priority: 'all',
+  starred: null,
+  sortBy: 'created_at',
+  sortOrder: 'desc',
+};
 
 export function LeadsListScreen() {
   const navigation = useNavigation<LeadsNavigationProp>();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [showFiltersSheet, setShowFiltersSheet] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<LeadFilters>(defaultFilters);
 
   const { leads, isLoading, refetch } = useLeads();
 
@@ -45,13 +65,40 @@ export function LeadsListScreen() {
       lead.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Status filter
-    const matchesFilter = activeFilter === 'all' ||
+    // Quick status filter (tabs)
+    const matchesQuickFilter = activeFilter === 'all' ||
       lead.status === activeFilter ||
       (activeFilter === 'starred' && lead.starred);
 
-    return matchesSearch && matchesFilter;
+    // Advanced filters
+    const matchesAdvancedStatus = advancedFilters.status === 'all' ||
+      lead.status === advancedFilters.status;
+    const matchesSource = advancedFilters.source === 'all' ||
+      lead.source === advancedFilters.source;
+    const matchesStarred = advancedFilters.starred === null ||
+      lead.starred === advancedFilters.starred;
+
+    return matchesSearch && matchesQuickFilter && matchesAdvancedStatus && matchesSource && matchesStarred;
+  }).sort((a, b) => {
+    const { sortBy, sortOrder } = advancedFilters;
+    let comparison = 0;
+
+    if (sortBy === 'name') {
+      comparison = (a.name || '').localeCompare(b.name || '');
+    } else if (sortBy === 'score') {
+      comparison = (a.score || 0) - (b.score || 0);
+    } else {
+      comparison = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+    }
+
+    return sortOrder === 'asc' ? comparison : -comparison;
   }) || [];
+
+  const activeFiltersCount = [
+    advancedFilters.status !== 'all',
+    advancedFilters.source !== 'all',
+    advancedFilters.starred !== null,
+  ].filter(Boolean).length;
 
   const filters = [
     { key: 'all', label: 'All' },
@@ -61,20 +108,30 @@ export function LeadsListScreen() {
     { key: 'starred', label: 'Starred' },
   ];
 
-  const handleLeadPress = (lead: Lead) => {
-    navigation.navigate('LeadDetail', { id: lead.id });
+  const handleLeadPress = useCallback((lead: Lead) => {
+    navigation.navigate('LeadDetail', { leadId: lead.id });
+  }, [navigation]);
+
+  const handleApplyFilters = (newFilters: LeadFilters) => {
+    setAdvancedFilters(newFilters);
+    setShowFiltersSheet(false);
+  };
+
+  const handleResetFilters = () => {
+    setAdvancedFilters(defaultFilters);
   };
 
   const renderItem = useCallback(({ item }: { item: Lead }) => (
-    <LeadCard
+    <SwipeableLeadCard
       lead={item}
       onPress={() => handleLeadPress(item)}
     />
-  ), []);
+  ), [handleLeadPress]);
 
   const keyExtractor = useCallback((item: Lead) => item.id, []);
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <View className="flex-1 bg-background">
       {/* Search Bar */}
       <View className="px-4 pt-2 pb-2">
@@ -90,9 +147,24 @@ export function LeadsListScreen() {
               autoCapitalize="none"
               autoCorrect={false}
             />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <X size={18} color="#6b7280" />
+              </TouchableOpacity>
+            )}
           </View>
-          <TouchableOpacity className="bg-muted p-2.5 rounded-lg">
-            <Filter size={20} color="#6b7280" />
+          <TouchableOpacity
+            className="bg-muted p-2.5 rounded-lg relative"
+            onPress={() => setShowFiltersSheet(true)}
+          >
+            <SlidersHorizontal size={20} color="#6b7280" />
+            {activeFiltersCount > 0 && (
+              <View className="absolute -top-1 -right-1 bg-primary w-5 h-5 rounded-full items-center justify-center">
+                <Text className="text-primary-foreground text-xs font-bold">
+                  {activeFiltersCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -183,7 +255,17 @@ export function LeadsListScreen() {
       >
         <Plus size={24} color="white" />
       </TouchableOpacity>
+
+      {/* Filters Sheet */}
+      <LeadsFiltersSheet
+        visible={showFiltersSheet}
+        filters={advancedFilters}
+        onClose={() => setShowFiltersSheet(false)}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+      />
     </View>
+    </GestureHandlerRootView>
   );
 }
 

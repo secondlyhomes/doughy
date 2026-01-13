@@ -11,10 +11,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootStackParamList } from './types';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
+import { AdminNavigator } from './AdminNavigator';
 
 // Zone B: Auth Provider and Hook (COMPLETE)
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+
+// Zone D: Unread Counts Provider
+import { UnreadCountsProvider } from '@/features/layout';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -30,10 +34,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function RootStack() {
   // Zone B: Using real auth hook
-  // const { isAuthenticated, isLoading } = useAuth();
-  // TEMP: Bypass auth for testing Zone C
-  const isAuthenticated = true;
-  const isLoading = false;
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Show loading screen while checking auth
   if (isLoading) {
@@ -53,7 +54,10 @@ function RootStack() {
     >
       {isAuthenticated ? (
         // Authenticated routes
-        <Stack.Screen name="Main" component={MainNavigator} />
+        <>
+          <Stack.Screen name="Main" component={MainNavigator} />
+          <Stack.Screen name="Admin" component={AdminNavigator} />
+        </>
       ) : (
         // Auth routes
         <Stack.Screen name="Auth" component={AuthNavigator} />
@@ -66,12 +70,14 @@ export function RootNavigator() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <StatusBar style="auto" />
-            <RootStack />
-          </NavigationContainer>
-        </SafeAreaProvider>
+        <UnreadCountsProvider>
+          <SafeAreaProvider>
+            <NavigationContainer>
+              <StatusBar style="auto" />
+              <RootStack />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </UnreadCountsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

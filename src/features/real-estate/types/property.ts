@@ -79,6 +79,12 @@ export interface Property {
   mortgage_balance?: number;
   hoa?: boolean;
 
+  // Financial fields (computed/aggregated)
+  repair_cost?: number;
+  total_repair_cost?: number;
+  monthly_rent?: number;
+  estimated_rent?: number;
+
   // For component compatibility
   documents?: Document[];
   financingScenarios?: FinancingScenario[];
