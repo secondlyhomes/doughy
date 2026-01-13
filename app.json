@@ -60,7 +60,8 @@
         {
           "locationWhenInUsePermission": "Allow Doughy AI to use your location to show nearby properties."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }

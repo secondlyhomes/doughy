@@ -41,6 +41,15 @@ export type { SkeletonProps } from './Skeleton';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
 export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps } from './Tabs';
 
+export { ScrollArea } from './ScrollArea';
+export type { ScrollAreaProps } from './ScrollArea';
+
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './Collapsible';
+export type { CollapsibleProps, CollapsibleTriggerProps, CollapsibleContentProps } from './Collapsible';
+
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './Accordion';
+export type { AccordionProps, AccordionItemProps, AccordionTriggerProps, AccordionContentProps } from './Accordion';
+
 // Feedback components
 export { Alert, AlertTitle, AlertDescription } from './Alert';
 export type { AlertProps, AlertTitleProps, AlertDescriptionProps } from './Alert';
@@ -72,12 +81,106 @@ export {
 } from './Modal';
 export type { ModalProps, ModalContentProps } from './Modal';
 
+export {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from './AlertDialog';
+export type {
+  AlertDialogProps,
+  AlertDialogContentProps,
+  AlertDialogHeaderProps,
+  AlertDialogFooterProps,
+  AlertDialogTitleProps,
+  AlertDialogDescriptionProps,
+  AlertDialogActionProps,
+  AlertDialogCancelProps,
+} from './AlertDialog';
+
+export { Popover, PopoverTrigger, PopoverContent } from './Popover';
+export type { PopoverProps, PopoverTriggerProps, PopoverContentProps } from './Popover';
+
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
+} from './DropdownMenu';
+export type {
+  DropdownMenuProps,
+  DropdownMenuTriggerProps,
+  DropdownMenuContentProps,
+  DropdownMenuItemProps,
+  DropdownMenuSeparatorProps,
+  DropdownMenuLabelProps,
+  DropdownMenuGroupProps,
+} from './DropdownMenu';
+
+export { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './Tooltip';
+export type { TooltipProps, TooltipProviderProps, TooltipTriggerProps, TooltipContentProps } from './Tooltip';
+
 // Display components
 export { Avatar, AvatarImage, AvatarFallback } from './Avatar';
 export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from './Avatar';
 
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
+
+export { Table, TableRoot, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table';
+export type { TableProps, TableColumn } from './Table';
+
+export { Carousel, CarouselItem } from './Carousel';
+export type { CarouselProps, CarouselItemProps } from './Carousel';
+
+// Navigation components
+export {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from './Breadcrumb';
+export type {
+  BreadcrumbProps,
+  BreadcrumbItemProps,
+  BreadcrumbLinkProps,
+  BreadcrumbPageProps,
+  BreadcrumbSeparatorProps,
+  BreadcrumbEllipsisProps,
+} from './Breadcrumb';
+
+export { Pagination } from './Pagination';
+export type { PaginationProps } from './Pagination';
+
+// Date/Time components
+export { Calendar } from './Calendar';
+export type { CalendarProps, MarkedDateStyle } from './Calendar';
+
+export { DatePicker } from './DatePicker';
+export type { DatePickerProps } from './DatePicker';
+
+// File/Media components
+export { FileUpload } from './FileUpload';
+export type { FileUploadProps } from './FileUpload';
+
+export { ImagePicker } from './ImagePickerComponent';
+export type { ImagePickerProps } from './ImagePickerComponent';
+
+// Input components
+export { OTPInput } from './OTPInput';
+export type { OTPInputProps } from './OTPInput';
+
+export { AddressAutocomplete } from './AddressAutocomplete';
+export type { AddressAutocompleteProps, AddressValue } from './AddressAutocomplete';
 
 // Bottom Sheet
 export { BottomSheet, BottomSheetSection } from './BottomSheet';
