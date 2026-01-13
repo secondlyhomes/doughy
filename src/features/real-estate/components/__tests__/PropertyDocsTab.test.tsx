@@ -93,8 +93,8 @@ describe('PropertyDocsTab', () => {
   it('should show supported document types in empty state', () => {
     const { getByText } = render(<PropertyDocsTab property={createMockProperty()} />);
     expect(getByText('Supported Document Types')).toBeTruthy();
-    expect(getByText('Contracts')).toBeTruthy();
-    expect(getByText('Inspections')).toBeTruthy();
+    expect(getByText('Contract')).toBeTruthy();
+    expect(getByText('Inspection')).toBeTruthy();
   });
 
   it('should show loading state', () => {

@@ -245,7 +245,7 @@ jest.mock('react-native/Libraries/Linking/Linking', () => ({
   canOpenURL: jest.fn(() => Promise.resolve(true)),
 }));
 
-// Mock react-native Share
+// Mock react-native Share (for react-native internal paths)
 jest.mock('react-native/Libraries/Share/Share', () => ({
   share: jest.fn(() => Promise.resolve({ action: 'sharedAction' })),
   sharedAction: 'sharedAction',

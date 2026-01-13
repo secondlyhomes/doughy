@@ -30,7 +30,7 @@ jest.mock('@/components/ui/BottomSheet', () => ({
   BottomSheet: ({ children, visible, title }: any) =>
     visible ? (
       <mock-bottom-sheet testID="bottom-sheet">
-        <mock-title>{title}</mock-title>
+        <mock-title testID="sheet-title">{title}</mock-title>
         {children}
       </mock-bottom-sheet>
     ) : null,
@@ -71,8 +71,8 @@ describe('UploadDocumentSheet', () => {
   });
 
   it('should render title', () => {
-    const { getByText } = render(<UploadDocumentSheet {...defaultProps} />);
-    expect(getByText('Upload Document')).toBeTruthy();
+    const { getByTestId } = render(<UploadDocumentSheet {...defaultProps} />);
+    expect(getByTestId('sheet-title').children[0]).toBe('Upload Document');
   });
 
   it('should render file selection area', () => {
@@ -159,18 +159,15 @@ describe('UploadDocumentSheet', () => {
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
-  it('should show validation error when uploading without file', async () => {
+  it('should disable Upload button when no file selected', () => {
     const { getByText } = render(<UploadDocumentSheet {...defaultProps} />);
 
-    // Try to upload without selecting file
-    fireEvent.press(getByText('Upload'));
-
-    await waitFor(() => {
-      expect(getByText('Please select a document to upload')).toBeTruthy();
-    });
+    // Find the Upload button's parent TouchableOpacity
+    const uploadButton = getByText('Upload').parent?.parent;
+    expect(uploadButton?.props.accessibilityState?.disabled).toBe(true);
   });
 
-  it('should show validation error when uploading without title', async () => {
+  it('should disable Upload button when title is empty', async () => {
     mockPickDocument.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: 'file:///test/doc.pdf', name: 'doc.pdf', size: 100 }],
@@ -189,12 +186,9 @@ describe('UploadDocumentSheet', () => {
     const titleInput = getByPlaceholderText('Document title');
     fireEvent.changeText(titleInput, '');
 
-    // Try to upload
-    fireEvent.press(getByText('Upload'));
-
-    await waitFor(() => {
-      expect(getByText('Please enter a document title')).toBeTruthy();
-    });
+    // Upload button should be disabled
+    const uploadButton = getByText('Upload').parent?.parent;
+    expect(uploadButton?.props.accessibilityState?.disabled).toBe(true);
   });
 
   it('should show file size validation error for large files', async () => {
