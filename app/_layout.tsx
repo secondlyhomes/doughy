@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { UnreadCountsProvider, ErrorBoundary } from '@/features/layout';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -60,12 +61,14 @@ export default function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <UnreadCountsProvider>
-            <SafeAreaProvider>
-              <StatusBar style="auto" />
-              <AuthRouter />
-            </SafeAreaProvider>
-          </UnreadCountsProvider>
+          <ThemeProvider>
+            <UnreadCountsProvider>
+              <SafeAreaProvider>
+                <StatusBar style="auto" />
+                <AuthRouter />
+              </SafeAreaProvider>
+            </UnreadCountsProvider>
+          </ThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

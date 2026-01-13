@@ -15,8 +15,8 @@ import {
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Bell, MessageCircle, TrendingUp, AlertTriangle, Settings } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getPermissionsAsync, requestPermissionsAsync } from '@/utils/notifications';
 
 const NOTIFICATIONS_STORAGE_KEY = '@doughy_notifications';
 
@@ -48,7 +48,7 @@ export function NotificationsSettingsScreen() {
   // Check notification permission status
   useEffect(() => {
     const checkPermission = async () => {
-      const { status } = await Notifications.getPermissionsAsync();
+      const { status } = await getPermissionsAsync();
       setHasPermission(status === 'granted');
     };
     checkPermission();
@@ -79,7 +79,7 @@ export function NotificationsSettingsScreen() {
   );
 
   const handleRequestPermission = useCallback(async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
+    const { status } = await requestPermissionsAsync();
     setHasPermission(status === 'granted');
 
     if (status !== 'granted') {

@@ -18,7 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 
 export function LoginScreen() {
   const router = useRouter();
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, devBypassAuth } = useAuth();
 
   // Form state
   const [email, setEmail] = useState('');
@@ -176,6 +176,27 @@ export function LoginScreen() {
               <Text className="text-primary font-medium">Sign up</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Dev Login - Only visible in development */}
+          {__DEV__ && (
+            <View className="mt-8 pt-6 border-t border-border">
+              <Text className="text-xs text-muted-foreground text-center mb-3">
+                Development Mode
+              </Text>
+              <TouchableOpacity
+                className="bg-green-600 rounded-lg py-3 items-center mb-3"
+                onPress={devBypassAuth}
+                disabled={loading}
+              >
+                <Text className="text-white font-semibold text-sm">
+                  Skip Login (Dev Mode)
+                </Text>
+              </TouchableOpacity>
+              <Text className="text-xs text-muted-foreground text-center">
+                Bypasses auth with mock admin user
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

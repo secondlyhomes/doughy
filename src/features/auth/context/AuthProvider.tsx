@@ -172,6 +172,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
+   * Dev bypass - skip authentication for testing (only works in __DEV__)
+   */
+  const devBypassAuth = useCallback(() => {
+    if (!__DEV__) {
+      console.warn('[auth] devBypassAuth only works in development mode');
+      return;
+    }
+
+    console.log('[auth] Dev bypass: Setting mock authenticated state');
+
+    // Create mock user and session for development
+    const mockUser = {
+      id: 'dev-user-123',
+      email: 'dev@example.com',
+      email_confirmed_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      aud: 'authenticated',
+      role: 'authenticated',
+      app_metadata: {},
+      user_metadata: {},
+    } as User;
+
+    const mockSession = {
+      access_token: 'dev-token',
+      refresh_token: 'dev-refresh-token',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer',
+      user: mockUser,
+    } as Session;
+
+    setUser(mockUser);
+    setSession(mockSession);
+    setProfile({
+      id: mockUser.id,
+      email: mockUser.email!,
+      role: 'admin', // Give admin access in dev mode for full testing
+      email_verified: true,
+      onboarding_complete: true,
+      full_name: 'Dev User',
+    });
+    setIsLoading(false);
+  }, []);
+
+  /**
    * Send password reset email
    */
   const resetPassword = useCallback(async (email: string) => {
@@ -259,6 +305,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     updatePassword,
     refetchProfile,
+    devBypassAuth,
   }), [
     user,
     session,
@@ -270,6 +317,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     updatePassword,
     refetchProfile,
+    devBypassAuth,
   ]);
 
   return (
