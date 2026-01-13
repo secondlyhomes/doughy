@@ -48,12 +48,16 @@ export function AddressAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AddressResult[]>([]);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Clear timeout on unmount
+  // Clear timeout and abort pending requests on unmount
   useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
   }, []);
@@ -61,11 +65,27 @@ export function AddressAutocomplete({
   const searchAddress = useCallback(async (query: string) => {
     if (!query || query.length < 3) return;
 
+    // Abort any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
+
     setIsLoading(true);
 
     try {
       // Get Supabase URL for edge function
       const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        console.warn('No session available for geocoding');
+        setResults([]);
+        setIsLoading(false);
+        return;
+      }
 
       const response = await fetch(
         `${SUPABASE_URL}/functions/v1/openstreetmap-api`,
@@ -73,7 +93,7 @@ export function AddressAutocomplete({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`,
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             action: 'geocode',
@@ -85,6 +105,7 @@ export function AddressAutocomplete({
               countrycodes: 'us',
             },
           }),
+          signal,
         }
       );
 
@@ -173,6 +194,10 @@ export function AddressAutocomplete({
         setIsOpen(true);
       }
     } catch (error) {
+      // Ignore abort errors - they're expected when canceling requests
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('Error searching addresses:', error);
       setResults([]);
     } finally {

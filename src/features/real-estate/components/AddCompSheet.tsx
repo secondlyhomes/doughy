@@ -1,7 +1,7 @@
 // src/features/real-estate/components/AddCompSheet.tsx
 // Bottom sheet for adding a new comparable property
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -52,6 +52,23 @@ const initialFormData: FormData = {
   distance: '',
 };
 
+const buildFormDataFromComp = (comp: PropertyComp | null | undefined): FormData => {
+  if (!comp) return initialFormData;
+  return {
+    address: comp.address || '',
+    city: comp.city || '',
+    state: comp.state || '',
+    zip: comp.zip || '',
+    bedrooms: comp.bedrooms?.toString() || '',
+    bathrooms: comp.bathrooms?.toString() || '',
+    square_feet: (comp.square_feet || comp.sqft)?.toString() || '',
+    year_built: (comp.year_built || comp.yearBuilt)?.toString() || '',
+    sold_price: (comp.sold_price || comp.salePrice)?.toString() || '',
+    sold_date: comp.sold_date || comp.saleDate || '',
+    distance: comp.distance?.toString() || '',
+  };
+};
+
 export function AddCompSheet({
   visible,
   onClose,
@@ -59,38 +76,28 @@ export function AddCompSheet({
   isLoading = false,
   editComp,
 }: AddCompSheetProps) {
-  const [formData, setFormData] = useState<FormData>(() => {
-    if (editComp) {
-      return {
-        address: editComp.address || '',
-        city: editComp.city || '',
-        state: editComp.state || '',
-        zip: editComp.zip || '',
-        bedrooms: editComp.bedrooms?.toString() || '',
-        bathrooms: editComp.bathrooms?.toString() || '',
-        square_feet: (editComp.square_feet || editComp.sqft)?.toString() || '',
-        year_built: (editComp.year_built || editComp.yearBuilt)?.toString() || '',
-        sold_price: (editComp.sold_price || editComp.salePrice)?.toString() || '',
-        sold_date: editComp.sold_date || editComp.saleDate || '',
-        distance: editComp.distance?.toString() || '',
-      };
-    }
-    return initialFormData;
-  });
+  const [formData, setFormData] = useState<FormData>(() => buildFormDataFromComp(editComp));
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reset form data when editComp changes
+  useEffect(() => {
+    setFormData(buildFormDataFromComp(editComp));
+    setErrors({});
+  }, [editComp]);
 
   const updateField = useCallback((field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user types
-    if (errors[field]) {
-      setErrors(prev => {
+    setErrors(prev => {
+      if (prev[field]) {
         const next = { ...prev };
         delete next[field];
         return next;
-      });
-    }
-  }, [errors]);
+      }
+      return prev;
+    });
+  }, []);
 
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
