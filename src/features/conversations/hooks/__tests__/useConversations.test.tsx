@@ -7,6 +7,7 @@ import {
   useCreateConversation,
   useDeleteConversation,
 } from '../useConversations';
+import type { Conversation } from '../../types';
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -75,7 +76,7 @@ describe('useCreateConversation', () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useCreateConversation(), { wrapper });
 
-    let newConversation;
+    let newConversation: Conversation | undefined;
     await act(async () => {
       newConversation = await result.current.mutateAsync('Test Conversation');
     });
@@ -90,7 +91,7 @@ describe('useCreateConversation', () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useCreateConversation(), { wrapper });
 
-    let newConversation;
+    let newConversation: Conversation | undefined;
     await act(async () => {
       newConversation = await result.current.mutateAsync('');
     });
@@ -104,7 +105,7 @@ describe('useCreateConversation', () => {
 
     const beforeCreate = new Date().toISOString();
 
-    let newConversation;
+    let newConversation: Conversation | undefined;
     await act(async () => {
       newConversation = await result.current.mutateAsync('Timestamped Convo');
     });
@@ -120,7 +121,7 @@ describe('useCreateConversation', () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useCreateConversation(), { wrapper });
 
-    let convo1, convo2;
+    let convo1: Conversation | undefined, convo2: Conversation | undefined;
     await act(async () => {
       convo1 = await result.current.mutateAsync('Convo 1');
       // Add a small delay to ensure different timestamps

@@ -1,7 +1,7 @@
 // src/features/real-estate/components/AddRepairSheet.tsx
 // Bottom sheet for adding/editing repair estimates
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -73,6 +73,25 @@ export function AddRepairSheet({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reset form when editRepair prop changes (switching between different repairs)
+  useEffect(() => {
+    if (editRepair) {
+      setFormData({
+        category: editRepair.category,
+        description: editRepair.description || '',
+        estimate: editRepair.estimate?.toString() || '',
+        notes: editRepair.notes || '',
+        priority: editRepair.priority || 'medium',
+      });
+    } else {
+      setFormData({
+        ...initialFormData,
+        category: preselectedCategory || 'interior',
+      });
+    }
+    setErrors({});
+  }, [editRepair, preselectedCategory]);
 
   const updateField = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));

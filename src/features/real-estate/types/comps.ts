@@ -8,30 +8,33 @@ export interface PropertyComp {
   address: string;
   // Add new standardized fields
   address_line_1?: string;
-  address_line_2?: string;
+  address_line_2?: string | null;
   city: string;
   state: string;
   zip: string;
-  bedrooms: number;
-  bathrooms: number;
-  square_feet: number;
-  sqft?: number;
-  year_built?: number;
-  yearBuilt?: number;
-  sold_price: number;
-  salePrice?: number;
-  sold_date?: string;
-  saleDate?: string;
-  days_on_market?: number;
-  distance: number;
-  price_per_sqft: number;
-  status?: string;
-  special_features?: string;
-  lot_size?: number;
-  lotSize?: number;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_feet: number | null;
+  sqft?: number | null;
+  year_built?: number | null;
+  yearBuilt?: number | null;
+  // Made nullable to match database types
+  sold_price?: number | null;
+  salePrice?: number | null;
+  sold_date?: string | null;
+  saleDate?: string | null;
+  days_on_market?: number | null;
+  distance?: number | null;
+  price_per_sqft?: number | null;
+  status?: string | null;
+  special_features?: string | null;
+  lot_size?: number | null;
+  lotSize?: number | null;
   // Add fields that are used in hooks
-  created_at?: string;
-  updated_at?: string;
-  features_json?: any;
-  source?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  created_by?: string | null;
+  user_id?: string | null;
+  features_json?: unknown;
+  source?: string | null;
 }

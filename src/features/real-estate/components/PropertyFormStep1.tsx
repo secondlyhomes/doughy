@@ -31,12 +31,12 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
 
   const handleAddressSelect = useCallback((result: AddressResult) => {
     onChange({
-      address: result.street,
+      address: result.address,
       city: result.city,
       state: result.state,
       zip: result.zip,
-      latitude: result.latitude,
-      longitude: result.longitude,
+      latitude: result.lat,
+      longitude: result.lon,
     });
   }, [onChange]);
 
@@ -75,7 +75,9 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
           {useAutocomplete ? (
             <View className="mb-4">
               <AddressAutocomplete
-                onAddressSelect={handleAddressSelect}
+                value={data.address || ''}
+                onChange={(value) => onChange({ address: value })}
+                onAddressSelected={handleAddressSelect}
                 placeholder="Start typing an address..."
               />
               {data.address && (

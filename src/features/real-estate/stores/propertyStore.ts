@@ -375,17 +375,31 @@ export const usePropertyStore = create<PropertyStore>()(
 
         try {
           // Map frontend properties to database properties
-          const dbData: any = {
-            ...data,
-            address_line_1: data.address || data.address_line_1,
-            address_line_2: data.address_line_2,
-            property_type: data.propertyType || data.property_type
-          };
+          // Using a typed interface for database updates
+          const dbData: Record<string, unknown> = {};
 
-          // Remove frontend-only properties
-          delete dbData.address;
-          delete dbData.propertyType;
-          delete dbData.sqft;
+          // Copy over allowed database fields
+          if (data.address_line_1 !== undefined || data.address !== undefined) {
+            dbData.address_line_1 = data.address || data.address_line_1;
+          }
+          if (data.address_line_2 !== undefined) dbData.address_line_2 = data.address_line_2;
+          if (data.city !== undefined) dbData.city = data.city;
+          if (data.state !== undefined) dbData.state = data.state;
+          if (data.zip !== undefined) dbData.zip = data.zip;
+          if (data.county !== undefined) dbData.county = data.county;
+          if (data.bedrooms !== undefined) dbData.bedrooms = data.bedrooms;
+          if (data.bathrooms !== undefined) dbData.bathrooms = data.bathrooms;
+          if (data.square_feet !== undefined) dbData.square_feet = data.square_feet;
+          if (data.lot_size !== undefined) dbData.lot_size = data.lot_size;
+          if (data.year_built !== undefined) dbData.year_built = data.year_built;
+          if (data.propertyType !== undefined || data.property_type !== undefined) {
+            dbData.property_type = data.propertyType || data.property_type;
+          }
+          if (data.owner_occupied !== undefined) dbData.owner_occupied = data.owner_occupied;
+          if (data.notes !== undefined) dbData.notes = data.notes;
+          if (data.geo_point !== undefined) dbData.geo_point = data.geo_point;
+          if (data.arv !== undefined) dbData.arv = data.arv;
+          if (data.purchase_price !== undefined) dbData.purchase_price = data.purchase_price;
 
           // Update in database
           const { data: updatedData, error } = await supabase

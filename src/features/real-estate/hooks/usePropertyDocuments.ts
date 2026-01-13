@@ -49,7 +49,8 @@ export function usePropertyDocuments({ propertyId }: UsePropertyDocumentsOptions
       setIsLoading(true);
       setError(null);
 
-      const { data, error: queryError } = await supabase
+      // Use type assertion for table that may not be in generated types yet
+      const { data, error: queryError } = await (supabase as any)
         .from('re_documents')
         .select('*')
         .eq('property_id', propertyId)
@@ -59,7 +60,7 @@ export function usePropertyDocuments({ propertyId }: UsePropertyDocumentsOptions
         throw queryError;
       }
 
-      setDocuments(data || []);
+      setDocuments((data as Document[]) || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error fetching documents:', errorMessage);
@@ -153,7 +154,7 @@ export function useDocumentMutations() {
       } else {
         // On native, read as base64
         const base64 = await FileSystem.readAsStringAsync(file.uri, {
-          encoding: FileSystem.EncodingType.Base64,
+          encoding: 'base64',
         });
         fileData = base64;
       }
@@ -198,7 +199,8 @@ export function useDocumentMutations() {
         status: 'active',
       };
 
-      const { data: docData, error: insertError } = await supabase
+      // Use type assertion for table that may not be in generated types yet
+      const { data: docData, error: insertError } = await (supabase as any)
         .from('re_documents')
         .insert(insertData)
         .select()
@@ -209,7 +211,7 @@ export function useDocumentMutations() {
       }
 
       setUploadProgress(100);
-      return docData;
+      return docData as Document;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error uploading document:', errorMessage);
@@ -232,15 +234,21 @@ export function useDocumentMutations() {
         // Extract file path from URL
         const urlParts = url.split('/property-documents/');
         if (urlParts.length > 1) {
-          const filePath = urlParts[1];
-          await supabase.storage
+          // Remove query params if present (e.g., ?token=xxx)
+          let filePath = urlParts[1].split('?')[0];
+
+          const { error: removeError } = await supabase.storage
             .from('property-documents')
             .remove([filePath]);
+
+          if (removeError) {
+            console.warn('Failed to remove file from storage:', removeError);
+          }
         }
       }
 
-      // Delete database record
-      const { error: deleteError } = await supabase
+      // Delete database record - use type assertion for table not in generated types yet
+      const { error: deleteError } = await (supabase as any)
         .from('re_documents')
         .delete()
         .eq('id', document.id);
@@ -271,11 +279,41 @@ export function useDocumentMutations() {
 }
 
 // Helper function to decode base64 for native platforms
+// Uses a React Native compatible approach (atob is not available in RN runtime)
 function decode(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+  // Base64 character lookup table
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const lookup = new Uint8Array(256);
+  for (let i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i;
   }
+
+  // Remove padding and calculate output length
+  let bufferLength = base64.length * 0.75;
+  if (base64[base64.length - 1] === '=') {
+    bufferLength--;
+    if (base64[base64.length - 2] === '=') {
+      bufferLength--;
+    }
+  }
+
+  const bytes = new Uint8Array(bufferLength);
+  let p = 0;
+
+  for (let i = 0; i < base64.length; i += 4) {
+    const encoded1 = lookup[base64.charCodeAt(i)];
+    const encoded2 = lookup[base64.charCodeAt(i + 1)];
+    const encoded3 = lookup[base64.charCodeAt(i + 2)];
+    const encoded4 = lookup[base64.charCodeAt(i + 3)];
+
+    bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+    if (base64[i + 2] !== '=') {
+      bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+    }
+    if (base64[i + 3] !== '=') {
+      bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+  }
+
   return bytes;
 }

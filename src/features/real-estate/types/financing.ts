@@ -4,14 +4,18 @@
 export interface FinancingScenario {
   id: string;
   name: string;
-  description: string;
-  pros_cons: string;
-  scenario_type: string;
+  // Made nullable to match database types
+  description?: string | null;
+  pros_cons?: string | null;
+  scenario_type?: string | null;
   property_id: string;
-  created_at: string;
-  updated_at: string;
-  input_json?: any;
-  result_json?: any;
+  created_at?: string | null;
+  updated_at?: string | null;
+  created_by?: string | null;
+  workspace_id?: string | null;
+  is_primary?: boolean | null;
+  input_json?: unknown;
+  result_json?: unknown;
   // For compatibility with hooks
   details?: ScenarioDetails;
 }

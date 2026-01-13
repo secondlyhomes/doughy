@@ -22,11 +22,11 @@ import {
   AlertCircle,
   Smartphone,
 } from 'lucide-react-native';
-import { RootStackParamList } from '@/types';
+import { SettingsStackParamList } from '@/types';
 
 type NotificationSettingsScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Settings'
+  SettingsStackParamList,
+  'NotificationsSettings'
 >;
 
 interface NotificationSetting {

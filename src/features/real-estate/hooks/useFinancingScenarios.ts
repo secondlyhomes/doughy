@@ -231,10 +231,13 @@ export function useFinancingScenarioMutations() {
 
       if (fetchError) throw fetchError;
 
-      const existingInput = existing.input_json || {};
+      // Safely parse existing input_json as an object
+      const existingInput = (typeof existing.input_json === 'object' && existing.input_json !== null)
+        ? existing.input_json as Record<string, unknown>
+        : {};
 
       const updatedInput: ScenarioDetails = {
-        ...existingInput,
+        ...(existingInput as Partial<ScenarioDetails>),
         purchasePrice: data.purchasePrice ?? existingInput.purchasePrice,
         loanAmount: data.loanAmount ?? existingInput.loanAmount,
         interestRate: data.interestRate ?? existingInput.interestRate,

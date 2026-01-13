@@ -17,7 +17,7 @@ import {
   Modal,
 } from 'react-native';
 import { MapPin, X, ChevronDown } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
+import { supabase, SUPABASE_URL } from '@/lib/supabase';
 
 export interface AddressResult {
   address: string;
@@ -68,7 +68,7 @@ export function AddressAutocomplete({
       const { data: { session } } = await supabase.auth.getSession();
 
       const response = await fetch(
-        `https://lqmbyobweeaigrwmvizo.supabase.co/functions/v1/openstreetmap-api`,
+        `${SUPABASE_URL}/functions/v1/openstreetmap-api`,
         {
           method: 'POST',
           headers: {

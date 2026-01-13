@@ -186,5 +186,8 @@ export function useDealAnalysis(
       hasFlipData,
       hasRentalData,
     };
-  }, [property, rentalAssumptions]);
+    // Using JSON.stringify for rentalAssumptions to ensure stable dependency comparison
+    // since objects are compared by reference and would cause unnecessary recalculations
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [property, JSON.stringify(rentalAssumptions)]);
 }

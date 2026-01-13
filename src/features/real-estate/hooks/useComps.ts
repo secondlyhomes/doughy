@@ -99,6 +99,10 @@ function calculateARV(comps: PropertyComp[]): { calculatedARV: number | null; ar
   if (validComps === 0) {
     // Fall back to simple average if no sqft data
     const totalPrice = comps.reduce((sum, comp) => sum + (comp.sold_price || comp.salePrice || 0), 0);
+    // Guard against zero total price (all comps have no price data)
+    if (totalPrice === 0 || comps.length === 0) {
+      return { calculatedARV: null, arvPerSqft: null };
+    }
     return {
       calculatedARV: Math.round(totalPrice / comps.length),
       arvPerSqft: null,
@@ -185,11 +189,12 @@ export function useCompMutations() {
       setIsLoading(true);
       setError(null);
 
-      const updateData: any = {
+      // Build update data with proper typing
+      const updateData: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
-      // Map fields
+      // Map fields - only include defined values
       if (updates.address !== undefined) updateData.address = updates.address;
       if (updates.address_line_1 !== undefined) updateData.address_line_1 = updates.address_line_1;
       if (updates.address_line_2 !== undefined) updateData.address_line_2 = updates.address_line_2;

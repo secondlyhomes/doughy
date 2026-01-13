@@ -71,9 +71,10 @@ export function AddFinancingSheet({
 }: AddFinancingSheetProps) {
   const [formData, setFormData] = useState<FormData>(() => {
     if (editScenario) {
-      const input = editScenario.input_json || editScenario.details || {};
-      const purchasePrice = input.purchasePrice || 0;
-      const downPayment = input.downPayment || 0;
+      // Safely cast input_json to a record for property access
+      const input = (editScenario.input_json || editScenario.details || {}) as Record<string, unknown>;
+      const purchasePrice = (input.purchasePrice as number) || 0;
+      const downPayment = (input.downPayment as number) || 0;
       const downPaymentPercent = purchasePrice > 0 ? (downPayment / purchasePrice) * 100 : 20;
 
       return {
@@ -81,9 +82,9 @@ export function AddFinancingSheet({
         scenarioType: (editScenario.scenario_type as LoanType) || 'conventional',
         purchasePrice: purchasePrice?.toString() || '',
         downPaymentPercent: downPaymentPercent.toFixed(0),
-        interestRate: input.interestRate?.toString() || '7',
-        loanTerm: (input.loanTerm || input.term || 30).toString(),
-        closingCosts: input.closingCosts?.toString() || '',
+        interestRate: (input.interestRate as number)?.toString() || '7',
+        loanTerm: ((input.loanTerm as number) || (input.term as number) || 30).toString(),
+        closingCosts: (input.closingCosts as number)?.toString() || '',
         notes: editScenario.description || '',
       };
     }
@@ -94,6 +95,34 @@ export function AddFinancingSheet({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reset form when editScenario prop changes (switching between different scenarios)
+  useEffect(() => {
+    if (editScenario) {
+      // Safely cast input_json to a record for property access
+      const input = (editScenario.input_json || editScenario.details || {}) as Record<string, unknown>;
+      const price = (input.purchasePrice as number) || 0;
+      const down = (input.downPayment as number) || 0;
+      const downPct = price > 0 ? (down / price) * 100 : 20;
+
+      setFormData({
+        name: editScenario.name || '',
+        scenarioType: (editScenario.scenario_type as LoanType) || 'conventional',
+        purchasePrice: price?.toString() || '',
+        downPaymentPercent: downPct.toFixed(0),
+        interestRate: (input.interestRate as number)?.toString() || '7',
+        loanTerm: ((input.loanTerm as number) || (input.term as number) || 30).toString(),
+        closingCosts: (input.closingCosts as number)?.toString() || '',
+        notes: editScenario.description || '',
+      });
+    } else {
+      setFormData({
+        ...initialFormData,
+        purchasePrice: defaultPurchasePrice?.toString() || '',
+      });
+    }
+    setErrors({});
+  }, [editScenario, defaultPurchasePrice]);
 
   // Calculate derived values
   const purchasePrice = parseFloat(formData.purchasePrice) || 0;

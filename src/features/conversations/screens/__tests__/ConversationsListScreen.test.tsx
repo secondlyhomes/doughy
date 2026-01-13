@@ -324,12 +324,8 @@ describe('ConversationsListScreen', () => {
   });
 
   it('should handle conversation without last_message', () => {
-    mockUseConversations.conversations = [
-      {
-        ...mockConversations[0],
-        last_message: undefined,
-      },
-    ];
+    const { last_message, ...conversationWithoutMessage } = mockConversations[0];
+    mockUseConversations.conversations = [conversationWithoutMessage];
 
     const { getByText, queryByText } = renderWithQueryClient();
 
@@ -338,12 +334,8 @@ describe('ConversationsListScreen', () => {
   });
 
   it('should handle conversation without title', () => {
-    mockUseConversations.conversations = [
-      {
-        ...mockConversations[0],
-        title: undefined,
-      },
-    ];
+    const { title, ...conversationWithoutTitle } = mockConversations[0];
+    mockUseConversations.conversations = [conversationWithoutTitle];
 
     const { getByText } = renderWithQueryClient();
 

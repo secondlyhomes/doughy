@@ -209,7 +209,7 @@ describe('SwipeableLeadCard', () => {
       company: 'Acme Corp',
       source: 'website',
       score: 85,
-      notes: 'Important client',
+      notes: [{ id: 'note-1', lead_id: mockLead.id, content: 'Important client' }],
     };
 
     const { getByText } = renderWithQueryClient(

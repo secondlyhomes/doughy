@@ -17,7 +17,7 @@ export {
   getUsers,
   getUserById,
   updateUserRole,
-  updateUserStatus,
+  restoreUser,
   deleteUser,
   getLogs,
   getLogSources,

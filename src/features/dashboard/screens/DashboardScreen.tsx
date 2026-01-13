@@ -9,8 +9,9 @@ import {
   TouchableOpacity,
   RefreshControl
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   TrendingUp,
   Clock,
@@ -31,9 +32,13 @@ import { Progress } from '@/components/ui';
 // Zone D Components
 import { QuickActionFAB } from '@/features/layout';
 
-import { RootStackParamList } from '@/types';
+import { RootStackParamList, MainTabParamList, LeadsStackParamList } from '@/types';
 
-type DashboardNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+// Composite navigation type for dashboard - can navigate to tabs and modals
+type DashboardNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Dashboard'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface StatCardProps {
   title: string;
@@ -107,15 +112,18 @@ export function DashboardScreen() {
   };
 
   const handleAddLead = () => {
-    navigation.navigate('AddLead');
+    // Navigate to Leads tab, then to AddLead screen
+    navigation.navigate('Leads', { screen: 'AddLead' } as any);
   };
 
   const handleAddProperty = () => {
+    // Navigate to Properties tab
     navigation.navigate('Properties');
   };
 
   const handleStartChat = () => {
-    navigation.navigate('Assistant');
+    // Navigate to the assistant modal
+    navigation.navigate('AssistantModal');
   };
 
   return (
@@ -148,7 +156,7 @@ export function DashboardScreen() {
                 <View className="flex-row mt-3 gap-2">
                   <TouchableOpacity
                     className="border border-border rounded-md px-3 py-2"
-                    onPress={() => navigation.navigate('Leads')}
+                    onPress={() => navigation.navigate('Leads', { screen: 'LeadList' } as any)}
                   >
                     <Text className="text-sm text-foreground">View Leads</Text>
                   </TouchableOpacity>
@@ -207,7 +215,7 @@ export function DashboardScreen() {
             <TouchableOpacity
               key={index}
               className="bg-primary/10 rounded-lg p-3 mb-2"
-              onPress={() => navigation.navigate('LeadDetail', { leadId: String(index + 1) })}
+              onPress={() => navigation.navigate('LeadDetailModal', { leadId: String(index + 1) })}
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
@@ -231,7 +239,7 @@ export function DashboardScreen() {
 
           <TouchableOpacity
             className="flex-row items-center justify-center mt-3 py-2"
-            onPress={() => navigation.navigate('Leads')}
+            onPress={() => navigation.navigate('Leads', { screen: 'LeadList' } as any)}
           >
             <Text className="text-sm text-primary mr-1">View All Leads</Text>
             <ArrowRight size={14} color="#3b82f6" />
@@ -244,14 +252,14 @@ export function DashboardScreen() {
           <View className="flex-row gap-3">
             <TouchableOpacity
               className="flex-1 bg-primary rounded-lg p-4 items-center"
-              onPress={() => navigation.navigate('AddLead')}
+              onPress={() => navigation.navigate('Leads', { screen: 'AddLead' } as any)}
             >
               <Users size={24} color="white" />
               <Text className="text-white font-medium mt-2">Add Lead</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="flex-1 bg-secondary rounded-lg p-4 items-center"
-              onPress={() => navigation.navigate('Assistant')}
+              onPress={() => navigation.navigate('AssistantModal')}
             >
               <TrendingUp size={24} color="#1f2937" />
               <Text className="text-secondary-foreground font-medium mt-2">AI Assistant</Text>
