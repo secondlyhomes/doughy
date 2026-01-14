@@ -6,7 +6,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner } from '@/components/ui';
+import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { DealStrategy, OfferTerms, DEAL_STRATEGY_CONFIG } from '../types';
 import { getEmptyOfferTerms } from '../data/mockOffers';
@@ -112,7 +112,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
         showsVerticalScrollIndicator={false}
       >
         {/* Strategy selector */}

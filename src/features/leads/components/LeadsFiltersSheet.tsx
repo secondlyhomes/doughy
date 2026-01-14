@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { X, Check, ChevronDown, RotateCcw } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';
 
@@ -88,7 +89,7 @@ function OptionButton({ label, selected, onPress }: OptionButtonProps) {
     <TouchableOpacity
       className="flex-row items-center justify-between px-4 py-3 rounded-lg mb-2"
       style={{
-        backgroundColor: selected ? `${colors.primary}15` : colors.muted,
+        backgroundColor: selected ? withOpacity(colors.primary, 'muted') : colors.muted,
         borderWidth: selected ? 1 : 0,
         borderColor: selected ? colors.primary : 'transparent',
       }}

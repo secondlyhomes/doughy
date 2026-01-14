@@ -36,8 +36,9 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
+import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useDeal, useUpdateDealStage } from '../hooks/useDeals';
 import { useNextAction, getActionButtonText, getActionIcon } from '../hooks/useNextAction';
 import { useDealAnalysis } from '../../real-estate/hooks/useDealAnalysis';
@@ -76,7 +77,7 @@ function StageBadge({ stage, onPress }: StageBadgeProps) {
       onPress={onPress}
       disabled={!onPress}
       className="flex-row items-center px-3 py-1.5 rounded-full"
-      style={{ backgroundColor: `${colors.primary}20` }}
+      style={{ backgroundColor: withOpacity(colors.primary, 'light') }}
       accessibilityLabel={`Stage: ${config.label}`}
       accessibilityRole="button"
     >
@@ -116,11 +117,7 @@ function NextActionButton({ deal, onPress }: NextActionButtonProps) {
       className="rounded-xl p-4 mb-4"
       style={{
         backgroundColor: buttonBg,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        ...getShadowStyle(colors, { size: 'md' }),
       }}
       onPress={onPress}
       accessibilityLabel={`Next action: ${nextAction.action}`}
@@ -144,7 +141,7 @@ function NextActionButton({ deal, onPress }: NextActionButtonProps) {
         </View>
         <View
           className="w-10 h-10 rounded-full items-center justify-center"
-          style={{ backgroundColor: isHighPriority ? 'rgba(255,255,255,0.2)' : `${colors.primary}20` }}
+          style={{ backgroundColor: isHighPriority ? withOpacity(colors.card, 'light') : withOpacity(colors.primary, 'light') }}
         >
           <ChevronRight size={20} color={isHighPriority ? buttonText : colors.primary} />
         </View>
@@ -298,7 +295,7 @@ function ActionCard({
       <View className="flex-row items-center">
         <View
           className="w-10 h-10 rounded-full items-center justify-center mr-3"
-          style={{ backgroundColor: `${colors.primary}15` }}
+          style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
         >
           {icon}
         </View>
@@ -308,11 +305,11 @@ function ActionCard({
             {badge && (
               <View
                 className="ml-2 px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: badgeColor || `${colors.primary}20` }}
+                style={{ backgroundColor: badgeColor || withOpacity(colors.primary, 'light') }}
               >
                 <Text
                   className="text-xs font-medium"
-                  style={{ color: badgeColor ? '#fff' : colors.primary }}
+                  style={{ color: badgeColor ? colors.primaryForeground : colors.primary }}
                 >
                   {badge}
                 </Text>
@@ -537,7 +534,7 @@ export function DealCockpitScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -565,7 +562,7 @@ export function DealCockpitScreen() {
             <View className="flex-row items-center mt-2">
               <View
                 className="px-2 py-1 rounded-full"
-                style={{ backgroundColor: `${colors.secondary}30` }}
+                style={{ backgroundColor: withOpacity(colors.secondary, 'medium') }}
               >
                 <Text className="text-xs font-medium" style={{ color: colors.secondaryForeground }}>
                   {DEAL_STRATEGY_CONFIG[deal.strategy].label}
@@ -651,7 +648,7 @@ export function DealCockpitScreen() {
             style={{
               backgroundColor:
                 deal.stage === 'closed_won'
-                  ? `${colors.success}20`
+                  ? withOpacity(colors.success, 'light')
                   : `${colors.muted}`,
             }}
           >

@@ -22,6 +22,8 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { formatRelativeTime } from '@/utils/format';
+import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 import {
   AIJob,
@@ -128,7 +130,7 @@ export function JobsTab({ dealId, onJobPress }: JobsTabProps) {
               IN PROGRESS
             </Text>
             <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
-              <Text style={styles.countBadgeText}>{activeJobs.length}</Text>
+              <Text style={[styles.countBadgeText, { color: colors.primaryForeground }]}>{activeJobs.length}</Text>
             </View>
           </View>
         </View>
@@ -306,28 +308,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: SPACING.lg,
+    paddingBottom: TAB_BAR_SAFE_PADDING,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    padding: SPACING['3xl'],
   },
   emptyIconContainer: {
     width: 72,
     height: 72,
-    borderRadius: 36,
+    borderRadius: BORDER_RADIUS['36'],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
   },
   emptySubtitle: {
     fontSize: 14,
@@ -338,19 +340,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: SPACING.md,
   },
   loadingText: {
     fontSize: 14,
   },
   sectionHeader: {
-    marginBottom: 12,
-    marginTop: 8,
+    marginBottom: SPACING.md,
+    marginTop: SPACING.sm,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
   },
   sectionTitle: {
     fontSize: 11,
@@ -360,10 +362,9 @@ const styles = StyleSheet.create({
   countBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS['10'],
   },
   countBadgeText: {
-    color: '#fff',
     fontSize: 11,
     fontWeight: '600',
   },
@@ -371,14 +372,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     marginBottom: 10,
   },
   statusIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS['10'],
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -397,8 +398,8 @@ const styles = StyleSheet.create({
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    gap: 8,
+    marginTop: SPACING.sm,
+    gap: SPACING.sm,
   },
   progressTrack: {
     flex: 1,
@@ -422,13 +423,13 @@ const styles = StyleSheet.create({
   jobActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
     marginLeft: 8,
   },
   cancelButton: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: BORDER_RADIUS['14'],
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -437,11 +438,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: SPACING.sm,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS['10'],
     borderWidth: 1,
-    marginTop: 8,
+    marginTop: SPACING.sm,
   },
   refreshText: {
     fontSize: 13,

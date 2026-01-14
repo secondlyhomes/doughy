@@ -1,8 +1,9 @@
 // Lead Card Component - React Native
 // Converted from web app lead card components
+// Now uses DataCard for consistency
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import {
   Star,
   Phone,
@@ -14,7 +15,7 @@ import {
 import { useThemeColors } from '@/context/ThemeContext';
 
 // Zone A UI Components
-import { Card, Badge } from '@/components/ui';
+import { DataCard, DataCardField } from '@/components/ui';
 
 import { Lead } from '../types';
 
@@ -26,24 +27,24 @@ interface LeadCardProps {
 export function LeadCard({ lead, onPress }: LeadCardProps) {
   const colors = useThemeColors();
 
-  const getStatusColor = (status: string | undefined) => {
-    switch (status) {
-      case 'new': return 'bg-success';
-      case 'active': return 'bg-info';
-      case 'won': return 'bg-success';
-      case 'lost': return 'bg-destructive';
-      case 'closed': return 'bg-primary';
-      case 'inactive': return 'bg-muted-foreground';
-      default: return 'bg-muted-foreground';
-    }
-  };
-
   const formatStatus = (status: string | undefined) => {
     if (!status) return 'Unknown';
     return status.replace(/_/g, ' ').replace(/-/g, ' ')
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
+  };
+
+  const getStatusVariant = (status: string | undefined) => {
+    switch (status) {
+      case 'new': return 'success' as const;
+      case 'active': return 'info' as const;
+      case 'won': return 'success' as const;
+      case 'lost': return 'destructive' as const;
+      case 'closed': return 'default' as const;
+      case 'inactive': return 'secondary' as const;
+      default: return 'default' as const;
+    }
   };
 
   const getScoreColor = (score: number | undefined) => {
@@ -53,108 +54,61 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
     return colors.destructive;
   };
 
+  // Build fields array from lead data
+  const fields: DataCardField[] = [
+    ...(lead.email ? [{ icon: Mail, value: lead.email }] : []),
+    ...(lead.phone ? [{ icon: Phone, value: lead.phone }] : []),
+    ...((lead.city || lead.state) ? [{
+      icon: MapPin,
+      value: [lead.city, lead.state].filter(Boolean).join(', '),
+    }] : []),
+  ];
+
+  // Build badges array
+  const cardBadges = [
+    ...(lead.tags?.slice(0, 2).map(tag => ({
+      label: tag,
+      variant: 'outline' as const,
+      size: 'sm' as const,
+    })) || []),
+  ];
+
   return (
-    <Card className="p-4">
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.7}
-      >
-      {/* Header Row */}
-      <View className="flex-row items-start justify-between mb-2">
-        <View className="flex-1">
-          <View className="flex-row items-center">
-            <Text className="text-base font-semibold flex-1" style={{ color: colors.foreground }} numberOfLines={1}>
-              {lead.name || 'Unnamed Lead'}
-            </Text>
-            {lead.starred && (
-              <Star size={16} color={colors.warning} fill={colors.warning} />
-            )}
-          </View>
-          {lead.company && (
-            <View className="flex-row items-center mt-1">
-              <Building2 size={12} color={colors.mutedForeground} />
-              <Text className="text-sm ml-1" style={{ color: colors.mutedForeground }} numberOfLines={1}>
-                {lead.company}
+    <DataCard
+      onPress={onPress}
+      title={lead.name || 'Unnamed Lead'}
+      subtitle={lead.company}
+      headerIcon={lead.starred ? Star : undefined}
+      headerBadge={{
+        label: formatStatus(lead.status),
+        variant: getStatusVariant(lead.status),
+        size: 'sm',
+      }}
+      headerRight={<ChevronRight size={20} color={colors.mutedForeground} />}
+      fields={fields}
+      badges={cardBadges}
+      footerContent={
+        <View className="flex-row items-center justify-between mb-2">
+          {/* Score */}
+          {lead.score !== undefined && (
+            <View className="flex-row items-center">
+              <Text className="text-sm font-medium" style={{ color: getScoreColor(lead.score) }}>
+                {lead.score}
+              </Text>
+              <Text className="text-xs ml-0.5" style={{ color: colors.mutedForeground }}>
+                pts
               </Text>
             </View>
           )}
-        </View>
-        <ChevronRight size={20} color={colors.mutedForeground} />
-      </View>
-
-      {/* Contact Info */}
-      <View className="mb-3">
-        {lead.email && (
-          <View className="flex-row items-center mb-1">
-            <Mail size={12} color={colors.mutedForeground} />
-            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }} numberOfLines={1}>
-              {lead.email}
+          {/* Tag overflow indicator */}
+          {lead.tags && lead.tags.length > 2 && (
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+              +{lead.tags.length - 2} more tags
             </Text>
-          </View>
-        )}
-        {lead.phone && (
-          <View className="flex-row items-center mb-1">
-            <Phone size={12} color={colors.mutedForeground} />
-            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>
-              {lead.phone}
-            </Text>
-          </View>
-        )}
-        {(lead.city || lead.state) && (
-          <View className="flex-row items-center">
-            <MapPin size={12} color={colors.mutedForeground} />
-            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }} numberOfLines={1}>
-              {[lead.city, lead.state].filter(Boolean).join(', ')}
-            </Text>
-          </View>
-        )}
-      </View>
-
-        {/* Footer Row */}
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
-            {/* Status Badge */}
-            <Badge
-              variant={
-                lead.status === 'new' ? 'default' :
-                lead.status === 'active' ? 'secondary' :
-                lead.status === 'won' ? 'default' :
-                lead.status === 'lost' ? 'destructive' :
-                'default'
-              }
-            >
-              {formatStatus(lead.status)}
-            </Badge>
-
-            {/* Score */}
-            {lead.score !== undefined && (
-              <View className="flex-row items-center">
-                <Text className="text-sm font-medium" style={{ color: getScoreColor(lead.score) }}>
-                  {lead.score}
-                </Text>
-                <Text className="text-xs ml-0.5" style={{ color: colors.mutedForeground }}>pts</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Tags */}
-          {lead.tags && lead.tags.length > 0 && (
-            <View className="flex-row items-center gap-1">
-              {lead.tags.slice(0, 2).map((tag, index) => (
-                <Badge key={index} variant="outline" size="sm">
-                  {tag}
-                </Badge>
-              ))}
-              {lead.tags.length > 2 && (
-                <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                  +{lead.tags.length - 2}
-                </Text>
-              )}
-            </View>
           )}
         </View>
-      </TouchableOpacity>
-    </Card>
+      }
+    />
   );
 }
 

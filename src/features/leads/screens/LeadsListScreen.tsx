@@ -10,11 +10,12 @@ import {
   RefreshControl,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, ScreenHeader, LoadingSpinner } from '@/components/ui';
+import { SearchBar, ScreenHeader, LoadingSpinner, ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Plus, SlidersHorizontal } from 'lucide-react-native';
+import { Plus, SlidersHorizontal, Users, Search } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { getShadowStyle } from '@/lib/design-utils';
 
 import { Lead, LeadStatus } from '../types';
 import { useLeads } from '../hooks/useLeads';
@@ -126,7 +127,7 @@ export function LeadsListScreen() {
       <ScreenHeader title="Leads" subtitle="Track your prospects" />
 
       {/* Search Bar */}
-      <View className="px-4 pt-2 pb-2">
+      <View className="px-4 pt-2 pb-3">
         <View className="flex-row items-center gap-2">
           <SearchBar
             value={searchQuery}
@@ -136,7 +137,7 @@ export function LeadsListScreen() {
             className="flex-1"
           />
           <TouchableOpacity
-            className="p-2.5 rounded-lg relative"
+            className="p-2.5 rounded-xl relative"
             style={{ backgroundColor: colors.muted }}
             onPress={() => setShowFiltersSheet(true)}
             accessibilityLabel={`Open filters${activeFiltersCount > 0 ? `, ${activeFiltersCount} active` : ''}`}
@@ -155,7 +156,7 @@ export function LeadsListScreen() {
       </View>
 
       {/* Filter Tabs */}
-      <View className="px-4 pb-2">
+      <View className="px-4 pb-3">
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -182,7 +183,7 @@ export function LeadsListScreen() {
       </View>
 
       {/* Leads Count */}
-      <View className="px-4 pb-2">
+      <View className="px-4 pb-3">
         <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           {filteredLeads.length} leads
         </Text>
@@ -196,7 +197,7 @@ export function LeadsListScreen() {
           data={filteredLeads}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
           ItemSeparatorComponent={() => <View className="h-3" />}
           refreshControl={
             <RefreshControl
@@ -206,20 +207,22 @@ export function LeadsListScreen() {
             />
           }
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center py-20">
-              <Text className="text-center" style={{ color: colors.mutedForeground }}>
-                {searchQuery ? 'No leads match your search' : 'No leads yet'}
-              </Text>
-              <TouchableOpacity
-                className="mt-4 px-4 py-2 rounded-lg"
-                style={{ backgroundColor: colors.primary }}
-                onPress={() => router.push('/(tabs)/leads/add')}
-                accessibilityLabel="Add your first lead"
-                accessibilityRole="button"
-              >
-                <Text className="font-medium" style={{ color: colors.primaryForeground }}>Add First Lead</Text>
-              </TouchableOpacity>
-            </View>
+            <ListEmptyState
+              state={searchQuery ? 'filtered' : 'empty'}
+              icon={searchQuery ? Search : Users}
+              title={searchQuery ? 'No Results Found' : 'No Leads Yet'}
+              description={
+                searchQuery
+                  ? 'No leads match your search criteria.'
+                  : 'Add your first lead to start building your pipeline.'
+              }
+              primaryAction={{
+                label: searchQuery ? 'Clear Search' : 'Add First Lead',
+                onPress: searchQuery
+                  ? () => setSearchQuery('')
+                  : () => router.push('/(tabs)/leads/add'),
+              }}
+            />
           }
         />
       )}
@@ -227,14 +230,12 @@ export function LeadsListScreen() {
       {/* Floating Action Button */}
       <TouchableOpacity
         className="absolute bottom-32 right-6 w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        style={{
-          backgroundColor: colors.primary,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
+        style={[
+          {
+            backgroundColor: colors.primary,
+          },
+          getShadowStyle(colors, { size: 'md' }),
+        ]}
         onPress={() => router.push('/(tabs)/leads/add')}
         accessibilityLabel="Add new lead"
         accessibilityRole="button"

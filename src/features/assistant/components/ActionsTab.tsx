@@ -26,6 +26,8 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 import { useNextAction, NextAction, ActionCategory } from '@/features/deals/hooks/useNextAction';
 import { useDeal } from '@/features/deals/hooks/useDeals';
@@ -315,46 +317,46 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: SPACING.lg,
+    paddingBottom: TAB_BAR_SAFE_PADDING,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    padding: SPACING['3xl'],
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
   },
   emptySubtitle: {
     fontSize: 14,
     textAlign: 'center',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: SPACING['2xl'],
   },
   sectionTitle: {
     fontSize: 11,
     fontWeight: '600',
     letterSpacing: 1,
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   nbaCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
   },
   nbaContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: SPACING.md,
     flex: 1,
   },
   nbaText: {
@@ -363,7 +365,7 @@ const styles = StyleSheet.create({
   nbaAction: {
     fontSize: 15,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   nbaMeta: {
     fontSize: 12,
@@ -371,12 +373,12 @@ const styles = StyleSheet.create({
   actionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: SPACING.md,
   },
   actionCard: {
     width: '47%',
-    padding: 16,
-    borderRadius: 12,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     alignItems: 'flex-start',
     minHeight: 90,
@@ -384,7 +386,7 @@ const styles = StyleSheet.create({
   actionIconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS['10'],
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -395,7 +397,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   asyncBadge: {
-    marginTop: 8,
+    marginTop: SPACING.sm,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
@@ -406,16 +408,16 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: SPACING.md,
   },
   quickActionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 10,
+    gap: SPACING.sm,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS['10'],
   },
   quickActionLabel: {
     fontSize: 13,

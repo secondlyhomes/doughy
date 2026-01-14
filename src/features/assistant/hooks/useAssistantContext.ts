@@ -194,6 +194,79 @@ function buildPropertyDetailPayload(
 }
 
 /**
+ * Build QuickUnderwrite payload
+ */
+function buildQuickUnderwritePayload(
+  deal: Deal,
+  property: any,
+  metrics: DealMetrics | null
+): ScreenPayload {
+  // Extend DealCockpit payload with underwrite-specific data
+  const basePayload = buildDealCockpitPayload(deal, null, metrics);
+
+  return {
+    ...basePayload,
+    type: 'deal_cockpit', // Reuse deal_cockpit type for now
+    // Could add underwrite-specific fields here in the future
+  };
+}
+
+/**
+ * Build OfferBuilder payload
+ */
+function buildOfferBuilderPayload(
+  deal: Deal,
+  metrics: DealMetrics | null
+): ScreenPayload {
+  const basePayload = buildDealCockpitPayload(deal, null, metrics);
+
+  return {
+    ...basePayload,
+    type: 'deal_cockpit',
+    // Could add offer-specific fields like:
+    // offerScenarios, comparableOffers, etc.
+  };
+}
+
+/**
+ * Build FieldMode payload
+ */
+function buildFieldModePayload(
+  deal: Deal
+): ScreenPayload {
+  return {
+    type: 'generic',
+    screenName: 'FieldMode',
+    // Could add field-specific context:
+    // photosCount, voiceMemosCount, location, etc.
+  };
+}
+
+/**
+ * Build DealsList payload
+ */
+function buildDealsListPayload(): ScreenPayload {
+  return {
+    type: 'generic',
+    screenName: 'DealsList',
+    // Could add:
+    // activeDealsCount, overdueActionsCount, stageBreakdown, etc.
+  };
+}
+
+/**
+ * Build Inbox payload
+ */
+function buildInboxPayload(): ScreenPayload {
+  return {
+    type: 'generic',
+    screenName: 'Inbox',
+    // Could add:
+    // pendingTasksCount, todaysDue, upcomingActions, etc.
+  };
+}
+
+/**
  * Build generic payload for screens without specific context
  */
 function buildGenericPayload(screenName: string): GenericPayload {
@@ -270,11 +343,32 @@ export function useAssistantContext(
 
     switch (screenName) {
       case 'DealCockpit':
-      case 'QuickUnderwrite':
-      case 'OfferBuilder':
-      case 'FieldMode':
         if (deal) {
           payload = buildDealCockpitPayload(deal, nextAction, metrics, recentEvents);
+        } else {
+          payload = buildGenericPayload(screenName);
+        }
+        break;
+
+      case 'QuickUnderwrite':
+        if (deal && property) {
+          payload = buildQuickUnderwritePayload(deal, property, metrics);
+        } else {
+          payload = buildGenericPayload(screenName);
+        }
+        break;
+
+      case 'OfferBuilder':
+        if (deal) {
+          payload = buildOfferBuilderPayload(deal, metrics);
+        } else {
+          payload = buildGenericPayload(screenName);
+        }
+        break;
+
+      case 'FieldMode':
+        if (deal) {
+          payload = buildFieldModePayload(deal);
         } else {
           payload = buildGenericPayload(screenName);
         }
@@ -286,6 +380,14 @@ export function useAssistantContext(
         } else {
           payload = buildGenericPayload(screenName);
         }
+        break;
+
+      case 'DealsList':
+        payload = buildDealsListPayload();
+        break;
+
+      case 'Inbox':
+        payload = buildInboxPayload();
         break;
 
       default:

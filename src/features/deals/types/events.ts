@@ -1,6 +1,23 @@
 // src/features/deals/types/events.ts
 // Zone B: Shared contract for deal events (used by both Zone A and Zone B)
 
+import type { LucideIcon } from 'lucide-react-native';
+import {
+  RefreshCw,
+  Target,
+  FileText,
+  Send,
+  MessageSquare,
+  Camera,
+  CheckCircle,
+  Calculator,
+  Share2,
+  Upload,
+  PenTool,
+  Shield,
+  Sparkles,
+} from 'lucide-react-native';
+
 /**
  * All possible deal event types for the timeline
  */
@@ -53,81 +70,81 @@ export const KEY_EVENT_TYPES: DealEventType[] = [
  */
 export const EVENT_TYPE_CONFIG: Record<
   DealEventType,
-  { label: string; iconName: string; colorKey: string }
+  { label: string; icon: LucideIcon; colorKey: string }
 > = {
   stage_change: {
     label: 'Stage Changed',
-    iconName: 'RefreshCw',
+    icon: RefreshCw,
     colorKey: 'primary',
   },
   next_action_set: {
     label: 'Next Action Set',
-    iconName: 'Target',
+    icon: Target,
     colorKey: 'info',
   },
   offer_created: {
     label: 'Offer Created',
-    iconName: 'FileText',
+    icon: FileText,
     colorKey: 'success',
   },
   offer_sent: {
     label: 'Offer Sent',
-    iconName: 'Send',
+    icon: Send,
     colorKey: 'success',
   },
   offer_countered: {
     label: 'Offer Countered',
-    iconName: 'MessageSquare',
+    icon: MessageSquare,
     colorKey: 'warning',
   },
   walkthrough_started: {
     label: 'Walkthrough Started',
-    iconName: 'Camera',
+    icon: Camera,
     colorKey: 'info',
   },
   walkthrough_completed: {
     label: 'Walkthrough Completed',
-    iconName: 'CheckCircle',
+    icon: CheckCircle,
     colorKey: 'success',
   },
   assumption_updated: {
     label: 'Assumption Updated',
-    iconName: 'Calculator',
+    icon: Calculator,
     colorKey: 'warning',
   },
   seller_report_generated: {
     label: 'Seller Report Generated',
-    iconName: 'Share2',
+    icon: Share2,
     colorKey: 'success',
   },
   document_uploaded: {
     label: 'Document Uploaded',
-    iconName: 'Upload',
+    icon: Upload,
     colorKey: 'info',
   },
   document_signed: {
     label: 'Document Signed',
-    iconName: 'PenTool',
+    icon: PenTool,
     colorKey: 'success',
   },
   risk_score_changed: {
     label: 'Risk Score Changed',
-    iconName: 'Shield',
+    icon: Shield,
     colorKey: 'warning',
   },
   note: {
     label: 'Note Added',
-    iconName: 'FileText',
+    icon: FileText,
     colorKey: 'mutedForeground',
   },
   ai_action_applied: {
     label: 'AI Action Applied',
-    iconName: 'Sparkles',
+    icon: Sparkles,
     colorKey: 'primary',
   },
   ai_job_completed: {
     label: 'AI Job Completed',
-    iconName: 'CheckCircle',
+    icon: CheckCircle,
     colorKey: 'success',
   },
 };

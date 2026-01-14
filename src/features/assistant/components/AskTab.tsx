@@ -15,6 +15,9 @@ import {
 } from 'react-native';
 import { Send, Sparkles, User, Loader2 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { withOpacity } from '@/lib/design-utils';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 import { useChat, Message } from '../hooks/useChat';
 import { useAssistantContext } from '../hooks/useAssistantContext';
@@ -171,7 +174,7 @@ export function AskTab({ dealId }: AskTabProps) {
           >
             <Send
               size={18}
-              color={inputText.trim() && !isLoading ? '#fff' : colors.mutedForeground}
+              color={inputText.trim() && !isLoading ? colors.primaryForeground : colors.mutedForeground}
             />
           </TouchableOpacity>
         </View>
@@ -221,7 +224,7 @@ function MessageBubble({ message }: { message: Message }) {
             styles.messageText,
             {
               color: isUser
-                ? '#fff'
+                ? colors.primaryForeground
                 : isSystem
                 ? colors.destructive
                 : colors.foreground,
@@ -233,8 +236,8 @@ function MessageBubble({ message }: { message: Message }) {
       </View>
       {isUser && (
         <View style={styles.avatarContainer}>
-          <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-            <User size={14} color="#fff" />
+          <View style={[styles.avatar, { backgroundColor: withOpacity(colors.primaryForeground, 'light') }]}>
+            <User size={14} color={colors.primaryForeground} />
           </View>
         </View>
       )}
@@ -312,21 +315,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   messagesContent: {
-    padding: 16,
-    paddingBottom: 8,
+    padding: SPACING.lg,
+    paddingBottom: TAB_BAR_SAFE_PADDING,
   },
   emptyState: {
     alignItems: 'center',
-    paddingTop: 40,
-    paddingHorizontal: 20,
+    paddingTop: SPACING['4xl'],
+    paddingHorizontal: SPACING['2xl'],
   },
   emptyIconContainer: {
     width: 72,
     height: 72,
-    borderRadius: 36,
+    borderRadius: BORDER_RADIUS['36'],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   emptyTitle: {
     fontSize: 20,
@@ -336,7 +339,7 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: SPACING['2xl'],
   },
   suggestionsContainer: {
     width: '100%',
@@ -344,10 +347,10 @@ const styles = StyleSheet.create({
   messageBubble: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: SPACING.md,
     maxWidth: '90%',
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
   },
   userBubble: {
     alignSelf: 'flex-end',
@@ -358,18 +361,18 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   avatarContainer: {
-    marginHorizontal: 4,
+    marginHorizontal: SPACING.xs,
   },
   avatar: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: BORDER_RADIUS['14'],
     alignItems: 'center',
     justifyContent: 'center',
   },
   messageContent: {
     flex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: SPACING.sm,
   },
   messageText: {
     fontSize: 14,
@@ -379,17 +382,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    padding: 12,
-    borderRadius: 16,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.xl,
     borderBottomLeftRadius: 4,
-    gap: 8,
+    gap: SPACING.sm,
   },
   loadingText: {
     fontSize: 13,
   },
   thinkingDots: {
     flexDirection: 'row',
-    gap: 4,
+    gap: SPACING.xs,
   },
   dot: {
     width: 6,
@@ -397,16 +400,16 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   inputContainer: {
-    padding: 12,
+    padding: SPACING.md,
     borderTopWidth: 1,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    borderRadius: 24,
+    borderRadius: BORDER_RADIUS['24'],
     paddingLeft: 16,
     paddingRight: 4,
-    paddingVertical: 4,
+    paddingVertical: SPACING.xs,
   },
   input: {
     flex: 1,
@@ -417,10 +420,10 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: BORDER_RADIUS['18'],
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
   },
 });
 

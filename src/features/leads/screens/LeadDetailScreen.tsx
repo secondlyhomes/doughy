@@ -7,6 +7,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } fr
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, Button } from '@/components/ui';
 
@@ -163,7 +164,7 @@ export function LeadDetailScreen() {
               className="px-3 py-1 rounded-full"
               style={{ backgroundColor: getStatusColor(lead.status) }}
             >
-              <Text className="text-sm font-medium" style={{ color: '#ffffff' }}>{formatStatus(lead.status)}</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>{formatStatus(lead.status)}</Text>
             </View>
           </View>
 
@@ -171,7 +172,7 @@ export function LeadDetailScreen() {
           {lead.score !== undefined && (
             <View className="flex-row items-center mb-3">
               <Text className="text-sm" style={{ color: colors.mutedForeground }}>Lead Score:</Text>
-              <View className="ml-2 px-2 py-0.5 rounded" style={{ backgroundColor: `${colors.primary}15` }}>
+              <View className="ml-2 px-2 py-0.5 rounded" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 <Text className="font-semibold" style={{ color: colors.primary }}>{lead.score}</Text>
               </View>
             </View>

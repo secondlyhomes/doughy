@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner, SimpleFAB } from '@/components/ui';
+import { ScreenHeader, LoadingSpinner, SimpleFAB, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import {
   MessageCircle,
@@ -25,6 +25,7 @@ import {
 import { useConversations, useCreateConversation, useDeleteConversation } from '../hooks/useConversations';
 import { Conversation } from '../types';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 function formatTimeAgo(dateString: string | undefined): string {
   if (!dateString) return '';
@@ -75,7 +76,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
       accessibilityHint="Opens conversation"
     >
       <View className="flex-row items-start">
-        <View className="rounded-full p-2 mr-3" style={{ backgroundColor: `${colors.primary}15` }}>
+        <View className="rounded-full p-2 mr-3" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
           <MessageCircle size={20} color={colors.info} />
         </View>
 
@@ -173,7 +174,7 @@ export function ConversationsListScreen() {
           data={conversations}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
@@ -183,7 +184,7 @@ export function ConversationsListScreen() {
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
-              <View className="rounded-full p-4 mb-4" style={{ backgroundColor: `${colors.primary}15` }}>
+              <View className="rounded-full p-4 mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 <Sparkles size={32} color={colors.info} />
               </View>
               <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>

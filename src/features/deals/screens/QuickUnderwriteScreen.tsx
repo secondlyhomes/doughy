@@ -24,8 +24,9 @@ import {
   User,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useDeal } from '../hooks/useDeals';
 import { useDealAnalysis, DealMetrics, DEFAULT_FLIP_CONSTANTS } from '../../real-estate/hooks/useDealAnalysis';
 import { PropertyAnalysisTab } from '../../real-estate/components/PropertyAnalysisTab';
@@ -73,11 +74,7 @@ function KeyMetricsHeader({ deal, metrics, onEvidencePress }: KeyMetricsHeaderPr
       className="mx-4 mb-4 rounded-2xl p-4"
       style={{
         backgroundColor: colors.card,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 4,
+        ...getShadowStyle(colors, { size: 'md' }),
       }}
     >
       {/* Big 3 Numbers Row */}
@@ -336,7 +333,7 @@ export function QuickUnderwriteScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -364,7 +361,7 @@ export function QuickUnderwriteScreen() {
             <View className="flex-row items-center mt-2">
               <View
                 className="px-2 py-1 rounded-full"
-                style={{ backgroundColor: `${colors.secondary}30` }}
+                style={{ backgroundColor: withOpacity(colors.secondary, 'medium') }}
               >
                 <Text className="text-xs font-medium" style={{ color: colors.secondaryForeground }}>
                   {DEAL_STRATEGY_CONFIG[deal.strategy].label}
@@ -401,7 +398,7 @@ export function QuickUnderwriteScreen() {
         </View>
 
         {/* Quick Tips */}
-        <View className="mx-4 mt-6 p-4 rounded-xl" style={{ backgroundColor: `${colors.info}10` }}>
+        <View className="mx-4 mt-6 p-4 rounded-xl" style={{ backgroundColor: withOpacity(colors.info, 'muted') }}>
           <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
             Underwriting Tips
           </Text>

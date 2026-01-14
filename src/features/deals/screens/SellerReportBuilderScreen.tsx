@@ -6,7 +6,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Save, Eye, Edit3, Share2 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Input } from '@/components/ui';
+import { LoadingSpinner, Input, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
@@ -174,7 +174,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
       {viewMode === 'edit' && (
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
           showsVerticalScrollIndicator={false}
         >
           {/* Basic Info */}

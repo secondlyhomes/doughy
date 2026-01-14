@@ -1,9 +1,10 @@
 // useChat Hook - React Native
-// Manages chat state and AI interactions
+// Manages chat state and AI interactions with enhanced deal-aware AI
 
 import { useState, useCallback } from 'react';
-
+import { callDealAssistant, AIMessage } from '@/lib/ai/dealAssistant';
 import { AssistantContextSnapshot } from '../types/context';
+import { validateMessage } from '@/lib/ai/validation';
 
 export interface Message {
   id: string;
@@ -11,6 +12,8 @@ export interface Message {
   content: string;
   createdAt: string;
   metadata?: Record<string, unknown>;
+  suggestedActions?: string[];
+  confidence?: 'high' | 'medium' | 'low';
 }
 
 interface UseChatReturn {
@@ -21,32 +24,26 @@ interface UseChatReturn {
   clearMessages: () => void;
 }
 
-// Mock AI responses for development
-const mockResponses = [
-  "I've analyzed your leads and found 3 that need immediate follow-up. Sarah Johnson from Acme Corp hasn't been contacted in 5 days and has a high engagement score.",
-  "Based on your conversion data, your best performing channel is email with a 32% response rate. I recommend focusing your outreach efforts there.",
-  "I can help you draft that email. Here's a suggested template:\n\nHi [Name],\n\nI hope this message finds you well. I wanted to follow up on our recent conversation about...",
-  "Your analytics show a 15% increase in lead engagement this week. The most active time for responses is between 10 AM and 2 PM.",
-  "I found 5 properties matching your client's criteria. Would you like me to summarize the key features of each?",
-];
-
-function getRandomResponse(): string {
-  return mockResponses[Math.floor(Math.random() * mockResponses.length)];
-}
-
 export function useChat(): UseChatReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const sendMessage = useCallback(async (content: string, context?: AssistantContextSnapshot) => {
-    if (!content.trim()) return;
+    // Validate input
+    const validation = validateMessage(content);
+    if (!validation.isValid) {
+      setError(new Error(validation.error || 'Invalid message'));
+      return;
+    }
+
+    const sanitized = validation.sanitized || content;
 
     // Add user message with context metadata
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: content.trim(),
+      content: sanitized,
       createdAt: new Date().toISOString(),
       metadata: context ? {
         screen: context.screen.name,
@@ -60,27 +57,29 @@ export function useChat(): UseChatReturn {
     setError(null);
 
     try {
-      // TODO: Replace with actual AI API call
-      // When implementing, include full context in the request:
-      // const response = await fetch('/api/chat', {
-      //   method: 'POST',
-      //   body: JSON.stringify({
-      //     message: content,
-      //     context: context, // Full context snapshot
-      //   }),
-      // });
+      // Build conversation history for AI (last 5 messages for context)
+      const conversationHistory: AIMessage[] = messages
+        .slice(-5)
+        .map(msg => ({
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content,
+        }));
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+      // Call enhanced AI service with full context (use sanitized input)
+      const response = context
+        ? await callDealAssistant(sanitized, context, conversationHistory)
+        : { content: "I need more context to help you. Please try opening the assistant from a deal or property screen." };
 
-      // Mock response - in real implementation, AI would use context
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: getRandomResponse(),
+        content: response.content,
         createdAt: new Date().toISOString(),
+        suggestedActions: response.suggestedActions,
+        confidence: response.confidence,
         metadata: {
           contextUsed: !!context,
+          screenName: context?.screen.name,
         },
       };
 
@@ -100,7 +99,7 @@ export function useChat(): UseChatReturn {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [messages]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

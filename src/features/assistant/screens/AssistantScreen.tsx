@@ -15,6 +15,7 @@ import {
 import { ThemedSafeAreaView } from '@/components';
 import { Send, Sparkles, RefreshCw } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 // Zone A UI Components
 import { LoadingSpinner } from '@/components/ui';
@@ -80,7 +81,7 @@ export function AssistantScreen() {
           onContentSizeChange={scrollToEnd}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-8">
-              <View className="rounded-full p-4 mb-4" style={{ backgroundColor: `${colors.primary}15` }}>
+              <View className="rounded-full p-4 mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 <Sparkles size={32} color={colors.info} />
               </View>
               <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>

@@ -24,6 +24,7 @@ import {
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { logDealEvent } from '../hooks/useDealEvents';
 import type { DealEventType } from '../types/events';
 
@@ -214,9 +215,9 @@ export function AddDealEventSheet({
                   // Get icon background color based on colorKey
                   const getIconBgColor = () => {
                     switch (option.colorKey) {
-                      case 'info': return `${colors.info}33`;
-                      case 'success': return `${colors.success}33`;
-                      case 'warning': return `${colors.warning}33`;
+                      case 'info': return withOpacity(colors.info, 'medium');
+                      case 'success': return withOpacity(colors.success, 'medium');
+                      case 'warning': return withOpacity(colors.warning, 'medium');
                       default: return colors.muted;
                     }
                   };
@@ -226,7 +227,7 @@ export function AddDealEventSheet({
                       key={option.type}
                       className="flex-row items-center px-4 py-3 rounded-lg"
                       style={{
-                        backgroundColor: isSelected ? `${colors.primary}15` : colors.muted,
+                        backgroundColor: isSelected ? withOpacity(colors.primary, 'muted') : colors.muted,
                         borderWidth: isSelected ? 1 : 0,
                         borderColor: isSelected ? colors.primary : 'transparent',
                       }}

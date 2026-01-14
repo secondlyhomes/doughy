@@ -11,11 +11,14 @@ import {
   RefreshControl,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, ScreenHeader, LoadingSpinner, Badge, SimpleFAB } from '@/components/ui';
+import { SearchBar, LoadingSpinner, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SlidersHorizontal, MapPin, Calendar, DollarSign, ChevronRight } from 'lucide-react-native';
+import { SlidersHorizontal, MapPin, Calendar, DollarSign, ChevronRight, Briefcase, Search } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SPACING } from '@/constants/design-tokens';
 
 import {
   Deal,
@@ -30,6 +33,19 @@ import { useDeals, DealsFilters } from '../hooks/useDeals';
 import { useNextAction, getActionIcon } from '../hooks/useNextAction';
 import { useDealAnalysis } from '../../real-estate/hooks/useDealAnalysis';
 import type { Property } from '../../real-estate/types';
+
+// ============================================
+// Spacing Constants
+// ============================================
+
+// Calculate search bar container height based on its padding
+const SEARCH_BAR_CONTAINER_HEIGHT =
+  SPACING.sm +  // pt-2 (8px top padding)
+  40 +          // SearchBar size="md" estimated height
+  SPACING.xs;   // pb-1 (4px bottom padding)
+  // Total: ~52px
+
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px standard gap
 
 // ============================================
 // Stage Filter Tabs
@@ -118,7 +134,7 @@ function DealCard({ deal, onPress }: DealCardProps) {
         <View className="flex-row items-center flex-1">
           <View
             className="px-2 py-1 rounded-full mr-2"
-            style={{ backgroundColor: `${colors.primary}20` }}
+            style={{ backgroundColor: withOpacity(colors.primary, 'light') }}
           >
             <Text className="text-xs font-medium" style={{ color: colors.primary }}>
               {stageConfig.label}
@@ -168,13 +184,13 @@ function DealCard({ deal, onPress }: DealCardProps) {
       {nextAction && (
         <View
           className="rounded-lg p-2 flex-row items-center"
-          style={{ backgroundColor: `${colors.primary}10` }}
+          style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
         >
           <View
             className="w-6 h-6 rounded-full items-center justify-center mr-2"
             style={{ backgroundColor: colors.primary }}
           >
-            <Text className="text-xs font-bold" style={{ color: '#ffffff' }}>!</Text>
+            <Text className="text-xs font-bold" style={{ color: colors.primaryForeground }}>!</Text>
           </View>
           <View className="flex-1">
             <Text className="text-xs" style={{ color: colors.mutedForeground }}>Next Action</Text>
@@ -184,7 +200,7 @@ function DealCard({ deal, onPress }: DealCardProps) {
           </View>
           {nextAction.isOverdue && (
             <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.destructive }}>
-              <Text className="text-xs font-medium" style={{ color: '#ffffff' }}>Overdue</Text>
+              <Text className="text-xs font-medium" style={{ color: colors.destructiveForeground }}>Overdue</Text>
             </View>
           )}
         </View>
@@ -208,8 +224,10 @@ function DealCard({ deal, onPress }: DealCardProps) {
 export function DealsListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStage, setActiveStage] = useState<DealStage | 'all'>('all');
+  const [showFiltersSheet, setShowFiltersSheet] = useState(false);
 
   // Build filters
   const filters: DealsFilters = useMemo(() => ({
@@ -249,75 +267,21 @@ export function DealsListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Header */}
-        <ScreenHeader
-          title="Deals"
-          subtitle="Track your pipeline"
-        />
-
-        {/* Search Bar */}
-        <View className="px-4 pt-2 pb-2">
-          <View className="flex-row items-center gap-2">
+        {/* Glass Search Bar - positioned absolutely at top */}
+        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+          <View className="px-4 pt-2 pb-1">
             <SearchBar
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Search by address or lead..."
               size="md"
-              className="flex-1"
+              glass={true}
+              onFilter={() => setShowFiltersSheet(true)}
+              hasActiveFilters={searchQuery.trim().length > 0 || activeStage !== 'all'}
             />
           </View>
         </View>
 
-        {/* Stage Filter Tabs */}
-        <View className="px-4 pb-2">
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={STAGE_FILTERS}
-            keyExtractor={(item) => item.key}
-            renderItem={({ item }) => {
-              const isActive = activeStage === item.key;
-              const count = stageCounts[item.key] || 0;
-              return (
-                <TouchableOpacity
-                  className="mr-2 px-4 py-2 rounded-full flex-row items-center"
-                  style={{ backgroundColor: isActive ? colors.primary : colors.muted }}
-                  onPress={() => setActiveStage(item.key)}
-                  accessibilityLabel={`Filter by ${item.label}, ${count} deals`}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isActive }}
-                >
-                  <Text
-                    className="text-sm font-medium"
-                    style={{ color: isActive ? colors.primaryForeground : colors.mutedForeground }}
-                  >
-                    {item.label}
-                  </Text>
-                  {count > 0 && (
-                    <View
-                      className="ml-1.5 px-1.5 py-0.5 rounded-full"
-                      style={{ backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : `${colors.primary}20` }}
-                    >
-                      <Text
-                        className="text-xs font-medium"
-                        style={{ color: isActive ? colors.primaryForeground : colors.primary }}
-                      >
-                        {count}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
-
-        {/* Deals Count */}
-        <View className="px-4 pb-2">
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-            {deals?.length || 0} deals
-          </Text>
-        </View>
 
         {/* Deals List */}
         {isLoading ? (
@@ -327,7 +291,11 @@ export function DealsListScreen() {
             data={deals}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+            contentContainerStyle={{
+              paddingTop: insets.top + SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
+              paddingHorizontal: 16,
+              paddingBottom: TAB_BAR_SAFE_PADDING
+            }}
             ItemSeparatorComponent={() => <View className="h-3" />}
             refreshControl={
               <RefreshControl
@@ -337,26 +305,88 @@ export function DealsListScreen() {
               />
             }
             ListEmptyComponent={
-              <View className="flex-1 items-center justify-center py-20">
-                <Text className="text-center" style={{ color: colors.mutedForeground }}>
-                  {searchQuery ? 'No deals match your search' : 'No deals yet'}
-                </Text>
-                <TouchableOpacity
-                  className="mt-4 px-4 py-2 rounded-lg"
-                  style={{ backgroundColor: colors.primary }}
-                  onPress={handleAddDeal}
-                  accessibilityLabel="Create your first deal"
-                  accessibilityRole="button"
-                >
-                  <Text className="font-medium" style={{ color: colors.primaryForeground }}>Create First Deal</Text>
-                </TouchableOpacity>
-              </View>
+              <ListEmptyState
+                state={searchQuery ? 'filtered' : 'empty'}
+                icon={searchQuery ? Search : Briefcase}
+                title={searchQuery ? 'No Results Found' : 'No Deals Yet'}
+                description={
+                  searchQuery
+                    ? 'No deals match your search criteria.'
+                    : 'Create your first deal to start tracking potential investments.'
+                }
+                primaryAction={{
+                  label: searchQuery ? 'Clear Search' : 'Create First Deal',
+                  onPress: searchQuery
+                    ? () => setSearchQuery('')
+                    : handleAddDeal,
+                }}
+              />
             }
           />
         )}
 
         {/* Floating Action Button */}
         <SimpleFAB onPress={handleAddDeal} accessibilityLabel="Add new deal" />
+
+        {/* Filters Sheet */}
+        <BottomSheet
+          visible={showFiltersSheet}
+          onClose={() => setShowFiltersSheet(false)}
+          title="Deal Filters"
+        >
+          <BottomSheetSection title="Deal Stage">
+            <View className="flex-row flex-wrap gap-2">
+              {STAGE_FILTERS.map(stage => {
+                const isActive = activeStage === stage.key;
+                const count = stageCounts[stage.key] || 0;
+                return (
+                  <TouchableOpacity
+                    key={stage.key}
+                    onPress={() => {
+                      setActiveStage(stage.key);
+                      setShowFiltersSheet(false);
+                    }}
+                    className="px-4 py-2 rounded-full border"
+                    style={{
+                      backgroundColor: isActive ? colors.primary : colors.muted,
+                      borderColor: isActive ? colors.primary : colors.border,
+                    }}
+                  >
+                    <Text
+                      className="text-sm font-medium"
+                      style={{
+                        color: isActive ? colors.primaryForeground : colors.foreground,
+                      }}
+                    >
+                      {stage.label} {count > 0 ? `(${count})` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </BottomSheetSection>
+
+          {/* Action buttons */}
+          <View className="flex-row gap-3 pt-4 pb-6">
+            <Button
+              variant="outline"
+              onPress={() => {
+                setSearchQuery('');
+                setActiveStage('all');
+                setShowFiltersSheet(false);
+              }}
+              className="flex-1"
+            >
+              Clear Filters
+            </Button>
+            <Button
+              onPress={() => setShowFiltersSheet(false)}
+              className="flex-1"
+            >
+              Done
+            </Button>
+          </View>
+        </BottomSheet>
       </ThemedSafeAreaView>
     </GestureHandlerRootView>
   );

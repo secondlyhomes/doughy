@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Bot, User } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 import { Message } from '../hooks/useChat';
 
@@ -32,7 +33,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       <View className="flex-row items-end gap-2" style={{ maxWidth: '85%' }}>
         {/* Avatar for Assistant */}
         {!isUser && (
-          <View className="rounded-full p-1.5 mb-1" style={{ backgroundColor: `${colors.primary}15` }}>
+          <View className="rounded-full p-1.5 mb-1" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
             <Bot size={14} color={colors.info} />
           </View>
         )}

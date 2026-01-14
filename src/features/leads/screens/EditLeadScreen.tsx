@@ -1,5 +1,6 @@
 // Edit Lead Screen - React Native
 // Zone D: Edit existing lead form
+// Refactored to use FormField + useForm (Phase 2 Migration)
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -15,8 +16,10 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button } from '@/components/ui';
+import { LoadingSpinner, Button, FormField } from '@/components/ui';
+import { useForm } from '@/hooks/useForm';
 
 import { useLead, useUpdateLead } from '../hooks/useLeads';
 import { Lead, LeadStatus } from '../types';
@@ -59,22 +62,57 @@ export function EditLeadScreen() {
   const { lead, isLoading: isLoadingLead } = useLead(leadId);
   const updateLead = useUpdateLead();
 
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    status: 'new',
-    tags: [],
-    notes: '',
+  // Use the new useForm hook for state management and validation
+  const { values, errors, updateField, handleSubmit, setValues } = useForm<FormData>({
+    initialValues: {
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      status: 'new',
+      tags: [],
+      notes: '',
+    },
+    validate: (vals) => {
+      const errs: Partial<Record<keyof FormData, string>> = {};
+
+      if (!vals.name.trim()) {
+        errs.name = 'Name is required';
+      }
+      if (vals.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vals.email)) {
+        errs.email = 'Please enter a valid email address';
+      }
+
+      return errs;
+    },
+    onSubmit: async (vals) => {
+      try {
+        await updateLead.mutateAsync({
+          id: leadId,
+          data: {
+            name: vals.name,
+            email: vals.email || undefined,
+            phone: vals.phone || undefined,
+            company: vals.company || undefined,
+            status: vals.status,
+            tags: vals.tags,
+          },
+        });
+        router.back();
+      } catch (error) {
+        Alert.alert('Error', 'Failed to update lead. Please try again.');
+        throw error; // Re-throw to prevent form reset
+      }
+    },
   });
+
   const [tagInput, setTagInput] = useState('');
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   // Populate form when lead data loads
   useEffect(() => {
     if (lead) {
-      setFormData({
+      setValues({
         name: lead.name || '',
         email: lead.email || '',
         phone: lead.phone || '',
@@ -84,65 +122,22 @@ export function EditLeadScreen() {
         notes: lead.notes?.[0]?.content || '',
       });
     }
-  }, [lead]);
-
-  const handleChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  }, [lead, setValues]);
 
   const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()],
-      }));
+    if (tagInput.trim() && !values.tags.includes(tagInput.trim())) {
+      updateField('tags', [...values.tags, tagInput.trim()]);
       setTagInput('');
     }
   };
 
   const handleRemoveTag = (tag: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(t => t !== tag),
-    }));
+    updateField('tags', values.tags.filter(t => t !== tag));
   };
 
   const handleStatusSelect = (status: LeadStatus) => {
-    setFormData(prev => ({ ...prev, status }));
+    updateField('status', status);
     setShowStatusPicker(false);
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
-      Alert.alert('Validation Error', 'Name is required');
-      return false;
-    }
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      Alert.alert('Validation Error', 'Please enter a valid email address');
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
-    try {
-      await updateLead.mutateAsync({
-        id: leadId,
-        data: {
-          name: formData.name,
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          company: formData.company || undefined,
-          status: formData.status,
-          tags: formData.tags,
-        },
-      });
-      router.back();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update lead. Please try again.');
-    }
   };
 
   const getStatusLabel = (status: LeadStatus) => {
@@ -175,76 +170,49 @@ export function EditLeadScreen() {
       >
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
         {/* Name */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
-            Name <Text style={{ color: colors.destructive }}>*</Text>
-          </Text>
-          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
-            <User size={18} color={colors.mutedForeground} />
-            <TextInput
-              className="flex-1 ml-3 text-base"
-              style={{ color: colors.foreground }}
-              placeholder="Enter lead name"
-              placeholderTextColor={colors.mutedForeground}
-              value={formData.name}
-              onChangeText={(text) => handleChange('name', text)}
-              autoCapitalize="words"
-            />
-          </View>
-        </View>
+        <FormField
+          label="Name"
+          value={values.name}
+          onChangeText={(text) => updateField('name', text)}
+          error={errors.name}
+          placeholder="Enter lead name"
+          required
+          icon={User}
+          autoCapitalize="words"
+        />
 
         {/* Email */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Email</Text>
-          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
-            <Mail size={18} color={colors.mutedForeground} />
-            <TextInput
-              className="flex-1 ml-3 text-base"
-              style={{ color: colors.foreground }}
-              placeholder="email@example.com"
-              placeholderTextColor={colors.mutedForeground}
-              value={formData.email}
-              onChangeText={(text) => handleChange('email', text)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-        </View>
+        <FormField
+          label="Email"
+          value={values.email}
+          onChangeText={(text) => updateField('email', text)}
+          error={errors.email}
+          placeholder="email@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          icon={Mail}
+        />
 
         {/* Phone */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Phone</Text>
-          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
-            <Phone size={18} color={colors.mutedForeground} />
-            <TextInput
-              className="flex-1 ml-3 text-base"
-              style={{ color: colors.foreground }}
-              placeholder="(555) 123-4567"
-              placeholderTextColor={colors.mutedForeground}
-              value={formData.phone}
-              onChangeText={(text) => handleChange('phone', text)}
-              keyboardType="phone-pad"
-            />
-          </View>
-        </View>
+        <FormField
+          label="Phone"
+          value={values.phone}
+          onChangeText={(text) => updateField('phone', text)}
+          placeholder="(555) 123-4567"
+          keyboardType="phone-pad"
+          icon={Phone}
+        />
 
         {/* Company */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Company</Text>
-          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
-            <Building2 size={18} color={colors.mutedForeground} />
-            <TextInput
-              className="flex-1 ml-3 text-base"
-              style={{ color: colors.foreground }}
-              placeholder="Company name"
-              placeholderTextColor={colors.mutedForeground}
-              value={formData.company}
-              onChangeText={(text) => handleChange('company', text)}
-              autoCapitalize="words"
-            />
-          </View>
-        </View>
+        <FormField
+          label="Company"
+          value={values.company}
+          onChangeText={(text) => updateField('company', text)}
+          placeholder="Company name"
+          autoCapitalize="words"
+          icon={Building2}
+        />
 
         {/* Status */}
         <View className="mb-4">
@@ -255,7 +223,7 @@ export function EditLeadScreen() {
             onPress={() => setShowStatusPicker(!showStatusPicker)}
           >
             <Text className="text-base" style={{ color: colors.foreground }}>
-              {getStatusLabel(formData.status)}
+              {getStatusLabel(values.status)}
             </Text>
             <ChevronDown size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
@@ -269,15 +237,15 @@ export function EditLeadScreen() {
                   style={{
                     borderBottomWidth: 1,
                     borderBottomColor: colors.border,
-                    backgroundColor: formData.status === option.value ? `${colors.primary}15` : 'transparent'
+                    backgroundColor: values.status === option.value ? withOpacity(colors.primary, 'muted') : 'transparent'
                   }}
                   onPress={() => handleStatusSelect(option.value)}
                 >
                   <Text
                     className="text-base"
                     style={{
-                      color: formData.status === option.value ? colors.primary : colors.foreground,
-                      fontWeight: formData.status === option.value ? '500' : 'normal'
+                      color: values.status === option.value ? colors.primary : colors.foreground,
+                      fontWeight: values.status === option.value ? '500' : 'normal'
                     }}
                   >
                     {option.label}
@@ -312,9 +280,9 @@ export function EditLeadScreen() {
             </TouchableOpacity>
           </View>
 
-          {formData.tags.length > 0 && (
+          {values.tags.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mt-2">
-              {formData.tags.map((tag, index) => (
+              {values.tags.map((tag, index) => (
                 <View
                   key={index}
                   className="flex-row items-center px-3 py-1.5 rounded-full"
@@ -334,24 +302,15 @@ export function EditLeadScreen() {
         </View>
 
         {/* Notes */}
-        <View className="mb-6">
-          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Notes</Text>
-          <View className="rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
-            <View className="flex-row items-start">
-              <FileText size={18} color={colors.mutedForeground} className="mt-0.5" />
-              <TextInput
-                className="flex-1 ml-3 text-base min-h-[100px]"
-                style={{ color: colors.foreground }}
-                placeholder="Add notes about this lead..."
-                placeholderTextColor={colors.mutedForeground}
-                value={formData.notes}
-                onChangeText={(text) => handleChange('notes', text)}
-                multiline
-                textAlignVertical="top"
-              />
-            </View>
-          </View>
-        </View>
+        <FormField
+          label="Notes"
+          value={values.notes}
+          onChangeText={(text) => updateField('notes', text)}
+          placeholder="Add notes about this lead..."
+          multiline
+          numberOfLines={4}
+          icon={FileText}
+        />
 
         {/* Submit Button */}
         <Button

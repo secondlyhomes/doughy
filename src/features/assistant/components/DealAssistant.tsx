@@ -23,8 +23,11 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { BORDER_RADIUS } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ErrorBoundary } from '@/features/layout/components/ErrorBoundary';
+import { FAB_SIZE, FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_LEFT_MARGIN, FAB_Z_INDEX } from '@/components/ui/FloatingGlassTabBar';
+import { getFABShadowStyle } from '@/components/ui/fab-styles';
 
 import { ActionsTab } from './ActionsTab';
 import { AskTab } from './AskTab';
@@ -40,9 +43,6 @@ import { AIJob } from '../types/jobs'; // Used in handleJobPress callback type
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // UI Constants
-const BUBBLE_SIZE = 56;
-const BUBBLE_MARGIN = 16;
-const BUBBLE_BOTTOM_OFFSET = 100; // Above tab bar
 const TAB_BAR_HEIGHT = 80; // Approximate tab bar height
 const MIN_BUBBLE_TOP_OFFSET = 100; // Minimum distance from top
 
@@ -144,13 +144,13 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
         const currentInsets = insetsRef.current;
 
         // Snap X to edges with margin + safe area
-        const leftSnapX = -(screen.width - BUBBLE_SIZE - BUBBLE_MARGIN - currentInsets.right);
+        const leftSnapX = -(screen.width - FAB_SIZE - FAB_LEFT_MARGIN - currentInsets.right);
         const rightSnapX = 0; // Default position (right edge)
         const snapX = gestureState.moveX > screen.width / 2 ? rightSnapX : leftSnapX;
 
         // Clamp Y within safe bounds
-        const minY = -(screen.height - BUBBLE_BOTTOM_OFFSET - MIN_BUBBLE_TOP_OFFSET - currentInsets.top);
-        const maxY = BUBBLE_BOTTOM_OFFSET - TAB_BAR_HEIGHT - currentInsets.bottom;
+        const minY = -(screen.height - FAB_BOTTOM_OFFSET - MIN_BUBBLE_TOP_OFFSET - currentInsets.top);
+        const maxY = FAB_BOTTOM_OFFSET - TAB_BAR_HEIGHT - currentInsets.bottom;
         const clampedY = Math.max(minY, Math.min(gestureState.dy, maxY));
 
         Animated.spring(bubblePosition, {
@@ -215,15 +215,19 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
       >
         <TouchableOpacity
           onPress={handleToggle}
-          style={[styles.bubble, { backgroundColor: colors.primary }]}
+          style={[
+            styles.bubble,
+            getFABShadowStyle(colors),
+            { backgroundColor: colors.primary },
+          ]}
           activeOpacity={0.9}
           accessibilityLabel="Open AI Assistant"
         >
-          <Sparkles size={24} color="#fff" />
+          <Sparkles size={24} color={colors.primaryForeground} />
           {/* Badge */}
           {pendingCount > 0 && (
             <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
-              <Text style={styles.badgeText}>{pendingCount}</Text>
+              <Text style={[styles.badgeText, { color: colors.destructiveForeground }]}>{pendingCount}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -297,7 +301,7 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
                 {/* Jobs tab badge */}
                 {tab.id === 'jobs' && pendingCount > 0 && (
                   <View style={[styles.tabBadge, { backgroundColor: colors.primary }]}>
-                    <Text style={styles.tabBadgeText}>{pendingCount}</Text>
+                    <Text style={[styles.tabBadgeText, { color: colors.primaryForeground }]}>{pendingCount}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -342,21 +346,16 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
 const styles = StyleSheet.create({
   bubbleContainer: {
     position: 'absolute',
-    bottom: BUBBLE_BOTTOM_OFFSET,
-    right: BUBBLE_MARGIN,
-    zIndex: 1000,
+    bottom: FAB_BOTTOM_OFFSET,
+    right: FAB_RIGHT_MARGIN,
+    zIndex: FAB_Z_INDEX.ASSISTANT,
   },
   bubble: {
-    width: BUBBLE_SIZE,
-    height: BUBBLE_SIZE,
-    borderRadius: BUBBLE_SIZE / 2,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
   },
   badge: {
     position: 'absolute',
@@ -364,13 +363,12 @@ const styles = StyleSheet.create({
     right: -4,
     minWidth: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS['10'],
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
   badgeText: {
-    color: '#fff',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -428,7 +426,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   tabBadgeText: {
-    color: '#fff',
     fontSize: 10,
     fontWeight: '700',
   },

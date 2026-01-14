@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useToast } from '@/components/ui/Toast';
 
@@ -197,11 +198,11 @@ export function PatchSetPreview({
             accessibilityState={{ disabled: isApplying }}
           >
             {isApplying ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={colors.primaryForeground} />
             ) : (
               <>
-                <Check size={18} color="#fff" />
-                <Text style={[styles.buttonText, { color: '#fff' }]}>
+                <Check size={18} color={colors.primaryForeground} />
+                <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>
                   Apply Changes
                 </Text>
               </>
@@ -344,18 +345,18 @@ function OperationCard({ operation, index, expanded, onToggle }: OperationCardPr
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 8,
+    paddingTop: SPACING.sm,
   },
   summaryCard: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    marginBottom: SPACING.lg,
   },
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
   },
   summaryText: {
     fontSize: 16,
@@ -368,9 +369,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.lg,
   },
   badgeText: {
     fontSize: 11,
@@ -383,34 +384,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     letterSpacing: 1,
-    marginBottom: 8,
-    marginTop: 8,
+    marginBottom: SPACING.sm,
+    marginTop: SPACING.sm,
   },
   opsList: {
     maxHeight: 200,
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   opCard: {
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS['10'],
     borderWidth: 1,
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
     overflow: 'hidden',
   },
   opHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
+    padding: SPACING.md,
   },
   opTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
   },
   opBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.sm,
   },
   opBadgeText: {
     fontSize: 10,
@@ -422,13 +423,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   opDetails: {
-    padding: 12,
+    padding: SPACING.md,
     borderTopWidth: 1,
-    gap: 8,
+    gap: SPACING.sm,
   },
   diffRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: SPACING.sm,
   },
   diffLabel: {
     fontSize: 12,
@@ -441,12 +442,12 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   rationaleRow: {
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
   rationaleLabel: {
     fontSize: 12,
     fontWeight: '500',
-    marginBottom: 2,
+    marginBottom: SPACING.xs,
   },
   rationaleText: {
     fontSize: 13,
@@ -455,8 +456,8 @@ const styles = StyleSheet.create({
   sourceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
+    gap: SPACING.xs,
+    marginTop: SPACING.xs,
   },
   sourceLabel: {
     fontSize: 12,
@@ -467,15 +468,15 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   eventsCard: {
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
-    gap: 8,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS['10'],
+    marginBottom: SPACING.lg,
+    gap: SPACING.sm,
   },
   eventRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
   },
   eventText: {
     fontSize: 13,
@@ -484,10 +485,10 @@ const styles = StyleSheet.create({
   errorCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
+    gap: SPACING.sm,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS['10'],
+    marginBottom: SPACING.lg,
   },
   errorText: {
     fontSize: 13,
@@ -496,16 +497,16 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 8,
+    marginTop: SPACING.sm,
   },
   button: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
+    gap: SPACING.sm,
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
   },
   cancelButton: {
     borderWidth: 1,

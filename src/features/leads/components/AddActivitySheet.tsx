@@ -25,6 +25,7 @@ import {
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 import { ActivityType } from './LeadTimeline';
 
@@ -59,10 +60,10 @@ const ACTIVITY_TYPE_CONFIG: ActivityTypeConfig[] = [
 
 function getActivityBgColor(colorKey: string, colors: ReturnType<typeof useThemeColors>) {
   switch (colorKey) {
-    case 'info': return `${colors.info}33`;
-    case 'success': return `${colors.success}33`;
-    case 'primary': return `${colors.primary}33`;
-    case 'warning': return `${colors.warning}33`;
+    case 'info': return withOpacity(colors.info, 'medium');
+    case 'success': return withOpacity(colors.success, 'medium');
+    case 'primary': return withOpacity(colors.primary, 'medium');
+    case 'warning': return withOpacity(colors.warning, 'medium');
     case 'mutedForeground': return colors.muted;
     default: return colors.muted;
   }
@@ -169,7 +170,7 @@ export function AddActivitySheet({
                       key={activity.type}
                       className="flex-row items-center px-4 py-3 rounded-lg"
                       style={{
-                        backgroundColor: isSelected ? `${colors.primary}15` : colors.muted,
+                        backgroundColor: isSelected ? withOpacity(colors.primary, 'muted') : colors.muted,
                         borderWidth: isSelected ? 1 : 0,
                         borderColor: isSelected ? colors.primary : 'transparent',
                       }}
