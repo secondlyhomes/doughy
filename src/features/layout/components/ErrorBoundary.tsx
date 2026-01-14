@@ -3,7 +3,13 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { AlertTriangle, RefreshCw } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+
+// Fallback colors for when ThemeProvider is not available
+const FALLBACK_COLORS = {
+  destructive: '#ef4444',
+  primaryForeground: '#ffffff',
+  background: '#ffffff',
+};
 
 interface Props {
   children: ReactNode;
@@ -27,35 +33,31 @@ interface DefaultErrorUIProps {
 }
 
 function DefaultErrorUI({ error, errorInfo, onReset }: DefaultErrorUIProps) {
-  const colors = useThemeColors();
-
   return (
-    <View className="flex-1 items-center justify-center bg-background p-6">
-      <View className="items-center mb-6">
-        <AlertTriangle size={48} color={colors.destructive} />
-        <Text className="text-xl font-semibold text-foreground mt-4">
-          Something went wrong
-        </Text>
-        <Text className="text-muted-foreground text-center mt-2">
-          An unexpected error occurred. Please try again.
-        </Text>
-      </View>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: FALLBACK_COLORS.background, padding: 24, gap: 16 }}>
+      <AlertTriangle size={48} color={FALLBACK_COLORS.destructive} />
+      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>
+        Something went wrong
+      </Text>
+      <Text style={{ color: '#6b7280', textAlign: 'center' }}>
+        An unexpected error occurred. Please try again.
+      </Text>
 
       <TouchableOpacity
         onPress={onReset}
-        className="flex-row items-center bg-primary px-6 py-3 rounded-lg"
+        style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#2563eb', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, marginTop: 8 }}
       >
-        <RefreshCw size={20} color={colors.primaryForeground} />
-        <Text className="text-white font-medium ml-2">Try Again</Text>
+        <RefreshCw size={20} color={FALLBACK_COLORS.primaryForeground} />
+        <Text style={{ color: '#ffffff', fontWeight: '500', marginLeft: 8 }}>Try Again</Text>
       </TouchableOpacity>
 
       {__DEV__ && error && (
-        <ScrollView className="mt-6 max-h-48 w-full bg-muted/50 rounded-lg p-4">
-          <Text className="text-sm font-mono text-destructive">
+        <ScrollView style={{ marginTop: 8, maxHeight: 192, width: '100%', backgroundColor: '#f3f4f6', borderRadius: 8, padding: 16 }}>
+          <Text style={{ fontSize: 12, fontFamily: 'monospace', color: FALLBACK_COLORS.destructive }}>
             {error.toString()}
           </Text>
           {errorInfo && (
-            <Text className="text-xs font-mono text-muted-foreground mt-2">
+            <Text style={{ fontSize: 10, fontFamily: 'monospace', color: '#6b7280', marginTop: 8 }}>
               {errorInfo.componentStack}
             </Text>
           )}

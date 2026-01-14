@@ -11,6 +11,7 @@ import {
   Platform,
   Animated,
   useWindowDimensions,
+  StyleSheet,
 } from 'react-native';
 import { MessageSquare, X, Send, ChevronDown, ChevronUp, Loader2 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -30,6 +31,62 @@ const INITIAL_MESSAGE: Message = {
   role: 'assistant',
   timestamp: new Date(),
 };
+
+// Extracted component for message bubbles - easier to modify and extend
+interface MessageBubbleProps {
+  message: Message;
+  colors: ReturnType<typeof useThemeColors>;
+}
+
+function MessageBubble({ message, colors }: MessageBubbleProps) {
+  const isUser = message.role === 'user';
+  const isLoading = message.role === 'loading';
+
+  return (
+    <View style={[bubbleStyles.row, isUser && bubbleStyles.rowUser]}>
+      <View
+        style={[
+          bubbleStyles.bubble,
+          { backgroundColor: isUser ? colors.primary : colors.muted },
+        ]}
+      >
+        <Text
+          style={[
+            bubbleStyles.text,
+            { color: isUser ? colors.primaryForeground : colors.foreground },
+          ]}
+        >
+          {message.content}
+        </Text>
+        {isLoading && <Loader2 size={16} color={colors.mutedForeground} />}
+      </View>
+    </View>
+  );
+}
+
+const bubbleStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  rowUser: {
+    justifyContent: 'flex-end',
+  },
+  bubble: {
+    maxWidth: '80%',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  text: {
+    fontSize: 14,
+    lineHeight: 20,
+    flexShrink: 1,
+  },
+});
 
 export function SimpleAssistant() {
   const colors = useThemeColors();
@@ -217,58 +274,7 @@ export function SimpleAssistant() {
               showsVerticalScrollIndicator={false}
             >
               {messages.map((message) => (
-                <View
-                  key={message.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                  }}
-                >
-                  <View
-                    style={{
-                      maxWidth: '80%',
-                      borderRadius: 12,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      backgroundColor:
-                        message.role === 'user' ? colors.primary : colors.muted,
-                    }}
-                  >
-                    {message.role === 'loading' ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text
-                          style={{
-                            color: colors.foreground,
-                            fontSize: 14,
-                          }}
-                        >
-                          {message.content}
-                        </Text>
-                        <Loader2
-                          size={16}
-                          color={colors.mutedForeground}
-                          style={{
-                            // React Native doesn't support CSS animations,
-                            // so we'd need Reanimated for spinning
-                          }}
-                        />
-                      </View>
-                    ) : (
-                      <Text
-                        style={{
-                          color:
-                            message.role === 'user'
-                              ? colors.primaryForeground
-                              : colors.foreground,
-                          fontSize: 14,
-                          lineHeight: 20,
-                        }}
-                      >
-                        {message.content}
-                      </Text>
-                    )}
-                  </View>
-                </View>
+                <MessageBubble key={message.id} message={message} colors={colors} />
               ))}
             </ScrollView>
 

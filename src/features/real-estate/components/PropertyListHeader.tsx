@@ -48,7 +48,7 @@ export function PropertyListHeader({
   };
 
   return (
-    <View className="mb-4">
+    <View>
       {/* Search Bar */}
       <SearchBar
         value={searchQuery}

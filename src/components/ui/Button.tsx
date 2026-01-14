@@ -87,8 +87,6 @@ export function Button({
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.7}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
     >
       {loading ? (
         <ActivityIndicator
@@ -100,7 +98,15 @@ export function Button({
           {children}
         </Text>
       ) : (
-        children
+        React.Children.map(children, (child) =>
+          typeof child === 'string' ? (
+            <Text className={cn(buttonTextVariants({ variant }), textClassName)}>
+              {child}
+            </Text>
+          ) : (
+            child
+          )
+        )
       )}
     </TouchableOpacity>
   );

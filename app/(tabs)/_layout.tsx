@@ -1,10 +1,11 @@
 // app/(tabs)/_layout.tsx
 // Bottom tab navigator layout with floating glass tab bar
+// MVP Deal OS: Inbox → Deals → Properties → Settings
 import { Tabs } from 'expo-router';
-import { Home, Building, Users, MessageCircle, Settings } from 'lucide-react-native';
+import { Inbox, Briefcase, Building, Users, MessageCircle, Settings } from 'lucide-react-native';
 import { useUnreadCounts, formatBadgeCount } from '@/features/layout';
 import { useThemeColors } from '@/context/ThemeContext';
-import { FloatingGlassTabBar } from '@/components/ui/FloatingGlassTabBar';
+import { FloatingGlassTabBar, TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
 
 export default function TabLayout() {
   const { counts } = useUnreadCounts();
@@ -19,15 +20,22 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.mutedForeground,
       }}
       sceneContainerStyle={{
-        // Add bottom padding so content doesn't hide behind floating tab bar
-        paddingBottom: 72,
+        paddingBottom: TAB_BAR_SAFE_PADDING,
       }}
     >
+      {/* MVP Tab Order: Inbox → Deals → Properties → Settings */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          title: 'Inbox',
+          tabBarIcon: ({ color, size }) => <Inbox size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="deals"
+        options={{
+          title: 'Deals',
+          tabBarIcon: ({ color, size }) => <Briefcase size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -38,26 +46,27 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+        }}
+      />
+      {/* Hidden tabs - still accessible via navigation but not in tab bar */}
+      <Tabs.Screen
         name="leads"
         options={{
           title: 'Leads',
+          href: null, // Hide from tab bar (FloatingGlassTabBar filters by href)
           tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
-          tabBarBadge: formatBadgeCount(counts.leads),
         }}
       />
       <Tabs.Screen
         name="conversations"
         options={{
           title: 'AI Chat',
+          href: null, // Hide from tab bar (FloatingGlassTabBar filters by href)
           tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
-          tabBarBadge: formatBadgeCount(counts.conversations),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
     </Tabs>

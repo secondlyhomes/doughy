@@ -1,22 +1,12 @@
 // src/components/ui/FloatingGlassTabBar.tsx
-// Production-ready floating liquid glass tab bar with draggable selector
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, LayoutChangeEvent, Platform } from 'react-native';
+// Floating liquid glass tab bar for iOS 26+ with animated selector
+import React, { useCallback, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Platform, LayoutChangeEvent } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  LiquidGlassView,
-  LiquidGlassContainerView,
-  isLiquidGlassSupported,
-} from '@callstack/liquid-glass';
+import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { BlurView } from 'expo-blur';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  runOnJS,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useTheme, useThemeColors } from '@/context/ThemeContext';
 
 // Safe haptics - requires native rebuild to work
@@ -29,18 +19,26 @@ const triggerHaptic = async () => {
   }
 };
 
-// Constants
-const SELECTOR_SIZE = 52;
-const TAB_BAR_HEIGHT = 60;
+// Constants - exported for use in layouts
+export const TAB_BAR_HEIGHT = 60;
+export const TAB_BAR_BOTTOM_OFFSET = 0;
+/** Safe padding for content to clear the floating tab bar */
+export const TAB_BAR_SAFE_PADDING = 80;
+
 const PILL_BORDER_RADIUS = 30;
-const SPRING_CONFIG = { damping: 20, stiffness: 300 };
+const SELECTOR_SIZE = 52;
+const SPRING_CONFIG = { damping: 42, stiffness: 180 };
+
+// Format badge text (caps at 99+)
+const formatBadge = (badge: number | string): string => {
+  if (typeof badge === 'number' && badge > 99) return '99+';
+  return String(badge);
+};
 
 export interface FloatingGlassTabBarProps extends BottomTabBarProps {
-  /** Show the draggable selector. Default: true */
-  showSelector?: boolean;
   /** Horizontal margin from screen edges. Default: 16 */
   horizontalMargin?: number;
-  /** Bottom offset from safe area. Default: 8 */
+  /** Bottom offset from safe area. Default: 0 */
   bottomOffset?: number;
 }
 
@@ -48,50 +46,78 @@ export function FloatingGlassTabBar({
   state,
   descriptors,
   navigation,
-  showSelector = true,
   horizontalMargin = 16,
-  bottomOffset = 8,
+  bottomOffset = TAB_BAR_BOTTOM_OFFSET,
 }: FloatingGlassTabBarProps) {
   const insets = useSafeAreaInsets();
   const colors = useThemeColors();
   const { isDark } = useTheme();
 
-  // Track tab positions for hit detection
-  const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
-  const containerWidth = useRef(0);
-  const [isLayoutReady, setIsLayoutReady] = useState(false);
+  // Filter routes to only show visible tabs
+  // tabBarButton: () => null is the standard React Navigation way to hide tabs
+  // This works with custom tab bars (unlike href: null which only works with default)
+  const visibleRoutes = state.routes.filter((route) => {
+    const { options } = descriptors[route.key];
+    // Check if tabBarButton exists and returns null when called
+    if (typeof options.tabBarButton === 'function') {
+      try {
+        const result = options.tabBarButton({} as any);
+        if (result === null) return false;
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  });
 
-  // Animated selector position
+  // Map from visible index to actual route index
+  const visibleToActualIndex = visibleRoutes.map((route) =>
+    state.routes.findIndex((r) => r.key === route.key)
+  );
+
+  // Find the visible index for the current active tab
+  const activeVisibleIndex = visibleToActualIndex.findIndex(
+    (actualIndex) => actualIndex === state.index
+  );
+
+  // Track tab positions for selector animation
+  const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
   const selectorX = useSharedValue(0);
 
-  // Calculate tab center X position
-  const getTabCenterX = useCallback((index: number) => {
-    if (tabLayouts[index]) {
-      return tabLayouts[index].x + tabLayouts[index].width / 2 - SELECTOR_SIZE / 2;
+  // Calculate selector position for a given visible tab index
+  const getTabCenterX = useCallback((visibleIndex: number) => {
+    if (tabLayouts[visibleIndex]) {
+      return tabLayouts[visibleIndex].x + tabLayouts[visibleIndex].width / 2 - SELECTOR_SIZE / 2;
     }
     return 0;
   }, [tabLayouts]);
 
-  // Initialize selector position when layouts are ready
+  // Animate selector when tab changes or layouts update
   useEffect(() => {
-    if (tabLayouts.length === state.routes.length && tabLayouts.every(t => t)) {
-      setIsLayoutReady(true);
-      selectorX.value = withSpring(getTabCenterX(state.index), SPRING_CONFIG);
+    if (tabLayouts.length === visibleRoutes.length && tabLayouts.every(t => t) && activeVisibleIndex >= 0) {
+      selectorX.value = withSpring(getTabCenterX(activeVisibleIndex), SPRING_CONFIG);
     }
-  }, [tabLayouts, state.routes.length, getTabCenterX, state.index, selectorX]);
+  }, [activeVisibleIndex, tabLayouts, getTabCenterX, selectorX, visibleRoutes.length]);
 
-  // Update selector when active tab changes externally
-  useEffect(() => {
-    if (isLayoutReady) {
-      selectorX.value = withSpring(getTabCenterX(state.index), SPRING_CONFIG);
-    }
-  }, [state.index, isLayoutReady, getTabCenterX, selectorX]);
+  const selectorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: selectorX.value }],
+  }));
 
-  // Navigate to tab with haptic feedback
-  const navigateToTab = useCallback((index: number) => {
-    if (index === state.index) return; // Already on this tab
+  const onTabLayout = useCallback((visibleIndex: number, e: LayoutChangeEvent) => {
+    const { x, width } = e.nativeEvent.layout;
+    setTabLayouts(prev => {
+      const updated = [...prev];
+      updated[visibleIndex] = { x, width };
+      return updated;
+    });
+  }, []);
 
-    const route = state.routes[index];
+  // Navigate to tab with haptic feedback (takes visible index)
+  const navigateToTab = useCallback((visibleIndex: number) => {
+    const actualIndex = visibleToActualIndex[visibleIndex];
+    if (actualIndex === state.index) return; // Already on this tab
+
+    const route = state.routes[actualIndex];
     const event = navigation.emit({
       type: 'tabPress',
       target: route.key,
@@ -99,105 +125,10 @@ export function FloatingGlassTabBar({
     });
 
     if (!event.defaultPrevented) {
-      triggerHaptic(); // Safe - won't crash if native module not linked
+      triggerHaptic();
       navigation.navigate(route.name);
     }
-  }, [state.index, state.routes, navigation]);
-
-  // Find nearest tab index from X position
-  const findNearestTab = useCallback((centerX: number): number => {
-    let nearestIndex = state.index;
-    let nearestDistance = Infinity;
-
-    for (let i = 0; i < tabLayouts.length; i++) {
-      const tab = tabLayouts[i];
-      if (tab) {
-        const tabCenter = tab.x + tab.width / 2;
-        const distance = Math.abs(centerX - tabCenter);
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestIndex = i;
-        }
-      }
-    }
-    return nearestIndex;
-  }, [tabLayouts, state.index]);
-
-  // Pan gesture for dragging selector
-  const panGesture = Gesture.Pan()
-    .onUpdate((e) => {
-      const maxX = containerWidth.current - SELECTOR_SIZE - 8;
-      selectorX.value = Math.max(8, Math.min(e.x - SELECTOR_SIZE / 2, maxX));
-    })
-    .onEnd(() => {
-      const centerX = selectorX.value + SELECTOR_SIZE / 2;
-      const targetIndex = findNearestTab(centerX);
-      selectorX.value = withSpring(getTabCenterX(targetIndex), SPRING_CONFIG);
-      runOnJS(navigateToTab)(targetIndex);
-    });
-
-  // Tap gesture for direct tab selection
-  const tapGesture = Gesture.Tap()
-    .onEnd((e) => {
-      for (let i = 0; i < tabLayouts.length; i++) {
-        const tab = tabLayouts[i];
-        if (tab && e.x >= tab.x && e.x <= tab.x + tab.width) {
-          selectorX.value = withSpring(getTabCenterX(i), SPRING_CONFIG);
-          runOnJS(navigateToTab)(i);
-          break;
-        }
-      }
-    });
-
-  const composedGesture = Gesture.Exclusive(panGesture, tapGesture);
-
-  const selectorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: selectorX.value }],
-  }));
-
-  const onTabLayout = useCallback((index: number, e: LayoutChangeEvent) => {
-    const { x, width } = e.nativeEvent.layout;
-    setTabLayouts(prev => {
-      const updated = [...prev];
-      updated[index] = { x, width };
-      return updated;
-    });
-  }, []);
-
-  const onContainerLayout = useCallback((e: LayoutChangeEvent) => {
-    containerWidth.current = e.nativeEvent.layout.width;
-  }, []);
-
-  // Render tab icon with optional badge
-  const renderTab = (route: typeof state.routes[0], index: number) => {
-    const { options } = descriptors[route.key];
-    const isFocused = state.index === index;
-    const badge = options.tabBarBadge;
-    const icon = options.tabBarIcon?.({
-      focused: isFocused,
-      color: isFocused ? colors.primary : colors.mutedForeground,
-      size: 24,
-    });
-
-    return (
-      <View
-        key={route.key}
-        style={styles.tab}
-        onLayout={(e) => onTabLayout(index, e)}
-      >
-        <View style={styles.iconContainer}>
-          {icon}
-          {badge != null && (
-            <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
-              <Text style={styles.badgeText}>
-                {typeof badge === 'number' && badge > 99 ? '99+' : badge}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-    );
-  };
+  }, [state.index, state.routes, navigation, visibleToActualIndex]);
 
   // ─────────────────────────────────────────────────────────────
   // FALLBACK: Non-iOS 26 devices get blurred pill tab bar
@@ -222,9 +153,10 @@ export function FloatingGlassTabBar({
           style={[styles.pill, { overflow: 'hidden' }]}
         >
           <View style={styles.iconsLayer}>
-            {state.routes.map((route, index) => {
+            {visibleRoutes.map((route, visibleIndex) => {
               const { options } = descriptors[route.key];
-              const isFocused = state.index === index;
+              const isFocused = visibleIndex === activeVisibleIndex;
+              const badge = options.tabBarBadge;
               const icon = options.tabBarIcon?.({
                 focused: isFocused,
                 color: isFocused ? colors.primary : colors.mutedForeground,
@@ -234,9 +166,16 @@ export function FloatingGlassTabBar({
                 <View
                   key={route.key}
                   style={[styles.tab, isFocused && styles.tabFocused]}
-                  onTouchEnd={() => navigateToTab(index)}
+                  onTouchEnd={() => navigateToTab(visibleIndex)}
                 >
-                  {icon}
+                  <View style={styles.iconContainer}>
+                    {icon}
+                    {badge != null && (
+                      <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
+                        <Text style={styles.badgeText}>{formatBadge(badge)}</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               );
             })}
@@ -247,41 +186,70 @@ export function FloatingGlassTabBar({
   }
 
   // ─────────────────────────────────────────────────────────────
-  // LIQUID GLASS: iOS 26+ with true glass effect
+  // LIQUID GLASS: iOS 26+ with true glass effect and animated selector
   // ─────────────────────────────────────────────────────────────
+  const isLayoutReady = tabLayouts.length === visibleRoutes.length && tabLayouts.every(t => t);
+
   return (
     <View style={[
       styles.wrapper,
       { bottom: insets.bottom + bottomOffset, left: horizontalMargin, right: horizontalMargin }
     ]}>
-      {/* Glass container for proper blending between pill and selector */}
-      <LiquidGlassContainerView spacing={8} style={StyleSheet.absoluteFillObject}>
-        {/* 1. Pill background - liquid glass */}
+      {/* Glass layer - NO touch handling (pointerEvents="none") */}
+      <LiquidGlassContainerView
+        spacing={8}
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="none"
+      >
+        {/* Pill background */}
         <LiquidGlassView
           style={styles.pill}
           effect="regular"
           colorScheme={isDark ? 'dark' : 'light'}
         />
 
-        {/* 2. Selector circle - liquid glass with interactive highlight */}
-        {showSelector && isLayoutReady && (
+        {/* Animated selector circle */}
+        {isLayoutReady && activeVisibleIndex >= 0 && (
           <Animated.View style={[styles.selectorWrapper, selectorStyle]}>
             <LiquidGlassView
               style={styles.selector}
               effect="clear"
-              interactive
               colorScheme={isDark ? 'dark' : 'light'}
             />
           </Animated.View>
         )}
       </LiquidGlassContainerView>
 
-      {/* 3. Icons layer - on top for gesture handling */}
-      <GestureDetector gesture={composedGesture}>
-        <View style={styles.iconsLayer} onLayout={onContainerLayout}>
-          {state.routes.map(renderTab)}
-        </View>
-      </GestureDetector>
+      {/* Touch layer - handles taps */}
+      <View style={styles.iconsLayer}>
+        {visibleRoutes.map((route, visibleIndex) => {
+          const { options } = descriptors[route.key];
+          const isFocused = visibleIndex === activeVisibleIndex;
+          const badge = options.tabBarBadge;
+          const icon = options.tabBarIcon?.({
+            focused: isFocused,
+            color: isFocused ? colors.primary : colors.mutedForeground,
+            size: 24,
+          });
+          return (
+            <View
+              key={route.key}
+              style={styles.tab}
+              onLayout={(e) => onTabLayout(visibleIndex, e)}
+              onTouchEnd={() => navigateToTab(visibleIndex)}
+            >
+              <View style={styles.iconContainer}>
+                {icon}
+                {badge != null && (
+                  <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
+                    <Text style={styles.badgeText}>{formatBadge(badge)}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }

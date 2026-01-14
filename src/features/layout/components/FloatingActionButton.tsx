@@ -19,6 +19,7 @@ import {
   FileText,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
 
 export interface FABAction {
   icon: React.ReactNode;
@@ -108,7 +109,7 @@ export function FloatingActionButton({
       )}
 
       {/* FAB Container */}
-      <View className="absolute bottom-6 right-6" style={{ zIndex: 100 }}>
+      <View className="absolute right-6" style={{ zIndex: 100, bottom: TAB_BAR_SAFE_PADDING }}>
         {/* Action Buttons */}
         {actions.map((action, index) => {
           const translateY = animation.interpolate({

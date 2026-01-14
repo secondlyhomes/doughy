@@ -6,7 +6,7 @@ import { Home, Users, FileText, Link } from 'lucide-react-native';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
-import { FloatingGlassTabBar } from '@/components/ui/FloatingGlassTabBar';
+import { FloatingGlassTabBar, TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
 
 export default function AdminLayout() {
   const { isLoading } = useAuth();
@@ -36,7 +36,7 @@ export default function AdminLayout() {
         tabBarInactiveTintColor: colors.mutedForeground,
       }}
       sceneContainerStyle={{
-        paddingBottom: 72, // Space for floating tab bar
+        paddingBottom: TAB_BAR_SAFE_PADDING,
       }}
     >
       <Tabs.Screen

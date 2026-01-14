@@ -230,7 +230,7 @@ export function LeadsListScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity
-        className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
+        className="absolute bottom-32 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
         style={{
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },

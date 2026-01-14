@@ -167,9 +167,14 @@ export function ThemeProvider({
   // Get current colors
   const colors = isDark ? darkColors : lightColors;
 
-  // Don't render children until theme is loaded to prevent flash
+  // Render children with default light theme while loading to maintain component tree structure
+  // This prevents navigation context issues that can occur when returning null
   if (!isLoaded) {
-    return null;
+    return (
+      <ThemeContext.Provider value={{ mode: 'light', setMode: () => {}, isDark: false, colors: lightColors, toggleTheme: () => {} }}>
+        {children}
+      </ThemeContext.Provider>
+    );
   }
 
   return (

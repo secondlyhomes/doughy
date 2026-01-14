@@ -3,6 +3,8 @@
 
 import { useState, useCallback } from 'react';
 
+import { AssistantContextSnapshot } from '../types/context';
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -13,7 +15,7 @@ export interface Message {
 
 interface UseChatReturn {
   messages: Message[];
-  sendMessage: (content: string) => void;
+  sendMessage: (content: string, context?: AssistantContextSnapshot) => void;
   isLoading: boolean;
   error: Error | null;
   clearMessages: () => void;
@@ -37,15 +39,20 @@ export function useChat(): UseChatReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, context?: AssistantContextSnapshot) => {
     if (!content.trim()) return;
 
-    // Add user message
+    // Add user message with context metadata
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: content.trim(),
       createdAt: new Date().toISOString(),
+      metadata: context ? {
+        screen: context.screen.name,
+        dealId: context.selection.dealId,
+        payload: context.payload,
+      } : undefined,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -54,20 +61,27 @@ export function useChat(): UseChatReturn {
 
     try {
       // TODO: Replace with actual AI API call
+      // When implementing, include full context in the request:
       // const response = await fetch('/api/chat', {
       //   method: 'POST',
-      //   body: JSON.stringify({ message: content }),
+      //   body: JSON.stringify({
+      //     message: content,
+      //     context: context, // Full context snapshot
+      //   }),
       // });
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
 
-      // Mock response
+      // Mock response - in real implementation, AI would use context
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: getRandomResponse(),
         createdAt: new Date().toISOString(),
+        metadata: {
+          contextUsed: !!context,
+        },
       };
 
       setMessages(prev => [...prev, assistantMessage]);

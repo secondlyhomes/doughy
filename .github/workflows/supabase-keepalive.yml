@@ -1,0 +1,60 @@
+name: Supabase Keep-Alive
+
+# Prevents Supabase from pausing inactive free-tier projects
+# Free tier projects pause after 7 days of inactivity
+
+on:
+  schedule:
+    # Run daily at 8am UTC (3am EST, 12am PST)
+    - cron: '0 8 * * *'
+  workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Dev/Stage Supabase
+        env:
+          STAGE_KEY: ${{ secrets.SUPABASE_STAGE_ANON_KEY }}
+        run: |
+          echo "Pinging Dev/Stage project..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            "https://lqmbyobweeaigrwmvizo.supabase.co/rest/v1/" \
+            -H "apikey: $STAGE_KEY" \
+            -H "Authorization: Bearer $STAGE_KEY")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          echo "Dev/Stage responded with HTTP $HTTP_CODE at $(date -u)"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Dev/Stage is alive"
+          else
+            echo "Dev/Stage returned unexpected status"
+          fi
+
+      - name: Ping Production Supabase
+        env:
+          PROD_KEY: ${{ secrets.SUPABASE_PROD_ANON_KEY }}
+        run: |
+          echo "Pinging Production project..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            "https://vpqglbaedcpeprnlnfxd.supabase.co/rest/v1/" \
+            -H "apikey: $PROD_KEY" \
+            -H "Authorization: Bearer $PROD_KEY")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          echo "Production responded with HTTP $HTTP_CODE at $(date -u)"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Production is alive"
+          else
+            echo "Production returned unexpected status"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Supabase Keep-Alive Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dev/Stage**: lqmbyobweeaigrwmvizo" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production**: vpqglbaedcpeprnlnfxd" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY

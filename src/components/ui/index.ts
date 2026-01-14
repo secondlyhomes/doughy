@@ -193,10 +193,19 @@ export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';
 export { ScreenHeader } from './ScreenHeader';
 export type { ScreenHeaderProps } from './ScreenHeader';
 
+// Floating Action Button
+export { SimpleFAB } from './SimpleFAB';
+export type { SimpleFABProps } from './SimpleFAB';
+
 // Glass components
 export { GlassView, GlassBackdrop, isLiquidGlassSupported } from './GlassView';
 export type { GlassViewProps, GlassBackdropProps } from './GlassView';
 
 // Navigation components
-export { FloatingGlassTabBar } from './FloatingGlassTabBar';
+export {
+  FloatingGlassTabBar,
+  TAB_BAR_HEIGHT,
+  TAB_BAR_BOTTOM_OFFSET,
+  TAB_BAR_SAFE_PADDING,
+} from './FloatingGlassTabBar';
 export type { FloatingGlassTabBarProps } from './FloatingGlassTabBar';

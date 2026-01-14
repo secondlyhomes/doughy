@@ -1,7 +1,7 @@
 // src/components/ui/Tabs.tsx
 // React Native Tabs component with NativeWind styling
 import React, { createContext, useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, ViewProps, TextProps } from 'react-native';
+import { View, Text, Pressable, ViewProps, TextProps } from 'react-native';
 import { cn } from '@/lib/utils';
 
 // Tabs context
@@ -94,7 +94,7 @@ export function TabsTrigger({
   const isActive = value === selectedValue;
 
   return (
-    <TouchableOpacity
+    <Pressable
       className={cn(
         'flex-1 items-center justify-center rounded-sm px-3 py-1.5',
         isActive && 'bg-background shadow-sm',
@@ -103,9 +103,6 @@ export function TabsTrigger({
       )}
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
-      activeOpacity={0.7}
-      accessibilityRole="tab"
-      accessibilityState={{ selected: isActive, disabled }}
     >
       {typeof children === 'string' ? (
         <Text
@@ -120,7 +117,7 @@ export function TabsTrigger({
       ) : (
         children
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

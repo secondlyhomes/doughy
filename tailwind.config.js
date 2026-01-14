@@ -9,6 +9,9 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontFamily: {
+        lobster: ['Lobster'],
+      },
       colors: {
         border: "var(--color-border)",
         input: "var(--color-input)",

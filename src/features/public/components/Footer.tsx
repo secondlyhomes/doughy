@@ -53,7 +53,7 @@ export function Footer() {
                 style={{ width: 32, height: 32 }}
                 resizeMode="contain"
               />
-              <Text className="text-3xl tracking-tight text-primary font-semibold">
+              <Text className="text-3xl tracking-tight text-primary font-lobster">
                 Doughy
               </Text>
             </View>
@@ -61,7 +61,7 @@ export function Footer() {
               Lead management for real estate investors
             </Text>
             <Text className="text-sm text-muted-foreground">
-              {currentYear} <Text className="text-primary font-semibold">Doughy</Text>
+              {currentYear} <Text className="text-primary font-lobster">Doughy</Text>
             </Text>
             <View className="flex-row gap-4 mt-4">
               <SocialLink href="https://twitter.com/doughy" Icon={Twitter} label="Twitter" />

@@ -2,11 +2,10 @@
 // Main screen for displaying the list of properties
 
 import React, { useCallback, useState } from 'react';
-import { View, Text, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader } from '@/components/ui';
+import { ScreenHeader, SimpleFAB } from '@/components/ui';
 import { useRouter } from 'expo-router';
-import { Plus } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyFiltersSheet } from '../components/PropertyFiltersSheet';
@@ -74,33 +73,35 @@ export function PropertyListScreen() {
       {/* Header */}
       <ScreenHeader title="Properties" subtitle="Manage your properties" />
 
+      {/* Search, Filters, Sort - stays fixed while list scrolls */}
+      <View className="px-4 pt-2">
+        <PropertyListHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClearSearch={() => setSearchQuery('')}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          hasActiveFilters={hasActiveFilters}
+          activeFilterCount={activeFilterCount}
+          filters={filters}
+          sortBy={sortBy}
+          onShowFilters={() => setShowFiltersSheet(true)}
+          onShowSort={() => setShowSortSheet(true)}
+          onResetFilters={resetFilters}
+          totalCount={properties.length}
+          filteredCount={filteredProperties.length}
+        />
+      </View>
+
       <FlatList
         data={filteredProperties}
         renderItem={renderPropertyItem}
         keyExtractor={keyExtractor}
         numColumns={viewMode === 'grid' ? 2 : 1}
         key={viewMode}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 100 }}
         columnWrapperStyle={viewMode === 'grid' ? { gap: 12 } : undefined}
         ItemSeparatorComponent={viewMode === 'list' ? ItemSeparator : undefined}
-        ListHeaderComponent={
-          <PropertyListHeader
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClearSearch={() => setSearchQuery('')}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            hasActiveFilters={hasActiveFilters}
-            activeFilterCount={activeFilterCount}
-            filters={filters}
-            sortBy={sortBy}
-            onShowFilters={() => setShowFiltersSheet(true)}
-            onShowSort={() => setShowSortSheet(true)}
-            onResetFilters={resetFilters}
-            totalCount={properties.length}
-            filteredCount={filteredProperties.length}
-          />
-        }
         ListEmptyComponent={
           <PropertyListEmpty
             isLoading={isLoading}
@@ -121,19 +122,7 @@ export function PropertyListScreen() {
         removeClippedSubviews={true}
       />
 
-      <TouchableOpacity
-        onPress={handleAddProperty}
-        className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        style={{
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
-        }}
-      >
-        <Plus size={28} color={colors.primaryForeground} />
-      </TouchableOpacity>
+      <SimpleFAB onPress={handleAddProperty} accessibilityLabel="Add property" />
 
       <PropertyFiltersSheet
         visible={showFiltersSheet}

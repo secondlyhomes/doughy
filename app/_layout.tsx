@@ -3,6 +3,7 @@
 import '../global.css';
 import { useEffect } from 'react';
 import { View, ActivityIndicator, LogBox, Platform } from 'react-native';
+import { useFonts } from 'expo-font';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 
@@ -21,6 +22,7 @@ console.warn = (...args: unknown[]) => {
   originalWarn.apply(console, args);
 };
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -28,6 +30,8 @@ import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { UnreadCountsProvider, ErrorBoundary } from '@/features/layout';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { FocusModeProvider } from '@/context/FocusModeContext';
+import { ToastProvider } from '@/components/ui/Toast';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -105,22 +109,42 @@ function ThemedStatusBar() {
 
 // Root layout with all providers
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Lobster: require('../assets/fonts/Lobster-Regular.ttf'),
+  });
+
+  // Show loading spinner while fonts are loading (but not if there's an error)
+  // If fonts fail to load, continue anyway - system fonts will be used as fallback
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ThemeProvider>
-            <ThemeSync>
-              <UnreadCountsProvider>
-                <SafeAreaProvider>
-                  <ThemedStatusBar />
-                  <AuthRouter />
-                </SafeAreaProvider>
-              </UnreadCountsProvider>
-            </ThemeSync>
+            <FocusModeProvider>
+              <ThemeSync>
+                <ToastProvider>
+                  <UnreadCountsProvider>
+                    <SafeAreaProvider>
+                      <ThemedStatusBar />
+                      <ErrorBoundary>
+                        <AuthRouter />
+                      </ErrorBoundary>
+                    </SafeAreaProvider>
+                  </UnreadCountsProvider>
+                </ToastProvider>
+              </ThemeSync>
+            </FocusModeProvider>
           </ThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
-    </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }

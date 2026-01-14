@@ -3,6 +3,7 @@
 
 import { useMemo } from 'react';
 import { Property } from '../types';
+import { IBuyingCriteria } from '../types/store';
 
 export interface DealMetrics {
   // Purchase Analysis
@@ -62,6 +63,17 @@ export const DEFAULT_RENTAL_ASSUMPTIONS: RentalAssumptions = {
 };
 
 /**
+ * Default values for flip analysis calculations
+ * These can be overridden by passing buyingCriteria
+ */
+export const DEFAULT_FLIP_CONSTANTS = {
+  closingCostsPct: 0.03,      // 3% of purchase price
+  holdingCostsPct: 0.02,      // 2% of purchase price (or can use holdingMonths * monthlyHoldingCost)
+  sellingCostsPct: 0.08,      // 8% of ARV (includes agent commission)
+  maoRulePct: 0.70,           // 70% rule for Maximum Allowable Offer
+};
+
+/**
  * Calculate monthly mortgage payment (P&I)
  */
 function calculateMonthlyMortgage(
@@ -83,10 +95,15 @@ function calculateMonthlyMortgage(
 
 /**
  * Hook for comprehensive deal analysis calculations
+ *
+ * @param property - The property to analyze
+ * @param rentalAssumptions - Optional rental assumptions for cash flow analysis
+ * @param buyingCriteria - Optional buying criteria from user settings (overrides default percentages)
  */
 export function useDealAnalysis(
-  property: Property,
-  rentalAssumptions?: Partial<RentalAssumptions>
+  property: Property | undefined,
+  rentalAssumptions?: Partial<RentalAssumptions>,
+  buyingCriteria?: Partial<IBuyingCriteria>
 ): DealMetrics {
   return useMemo(() => {
     // Merge default assumptions with provided ones
@@ -95,39 +112,48 @@ export function useDealAnalysis(
       ...rentalAssumptions,
     };
 
-    // Basic property values
-    const purchasePrice = property.purchase_price || 0;
-    const repairCost = property.repair_cost || 0;
-    const arv = property.arv || 0;
+    // Basic property values (handle undefined property)
+    const purchasePrice = property?.purchase_price || 0;
+    const repairCost = property?.repair_cost || 0;
+    const arv = property?.arv || 0;
 
-    // ============================================================================
-    // TODO: ZONE C CODE REVIEW - HARD-CODED CALCULATION CONSTANTS
-    // ============================================================================
-    // These percentages should be configurable via user settings or buying criteria.
-    // Current hard-coded values may not match user's actual costs.
-    //
-    // Suggested fix: Accept these as parameters from buyingCriteria or a config:
-    //   - closingCostsPct: number (default 0.03)
-    //   - holdingCostsPct: number (default 0.02)
-    //   - sellingCostsPct: number (default 0.08)
-    //   - maoRulePct: number (default 0.70)
-    //
-    // See: src/features/real-estate/types/store.ts IBuyingCriteria for related fields
-    // ============================================================================
-    const closingCosts = purchasePrice * 0.03;       // Hard-coded 3%
-    const holdingCosts = purchasePrice * 0.02;       // Hard-coded 2%
+    // Calculate percentages from buyingCriteria (with defaults)
+    // Note: buyingCriteria percentages are stored as whole numbers (e.g., 3 = 3%)
+    // so we divide by 100 for calculations
+    const closingCostsPct = buyingCriteria?.closingExpensesPct != null
+      ? buyingCriteria.closingExpensesPct / 100
+      : DEFAULT_FLIP_CONSTANTS.closingCostsPct;
+
+    // Holding costs can be calculated from holdingMonths * monthlyHoldingCost
+    // or use a percentage of purchase price as fallback
+    const holdingCosts = buyingCriteria?.holdingMonths && buyingCriteria?.monthlyHoldingCost
+      ? buyingCriteria.holdingMonths * buyingCriteria.monthlyHoldingCost
+      : purchasePrice * DEFAULT_FLIP_CONSTANTS.holdingCostsPct;
+
+    const sellingCostsPct = buyingCriteria?.sellingCommissionPct != null
+      ? buyingCriteria.sellingCommissionPct / 100
+      : DEFAULT_FLIP_CONSTANTS.sellingCostsPct;
+
+    // MAO rule percentage - derived from (1 - yourProfitPct - sellingCommissionPct)
+    // Default is 70% (i.e., 100% - 22% profit - 8% commission = 70%)
+    const maoRulePct = buyingCriteria?.yourProfitPct != null
+      ? 1 - (buyingCriteria.yourProfitPct / 100) - sellingCostsPct
+      : DEFAULT_FLIP_CONSTANTS.maoRulePct;
+
+    // Calculate costs
+    const closingCosts = purchasePrice * closingCostsPct;
 
     // Total investment
     const totalInvestment = purchasePrice + repairCost + closingCosts + holdingCosts;
 
     // === FLIP ANALYSIS ===
-    const sellingCosts = arv * 0.08;                 // Hard-coded 8%
+    const sellingCosts = arv * sellingCostsPct;
     const grossProfit = arv - totalInvestment;
     const netProfit = arv - totalInvestment - sellingCosts;
     const roi = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
 
-    // MAO (Maximum Allowable Offer) using 70% rule
-    const mao = arv > 0 ? arv * 0.7 - repairCost : 0; // Hard-coded 70% rule
+    // MAO (Maximum Allowable Offer) using configured rule percentage
+    const mao = arv > 0 ? arv * maoRulePct - repairCost : 0;
 
     // === RENTAL ANALYSIS ===
     const monthlyRent = assumptions.monthlyRent || 0;
@@ -198,8 +224,8 @@ export function useDealAnalysis(
       hasFlipData,
       hasRentalData,
     };
-    // Using JSON.stringify for rentalAssumptions to ensure stable dependency comparison
+    // Using JSON.stringify for objects to ensure stable dependency comparison
     // since objects are compared by reference and would cause unnecessary recalculations
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [property, JSON.stringify(rentalAssumptions)]);
+  }, [property, JSON.stringify(rentalAssumptions), JSON.stringify(buyingCriteria)]);
 }

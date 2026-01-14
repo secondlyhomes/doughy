@@ -65,7 +65,7 @@ export function AboutScreen() {
           <View className="w-24 h-24 rounded-2xl bg-primary items-center justify-center mb-4">
             <Text className="text-white text-3xl font-bold">D</Text>
           </View>
-          <Text className="text-2xl font-bold text-foreground">Doughy AI</Text>
+          <Text className="text-2xl font-lobster text-foreground">Doughy AI</Text>
           <Text className="text-muted-foreground mt-1">
             Real Estate Investment Platform
           </Text>

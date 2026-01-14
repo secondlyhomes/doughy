@@ -11,11 +11,10 @@ import {
   Alert,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner } from '@/components/ui';
+import { ScreenHeader, LoadingSpinner, SimpleFAB } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import {
   MessageCircle,
-  Plus,
   Trash2,
   Clock,
   ChevronRight,
@@ -207,27 +206,12 @@ export function ConversationsListScreen() {
       )}
 
       {/* Floating Action Button */}
-      <TouchableOpacity
+      <SimpleFAB
         testID="new-conversation-fab"
-        className="absolute bottom-6 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
         onPress={handleNewConversation}
-        disabled={createConversation.isPending}
+        loading={createConversation.isPending}
         accessibilityLabel="Start new conversation"
-        accessibilityRole="button"
-      >
-        {createConversation.isPending ? (
-          <LoadingSpinner size="small" color={colors.primaryForeground} />
-        ) : (
-          <Plus size={24} color={colors.primaryForeground} />
-        )}
-      </TouchableOpacity>
+      />
     </ThemedSafeAreaView>
   );
 }

@@ -6,6 +6,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/context/ThemeContext';
+import { cn } from '@/lib/utils';
 
 export interface ScreenHeaderProps {
   /** Main title text */
@@ -46,9 +47,11 @@ export function ScreenHeader({
 
   return (
     <View
-      className={`px-4 pt-4 pb-2 flex-row items-center justify-between ${
-        bordered ? 'border-b border-border' : ''
-      } ${className || ''}`}
+      className={cn(
+        'px-4 pt-4 pb-2 flex-row items-center justify-between',
+        bordered && 'border-b border-border',
+        className
+      )}
     >
       <View className="flex-row items-center flex-1">
         {backButton && (

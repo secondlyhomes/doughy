@@ -2,12 +2,20 @@
 // Public website navigation bar (web-only)
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Pressable } from 'react-native';
-import { Link, useRouter, usePathname } from 'expo-router';
+import { Link, useRouter, usePathname, Href } from 'expo-router';
 import { ChevronDown, Menu, X, LogOut, Sun, Moon, Search } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { AskDoughyModal } from '@/features/docs/components/AskDoughyModal';
+
+// Data-driven menu items - add/remove items here
+const SOLUTIONS_ITEMS = [
+  { href: '/features/real-estate', label: 'Real Estate' },
+  { href: '/features/lead-management', label: 'Lead Management' },
+  { href: '/features/ai-agents', label: 'AI Agents' },
+  { href: '/features/roi', label: 'ROI Calculator' },
+] as const;
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,7 +35,7 @@ export function Navbar() {
   };
 
   const NavLink = ({ href, children, onPress }: { href: string; children: string; onPress?: () => void }) => (
-    <Link href={href as any} asChild>
+    <Link href={href as Href} asChild>
       <Pressable
         onPress={onPress}
         className="px-3 py-2"
@@ -50,107 +58,91 @@ export function Navbar() {
               style={{ width: 32, height: 32 }}
               resizeMode="contain"
             />
-            <Text className="text-3xl tracking-tight text-primary font-semibold">
+            <Text className="text-3xl tracking-tight text-primary font-lobster">
               Doughy
             </Text>
           </Pressable>
         </Link>
 
         {/* Desktop Navigation */}
-        <View className="hidden md:flex flex-row items-center gap-1 flex-1 justify-end">
-          {/* Solutions Dropdown */}
-          <View className="relative">
-            <Pressable
-              onPress={() => setShowSolutionsDropdown(!showSolutionsDropdown)}
-              className="flex-row items-center gap-1 px-3 py-2"
-            >
-              <Text className="text-foreground">Solutions</Text>
-              <ChevronDown size={16} color={colors.foreground} />
-            </Pressable>
-
-            {showSolutionsDropdown && (
-              <View
-                className="absolute top-full right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 w-48"
-                onPointerLeave={() => setShowSolutionsDropdown(false)}
+        <View className="hidden md:flex flex-row items-center gap-2 flex-1 justify-end">
+          {/* Navigation Links Group */}
+          <View className="flex-row items-center gap-1 ml-8 mr-6">
+            {/* Solutions Dropdown */}
+            <View className="relative">
+              <Pressable
+                onPress={() => setShowSolutionsDropdown(!showSolutionsDropdown)}
+                className="flex-row items-center gap-1 px-3 py-2"
               >
-                <View className="py-1">
-                  <Link href="/features/real-estate" asChild>
-                    <Pressable
-                      onPress={() => setShowSolutionsDropdown(false)}
-                      className="px-4 py-2 hover:bg-muted"
-                    >
-                      <Text className="text-foreground">Real Estate</Text>
-                    </Pressable>
-                  </Link>
-                  <Link href="/features/lead-management" asChild>
-                    <Pressable
-                      onPress={() => setShowSolutionsDropdown(false)}
-                      className="px-4 py-2 hover:bg-muted"
-                    >
-                      <Text className="text-foreground">Lead Management</Text>
-                    </Pressable>
-                  </Link>
-                  <Link href="/features/ai-agents" asChild>
-                    <Pressable
-                      onPress={() => setShowSolutionsDropdown(false)}
-                      className="px-4 py-2 hover:bg-muted"
-                    >
-                      <Text className="text-foreground">AI Agents</Text>
-                    </Pressable>
-                  </Link>
-                  <Link href="/features/roi" asChild>
-                    <Pressable
-                      onPress={() => setShowSolutionsDropdown(false)}
-                      className="px-4 py-2 hover:bg-muted"
-                    >
-                      <Text className="text-foreground">ROI Calculator</Text>
-                    </Pressable>
-                  </Link>
+                <Text className="text-foreground">Solutions</Text>
+                <ChevronDown size={16} color={colors.foreground} />
+              </Pressable>
+
+              {showSolutionsDropdown && (
+                <View
+                  className="absolute top-full right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 w-48"
+                  onPointerLeave={() => setShowSolutionsDropdown(false)}
+                >
+                  <View className="py-1">
+                    {SOLUTIONS_ITEMS.map(({ href, label }) => (
+                      <Link key={href} href={href as Href} asChild>
+                        <Pressable
+                          onPress={() => setShowSolutionsDropdown(false)}
+                          className="px-4 py-2 hover:bg-muted"
+                        >
+                          <Text className="text-foreground">{label}</Text>
+                        </Pressable>
+                      </Link>
+                    ))}
+                  </View>
                 </View>
-              </View>
+              )}
+            </View>
+
+            <NavLink href="/pricing">Pricing</NavLink>
+            <NavLink href="/docs">Docs</NavLink>
+            {isDocsPage && (
+              <Pressable
+                onPress={() => setShowAskDoughy(true)}
+                className="flex-row items-center gap-1 px-3 py-2"
+              >
+                <Search size={16} color={colors.primary} />
+                <Text className="text-primary font-medium">Ask Doughy</Text>
+              </Pressable>
             )}
+            <NavLink href="/contact">Contact</NavLink>
           </View>
 
-          <NavLink href="/pricing">Pricing</NavLink>
-          <NavLink href="/docs">Docs</NavLink>
-          {isDocsPage && (
-            <Pressable
-              onPress={() => setShowAskDoughy(true)}
-              className="flex-row items-center gap-1 px-3 py-2"
-            >
-              <Search size={16} color={colors.primary} />
-              <Text className="text-primary font-medium">Ask Doughy</Text>
-            </Pressable>
-          )}
-          <NavLink href="/contact">Contact</NavLink>
+          {/* Auth Buttons Group */}
+          <View className="flex-row items-center gap-3">
+            {isAuthenticated ? (
+              <Button variant="outline" onPress={handleSignOut}>
+                <View className="flex-row items-center gap-1">
+                  <LogOut size={16} color={colors.foreground} />
+                  <Text className="text-foreground text-sm font-medium">Sign Out</Text>
+                </View>
+              </Button>
+            ) : (
+              <Link href="/(auth)/sign-in" asChild>
+                <Button variant="outline">
+                  <Text className="text-foreground text-sm font-medium">Sign In</Text>
+                </Button>
+              </Link>
+            )}
 
-          {isAuthenticated ? (
-            <Button variant="outline" onPress={handleSignOut}>
-              <View className="flex-row items-center gap-1">
-                <LogOut size={16} color={colors.foreground} />
-                <Text className="text-foreground text-sm font-medium">Sign Out</Text>
-              </View>
-            </Button>
-          ) : (
-            <Link href="/(auth)/sign-in" asChild>
-              <Button variant="outline">
-                <Text className="text-foreground text-sm font-medium">Sign In</Text>
+            <Link href={isAuthenticated ? "/(tabs)" : "/pricing"} asChild>
+              <Button>
+                <Text className="text-primary-foreground text-sm font-medium">
+                  {isAuthenticated ? 'Dashboard' : 'Get Started'}
+                </Text>
               </Button>
             </Link>
-          )}
-
-          <Link href={isAuthenticated ? "/(tabs)" : "/pricing"} asChild>
-            <Button>
-              <Text className="text-primary-foreground text-sm font-medium">
-                {isAuthenticated ? 'Dashboard' : 'Get Started'}
-              </Text>
-            </Button>
-          </Link>
+          </View>
 
           {/* Theme Toggle */}
           <TouchableOpacity
             onPress={toggleTheme}
-            className="p-2 rounded-lg hover:bg-muted"
+            className="p-2 rounded-lg hover:bg-muted ml-4"
             accessibilityLabel="Toggle theme"
           >
             {isDark ? (
@@ -195,26 +187,13 @@ export function Navbar() {
           <View className="px-4 pt-2 pb-4 gap-1">
             <Text className="px-3 py-2 font-medium text-foreground">Solutions</Text>
 
-            <Link href="/features/real-estate" asChild>
-              <Pressable onPress={() => setIsMenuOpen(false)} className="px-6 py-2">
-                <Text className="text-foreground">Real Estate</Text>
-              </Pressable>
-            </Link>
-            <Link href="/features/lead-management" asChild>
-              <Pressable onPress={() => setIsMenuOpen(false)} className="px-6 py-2">
-                <Text className="text-foreground">Lead Management</Text>
-              </Pressable>
-            </Link>
-            <Link href="/features/ai-agents" asChild>
-              <Pressable onPress={() => setIsMenuOpen(false)} className="px-6 py-2">
-                <Text className="text-foreground">AI Agents</Text>
-              </Pressable>
-            </Link>
-            <Link href="/features/roi" asChild>
-              <Pressable onPress={() => setIsMenuOpen(false)} className="px-6 py-2">
-                <Text className="text-foreground">ROI Calculator</Text>
-              </Pressable>
-            </Link>
+            {SOLUTIONS_ITEMS.map(({ href, label }) => (
+              <Link key={href} href={href as Href} asChild>
+                <Pressable onPress={() => setIsMenuOpen(false)} className="px-6 py-2">
+                  <Text className="text-foreground">{label}</Text>
+                </Pressable>
+              </Link>
+            ))}
 
             <Link href="/pricing" asChild>
               <Pressable onPress={() => setIsMenuOpen(false)} className="px-3 py-2">

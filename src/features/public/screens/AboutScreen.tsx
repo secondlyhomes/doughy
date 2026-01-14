@@ -37,7 +37,7 @@ export function AboutScreen() {
         <View className="max-w-[1200px] mx-auto">
           <View className="max-w-3xl mx-auto items-center">
             <Text className="text-4xl md:text-5xl font-bold text-center text-foreground mb-6">
-              About Doughy
+              About <Text className="font-lobster">Doughy</Text>
             </Text>
             <Text className="text-lg text-center text-muted-foreground">
               Transforming real estate investing through intelligent lead management

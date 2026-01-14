@@ -34,8 +34,6 @@ export function LoadingSpinner({
         fullScreen && 'flex-1',
         className
       )}
-      accessibilityLabel={text || 'Loading'}
-      accessibilityRole="progressbar"
       {...props}
     >
       <ActivityIndicator size={size} color={color ?? colors.primary} />

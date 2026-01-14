@@ -13,13 +13,13 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Pressable,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Edit2, Trash2, MoreHorizontal } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import {
   PropertyHeader,
   PropertyQuickStats,
@@ -157,51 +157,39 @@ export function PropertyDetailScreen() {
           isFavorite={isFavorite}
         />
 
-        {/* Tabs Navigation - Sticky */}
+        {/* Tab Bar - Simple inline implementation (no custom components) */}
         <View className="bg-background px-4 pt-2 pb-0">
           <PropertyQuickStats property={property} />
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <View className="mt-4">
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <TabsList className="flex-row bg-muted">
-                <TabsTrigger value={TAB_IDS.OVERVIEW}>Overview</TabsTrigger>
-                <TabsTrigger value={TAB_IDS.ANALYSIS}>Analysis</TabsTrigger>
-                <TabsTrigger value={TAB_IDS.COMPS}>Comps</TabsTrigger>
-                <TabsTrigger value={TAB_IDS.FINANCING}>Financing</TabsTrigger>
-                <TabsTrigger value={TAB_IDS.REPAIRS}>Repairs</TabsTrigger>
-                <TabsTrigger value={TAB_IDS.DOCS}>Docs</TabsTrigger>
-              </TabsList>
+              <View className="flex-row bg-muted rounded-md p-1">
+                {Object.entries(TAB_IDS).map(([key, value]) => (
+                  <Pressable
+                    key={value}
+                    onPress={() => setActiveTab(value)}
+                    className={`px-4 py-2 rounded-md ${activeTab === value ? 'bg-background shadow-sm' : ''}`}
+                  >
+                    <Text
+                      className={`text-sm font-medium ${activeTab === value ? 'text-foreground' : 'text-muted-foreground'}`}
+                    >
+                      {key.charAt(0) + key.slice(1).toLowerCase()}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </ScrollView>
-          </Tabs>
+          </View>
         </View>
 
-        {/* Tab Content */}
-        <View className="px-4 pb-24">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsContent value={TAB_IDS.OVERVIEW}>
-              <PropertyOverviewTab property={property} />
-            </TabsContent>
-
-            <TabsContent value={TAB_IDS.ANALYSIS}>
-              <PropertyAnalysisTab property={property} />
-            </TabsContent>
-
-            <TabsContent value={TAB_IDS.COMPS}>
-              <PropertyCompsTab property={property} onPropertyUpdate={refetch} />
-            </TabsContent>
-
-            <TabsContent value={TAB_IDS.FINANCING}>
-              <PropertyFinancingTab property={property} />
-            </TabsContent>
-
-            <TabsContent value={TAB_IDS.REPAIRS}>
-              <PropertyRepairsTab property={property} onPropertyUpdate={refetch} />
-            </TabsContent>
-
-            <TabsContent value={TAB_IDS.DOCS}>
-              <PropertyDocsTab property={property} />
-            </TabsContent>
-          </Tabs>
+        {/* Tab Content - Simple conditional rendering */}
+        <View className="px-4 pb-24 mt-2">
+          {activeTab === TAB_IDS.OVERVIEW && <PropertyOverviewTab property={property} />}
+          {activeTab === TAB_IDS.ANALYSIS && <PropertyAnalysisTab property={property} />}
+          {activeTab === TAB_IDS.COMPS && <PropertyCompsTab property={property} onPropertyUpdate={refetch} />}
+          {activeTab === TAB_IDS.FINANCING && <PropertyFinancingTab property={property} />}
+          {activeTab === TAB_IDS.REPAIRS && <PropertyRepairsTab property={property} onPropertyUpdate={refetch} />}
+          {activeTab === TAB_IDS.DOCS && <PropertyDocsTab property={property} />}
         </View>
       </ScrollView>
 

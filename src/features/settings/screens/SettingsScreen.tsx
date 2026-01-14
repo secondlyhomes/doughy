@@ -1,5 +1,6 @@
 // src/features/settings/screens/SettingsScreen.tsx
 // Settings screen for mobile app
+// Zone B: Added Focus Mode preference (Task B5)
 
 import React, { useState } from 'react';
 import {
@@ -8,6 +9,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -22,11 +24,13 @@ import {
   Palette,
   BarChart3,
   Settings,
+  Focus,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
-import { ScreenHeader, LoadingSpinner } from '@/components/ui';
+import { ScreenHeader, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useFocusMode } from '@/context/FocusModeContext';
 
 export function SettingsScreen() {
   const router = useRouter();
@@ -34,6 +38,9 @@ export function SettingsScreen() {
   const { user, profile, signOut, isLoading } = useAuth();
 
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Focus Mode from context (synced across all screens)
+  const { focusMode, setFocusMode } = useFocusMode();
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -102,7 +109,7 @@ export function SettingsScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Header */}
         <ScreenHeader title="Settings" subtitle="Customize your experience" />
 
@@ -202,6 +209,31 @@ export function SettingsScreen() {
           </View>
         </View>
 
+        {/* Deal Preferences - Zone B */}
+        <View className="p-4">
+          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+            DEAL PREFERENCES
+          </Text>
+
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+            <View className="flex-row items-center p-4">
+              <Focus size={20} color={colors.mutedForeground} />
+              <View className="flex-1 ml-3">
+                <Text className="text-foreground">Focus Mode Default</Text>
+                <Text className="text-sm text-muted-foreground">
+                  Show simplified deal view by default
+                </Text>
+              </View>
+              <Switch
+                value={focusMode}
+                onValueChange={setFocusMode}
+                trackColor={{ false: colors.muted, true: colors.primary }}
+                thumbColor={colors.card}
+              />
+            </View>
+          </View>
+        </View>
+
         {/* About */}
         <View className="p-4">
           <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
@@ -250,8 +282,6 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        {/* Bottom padding */}
-        <View className="h-8" />
       </ScrollView>
     </ThemedSafeAreaView>
   );
