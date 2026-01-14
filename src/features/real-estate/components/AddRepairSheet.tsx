@@ -1,20 +1,22 @@
 // src/features/real-estate/components/AddRepairSheet.tsx
 // Bottom sheet for adding/editing repair estimates
+// Refactored to use FormField + useForm (Phase 2 Migration)
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from 'react-native';
 import { X, Wrench, DollarSign, FileText, AlertCircle } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { BottomSheet } from '@/components/ui/BottomSheet';
+import { BottomSheet, FormField } from '@/components/ui';
+import { useForm } from '@/hooks/useForm';
 import { RepairEstimate, RepairCategory } from '../types';
 import { REPAIR_CATEGORIES } from '../hooks/useRepairEstimate';
 
@@ -49,6 +51,25 @@ const PRIORITY_OPTIONS: { value: 'low' | 'medium' | 'high'; label: string; color
   { value: 'high', label: 'High', color: 'text-destructive' },
 ];
 
+const buildFormDataFromRepair = (
+  repair: RepairEstimate | null | undefined,
+  preselectedCategory?: RepairCategory
+): FormData => {
+  if (repair) {
+    return {
+      category: repair.category,
+      description: repair.description || '',
+      estimate: repair.estimate?.toString() || '',
+      notes: repair.notes || '',
+      priority: repair.priority || 'medium',
+    };
+  }
+  return {
+    ...initialFormData,
+    category: preselectedCategory || 'interior',
+  };
+};
+
 export function AddRepairSheet({
   visible,
   onClose,
@@ -58,96 +79,45 @@ export function AddRepairSheet({
   preselectedCategory,
 }: AddRepairSheetProps) {
   const colors = useThemeColors();
-  const [formData, setFormData] = useState<FormData>(() => {
-    if (editRepair) {
-      return {
-        category: editRepair.category,
-        description: editRepair.description || '',
-        estimate: editRepair.estimate?.toString() || '',
-        notes: editRepair.notes || '',
-        priority: editRepair.priority || 'medium',
+
+  // Use the new useForm hook for state management and validation
+  const { values, errors, updateField, handleSubmit, reset, setValues } = useForm({
+    initialValues: buildFormDataFromRepair(editRepair, preselectedCategory),
+    validate: (vals) => {
+      const errs: Record<string, string> = {};
+
+      if (!vals.description.trim()) errs.description = 'Description is required';
+      if (!vals.estimate.trim()) {
+        errs.estimate = 'Estimate is required';
+      } else if (isNaN(Number(vals.estimate))) {
+        errs.estimate = 'Invalid amount';
+      }
+
+      return errs;
+    },
+    onSubmit: async (vals) => {
+      const repairData: Partial<RepairEstimate> = {
+        category: vals.category,
+        description: vals.description.trim(),
+        estimate: Number(vals.estimate),
+        notes: vals.notes.trim() || undefined,
+        priority: vals.priority,
       };
-    }
-    return {
-      ...initialFormData,
-      category: preselectedCategory || 'interior',
-    };
+
+      await onSubmit(repairData);
+      reset();
+    },
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Reset form when editRepair prop changes (switching between different repairs)
+  // Reset form when editRepair or preselectedCategory changes
   useEffect(() => {
-    if (editRepair) {
-      setFormData({
-        category: editRepair.category,
-        description: editRepair.description || '',
-        estimate: editRepair.estimate?.toString() || '',
-        notes: editRepair.notes || '',
-        priority: editRepair.priority || 'medium',
-      });
-    } else {
-      setFormData({
-        ...initialFormData,
-        category: preselectedCategory || 'interior',
-      });
-    }
-    setErrors({});
-  }, [editRepair, preselectedCategory]);
-
-  const updateField = useCallback(<K extends keyof FormData>(field: K, value: FormData[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  }, [errors]);
-
-  const validate = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-    if (!formData.estimate.trim()) {
-      newErrors.estimate = 'Estimate is required';
-    } else if (isNaN(Number(formData.estimate))) {
-      newErrors.estimate = 'Invalid amount';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
-
-  const handleSubmit = useCallback(async () => {
-    if (!validate()) return;
-
-    const repairData: Partial<RepairEstimate> = {
-      category: formData.category,
-      description: formData.description.trim(),
-      estimate: Number(formData.estimate),
-      notes: formData.notes.trim() || undefined,
-      priority: formData.priority,
-    };
-
-    await onSubmit(repairData);
-    setFormData({
-      ...initialFormData,
-      category: preselectedCategory || 'interior',
-    });
-  }, [formData, validate, onSubmit, preselectedCategory]);
+    setValues(buildFormDataFromRepair(editRepair, preselectedCategory));
+  }, [editRepair, preselectedCategory, setValues]);
 
   const handleClose = useCallback(() => {
-    setFormData({
-      ...initialFormData,
-      category: preselectedCategory || 'interior',
-    });
-    setErrors({});
+    reset();
     onClose();
-  }, [onClose, preselectedCategory]);
+  }, [onClose, reset]);
 
   return (
     <BottomSheet
@@ -194,14 +164,14 @@ export function AddRepairSheet({
                   onPress={() => updateField('category', category.id)}
                   className="px-3 py-2 rounded-lg border"
                   style={{
-                    backgroundColor: formData.category === category.id ? colors.primary : colors.muted,
-                    borderColor: formData.category === category.id ? colors.primary : colors.border,
+                    backgroundColor: values.category === category.id ? colors.primary : colors.muted,
+                    borderColor: values.category === category.id ? colors.primary : colors.border,
                   }}
                 >
                   <Text
                     className="text-sm font-medium"
                     style={{
-                      color: formData.category === category.id ? colors.primaryForeground : colors.foreground,
+                      color: values.category === category.id ? colors.primaryForeground : colors.foreground,
                     }}
                   >
                     {category.label}
@@ -212,43 +182,27 @@ export function AddRepairSheet({
           </View>
 
           {/* Description */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Description *</Text>
-            <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
-              <FileText size={16} color={colors.mutedForeground} />
-              <TextInput
-                value={formData.description}
-                onChangeText={(value) => updateField('description', value)}
-                placeholder="e.g., Replace kitchen cabinets"
-                placeholderTextColor={colors.mutedForeground}
-                className="flex-1 py-3 ml-2"
-                style={{ color: colors.foreground }}
-              />
-            </View>
-            {errors.description && (
-              <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.description}</Text>
-            )}
-          </View>
+          <FormField
+            label="Description"
+            value={values.description}
+            onChangeText={(text) => updateField('description', text)}
+            error={errors.description}
+            placeholder="e.g., Replace kitchen cabinets"
+            required
+            icon={FileText}
+          />
 
           {/* Estimate */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Estimated Cost *</Text>
-            <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
-              <DollarSign size={16} color={colors.mutedForeground} />
-              <TextInput
-                value={formData.estimate}
-                onChangeText={(value) => updateField('estimate', value)}
-                placeholder="0"
-                placeholderTextColor={colors.mutedForeground}
-                keyboardType="numeric"
-                className="flex-1 py-3 text-lg font-semibold"
-                style={{ color: colors.foreground }}
-              />
-            </View>
-            {errors.estimate && (
-              <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.estimate}</Text>
-            )}
-          </View>
+          <FormField
+            label="Estimated Cost"
+            value={values.estimate}
+            onChangeText={(text) => updateField('estimate', text)}
+            error={errors.estimate}
+            placeholder="0"
+            keyboardType="numeric"
+            icon={DollarSign}
+            required
+          />
 
           {/* Priority */}
           <View className="mb-4">
@@ -260,14 +214,14 @@ export function AddRepairSheet({
                   onPress={() => updateField('priority', option.value)}
                   className="flex-1 py-2.5 rounded-lg border items-center"
                   style={{
-                    backgroundColor: formData.priority === option.value ? colors.primary : colors.muted,
-                    borderColor: formData.priority === option.value ? colors.primary : colors.border,
+                    backgroundColor: values.priority === option.value ? colors.primary : colors.muted,
+                    borderColor: values.priority === option.value ? colors.primary : colors.border,
                   }}
                 >
                   <Text
                     className="text-sm font-medium"
                     style={{
-                      color: formData.priority === option.value
+                      color: values.priority === option.value
                         ? colors.primaryForeground
                         : option.value === 'low'
                           ? colors.success
@@ -284,20 +238,15 @@ export function AddRepairSheet({
           </View>
 
           {/* Notes */}
-          <View className="mb-6">
-            <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Notes (Optional)</Text>
-            <TextInput
-              value={formData.notes}
-              onChangeText={(value) => updateField('notes', value)}
-              placeholder="Additional details, contractor info, etc."
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-              className="rounded-lg px-3 py-3 min-h-[80]"
-              style={{ backgroundColor: colors.muted, color: colors.foreground }}
-            />
-          </View>
+          <FormField
+            label="Notes"
+            value={values.notes}
+            onChangeText={(text) => updateField('notes', text)}
+            placeholder="Additional details, contractor info, etc."
+            multiline
+            numberOfLines={3}
+            helperText="Optional"
+          />
 
           <View className="h-4" />
         </ScrollView>

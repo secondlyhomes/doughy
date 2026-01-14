@@ -12,6 +12,7 @@ import { View, Text, TouchableOpacity, Linking, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import { MapPin, Navigation, ExternalLink, AlertCircle } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 interface PropertyLocationMapProps {
   address: string;
@@ -207,7 +208,7 @@ export function PropertyLocationMap({
       <TouchableOpacity
         onPress={openInMaps}
         className="absolute top-2 right-2 px-2 py-1 rounded-md flex-row items-center"
-        style={{ backgroundColor: `${colors.card}E6` }}
+        style={{ backgroundColor: withOpacity(colors.card, 'almostOpaque') }}
         activeOpacity={0.7}
       >
         <ExternalLink size={12} color={colors.mutedForeground} />

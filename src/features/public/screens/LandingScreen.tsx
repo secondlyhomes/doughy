@@ -1,5 +1,8 @@
 // src/features/public/screens/LandingScreen.tsx
 // Landing page for public website
+//
+// NOTE: This public marketing page intentionally uses hardcoded brand colors (#ffffff, #eab308, etc.)
+// for consistent cross-platform branding. Do not migrate to theme colors.
 import { View, Text, Image, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { ArrowRight, CheckCircle, Star, Clock, BarChart3, Clock3, Calculator, TrendingUp, DollarSign } from 'lucide-react-native';

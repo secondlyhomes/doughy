@@ -1,5 +1,8 @@
 // src/features/public/screens/PricingScreen.tsx
 // Public pricing page
+//
+// NOTE: This public marketing page intentionally uses hardcoded brand colors
+// for consistent cross-platform branding. Do not migrate to theme colors.
 import { useState } from 'react';
 import { View, Text, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';

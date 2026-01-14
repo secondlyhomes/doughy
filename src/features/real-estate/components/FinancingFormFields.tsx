@@ -1,10 +1,12 @@
 // src/features/real-estate/components/FinancingFormFields.tsx
 // Form input fields for financing scenarios
+// Refactored to use FormField component (Phase 2 Migration)
 
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { DollarSign, Percent } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { DollarSign, Percent, FileText } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { FormField } from '@/components/ui';
 import { LOAN_TYPES, LoanType } from '../hooks/useFinancingScenarios';
 import { FinancingFormData, FinancingCalculations } from '../hooks/useFinancingForm';
 import { formatCurrency } from '../utils/formatters';
@@ -28,18 +30,15 @@ export function FinancingFormFields({
   return (
     <>
       {/* Scenario Name */}
-      <View className="mb-4">
-        <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Scenario Name *</Text>
-        <TextInput
-          value={formData.name}
-          onChangeText={(value) => onUpdateField('name', value)}
-          placeholder="e.g., Conventional 20% Down"
-          placeholderTextColor={colors.mutedForeground}
-          className="rounded-lg px-3 py-3"
-          style={{ backgroundColor: colors.muted, color: colors.foreground }}
-        />
-        {errors.name && <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.name}</Text>}
-      </View>
+      <FormField
+        label="Scenario Name"
+        value={formData.name}
+        onChangeText={(value) => onUpdateField('name', value)}
+        error={errors.name}
+        placeholder="e.g., Conventional 20% Down"
+        required
+        icon={FileText}
+      />
 
       {/* Loan Type */}
       <View className="mb-4">
@@ -69,66 +68,45 @@ export function FinancingFormFields({
       </View>
 
       {/* Purchase Price */}
-      <View className="mb-4">
-        <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Purchase Price *</Text>
-        <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
-          <DollarSign size={16} color={colors.mutedForeground} />
-          <TextInput
-            value={formData.purchasePrice}
-            onChangeText={(value) => onUpdateField('purchasePrice', value)}
-            placeholder="350000"
-            placeholderTextColor={colors.mutedForeground}
-            keyboardType="numeric"
-            className="flex-1 py-3 text-lg font-semibold"
-            style={{ color: colors.foreground }}
-          />
-        </View>
-        {errors.purchasePrice && (
-          <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.purchasePrice}</Text>
-        )}
-      </View>
+      <FormField
+        label="Purchase Price"
+        value={formData.purchasePrice}
+        onChangeText={(value) => onUpdateField('purchasePrice', value)}
+        error={errors.purchasePrice}
+        placeholder="350000"
+        keyboardType="numeric"
+        icon={DollarSign}
+        required
+      />
 
       {/* Down Payment % */}
-      <View className="mb-4">
-        <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Down Payment</Text>
-        <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
-          <TextInput
-            value={formData.downPaymentPercent}
-            onChangeText={(value) => onUpdateField('downPaymentPercent', value)}
-            placeholder="20"
-            placeholderTextColor={colors.mutedForeground}
-            keyboardType="decimal-pad"
-            className="flex-1 py-3"
-            style={{ color: colors.foreground }}
-          />
-          <Text style={{ color: colors.mutedForeground }}>%</Text>
-        </View>
-        {calculations.purchasePrice > 0 && (
-          <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
-            {formatCurrency(calculations.downPayment)} down • {formatCurrency(calculations.loanAmount)} loan
-          </Text>
-        )}
-      </View>
+      <FormField
+        label="Down Payment"
+        value={formData.downPaymentPercent}
+        onChangeText={(value) => onUpdateField('downPaymentPercent', value)}
+        placeholder="20"
+        keyboardType="decimal-pad"
+        suffix="%"
+        helperText={
+          calculations.purchasePrice > 0
+            ? `${formatCurrency(calculations.downPayment)} down • ${formatCurrency(calculations.loanAmount)} loan`
+            : undefined
+        }
+      />
 
       {/* Interest Rate & Term */}
       <View className="flex-row gap-3 mb-4">
         <View className="flex-1">
-          <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Interest Rate *</Text>
-          <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
-            <Percent size={14} color={colors.mutedForeground} />
-            <TextInput
-              value={formData.interestRate}
-              onChangeText={(value) => onUpdateField('interestRate', value)}
-              placeholder="7"
-              placeholderTextColor={colors.mutedForeground}
-              keyboardType="decimal-pad"
-              className="flex-1 py-3 ml-1"
-              style={{ color: colors.foreground }}
-            />
-          </View>
-          {errors.interestRate && (
-            <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.interestRate}</Text>
-          )}
+          <FormField
+            label="Interest Rate"
+            value={formData.interestRate}
+            onChangeText={(value) => onUpdateField('interestRate', value)}
+            error={errors.interestRate}
+            placeholder="7"
+            keyboardType="decimal-pad"
+            icon={Percent}
+            required
+          />
         </View>
 
         <View className="flex-1">
@@ -158,37 +136,26 @@ export function FinancingFormFields({
       </View>
 
       {/* Closing Costs */}
-      <View className="mb-4">
-        <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Closing Costs (Optional)</Text>
-        <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
-          <DollarSign size={16} color={colors.mutedForeground} />
-          <TextInput
-            value={formData.closingCosts}
-            onChangeText={(value) => onUpdateField('closingCosts', value)}
-            placeholder="0"
-            placeholderTextColor={colors.mutedForeground}
-            keyboardType="numeric"
-            className="flex-1 py-3"
-            style={{ color: colors.foreground }}
-          />
-        </View>
-      </View>
+      <FormField
+        label="Closing Costs"
+        value={formData.closingCosts}
+        onChangeText={(value) => onUpdateField('closingCosts', value)}
+        placeholder="0"
+        keyboardType="numeric"
+        icon={DollarSign}
+        helperText="Optional"
+      />
 
       {/* Notes */}
-      <View className="mb-4">
-        <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Notes (Optional)</Text>
-        <TextInput
-          value={formData.notes}
-          onChangeText={(value) => onUpdateField('notes', value)}
-          placeholder="Additional notes about this scenario..."
-          placeholderTextColor={colors.mutedForeground}
-          multiline
-          numberOfLines={2}
-          textAlignVertical="top"
-          className="rounded-lg px-3 py-3 min-h-[60]"
-          style={{ backgroundColor: colors.muted, color: colors.foreground }}
-        />
-      </View>
+      <FormField
+        label="Notes"
+        value={formData.notes}
+        onChangeText={(value) => onUpdateField('notes', value)}
+        placeholder="Additional notes about this scenario..."
+        multiline
+        numberOfLines={2}
+        helperText="Optional"
+      />
     </>
   );
 }

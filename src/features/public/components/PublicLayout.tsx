@@ -1,5 +1,7 @@
 // src/features/public/components/PublicLayout.tsx
 // Layout wrapper for public pages with Navbar and Footer
+//
+// NOTE: Public marketing component - hardcoded brand colors intentional
 import { ScrollView, View } from 'react-native';
 import { usePathname } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';

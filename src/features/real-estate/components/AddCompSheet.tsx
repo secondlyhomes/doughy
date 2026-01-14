@@ -1,20 +1,22 @@
 // src/features/real-estate/components/AddCompSheet.tsx
 // Bottom sheet for adding a new comparable property
+// Refactored to use FormField + useForm (Phase 2 Migration)
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { X, MapPin, Home, DollarSign, Calendar, Info } from 'lucide-react-native';
+import { X, MapPin, Home, DollarSign, Info } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { BottomSheet } from '@/components/ui/BottomSheet';
+import { withOpacity } from '@/lib/design-utils';
+import { BottomSheet, FormField } from '@/components/ui';
+import { useForm } from '@/hooks/useForm';
 import { PropertyComp } from '../types';
 
 interface AddCompSheetProps {
@@ -78,108 +80,53 @@ export function AddCompSheet({
   editComp,
 }: AddCompSheetProps) {
   const colors = useThemeColors();
-  const [formData, setFormData] = useState<FormData>(() => buildFormDataFromComp(editComp));
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Use the new useForm hook for state management and validation
+  const { values, errors, updateField, handleSubmit, reset, setValues } = useForm({
+    initialValues: buildFormDataFromComp(editComp),
+    validate: (vals) => {
+      const errs: Record<string, string> = {};
 
-  // Reset form data when editComp changes
-  useEffect(() => {
-    setFormData(buildFormDataFromComp(editComp));
-    setErrors({});
-  }, [editComp]);
-
-  const updateField = useCallback((field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user types
-    setErrors(prev => {
-      if (prev[field]) {
-        const next = { ...prev };
-        delete next[field];
-        return next;
+      if (!vals.address.trim()) errs.address = 'Address is required';
+      if (!vals.city.trim()) errs.city = 'City is required';
+      if (!vals.state.trim()) errs.state = 'State is required';
+      if (!vals.sold_price.trim()) {
+        errs.sold_price = 'Sale price is required';
+      } else if (isNaN(Number(vals.sold_price))) {
+        errs.sold_price = 'Invalid price';
       }
-      return prev;
-    });
-  }, []);
 
-  const validate = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
+      return errs;
+    },
+    onSubmit: async (vals) => {
+      const compData: Partial<PropertyComp> = {
+        address: vals.address.trim(),
+        city: vals.city.trim(),
+        state: vals.state.trim(),
+        zip: vals.zip.trim(),
+        bedrooms: vals.bedrooms ? Number(vals.bedrooms) : undefined,
+        bathrooms: vals.bathrooms ? Number(vals.bathrooms) : undefined,
+        square_feet: vals.square_feet ? Number(vals.square_feet) : undefined,
+        year_built: vals.year_built ? Number(vals.year_built) : undefined,
+        sold_price: Number(vals.sold_price),
+        sold_date: vals.sold_date || undefined,
+        distance: vals.distance ? Number(vals.distance) : undefined,
+      };
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
-    }
-    if (!formData.city.trim()) {
-      newErrors.city = 'City is required';
-    }
-    if (!formData.state.trim()) {
-      newErrors.state = 'State is required';
-    }
-    if (!formData.sold_price.trim()) {
-      newErrors.sold_price = 'Sale price is required';
-    } else if (isNaN(Number(formData.sold_price))) {
-      newErrors.sold_price = 'Invalid price';
-    }
+      await onSubmit(compData);
+      reset();
+    },
+  });
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
-
-  const handleSubmit = useCallback(async () => {
-    if (!validate()) return;
-
-    const compData: Partial<PropertyComp> = {
-      address: formData.address.trim(),
-      city: formData.city.trim(),
-      state: formData.state.trim(),
-      zip: formData.zip.trim(),
-      bedrooms: formData.bedrooms ? Number(formData.bedrooms) : undefined,
-      bathrooms: formData.bathrooms ? Number(formData.bathrooms) : undefined,
-      square_feet: formData.square_feet ? Number(formData.square_feet) : undefined,
-      year_built: formData.year_built ? Number(formData.year_built) : undefined,
-      sold_price: Number(formData.sold_price),
-      sold_date: formData.sold_date || undefined,
-      distance: formData.distance ? Number(formData.distance) : undefined,
-    };
-
-    await onSubmit(compData);
-    setFormData(initialFormData);
-  }, [formData, validate, onSubmit]);
+  // Reset form when editComp changes
+  useEffect(() => {
+    setValues(buildFormDataFromComp(editComp));
+  }, [editComp, setValues]);
 
   const handleClose = useCallback(() => {
-    setFormData(initialFormData);
-    setErrors({});
+    reset();
     onClose();
-  }, [onClose]);
-
-  const renderInput = (
-    label: string,
-    field: keyof FormData,
-    options: {
-      placeholder?: string;
-      keyboardType?: 'default' | 'numeric' | 'decimal-pad';
-      prefix?: string;
-    } = {}
-  ) => (
-    <View className="mb-4">
-      <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>{label}</Text>
-      <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
-        {options.prefix && (
-          <Text className="mr-1" style={{ color: colors.mutedForeground }}>{options.prefix}</Text>
-        )}
-        <TextInput
-          value={formData[field]}
-          onChangeText={(value) => updateField(field, value)}
-          placeholder={options.placeholder}
-          placeholderTextColor={colors.mutedForeground}
-          keyboardType={options.keyboardType || 'default'}
-          className="flex-1 py-3"
-          style={{ color: colors.foreground }}
-        />
-      </View>
-      {errors[field] && (
-        <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors[field]}</Text>
-      )}
-    </View>
-  );
+  }, [onClose, reset]);
 
   return (
     <BottomSheet
@@ -223,26 +170,56 @@ export function AddCompSheet({
               <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Address</Text>
             </View>
 
-            {renderInput('Street Address *', 'address', { placeholder: '123 Main St' })}
+            <FormField
+              label="Street Address"
+              value={values.address}
+              onChangeText={(text) => updateField('address', text)}
+              error={errors.address}
+              placeholder="123 Main St"
+              required
+              icon={MapPin}
+            />
 
             <View className="flex-row gap-3">
               <View className="flex-1">
-                {renderInput('City *', 'city', { placeholder: 'City' })}
+                <FormField
+                  label="City"
+                  value={values.city}
+                  onChangeText={(text) => updateField('city', text)}
+                  error={errors.city}
+                  placeholder="City"
+                  required
+                />
               </View>
               <View className="w-20">
-                {renderInput('State *', 'state', { placeholder: 'CA' })}
+                <FormField
+                  label="State"
+                  value={values.state}
+                  onChangeText={(text) => updateField('state', text)}
+                  error={errors.state}
+                  placeholder="CA"
+                  required
+                />
               </View>
             </View>
 
             <View className="flex-row gap-3">
               <View className="flex-1">
-                {renderInput('ZIP', 'zip', { placeholder: '90210' })}
+                <FormField
+                  label="ZIP"
+                  value={values.zip}
+                  onChangeText={(text) => updateField('zip', text)}
+                  placeholder="90210"
+                />
               </View>
               <View className="flex-1">
-                {renderInput('Distance (mi)', 'distance', {
-                  placeholder: '0.5',
-                  keyboardType: 'decimal-pad',
-                })}
+                <FormField
+                  label="Distance (mi)"
+                  value={values.distance}
+                  onChangeText={(text) => updateField('distance', text)}
+                  placeholder="0.5"
+                  keyboardType="decimal-pad"
+                />
               </View>
             </View>
           </View>
@@ -254,15 +231,24 @@ export function AddCompSheet({
               <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Sale Information</Text>
             </View>
 
-            {renderInput('Sale Price *', 'sold_price', {
-              placeholder: '350000',
-              keyboardType: 'numeric',
-              prefix: '$',
-            })}
+            <FormField
+              label="Sale Price"
+              value={values.sold_price}
+              onChangeText={(text) => updateField('sold_price', text)}
+              error={errors.sold_price}
+              placeholder="350000"
+              keyboardType="numeric"
+              prefix="$"
+              icon={DollarSign}
+              required
+            />
 
-            {renderInput('Sale Date', 'sold_date', {
-              placeholder: 'YYYY-MM-DD',
-            })}
+            <FormField
+              label="Sale Date"
+              value={values.sold_date}
+              onChangeText={(text) => updateField('sold_date', text)}
+              placeholder="YYYY-MM-DD"
+            />
           </View>
 
           {/* Property Details Section */}
@@ -274,37 +260,50 @@ export function AddCompSheet({
 
             <View className="flex-row gap-3">
               <View className="flex-1">
-                {renderInput('Bedrooms', 'bedrooms', {
-                  placeholder: '3',
-                  keyboardType: 'numeric',
-                })}
+                <FormField
+                  label="Bedrooms"
+                  value={values.bedrooms}
+                  onChangeText={(text) => updateField('bedrooms', text)}
+                  placeholder="3"
+                  keyboardType="numeric"
+                  icon={Home}
+                />
               </View>
               <View className="flex-1">
-                {renderInput('Bathrooms', 'bathrooms', {
-                  placeholder: '2',
-                  keyboardType: 'decimal-pad',
-                })}
+                <FormField
+                  label="Bathrooms"
+                  value={values.bathrooms}
+                  onChangeText={(text) => updateField('bathrooms', text)}
+                  placeholder="2"
+                  keyboardType="decimal-pad"
+                />
               </View>
             </View>
 
             <View className="flex-row gap-3">
               <View className="flex-1">
-                {renderInput('Square Feet', 'square_feet', {
-                  placeholder: '1500',
-                  keyboardType: 'numeric',
-                })}
+                <FormField
+                  label="Square Feet"
+                  value={values.square_feet}
+                  onChangeText={(text) => updateField('square_feet', text)}
+                  placeholder="1500"
+                  keyboardType="numeric"
+                />
               </View>
               <View className="flex-1">
-                {renderInput('Year Built', 'year_built', {
-                  placeholder: '1990',
-                  keyboardType: 'numeric',
-                })}
+                <FormField
+                  label="Year Built"
+                  value={values.year_built}
+                  onChangeText={(text) => updateField('year_built', text)}
+                  placeholder="1990"
+                  keyboardType="numeric"
+                />
               </View>
             </View>
           </View>
 
           {/* Info Note */}
-          <View className="flex-row rounded-xl p-3 border mb-6" style={{ backgroundColor: colors.primary + '0D', borderColor: colors.primary + '1A' }}>
+          <View className="flex-row rounded-xl p-3 border mb-6" style={{ backgroundColor: withOpacity(colors.primary, 'subtle'), borderColor: withOpacity(colors.primary, 'muted') }}>
             <Info size={16} color={colors.primary} className="mt-0.5" />
             <Text className="text-xs ml-2 flex-1" style={{ color: colors.foreground }}>
               Add recently sold properties similar to your subject property.

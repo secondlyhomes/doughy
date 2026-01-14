@@ -1,5 +1,7 @@
 // src/features/public/screens/TermsScreen.tsx
 // Terms of service page for public website
+//
+// NOTE: Public marketing page - hardcoded brand colors intentional
 import { View, Text } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 

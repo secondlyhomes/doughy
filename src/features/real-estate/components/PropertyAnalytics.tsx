@@ -16,6 +16,7 @@ import {
   Home,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 interface MetricCardProps {
   label: string;
@@ -30,16 +31,16 @@ function MetricCard({ label, value, icon, trend = 'neutral', subtitle }: MetricC
 
   const getTrendBackgroundColor = () => {
     switch (trend) {
-      case 'positive': return `${colors.success}1A`; // 10% opacity
-      case 'negative': return `${colors.destructive}1A`; // 10% opacity
+      case 'positive': return withOpacity(colors.success, 'muted');
+      case 'negative': return withOpacity(colors.destructive, 'muted');
       default: return colors.card;
     }
   };
 
   const getTrendBorderColor = () => {
     switch (trend) {
-      case 'positive': return `${colors.success}4D`; // 30% opacity
-      case 'negative': return `${colors.destructive}4D`; // 30% opacity
+      case 'positive': return withOpacity(colors.success, 'strong');
+      case 'negative': return withOpacity(colors.destructive, 'strong');
       default: return colors.border;
     }
   };
@@ -246,7 +247,7 @@ export function PropertyAnalytics({
       {/* Total Investment */}
       {totalInvestment > 0 && (
         <View className="mb-6">
-          <View style={{ backgroundColor: `${colors.primary}1A`, borderColor: `${colors.primary}33` }} className="rounded-xl p-4 border">
+          <View style={{ backgroundColor: withOpacity(colors.primary, 'muted'), borderColor: withOpacity(colors.primary, 'medium') }} className="rounded-xl p-4 border">
             <Text style={{ color: colors.primary }} className="text-sm font-medium mb-1">Total Investment Required</Text>
             <Text style={{ color: colors.primary }} className="text-2xl font-bold">{formatCurrency(totalInvestment)}</Text>
           </View>

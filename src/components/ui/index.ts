@@ -7,8 +7,17 @@ export type { ButtonProps } from './Button';
 
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
 
+export { DataCard } from './DataCard';
+export type { DataCardProps, DataCardField, DataCardBadge, DataCardAction } from './DataCard';
+
+export { Timeline } from './Timeline';
+export type { TimelineProps, TimelineEvent, TimelineEventConfig } from './Timeline';
+
 export { Input } from './Input';
 export type { InputProps } from './Input';
+
+export { FormField } from './FormField';
+export type { FormFieldProps } from './FormField';
 
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
@@ -137,6 +146,9 @@ export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from './Avata
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
 
+export { ListEmptyState } from './ListEmptyState';
+export type { ListEmptyStateProps, ListEmptyAction, ListEmptyStateType } from './ListEmptyState';
+
 export { Table, TableRoot, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table';
 export type { TableProps, TableColumn } from './Table';
 
@@ -193,6 +205,10 @@ export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';
 export { ScreenHeader } from './ScreenHeader';
 export type { ScreenHeaderProps } from './ScreenHeader';
 
+// @deprecated Use SearchBar with glass={true} instead. See SearchBar component.
+export { GlassScreenHeader } from './GlassScreenHeader';
+export type { GlassScreenHeaderProps } from './GlassScreenHeader';
+
 // Floating Action Button
 export { SimpleFAB } from './SimpleFAB';
 export type { SimpleFABProps } from './SimpleFAB';
@@ -207,5 +223,28 @@ export {
   TAB_BAR_HEIGHT,
   TAB_BAR_BOTTOM_OFFSET,
   TAB_BAR_SAFE_PADDING,
+  FAB_BOTTOM_OFFSET,
+  FAB_RIGHT_MARGIN,
+  FAB_LEFT_MARGIN,
+  FAB_Z_INDEX,
+  FAB_SIZE,
 } from './FloatingGlassTabBar';
 export type { FloatingGlassTabBarProps } from './FloatingGlassTabBar';
+
+// FAB Styling Utilities
+export { getFABShadowStyle } from './fab-styles';
+export type { FABShadowOptions } from './fab-styles';
+
+// Design System Utilities
+export { getShadowStyle, withOpacity } from '@/lib/design-utils';
+export type { ShadowOptions } from '@/lib/design-utils';
+
+// Design System Tokens
+export {
+  SPACING,
+  BORDER_RADIUS,
+  OPACITY,
+  SHADOWS,
+  ICON_SIZES,
+  FONT_SIZES,
+} from '@/constants/design-tokens';

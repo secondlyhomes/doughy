@@ -19,7 +19,9 @@ import {
   FileText,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
+import { FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_Z_INDEX, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
+import { getFABShadowStyle } from '@/components/ui/fab-styles';
+import { withOpacity } from '@/lib/design-utils';
 
 export interface FABAction {
   icon: React.ReactNode;
@@ -88,13 +90,13 @@ export function FloatingActionButton({
 
   return (
     <>
-      {/* Backdrop - using black for overlay is standard UX */}
+      {/* Backdrop - uses theme background with opacity for proper dark mode support */}
       {isOpen && (
         <Animated.View
           style={[
             StyleSheet.absoluteFillObject,
             {
-              backgroundColor: '#000',
+              backgroundColor: withOpacity(colors.background, 'backdrop'),
               opacity: backdropOpacity,
             },
           ]}
@@ -109,12 +111,25 @@ export function FloatingActionButton({
       )}
 
       {/* FAB Container */}
-      <View className="absolute right-6" style={{ zIndex: 100, bottom: TAB_BAR_SAFE_PADDING }}>
+      <View style={{ position: 'absolute', zIndex: FAB_Z_INDEX.EXPANDABLE, bottom: FAB_BOTTOM_OFFSET, right: FAB_RIGHT_MARGIN }}>
         {/* Action Buttons */}
         {actions.map((action, index) => {
+          // Simple vertical stack positioning
+          const spacing = 70; // Distance between each button
+          const leftOffset = -4; // Fine-tune alignment with main FAB
+
+          // Stack vertically upward
+          const targetX = leftOffset;
+          const targetY = -spacing * (index + 1);
+
+          const translateX = animation.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, targetX],
+          });
+
           const translateY = animation.interpolate({
             inputRange: [0, 1],
-            outputRange: [0, -60 * (index + 1)],
+            outputRange: [0, targetY],
           });
 
           const scale = animation.interpolate({
@@ -134,29 +149,31 @@ export function FloatingActionButton({
                 position: 'absolute',
                 bottom: 0,
                 right: 0,
-                transform: [{ translateY }, { scale }],
+                transform: [{ translateX }, { translateY }, { scale }],
                 opacity,
               }}
             >
-              <View className="flex-row items-center">
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
                 {/* Label */}
-                <View className="rounded-lg px-3 py-2 mr-3 shadow-sm" style={{ backgroundColor: colors.card }}>
-                  <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
+                <View className="rounded-lg px-3 py-2 mr-3 shadow-sm" style={{ backgroundColor: colors.card, maxWidth: 200 }}>
+                  <Text className="text-sm font-medium" style={{ color: colors.foreground }} numberOfLines={1}>
                     {action.label}
                   </Text>
                 </View>
 
                 {/* Action Button */}
                 <TouchableOpacity
-                  className="w-12 h-12 rounded-full items-center justify-center shadow-lg"
-                  style={{
-                    backgroundColor: action.color || colors.mutedForeground,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3,
-                    elevation: 5,
-                  }}
+                  style={[
+                    {
+                      width: 48,
+                      height: 48,
+                      borderRadius: 24,
+                      backgroundColor: action.color || colors.mutedForeground,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    },
+                    getFABShadowStyle(colors),
+                  ]}
                   onPress={() => handleActionPress(action)}
                   activeOpacity={0.8}
                   accessibilityLabel={action.label}
@@ -172,15 +189,17 @@ export function FloatingActionButton({
         {/* Main FAB Button */}
         <Animated.View style={{ transform: [{ rotate: rotation }] }}>
           <TouchableOpacity
-            className="w-14 h-14 rounded-full items-center justify-center shadow-lg"
-            style={{
-              backgroundColor: fabColor,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-              elevation: 5,
-            }}
+            style={[
+              {
+                width: FAB_SIZE,
+                height: FAB_SIZE,
+                borderRadius: FAB_SIZE / 2,
+                backgroundColor: fabColor,
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+              getFABShadowStyle(colors),
+            ]}
             onPress={toggleMenu}
             activeOpacity={0.8}
             accessibilityLabel={isOpen ? 'Close quick actions' : 'Open quick actions'}
@@ -188,9 +207,9 @@ export function FloatingActionButton({
             accessibilityState={{ expanded: isOpen }}
           >
             {isOpen ? (
-              <X size={24} color={colors.primaryForeground} />
+              <X size={28} color={colors.primaryForeground} />
             ) : (
-              <Plus size={24} color={colors.primaryForeground} />
+              <Plus size={28} color={colors.primaryForeground} />
             )}
           </TouchableOpacity>
         </Animated.View>

@@ -4,22 +4,36 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, SimpleFAB } from '@/components/ui';
+import { SearchBar, SimpleFAB, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SPACING } from '@/constants/design-tokens';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyFiltersSheet } from '../components/PropertyFiltersSheet';
-import { PropertySortSheet } from '../components/PropertySortSheet';
-import { PropertyListHeader } from '../components/PropertyListHeader';
 import { PropertyListEmpty } from '../components/PropertyListEmpty';
 import { Property } from '../types';
 import { useProperties } from '../hooks/useProperties';
 import { usePropertyFilters, PropertyFilters, SortOption } from '../hooks/usePropertyFilters';
 import { usePropertyListSearch } from '../hooks/usePropertyListSearch';
 
+// ============================================
+// Spacing Constants
+// ============================================
+
+// Calculate search bar container height based on its padding
+const SEARCH_BAR_CONTAINER_HEIGHT =
+  SPACING.sm +  // pt-2 (8px top padding)
+  40 +          // SearchBar size="md" estimated height
+  SPACING.xs;   // pb-1 (4px bottom padding)
+  // Total: ~52px
+
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px standard gap
+
 export function PropertyListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { properties, isLoading, error, refetch } = useProperties();
   const {
     filters,
@@ -35,7 +49,6 @@ export function PropertyListScreen() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
-  const [showSortSheet, setShowSortSheet] = useState(false);
 
   const filteredProperties = usePropertyListSearch(properties, searchQuery, filters, sortBy);
 
@@ -70,27 +83,19 @@ export function PropertyListScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <ScreenHeader title="Properties" subtitle="Manage your properties" />
-
-      {/* Search, Filters, Sort - stays fixed while list scrolls */}
-      <View className="px-4 pt-2">
-        <PropertyListHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onClearSearch={() => setSearchQuery('')}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          hasActiveFilters={hasActiveFilters}
-          activeFilterCount={activeFilterCount}
-          filters={filters}
-          sortBy={sortBy}
-          onShowFilters={() => setShowFiltersSheet(true)}
-          onShowSort={() => setShowSortSheet(true)}
-          onResetFilters={resetFilters}
-          totalCount={properties.length}
-          filteredCount={filteredProperties.length}
-        />
+      {/* Glass Search Bar - positioned absolutely at top */}
+      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+        <View className="px-4 pt-2 pb-1">
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search properties..."
+            size="md"
+            glass={true}
+            onFilter={() => setShowFiltersSheet(true)}
+            hasActiveFilters={hasActiveFilters}
+          />
+        </View>
       </View>
 
       <FlatList
@@ -99,7 +104,11 @@ export function PropertyListScreen() {
         keyExtractor={keyExtractor}
         numColumns={viewMode === 'grid' ? 2 : 1}
         key={viewMode}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 100 }}
+        contentContainerStyle={{
+          paddingTop: insets.top + SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
+          paddingHorizontal: 16,
+          paddingBottom: TAB_BAR_SAFE_PADDING
+        }}
         columnWrapperStyle={viewMode === 'grid' ? { gap: 12 } : undefined}
         ItemSeparatorComponent={viewMode === 'list' ? ItemSeparator : undefined}
         ListEmptyComponent={
@@ -113,7 +122,11 @@ export function PropertyListScreen() {
           />
         }
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refetch}
+            tintColor={colors.primary}
+          />
         }
         showsVerticalScrollIndicator={false}
         initialNumToRender={10}
@@ -130,13 +143,10 @@ export function PropertyListScreen() {
         filters={filters}
         onApply={(newFilters: PropertyFilters) => setFilters(newFilters)}
         onReset={resetFilters}
-      />
-
-      <PropertySortSheet
-        visible={showSortSheet}
-        onClose={() => setShowSortSheet(false)}
         sortBy={sortBy}
-        onSortChange={(newSort: SortOption) => setSortBy(newSort)}
+        onSortChange={setSortBy}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
     </ThemedSafeAreaView>
   );

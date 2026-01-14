@@ -1,5 +1,7 @@
 // src/features/public/components/Navbar.tsx
 // Public website navigation bar (web-only)
+//
+// NOTE: Public marketing component - hardcoded brand colors intentional
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Pressable } from 'react-native';
 import { Link, useRouter, usePathname, Href } from 'expo-router';

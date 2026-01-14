@@ -1,11 +1,12 @@
 // src/features/real-estate/components/FinancingScenarioCard.tsx
 // Individual financing scenario card display
+// Now uses DataCard for consistency
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import { Edit2, Trash2 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { Button } from '@/components/ui';
+import { DataCard } from '@/components/ui';
 import { FinancingScenario, ScenarioDetails } from '../types';
 import { FinancingScenarioWithCalcs, LOAN_TYPES, LoanType } from '../hooks/useFinancingScenarios';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
@@ -40,51 +41,40 @@ export function FinancingScenarioCard({
   const colors = useThemeColors();
   const input: ScenarioDetails = scenario.input_json || EMPTY_SCENARIO_DETAILS;
 
+  // Build fields array
+  const fields = [
+    { label: 'Loan Amount', value: formatCurrency(input.loanAmount || 0) },
+    { label: 'Down Payment', value: formatCurrency(input.downPayment || 0) },
+    { label: 'Total Interest', value: formatCurrency(scenario.totalInterest) },
+    { label: 'Cash Required', value: formatCurrency(scenario.cashRequired) },
+  ];
+
+  // Build actions array
+  const actions = [
+    { icon: Edit2, label: 'Edit', onPress: onEdit },
+    { icon: Trash2, label: 'Delete', onPress: onDelete, variant: 'destructive' as const },
+  ];
+
   return (
-    <TouchableOpacity
+    <DataCard
       onPress={onSelect}
-      className="rounded-xl border overflow-hidden"
-      style={{
-        backgroundColor: colors.card,
-        borderColor: isSelected ? colors.primary : colors.border,
-        borderWidth: isSelected ? 2 : 1,
-      }}
-    >
-      {/* Header */}
-      <View className="flex-row items-center justify-between p-4 border-b" style={{ borderColor: colors.border }}>
-        <View className="flex-1">
-          <View className="flex-row items-center">
-            <Text className="font-semibold" style={{ color: colors.foreground }}>{scenario.name}</Text>
-            {isSelected && (
-              <View className="ml-2 px-2 py-0.5 rounded" style={{ backgroundColor: colors.primary }}>
-                <Text className="text-xs" style={{ color: colors.primaryForeground }}>Selected</Text>
-              </View>
-            )}
-          </View>
-          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-            {getLoanTypeLabel(scenario.scenario_type)} • {input.loanTerm || 30} years
+      title={scenario.name}
+      subtitle={`${getLoanTypeLabel(scenario.scenario_type)} • ${input.loanTerm || 30} years`}
+      headerBadge={
+        isSelected
+          ? {
+              label: 'Selected',
+              variant: 'default',
+              size: 'sm',
+            }
+          : undefined
+      }
+      highlightLabel="Monthly Payment"
+      highlightValue={
+        <View className="flex-row items-end justify-between w-full">
+          <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
+            {formatCurrency(scenario.calculatedPayment)}
           </Text>
-        </View>
-
-        <View className="flex-row gap-1">
-          <Button variant="ghost" size="icon" onPress={onEdit} style={{ backgroundColor: colors.muted }}>
-            <Edit2 size={14} color={colors.mutedForeground} />
-          </Button>
-          <Button variant="ghost" size="icon" onPress={onDelete} style={{ backgroundColor: colors.destructive + '1A' }}>
-            <Trash2 size={14} color={colors.destructive} />
-          </Button>
-        </View>
-      </View>
-
-      {/* Payment Highlight */}
-      <View className="p-4" style={{ backgroundColor: colors.primary + '0D' }}>
-        <View className="flex-row justify-between items-center">
-          <View>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Monthly Payment</Text>
-            <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
-              {formatCurrency(scenario.calculatedPayment)}
-            </Text>
-          </View>
           <View className="items-end">
             <Text className="text-xs" style={{ color: colors.mutedForeground }}>Interest Rate</Text>
             <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
@@ -92,44 +82,18 @@ export function FinancingScenarioCard({
             </Text>
           </View>
         </View>
-      </View>
-
-      {/* Details */}
-      <View className="p-4">
-        <View className="flex-row flex-wrap gap-x-4 gap-y-2">
-          <View className="min-w-[45%]">
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Loan Amount</Text>
-            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
-              {formatCurrency(input.loanAmount || 0)}
-            </Text>
-          </View>
-          <View className="min-w-[45%]">
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Down Payment</Text>
-            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
-              {formatCurrency(input.downPayment || 0)}
-            </Text>
-          </View>
-          <View className="min-w-[45%]">
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Total Interest</Text>
-            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
-              {formatCurrency(scenario.totalInterest)}
-            </Text>
-          </View>
-          <View className="min-w-[45%]">
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Cash Required</Text>
-            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
-              {formatCurrency(scenario.cashRequired)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Notes */}
-        {scenario.description && (
-          <Text className="text-xs mt-3" style={{ color: colors.mutedForeground }}>
+      }
+      highlightColor={colors.primary}
+      fields={fields}
+      actions={actions}
+      footerContent={
+        scenario.description && (
+          <Text className="text-xs mb-2" style={{ color: colors.mutedForeground }}>
             {scenario.description}
           </Text>
-        )}
-      </View>
-    </TouchableOpacity>
+        )
+      }
+      isSelected={isSelected}
+    />
   );
 }

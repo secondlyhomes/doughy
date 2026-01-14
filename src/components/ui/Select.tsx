@@ -8,10 +8,12 @@ import {
   Modal,
   FlatList,
   ViewProps,
+  useColorScheme,
 } from 'react-native';
 import { ChevronDown, Check } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { getBackdropColor } from '@/lib/design-utils';
 
 export interface SelectOption {
   label: string;
@@ -43,6 +45,7 @@ export function Select({
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const colors = useThemeColors();
+  const colorScheme = useColorScheme();
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -99,7 +102,7 @@ export function Select({
       >
         <TouchableOpacity
           className="flex-1 items-center justify-center px-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          style={{ backgroundColor: getBackdropColor(colorScheme === 'dark') }}
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >

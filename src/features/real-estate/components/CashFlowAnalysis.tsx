@@ -14,6 +14,7 @@ import {
   Calculator,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { Property } from '../types';
 import { useDealAnalysis, RentalAssumptions, DEFAULT_RENTAL_ASSUMPTIONS } from '../hooks/useDealAnalysis';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
@@ -92,7 +93,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
           </View>
           <View
             className="px-2 py-1 rounded-full"
-            style={{ backgroundColor: `${colors.primary}15` }}
+            style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
           >
             <Text className="text-xs font-medium" style={{ color: colors.primary }}>
               {metrics.hasRentalData ? 'Active' : 'Add Rent'}
@@ -102,7 +103,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
       </View>
 
       {/* Monthly Rent Input - Always Visible */}
-      <View className="p-4" style={{ backgroundColor: `${colors.primary}08` }}>
+      <View className="p-4" style={{ backgroundColor: withOpacity(colors.primary, 'subtle') }}>
         <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Monthly Rent</Text>
         <View
           className="flex-row items-center rounded-lg px-3"
@@ -159,7 +160,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
           <View className="flex-row flex-wrap gap-3">
             <View
               className="flex-1 min-w-[30%] rounded-lg p-2"
-              style={{ backgroundColor: `${colors.muted}80` }}
+              style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
             >
               <Text className="text-xs" style={{ color: colors.mutedForeground }}>Cap Rate</Text>
               <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
@@ -168,7 +169,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
             </View>
             <View
               className="flex-1 min-w-[30%] rounded-lg p-2"
-              style={{ backgroundColor: `${colors.muted}80` }}
+              style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
             >
               <Text className="text-xs" style={{ color: colors.mutedForeground }}>GRM</Text>
               <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
@@ -177,7 +178,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
             </View>
             <View
               className="flex-1 min-w-[30%] rounded-lg p-2"
-              style={{ backgroundColor: `${colors.muted}80` }}
+              style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
             >
               <Text className="text-xs" style={{ color: colors.mutedForeground }}>Annual</Text>
               <Text
@@ -223,7 +224,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
       <TouchableOpacity
         onPress={() => setExpanded(!expanded)}
         className="flex-row items-center justify-between px-4 py-3"
-        style={{ backgroundColor: `${colors.muted}80`, borderTopWidth: 1, borderTopColor: colors.border }}
+        style={{ backgroundColor: withOpacity(colors.muted, 'opaque'), borderTopWidth: 1, borderTopColor: colors.border }}
       >
         <View className="flex-row items-center">
           <Calculator size={14} color={colors.mutedForeground} />
@@ -237,7 +238,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
       </TouchableOpacity>
 
       {expanded && (
-        <View className="p-4" style={{ backgroundColor: `${colors.muted}50` }}>
+        <View className="p-4" style={{ backgroundColor: withOpacity(colors.muted, 'strong') }}>
           {/* Expense Assumptions */}
           <Text className="text-sm font-medium mb-3" style={{ color: colors.foreground }}>Expense Rates</Text>
           <View className="flex-row gap-3 mb-4">
@@ -282,7 +283,7 @@ export function CashFlowAnalysis({ property }: CashFlowAnalysisProps) {
           {/* Info */}
           <View
             className="flex-row rounded-lg p-3 mt-2"
-            style={{ backgroundColor: `${colors.primary}08` }}
+            style={{ backgroundColor: withOpacity(colors.primary, 'subtle') }}
           >
             <Info size={14} color={colors.primary} className="mt-0.5" />
             <Text className="text-xs ml-2 flex-1" style={{ color: colors.mutedForeground }}>

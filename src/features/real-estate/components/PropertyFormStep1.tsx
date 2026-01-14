@@ -6,6 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { ChevronDown, MapPin } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { PropertyConstants } from '../types';
 import { AddressAutocomplete, AddressResult } from './AddressAutocomplete';
 
@@ -252,7 +253,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                     style={{
                       borderBottomWidth: 1,
                       borderBottomColor: colors.border,
-                      backgroundColor: data.propertyType === option.value ? `${colors.primary}15` : undefined,
+                      backgroundColor: data.propertyType === option.value ? withOpacity(colors.primary, 'muted') : undefined,
                     }}
                   >
                     <Text

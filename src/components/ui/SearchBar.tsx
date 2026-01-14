@@ -1,10 +1,11 @@
 // src/components/ui/SearchBar.tsx
 // Reusable search bar component with consistent styling
 import React from 'react';
-import { View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Search, X } from 'lucide-react-native';
+import { View, TextInput, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
+import { Search, X, SlidersHorizontal } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { GlassView } from './GlassView';
 
 export interface SearchBarProps {
   value: string;
@@ -16,6 +17,9 @@ export interface SearchBarProps {
   isLoading?: boolean;
   autoFocus?: boolean;
   className?: string;
+  onFilter?: () => void;
+  hasActiveFilters?: boolean;
+  glass?: boolean;
 }
 
 const sizeConfig = {
@@ -46,6 +50,9 @@ export function SearchBar({
   isLoading = false,
   autoFocus = false,
   className,
+  onFilter,
+  hasActiveFilters = false,
+  glass = false,
 }: SearchBarProps) {
   const colors = useThemeColors();
   const config = sizeConfig[size];
@@ -58,14 +65,17 @@ export function SearchBar({
     }
   };
 
-  return (
+  const searchBarContent = (
     <View
       className={cn(
-        'flex-row items-center rounded-md',
+        'flex-row items-center rounded-full',
         config.paddingClass,
         className
       )}
-      style={{ backgroundColor: colors.muted }}
+      style={{
+        backgroundColor: glass ? 'transparent' : colors.muted,
+        borderRadius: 9999
+      }}
     >
       <Search size={config.iconSize} color={colors.mutedForeground} />
       <TextInput
@@ -90,6 +100,39 @@ export function SearchBar({
           </TouchableOpacity>
         )
       )}
+      {onFilter && (
+        <TouchableOpacity
+          onPress={onFilter}
+          className="ml-2 w-9 h-9 rounded-full items-center justify-center"
+          style={{ backgroundColor: hasActiveFilters ? colors.primary : colors.muted }}
+        >
+          <SlidersHorizontal
+            size={16}
+            color={hasActiveFilters ? colors.primaryForeground : colors.mutedForeground}
+          />
+          {hasActiveFilters && (
+            <View
+              className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+              style={{ backgroundColor: colors.destructive }}
+            />
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
+
+  if (glass) {
+    return (
+      <GlassView
+        intensity={40}
+        effect="regular"
+        className={cn('rounded-full', config.paddingClass)}
+        style={{ borderRadius: 9999 }}
+      >
+        {searchBarContent}
+      </GlassView>
+    );
+  }
+
+  return searchBarContent;
 }

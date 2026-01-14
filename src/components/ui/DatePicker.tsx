@@ -8,6 +8,7 @@ import {
   Modal as RNModal,
   TouchableWithoutFeedback,
   Platform,
+  useColorScheme,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Calendar as CalendarIcon, X } from 'lucide-react-native';
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar } from './Calendar';
 import { useThemeColors } from '@/context/ThemeContext';
+import { getBackdropColor } from '@/lib/design-utils';
 
 export interface DatePickerProps {
   value?: Date;
@@ -46,6 +48,7 @@ export function DatePicker({
   const [isOpen, setIsOpen] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(value || new Date());
   const colors = useThemeColors();
+  const colorScheme = useColorScheme();
 
   // Format display value
   const displayValue = value ? format(value, dateFormat) : '';
@@ -108,7 +111,7 @@ export function DatePicker({
     return (
       <RNModal visible={isOpen} transparent animationType="slide" onRequestClose={() => setIsOpen(false)}>
         <TouchableWithoutFeedback onPress={() => setIsOpen(false)}>
-          <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View className="flex-1 justify-end" style={{ backgroundColor: getBackdropColor(colorScheme === 'dark') }}>
             <TouchableWithoutFeedback>
               <View className="rounded-t-xl pb-8" style={{ backgroundColor: colors.background }}>
                 <View
@@ -149,7 +152,7 @@ export function DatePicker({
     return (
       <RNModal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>
         <TouchableWithoutFeedback onPress={() => setIsOpen(false)}>
-          <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: getBackdropColor(colorScheme === 'dark') }}>
             <TouchableWithoutFeedback>
               <View className="w-full max-w-sm">
                 <Calendar

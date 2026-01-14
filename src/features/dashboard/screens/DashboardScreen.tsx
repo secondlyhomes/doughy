@@ -34,7 +34,7 @@ import {
 } from 'lucide-react-native';
 
 // Zone A UI Components
-import { Card, CardContent, CardHeader, CardTitle, Badge, Progress, ScreenHeader } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Progress } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { getTrendColor } from '@/utils';
 
@@ -176,9 +176,6 @@ export function DashboardScreen() {
         }
       >
         <View className="p-4">
-          {/* Header */}
-        <ScreenHeader title="Inbox" subtitle="Your deals at a glance" className="px-0 pt-0" />
-
         {/* Alert Banner */}
         {showAlert && overdueActions > 0 && (
           <View
@@ -289,7 +286,7 @@ export function DashboardScreen() {
                   <View className="flex-row items-start justify-between">
                     <View className="flex-row items-start flex-1">
                       <View className="px-2 py-1 rounded mr-3" style={{ backgroundColor: getPriorityColorValue(nextAction.priority, colors) }}>
-                        <ActionIcon category={nextAction.category} color="#ffffff" size={14} />
+                        <ActionIcon category={nextAction.category} color={colors.primaryForeground} size={14} />
                       </View>
                       <View className="flex-1">
                         <Text className="text-sm font-medium" style={{ color: colors.foreground }} numberOfLines={2}>

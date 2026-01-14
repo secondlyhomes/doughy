@@ -9,6 +9,7 @@ import React, { useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MapPin, Navigation, ExternalLink, AlertCircle } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 interface PropertyLocationMapProps {
   address: string;
@@ -149,14 +150,14 @@ export function PropertyLocationMap({
       {/* Overlay with actions */}
       <View
         className="absolute bottom-0 left-0 right-0 p-3"
-        style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        style={{ backgroundColor: withOpacity(colors.background, 'backdrop') }}
       >
         <View className="flex-row justify-between items-center">
           <View className="flex-1 mr-2">
             <Text className="font-medium text-sm" style={{ color: '#ffffff' }} numberOfLines={1}>
               {address}
             </Text>
-            <Text className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }} numberOfLines={1}>
+            <Text className="text-xs" style={{ color: withOpacity('#ffffff', 'opaque') }} numberOfLines={1}>
               {city}, {state} {zip}
             </Text>
           </View>
@@ -165,7 +166,7 @@ export function PropertyLocationMap({
             <TouchableOpacity
               onPress={openDirections}
               className="px-3 py-2 rounded-lg flex-row items-center"
-              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+              style={{ backgroundColor: withOpacity(colors.primary, 'light') }}
               activeOpacity={0.7}
             >
               <Navigation size={14} color="#ffffff" />
@@ -181,7 +182,7 @@ export function PropertyLocationMap({
       <TouchableOpacity
         onPress={openInMaps}
         className="absolute top-2 right-2 px-2 py-1 rounded-md flex-row items-center"
-        style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}
+        style={{ backgroundColor: withOpacity(colors.card, 'almostOpaque') }}
         activeOpacity={0.7}
       >
         <ExternalLink size={12} color={colors.mutedForeground} />

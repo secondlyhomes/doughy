@@ -1,9 +1,9 @@
 // src/features/real-estate/components/CompCard.tsx
 // Card component for displaying a comparable property
-// Uses useThemeColors() for reliable dark mode support
+// Now uses DataCard for consistency
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import {
   Home,
   Bed,
@@ -11,11 +11,11 @@ import {
   Square,
   Calendar,
   MapPin,
-  DollarSign,
   Trash2,
   Edit2,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { DataCard, DataCardField, DataCardAction } from '@/components/ui';
 import { PropertyComp } from '../types';
 import { formatCurrency, formatNumber, formatDate } from '../utils/formatters';
 
@@ -41,59 +41,68 @@ export function CompCard({ comp, onEdit, onDelete, subjectSqft }: CompCardProps)
   const sizeAdjustment = sizeDiff !== 0 ? sizeDiff * pricePerSqft : 0;
   const adjustedPrice = soldPrice + sizeAdjustment;
 
-  return (
-    <View
-      className="rounded-xl overflow-hidden"
-      style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
-    >
-      {/* Header */}
-      <View className="p-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <View className="flex-row items-start justify-between">
-          <View className="flex-1">
-            <View className="flex-row items-center">
-              <Home size={14} color={colors.mutedForeground} />
-              <Text className="font-medium ml-2 flex-1" numberOfLines={1} style={{ color: colors.foreground }}>
-                {comp.address}
-              </Text>
-            </View>
-            <Text className="text-xs mt-0.5" style={{ color: colors.mutedForeground }}>
-              {comp.city}, {comp.state} {comp.zip}
+  // Build fields array
+  const fields: DataCardField[] = [
+    ...(comp.bedrooms ? [{ icon: Bed, value: `${comp.bedrooms} bd` }] : []),
+    ...(comp.bathrooms ? [{ icon: Bath, value: `${comp.bathrooms} ba` }] : []),
+    ...(sqft > 0 ? [{ icon: Square, value: `${formatNumber(sqft)} sf` }] : []),
+    ...(yearBuilt ? [{ icon: Calendar, value: String(yearBuilt) }] : []),
+    ...((distance != null && distance > 0) ? [{ icon: MapPin, value: `${distance.toFixed(2)} mi` }] : []),
+  ];
+
+  // Build actions array
+  const actions: DataCardAction[] = [
+    ...(onEdit ? [{ icon: Edit2, label: 'Edit', onPress: () => onEdit(comp) }] : []),
+    ...(onDelete ? [{ icon: Trash2, label: 'Delete', onPress: () => onDelete(comp), variant: 'destructive' as const }] : []),
+  ];
+
+  // Build footer content
+  const footerContent = (
+    <>
+      {soldDate && (
+        <View className="mb-2 pb-2" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+            Sold: {formatDate(soldDate)}
+          </Text>
+        </View>
+      )}
+
+      {/* Size Adjustment (if subject property sqft provided) */}
+      {subjectSqft && sizeDiff !== 0 && (
+        <View className="mb-2">
+          <View className="flex-row justify-between items-center mb-1">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+              Size Adjustment ({sizeDiff > 0 ? '+' : ''}{formatNumber(sizeDiff)} sf)
+            </Text>
+            <Text
+              className="text-xs font-medium"
+              style={{ color: sizeAdjustment >= 0 ? colors.success : colors.destructive }}
+            >
+              {sizeAdjustment >= 0 ? '+' : ''}{formatCurrency(Math.round(sizeAdjustment))}
             </Text>
           </View>
-
-          {/* Actions */}
-          <View className="flex-row gap-2 ml-2">
-            {onEdit && (
-              <TouchableOpacity
-                onPress={() => onEdit(comp)}
-                className="p-1.5 rounded-lg"
-                style={{ backgroundColor: colors.muted }}
-              >
-                <Edit2 size={14} color={colors.mutedForeground} />
-              </TouchableOpacity>
-            )}
-            {onDelete && (
-              <TouchableOpacity
-                onPress={() => onDelete(comp)}
-                className="p-1.5 rounded-lg"
-                style={{ backgroundColor: `${colors.destructive}15` }}
-              >
-                <Trash2 size={14} color={colors.destructive} />
-              </TouchableOpacity>
-            )}
+          <View className="flex-row justify-between items-center">
+            <Text className="text-xs font-medium" style={{ color: colors.foreground }}>Adjusted Value</Text>
+            <Text className="text-xs font-bold" style={{ color: colors.primary }}>
+              {formatCurrency(Math.round(adjustedPrice))}
+            </Text>
           </View>
         </View>
-      </View>
+      )}
+    </>
+  );
 
-      {/* Price */}
-      <View className="px-4 py-3" style={{ backgroundColor: `${colors.primary}08` }}>
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Sold Price</Text>
-            <Text className="text-lg font-bold" style={{ color: colors.primary }}>
-              {formatCurrency(soldPrice)}
-            </Text>
-          </View>
+  return (
+    <DataCard
+      title={comp.address}
+      subtitle={`${comp.city}, ${comp.state} ${comp.zip}`}
+      headerIcon={Home}
+      highlightLabel="Sold Price"
+      highlightValue={
+        <View className="flex-row items-end justify-between w-full">
+          <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
+            {formatCurrency(soldPrice)}
+          </Text>
           {pricePerSqft > 0 && (
             <View className="items-end">
               <Text className="text-xs" style={{ color: colors.mutedForeground }}>Price/SqFt</Text>
@@ -103,75 +112,11 @@ export function CompCard({ comp, onEdit, onDelete, subjectSqft }: CompCardProps)
             </View>
           )}
         </View>
-      </View>
-
-      {/* Details */}
-      <View className="p-4">
-        <View className="flex-row flex-wrap gap-3">
-          {comp.bedrooms && (
-            <View className="flex-row items-center">
-              <Bed size={12} color={colors.mutedForeground} />
-              <Text className="text-xs ml-1" style={{ color: colors.foreground }}>{comp.bedrooms} bd</Text>
-            </View>
-          )}
-          {comp.bathrooms && (
-            <View className="flex-row items-center">
-              <Bath size={12} color={colors.mutedForeground} />
-              <Text className="text-xs ml-1" style={{ color: colors.foreground }}>{comp.bathrooms} ba</Text>
-            </View>
-          )}
-          {sqft > 0 && (
-            <View className="flex-row items-center">
-              <Square size={12} color={colors.mutedForeground} />
-              <Text className="text-xs ml-1" style={{ color: colors.foreground }}>{formatNumber(sqft)} sf</Text>
-            </View>
-          )}
-          {yearBuilt && (
-            <View className="flex-row items-center">
-              <Calendar size={12} color={colors.mutedForeground} />
-              <Text className="text-xs ml-1" style={{ color: colors.foreground }}>{yearBuilt}</Text>
-            </View>
-          )}
-          {distance != null && distance > 0 && (
-            <View className="flex-row items-center">
-              <MapPin size={12} color={colors.mutedForeground} />
-              <Text className="text-xs ml-1" style={{ color: colors.foreground }}>{distance.toFixed(2)} mi</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Sale Date */}
-        {soldDate && (
-          <View className="mt-2 pt-2" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-              Sold: {formatDate(soldDate)}
-            </Text>
-          </View>
-        )}
-
-        {/* Size Adjustment (if subject property sqft provided) */}
-        {subjectSqft && sizeDiff !== 0 && (
-          <View className="mt-2 pt-2" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
-            <View className="flex-row justify-between items-center">
-              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                Size Adjustment ({sizeDiff > 0 ? '+' : ''}{formatNumber(sizeDiff)} sf)
-              </Text>
-              <Text
-                className="text-xs font-medium"
-                style={{ color: sizeAdjustment >= 0 ? colors.success : colors.destructive }}
-              >
-                {sizeAdjustment >= 0 ? '+' : ''}{formatCurrency(Math.round(sizeAdjustment))}
-              </Text>
-            </View>
-            <View className="flex-row justify-between items-center mt-1">
-              <Text className="text-xs font-medium" style={{ color: colors.foreground }}>Adjusted Value</Text>
-              <Text className="text-xs font-bold" style={{ color: colors.primary }}>
-                {formatCurrency(Math.round(adjustedPrice))}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
-    </View>
+      }
+      highlightColor={colors.primary}
+      fields={fields}
+      actions={actions}
+      footerContent={footerContent}
+    />
   );
 }

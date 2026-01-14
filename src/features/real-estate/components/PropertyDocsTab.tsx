@@ -17,6 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { Button, LoadingSpinner } from '@/components/ui';
 import { Property, Document } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
@@ -178,7 +179,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
               onPress={() => handleDeleteDocument(doc)}
               disabled={isDeletingDoc}
               loading={isDeletingDoc}
-              style={{ backgroundColor: `${colors.destructive}1A` }}
+              style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}
             >
               {!isDeletingDoc && <Trash2 size={16} color={colors.destructive} />}
             </Button>
@@ -214,7 +215,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
         <View className="flex-row items-center">
           <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
           {documents.length > 0 && (
-            <View className="px-2 py-1 rounded-full ml-2" style={{ backgroundColor: `${colors.primary}1A` }}>
+            <View className="px-2 py-1 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
               <Text className="text-xs font-medium" style={{ color: colors.primary }}>{documents.length}</Text>
             </View>
           )}
@@ -290,7 +291,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
                       <Icon size={18} color={colors.primary} />
                     </View>
                     <Text className="font-medium" style={{ color: colors.foreground }}>{category.label}</Text>
-                    <View className="px-2 py-0.5 rounded-full ml-2" style={{ backgroundColor: `${colors.primary}1A` }}>
+                    <View className="px-2 py-0.5 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                       <Text className="text-xs font-medium" style={{ color: colors.primary }}>{categoryDocs.length}</Text>
                     </View>
                   </View>

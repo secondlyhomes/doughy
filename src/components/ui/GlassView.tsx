@@ -1,13 +1,14 @@
 // src/components/ui/GlassView.tsx
 // Glass effect component with Liquid Glass (iOS 26+) and expo-blur fallback
 import React from 'react';
-import { Platform, View, ViewProps, StyleSheet } from 'react-native';
+import { Platform, View, ViewProps, StyleSheet, useColorScheme } from 'react-native';
 import { BlurView } from 'expo-blur';
 import {
   LiquidGlassView,
   isLiquidGlassSupported,
 } from '@callstack/liquid-glass';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/context/ThemeContext';
+import { getBackdropColor, withOpacity } from '@/lib/design-utils';
 
 export interface GlassViewProps extends ViewProps {
   /** Blur intensity for expo-blur fallback (0-100). Default: 50 */
@@ -31,6 +32,7 @@ export function GlassView({
   ...props
 }: GlassViewProps) {
   const { isDark } = useTheme();
+  const colors = useThemeColors();
   const effectiveTint = tint ?? (isDark ? 'dark' : 'light');
 
   // iOS 26+ with Liquid Glass support
@@ -68,7 +70,11 @@ export function GlassView({
       style={[
         style,
         styles.webGlass,
-        isDark ? styles.webGlassDark : styles.webGlassLight,
+        {
+          backgroundColor: isDark
+            ? withOpacity(colors.card, 'opaque')
+            : withOpacity(colors.background, 'opaque'),
+        },
       ]}
       {...props}
     >
@@ -127,7 +133,7 @@ export function GlassBackdrop({
         StyleSheet.absoluteFill,
         style,
         styles.webBackdrop,
-        isDark ? styles.webBackdropDark : styles.webBackdropLight,
+        { backgroundColor: getBackdropColor(isDark) },
       ]}
       {...props}
     >
@@ -143,23 +149,11 @@ const styles = StyleSheet.create({
     // @ts-ignore - web-only property
     WebkitBackdropFilter: 'blur(12px)',
   },
-  webGlassLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-  },
-  webGlassDark: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
   webBackdrop: {
     // @ts-ignore - web-only property
     backdropFilter: 'blur(8px)',
     // @ts-ignore - web-only property
     WebkitBackdropFilter: 'blur(8px)',
-  },
-  webBackdropLight: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  webBackdropDark: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
 });
 

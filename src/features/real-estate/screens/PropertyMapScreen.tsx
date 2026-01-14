@@ -20,6 +20,7 @@ import { ThemedSafeAreaView } from '@/components';
 import { PropertyMap } from '../components/PropertyMap';
 import { useProperties } from '../hooks/useProperties';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { Property } from '../types';
 import { formatCurrency, formatPropertyType } from '../utils/formatters';
 
@@ -117,7 +118,7 @@ export function PropertyMapScreen() {
           >
             {/* Handle */}
             <View className="items-center py-3">
-              <View className="w-10 h-1 rounded-full" style={{ backgroundColor: `${colors.mutedForeground}4D` }} />
+              <View className="w-10 h-1 rounded-full" style={{ backgroundColor: withOpacity(colors.mutedForeground, 'strong') }} />
             </View>
 
             {/* Close Button */}
@@ -150,7 +151,7 @@ export function PropertyMapScreen() {
                       ? formatCurrency(selectedProperty.arv)
                       : 'Price TBD'}
                   </Text>
-                  <View className="px-3 py-1 rounded-lg" style={{ backgroundColor: `${colors.primary}1A` }}>
+                  <View className="px-3 py-1 rounded-lg" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                     <Text className="font-medium" style={{ color: colors.primary }}>
                       {formatPropertyType(selectedProperty.propertyType)}
                     </Text>

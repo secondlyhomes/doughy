@@ -2,14 +2,13 @@
  * PropertyForm Component
  *
  * Form for creating and editing property information.
- * Uses controlled inputs with React Native components.
+ * Refactored to use FormField + useForm (Phase 2 Migration)
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -17,8 +16,10 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { ChevronDown, Save, X } from 'lucide-react-native';
+import { ChevronDown, Save, X, MapPin, Home, DollarSign, FileText } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { FormField, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useForm } from '@/hooks/useForm';
 import { Property, PropertyType, PropertyConstants } from '../types';
 import { PropertyImagePicker } from './PropertyImagePicker';
 
@@ -76,14 +77,66 @@ export function PropertyForm({
   submitLabel = 'Save Property',
 }: PropertyFormProps) {
   const colors = useThemeColors();
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+
+  // Use the new useForm hook for state management and validation
+  const { values, errors, updateField, handleSubmit, setValues } = useForm<FormData>({
+    initialValues: initialFormData,
+    validate: (vals) => {
+      const errs: Partial<Record<keyof FormData, string>> = {};
+
+      if (!vals.address.trim()) errs.address = 'Address is required';
+      if (!vals.city.trim()) errs.city = 'City is required';
+      if (!vals.state.trim()) errs.state = 'State is required';
+      if (!vals.zip.trim()) errs.zip = 'ZIP code is required';
+
+      // Validate numeric fields
+      if (vals.bedrooms && isNaN(Number(vals.bedrooms))) {
+        errs.bedrooms = 'Must be a number';
+      }
+      if (vals.bathrooms && isNaN(Number(vals.bathrooms))) {
+        errs.bathrooms = 'Must be a number';
+      }
+      if (vals.square_feet && isNaN(Number(vals.square_feet))) {
+        errs.square_feet = 'Must be a number';
+      }
+      if (vals.year_built) {
+        const year = Number(vals.year_built);
+        if (isNaN(year) || year < 1800 || year > new Date().getFullYear() + 5) {
+          errs.year_built = 'Invalid year';
+        }
+      }
+
+      return errs;
+    },
+    onSubmit: async (vals) => {
+      const propertyData: Partial<Property> = {
+        address: vals.address.trim(),
+        address_line_2: vals.address_line_2.trim() || undefined,
+        city: vals.city.trim(),
+        state: vals.state.trim(),
+        zip: vals.zip.trim(),
+        county: vals.county.trim() || undefined,
+        propertyType: vals.propertyType,
+        bedrooms: vals.bedrooms ? Number(vals.bedrooms) : undefined,
+        bathrooms: vals.bathrooms ? Number(vals.bathrooms) : undefined,
+        square_feet: vals.square_feet ? Number(vals.square_feet) : undefined,
+        lot_size: vals.lot_size ? Number(vals.lot_size) : undefined,
+        year_built: vals.year_built ? Number(vals.year_built) : undefined,
+        arv: vals.arv ? Number(vals.arv) : undefined,
+        purchase_price: vals.purchase_price ? Number(vals.purchase_price) : undefined,
+        notes: vals.notes.trim() || undefined,
+      };
+
+      await onSubmit(propertyData);
+    },
+  });
+
   const [showPropertyTypePicker, setShowPropertyTypePicker] = useState(false);
 
   // Initialize form with existing data
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      setValues({
         address: initialData.address || initialData.address_line_1 || '',
         address_line_2: initialData.address_line_2 || '',
         city: initialData.city || '',
@@ -102,117 +155,7 @@ export function PropertyForm({
         images: initialData.images?.map(img => img.url) || [],
       });
     }
-  }, [initialData]);
-
-  const updateField = useCallback((field: keyof FormData, value: string | string[]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when field is updated
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
-  }, [errors]);
-
-  const validateForm = useCallback((): boolean => {
-    const newErrors: Partial<Record<keyof FormData, string>> = {};
-
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
-    }
-    if (!formData.city.trim()) {
-      newErrors.city = 'City is required';
-    }
-    if (!formData.state.trim()) {
-      newErrors.state = 'State is required';
-    }
-    if (!formData.zip.trim()) {
-      newErrors.zip = 'ZIP code is required';
-    }
-
-    // Validate numeric fields
-    if (formData.bedrooms && isNaN(Number(formData.bedrooms))) {
-      newErrors.bedrooms = 'Must be a number';
-    }
-    if (formData.bathrooms && isNaN(Number(formData.bathrooms))) {
-      newErrors.bathrooms = 'Must be a number';
-    }
-    if (formData.square_feet && isNaN(Number(formData.square_feet))) {
-      newErrors.square_feet = 'Must be a number';
-    }
-    if (formData.year_built) {
-      const year = Number(formData.year_built);
-      if (isNaN(year) || year < 1800 || year > new Date().getFullYear() + 5) {
-        newErrors.year_built = 'Invalid year';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
-
-  const handleSubmit = useCallback(async () => {
-    if (!validateForm()) {
-      Alert.alert('Validation Error', 'Please fix the errors before submitting.');
-      return;
-    }
-
-    const propertyData: Partial<Property> = {
-      address: formData.address.trim(),
-      address_line_2: formData.address_line_2.trim() || undefined,
-      city: formData.city.trim(),
-      state: formData.state.trim(),
-      zip: formData.zip.trim(),
-      county: formData.county.trim() || undefined,
-      propertyType: formData.propertyType,
-      bedrooms: formData.bedrooms ? Number(formData.bedrooms) : undefined,
-      bathrooms: formData.bathrooms ? Number(formData.bathrooms) : undefined,
-      square_feet: formData.square_feet ? Number(formData.square_feet) : undefined,
-      lot_size: formData.lot_size ? Number(formData.lot_size) : undefined,
-      year_built: formData.year_built ? Number(formData.year_built) : undefined,
-      arv: formData.arv ? Number(formData.arv) : undefined,
-      purchase_price: formData.purchase_price ? Number(formData.purchase_price) : undefined,
-      notes: formData.notes.trim() || undefined,
-    };
-
-    await onSubmit(propertyData);
-  }, [formData, validateForm, onSubmit]);
-
-  const renderInput = (
-    label: string,
-    field: keyof FormData,
-    options: {
-      placeholder?: string;
-      keyboardType?: 'default' | 'numeric' | 'decimal-pad';
-      multiline?: boolean;
-      numberOfLines?: number;
-      maxLength?: number;
-    } = {}
-  ) => (
-    <View className="mb-4">
-      <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>{label}</Text>
-      <TextInput
-        value={formData[field] as string}
-        onChangeText={(value) => updateField(field, value)}
-        placeholder={options.placeholder}
-        placeholderTextColor={colors.mutedForeground}
-        keyboardType={options.keyboardType || 'default'}
-        multiline={options.multiline}
-        numberOfLines={options.numberOfLines}
-        maxLength={options.maxLength}
-        className={`rounded-lg px-4 py-3 ${
-          options.multiline ? 'min-h-[100]' : ''
-        } ${errors[field] ? 'border' : ''}`}
-        style={{
-          backgroundColor: colors.muted,
-          color: colors.foreground,
-          ...(errors[field] ? { borderColor: colors.destructive, borderWidth: 1 } : {}),
-        }}
-        editable={!isLoading}
-      />
-      {errors[field] && (
-        <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors[field]}</Text>
-      )}
-    </View>
-  );
+  }, [initialData, setValues]);
 
   const getPropertyTypeLabel = (type: string): string => {
     const option = PropertyConstants.TYPE_OPTIONS.find(opt => opt.value === type);
@@ -227,7 +170,7 @@ export function PropertyForm({
       <ScrollView
         className="flex-1"
         style={{ backgroundColor: colors.background }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -235,7 +178,7 @@ export function PropertyForm({
         <View className="mb-6">
           <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Photos</Text>
           <PropertyImagePicker
-            images={formData.images}
+            images={values.images}
             onChange={(images) => updateField('images', images)}
             maxImages={10}
             disabled={isLoading}
@@ -244,22 +187,71 @@ export function PropertyForm({
 
         {/* Address Section */}
         <Text className="text-lg font-semibold mb-3" style={{ color: colors.foreground }}>Address</Text>
-        {renderInput('Street Address *', 'address', { placeholder: '123 Main Street' })}
-        {renderInput('Unit/Apt (optional)', 'address_line_2', { placeholder: 'Apt 4B' })}
+        <FormField
+          label="Street Address"
+          value={values.address}
+          onChangeText={(text) => updateField('address', text)}
+          error={errors.address}
+          placeholder="123 Main Street"
+          required
+          icon={MapPin}
+          editable={!isLoading}
+        />
+        <FormField
+          label="Unit/Apt"
+          value={values.address_line_2}
+          onChangeText={(text) => updateField('address_line_2', text)}
+          placeholder="Apt 4B"
+          helperText="Optional"
+          editable={!isLoading}
+        />
 
         <View className="flex-row gap-3">
           <View className="flex-1">
-            {renderInput('City *', 'city', { placeholder: 'City' })}
+            <FormField
+              label="City"
+              value={values.city}
+              onChangeText={(text) => updateField('city', text)}
+              error={errors.city}
+              placeholder="City"
+              required
+              editable={!isLoading}
+            />
           </View>
           <View className="w-20">
-            {renderInput('State *', 'state', { placeholder: 'CA', maxLength: 2 })}
+            <FormField
+              label="State"
+              value={values.state}
+              onChangeText={(text) => updateField('state', text)}
+              error={errors.state}
+              placeholder="CA"
+              maxLength={2}
+              required
+              editable={!isLoading}
+            />
           </View>
           <View className="w-24">
-            {renderInput('ZIP *', 'zip', { placeholder: '12345', keyboardType: 'numeric' })}
+            <FormField
+              label="ZIP"
+              value={values.zip}
+              onChangeText={(text) => updateField('zip', text)}
+              error={errors.zip}
+              placeholder="12345"
+              keyboardType="numeric"
+              required
+              editable={!isLoading}
+            />
           </View>
         </View>
 
-        {renderInput('County (optional)', 'county', { placeholder: 'County' })}
+        <FormField
+          label="County"
+          value={values.county}
+          onChangeText={(text) => updateField('county', text)}
+          placeholder="County"
+          helperText="Optional"
+          editable={!isLoading}
+        />
 
         {/* Property Details Section */}
         <Text className="text-lg font-semibold mb-3 mt-4" style={{ color: colors.foreground }}>Property Details</Text>
@@ -274,7 +266,7 @@ export function PropertyForm({
             disabled={isLoading}
           >
             <Text style={{ color: colors.foreground }}>
-              {getPropertyTypeLabel(formData.propertyType)}
+              {getPropertyTypeLabel(values.propertyType)}
             </Text>
             <ChevronDown size={20} color={colors.mutedForeground} />
           </TouchableOpacity>
@@ -292,13 +284,13 @@ export function PropertyForm({
                     className="px-4 py-3 border-b"
                     style={{
                       borderColor: colors.border,
-                      backgroundColor: formData.propertyType === option.value ? colors.primary + '1A' : undefined,
+                      backgroundColor: values.propertyType === option.value ? colors.primary + '1A' : undefined,
                     }}
                   >
                     <Text
                       style={{
-                        color: formData.propertyType === option.value ? colors.primary : colors.foreground,
-                        fontWeight: formData.propertyType === option.value ? '500' : 'normal',
+                        color: values.propertyType === option.value ? colors.primary : colors.foreground,
+                        fontWeight: values.propertyType === option.value ? '500' : 'normal',
                       }}
                     >
                       {option.label}
@@ -312,43 +304,105 @@ export function PropertyForm({
 
         <View className="flex-row gap-3">
           <View className="flex-1">
-            {renderInput('Bedrooms', 'bedrooms', { keyboardType: 'numeric', placeholder: '3' })}
+            <FormField
+              label="Bedrooms"
+              value={values.bedrooms}
+              onChangeText={(text) => updateField('bedrooms', text)}
+              error={errors.bedrooms}
+              placeholder="3"
+              keyboardType="numeric"
+              icon={Home}
+              editable={!isLoading}
+            />
           </View>
           <View className="flex-1">
-            {renderInput('Bathrooms', 'bathrooms', { keyboardType: 'decimal-pad', placeholder: '2' })}
+            <FormField
+              label="Bathrooms"
+              value={values.bathrooms}
+              onChangeText={(text) => updateField('bathrooms', text)}
+              error={errors.bathrooms}
+              placeholder="2"
+              keyboardType="decimal-pad"
+              icon={Home}
+              editable={!isLoading}
+            />
           </View>
         </View>
 
         <View className="flex-row gap-3">
           <View className="flex-1">
-            {renderInput('Square Feet', 'square_feet', { keyboardType: 'numeric', placeholder: '1500' })}
+            <FormField
+              label="Square Feet"
+              value={values.square_feet}
+              onChangeText={(text) => updateField('square_feet', text)}
+              error={errors.square_feet}
+              placeholder="1500"
+              keyboardType="numeric"
+              editable={!isLoading}
+            />
           </View>
           <View className="flex-1">
-            {renderInput('Lot Size (sqft)', 'lot_size', { keyboardType: 'numeric', placeholder: '5000' })}
+            <FormField
+              label="Lot Size (sqft)"
+              value={values.lot_size}
+              onChangeText={(text) => updateField('lot_size', text)}
+              placeholder="5000"
+              keyboardType="numeric"
+              editable={!isLoading}
+            />
           </View>
         </View>
 
-        {renderInput('Year Built', 'year_built', { keyboardType: 'numeric', placeholder: '1990' })}
+        <FormField
+          label="Year Built"
+          value={values.year_built}
+          onChangeText={(text) => updateField('year_built', text)}
+          error={errors.year_built}
+          placeholder="1990"
+          keyboardType="numeric"
+          editable={!isLoading}
+        />
 
         {/* Financial Section */}
         <Text className="text-lg font-semibold mb-3 mt-4" style={{ color: colors.foreground }}>Financial</Text>
 
         <View className="flex-row gap-3">
           <View className="flex-1">
-            {renderInput('Property Value (ARV)', 'arv', { keyboardType: 'numeric', placeholder: '350000' })}
+            <FormField
+              label="Property Value (ARV)"
+              value={values.arv}
+              onChangeText={(text) => updateField('arv', text)}
+              placeholder="350000"
+              keyboardType="numeric"
+              icon={DollarSign}
+              editable={!isLoading}
+            />
           </View>
           <View className="flex-1">
-            {renderInput('Purchase Price', 'purchase_price', { keyboardType: 'numeric', placeholder: '300000' })}
+            <FormField
+              label="Purchase Price"
+              value={values.purchase_price}
+              onChangeText={(text) => updateField('purchase_price', text)}
+              placeholder="300000"
+              keyboardType="numeric"
+              icon={DollarSign}
+              editable={!isLoading}
+            />
           </View>
         </View>
 
         {/* Notes Section */}
         <Text className="text-lg font-semibold mb-3 mt-4" style={{ color: colors.foreground }}>Notes</Text>
-        {renderInput('Notes', 'notes', {
-          multiline: true,
-          numberOfLines: 4,
-          placeholder: 'Add any additional notes about this property...',
-        })}
+        <FormField
+          label="Notes"
+          value={values.notes}
+          onChangeText={(text) => updateField('notes', text)}
+          placeholder="Add any additional notes about this property..."
+          multiline
+          numberOfLines={4}
+          icon={FileText}
+          editable={!isLoading}
+        />
       </ScrollView>
 
       {/* Bottom Action Buttons */}

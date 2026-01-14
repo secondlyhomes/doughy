@@ -1,5 +1,7 @@
 // src/features/public/screens/features/RealEstateScreen.tsx
 // Real Estate feature page
+//
+// NOTE: Public marketing page - hardcoded brand colors intentional
 import { View, Text, Image, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Home, Building2, DollarSign, TrendingUp, CheckCircle, ArrowRight } from 'lucide-react-native';

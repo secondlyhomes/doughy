@@ -5,10 +5,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { BottomSheet, BottomSheetSection } from '@/components/ui/BottomSheet';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { List, Grid, Check } from 'lucide-react-native';
 import { PropertyStatus, PropertyType, PropertyConstants } from '../types';
-import { PropertyFilters, DEFAULT_FILTERS } from '../hooks/usePropertyFilters';
+import { PropertyFilters, DEFAULT_FILTERS, SortOption, SORT_OPTIONS } from '../hooks/usePropertyFilters';
 
 interface PropertyFiltersSheetProps {
   visible: boolean;
@@ -16,6 +18,10 @@ interface PropertyFiltersSheetProps {
   filters: PropertyFilters;
   onApply: (filters: PropertyFilters) => void;
   onReset: () => void;
+  sortBy: SortOption;
+  onSortChange: (sortBy: SortOption) => void;
+  viewMode: 'list' | 'grid';
+  onViewModeChange: (mode: 'list' | 'grid') => void;
 }
 
 export function PropertyFiltersSheet({
@@ -24,6 +30,10 @@ export function PropertyFiltersSheet({
   filters,
   onApply,
   onReset,
+  sortBy,
+  onSortChange,
+  viewMode,
+  onViewModeChange,
 }: PropertyFiltersSheetProps) {
   const colors = useThemeColors();
   // Local state for editing filters before applying
@@ -81,8 +91,69 @@ export function PropertyFiltersSheet({
     <BottomSheet
       visible={visible}
       onClose={handleClose}
-      title="Filters"
+      title="Filters & View Options"
     >
+      {/* View Mode */}
+      <BottomSheetSection title="View Mode">
+        <View className="flex-row rounded-xl" style={{ backgroundColor: colors.muted }}>
+          <TouchableOpacity
+            onPress={() => onViewModeChange('list')}
+            className="flex-1 flex-row items-center justify-center px-4 py-3 rounded-xl"
+            style={viewMode === 'list' ? { backgroundColor: colors.primary } : undefined}
+          >
+            <List size={18} color={viewMode === 'list' ? colors.primaryForeground : colors.mutedForeground} />
+            <Text
+              className="ml-2 font-medium"
+              style={{ color: viewMode === 'list' ? colors.primaryForeground : colors.mutedForeground }}
+            >
+              List
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onViewModeChange('grid')}
+            className="flex-1 flex-row items-center justify-center px-4 py-3 rounded-xl"
+            style={viewMode === 'grid' ? { backgroundColor: colors.primary } : undefined}
+          >
+            <Grid size={18} color={viewMode === 'grid' ? colors.primaryForeground : colors.mutedForeground} />
+            <Text
+              className="ml-2 font-medium"
+              style={{ color: viewMode === 'grid' ? colors.primaryForeground : colors.mutedForeground }}
+            >
+              Grid
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </BottomSheetSection>
+
+      {/* Sort By */}
+      <BottomSheetSection title="Sort By">
+        <View className="gap-2">
+          {SORT_OPTIONS.map(option => (
+            <TouchableOpacity
+              key={option.value}
+              onPress={() => onSortChange(option.value)}
+              className="flex-row items-center justify-between py-3 px-4 rounded-lg"
+              style={{
+                backgroundColor: sortBy === option.value ? withOpacity(colors.primary, 'muted') : colors.muted
+              }}
+            >
+              <Text
+                className="text-base"
+                style={{
+                  color: sortBy === option.value ? colors.primary : colors.foreground,
+                  fontWeight: sortBy === option.value ? '600' : '400'
+                }}
+              >
+                {option.label}
+              </Text>
+              {sortBy === option.value && (
+                <Check size={20} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </BottomSheetSection>
+
       {/* Status Filter */}
       <BottomSheetSection title="Status">
         <View className="flex-row flex-wrap gap-2">

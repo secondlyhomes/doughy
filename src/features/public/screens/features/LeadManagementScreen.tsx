@@ -1,5 +1,7 @@
 // src/features/public/screens/features/LeadManagementScreen.tsx
 // Lead Management feature page
+//
+// NOTE: Public marketing page - hardcoded brand colors intentional
 import { View, Text, Image, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Users, Target, Zap, BarChart3, CheckCircle, ArrowRight } from 'lucide-react-native';

@@ -1,7 +1,7 @@
 // src/context/ThemeContext.tsx
 // Dark mode support with system preference detection
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useColorScheme as useRNColorScheme, Appearance } from 'react-native';
+import { useColorScheme as useRNColorScheme, Appearance, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colorScheme as nativeWindColorScheme } from 'nativewind';
 
@@ -172,9 +172,11 @@ export function ThemeProvider({
   // - System UI elements like StatusBar
   useEffect(() => {
     const scheme = isDark ? 'dark' : 'light';
-    // React Native's Appearance API - triggers @media (prefers-color-scheme) in CSS
-    Appearance.setColorScheme(scheme);
-    // NativeWind's colorScheme API - ensures NativeWind is in sync
+    // React Native's Appearance API - only available on native platforms
+    if (Platform.OS !== 'web') {
+      Appearance.setColorScheme(scheme);
+    }
+    // NativeWind's colorScheme API - works on all platforms
     nativeWindColorScheme.set(scheme);
   }, [isDark]);
 

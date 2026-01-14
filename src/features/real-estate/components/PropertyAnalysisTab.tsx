@@ -10,6 +10,7 @@ import { useDealAnalysis } from '../hooks/useDealAnalysis';
 import { CashFlowAnalysis } from './CashFlowAnalysis';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 interface PropertyAnalysisTabProps {
   property: Property;
@@ -244,9 +245,9 @@ export function PropertyAnalysisTab({ property }: PropertyAnalysisTabProps) {
               <View
                 className="rounded-xl p-4"
                 style={{
-                  backgroundColor: `${colors.primary}15`,
+                  backgroundColor: withOpacity(colors.primary, 'muted'),
                   borderWidth: 1,
-                  borderColor: `${colors.primary}30`,
+                  borderColor: withOpacity(colors.primary, 'strong'),
                 }}
               >
                 <Text className="text-sm font-medium mb-1" style={{ color: colors.primary }}>

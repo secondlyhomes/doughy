@@ -4,21 +4,17 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Filter, Grid, List, ArrowUpDown, X } from 'lucide-react-native';
-import { SearchBar } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { PropertyFilters, SORT_OPTIONS, SortOption } from '../hooks/usePropertyFilters';
 
 interface PropertyListHeaderProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  onClearSearch: () => void;
   viewMode: 'list' | 'grid';
   onViewModeChange: (mode: 'list' | 'grid') => void;
   hasActiveFilters: boolean;
   activeFilterCount: number;
   filters: PropertyFilters;
   sortBy: SortOption;
-  onShowFilters: () => void;
   onShowSort: () => void;
   onResetFilters: () => void;
   totalCount: number;
@@ -26,16 +22,12 @@ interface PropertyListHeaderProps {
 }
 
 export function PropertyListHeader({
-  searchQuery,
-  onSearchChange,
-  onClearSearch,
   viewMode,
   onViewModeChange,
   hasActiveFilters,
   activeFilterCount,
   filters,
   sortBy,
-  onShowFilters,
   onShowSort,
   onResetFilters,
   totalCount,
@@ -49,35 +41,13 @@ export function PropertyListHeader({
 
   return (
     <View>
-      {/* Search Bar */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={onSearchChange}
-        onClear={onClearSearch}
-        placeholder="Search properties..."
-        size="md"
-      />
-
       {/* Filter, Sort, and View Toggle */}
-      <View className="flex-row justify-between items-center mt-4">
+      <View className="pb-3">
+        <View className="flex-row justify-between items-center">
         <View className="flex-row gap-2">
           <TouchableOpacity
-            onPress={onShowFilters}
-            className="flex-row items-center px-3 py-2 rounded-lg"
-            style={{ backgroundColor: hasActiveFilters ? colors.primary : colors.muted }}
-          >
-            <Filter size={16} color={hasActiveFilters ? colors.primaryForeground : colors.mutedForeground} />
-            <Text
-              className="ml-2 font-medium"
-              style={{ color: hasActiveFilters ? colors.primaryForeground : colors.mutedForeground }}
-            >
-              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             onPress={onShowSort}
-            className="flex-row items-center px-3 py-2 rounded-lg"
+            className="flex-row items-center px-3 py-2 rounded-xl"
             style={{ backgroundColor: colors.muted }}
           >
             <ArrowUpDown size={16} color={colors.mutedForeground} />
@@ -87,31 +57,33 @@ export function PropertyListHeader({
           </TouchableOpacity>
         </View>
 
-        <View className="flex-row rounded-lg" style={{ backgroundColor: colors.muted }}>
+        <View className="flex-row rounded-xl" style={{ backgroundColor: colors.muted }}>
           <TouchableOpacity
             onPress={() => onViewModeChange('list')}
-            className="px-3 py-2 rounded-lg"
+            className="px-3 py-2 rounded-xl"
             style={viewMode === 'list' ? { backgroundColor: colors.primary } : undefined}
           >
             <List size={18} color={viewMode === 'list' ? colors.primaryForeground : colors.mutedForeground} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onViewModeChange('grid')}
-            className="px-3 py-2 rounded-lg"
+            className="px-3 py-2 rounded-xl"
             style={viewMode === 'grid' ? { backgroundColor: colors.primary } : undefined}
           >
             <Grid size={18} color={viewMode === 'grid' ? colors.primaryForeground : colors.mutedForeground} />
           </TouchableOpacity>
         </View>
+        </View>
       </View>
 
       {/* Active Filters Pills */}
       {hasActiveFilters && (
-        <View className="flex-row flex-wrap gap-2 mt-3">
+        <View className="pb-3">
+          <View className="flex-row flex-wrap gap-2">
           {filters.status.length > 0 && (
             <View
               className="flex-row items-center px-3 py-1 rounded-full"
-              style={{ backgroundColor: `${colors.primary}1A` }}
+              style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
             >
               <Text className="text-sm font-medium" style={{ color: colors.primary }}>
                 Status: {filters.status.length}
@@ -121,7 +93,7 @@ export function PropertyListHeader({
           {filters.propertyType.length > 0 && (
             <View
               className="flex-row items-center px-3 py-1 rounded-full"
-              style={{ backgroundColor: `${colors.primary}1A` }}
+              style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
             >
               <Text className="text-sm font-medium" style={{ color: colors.primary }}>
                 Type: {filters.propertyType.length}
@@ -131,7 +103,7 @@ export function PropertyListHeader({
           {(filters.priceMin !== null || filters.priceMax !== null) && (
             <View
               className="flex-row items-center px-3 py-1 rounded-full"
-              style={{ backgroundColor: `${colors.primary}1A` }}
+              style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
             >
               <Text className="text-sm font-medium" style={{ color: colors.primary }}>Price Range</Text>
             </View>
@@ -139,7 +111,7 @@ export function PropertyListHeader({
           {(filters.arvMin !== null || filters.arvMax !== null) && (
             <View
               className="flex-row items-center px-3 py-1 rounded-full"
-              style={{ backgroundColor: `${colors.primary}1A` }}
+              style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
             >
               <Text className="text-sm font-medium" style={{ color: colors.primary }}>ARV Range</Text>
             </View>
@@ -147,7 +119,7 @@ export function PropertyListHeader({
           {(filters.city || filters.state) && (
             <View
               className="flex-row items-center px-3 py-1 rounded-full"
-              style={{ backgroundColor: `${colors.primary}1A` }}
+              style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
             >
               <Text className="text-sm font-medium" style={{ color: colors.primary }}>Location</Text>
             </View>
@@ -156,14 +128,17 @@ export function PropertyListHeader({
             <X size={14} color={colors.primary} />
             <Text className="text-sm font-medium ml-1" style={{ color: colors.primary }}>Clear</Text>
           </TouchableOpacity>
+          </View>
         </View>
       )}
 
       {/* Results Count */}
-      <Text className="text-sm mt-4" style={{ color: colors.mutedForeground }}>
-        {filteredCount} {filteredCount === 1 ? 'property' : 'properties'}
-        {(searchQuery || hasActiveFilters) && totalCount !== filteredCount ? ` of ${totalCount}` : ''}
-      </Text>
+      <View className="pb-3">
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+          {filteredCount} {filteredCount === 1 ? 'property' : 'properties'}
+          {hasActiveFilters && totalCount !== filteredCount ? ` of ${totalCount}` : ''}
+        </Text>
+      </View>
     </View>
   );
 }

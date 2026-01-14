@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { Button } from '@/components/ui';
 import { FormStepProgress, PROPERTY_FORM_STEPS } from './FormStepProgress';
@@ -69,6 +70,7 @@ export function PropertyFormWizard({
   submitLabel = 'Create Property',
 }: PropertyFormWizardProps) {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const [currentStep, setCurrentStep] = useState(0);
   const [step1Data, setStep1Data] = useState<Step1Data>(() => ({
     ...initialStep1Data,
@@ -270,7 +272,7 @@ export function PropertyFormWizard({
       </View>
 
       {/* Navigation Buttons */}
-      <View className="flex-row gap-3 p-4" style={{ backgroundColor: colors.background, borderTopWidth: 1, borderColor: colors.border }}>
+      <View className="flex-row gap-3 p-4" style={{ backgroundColor: colors.background, borderTopWidth: 1, borderColor: colors.border, paddingBottom: insets.bottom }}>
         {currentStep === 0 ? (
           <Button
             variant="secondary"

@@ -6,6 +6,7 @@ import React from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { DollarSign, TrendingUp, Wrench, Target } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { formatCurrency } from '../utils/formatters';
 
 export interface Step3Data {
@@ -222,9 +223,9 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
           <View
             className="rounded-xl p-4"
             style={{
-              backgroundColor: `${colors.primary}15`,
+              backgroundColor: withOpacity(colors.primary, 'muted'),
               borderWidth: 1,
-              borderColor: `${colors.primary}30`,
+              borderColor: withOpacity(colors.primary, 'strong'),
             }}
           >
             <View className="flex-row items-center mb-3">
@@ -255,7 +256,7 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
                   {roi.toFixed(1)}%
                 </Text>
               </View>
-              <View className="h-px my-2" style={{ backgroundColor: `${colors.primary}30` }} />
+              <View className="h-px my-2" style={{ backgroundColor: withOpacity(colors.primary, 'strong') }} />
               <View className="flex-row justify-between">
                 <Text className="font-medium" style={{ color: colors.primary }}>Max Offer (70% Rule)</Text>
                 <Text className="font-bold" style={{ color: colors.primary }}>{formatCurrency(mao)}</Text>

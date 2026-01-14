@@ -12,11 +12,15 @@ import {
   ScrollView,
   Dimensions,
   StyleSheet,
+  useColorScheme,
 } from 'react-native';
 import { X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { SPACING } from '@/constants/design-tokens';
 import { GlassBackdrop, GlassView } from './GlassView';
+import { getBackdropColor } from '@/lib/design-utils';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -47,6 +51,8 @@ export function BottomSheet({
   useGlassBackdrop = true,
 }: BottomSheetProps) {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
   // Calculate maxHeight from snapPoints if provided
   const calculatedMaxHeight = React.useMemo(() => {
     if (snapPoints && snapPoints.length > 0) {
@@ -90,7 +96,7 @@ export function BottomSheet({
       <ScrollView
         style={bottomSheetStyles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + SPACING.lg }}
       >
         {children}
       </ScrollView>
@@ -157,7 +163,7 @@ export function BottomSheet({
     }
 
     return (
-      <View style={[bottomSheetStyles.backdrop, bottomSheetStyles.solidBackdrop]}>
+      <View style={[bottomSheetStyles.backdrop, { backgroundColor: getBackdropColor(colorScheme === 'dark') }]}>
         {content}
       </View>
     );
@@ -186,9 +192,6 @@ const bottomSheetStyles = StyleSheet.create({
   },
   backdrop: {
     flex: 1,
-  },
-  solidBackdrop: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   backdropContent: {
     flex: 1,

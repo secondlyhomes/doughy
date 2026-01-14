@@ -10,9 +10,11 @@ import {
   TouchableWithoutFeedback,
   ViewProps,
   TextProps,
+  useColorScheme,
 } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { getBackdropColor } from '@/lib/design-utils';
 
 // Context
 interface DropdownMenuContextType {
@@ -109,6 +111,7 @@ export function DropdownMenuContent({
 }: DropdownMenuContentProps) {
   const { open, onOpenChange } = useDropdownMenuContext();
   const colors = useThemeColors();
+  const colorScheme = useColorScheme();
 
   if (!open) return null;
 
@@ -120,7 +123,7 @@ export function DropdownMenuContent({
       onRequestClose={() => onOpenChange(false)}
     >
       <TouchableWithoutFeedback onPress={() => onOpenChange(false)}>
-        <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <View className="flex-1 justify-end" style={{ backgroundColor: getBackdropColor(colorScheme === 'dark') }}>
           <TouchableWithoutFeedback>
             <View
               className={cn('rounded-t-3xl border-t pb-8 pt-2', className)}

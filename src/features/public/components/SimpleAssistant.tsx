@@ -16,6 +16,7 @@ import {
 import { MessageSquare, X, Send, ChevronDown, ChevronUp, Loader2 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { callPublicAssistant } from '@/lib/openai';
+import { getShadowStyle } from '@/lib/design-utils';
 
 interface Message {
   id: string;
@@ -220,11 +221,7 @@ export function SimpleAssistant() {
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
-              elevation: 8,
+              ...getShadowStyle(colors, { size: 'lg' }),
               overflow: 'hidden',
             }}
           >
@@ -344,11 +341,7 @@ export function SimpleAssistant() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: 8,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 4,
+            ...getShadowStyle(colors, { size: 'md' }),
           }}
         >
           <MessageSquare size={20} color={colors.primary} />
@@ -370,11 +363,7 @@ export function SimpleAssistant() {
             backgroundColor: colors.primary,
             alignItems: 'center',
             justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 6,
-            elevation: 6,
+            ...getShadowStyle(colors, { size: 'lg' }),
           }}
           accessibilityLabel="Chat with assistant"
         >

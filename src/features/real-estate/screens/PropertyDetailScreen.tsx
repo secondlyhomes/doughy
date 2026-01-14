@@ -18,6 +18,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Edit2, Trash2, MoreHorizontal } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { getShadowStyle } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
 import {
@@ -172,10 +173,7 @@ export function PropertyDetailScreen() {
                       { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
                       activeTab === value && {
                         backgroundColor: colors.background,
-                        shadowColor: '#000',
-                        shadowOpacity: 0.1,
-                        shadowRadius: 2,
-                        shadowOffset: { width: 0, height: 1 },
+                        ...getShadowStyle(colors, { size: 'sm' }),
                       },
                     ]}
                   >

@@ -1,5 +1,8 @@
 // src/features/public/screens/AboutScreen.tsx
 // About page for public website
+//
+// NOTE: This public marketing page intentionally uses hardcoded brand colors
+// for consistent cross-platform branding. Do not migrate to theme colors.
 import { View, Text, Image, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Calendar, Users, Brain, ArrowRight } from 'lucide-react-native';

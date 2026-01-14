@@ -9,6 +9,7 @@ export interface InputProps extends TextInputProps {
   className?: string;
   error?: string;
   label?: string;
+  multiline?: boolean;
 }
 
 export function Input({
@@ -16,6 +17,7 @@ export function Input({
   error,
   label,
   editable = true,
+  multiline = false,
   style,
   ...props
 }: InputProps) {
@@ -32,7 +34,7 @@ export function Input({
       )}
       <TextInput
         className={cn(
-          'h-10 w-full rounded-md px-3 py-2 text-base',
+          'h-10 w-full rounded-lg px-3 text-base',
           !editable && 'opacity-50',
           className
         )}
@@ -42,11 +44,15 @@ export function Input({
             color: colors.foreground,
             borderWidth: 1,
             borderColor: error ? colors.destructive : colors.input,
+            textAlignVertical: multiline ? 'top' : 'center',
+            paddingTop: multiline ? 8 : 10,
+            paddingBottom: multiline ? 8 : 10,
           },
           style,
         ]}
         placeholderTextColor={colors.mutedForeground}
         editable={editable}
+        multiline={multiline}
         {...props}
       />
       {error && (

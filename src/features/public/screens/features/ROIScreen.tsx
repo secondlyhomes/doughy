@@ -1,5 +1,7 @@
 // src/features/public/screens/features/ROIScreen.tsx
 // ROI Calculator feature page
+//
+// NOTE: Public marketing page - hardcoded brand colors intentional
 import { View, Text, Image, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Calculator, TrendingUp, Clock, PiggyBank, CheckCircle, ArrowRight } from 'lucide-react-native';

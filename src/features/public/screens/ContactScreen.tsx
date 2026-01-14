@@ -1,5 +1,7 @@
 // src/features/public/screens/ContactScreen.tsx
 // Contact page for public website
+//
+// NOTE: Public marketing page - hardcoded brand colors intentional
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, Linking, useWindowDimensions } from 'react-native';
 import { Mail, Phone, MapPin, Send } from 'lucide-react-native';

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { Property } from '../types';
 import { PropertyStatus, PropertyConstants } from '../types/constants';
 import { usePropertyActions } from '../hooks/usePropertyActions';
@@ -55,17 +56,17 @@ export function PropertyActionsSheet({
   const getStatusColors = (status: string) => {
     switch (status) {
       case 'Active':
-        return { bg: `${colors.success}1A`, text: colors.success, solid: colors.success };
+        return { bg: withOpacity(colors.success, 'muted'), text: colors.success, solid: colors.success };
       case 'Pending':
-        return { bg: `${colors.warning}1A`, text: colors.warning, solid: colors.warning };
+        return { bg: withOpacity(colors.warning, 'muted'), text: colors.warning, solid: colors.warning };
       case 'Sold':
-        return { bg: `${colors.info}1A`, text: colors.info, solid: colors.info };
+        return { bg: withOpacity(colors.info, 'muted'), text: colors.info, solid: colors.info };
       case 'Withdrawn':
         return { bg: colors.muted, text: colors.mutedForeground, solid: colors.mutedForeground };
       case 'Expired':
-        return { bg: `${colors.destructive}1A`, text: colors.destructive, solid: colors.destructive };
+        return { bg: withOpacity(colors.destructive, 'muted'), text: colors.destructive, solid: colors.destructive };
       case 'Off Market':
-        return { bg: `${colors.primary}1A`, text: colors.primary, solid: colors.primary };
+        return { bg: withOpacity(colors.primary, 'muted'), text: colors.primary, solid: colors.primary };
       default:
         return { bg: colors.muted, text: colors.foreground, solid: colors.foreground };
     }
@@ -304,7 +305,7 @@ export function PropertyActionsSheet({
                 className="flex-row items-center justify-between p-4 rounded-xl border"
                 style={{
                   borderColor: isSelected ? colors.primary : colors.border,
-                  backgroundColor: isSelected ? `${colors.primary}0D` : colors.card,
+                  backgroundColor: isSelected ? withOpacity(colors.primary, 'subtle') : colors.card,
                 }}
               >
                 <View className="flex-row items-center">

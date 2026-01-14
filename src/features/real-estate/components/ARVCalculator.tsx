@@ -12,6 +12,7 @@ import {
   Check,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { PropertyComp, Property } from '../types';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 
@@ -107,7 +108,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
     return (
       <View
         className="rounded-xl p-4"
-        style={{ backgroundColor: `${colors.muted}80`, borderWidth: 1, borderColor: colors.border }}
+        style={{ backgroundColor: withOpacity(colors.muted, 'opaque'), borderWidth: 1, borderColor: colors.border }}
       >
         <View className="flex-row items-center mb-2">
           <Calculator size={18} color={colors.mutedForeground} />
@@ -131,7 +132,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
       {/* Header */}
       <View
         className="px-4 py-3"
-        style={{ backgroundColor: `${colors.primary}08`, borderBottomWidth: 1, borderBottomColor: colors.border }}
+        style={{ backgroundColor: withOpacity(colors.primary, 'subtle'), borderBottomWidth: 1, borderBottomColor: colors.border }}
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
@@ -140,7 +141,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
           </View>
           <View
             className="px-2 py-1 rounded-full"
-            style={{ backgroundColor: `${colors.primary}15` }}
+            style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
           >
             <Text className="text-xs font-medium" style={{ color: colors.primary }}>
               {stats.validComps} comp{stats.validComps !== 1 ? 's' : ''}
@@ -150,7 +151,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
       </View>
 
       {/* Calculated ARV */}
-      <View className="p-4" style={{ backgroundColor: `${colors.primary}08` }}>
+      <View className="p-4" style={{ backgroundColor: withOpacity(colors.primary, 'subtle') }}>
         <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Calculated ARV</Text>
         <Text className="text-3xl font-bold" style={{ color: colors.primary }}>
           {formatCurrency(stats.calculatedARV)}
@@ -167,7 +168,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
         <View className="flex-row flex-wrap gap-3">
           <View
             className="flex-1 min-w-[100] rounded-lg p-3"
-            style={{ backgroundColor: `${colors.muted}80` }}
+            style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
           >
             <Text className="text-xs" style={{ color: colors.mutedForeground }}>Low</Text>
             <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
@@ -176,7 +177,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
           </View>
           <View
             className="flex-1 min-w-[100] rounded-lg p-3"
-            style={{ backgroundColor: `${colors.muted}80` }}
+            style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
           >
             <Text className="text-xs" style={{ color: colors.mutedForeground }}>Median</Text>
             <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
@@ -185,7 +186,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
           </View>
           <View
             className="flex-1 min-w-[100] rounded-lg p-3"
-            style={{ backgroundColor: `${colors.muted}80` }}
+            style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
           >
             <Text className="text-xs" style={{ color: colors.mutedForeground }}>High</Text>
             <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
@@ -198,7 +199,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
         {stats.avgPricePerSqft > 0 && (
           <View
             className="mt-3 rounded-lg p-3"
-            style={{ backgroundColor: `${colors.muted}80` }}
+            style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
           >
             <View className="flex-row justify-between items-center">
               <Text className="text-sm" style={{ color: colors.mutedForeground }}>Avg Price/SqFt</Text>
@@ -251,7 +252,7 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
       <View className="px-4 pb-4">
         <View
           className="flex-row rounded-lg p-3"
-          style={{ backgroundColor: `${colors.muted}80` }}
+          style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}
         >
           <Info size={14} color={colors.mutedForeground} className="mt-0.5" />
           <Text className="text-xs ml-2 flex-1" style={{ color: colors.mutedForeground }}>

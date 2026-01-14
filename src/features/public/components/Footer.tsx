@@ -1,5 +1,7 @@
 // src/features/public/components/Footer.tsx
 // Public website footer (web-only)
+//
+// NOTE: Public marketing component - hardcoded brand colors intentional
 import { View, Text, Image, Pressable, Linking } from 'react-native';
 import { Link } from 'expo-router';
 import { Twitter, Facebook, Instagram, Linkedin } from 'lucide-react-native';

@@ -13,6 +13,7 @@ import {
   Edit2,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { RepairEstimate, RepairCategory } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
@@ -53,7 +54,7 @@ export function RepairCategorySection({
         className="flex-row items-center justify-between p-4"
       >
         <View className="flex-row items-center flex-1">
-          <View className="p-2 rounded-lg" style={{ backgroundColor: `${colors.primary}1A` }}>
+          <View className="p-2 rounded-lg" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
             <Wrench size={16} color={colors.primary} />
           </View>
           <View className="ml-3 flex-1">
@@ -121,10 +122,10 @@ export function RepairCategorySection({
                       style={{
                         backgroundColor:
                           repair.priority === 'low'
-                            ? `${colors.success}33`
+                            ? withOpacity(colors.success, 'medium')
                             : repair.priority === 'medium'
-                              ? `${colors.warning}33`
-                              : `${colors.destructive}33`,
+                              ? withOpacity(colors.warning, 'medium')
+                              : withOpacity(colors.destructive, 'medium'),
                       }}
                     >
                       <Text
@@ -163,7 +164,7 @@ export function RepairCategorySection({
                   <TouchableOpacity
                     onPress={() => onDeleteRepair(repair)}
                     className="p-1.5 rounded-lg"
-                    style={{ backgroundColor: `${colors.destructive}1A` }}
+                    style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}
                   >
                     <Trash2 size={14} color={colors.destructive} />
                   </TouchableOpacity>
@@ -176,7 +177,7 @@ export function RepairCategorySection({
           <TouchableOpacity
             onPress={onAddToCategory}
             className="flex-row items-center justify-center py-3 border-t"
-            style={{ backgroundColor: `${colors.muted}80`, borderColor: colors.border }}
+            style={{ backgroundColor: withOpacity(colors.muted, 'opaque'), borderColor: colors.border }}
           >
             <Plus size={14} color={colors.primary} />
             <Text className="font-medium ml-1" style={{ color: colors.primary }}>Add to {summary.label}</Text>

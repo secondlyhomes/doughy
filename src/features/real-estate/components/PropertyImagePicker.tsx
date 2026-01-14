@@ -10,6 +10,7 @@ import { View, Text, Image, TouchableOpacity, ScrollView, Alert } from 'react-na
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImagePlus, X, Image as ImageIcon } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 interface PropertyImagePickerProps {
   images: string[];
@@ -124,7 +125,7 @@ export function PropertyImagePicker({
               onPress={pickImages}
               disabled={disabled}
               style={{
-                backgroundColor: disabled ? `${colors.muted}80` : colors.muted,
+                backgroundColor: disabled ? withOpacity(colors.muted, 'opaque') : colors.muted,
                 borderColor: disabled ? colors.muted : colors.border,
               }}
               className="w-24 h-24 rounded-xl items-center justify-center border-2 border-dashed"
@@ -149,7 +150,7 @@ export function PropertyImagePicker({
               onPress={takePhoto}
               disabled={disabled}
               style={{
-                backgroundColor: disabled ? `${colors.muted}80` : colors.muted,
+                backgroundColor: disabled ? withOpacity(colors.muted, 'opaque') : colors.muted,
                 borderColor: disabled ? colors.muted : colors.border,
               }}
               className="w-24 h-24 rounded-xl items-center justify-center border-2 border-dashed"
@@ -187,7 +188,7 @@ export function PropertyImagePicker({
                 </TouchableOpacity>
               )}
               {index === 0 && (
-                <View style={{ backgroundColor: `${colors.primary}CC` }} className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded">
+                <View style={{ backgroundColor: withOpacity(colors.primary, 'opaque') }} className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded">
                   <Text style={{ color: colors.primaryForeground }} className="text-xs font-medium">Primary</Text>
                 </View>
               )}

@@ -1,5 +1,7 @@
 // src/features/public/screens/features/AIAgentsScreen.tsx
 // AI Agents feature page
+//
+// NOTE: Public marketing page - hardcoded brand colors intentional
 import { View, Text, Image, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Bot, Brain, MessageSquare, FileText, CheckCircle, ArrowRight } from 'lucide-react-native';

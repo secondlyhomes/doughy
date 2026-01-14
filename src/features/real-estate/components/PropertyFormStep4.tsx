@@ -6,6 +6,7 @@ import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Camera, Image as ImageIcon, Info } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { PropertyImagePicker } from './PropertyImagePicker';
 
 export interface Step4Data {
@@ -95,9 +96,9 @@ export function PropertyFormStep4({ data, onChange }: PropertyFormStep4Props) {
         <View
           className="rounded-xl p-4"
           style={{
-            backgroundColor: `${colors.primary}08`,
+            backgroundColor: withOpacity(colors.primary, 'subtle'),
             borderWidth: 1,
-            borderColor: `${colors.primary}15`,
+            borderColor: withOpacity(colors.primary, 'muted'),
           }}
         >
           <Text className="text-sm" style={{ color: colors.foreground }}>

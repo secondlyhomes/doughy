@@ -1,5 +1,7 @@
 // src/features/public/screens/PrivacyScreen.tsx
 // Privacy policy page for public website
+//
+// NOTE: Public marketing page - hardcoded brand colors intentional
 import { View, Text, ScrollView } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 

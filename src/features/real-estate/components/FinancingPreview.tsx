@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Calculator } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { FinancingCalculations } from '../hooks/useFinancingForm';
 import { formatCurrency } from '../utils/formatters';
 
@@ -24,9 +25,9 @@ export function FinancingPreview({ calculations }: FinancingPreviewProps) {
     <View
       className="rounded-xl p-4 mb-6"
       style={{
-        backgroundColor: `${colors.primary}0D`,
+        backgroundColor: withOpacity(colors.primary, 'subtle'),
         borderWidth: 1,
-        borderColor: `${colors.primary}1A`,
+        borderColor: withOpacity(colors.primary, 'muted'),
       }}
     >
       <View className="flex-row items-center mb-3">
