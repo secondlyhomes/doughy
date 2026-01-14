@@ -27,14 +27,16 @@ import {
   Focus,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
-import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export function SettingsScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const tabBarHeight = useBottomTabBarHeight();
   const { user, profile, signOut, isLoading } = useAuth();
 
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -109,7 +111,7 @@ export function SettingsScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: tabBarHeight }}>
         {/* Profile Section */}
         <View className="px-4 py-2">
           <TouchableOpacity

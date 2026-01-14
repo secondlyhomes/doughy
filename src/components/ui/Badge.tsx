@@ -4,8 +4,9 @@ import React from 'react';
 import { View, Text, ViewProps, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
-type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'danger' | 'inactive';
+type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'danger' | 'info' | 'inactive';
 type BadgeSize = 'default' | 'sm' | 'lg';
 
 export interface BadgeProps extends ViewProps {
@@ -38,11 +39,13 @@ export function Badge({
       case 'outline':
         return 'transparent';
       case 'success':
-        return `${colors.success}33`;
+        return withOpacity(colors.success, 'medium');
       case 'warning':
-        return `${colors.warning}33`;
+        return withOpacity(colors.warning, 'medium');
       case 'danger':
-        return `${colors.destructive}33`;
+        return withOpacity(colors.destructive, 'medium');
+      case 'info':
+        return withOpacity(colors.info, 'medium');
       case 'inactive':
         return colors.muted;
       default:
@@ -75,6 +78,8 @@ export function Badge({
         return colors.warning;
       case 'danger':
         return colors.destructive;
+      case 'info':
+        return colors.info;
       case 'inactive':
         return colors.mutedForeground;
       default:

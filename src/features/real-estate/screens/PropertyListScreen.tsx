@@ -28,7 +28,7 @@ const SEARCH_BAR_CONTAINER_HEIGHT =
   SPACING.xs;   // pb-1 (4px bottom padding)
   // Total: ~52px
 
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px standard gap
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 export function PropertyListScreen() {
   const router = useRouter();
@@ -105,7 +105,7 @@ export function PropertyListScreen() {
         numColumns={viewMode === 'grid' ? 2 : 1}
         key={viewMode}
         contentContainerStyle={{
-          paddingTop: insets.top + SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
+          paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
           paddingHorizontal: 16,
           paddingBottom: TAB_BAR_SAFE_PADDING
         }}

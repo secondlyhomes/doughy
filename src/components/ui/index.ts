@@ -2,7 +2,7 @@
 // Export all UI components for easy importing
 
 // Base components
-export { Button, buttonVariants } from './Button';
+export { Button } from './Button';
 export type { ButtonProps } from './Button';
 
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
@@ -28,7 +28,7 @@ export type { TextAreaProps } from './TextArea';
 export { Label } from './Label';
 export type { LabelProps } from './Label';
 
-export { Badge, badgeVariants } from './Badge';
+export { Badge } from './Badge';
 export type { BadgeProps } from './Badge';
 
 export { Switch } from './Switch';

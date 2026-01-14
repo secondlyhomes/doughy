@@ -106,6 +106,7 @@ export function FloatingGlassTabBar({
 
   // Track tab positions for selector animation
   const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
+  const tabLayoutsRef = useRef<{ x: number; width: number }[]>([]);
   const selectorX = useSharedValue(0);
 
   // Drag state management
@@ -122,7 +123,7 @@ export function FloatingGlassTabBar({
         if (containerWidth.current === 0) return false;
 
         // EDGE CASE 2: Prevent drag if tab layouts not ready
-        if (tabLayouts.length === 0 || !tabLayouts.every(t => t)) return false;
+        if (tabLayoutsRef.current.length === 0 || !tabLayoutsRef.current.every(t => t)) return false;
 
         // 5px threshold prevents accidental drag (preserves tap)
         // Horizontal-only drag
@@ -160,7 +161,7 @@ export function FloatingGlassTabBar({
         let nearestIndex = 0;
         let minDistance = Infinity;
 
-        tabLayouts.forEach((layout, index) => {
+        tabLayoutsRef.current.forEach((layout, index) => {
           if (!layout) return;
           const tabCenterX = layout.x + layout.width / 2;
           const distance = Math.abs(tabCenterX - centerX);
@@ -207,6 +208,11 @@ export function FloatingGlassTabBar({
       return updated;
     });
   }, []);
+
+  // Keep ref in sync with state for PanResponder closure
+  useEffect(() => {
+    tabLayoutsRef.current = tabLayouts;
+  }, [tabLayouts]);
 
   // Navigate to tab with haptic feedback (takes visible index)
   const navigateToTab = useCallback((visibleIndex: number) => {

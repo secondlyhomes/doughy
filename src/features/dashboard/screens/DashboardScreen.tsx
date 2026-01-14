@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   RefreshControl
 } from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { ThemedSafeAreaView } from '@/components';
 import { useRouter } from 'expo-router';
 import {
@@ -137,6 +138,7 @@ function getPriorityColorValue(priority: 'high' | 'medium' | 'low', colors: Retu
 export function DashboardScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const tabBarHeight = useBottomTabBarHeight();
   const [refreshing, setRefreshing] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
 
@@ -172,6 +174,7 @@ export function DashboardScreen() {
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         className="flex-1"
+        contentContainerStyle={{ paddingBottom: tabBarHeight }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

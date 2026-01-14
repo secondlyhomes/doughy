@@ -1,7 +1,7 @@
 // src/components/ui/Button.tsx
 // React Native Button component with inline styles for dark mode support
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
 
@@ -17,6 +17,7 @@ export interface ButtonProps {
   children: React.ReactNode;
   className?: string;
   textClassName?: string;
+  style?: ViewStyle;
 }
 
 export function Button({
@@ -28,6 +29,7 @@ export function Button({
   children,
   className,
   textClassName,
+  style,
 }: ButtonProps) {
   const colors = useThemeColors();
   const isDisabled = disabled || loading;
@@ -107,6 +109,7 @@ export function Button({
           borderColor: getBorderColor(),
           opacity: isDisabled ? 0.5 : 1,
         },
+        style,
       ]}
       onPress={onPress}
       disabled={isDisabled}
