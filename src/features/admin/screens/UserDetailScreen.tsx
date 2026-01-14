@@ -6,6 +6,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Mail, Shield, Calendar, Clock, MoreVertical, Trash2, RotateCcw } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -164,7 +165,7 @@ export function UserDetailScreen() {
 
       <ScrollView className="flex-1">
         {isSelf && (
-          <View className="mx-4 mt-4 p-3 rounded-lg" style={{ backgroundColor: `${colors.info}1A` }}>
+          <View className="mx-4 mt-4 p-3 rounded-lg" style={{ backgroundColor: withOpacity(colors.info, 'muted') }}>
             <Text className="text-sm" style={{ color: colors.info }}>This is your account. Some actions are restricted.</Text>
           </View>
         )}

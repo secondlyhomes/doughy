@@ -21,6 +21,7 @@ import {
   ChevronDown,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 import { LeadsOverTimeChart, LeadSourceChart, ConversionChart } from '../components/LeadsChart';
@@ -153,7 +154,7 @@ export function AnalyticsScreen() {
                     style={{
                       borderBottomWidth: 1,
                       borderBottomColor: colors.border,
-                      backgroundColor: dateRange === range.value ? `${colors.primary}15` : undefined,
+                      backgroundColor: dateRange === range.value ? withOpacity(colors.primary, 'muted') : undefined,
                     }}
                     onPress={() => {
                       setDateRange(range.value);

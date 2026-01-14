@@ -36,6 +36,7 @@ import {
 // Zone A UI Components
 import { Card, CardContent, CardHeader, CardTitle, Badge, Progress } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { getTrendColor } from '@/utils';
 
 // Zone D Components
@@ -183,7 +184,7 @@ export function DashboardScreen() {
             style={{ backgroundColor: colors.card, borderLeftWidth: 4, borderLeftColor: colors.warning }}
           >
             <View className="flex-row items-start">
-              <View className="rounded-full p-2 mr-3" style={{ backgroundColor: `${colors.warning}20` }}>
+              <View className="rounded-full p-2 mr-3" style={{ backgroundColor: withOpacity(colors.warning, 'light') }}>
                 <AlertTriangle size={20} color={colors.warning} />
               </View>
               <View className="flex-1">
@@ -277,7 +278,7 @@ export function DashboardScreen() {
                 <TouchableOpacity
                   key={deal.id}
                   className="rounded-lg p-3 mb-2"
-                  style={{ backgroundColor: `${colors.primary}10` }}
+                  style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
                   onPress={() => router.push(`/(tabs)/deals/${deal.id}`)}
                   accessibilityLabel={`${nextAction.priority} priority: ${nextAction.action} for ${address}`}
                   accessibilityRole="button"
@@ -298,7 +299,7 @@ export function DashboardScreen() {
                         <View className="flex-row items-center mt-1">
                           <View
                             className="px-2 py-0.5 rounded"
-                            style={{ backgroundColor: `${colors.primary}20` }}
+                            style={{ backgroundColor: withOpacity(colors.primary, 'light') }}
                           >
                             <Text style={{ color: colors.primary }} className="text-xs">
                               {stageConfig.label}

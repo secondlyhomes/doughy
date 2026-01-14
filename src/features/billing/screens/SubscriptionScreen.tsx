@@ -26,6 +26,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 interface Plan {
   id: string;
@@ -201,7 +202,7 @@ export function SubscriptionScreen() {
                 </View>
                 <View
                   className="px-3 py-1 rounded-full"
-                  style={{ backgroundColor: `${getStatusColor(subscription.status)}20` }}
+                  style={{ backgroundColor: withOpacity(getStatusColor(subscription.status), 'light') }}
                 >
                   <Text
                     className="text-sm font-medium capitalize"
@@ -310,7 +311,7 @@ export function SubscriptionScreen() {
         <View className="p-4 pb-8">
           <View
             className="rounded-lg p-4 flex-row"
-            style={{ backgroundColor: `${colors.primary}15` }}
+            style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
           >
             <AlertCircle size={20} color={colors.primary} />
             <View className="flex-1 ml-3">

@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { User } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 
 interface UserProfileHeaderProps {
   name: string | null;
@@ -16,7 +17,7 @@ export function UserProfileHeader({ name, email, isDeleted }: UserProfileHeaderP
   const colors = useThemeColors();
   return (
     <View className="items-center py-8 border-b" style={{ borderColor: colors.border }}>
-      <View className="w-24 h-24 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}1A` }}>
+      <View className="w-24 h-24 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
         <User size={48} color={colors.info} />
       </View>
       <Text className="text-xl font-semibold mt-4" style={{ color: colors.foreground }}>

@@ -30,6 +30,7 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
 import {
@@ -195,7 +196,7 @@ export function IntegrationsScreen() {
       <ScreenHeader title="Integrations" backButton bordered />
 
       {/* Stats */}
-      <View className="flex-row px-4 py-3 gap-4" style={{ backgroundColor: `${colors.muted}80` }}>
+      <View className="flex-row px-4 py-3 gap-4" style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}>
         <View className="flex-row items-center">
           <CheckCircle size={16} color={colors.success} />
           <Text className="text-sm ml-1" style={{ color: colors.mutedForeground }}>
@@ -225,7 +226,7 @@ export function IntegrationsScreen() {
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
           >
             <View className="flex-row items-start">
-              <View className="w-12 h-12 rounded-lg items-center justify-center" style={{ backgroundColor: `${colors.primary}1A` }}>
+              <View className="w-12 h-12 rounded-lg items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 {getIcon(integration.icon)}
               </View>
               <View className="flex-1 ml-3">
@@ -280,7 +281,7 @@ export function IntegrationsScreen() {
             )}
 
             {integration.status === 'error' && (
-              <View className="mt-3 p-2 rounded" style={{ backgroundColor: `${colors.destructive}1A` }}>
+              <View className="mt-3 p-2 rounded" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
                 <Text className="text-xs" style={{ color: colors.destructive }}>
                   Connection error. Please check your API credentials and try again.
                 </Text>

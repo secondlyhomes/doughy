@@ -22,6 +22,7 @@ import {
   Smartphone,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';
 import { APP_CONFIG } from '@/config';
@@ -152,7 +153,7 @@ export function NotificationSettingsScreen() {
 
         {/* Info */}
         <View className="p-4">
-          <View className="rounded-lg p-4" style={{ backgroundColor: `${colors.primary}15` }}>
+          <View className="rounded-lg p-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
             <Text className="text-sm font-medium mb-1" style={{ color: colors.primary }}>
               Need to manage permissions?
             </Text>

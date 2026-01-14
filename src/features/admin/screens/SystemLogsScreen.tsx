@@ -20,6 +20,7 @@ import {
   ChevronDown,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
@@ -95,11 +96,11 @@ export function SystemLogsScreen() {
   const getLevelStyles = (level: LogLevel) => {
     switch (level) {
       case 'error':
-        return { backgroundColor: `${colors.destructive}1A`, borderColor: `${colors.destructive}4D` };
+        return { backgroundColor: withOpacity(colors.destructive, 'muted'), borderColor: withOpacity(colors.destructive, 'strong') };
       case 'warning':
-        return { backgroundColor: `${colors.warning}1A`, borderColor: `${colors.warning}4D` };
+        return { backgroundColor: withOpacity(colors.warning, 'muted'), borderColor: withOpacity(colors.warning, 'strong') };
       case 'info':
-        return { backgroundColor: `${colors.info}1A`, borderColor: `${colors.info}4D` };
+        return { backgroundColor: withOpacity(colors.info, 'muted'), borderColor: withOpacity(colors.info, 'strong') };
       case 'debug':
         return { backgroundColor: colors.muted, borderColor: colors.border };
     }
@@ -229,7 +230,7 @@ export function SystemLogsScreen() {
       )}
 
       {/* Stats */}
-      <View className="px-4 py-2 flex-row justify-between" style={{ backgroundColor: `${colors.muted}80` }}>
+      <View className="px-4 py-2 flex-row justify-between" style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}>
         <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           {total} log{total !== 1 ? 's' : ''}
         </Text>

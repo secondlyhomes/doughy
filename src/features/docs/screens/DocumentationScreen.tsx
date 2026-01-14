@@ -21,6 +21,7 @@ import {
   Database,
 } from 'lucide-react-native';
 import { useTheme, useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import {
   documentationData,
   getDocContent,
@@ -99,7 +100,7 @@ function Sidebar({ currentSlug, onNavigate }: SidebarProps) {
                         <Pressable
                           onPress={onNavigate}
                           className="px-4 py-2 rounded-lg"
-                          style={isActive ? { backgroundColor: `${colors.primary}1A` } : undefined}
+                          style={isActive ? { backgroundColor: withOpacity(colors.primary, 'muted') } : undefined}
                         >
                           <Text
                             className={`text-sm ${isActive ? 'font-medium' : ''}`}
