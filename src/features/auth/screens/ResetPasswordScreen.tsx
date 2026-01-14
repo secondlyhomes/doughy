@@ -16,6 +16,7 @@ import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react-native
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import {
   updatePassword,
   calculatePasswordStrength,
@@ -77,7 +78,7 @@ export function ResetPasswordScreen() {
     return (
       <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.success}33` }}>
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: withOpacity(colors.success, 'medium') }}>
             <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
@@ -106,7 +107,7 @@ export function ResetPasswordScreen() {
           <View className="flex-1 justify-center px-6 py-12">
             {/* Header */}
             <View className="items-center mb-8">
-              <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: `${colors.primary}15` }}>
+              <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 <Lock size={32} color={colors.info} />
               </View>
               <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
@@ -119,7 +120,7 @@ export function ResetPasswordScreen() {
 
             {/* Error Message */}
             {error && (
-              <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
+              <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
                 <AlertCircle size={20} color={colors.destructive} />
                 <Text className="ml-2 flex-1" style={{ color: colors.destructive }}>{error}</Text>
               </View>

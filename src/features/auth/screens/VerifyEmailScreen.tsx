@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import {
   resendVerificationEmail,
@@ -91,7 +92,7 @@ export function VerifyEmailScreen() {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center px-6" edges={['top']}>
         <View className="items-center">
-          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.success}33` }}>
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: withOpacity(colors.success, 'medium') }}>
             <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
@@ -119,7 +120,7 @@ export function VerifyEmailScreen() {
         <View className="flex-1 justify-center px-6 py-12">
           {/* Header */}
           <View className="items-center mb-8">
-            <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.primary}15` }}>
+            <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
               <Mail size={40} color={colors.info} />
             </View>
             <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
@@ -134,7 +135,7 @@ export function VerifyEmailScreen() {
           </View>
 
           {/* Instructions */}
-          <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.muted}80` }}>
+          <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}>
             <Text className="text-sm text-center" style={{ color: colors.mutedForeground }}>
               Click the link in your email to verify your account.
               {'\n'}Check your spam folder if you don't see it.
@@ -145,7 +146,7 @@ export function VerifyEmailScreen() {
           {message && (
             <View
               className="rounded-lg p-4 mb-6"
-              style={{ backgroundColor: message.type === 'success' ? `${colors.success}33` : `${colors.destructive}15` }}
+              style={{ backgroundColor: message.type === 'success' ? withOpacity(colors.success, 'medium') : withOpacity(colors.destructive, 'muted') }}
             >
               <Text
                 className="text-sm text-center"

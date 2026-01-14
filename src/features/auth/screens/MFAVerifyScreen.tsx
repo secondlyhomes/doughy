@@ -14,6 +14,7 @@ import { Shield, ArrowLeft } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { MFACodeInput } from '../components/MFACodeInput';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -127,7 +128,7 @@ export function MFAVerifyScreen() {
         <View className="flex-1 justify-center px-6">
           {/* Icon */}
           <View className="items-center mb-6">
-            <View className="w-20 h-20 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
+            <View className="w-20 h-20 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
               <Shield size={40} color={colors.info} />
             </View>
           </View>
@@ -152,7 +153,7 @@ export function MFAVerifyScreen() {
 
           {/* Error message */}
           {error && (
-            <View className="rounded-lg p-3 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
+            <View className="rounded-lg p-3 mb-6" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
               <Text className="text-sm text-center" style={{ color: colors.destructive }}>{error}</Text>
             </View>
           )}

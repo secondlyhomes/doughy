@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { Mail, AlertCircle, Check, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 export function ForgotPasswordScreen() {
@@ -67,7 +68,7 @@ export function ForgotPasswordScreen() {
   if (success) {
     return (
       <ThemedSafeAreaView className="flex-1 justify-center items-center px-6" edges={['top']}>
-        <View className="rounded-full p-6 mb-6" style={{ backgroundColor: `${colors.primary}15` }}>
+        <View className="rounded-full p-6 mb-6" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
           <Check size={48} color={colors.success} />
         </View>
         <Text className="text-2xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
@@ -121,7 +122,7 @@ export function ForgotPasswordScreen() {
 
           {/* Error Message */}
           {error && (
-            <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
+            <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
               <AlertCircle size={20} color={colors.destructive} />
               <Text className="ml-2 flex-1" style={{ color: colors.destructive }}>{error}</Text>
             </View>

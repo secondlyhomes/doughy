@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 export function LoginScreen() {
@@ -87,7 +88,7 @@ export function LoginScreen() {
 
           {/* Error Message */}
           {error && (
-            <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
+            <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
               <AlertCircle size={20} color={colors.destructive} />
               <Text className="ml-2 flex-1" style={{ color: colors.destructive }}>{error}</Text>
             </View>
@@ -217,7 +218,7 @@ export function LoginScreen() {
                   }}
                   disabled={loading}
                 >
-                  <Text className="font-semibold text-sm" style={{ color: '#ffffff' }}>
+                  <Text className="font-semibold text-sm" style={{ color: colors.primaryForeground }}>
                     Admin Console
                   </Text>
                 </TouchableOpacity>

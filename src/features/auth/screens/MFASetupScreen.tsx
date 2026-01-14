@@ -14,6 +14,7 @@ import { Shield, Copy, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import * as Clipboard from 'expo-clipboard';
 import { MFACodeInput } from '../components/MFACodeInput';
 import {
@@ -110,7 +111,7 @@ export function MFASetupScreen() {
     return (
       <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.success}33` }}>
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: withOpacity(colors.success, 'medium') }}>
             <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
@@ -140,7 +141,7 @@ export function MFASetupScreen() {
           <>
             {/* Icon */}
             <View className="items-center mb-6">
-              <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
+              <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 <Shield size={32} color={colors.info} />
               </View>
             </View>
@@ -156,7 +157,7 @@ export function MFASetupScreen() {
             {/* QR Code */}
             {enrollmentData?.qrCode && (
               <View className="items-center mb-6">
-                <View className="p-4 rounded-lg" style={{ backgroundColor: '#FFFFFF' }}>
+                <View className="p-4 rounded-lg" style={{ backgroundColor: colors.card }}>
                   <Image
                     source={{ uri: enrollmentData.qrCode }}
                     style={{ width: 200, height: 200 }}
@@ -167,7 +168,7 @@ export function MFASetupScreen() {
             )}
 
             {/* Manual entry */}
-            <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.muted}80` }}>
+            <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}>
               <Text className="text-sm text-center mb-2" style={{ color: colors.mutedForeground }}>
                 Or enter this code manually:
               </Text>
@@ -196,7 +197,7 @@ export function MFASetupScreen() {
           <>
             {/* Icon */}
             <View className="items-center mb-6">
-              <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
+              <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 <Shield size={32} color={colors.info} />
               </View>
             </View>
@@ -221,7 +222,7 @@ export function MFASetupScreen() {
 
             {/* Error message */}
             {error && (
-              <View className="rounded-lg p-3 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
+              <View className="rounded-lg p-3 mb-6" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
                 <Text className="text-sm text-center" style={{ color: colors.destructive }}>{error}</Text>
               </View>
             )}

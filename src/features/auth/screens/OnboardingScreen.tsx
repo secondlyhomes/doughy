@@ -15,6 +15,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { useAuth } from '../hooks/useAuth';
 import { OnboardingProgress } from '../components/OnboardingProgress';
 import { SurveyOption } from '../components/SurveyOption';
@@ -133,7 +134,7 @@ export function OnboardingScreen() {
           {/* Welcome message on first step */}
           {currentStep === 0 && (
             <View className="items-center mb-6 mt-4">
-              <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: `${colors.primary}15` }}>
+              <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                 <Sparkles size={32} color={colors.info} />
               </View>
               <Text className="text-xl font-semibold text-center" style={{ color: colors.foreground }}>
@@ -170,7 +171,7 @@ export function OnboardingScreen() {
 
           {/* Error message */}
           {error && (
-            <View className="rounded-lg p-3 mt-4" style={{ backgroundColor: `${colors.destructive}15` }}>
+            <View className="rounded-lg p-3 mt-4" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
               <Text className="text-sm text-center" style={{ color: colors.destructive }}>{error}</Text>
             </View>
           )}
