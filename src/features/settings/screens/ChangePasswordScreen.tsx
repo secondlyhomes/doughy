@@ -17,6 +17,7 @@ import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { changePassword } from '../services/profileService';
 import {
   calculatePasswordStrength,
@@ -85,7 +86,7 @@ export function ChangePasswordScreen() {
     return (
       <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.success}33` }}>
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: withOpacity(colors.success, 'medium') }}>
             <CheckCircle size={48} color={colors.success} />
           </View>
           <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>

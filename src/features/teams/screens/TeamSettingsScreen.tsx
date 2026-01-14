@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  useColorScheme,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -26,6 +27,7 @@ import {
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
+import { getBackdropColor, withOpacity } from '@/lib/design-utils';
 
 interface TeamMember {
   id: string;
@@ -39,6 +41,7 @@ interface TeamMember {
 export function TeamSettingsScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const colorScheme = useColorScheme();
   const { profile, user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -253,7 +256,7 @@ export function TeamSettingsScreen() {
                 {/* Avatar */}
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center"
-                  style={{ backgroundColor: `${colors.primary}20` }}
+                  style={{ backgroundColor: withOpacity(colors.primary, 'light') }}
                 >
                   <Text className="font-semibold" style={{ color: colors.primary }}>{member.avatarInitials}</Text>
                 </View>
@@ -317,7 +320,7 @@ export function TeamSettingsScreen() {
 
       {/* Invite Modal */}
       {showInviteModal && (
-        <View className="absolute inset-0 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <View className="absolute inset-0 justify-end" style={{ backgroundColor: getBackdropColor(colorScheme === 'dark') }}>
           <View className="rounded-t-3xl p-6" style={{ backgroundColor: colors.background }}>
             <Text className="text-xl font-semibold mb-4" style={{ color: colors.foreground }}>Invite Team Member</Text>
 

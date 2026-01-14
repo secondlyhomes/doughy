@@ -63,7 +63,7 @@ export function AboutScreen() {
         {/* App Logo and Info */}
         <View className="items-center mb-8">
           <View className="w-24 h-24 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: colors.primary }}>
-            <Text className="text-3xl font-bold" style={{ color: '#FFFFFF' }}>D</Text>
+            <Text className="text-3xl font-bold" style={{ color: colors.primaryForeground }}>D</Text>
           </View>
           <Text className="text-2xl font-lobster" style={{ color: colors.foreground }}>Doughy AI</Text>
           <Text className="mt-1" style={{ color: colors.mutedForeground }}>

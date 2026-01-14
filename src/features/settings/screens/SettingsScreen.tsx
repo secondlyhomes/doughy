@@ -27,7 +27,7 @@ import {
   Focus,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
-import { ScreenHeader, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
@@ -110,9 +110,6 @@ export function SettingsScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
-        {/* Header */}
-        <ScreenHeader title="Settings" subtitle="Customize your experience" />
-
         {/* Profile Section */}
         <View className="px-4 py-2">
           <TouchableOpacity

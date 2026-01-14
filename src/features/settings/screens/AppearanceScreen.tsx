@@ -26,19 +26,19 @@ const themeOptions: ThemeOption[] = [
     value: 'light',
     label: 'Light',
     description: 'Always use light theme',
-    icon: <Sun size={24} color="#f59e0b" />,
+    icon: <Sun size={24} color="#f59e0b" />, // Intentional: Fixed amber for light theme icon
   },
   {
     value: 'dark',
     label: 'Dark',
     description: 'Always use dark theme',
-    icon: <Moon size={24} color="#6366f1" />,
+    icon: <Moon size={24} color="#6366f1" />, // Intentional: Fixed indigo for dark theme icon
   },
   {
     value: 'system',
     label: 'System',
     description: 'Match device settings',
-    icon: <Smartphone size={24} color="#6b7280" />,
+    icon: <Smartphone size={24} color="#6b7280" />, // Intentional: Fixed gray for system icon
   },
 ];
 
@@ -95,6 +95,7 @@ export function AppearanceScreen() {
           <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row gap-4">
               {/* Light Preview */}
+              {/* Intentional: Static preview colors to show light/dark theme examples */}
               <View className="flex-1 rounded-lg overflow-hidden" style={{ borderWidth: 1, borderColor: colors.border }}>
                 <View className="h-20 p-3" style={{ backgroundColor: '#ffffff' }}>
                   <View className="h-2 w-16 rounded mb-2" style={{ backgroundColor: '#e5e7eb' }} />
@@ -106,6 +107,7 @@ export function AppearanceScreen() {
               </View>
 
               {/* Dark Preview */}
+              {/* Intentional: Static preview colors to show light/dark theme examples */}
               <View className="flex-1 rounded-lg overflow-hidden" style={{ borderWidth: 1, borderColor: colors.border }}>
                 <View className="h-20 p-3" style={{ backgroundColor: '#111827' }}>
                   <View className="h-2 w-16 rounded mb-2" style={{ backgroundColor: '#374151' }} />

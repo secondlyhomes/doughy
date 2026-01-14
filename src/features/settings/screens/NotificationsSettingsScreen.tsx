@@ -17,6 +17,7 @@ import { ArrowLeft, Bell, MessageCircle, TrendingUp, AlertTriangle, Settings } f
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPermissionsAsync, requestPermissionsAsync } from '@/utils/notifications';
 
@@ -116,7 +117,7 @@ export function NotificationsSettingsScreen() {
         {hasPermission === false && (
           <TouchableOpacity
             className="rounded-lg p-4 mb-6 flex-row items-center"
-            style={{ backgroundColor: `${colors.warning}15`, borderWidth: 1, borderColor: `${colors.warning}50` }}
+            style={{ backgroundColor: withOpacity(colors.warning, 'muted'), borderWidth: 1, borderColor: withOpacity(colors.warning, 'strong') }}
             onPress={handleRequestPermission}
           >
             <AlertTriangle size={24} color={colors.warning} />
@@ -138,7 +139,7 @@ export function NotificationsSettingsScreen() {
 
         <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center p-4">
-            <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
+            <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
               <Bell size={20} color={colors.info} />
             </View>
             <View className="flex-1 ml-4">
