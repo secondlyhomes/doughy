@@ -3,7 +3,7 @@
 import { View, Text, Image, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { ArrowRight, CheckCircle, Star, Clock, BarChart3, Clock3, Calculator, TrendingUp, DollarSign } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -76,31 +76,31 @@ const howItWorks = [
 ];
 
 export function LandingScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isAuthenticated } = useAuth();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Hero Section */}
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <View className="max-w-[1200px] mx-auto">
           <View className="max-w-3xl mx-auto items-center">
-            <Text className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-center text-foreground mb-4">
+            <Text className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-center mb-4" style={{ color: colors.foreground }}>
               Transform Your Real Estate
             </Text>
-            <Text className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-center text-primary mb-6">
+            <Text className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-center mb-6" style={{ color: colors.primary }}>
               Lead Management
             </Text>
-            <Text className="text-lg md:text-xl text-center text-muted-foreground mb-10 max-w-2xl">
+            <Text className="text-lg md:text-xl text-center mb-10 max-w-2xl" style={{ color: colors.mutedForeground }}>
               Unlock growth potential with Doughy's intelligent platform designed exclusively for real estate investors to capture, nurture, and convert more leads.
             </Text>
             <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-4 items-center justify-center`}>
               <Link href={isAuthenticated ? '/(tabs)' : '/pricing'} asChild>
                 <Button size="lg">
                   <View className="flex-row items-center gap-2">
-                    <Text className="text-primary-foreground font-medium">
+                    <Text className="font-medium" style={{ color: colors.primaryForeground }}>
                       {isAuthenticated ? 'Dashboard' : 'Get Started'}
                     </Text>
                     <ArrowRight size={16} color={colors.primaryForeground} />
@@ -109,7 +109,7 @@ export function LandingScreen() {
               </Link>
               <Link href="/features/real-estate" asChild>
                 <Button variant="outline" size="lg">
-                  <Text className="text-foreground font-medium">Learn More</Text>
+                  <Text className="font-medium" style={{ color: colors.foreground }}>Learn More</Text>
                 </Button>
               </Link>
             </View>
@@ -118,23 +118,23 @@ export function LandingScreen() {
       </View>
 
       {/* Features Section */}
-      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card">
+      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.card }}>
         <View className="max-w-[1200px] mx-auto">
           <View className="items-center mb-16">
-            <Text className="text-3xl md:text-4xl font-bold text-center text-primary mb-4">
+            <Text className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: colors.primary }}>
               Why Real Estate Investors Choose Doughy
             </Text>
-            <Text className="text-lg text-center text-muted-foreground max-w-2xl">
+            <Text className="text-lg text-center max-w-2xl" style={{ color: colors.mutedForeground }}>
               Our specialized platform helps you stay organized, save time, and close more deals
             </Text>
           </View>
 
           <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-8`}>
             {features.map((feature, index) => (
-              <View key={index} className="flex-1 p-6 rounded-xl bg-background shadow-lg">
+              <View key={index} className="flex-1 p-6 rounded-xl shadow-lg" style={{ backgroundColor: colors.background }}>
                 <feature.Icon size={48} color={colors.primary} className="mb-4" />
-                <Text className="text-xl font-semibold text-foreground mb-2">{feature.title}</Text>
-                <Text className="text-muted-foreground">{feature.description}</Text>
+                <Text className="text-xl font-semibold mb-2" style={{ color: colors.foreground }}>{feature.title}</Text>
+                <Text style={{ color: colors.mutedForeground }}>{feature.description}</Text>
               </View>
             ))}
           </View>
@@ -145,10 +145,10 @@ export function LandingScreen() {
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <View className="max-w-[1200px] mx-auto">
           <View className="items-center mb-16">
-            <Text className="text-3xl md:text-4xl font-bold text-center text-primary mb-4">
+            <Text className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: colors.primary }}>
               How Doughy Works
             </Text>
-            <Text className="text-lg text-center text-muted-foreground max-w-2xl">
+            <Text className="text-lg text-center max-w-2xl" style={{ color: colors.mutedForeground }}>
               Our platform streamlines your lead management workflow from start to finish
             </Text>
           </View>
@@ -168,13 +168,13 @@ export function LandingScreen() {
                 />
               </View>
               <View className={`${isMobile ? 'w-full' : 'flex-1'}`}>
-                <Text className="text-2xl font-semibold text-foreground mb-4">{step.title}</Text>
-                <Text className="text-muted-foreground mb-6">{step.description}</Text>
+                <Text className="text-2xl font-semibold mb-4" style={{ color: colors.foreground }}>{step.title}</Text>
+                <Text className="mb-6" style={{ color: colors.mutedForeground }}>{step.description}</Text>
                 <View className="gap-3">
                   {step.items.map((item, itemIndex) => (
                     <View key={itemIndex} className="flex-row items-start gap-2">
                       <CheckCircle size={20} color={colors.primary} className="mt-0.5" />
-                      <Text className="text-foreground flex-1">{item}</Text>
+                      <Text className="flex-1" style={{ color: colors.foreground }}>{item}</Text>
                     </View>
                   ))}
                 </View>
@@ -185,13 +185,13 @@ export function LandingScreen() {
       </View>
 
       {/* Testimonials Section */}
-      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card">
+      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.card }}>
         <View className="max-w-[1200px] mx-auto">
           <View className="items-center mb-16">
-            <Text className="text-3xl md:text-4xl font-bold text-center text-primary mb-4">
+            <Text className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: colors.primary }}>
               Trusted by Real Estate Professionals
             </Text>
-            <Text className="text-lg text-center text-muted-foreground max-w-2xl">
+            <Text className="text-lg text-center max-w-2xl" style={{ color: colors.mutedForeground }}>
               Join hundreds of successful real estate investors who've transformed their businesses with Doughy
             </Text>
           </View>
@@ -204,14 +204,14 @@ export function LandingScreen() {
                     <Star key={i} size={20} color="#eab308" fill="#eab308" />
                   ))}
                 </View>
-                <Text className="text-foreground mb-4 italic">"{testimonial.quote}"</Text>
+                <Text className="mb-4 italic" style={{ color: colors.foreground }}>"{testimonial.quote}"</Text>
                 <View className="flex-row items-center">
-                  <View className="h-10 w-10 rounded-full bg-primary/20 items-center justify-center mr-3">
-                    <Text className="text-primary font-semibold">{testimonial.name.charAt(0)}</Text>
+                  <View className="h-10 w-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.primary + '33' }}>
+                    <Text className="font-semibold" style={{ color: colors.primary }}>{testimonial.name.charAt(0)}</Text>
                   </View>
                   <View>
-                    <Text className="font-medium text-foreground">{testimonial.name}</Text>
-                    <Text className="text-sm text-muted-foreground">{testimonial.role}</Text>
+                    <Text className="font-medium" style={{ color: colors.foreground }}>{testimonial.name}</Text>
+                    <Text className="text-sm" style={{ color: colors.mutedForeground }}>{testimonial.role}</Text>
                   </View>
                 </View>
               </Card>
@@ -224,10 +224,10 @@ export function LandingScreen() {
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <View className="max-w-[1200px] mx-auto">
           <View className="items-center mb-16">
-            <Text className="text-3xl md:text-4xl font-bold text-center text-primary mb-4">
+            <Text className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: colors.primary }}>
               Boost Your Productivity
             </Text>
-            <Text className="text-lg text-center text-muted-foreground max-w-2xl">
+            <Text className="text-lg text-center max-w-2xl" style={{ color: colors.mutedForeground }}>
               Our customers see real, measurable results after implementing Doughy
             </Text>
           </View>
@@ -235,11 +235,11 @@ export function LandingScreen() {
           <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-8`}>
             {stats.map((stat, index) => (
               <View key={index} className="flex-1 items-center">
-                <View className="rounded-full bg-primary/20 p-6 mb-6">
+                <View className="rounded-full p-6 mb-6" style={{ backgroundColor: colors.primary + '33' }}>
                   <stat.Icon size={48} color={colors.primary} />
                 </View>
-                <Text className="text-4xl md:text-5xl font-bold text-primary mb-2">{stat.value}</Text>
-                <Text className="text-center text-muted-foreground">{stat.label}</Text>
+                <Text className="text-4xl md:text-5xl font-bold mb-2" style={{ color: colors.primary }}>{stat.value}</Text>
+                <Text className="text-center" style={{ color: colors.mutedForeground }}>{stat.label}</Text>
               </View>
             ))}
           </View>
@@ -247,33 +247,33 @@ export function LandingScreen() {
       </View>
 
       {/* Quote Section */}
-      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card">
+      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.card }}>
         <View className="max-w-[1200px] mx-auto">
           <View className="max-w-3xl mx-auto items-center">
-            <Text className="text-6xl text-secondary/30 mb-4">"</Text>
-            <Text className="text-xl md:text-2xl text-center text-foreground italic mb-8">
+            <Text className="text-6xl mb-4" style={{ color: colors.secondary + '4D' }}>"</Text>
+            <Text className="text-xl md:text-2xl text-center italic mb-8" style={{ color: colors.foreground }}>
               Doughy has completely transformed how I manage my investment leads. I've seen a 30% increase in deal closings since implementing their system.
             </Text>
-            <View className="h-px w-24 bg-primary mb-8" />
-            <Text className="font-medium text-foreground">Sarah Johnson</Text>
-            <Text className="text-muted-foreground">Real Estate Investor, CA</Text>
+            <View className="h-px w-24 mb-8" style={{ backgroundColor: colors.primary }} />
+            <Text className="font-medium" style={{ color: colors.foreground }}>Sarah Johnson</Text>
+            <Text style={{ color: colors.mutedForeground }}>Real Estate Investor, CA</Text>
           </View>
         </View>
       </View>
 
       {/* CTA Section */}
-      <View className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-primary">
+      <View className="py-16 md:py-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.primary }}>
         <View className="max-w-[1200px] mx-auto">
           <View className="max-w-3xl mx-auto items-center">
-            <Text className="text-3xl md:text-4xl font-bold text-center text-white mb-6">
+            <Text className="text-3xl md:text-4xl font-bold text-center mb-6" style={{ color: '#ffffff' }}>
               Ready to Grow Your Investment Portfolio?
             </Text>
-            <Text className="text-lg text-center text-white/90 mb-8">
+            <Text className="text-lg text-center mb-8" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
               Join thousands of successful real estate investors using Doughy to manage and convert more leads.
             </Text>
             <Link href={isAuthenticated ? '/(tabs)' : '/pricing'} asChild>
-              <Pressable className="bg-white px-8 py-4 rounded-lg flex-row items-center gap-2 shadow-lg">
-                <Text className="text-primary font-semibold text-lg">
+              <Pressable className="px-8 py-4 rounded-lg flex-row items-center gap-2 shadow-lg" style={{ backgroundColor: '#ffffff' }}>
+                <Text className="font-semibold text-lg" style={{ color: colors.primary }}>
                   {isAuthenticated ? 'Go to Dashboard' : 'Get Started Today'}
                 </Text>
                 <ArrowRight size={20} color={colors.primary} />

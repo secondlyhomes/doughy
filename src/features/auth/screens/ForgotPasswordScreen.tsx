@@ -67,20 +67,21 @@ export function ForgotPasswordScreen() {
   if (success) {
     return (
       <ThemedSafeAreaView className="flex-1 justify-center items-center px-6" edges={['top']}>
-        <View className="bg-primary/10 rounded-full p-6 mb-6">
+        <View className="rounded-full p-6 mb-6" style={{ backgroundColor: `${colors.primary}15` }}>
           <Check size={48} color={colors.success} />
         </View>
-        <Text className="text-2xl font-bold text-foreground text-center mb-4">
+        <Text className="text-2xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
           Check Your Email
         </Text>
-        <Text className="text-muted-foreground text-center mb-8">
+        <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
           We've sent password reset instructions to {email}. Please check your inbox.
         </Text>
         <TouchableOpacity
-          className="bg-primary rounded-lg py-4 px-8"
+          className="rounded-lg py-4 px-8"
+          style={{ backgroundColor: colors.primary }}
           onPress={handleBackToLogin}
         >
-          <Text className="text-primary-foreground font-semibold">
+          <Text className="font-semibold" style={{ color: colors.primaryForeground }}>
             Back to Sign In
           </Text>
         </TouchableOpacity>
@@ -105,36 +106,36 @@ export function ForgotPasswordScreen() {
             onPress={handleBackToLogin}
           >
             <ArrowLeft size={20} color={colors.mutedForeground} />
-            <Text className="text-muted-foreground ml-2">Back to Sign In</Text>
+            <Text className="ml-2" style={{ color: colors.mutedForeground }}>Back to Sign In</Text>
           </TouchableOpacity>
 
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-3xl font-bold text-foreground">
+            <Text className="text-3xl font-bold" style={{ color: colors.foreground }}>
               Forgot Password?
             </Text>
-            <Text className="text-base text-muted-foreground mt-2">
+            <Text className="text-base mt-2" style={{ color: colors.mutedForeground }}>
               No worries, we'll send you reset instructions.
             </Text>
           </View>
 
           {/* Error Message */}
           {error && (
-            <View className="flex-row items-center bg-destructive/10 rounded-lg p-4 mb-6">
+            <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
               <AlertCircle size={20} color={colors.destructive} />
-              <Text className="text-destructive ml-2 flex-1">{error}</Text>
+              <Text className="ml-2 flex-1" style={{ color: colors.destructive }}>{error}</Text>
             </View>
           )}
 
           {/* Email Input */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Email</Text>
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}>
               <View className="pl-4">
                 <Mail size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
                 placeholder="name@example.com"
                 placeholderTextColor={colors.mutedForeground}
                 value={email}
@@ -144,21 +145,22 @@ export function ForgotPasswordScreen() {
                 autoCorrect={false}
                 autoComplete="email"
                 editable={!loading}
+                style={{ color: colors.foreground }}
               />
             </View>
           </View>
 
           {/* Reset Password Button */}
           <TouchableOpacity
-            className="bg-primary rounded-lg py-4 items-center"
-            style={{ opacity: loading ? 0.5 : 1 }}
+            className="rounded-lg py-4 items-center"
+            style={{ backgroundColor: colors.primary, opacity: loading ? 0.5 : 1 }}
             onPress={handleResetPassword}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.primaryForeground} />
             ) : (
-              <Text className="text-primary-foreground font-semibold text-base">
+              <Text className="font-semibold text-base" style={{ color: colors.primaryForeground }}>
                 Reset Password
               </Text>
             )}
@@ -166,9 +168,9 @@ export function ForgotPasswordScreen() {
 
           {/* Remember Password Link */}
           <View className="flex-row justify-center mt-6">
-            <Text className="text-muted-foreground">Remember your password? </Text>
+            <Text style={{ color: colors.mutedForeground }}>Remember your password? </Text>
             <TouchableOpacity onPress={handleBackToLogin} disabled={loading}>
-              <Text className="text-primary font-medium">Sign in</Text>
+              <Text className="font-medium" style={{ color: colors.primary }}>Sign in</Text>
             </TouchableOpacity>
           </View>
         </View>

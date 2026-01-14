@@ -1,11 +1,9 @@
 // app/_layout.tsx
-// Root layout for Expo Router - handles providers and auth routing
+// Root layout for Expo Router - handles providers
 import '../global.css';
-import { useEffect } from 'react';
-import { View, ActivityIndicator, LogBox, Platform } from 'react-native';
+import { View, LogBox } from 'react-native';
 import { useFonts } from 'expo-font';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { useColorScheme } from 'nativewind';
+import { Slot } from 'expo-router';
 
 // Suppress warnings from dependencies we can't control
 const SUPPRESSED_WARNINGS = ['SafeAreaView has been deprecated'];
@@ -27,7 +25,6 @@ import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 import { UnreadCountsProvider, ErrorBoundary } from '@/features/layout';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { FocusModeProvider } from '@/context/FocusModeContext';
@@ -43,62 +40,14 @@ const queryClient = new QueryClient({
   },
 });
 
-// Sync ThemeContext with NativeWind's color scheme and apply .dark class
+// Wrapper for flex layout - no className to avoid NativeWind's CssInterop.View bug
+// Dark mode is synced via Appearance API in ThemeProvider instead
 function ThemeSync({ children }: { children: React.ReactNode }) {
-  const { isDark } = useTheme();
-  const { setColorScheme } = useColorScheme();
-
-  useEffect(() => {
-    setColorScheme(isDark ? 'dark' : 'light');
-  }, [isDark, setColorScheme]);
-
-  // Wrap in View with .dark class so NativeWind CSS variables activate for dark mode
   return (
-    <View className={`flex-1 ${isDark ? 'dark' : ''}`}>
+    <View style={{ flex: 1 }}>
       {children}
     </View>
   );
-}
-
-// Auth routing logic
-function AuthRouter() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const { colors } = useTheme();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-    const inPublicGroup = segments[0] === '(public)';
-    const isWeb = Platform.OS === 'web';
-
-    // On web, allow public routes without authentication
-    // Public routes include: landing page (/), pricing, about, docs, etc.
-    if (isWeb && (inPublicGroup || segments.length === 0)) {
-      // User is on a public route on web - no redirect needed
-      return;
-    }
-
-    if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to sign-in if not authenticated and not already in auth group
-      router.replace('/(auth)/sign-in');
-    }
-    // Note: Don't auto-redirect authenticated users from auth group
-    // Let the login buttons handle navigation to /(tabs) or /(admin) explicitly
-  }, [isAuthenticated, isLoading, segments]);
-
-  // Show loading screen while checking auth
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  return <Slot />;
 }
 
 // StatusBar that respects theme
@@ -109,42 +58,33 @@ function ThemedStatusBar() {
 
 // Root layout with all providers
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
+  // Load fonts in background - don't block render
+  useFonts({
     Lobster: require('../assets/fonts/Lobster-Regular.ttf'),
   });
 
-  // Show loading spinner while fonts are loading (but not if there's an error)
-  // If fonts fail to load, continue anyway - system fonts will be used as fallback
-  if (!fontsLoaded && !fontError) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeProvider>
-            <FocusModeProvider>
-              <ThemeSync>
-                <ToastProvider>
-                  <UnreadCountsProvider>
-                    <SafeAreaProvider>
-                      <ThemedStatusBar />
-                      <ErrorBoundary>
-                        <AuthRouter />
-                      </ErrorBoundary>
-                    </SafeAreaProvider>
-                  </UnreadCountsProvider>
-                </ToastProvider>
-              </ThemeSync>
-            </FocusModeProvider>
-          </ThemeProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ThemeProvider>
+              <FocusModeProvider>
+                <ThemeSync>
+                  <ToastProvider>
+                    <UnreadCountsProvider>
+                      <SafeAreaProvider>
+                        <ThemedStatusBar />
+                        <Slot />
+                      </SafeAreaProvider>
+                    </UnreadCountsProvider>
+                  </ToastProvider>
+                </ThemeSync>
+              </FocusModeProvider>
+            </ThemeProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }

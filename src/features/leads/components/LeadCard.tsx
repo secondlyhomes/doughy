@@ -47,10 +47,10 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
   };
 
   const getScoreColor = (score: number | undefined) => {
-    if (!score) return 'text-muted-foreground';
-    if (score >= 80) return 'text-success';
-    if (score >= 50) return 'text-warning';
-    return 'text-destructive';
+    if (!score) return colors.mutedForeground;
+    if (score >= 80) return colors.success;
+    if (score >= 50) return colors.warning;
+    return colors.destructive;
   };
 
   return (
@@ -63,7 +63,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
       <View className="flex-row items-start justify-between mb-2">
         <View className="flex-1">
           <View className="flex-row items-center">
-            <Text className="text-base font-semibold text-foreground flex-1" numberOfLines={1}>
+            <Text className="text-base font-semibold flex-1" style={{ color: colors.foreground }} numberOfLines={1}>
               {lead.name || 'Unnamed Lead'}
             </Text>
             {lead.starred && (
@@ -73,7 +73,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
           {lead.company && (
             <View className="flex-row items-center mt-1">
               <Building2 size={12} color={colors.mutedForeground} />
-              <Text className="text-sm text-muted-foreground ml-1" numberOfLines={1}>
+              <Text className="text-sm ml-1" style={{ color: colors.mutedForeground }} numberOfLines={1}>
                 {lead.company}
               </Text>
             </View>
@@ -87,7 +87,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
         {lead.email && (
           <View className="flex-row items-center mb-1">
             <Mail size={12} color={colors.mutedForeground} />
-            <Text className="text-sm text-muted-foreground ml-2" numberOfLines={1}>
+            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }} numberOfLines={1}>
               {lead.email}
             </Text>
           </View>
@@ -95,7 +95,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
         {lead.phone && (
           <View className="flex-row items-center mb-1">
             <Phone size={12} color={colors.mutedForeground} />
-            <Text className="text-sm text-muted-foreground ml-2">
+            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>
               {lead.phone}
             </Text>
           </View>
@@ -103,7 +103,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
         {(lead.city || lead.state) && (
           <View className="flex-row items-center">
             <MapPin size={12} color={colors.mutedForeground} />
-            <Text className="text-sm text-muted-foreground ml-2" numberOfLines={1}>
+            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }} numberOfLines={1}>
               {[lead.city, lead.state].filter(Boolean).join(', ')}
             </Text>
           </View>
@@ -129,10 +129,10 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
             {/* Score */}
             {lead.score !== undefined && (
               <View className="flex-row items-center">
-                <Text className={`text-sm font-medium ${getScoreColor(lead.score)}`}>
+                <Text className="text-sm font-medium" style={{ color: getScoreColor(lead.score) }}>
                   {lead.score}
                 </Text>
-                <Text className="text-xs text-muted-foreground ml-0.5">pts</Text>
+                <Text className="text-xs ml-0.5" style={{ color: colors.mutedForeground }}>pts</Text>
               </View>
             )}
           </View>
@@ -146,7 +146,7 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
                 </Badge>
               ))}
               {lead.tags.length > 2 && (
-                <Text className="text-xs text-muted-foreground">
+                <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                   +{lead.tags.length - 2}
                 </Text>
               )}

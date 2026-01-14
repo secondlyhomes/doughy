@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { AlertCircle } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { formatCurrency } from '../utils/formatters';
 
 interface RepairSummaryCardProps {
@@ -19,33 +20,34 @@ export function RepairSummaryCard({
   propertyRepairCost,
   onSyncRepairCost,
 }: RepairSummaryCardProps) {
+  const colors = useThemeColors();
   const showSyncWarning = totalEstimate !== propertyRepairCost && totalEstimate > 0;
   const completionPercentage = totalEstimate > 0 ? Math.round((totalCompleted / totalEstimate) * 100) : 0;
 
   return (
-    <View className="bg-card rounded-xl border border-border overflow-hidden">
-      <View className="p-4 bg-primary/5">
+    <View className="rounded-xl border overflow-hidden" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+      <View className="p-4" style={{ backgroundColor: `${colors.primary}0D` }}>
         <View className="flex-row justify-between items-center">
           <View>
-            <Text className="text-xs text-muted-foreground">Total Estimated</Text>
-            <Text className="text-2xl font-bold text-primary">{formatCurrency(totalEstimate)}</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Total Estimated</Text>
+            <Text className="text-2xl font-bold" style={{ color: colors.primary }}>{formatCurrency(totalEstimate)}</Text>
           </View>
           <View className="items-end">
-            <Text className="text-xs text-muted-foreground">Completed</Text>
-            <Text className="text-lg font-semibold text-success">{formatCurrency(totalCompleted)}</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Completed</Text>
+            <Text className="text-lg font-semibold" style={{ color: colors.success }}>{formatCurrency(totalCompleted)}</Text>
           </View>
         </View>
 
         {/* Progress bar */}
         {totalEstimate > 0 && (
           <View className="mt-3">
-            <View className="h-2 bg-muted rounded-full overflow-hidden">
+            <View className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: colors.muted }}>
               <View
-                className="h-full bg-success rounded-full"
-                style={{ width: `${Math.min(completionPercentage, 100)}%` }}
+                className="h-full rounded-full"
+                style={{ width: `${Math.min(completionPercentage, 100)}%`, backgroundColor: colors.success }}
               />
             </View>
-            <Text className="text-xs text-muted-foreground mt-1">
+            <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
               {completionPercentage}% completed
             </Text>
           </View>
@@ -56,10 +58,11 @@ export function RepairSummaryCard({
       {showSyncWarning && (
         <TouchableOpacity
           onPress={onSyncRepairCost}
-          className="flex-row items-center justify-center py-3 border-t border-border bg-warning/10"
+          className="flex-row items-center justify-center py-3 border-t"
+          style={{ borderColor: colors.border, backgroundColor: `${colors.warning}1A` }}
         >
-          <AlertCircle size={14} className="text-warning" />
-          <Text className="text-sm text-warning font-medium ml-2">
+          <AlertCircle size={14} color={colors.warning} />
+          <Text className="text-sm font-medium ml-2" style={{ color: colors.warning }}>
             Update property repair cost to {formatCurrency(totalEstimate)}
           </Text>
         </TouchableOpacity>

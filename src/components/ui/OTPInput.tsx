@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface OTPInputProps extends ViewProps {
   value?: string;
@@ -74,6 +75,15 @@ export function OTPInput({
     setFocusedIndex(Math.min(value.length, length - 1));
   }, [value, length]);
 
+  const colors = useThemeColors();
+
+  const getBoxBorderColor = (isCurrentFocus: boolean, isFilled: boolean) => {
+    if (error) return colors.destructive;
+    if (isCurrentFocus) return colors.primary;
+    if (isFilled) return `${colors.primary}80`;
+    return colors.input;
+  };
+
   return (
     <View className={cn('w-full', className)} {...props}>
       {/* Hidden TextInput for handling actual input */}
@@ -117,26 +127,25 @@ export function OTPInput({
             <View
               key={index}
               className={cn(
-                'h-14 w-12 items-center justify-center rounded-md border-2',
-                disabled && 'opacity-50',
-                error && 'border-destructive',
-                !error && isCurrentFocus && 'border-primary',
-                !error && !isCurrentFocus && 'border-input',
-                isFilled && !error && 'border-primary/50 bg-primary/5'
+                'h-14 w-12 items-center justify-center rounded-md',
+                disabled && 'opacity-50'
               )}
+              style={{
+                borderWidth: 2,
+                borderColor: getBoxBorderColor(isCurrentFocus, isFilled),
+                backgroundColor: isFilled && !error ? `${colors.primary}0D` : undefined,
+              }}
             >
               <Text
-                className={cn(
-                  'text-2xl font-semibold',
-                  isFilled ? 'text-foreground' : 'text-muted-foreground'
-                )}
+                className="text-2xl font-semibold"
+                style={{ color: isFilled ? colors.foreground : colors.mutedForeground }}
               >
                 {digit ? (masked ? '•' : digit) : ''}
               </Text>
 
               {/* Cursor indicator */}
               {isCurrentFocus && !isFilled && (
-                <View className="absolute h-6 w-0.5 animate-pulse bg-primary" />
+                <View className="absolute h-6 w-0.5 animate-pulse" style={{ backgroundColor: colors.primary }} />
               )}
             </View>
           );
@@ -145,11 +154,11 @@ export function OTPInput({
 
       {/* Error message */}
       {error && (
-        <Text className="mt-2 text-center text-sm text-destructive">{error}</Text>
+        <Text className="mt-2 text-center text-sm" style={{ color: colors.destructive }}>{error}</Text>
       )}
 
       {/* Helper text */}
-      <Text className="mt-2 text-center text-xs text-muted-foreground">
+      <Text className="mt-2 text-center text-xs" style={{ color: colors.mutedForeground }}>
         Enter {length}-digit code
       </Text>
     </View>

@@ -101,12 +101,12 @@ export function PropertyMap({
 
   if (propertiesWithCoords.length === 0) {
     return (
-      <View className="flex-1 bg-muted items-center justify-center" style={style}>
-        <MapPin size={48} className="text-muted-foreground mb-4" />
-        <Text className="text-muted-foreground text-center px-8">
+      <View className="flex-1 items-center justify-center" style={[style, { backgroundColor: colors.muted }]}>
+        <MapPin size={48} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
+        <Text className="text-center px-8" style={{ color: colors.mutedForeground }}>
           No properties with location data to display on the map.
         </Text>
-        <Text className="text-xs text-muted-foreground mt-2">
+        <Text className="text-xs mt-2" style={{ color: colors.mutedForeground }}>
           Add geo coordinates to your properties to see them here.
         </Text>
       </View>
@@ -138,8 +138,8 @@ export function PropertyMap({
         )}
 
         {/* Property Count Badge */}
-        <View className="absolute top-4 left-4 bg-card px-3 py-2 rounded-full shadow-md">
-          <Text className="text-foreground font-medium text-sm">
+        <View className="absolute top-4 left-4 px-3 py-2 rounded-full shadow-md" style={{ backgroundColor: colors.card }}>
+          <Text className="font-medium text-sm" style={{ color: colors.foreground }}>
             {propertiesWithCoords.length} {propertiesWithCoords.length === 1 ? 'property' : 'properties'}
           </Text>
         </View>
@@ -147,21 +147,23 @@ export function PropertyMap({
         {/* Open in Maps Button */}
         <TouchableOpacity
           onPress={() => openInMaps(currentProperty)}
-          className="absolute top-4 right-4 bg-card px-3 py-2 rounded-full shadow-md flex-row items-center"
+          className="absolute top-4 right-4 px-3 py-2 rounded-full shadow-md flex-row items-center"
+          style={{ backgroundColor: colors.card }}
           activeOpacity={0.7}
         >
-          <Navigation size={16} className="text-foreground" />
-          <Text className="text-foreground text-sm ml-2">Open in Maps</Text>
+          <Navigation size={16} color={colors.foreground} />
+          <Text className="text-sm ml-2" style={{ color: colors.foreground }}>Open in Maps</Text>
         </TouchableOpacity>
       </View>
 
       {/* Property Cards Carousel */}
-      <View className="bg-card border-t border-border">
+      <View style={{ backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border }}>
         <View className="flex-row items-center px-4 py-3">
           {/* Previous Button */}
           <TouchableOpacity
             onPress={prevProperty}
-            className="w-10 h-10 rounded-full bg-muted items-center justify-center"
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: colors.muted }}
             disabled={propertiesWithCoords.length <= 1}
             activeOpacity={0.7}
           >
@@ -182,19 +184,19 @@ export function PropertyMap({
             }}
             activeOpacity={0.7}
           >
-            <Text className="text-foreground font-semibold" numberOfLines={1}>
+            <Text className="font-semibold" style={{ color: colors.foreground }} numberOfLines={1}>
               {currentProperty.address || 'Address not specified'}
             </Text>
-            <Text className="text-muted-foreground text-sm" numberOfLines={1}>
+            <Text className="text-sm" style={{ color: colors.mutedForeground }} numberOfLines={1}>
               {currentProperty.city}, {currentProperty.state}
             </Text>
             <View className="flex-row items-center justify-between mt-2">
               {currentProperty.arv && (
-                <Text className="text-primary font-bold">
+                <Text className="font-bold" style={{ color: colors.primary }}>
                   {formatCurrency(currentProperty.arv)}
                 </Text>
               )}
-              <Text className="text-xs text-muted-foreground">
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                 {currentIndex + 1} of {propertiesWithCoords.length}
               </Text>
             </View>
@@ -203,7 +205,8 @@ export function PropertyMap({
           {/* Next Button */}
           <TouchableOpacity
             onPress={nextProperty}
-            className="w-10 h-10 rounded-full bg-muted items-center justify-center"
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: colors.muted }}
             disabled={propertiesWithCoords.length <= 1}
             activeOpacity={0.7}
           >

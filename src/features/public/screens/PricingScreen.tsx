@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { View, Text, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Check, X, ChevronDown, ChevronUp } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -123,7 +123,7 @@ const faqs = [
 ];
 
 function PricingCard({ tier, isAnnual }: { tier: PricingTier; isAnnual: boolean }) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isAuthenticated } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const displayPrice = isAnnual ? tier.price : (tier.monthlyPrice || tier.price);
@@ -150,33 +150,33 @@ function PricingCard({ tier, isAnnual }: { tier: PricingTier; isAnnual: boolean 
       } : undefined}
     >
       {tier.popular && (
-        <View className="absolute -top-3 right-4 bg-primary px-3 py-1 rounded-full">
-          <Text className="text-primary-foreground text-xs font-medium">Most Popular</Text>
+        <View className="absolute -top-3 right-4 px-3 py-1 rounded-full" style={{ backgroundColor: colors.primary }}>
+          <Text className="text-xs font-medium" style={{ color: colors.primaryForeground }}>Most Popular</Text>
         </View>
       )}
       {isEnterprise && (
-        <View className="absolute -top-3 right-4 bg-amber-500 px-3 py-1 rounded-full">
-          <Text className="text-white text-xs font-medium">Enterprise</Text>
+        <View className="absolute -top-3 right-4 px-3 py-1 rounded-full" style={{ backgroundColor: '#f59e0b' }}>
+          <Text className="text-xs font-medium" style={{ color: '#ffffff' }}>Enterprise</Text>
         </View>
       )}
 
-      <Text className="text-xl font-bold text-foreground mb-2">{tier.name}</Text>
+      <Text className="text-xl font-bold mb-2" style={{ color: colors.foreground }}>{tier.name}</Text>
 
       <View className="flex-row items-baseline mb-2">
-        <Text className="text-4xl font-bold text-foreground">{displayPrice}</Text>
+        <Text className="text-4xl font-bold" style={{ color: colors.foreground }}>{displayPrice}</Text>
         {!isEnterprise && (
-          <Text className="text-muted-foreground ml-1">/month</Text>
+          <Text className="ml-1" style={{ color: colors.mutedForeground }}>/month</Text>
         )}
       </View>
 
       {!isEnterprise && isAnnual && (
-        <Text className="text-sm text-muted-foreground mb-2">billed annually</Text>
+        <Text className="text-sm mb-2" style={{ color: colors.mutedForeground }}>billed annually</Text>
       )}
 
-      <Text className="text-muted-foreground mb-4">{tier.description}</Text>
+      <Text className="mb-4" style={{ color: colors.mutedForeground }}>{tier.description}</Text>
 
       {tier.credits && (
-        <Text className="text-sm text-primary mb-4">{tier.credits}</Text>
+        <Text className="text-sm mb-4" style={{ color: colors.primary }}>{tier.credits}</Text>
       )}
 
       <Link
@@ -185,9 +185,8 @@ function PricingCard({ tier, isAnnual }: { tier: PricingTier; isAnnual: boolean 
       >
         <Button className="w-full mb-6" variant={tier.popular ? 'default' : 'outline'}>
           <Text
-            className={`font-medium ${
-              tier.popular ? 'text-primary-foreground' : 'text-foreground'
-            }`}
+            className="font-medium"
+            style={{ color: tier.popular ? colors.primaryForeground : colors.foreground }}
           >
             {isEnterprise ? 'Contact Sales' : 'Get Started'}
           </Text>
@@ -203,13 +202,14 @@ function PricingCard({ tier, isAnnual }: { tier: PricingTier; isAnnual: boolean 
               <X size={18} color={colors.mutedForeground} />
             )}
             <Text
-              className={`flex-1 ${
-                feature.included
+              className={`flex-1 ${feature.included && feature.highlight ? 'font-medium' : ''}`}
+              style={{
+                color: feature.included
                   ? feature.highlight
-                    ? 'text-primary font-medium'
-                    : 'text-foreground'
-                  : 'text-muted-foreground'
-              }`}
+                    ? colors.primary
+                    : colors.foreground
+                  : colors.mutedForeground
+              }}
             >
               {feature.name}
             </Text>
@@ -223,15 +223,16 @@ function PricingCard({ tier, isAnnual }: { tier: PricingTier; isAnnual: boolean 
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { colors } = useTheme();
+  const colors = useThemeColors();
 
   return (
     <Pressable
       onPress={() => setIsOpen(!isOpen)}
-      className="border-b border-border py-4 w-full"
+      className="py-4 w-full"
+      style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
     >
       <View className="flex-row items-start justify-between w-full">
-        <Text className="text-foreground font-medium flex-1 pr-4 flex-shrink">{question}</Text>
+        <Text className="font-medium flex-1 pr-4 flex-shrink" style={{ color: colors.foreground }}>{question}</Text>
         <View className="flex-shrink-0">
           {isOpen ? (
             <ChevronUp size={20} color={colors.foreground} />
@@ -241,7 +242,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         </View>
       </View>
       {isOpen && (
-        <Text className="text-muted-foreground mt-3 w-full">{answer}</Text>
+        <Text className="mt-3 w-full" style={{ color: colors.mutedForeground }}>{answer}</Text>
       )}
     </Pressable>
   );
@@ -249,42 +250,44 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 
 export function PricingScreen() {
   const [isAnnual, setIsAnnual] = useState(true);
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 
   return (
-    <View className="flex-1 bg-background py-12">
+    <View className="flex-1 py-12" style={{ backgroundColor: colors.background }}>
       {/* Header */}
       <View className="px-4 sm:px-6 lg:px-8 mb-12">
         <View className="max-w-[1400px] mx-auto items-center">
-          <Text className="text-3xl md:text-4xl font-bold text-center text-primary mb-4">
+          <Text className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: colors.primary }}>
             Simple, Transparent Pricing
           </Text>
-          <Text className="text-lg text-center text-muted-foreground mb-8 max-w-2xl">
+          <Text className="text-lg text-center mb-8 max-w-2xl" style={{ color: colors.mutedForeground }}>
             Choose the plan that fits your needs. All plans include a 30-day money-back guarantee.
           </Text>
 
           {/* Billing Toggle */}
-          <View className="flex-row items-center gap-4 bg-card p-1 rounded-lg">
+          <View className="flex-row items-center gap-4 p-1 rounded-lg" style={{ backgroundColor: colors.card }}>
             <Pressable
               onPress={() => setIsAnnual(false)}
-              className={`px-4 py-2 rounded-md ${!isAnnual ? 'bg-primary' : ''}`}
+              className="px-4 py-2 rounded-md"
+              style={!isAnnual ? { backgroundColor: colors.primary } : undefined}
             >
-              <Text className={!isAnnual ? 'text-primary-foreground font-medium' : 'text-foreground'}>
+              <Text style={{ color: !isAnnual ? colors.primaryForeground : colors.foreground, fontWeight: !isAnnual ? '500' : undefined }}>
                 Monthly
               </Text>
             </Pressable>
             <Pressable
               onPress={() => setIsAnnual(true)}
-              className={`px-4 py-2 rounded-md ${isAnnual ? 'bg-primary' : ''}`}
+              className="px-4 py-2 rounded-md"
+              style={isAnnual ? { backgroundColor: colors.primary } : undefined}
             >
               <View className="flex-row items-center gap-2">
-                <Text className={isAnnual ? 'text-primary-foreground font-medium' : 'text-foreground'}>
+                <Text style={{ color: isAnnual ? colors.primaryForeground : colors.foreground, fontWeight: isAnnual ? '500' : undefined }}>
                   Annual
                 </Text>
-                <View className="bg-green-500 px-2 py-0.5 rounded">
-                  <Text className="text-white text-xs font-medium">Save 20%</Text>
+                <View className="px-2 py-0.5 rounded" style={{ backgroundColor: '#22c55e' }}>
+                  <Text className="text-xs font-medium" style={{ color: '#ffffff' }}>Save 20%</Text>
                 </View>
               </View>
             </Pressable>
@@ -306,9 +309,9 @@ export function PricingScreen() {
       </View>
 
       {/* FAQ Section */}
-      <View className="px-4 sm:px-6 lg:px-8 py-16 bg-card">
+      <View className="px-4 sm:px-6 lg:px-8 py-16" style={{ backgroundColor: colors.card }}>
         <View style={{ maxWidth: 720, width: '100%', marginHorizontal: 'auto' }}>
-          <Text className="text-3xl font-bold text-center text-foreground mb-12">
+          <Text className="text-3xl font-bold text-center mb-12" style={{ color: colors.foreground }}>
             Frequently Asked Questions
           </Text>
           <View className="gap-4">

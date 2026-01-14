@@ -12,6 +12,7 @@ import {
   TextProps,
 } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Context
 interface DropdownMenuContextType {
@@ -107,6 +108,7 @@ export function DropdownMenuContent({
   ...props
 }: DropdownMenuContentProps) {
   const { open, onOpenChange } = useDropdownMenuContext();
+  const colors = useThemeColors();
 
   if (!open) return null;
 
@@ -118,18 +120,19 @@ export function DropdownMenuContent({
       onRequestClose={() => onOpenChange(false)}
     >
       <TouchableWithoutFeedback onPress={() => onOpenChange(false)}>
-        <View className="flex-1 justify-end bg-black/50">
+        <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <TouchableWithoutFeedback>
             <View
-              className={cn(
-                'rounded-t-3xl border-t border-border bg-background pb-8 pt-2',
-                className
-              )}
+              className={cn('rounded-t-3xl border-t pb-8 pt-2', className)}
+              style={{
+                backgroundColor: colors.background,
+                borderTopColor: colors.border,
+              }}
               {...props}
             >
               {/* Handle bar */}
               <View className="mb-2 items-center">
-                <View className="h-1 w-10 rounded-full bg-muted" />
+                <View className="h-1 w-10 rounded-full" style={{ backgroundColor: colors.muted }} />
               </View>
               {children}
             </View>
@@ -163,6 +166,7 @@ export function DropdownMenuItem({
   closeOnPress = true,
 }: DropdownMenuItemProps) {
   const { onOpenChange } = useDropdownMenuContext();
+  const colors = useThemeColors();
 
   const handlePress = useCallback(() => {
     if (disabled) return;
@@ -183,18 +187,11 @@ export function DropdownMenuItem({
       disabled={disabled}
       activeOpacity={0.7}
     >
-      {icon && (
-        <View className={destructive ? 'text-destructive' : ''}>
-          {icon}
-        </View>
-      )}
+      {icon && <View>{icon}</View>}
       {typeof children === 'string' ? (
         <Text
-          className={cn(
-            'text-base',
-            destructive ? 'text-destructive' : 'text-foreground',
-            textClassName
-          )}
+          className={cn('text-base', textClassName)}
+          style={{ color: destructive ? colors.destructive : colors.foreground }}
         >
           {children}
         </Text>
@@ -211,7 +208,8 @@ export interface DropdownMenuSeparatorProps {
 }
 
 export function DropdownMenuSeparator({ className }: DropdownMenuSeparatorProps) {
-  return <View className={cn('my-1 h-px bg-border', className)} />;
+  const colors = useThemeColors();
+  return <View className={cn('my-1 h-px', className)} style={{ backgroundColor: colors.border }} />;
 }
 
 // Label
@@ -225,9 +223,11 @@ export function DropdownMenuLabel({
   className,
   ...props
 }: DropdownMenuLabelProps) {
+  const colors = useThemeColors();
   return (
     <Text
-      className={cn('px-4 py-2 text-xs font-semibold text-muted-foreground', className)}
+      className={cn('px-4 py-2 text-xs font-semibold', className)}
+      style={{ color: colors.mutedForeground }}
       {...props}
     >
       {children}

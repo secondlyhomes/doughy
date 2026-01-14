@@ -7,6 +7,7 @@ import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { LoadingSpinner } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface OnboardingGuardProps {
   children: React.ReactNode;
@@ -20,11 +21,12 @@ interface OnboardingGuardProps {
 export function OnboardingGuard({ children, fallback }: OnboardingGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const { isOnboardingComplete, isEmailVerified } = usePermissions();
+  const colors = useThemeColors();
 
   // Still loading
   if (isLoading) {
     return fallback ?? (
-      <View className="flex-1 bg-background">
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
         <LoadingSpinner fullScreen />
       </View>
     );

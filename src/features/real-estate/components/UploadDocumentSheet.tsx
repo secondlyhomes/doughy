@@ -120,26 +120,26 @@ export function UploadDocumentSheet({
       <View className="gap-4">
         {/* File Selection */}
         <View>
-          <Text className="text-sm font-medium text-foreground mb-2">Select File *</Text>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Select File *</Text>
           {selectedFile ? (
-            <View className="bg-card rounded-xl p-4 border border-border">
+            <View className="rounded-xl p-4 border" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
-                  <View className="bg-primary/10 rounded-lg p-2 mr-3">
-                    <FileText size={24} className="text-primary" />
+                  <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.primary + '1A' }}>
+                    <FileText size={24} color={colors.primary} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-foreground font-medium" numberOfLines={1}>
+                    <Text className="font-medium" numberOfLines={1} style={{ color: colors.foreground }}>
                       {selectedFile.name}
                     </Text>
                     <View className="flex-row items-center mt-1">
-                      <Text className="text-xs text-muted-foreground">
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         {getFileTypeLabel(selectedFile.mimeType)}
                       </Text>
                       {selectedFile.size && (
                         <>
-                          <Text className="text-xs text-muted-foreground mx-1">•</Text>
-                          <Text className="text-xs text-muted-foreground">
+                          <Text className="text-xs mx-1" style={{ color: colors.mutedForeground }}>•</Text>
+                          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                             {formatFileSize(selectedFile.size)}
                           </Text>
                         </>
@@ -149,22 +149,24 @@ export function UploadDocumentSheet({
                 </View>
                 <TouchableOpacity
                   onPress={() => setSelectedFile(null)}
-                  className="bg-muted p-2 rounded-lg ml-2"
+                  className="p-2 rounded-lg ml-2"
+                  style={{ backgroundColor: colors.muted }}
                   disabled={isLoading}
                 >
-                  <X size={16} className="text-muted-foreground" />
+                  <X size={16} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <TouchableOpacity
               onPress={handlePickDocument}
-              className="bg-muted border-2 border-dashed border-border rounded-xl p-8 items-center"
+              className="border-2 border-dashed rounded-xl p-8 items-center"
+              style={{ backgroundColor: colors.muted, borderColor: colors.border }}
               disabled={isLoading}
             >
-              <Upload size={32} className="text-muted-foreground mb-2" />
-              <Text className="text-foreground font-medium">Choose File</Text>
-              <Text className="text-xs text-muted-foreground mt-1">
+              <Upload size={32} color={colors.mutedForeground} className="mb-2" />
+              <Text className="font-medium" style={{ color: colors.foreground }}>Choose File</Text>
+              <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
                 PDF, Images, Word (max 10MB)
               </Text>
             </TouchableOpacity>
@@ -173,36 +175,36 @@ export function UploadDocumentSheet({
 
         {/* Title */}
         <View>
-          <Text className="text-sm font-medium text-foreground mb-2">Title *</Text>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Title *</Text>
           <TextInput
             value={title}
             onChangeText={setTitle}
             placeholder="Document title"
             placeholderTextColor={colors.mutedForeground}
-            className="bg-input border border-border rounded-xl px-4 py-3 text-foreground"
+            className="rounded-xl px-4 py-3 border"
+            style={{ backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground }}
             editable={!isLoading}
           />
         </View>
 
         {/* Category */}
         <View>
-          <Text className="text-sm font-medium text-foreground mb-2">Category</Text>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Category</Text>
           <View className="flex-row flex-wrap gap-2">
             {DOCUMENT_CATEGORIES.map((cat) => (
               <TouchableOpacity
                 key={cat.id}
                 onPress={() => setCategory(cat.id)}
-                className={`px-4 py-2 rounded-lg border ${
-                  category === cat.id
-                    ? 'bg-primary border-primary'
-                    : 'bg-muted border-border'
-                }`}
+                className="px-4 py-2 rounded-lg border"
+                style={{
+                  backgroundColor: category === cat.id ? colors.primary : colors.muted,
+                  borderColor: category === cat.id ? colors.primary : colors.border,
+                }}
                 disabled={isLoading}
               >
                 <Text
-                  className={`text-sm font-medium ${
-                    category === cat.id ? 'text-primary-foreground' : 'text-foreground'
-                  }`}
+                  className="text-sm font-medium"
+                  style={{ color: category === cat.id ? colors.primaryForeground : colors.foreground }}
                 >
                   {cat.label}
                 </Text>
@@ -213,13 +215,14 @@ export function UploadDocumentSheet({
 
         {/* Description */}
         <View>
-          <Text className="text-sm font-medium text-foreground mb-2">Description (optional)</Text>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Description (optional)</Text>
           <TextInput
             value={description}
             onChangeText={setDescription}
             placeholder="Add notes about this document"
             placeholderTextColor={colors.mutedForeground}
-            className="bg-input border border-border rounded-xl px-4 py-3 text-foreground"
+            className="rounded-xl px-4 py-3 border"
+            style={{ backgroundColor: colors.input, borderColor: colors.border, color: colors.foreground }}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -229,15 +232,15 @@ export function UploadDocumentSheet({
 
         {/* Upload Progress */}
         {isLoading && uploadProgress > 0 && (
-          <View className="bg-card rounded-xl p-4 border border-border">
+          <View className="rounded-xl p-4 border" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-sm font-medium text-foreground">Uploading...</Text>
-              <Text className="text-sm text-muted-foreground">{uploadProgress}%</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.foreground }}>Uploading...</Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>{uploadProgress}%</Text>
             </View>
-            <View className="h-2 bg-muted rounded-full overflow-hidden">
+            <View className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: colors.muted }}>
               <View
-                className="h-full bg-primary rounded-full"
-                style={{ width: `${uploadProgress}%` }}
+                className="h-full rounded-full"
+                style={{ width: `${uploadProgress}%`, backgroundColor: colors.primary }}
               />
             </View>
           </View>
@@ -245,9 +248,9 @@ export function UploadDocumentSheet({
 
         {/* Error Display */}
         {(validationError || error) && (
-          <View className="bg-destructive/10 rounded-xl p-4 flex-row items-center">
-            <AlertCircle size={20} className="text-destructive mr-2" />
-            <Text className="text-destructive flex-1">
+          <View className="rounded-xl p-4 flex-row items-center" style={{ backgroundColor: colors.destructive + '1A' }}>
+            <AlertCircle size={20} color={colors.destructive} className="mr-2" />
+            <Text className="flex-1" style={{ color: colors.destructive }}>
               {validationError || error?.message || 'Upload failed'}
             </Text>
           </View>
@@ -257,26 +260,28 @@ export function UploadDocumentSheet({
         <View className="flex-row gap-3 pt-2">
           <TouchableOpacity
             onPress={handleClose}
-            className="flex-1 bg-muted py-4 rounded-xl items-center"
+            className="flex-1 py-4 rounded-xl items-center"
+            style={{ backgroundColor: colors.muted }}
             disabled={isLoading}
           >
-            <Text className="text-foreground font-semibold">Cancel</Text>
+            <Text className="font-semibold" style={{ color: colors.foreground }}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleUpload}
             disabled={isLoading || !selectedFile || !title.trim()}
-            className={`flex-1 py-4 rounded-xl items-center flex-row justify-center ${
-              isLoading || !selectedFile || !title.trim()
-                ? 'bg-primary/50'
-                : 'bg-primary'
-            }`}
+            className="flex-1 py-4 rounded-xl items-center flex-row justify-center"
+            style={{
+              backgroundColor: isLoading || !selectedFile || !title.trim()
+                ? colors.primary + '80'
+                : colors.primary,
+            }}
           >
             {isLoading ? (
               <ActivityIndicator color={colors.primaryForeground} size="small" />
             ) : (
               <>
                 <Upload size={18} color={colors.primaryForeground} />
-                <Text className="text-primary-foreground font-semibold ml-2">Upload</Text>
+                <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>Upload</Text>
               </>
             )}
           </TouchableOpacity>

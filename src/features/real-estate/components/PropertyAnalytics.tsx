@@ -26,27 +26,41 @@ interface MetricCardProps {
 }
 
 function MetricCard({ label, value, icon, trend = 'neutral', subtitle }: MetricCardProps) {
-  const trendColors = {
-    positive: 'bg-success/10 border-success/30',
-    negative: 'bg-destructive/10 border-destructive/30',
-    neutral: 'bg-card border-border',
+  const colors = useThemeColors();
+
+  const getTrendBackgroundColor = () => {
+    switch (trend) {
+      case 'positive': return `${colors.success}1A`; // 10% opacity
+      case 'negative': return `${colors.destructive}1A`; // 10% opacity
+      default: return colors.card;
+    }
   };
 
-  const textColors = {
-    positive: 'text-success',
-    negative: 'text-destructive',
-    neutral: 'text-foreground',
+  const getTrendBorderColor = () => {
+    switch (trend) {
+      case 'positive': return `${colors.success}4D`; // 30% opacity
+      case 'negative': return `${colors.destructive}4D`; // 30% opacity
+      default: return colors.border;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (trend) {
+      case 'positive': return colors.success;
+      case 'negative': return colors.destructive;
+      default: return colors.foreground;
+    }
   };
 
   return (
-    <View className={`p-4 rounded-xl border ${trendColors[trend]}`}>
+    <View style={{ backgroundColor: getTrendBackgroundColor(), borderColor: getTrendBorderColor() }} className="p-4 rounded-xl border">
       <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-sm text-muted-foreground font-medium">{label}</Text>
+        <Text style={{ color: colors.mutedForeground }} className="text-sm font-medium">{label}</Text>
         {icon}
       </View>
-      <Text className={`text-xl font-bold ${textColors[trend]}`}>{value}</Text>
+      <Text style={{ color: getTextColor() }} className="text-xl font-bold">{value}</Text>
       {subtitle && (
-        <Text className="text-xs text-muted-foreground mt-1">{subtitle}</Text>
+        <Text style={{ color: colors.mutedForeground }} className="text-xs mt-1">{subtitle}</Text>
       )}
     </View>
   );
@@ -108,7 +122,7 @@ export function PropertyAnalytics({
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       {/* Deal Overview Section */}
       <View className="mb-6">
-        <Text className="text-lg font-bold text-foreground mb-3">Deal Overview</Text>
+        <Text style={{ color: colors.foreground }} className="text-lg font-bold mb-3">Deal Overview</Text>
         <View className="flex-row flex-wrap gap-3">
           <View className="flex-1 min-w-[45%]">
             <MetricCard
@@ -151,7 +165,7 @@ export function PropertyAnalytics({
 
       {/* Cash Flow Section */}
       <View className="mb-6">
-        <Text className="text-lg font-bold text-foreground mb-3">Cash Flow Analysis</Text>
+        <Text style={{ color: colors.foreground }} className="text-lg font-bold mb-3">Cash Flow Analysis</Text>
         <View className="flex-row flex-wrap gap-3">
           <View className="flex-1 min-w-[45%]">
             <MetricCard
@@ -189,7 +203,7 @@ export function PropertyAnalytics({
 
       {/* Investment Returns Section */}
       <View className="mb-6">
-        <Text className="text-lg font-bold text-foreground mb-3">Investment Returns</Text>
+        <Text style={{ color: colors.foreground }} className="text-lg font-bold mb-3">Investment Returns</Text>
         <View className="flex-row flex-wrap gap-3">
           <View className="flex-1 min-w-[45%]">
             <MetricCard
@@ -232,9 +246,9 @@ export function PropertyAnalytics({
       {/* Total Investment */}
       {totalInvestment > 0 && (
         <View className="mb-6">
-          <View className="bg-primary/10 rounded-xl p-4 border border-primary/20">
-            <Text className="text-sm text-primary font-medium mb-1">Total Investment Required</Text>
-            <Text className="text-2xl font-bold text-primary">{formatCurrency(totalInvestment)}</Text>
+          <View style={{ backgroundColor: `${colors.primary}1A`, borderColor: `${colors.primary}33` }} className="rounded-xl p-4 border">
+            <Text style={{ color: colors.primary }} className="text-sm font-medium mb-1">Total Investment Required</Text>
+            <Text style={{ color: colors.primary }} className="text-2xl font-bold">{formatCurrency(totalInvestment)}</Text>
           </View>
         </View>
       )}

@@ -56,7 +56,7 @@ export function Select({
   return (
     <View className={cn('w-full', className)} {...props}>
       {label && (
-        <Text className="mb-1.5 text-sm font-medium text-foreground">
+        <Text className="mb-1.5 text-sm font-medium" style={{ color: colors.foreground }}>
           {label}
         </Text>
       )}
@@ -64,19 +64,21 @@ export function Select({
       {/* Trigger */}
       <TouchableOpacity
         className={cn(
-          'h-10 w-full flex-row items-center justify-between rounded-md border border-input bg-background px-3',
-          disabled && 'opacity-50',
-          error && 'border-destructive'
+          'h-10 w-full flex-row items-center justify-between rounded-md px-3',
+          disabled && 'opacity-50'
         )}
+        style={{
+          backgroundColor: colors.background,
+          borderWidth: 1,
+          borderColor: error ? colors.destructive : colors.input,
+        }}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
         activeOpacity={0.7}
       >
         <Text
-          className={cn(
-            'text-sm',
-            selectedOption ? 'text-foreground' : 'text-muted-foreground'
-          )}
+          className="text-sm"
+          style={{ color: selectedOption ? colors.foreground : colors.mutedForeground }}
           numberOfLines={1}
         >
           {selectedOption?.label || placeholder}
@@ -85,7 +87,7 @@ export function Select({
       </TouchableOpacity>
 
       {error && (
-        <Text className="mt-1 text-sm text-destructive">{error}</Text>
+        <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>{error}</Text>
       )}
 
       {/* Options Modal */}
@@ -96,11 +98,15 @@ export function Select({
         animationType="fade"
       >
         <TouchableOpacity
-          className="flex-1 items-center justify-center bg-black/50 px-4"
+          className="flex-1 items-center justify-center px-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >
-          <View className="w-full max-w-sm rounded-lg border border-border bg-popover shadow-lg">
+          <View
+            className="w-full max-w-sm rounded-lg shadow-lg"
+            style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+          >
             <FlatList
               data={options}
               keyExtractor={(item) => item.value}
@@ -108,9 +114,11 @@ export function Select({
                 <TouchableOpacity
                   className={cn(
                     'flex-row items-center px-4 py-3',
-                    item.disabled && 'opacity-50',
-                    item.value === value && 'bg-accent'
+                    item.disabled && 'opacity-50'
                   )}
+                  style={{
+                    backgroundColor: item.value === value ? `${colors.primary}15` : 'transparent',
+                  }}
                   onPress={() => handleSelect(item)}
                   disabled={item.disabled}
                 >
@@ -120,12 +128,11 @@ export function Select({
                     )}
                   </View>
                   <Text
-                    className={cn(
-                      'text-sm',
-                      item.value === value
-                        ? 'text-accent-foreground font-medium'
-                        : 'text-popover-foreground'
-                    )}
+                    className="text-sm"
+                    style={{
+                      color: item.value === value ? colors.primary : colors.foreground,
+                      fontWeight: item.value === value ? '500' : 'normal',
+                    }}
                   >
                     {item.label}
                   </Text>

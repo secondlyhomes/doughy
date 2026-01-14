@@ -44,7 +44,7 @@ export function WeHandleToggles({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">What We Handle</CardTitle>
-        <Text className="text-xs text-muted-foreground">
+        <Text className="text-xs" style={{ color: colors.mutedForeground }}>
           Select what you'll cover as the buyer
         </Text>
       </CardHeader>
@@ -57,7 +57,8 @@ export function WeHandleToggles({
           return (
             <TouchableOpacity
               key={option}
-              className="flex-row items-start py-3 border-b border-border last:border-b-0"
+              className="flex-row items-start py-3"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
               onPress={() => toggleOption(option)}
               disabled={disabled}
               accessibilityLabel={`${config.label}, ${isChecked ? 'checked' : 'unchecked'}`}
@@ -92,7 +93,7 @@ export function WeHandleToggles({
                 >
                   {config.label}
                 </Text>
-                <Text className="text-xs text-muted-foreground mt-0.5">
+                <Text className="text-xs mt-0.5" style={{ color: colors.mutedForeground }}>
                   {config.description}
                 </Text>
               </View>

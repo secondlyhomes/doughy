@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, Linking, useWindowDimensions } from 'react-native';
 import { Mail, Phone, MapPin, Send } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -32,7 +32,7 @@ const contactInfo = [
 ];
 
 export function ContactScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 
@@ -54,15 +54,15 @@ export function ContactScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Hero Section */}
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <View className="max-w-[1200px] mx-auto">
           <View className="max-w-3xl mx-auto items-center">
-            <Text className="text-4xl md:text-5xl font-bold text-center text-foreground mb-6">
+            <Text className="text-4xl md:text-5xl font-bold text-center mb-6" style={{ color: colors.foreground }}>
               Get in Touch With Us
             </Text>
-            <Text className="text-lg text-center text-muted-foreground">
+            <Text className="text-lg text-center" style={{ color: colors.mutedForeground }}>
               We'd love to hear from you. Reach out to our team for support, inquiries, or partnerships.
             </Text>
           </View>
@@ -70,18 +70,18 @@ export function ContactScreen() {
       </View>
 
       {/* Contact Options Section */}
-      <View className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-card">
+      <View className="py-12 md:py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.card }}>
         <View className="max-w-[1200px] mx-auto">
           <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-8`}>
             {contactInfo.map((info, index) => (
               <Pressable key={index} onPress={info.action} className="flex-1">
                 <Card className="p-6 items-center">
-                  <View className="w-12 h-12 rounded-full bg-primary/20 items-center justify-center mb-4">
+                  <View className="w-12 h-12 rounded-full items-center justify-center mb-4" style={{ backgroundColor: colors.primary + '33' }}>
                     <info.Icon size={24} color={colors.primary} />
                   </View>
-                  <Text className="text-xl font-semibold text-foreground mb-2">{info.title}</Text>
-                  <Text className="text-muted-foreground mb-4 text-center">{info.description}</Text>
-                  <Text className="text-primary font-medium text-center">{info.value}</Text>
+                  <Text className="text-xl font-semibold mb-2" style={{ color: colors.foreground }}>{info.title}</Text>
+                  <Text className="mb-4 text-center" style={{ color: colors.mutedForeground }}>{info.description}</Text>
+                  <Text className="font-medium text-center" style={{ color: colors.primary }}>{info.value}</Text>
                 </Card>
               </Pressable>
             ))}
@@ -92,19 +92,20 @@ export function ContactScreen() {
       {/* Contact Form Section */}
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <View className="max-w-3xl mx-auto">
-          <Text className="text-3xl font-bold text-center text-foreground mb-4">
+          <Text className="text-3xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
             Send Us a Message
           </Text>
-          <Text className="text-center text-muted-foreground mb-8">
+          <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
             Fill out the form below and we'll get back to you as soon as possible.
           </Text>
 
           <View className="gap-4">
             <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-4`}>
               <View className="flex-1">
-                <Text className="text-foreground mb-2 font-medium">Name</Text>
+                <Text className="mb-2 font-medium" style={{ color: colors.foreground }}>Name</Text>
                 <TextInput
-                  className="border border-border rounded-lg px-4 py-3 text-foreground bg-background"
+                  className="rounded-lg px-4 py-3"
+                  style={{ borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }}
                   placeholder="Your name"
                   placeholderTextColor={colors.mutedForeground}
                   value={formData.name}
@@ -112,9 +113,10 @@ export function ContactScreen() {
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-foreground mb-2 font-medium">Email</Text>
+                <Text className="mb-2 font-medium" style={{ color: colors.foreground }}>Email</Text>
                 <TextInput
-                  className="border border-border rounded-lg px-4 py-3 text-foreground bg-background"
+                  className="rounded-lg px-4 py-3"
+                  style={{ borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }}
                   placeholder="your@email.com"
                   placeholderTextColor={colors.mutedForeground}
                   keyboardType="email-address"
@@ -125,9 +127,10 @@ export function ContactScreen() {
             </View>
 
             <View>
-              <Text className="text-foreground mb-2 font-medium">Subject</Text>
+              <Text className="mb-2 font-medium" style={{ color: colors.foreground }}>Subject</Text>
               <TextInput
-                className="border border-border rounded-lg px-4 py-3 text-foreground bg-background"
+                className="rounded-lg px-4 py-3"
+                style={{ borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }}
                 placeholder="What's this about?"
                 placeholderTextColor={colors.mutedForeground}
                 value={formData.subject}
@@ -136,9 +139,10 @@ export function ContactScreen() {
             </View>
 
             <View>
-              <Text className="text-foreground mb-2 font-medium">Message</Text>
+              <Text className="mb-2 font-medium" style={{ color: colors.foreground }}>Message</Text>
               <TextInput
-                className="border border-border rounded-lg px-4 py-3 text-foreground bg-background min-h-[150px]"
+                className="rounded-lg px-4 py-3 min-h-[150px]"
+                style={{ borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }}
                 placeholder="Tell us more..."
                 placeholderTextColor={colors.mutedForeground}
                 multiline
@@ -152,7 +156,7 @@ export function ContactScreen() {
             <Button onPress={handleSubmit} className="mt-4">
               <View className="flex-row items-center gap-2">
                 <Send size={18} color={colors.primaryForeground} />
-                <Text className="text-primary-foreground font-medium">Send Message</Text>
+                <Text className="font-medium" style={{ color: colors.primaryForeground }}>Send Message</Text>
               </View>
             </Button>
           </View>

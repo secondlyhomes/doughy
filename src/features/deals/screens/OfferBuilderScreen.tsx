@@ -59,7 +59,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+      <View className="flex-row items-center justify-between px-4 py-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <View className="flex-row items-center flex-1">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -70,10 +70,10 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
             <ArrowLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
           <View>
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
               Offer Builder
             </Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {DEAL_STRATEGY_CONFIG[strategy].label}
             </Text>
           </View>
@@ -117,7 +117,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
       >
         {/* Strategy selector */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-2">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
             Offer Type
           </Text>
           <StrategySelector
@@ -132,7 +132,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
           className="p-3 rounded-lg mb-4"
           style={{ backgroundColor: colors.muted }}
         >
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             {DEAL_STRATEGY_CONFIG[strategy].description}
           </Text>
         </View>
@@ -160,8 +160,8 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
 
       {/* Bottom action bar */}
       <View
-        className="absolute bottom-0 left-0 right-0 p-4 border-t border-border"
-        style={{ backgroundColor: colors.background }}
+        className="absolute bottom-0 left-0 right-0 p-4"
+        style={{ backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border }}
       >
         <TouchableOpacity
           onPress={toggleViewMode}
@@ -170,7 +170,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
           accessibilityLabel={viewMode === 'edit' ? 'Preview scripts' : 'Back to editing'}
           accessibilityRole="button"
         >
-          <Text className="text-base font-semibold text-primary-foreground">
+          <Text className="text-base font-semibold" style={{ color: colors.primaryForeground }}>
             {viewMode === 'edit' ? 'Preview Scripts & Email' : 'Back to Edit'}
           </Text>
         </TouchableOpacity>

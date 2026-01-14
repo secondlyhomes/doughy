@@ -148,11 +148,16 @@ export function AccordionItem({
   ...props
 }: AccordionItemProps) {
   const { value: accordionValue } = useAccordionContext();
+  const colors = useThemeColors();
   const isOpen = accordionValue.includes(value);
 
   return (
     <AccordionItemContext.Provider value={{ value, isOpen, disabled }}>
-      <View className={cn('border-b border-border', className)} {...props}>
+      <View
+        className={cn('', className)}
+        style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+        {...props}
+      >
         {children}
       </View>
     </AccordionItemContext.Provider>
@@ -203,7 +208,10 @@ export function AccordionTrigger({
       accessibilityLabel={typeof children === 'string' ? children : undefined}
     >
       {typeof children === 'string' ? (
-        <Text className={cn('flex-1 text-sm font-medium text-foreground', textClassName)}>
+        <Text
+          className={cn('flex-1 text-sm font-medium', textClassName)}
+          style={{ color: colors.foreground }}
+        >
           {children}
         </Text>
       ) : (

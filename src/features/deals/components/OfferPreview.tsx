@@ -113,7 +113,7 @@ export function OfferPreview({
               accessibilityRole="button"
             >
               <Copy size={14} color={colors.primaryForeground} />
-              <Text className="text-xs font-medium text-primary-foreground">Copy</Text>
+              <Text className="text-xs font-medium" style={{ color: colors.primaryForeground }}>Copy</Text>
             </TouchableOpacity>
           </View>
         </CardHeader>
@@ -123,7 +123,7 @@ export function OfferPreview({
             style={{ backgroundColor: colors.muted }}
             showsVerticalScrollIndicator={false}
           >
-            <Text className="text-sm text-foreground font-mono">{callScript}</Text>
+            <Text className="text-sm font-mono" style={{ color: colors.foreground }}>{callScript}</Text>
           </ScrollView>
         </CardContent>
       </Card>
@@ -144,7 +144,7 @@ export function OfferPreview({
               accessibilityRole="button"
             >
               <Copy size={14} color={colors.primaryForeground} />
-              <Text className="text-xs font-medium text-primary-foreground">Copy</Text>
+              <Text className="text-xs font-medium" style={{ color: colors.primaryForeground }}>Copy</Text>
             </TouchableOpacity>
           </View>
         </CardHeader>
@@ -154,7 +154,7 @@ export function OfferPreview({
             style={{ backgroundColor: colors.muted }}
             showsVerticalScrollIndicator={false}
           >
-            <Text className="text-sm text-foreground font-mono">{emailText}</Text>
+            <Text className="text-sm font-mono" style={{ color: colors.foreground }}>{emailText}</Text>
           </ScrollView>
         </CardContent>
       </Card>
@@ -168,10 +168,10 @@ export function OfferPreview({
           >
             <FileText size={24} color={colors.mutedForeground} />
           </View>
-          <Text className="text-sm font-medium text-foreground mb-1">
+          <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
             PDF Generation
           </Text>
-          <Text className="text-xs text-muted-foreground text-center">
+          <Text className="text-xs text-center" style={{ color: colors.mutedForeground }}>
             Professional PDF offer letters will be available{'\n'}after Supabase integration
           </Text>
         </CardContent>

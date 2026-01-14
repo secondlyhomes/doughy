@@ -43,48 +43,51 @@ export function FinancingScenarioCard({
   return (
     <TouchableOpacity
       onPress={onSelect}
-      className={`bg-card rounded-xl border overflow-hidden ${
-        isSelected ? 'border-primary border-2' : 'border-border'
-      }`}
+      className="rounded-xl border overflow-hidden"
+      style={{
+        backgroundColor: colors.card,
+        borderColor: isSelected ? colors.primary : colors.border,
+        borderWidth: isSelected ? 2 : 1,
+      }}
     >
       {/* Header */}
-      <View className="flex-row items-center justify-between p-4 border-b border-border">
+      <View className="flex-row items-center justify-between p-4 border-b" style={{ borderColor: colors.border }}>
         <View className="flex-1">
           <View className="flex-row items-center">
-            <Text className="text-foreground font-semibold">{scenario.name}</Text>
+            <Text className="font-semibold" style={{ color: colors.foreground }}>{scenario.name}</Text>
             {isSelected && (
-              <View className="ml-2 bg-primary px-2 py-0.5 rounded">
-                <Text className="text-xs text-primary-foreground">Selected</Text>
+              <View className="ml-2 px-2 py-0.5 rounded" style={{ backgroundColor: colors.primary }}>
+                <Text className="text-xs" style={{ color: colors.primaryForeground }}>Selected</Text>
               </View>
             )}
           </View>
-          <Text className="text-xs text-muted-foreground">
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             {getLoanTypeLabel(scenario.scenario_type)} • {input.loanTerm || 30} years
           </Text>
         </View>
 
         <View className="flex-row gap-1">
-          <Button variant="ghost" size="icon" onPress={onEdit} className="bg-muted">
+          <Button variant="ghost" size="icon" onPress={onEdit} style={{ backgroundColor: colors.muted }}>
             <Edit2 size={14} color={colors.mutedForeground} />
           </Button>
-          <Button variant="ghost" size="icon" onPress={onDelete} className="bg-destructive/10">
+          <Button variant="ghost" size="icon" onPress={onDelete} style={{ backgroundColor: colors.destructive + '1A' }}>
             <Trash2 size={14} color={colors.destructive} />
           </Button>
         </View>
       </View>
 
       {/* Payment Highlight */}
-      <View className="p-4 bg-primary/5">
+      <View className="p-4" style={{ backgroundColor: colors.primary + '0D' }}>
         <View className="flex-row justify-between items-center">
           <View>
-            <Text className="text-xs text-muted-foreground">Monthly Payment</Text>
-            <Text className="text-2xl font-bold text-primary">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Monthly Payment</Text>
+            <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
               {formatCurrency(scenario.calculatedPayment)}
             </Text>
           </View>
           <View className="items-end">
-            <Text className="text-xs text-muted-foreground">Interest Rate</Text>
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Interest Rate</Text>
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
               {formatPercentage(input.interestRate || 0)}
             </Text>
           </View>
@@ -95,26 +98,26 @@ export function FinancingScenarioCard({
       <View className="p-4">
         <View className="flex-row flex-wrap gap-x-4 gap-y-2">
           <View className="min-w-[45%]">
-            <Text className="text-xs text-muted-foreground">Loan Amount</Text>
-            <Text className="text-sm text-foreground font-medium">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Loan Amount</Text>
+            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
               {formatCurrency(input.loanAmount || 0)}
             </Text>
           </View>
           <View className="min-w-[45%]">
-            <Text className="text-xs text-muted-foreground">Down Payment</Text>
-            <Text className="text-sm text-foreground font-medium">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Down Payment</Text>
+            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
               {formatCurrency(input.downPayment || 0)}
             </Text>
           </View>
           <View className="min-w-[45%]">
-            <Text className="text-xs text-muted-foreground">Total Interest</Text>
-            <Text className="text-sm text-foreground font-medium">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Total Interest</Text>
+            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
               {formatCurrency(scenario.totalInterest)}
             </Text>
           </View>
           <View className="min-w-[45%]">
-            <Text className="text-xs text-muted-foreground">Cash Required</Text>
-            <Text className="text-sm text-foreground font-medium">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Cash Required</Text>
+            <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
               {formatCurrency(scenario.cashRequired)}
             </Text>
           </View>
@@ -122,7 +125,7 @@ export function FinancingScenarioCard({
 
         {/* Notes */}
         {scenario.description && (
-          <Text className="text-xs text-muted-foreground mt-3">
+          <Text className="text-xs mt-3" style={{ color: colors.mutedForeground }}>
             {scenario.description}
           </Text>
         )}

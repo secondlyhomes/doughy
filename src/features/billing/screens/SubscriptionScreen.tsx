@@ -1,5 +1,6 @@
 // src/features/billing/screens/SubscriptionScreen.tsx
 // Subscription and billing screen for mobile
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -173,25 +174,28 @@ export function SubscriptionScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center p-4 border-b border-border">
+      <View
+        className="flex-row items-center p-4"
+        style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+      >
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <ArrowLeft size={24} color={colors.mutedForeground} />
         </TouchableOpacity>
-        <Text className="text-xl font-semibold text-foreground">Subscription</Text>
+        <Text className="text-xl font-semibold" style={{ color: colors.foreground }}>Subscription</Text>
       </View>
 
       <ScrollView className="flex-1">
         {/* Current Plan */}
         {subscription && (
           <View className="p-4">
-            <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
+            <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
               CURRENT PLAN
             </Text>
-            <View className="bg-card rounded-lg p-4">
+            <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center">
                   <CreditCard size={24} color={colors.primary} />
-                  <Text className="text-lg font-semibold text-foreground ml-3">
+                  <Text className="text-lg font-semibold ml-3" style={{ color: colors.foreground }}>
                     {subscription.planName}
                   </Text>
                 </View>
@@ -211,22 +215,22 @@ export function SubscriptionScreen() {
               {/* Credits Usage */}
               <View className="mb-4">
                 <View className="flex-row justify-between mb-2">
-                  <Text className="text-sm text-muted-foreground">Credits Used</Text>
-                  <Text className="text-sm text-foreground">
+                  <Text className="text-sm" style={{ color: colors.mutedForeground }}>Credits Used</Text>
+                  <Text className="text-sm" style={{ color: colors.foreground }}>
                     {creditsUsed} / {creditsTotal}
                   </Text>
                 </View>
-                <View className="h-2 bg-muted rounded-full overflow-hidden">
+                <View className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: colors.muted }}>
                   <View
-                    className="h-full bg-primary rounded-full"
-                    style={{ width: `${(creditsUsed / creditsTotal) * 100}%` }}
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: colors.primary, width: `${(creditsUsed / creditsTotal) * 100}%` }}
                   />
                 </View>
               </View>
 
               <View className="flex-row justify-between mb-2">
-                <Text className="text-sm text-muted-foreground">Renews On</Text>
-                <Text className="text-sm text-foreground">
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>Renews On</Text>
+                <Text className="text-sm" style={{ color: colors.foreground }}>
                   {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                 </Text>
               </View>
@@ -245,33 +249,39 @@ export function SubscriptionScreen() {
 
         {/* Available Plans */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
             AVAILABLE PLANS
           </Text>
 
           {plans.map((plan) => (
             <View
               key={plan.id}
-              className={`bg-card rounded-lg p-4 mb-3 ${
-                plan.popular ? 'border-2 border-primary' : 'border border-border'
-              }`}
+              className="rounded-lg p-4 mb-3"
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: plan.popular ? 2 : 1,
+                borderColor: plan.popular ? colors.primary : colors.border,
+              }}
             >
               {plan.popular && (
-                <View className="absolute -top-3 right-4 bg-primary px-3 py-1 rounded-full">
-                  <Text className="text-xs text-primary-foreground font-medium">Popular</Text>
+                <View
+                  className="absolute -top-3 right-4 px-3 py-1 rounded-full"
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  <Text className="text-xs font-medium" style={{ color: colors.primaryForeground }}>Popular</Text>
                 </View>
               )}
 
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center">
                   {plan.icon}
-                  <Text className="text-lg font-semibold text-foreground ml-3">{plan.name}</Text>
+                  <Text className="text-lg font-semibold ml-3" style={{ color: colors.foreground }}>{plan.name}</Text>
                 </View>
                 <View className="items-end">
-                  <Text className="text-2xl font-bold text-foreground">
+                  <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>
                     ${plan.price}
                   </Text>
-                  <Text className="text-xs text-muted-foreground">/{plan.interval}</Text>
+                  <Text className="text-xs" style={{ color: colors.mutedForeground }}>/{plan.interval}</Text>
                 </View>
               </View>
 
@@ -279,7 +289,7 @@ export function SubscriptionScreen() {
                 {plan.features.map((feature, index) => (
                   <View key={index} className="flex-row items-center mb-2">
                     <CheckCircle size={16} color={colors.success} />
-                    <Text className="text-sm text-muted-foreground ml-2">{feature}</Text>
+                    <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>{feature}</Text>
                   </View>
                 ))}
               </View>
@@ -298,11 +308,14 @@ export function SubscriptionScreen() {
 
         {/* Help Section */}
         <View className="p-4 pb-8">
-          <View className="bg-primary/10 rounded-lg p-4 flex-row">
+          <View
+            className="rounded-lg p-4 flex-row"
+            style={{ backgroundColor: `${colors.primary}15` }}
+          >
             <AlertCircle size={20} color={colors.primary} />
             <View className="flex-1 ml-3">
-              <Text className="text-sm text-primary font-medium">Need help with billing?</Text>
-              <Text className="text-sm text-muted-foreground mt-1">
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>Need help with billing?</Text>
+              <Text className="text-sm mt-1" style={{ color: colors.mutedForeground }}>
                 Contact our support team for assistance with subscriptions and billing questions.
               </Text>
             </View>

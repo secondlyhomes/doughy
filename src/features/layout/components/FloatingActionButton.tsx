@@ -141,7 +141,7 @@ export function FloatingActionButton({
               <View className="flex-row items-center">
                 {/* Label */}
                 <View className="rounded-lg px-3 py-2 mr-3 shadow-sm" style={{ backgroundColor: colors.card }}>
-                  <Text className="text-foreground text-sm font-medium">
+                  <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
                     {action.label}
                   </Text>
                 </View>

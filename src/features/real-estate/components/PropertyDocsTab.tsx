@@ -128,35 +128,36 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
     return (
       <View
         key={doc.id}
-        className="bg-card rounded-xl p-4 border border-border mb-2"
+        className="rounded-xl p-4 mb-2"
+        style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
       >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => handleViewDocument(doc)}
             className="flex-row items-center flex-1"
           >
-            <View className="bg-muted rounded-lg p-2 mr-3">
-              <Icon size={20} className="text-primary" />
+            <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.muted }}>
+              <Icon size={20} color={colors.primary} />
             </View>
             <View className="flex-1">
-              <Text className="text-foreground font-medium" numberOfLines={1}>
+              <Text className="font-medium" numberOfLines={1} style={{ color: colors.foreground }}>
                 {doc.title || doc.name || 'Untitled Document'}
               </Text>
               <View className="flex-row items-center mt-1 flex-wrap">
-                <Text className="text-xs text-muted-foreground capitalize">
+                <Text className="text-xs capitalize" style={{ color: colors.mutedForeground }}>
                   {doc.type || doc.category || 'other'}
                 </Text>
                 {doc.created_at && (
                   <>
-                    <Text className="text-xs text-muted-foreground mx-1">•</Text>
-                    <Text className="text-xs text-muted-foreground">
+                    <Text className="text-xs mx-1" style={{ color: colors.mutedForeground }}>•</Text>
+                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                       {formatDate(doc.created_at)}
                     </Text>
                   </>
                 )}
               </View>
               {doc.description && (
-                <Text className="text-xs text-muted-foreground mt-1" numberOfLines={1}>
+                <Text className="text-xs mt-1" numberOfLines={1} style={{ color: colors.mutedForeground }}>
                   {doc.description}
                 </Text>
               )}
@@ -166,9 +167,10 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
           <View className="flex-row gap-2 ml-2">
             <TouchableOpacity
               onPress={() => handleViewDocument(doc)}
-              className="bg-muted p-2 rounded-lg"
+              className="p-2 rounded-lg"
+              style={{ backgroundColor: colors.muted }}
             >
-              <Download size={16} className="text-muted-foreground" />
+              <Download size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
             <Button
               variant="ghost"
@@ -176,7 +178,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
               onPress={() => handleDeleteDocument(doc)}
               disabled={isDeletingDoc}
               loading={isDeletingDoc}
-              className="bg-destructive/10"
+              style={{ backgroundColor: `${colors.destructive}1A` }}
             >
               {!isDeletingDoc && <Trash2 size={16} color={colors.destructive} />}
             </Button>
@@ -199,7 +201,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
   if (error && documents.length === 0) {
     return (
       <View className="gap-4 py-8 items-center">
-        <Text className="text-destructive">{error.message}</Text>
+        <Text style={{ color: colors.destructive }}>{error.message}</Text>
         <Button onPress={refetch}>Retry</Button>
       </View>
     );
@@ -210,10 +212,10 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
       {/* Header */}
       <View className="flex-row justify-between items-center">
         <View className="flex-row items-center">
-          <Text className="text-lg font-semibold text-foreground">Documents</Text>
+          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
           {documents.length > 0 && (
-            <View className="bg-primary/10 px-2 py-1 rounded-full ml-2">
-              <Text className="text-xs text-primary font-medium">{documents.length}</Text>
+            <View className="px-2 py-1 rounded-full ml-2" style={{ backgroundColor: `${colors.primary}1A` }}>
+              <Text className="text-xs font-medium" style={{ color: colors.primary }}>{documents.length}</Text>
             </View>
           )}
         </View>
@@ -226,12 +228,12 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
       {/* Empty State */}
       {!hasDocuments && (
         <>
-          <View className="flex-1 items-center justify-center py-12 bg-card rounded-xl border border-border">
-            <View className="bg-muted rounded-full p-4 mb-4">
-              <FileText size={32} className="text-muted-foreground" />
+          <View className="flex-1 items-center justify-center py-12 rounded-xl" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <View className="rounded-full p-4 mb-4" style={{ backgroundColor: colors.muted }}>
+              <FileText size={32} color={colors.mutedForeground} />
             </View>
-            <Text className="text-lg font-semibold text-foreground mb-2">No Documents</Text>
-            <Text className="text-muted-foreground text-center px-8 mb-4">
+            <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Documents</Text>
+            <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
               Upload contracts, inspections, appraisals, and other documents related to this
               property.
             </Text>
@@ -242,8 +244,8 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
           </View>
 
           {/* Document Types Quick Info */}
-          <View className="bg-card rounded-xl p-4 border border-border">
-            <Text className="text-sm font-medium text-foreground mb-3">
+          <View className="rounded-xl p-4" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <Text className="text-sm font-medium mb-3" style={{ color: colors.foreground }}>
               Supported Document Types
             </Text>
             <View className="flex-row flex-wrap gap-2">
@@ -252,10 +254,11 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
                 return (
                   <View
                     key={docType.id}
-                    className="flex-row items-center bg-muted px-3 py-2 rounded-lg"
+                    className="flex-row items-center px-3 py-2 rounded-lg"
+                    style={{ backgroundColor: colors.muted }}
                   >
-                    <Icon size={14} className="text-muted-foreground" />
-                    <Text className="text-foreground text-sm ml-2">{docType.label}</Text>
+                    <Icon size={14} color={colors.mutedForeground} />
+                    <Text className="text-sm ml-2" style={{ color: colors.foreground }}>{docType.label}</Text>
                   </View>
                 );
               })}
@@ -276,22 +279,22 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
             const ChevronIcon = isExpanded ? ChevronDown : ChevronRight;
 
             return (
-              <View key={category.id} className="bg-card rounded-xl border border-border overflow-hidden">
+              <View key={category.id} className="rounded-xl overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
                 {/* Category Header */}
                 <TouchableOpacity
                   onPress={() => toggleCategory(category.id)}
                   className="flex-row items-center justify-between p-4"
                 >
                   <View className="flex-row items-center">
-                    <View className="bg-muted rounded-lg p-2 mr-3">
-                      <Icon size={18} className="text-primary" />
+                    <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.muted }}>
+                      <Icon size={18} color={colors.primary} />
                     </View>
-                    <Text className="text-foreground font-medium">{category.label}</Text>
-                    <View className="bg-primary/10 px-2 py-0.5 rounded-full ml-2">
-                      <Text className="text-xs text-primary font-medium">{categoryDocs.length}</Text>
+                    <Text className="font-medium" style={{ color: colors.foreground }}>{category.label}</Text>
+                    <View className="px-2 py-0.5 rounded-full ml-2" style={{ backgroundColor: `${colors.primary}1A` }}>
+                      <Text className="text-xs font-medium" style={{ color: colors.primary }}>{categoryDocs.length}</Text>
                     </View>
                   </View>
-                  <ChevronIcon size={20} className="text-muted-foreground" />
+                  <ChevronIcon size={20} color={colors.mutedForeground} />
                 </TouchableOpacity>
 
                 {/* Category Documents */}
@@ -307,12 +310,12 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
       )}
 
       {/* Upload Info */}
-      <View className="bg-muted rounded-xl p-4">
+      <View className="rounded-xl p-4" style={{ backgroundColor: colors.muted }}>
         <View className="flex-row items-center mb-2">
-          <Upload size={16} className="text-muted-foreground" />
-          <Text className="text-sm font-medium text-foreground ml-2">Upload Documents</Text>
+          <Upload size={16} color={colors.mutedForeground} />
+          <Text className="text-sm font-medium ml-2" style={{ color: colors.foreground }}>Upload Documents</Text>
         </View>
-        <Text className="text-xs text-muted-foreground">
+        <Text className="text-xs" style={{ color: colors.mutedForeground }}>
           Supported formats: PDF, Images (JPG, PNG), Word documents. Maximum file size: 10MB.
         </Text>
       </View>

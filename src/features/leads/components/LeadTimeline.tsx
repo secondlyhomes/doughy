@@ -73,24 +73,24 @@ function getActivityIcon(type: ActivityType, colors: ThemeColors) {
   }
 }
 
-function getActivityColor(type: ActivityType) {
+function getActivityColor(type: ActivityType, colors: ThemeColors) {
   switch (type) {
     case 'call':
-      return 'bg-info/20';
+      return `${colors.info}33`;
     case 'email':
-      return 'bg-success/20';
+      return `${colors.success}33`;
     case 'text':
-      return 'bg-primary/20';
+      return `${colors.primary}33`;
     case 'meeting':
-      return 'bg-warning/20';
+      return `${colors.warning}33`;
     case 'note':
-      return 'bg-muted';
+      return colors.mutedForeground + '20';
     case 'status_change':
-      return 'bg-destructive/20';
+      return `${colors.destructive}33`;
     case 'property_shown':
-      return 'bg-info/20';
+      return `${colors.info}33`;
     default:
-      return 'bg-muted';
+      return colors.mutedForeground + '20';
   }
 }
 
@@ -147,31 +147,31 @@ function TimelineItem({ activity, isLast, colors }: TimelineItemProps) {
     <View className="flex-row">
       {/* Timeline connector */}
       <View className="items-center mr-3">
-        <View className={`w-8 h-8 rounded-full ${getActivityColor(activity.type)} items-center justify-center`}>
+        <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: getActivityColor(activity.type, colors) }}>
           {getActivityIcon(activity.type, colors)}
         </View>
         {!isLast && (
-          <View className="w-0.5 flex-1 bg-border my-1" />
+          <View className="w-0.5 flex-1 my-1" style={{ backgroundColor: colors.border }} />
         )}
       </View>
 
       {/* Content */}
       <View className="flex-1 pb-4">
         <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-sm font-medium text-foreground">
+          <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
             {formatActivityType(activity.type)}
           </Text>
-          <Text className="text-xs text-muted-foreground">
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             {formatTimeAgo(activity.created_at)}
           </Text>
         </View>
-        <Text className="text-sm text-muted-foreground">
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           {activity.description}
         </Text>
         {activity.metadata && 'duration' in activity.metadata && Boolean(activity.metadata.duration) ? (
           <View className="flex-row items-center mt-1">
             <Clock size={12} color={colors.mutedForeground} />
-            <Text className="text-xs text-muted-foreground ml-1">
+            <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>
               Duration: {String(activity.metadata.duration)}
             </Text>
           </View>
@@ -230,15 +230,16 @@ export function LeadTimeline({ activities, onAddActivity }: LeadTimelineProps) {
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center">
           <Calendar size={18} color={colors.mutedForeground} />
-          <Text className="text-lg font-semibold text-foreground ml-2">Activity</Text>
+          <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Activity</Text>
         </View>
         {onAddActivity && (
           <TouchableOpacity
-            className="flex-row items-center bg-primary/10 px-3 py-1.5 rounded-lg"
+            className="flex-row items-center px-3 py-1.5 rounded-lg"
+            style={{ backgroundColor: `${colors.primary}15` }}
             onPress={onAddActivity}
           >
             <Plus size={14} color={colors.info} />
-            <Text className="text-primary text-sm ml-1">Log Activity</Text>
+            <Text className="text-sm ml-1" style={{ color: colors.primary }}>Log Activity</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -258,15 +259,16 @@ export function LeadTimeline({ activities, onAddActivity }: LeadTimelineProps) {
       ) : (
         <View className="py-8 items-center">
           <Clock size={32} color={colors.border} />
-          <Text className="text-muted-foreground text-center mt-2">
+          <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
             No activity recorded yet
           </Text>
           {onAddActivity && (
             <TouchableOpacity
-              className="mt-3 bg-primary px-4 py-2 rounded-lg"
+              className="mt-3 px-4 py-2 rounded-lg"
+              style={{ backgroundColor: colors.primary }}
               onPress={onAddActivity}
             >
-              <Text className="text-primary-foreground font-medium">Log First Activity</Text>
+              <Text className="font-medium" style={{ color: colors.primaryForeground }}>Log First Activity</Text>
             </TouchableOpacity>
           )}
         </View>

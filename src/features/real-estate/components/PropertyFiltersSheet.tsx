@@ -90,18 +90,23 @@ export function PropertyFiltersSheet({
             <TouchableOpacity
               key={option.value}
               onPress={() => toggleStatus(option.value as PropertyStatus)}
-              className={`px-4 py-2 rounded-full border ${
-                localFilters.status.includes(option.value as PropertyStatus)
-                  ? 'bg-primary border-primary'
-                  : 'bg-muted border-border'
-              }`}
+              className="px-4 py-2 rounded-full border"
+              style={{
+                backgroundColor: localFilters.status.includes(option.value as PropertyStatus)
+                  ? colors.primary
+                  : colors.muted,
+                borderColor: localFilters.status.includes(option.value as PropertyStatus)
+                  ? colors.primary
+                  : colors.border,
+              }}
             >
               <Text
-                className={`text-sm font-medium ${
-                  localFilters.status.includes(option.value as PropertyStatus)
-                    ? 'text-primary-foreground'
-                    : 'text-foreground'
-                }`}
+                className="text-sm font-medium"
+                style={{
+                  color: localFilters.status.includes(option.value as PropertyStatus)
+                    ? colors.primaryForeground
+                    : colors.foreground,
+                }}
               >
                 {option.label}
               </Text>
@@ -120,18 +125,23 @@ export function PropertyFiltersSheet({
               <TouchableOpacity
                 key={type}
                 onPress={() => togglePropertyType(type)}
-                className={`px-4 py-2 rounded-full border ${
-                  localFilters.propertyType.includes(type)
-                    ? 'bg-primary border-primary'
-                    : 'bg-muted border-border'
-                }`}
+                className="px-4 py-2 rounded-full border"
+                style={{
+                  backgroundColor: localFilters.propertyType.includes(type)
+                    ? colors.primary
+                    : colors.muted,
+                  borderColor: localFilters.propertyType.includes(type)
+                    ? colors.primary
+                    : colors.border,
+                }}
               >
                 <Text
-                  className={`text-sm font-medium ${
-                    localFilters.propertyType.includes(type)
-                      ? 'text-primary-foreground'
-                      : 'text-foreground'
-                  }`}
+                  className="text-sm font-medium"
+                  style={{
+                    color: localFilters.propertyType.includes(type)
+                      ? colors.primaryForeground
+                      : colors.foreground,
+                  }}
                 >
                   {option.label}
                 </Text>
@@ -145,7 +155,7 @@ export function PropertyFiltersSheet({
       <BottomSheetSection title="Purchase Price">
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Text className="text-xs text-muted-foreground mb-1">Min</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Min</Text>
             <TextInput
               value={localFilters.priceMin?.toString() || ''}
               onChangeText={text => {
@@ -155,11 +165,12 @@ export function PropertyFiltersSheet({
               placeholder="$0"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
           <View className="flex-1">
-            <Text className="text-xs text-muted-foreground mb-1">Max</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Max</Text>
             <TextInput
               value={localFilters.priceMax?.toString() || ''}
               onChangeText={text => {
@@ -169,7 +180,8 @@ export function PropertyFiltersSheet({
               placeholder="No max"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
         </View>
@@ -179,7 +191,7 @@ export function PropertyFiltersSheet({
       <BottomSheetSection title="ARV (After Repair Value)">
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Text className="text-xs text-muted-foreground mb-1">Min</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Min</Text>
             <TextInput
               value={localFilters.arvMin?.toString() || ''}
               onChangeText={text => {
@@ -189,11 +201,12 @@ export function PropertyFiltersSheet({
               placeholder="$0"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
           <View className="flex-1">
-            <Text className="text-xs text-muted-foreground mb-1">Max</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Max</Text>
             <TextInput
               value={localFilters.arvMax?.toString() || ''}
               onChangeText={text => {
@@ -203,7 +216,8 @@ export function PropertyFiltersSheet({
               placeholder="No max"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
         </View>
@@ -213,7 +227,7 @@ export function PropertyFiltersSheet({
       <BottomSheetSection title="Bedrooms">
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Text className="text-xs text-muted-foreground mb-1">Min</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Min</Text>
             <TextInput
               value={localFilters.bedroomsMin?.toString() || ''}
               onChangeText={text => {
@@ -223,11 +237,12 @@ export function PropertyFiltersSheet({
               placeholder="Any"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
           <View className="flex-1">
-            <Text className="text-xs text-muted-foreground mb-1">Max</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Max</Text>
             <TextInput
               value={localFilters.bedroomsMax?.toString() || ''}
               onChangeText={text => {
@@ -237,7 +252,8 @@ export function PropertyFiltersSheet({
               placeholder="Any"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
         </View>
@@ -247,17 +263,18 @@ export function PropertyFiltersSheet({
       <BottomSheetSection title="Location">
         <View className="gap-3">
           <View>
-            <Text className="text-xs text-muted-foreground mb-1">City</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>City</Text>
             <TextInput
               value={localFilters.city}
               onChangeText={text => setLocalFilters(prev => ({ ...prev, city: text }))}
               placeholder="Any city"
               placeholderTextColor={colors.mutedForeground}
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
           <View>
-            <Text className="text-xs text-muted-foreground mb-1">State</Text>
+            <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>State</Text>
             <TextInput
               value={localFilters.state}
               onChangeText={text => setLocalFilters(prev => ({ ...prev, state: text }))}
@@ -265,7 +282,8 @@ export function PropertyFiltersSheet({
               placeholderTextColor={colors.mutedForeground}
               maxLength={2}
               autoCapitalize="characters"
-              className="bg-muted rounded-lg px-4 py-3 text-foreground"
+              className="rounded-lg px-4 py-3"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
         </View>

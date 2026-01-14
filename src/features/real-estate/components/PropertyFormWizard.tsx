@@ -255,7 +255,8 @@ export function PropertyFormWizard({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-background"
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
     >
       {/* Progress Indicator */}
       <FormStepProgress
@@ -269,7 +270,7 @@ export function PropertyFormWizard({
       </View>
 
       {/* Navigation Buttons */}
-      <View className="flex-row gap-3 p-4 bg-background border-t border-border">
+      <View className="flex-row gap-3 p-4" style={{ backgroundColor: colors.background, borderTopWidth: 1, borderColor: colors.border }}>
         {currentStep === 0 ? (
           <Button
             variant="secondary"

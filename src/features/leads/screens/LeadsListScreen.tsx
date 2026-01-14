@@ -136,15 +136,16 @@ export function LeadsListScreen() {
             className="flex-1"
           />
           <TouchableOpacity
-            className="bg-muted p-2.5 rounded-lg relative"
+            className="p-2.5 rounded-lg relative"
+            style={{ backgroundColor: colors.muted }}
             onPress={() => setShowFiltersSheet(true)}
             accessibilityLabel={`Open filters${activeFiltersCount > 0 ? `, ${activeFiltersCount} active` : ''}`}
             accessibilityRole="button"
           >
             <SlidersHorizontal size={20} color={colors.mutedForeground} />
             {activeFiltersCount > 0 && (
-              <View className="absolute -top-1 -right-1 bg-primary w-5 h-5 rounded-full items-center justify-center">
-                <Text className="text-primary-foreground text-xs font-bold">
+              <View className="absolute -top-1 -right-1 w-5 h-5 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary }}>
+                <Text className="text-xs font-bold" style={{ color: colors.primaryForeground }}>
                   {activeFiltersCount}
                 </Text>
               </View>
@@ -162,22 +163,16 @@ export function LeadsListScreen() {
           keyExtractor={(item) => item.key}
           renderItem={({ item }) => (
             <TouchableOpacity
-              className={`mr-2 px-4 py-2 rounded-full ${
-                activeFilter === item.key
-                  ? 'bg-primary'
-                  : 'bg-muted'
-              }`}
+              className="mr-2 px-4 py-2 rounded-full"
+              style={{ backgroundColor: activeFilter === item.key ? colors.primary : colors.muted }}
               onPress={() => setActiveFilter(item.key)}
               accessibilityLabel={`Filter by ${item.label}${activeFilter === item.key ? ', selected' : ''}`}
               accessibilityRole="button"
               accessibilityState={{ selected: activeFilter === item.key }}
             >
               <Text
-                className={`text-sm font-medium ${
-                  activeFilter === item.key
-                    ? 'text-primary-foreground'
-                    : 'text-muted-foreground'
-                }`}
+                className="text-sm font-medium"
+                style={{ color: activeFilter === item.key ? colors.primaryForeground : colors.mutedForeground }}
               >
                 {item.label}
               </Text>
@@ -188,7 +183,7 @@ export function LeadsListScreen() {
 
       {/* Leads Count */}
       <View className="px-4 pb-2">
-        <Text className="text-sm text-muted-foreground">
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           {filteredLeads.length} leads
         </Text>
       </View>
@@ -212,16 +207,17 @@ export function LeadsListScreen() {
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
-              <Text className="text-muted-foreground text-center">
+              <Text className="text-center" style={{ color: colors.mutedForeground }}>
                 {searchQuery ? 'No leads match your search' : 'No leads yet'}
               </Text>
               <TouchableOpacity
-                className="mt-4 bg-primary px-4 py-2 rounded-lg"
+                className="mt-4 px-4 py-2 rounded-lg"
+                style={{ backgroundColor: colors.primary }}
                 onPress={() => router.push('/(tabs)/leads/add')}
                 accessibilityLabel="Add your first lead"
                 accessibilityRole="button"
               >
-                <Text className="text-primary-foreground font-medium">Add First Lead</Text>
+                <Text className="font-medium" style={{ color: colors.primaryForeground }}>Add First Lead</Text>
               </TouchableOpacity>
             </View>
           }
@@ -230,8 +226,9 @@ export function LeadsListScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity
-        className="absolute bottom-32 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
+        className="absolute bottom-32 right-6 w-14 h-14 rounded-full items-center justify-center shadow-lg"
         style={{
+          backgroundColor: colors.primary,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.25,

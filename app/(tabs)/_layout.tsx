@@ -1,15 +1,32 @@
 // app/(tabs)/_layout.tsx
 // Bottom tab navigator layout with floating glass tab bar
 // MVP Deal OS: Inbox → Deals → Properties → Settings
-import { Tabs } from 'expo-router';
+import { View, ActivityIndicator } from 'react-native';
+import { Tabs, Redirect } from 'expo-router';
 import { Inbox, Briefcase, Building, Users, MessageCircle, Settings } from 'lucide-react-native';
-import { useUnreadCounts, formatBadgeCount } from '@/features/layout';
+import { useUnreadCounts } from '@/features/layout';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { FloatingGlassTabBar, TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
 
 export default function TabLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
   const { counts } = useUnreadCounts();
   const colors = useThemeColors();
+
+  // Auth guard - show loading while checking auth
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
 
   return (
     <Tabs

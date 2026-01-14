@@ -145,7 +145,7 @@ export function AskDoughyModal({ visible, onClose }: AskDoughyModalProps) {
         onClose={onClose}
       >
         {/* Header */}
-        <ModalHeader className="pb-4 border-b border-border">
+        <ModalHeader className="pb-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <View className="flex-row items-center justify-between">
             <ModalTitle className="text-xl">Ask Doughy</ModalTitle>
             <TouchableOpacity

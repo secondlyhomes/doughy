@@ -138,7 +138,8 @@ export function PhotoBucketCard({
       />
       {!disabled && (
         <TouchableOpacity
-          className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full items-center justify-center"
+          className="absolute -top-1 -right-1 w-5 h-5 rounded-full items-center justify-center"
+          style={{ backgroundColor: colors.destructive }}
           onPress={() => handleRemove(item.id)}
           accessibilityLabel="Remove photo"
           accessibilityRole="button"
@@ -167,10 +168,10 @@ export function PhotoBucketCard({
             <Icon size={20} color={colors.primary} />
           </View>
           <View className="flex-1">
-            <Text className="text-base font-semibold text-foreground">
+            <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
               {config.label}
             </Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {photos.length} photos • {memos.length} memos
             </Text>
           </View>
@@ -208,7 +209,7 @@ export function PhotoBucketCard({
                   style={{ backgroundColor: colors.muted }}
                 >
                   <Mic size={16} color={colors.primary} />
-                  <Text className="flex-1 ml-2 text-sm text-foreground" numberOfLines={1}>
+                  <Text className="flex-1 ml-2 text-sm" style={{ color: colors.foreground }} numberOfLines={1}>
                     {memo.transcript || 'Voice memo'}
                   </Text>
                   {!disabled && (
@@ -236,7 +237,7 @@ export function PhotoBucketCard({
                 accessibilityRole="button"
               >
                 <Camera size={16} color={colors.mutedForeground} />
-                <Text className="text-sm text-muted-foreground">Camera</Text>
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>Camera</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -247,7 +248,7 @@ export function PhotoBucketCard({
                 accessibilityRole="button"
               >
                 <ImageIcon size={16} color={colors.mutedForeground} />
-                <Text className="text-sm text-muted-foreground">Gallery</Text>
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>Gallery</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -258,7 +259,7 @@ export function PhotoBucketCard({
                 accessibilityRole="button"
               >
                 <Mic size={16} color={colors.mutedForeground} />
-                <Text className="text-sm text-muted-foreground">Memo</Text>
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>Memo</Text>
               </TouchableOpacity>
             </View>
           )}

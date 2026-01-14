@@ -20,7 +20,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   if (isSystem) {
     return (
       <View className="items-center py-2">
-        <Text className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
+        <Text className="text-xs px-3 py-1 rounded-full" style={{ color: colors.mutedForeground, backgroundColor: colors.muted }}>
           {message.content}
         </Text>
       </View>
@@ -32,23 +32,19 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       <View className="flex-row items-end gap-2" style={{ maxWidth: '85%' }}>
         {/* Avatar for Assistant */}
         {!isUser && (
-          <View className="bg-primary/10 rounded-full p-1.5 mb-1">
+          <View className="rounded-full p-1.5 mb-1" style={{ backgroundColor: `${colors.primary}15` }}>
             <Bot size={14} color={colors.info} />
           </View>
         )}
 
         {/* Message Bubble */}
         <View
-          className={`rounded-2xl px-4 py-3 ${
-            isUser
-              ? 'bg-primary rounded-br-sm'
-              : 'bg-muted rounded-bl-sm'
-          }`}
+          className={`rounded-2xl px-4 py-3 ${isUser ? 'rounded-br-sm' : 'rounded-bl-sm'}`}
+          style={{ backgroundColor: isUser ? colors.primary : colors.muted }}
         >
           <Text
-            className={`text-base leading-6 ${
-              isUser ? 'text-primary-foreground' : 'text-foreground'
-            }`}
+            className="text-base leading-6"
+            style={{ color: isUser ? colors.primaryForeground : colors.foreground }}
           >
             {message.content}
           </Text>
@@ -56,7 +52,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
         {/* Avatar for User */}
         {isUser && (
-          <View className="bg-secondary rounded-full p-1.5 mb-1">
+          <View className="rounded-full p-1.5 mb-1" style={{ backgroundColor: colors.secondary }}>
             <User size={14} color={colors.mutedForeground} />
           </View>
         )}
@@ -64,9 +60,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
       {/* Timestamp */}
       <Text
-        className={`text-xs text-muted-foreground mt-1 ${
-          isUser ? 'mr-8' : 'ml-8'
-        }`}
+        className={`text-xs mt-1 ${isUser ? 'mr-8' : 'ml-8'}`}
+        style={{ color: colors.mutedForeground }}
       >
         {formatTime(message.createdAt)}
       </Text>

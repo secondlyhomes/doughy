@@ -3,6 +3,7 @@
 import React from 'react';
 import { View, Text, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Button } from './Button';
 
 export interface EmptyStateProps extends ViewProps {
@@ -24,17 +25,18 @@ export function EmptyState({
   className,
   ...props
 }: EmptyStateProps) {
+  const colors = useThemeColors();
   return (
     <View
       className={cn('flex-1 items-center justify-center p-8 gap-4', className)}
       {...props}
     >
       {icon}
-      <Text className="text-center text-lg font-semibold text-foreground">
+      <Text className="text-center text-lg font-semibold" style={{ color: colors.foreground }}>
         {title}
       </Text>
       {description && (
-        <Text className="text-center text-sm text-muted-foreground">
+        <Text className="text-center text-sm" style={{ color: colors.mutedForeground }}>
           {description}
         </Text>
       )}

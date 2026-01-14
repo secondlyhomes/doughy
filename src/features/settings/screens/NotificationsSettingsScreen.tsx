@@ -115,15 +115,16 @@ export function NotificationsSettingsScreen() {
         {/* Permission Banner */}
         {hasPermission === false && (
           <TouchableOpacity
-            className="bg-warning/10 border border-warning/30 rounded-lg p-4 mb-6 flex-row items-center"
+            className="rounded-lg p-4 mb-6 flex-row items-center"
+            style={{ backgroundColor: `${colors.warning}15`, borderWidth: 1, borderColor: `${colors.warning}50` }}
             onPress={handleRequestPermission}
           >
             <AlertTriangle size={24} color={colors.warning} />
             <View className="flex-1 ml-3">
-              <Text className="text-warning font-medium">
+              <Text className="font-medium" style={{ color: colors.warning }}>
                 Notifications Disabled
               </Text>
-              <Text className="text-warning/80 text-sm">
+              <Text className="text-sm" style={{ color: `${colors.warning}cc` }}>
                 Tap to enable push notifications
               </Text>
             </View>
@@ -131,18 +132,18 @@ export function NotificationsSettingsScreen() {
         )}
 
         {/* Push Notifications Master Toggle */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           PUSH NOTIFICATIONS
         </Text>
 
         <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center p-4">
-            <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+            <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
               <Bell size={20} color={colors.info} />
             </View>
             <View className="flex-1 ml-4">
-              <Text className="text-foreground font-medium">Push Notifications</Text>
-              <Text className="text-sm text-muted-foreground">
+              <Text className="font-medium" style={{ color: colors.foreground }}>Push Notifications</Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                 Receive alerts on your device
               </Text>
             </View>
@@ -156,7 +157,7 @@ export function NotificationsSettingsScreen() {
         </View>
 
         {/* Notification Types */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           NOTIFICATION TYPES
         </Text>
 
@@ -197,7 +198,7 @@ export function NotificationsSettingsScreen() {
         </View>
 
         {/* Team & Email */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           OTHER
         </Text>
 
@@ -246,16 +247,18 @@ function NotificationToggle({
   const colors = useThemeColors();
   return (
     <View
-      className={`flex-row items-center p-4 ${
-        !hideBorder ? 'border-b border-border' : ''
-      } ${disabled ? 'opacity-50' : ''}`}
+      className="flex-row items-center p-4"
+      style={[
+        !hideBorder ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {},
+        disabled ? { opacity: 0.5 } : {},
+      ]}
     >
-      <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
+      <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.muted }}>
         {icon}
       </View>
       <View className="flex-1 ml-4">
-        <Text className="text-foreground font-medium">{title}</Text>
-        <Text className="text-sm text-muted-foreground">{description}</Text>
+        <Text className="font-medium" style={{ color: colors.foreground }}>{title}</Text>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{description}</Text>
       </View>
       <Switch
         value={value}

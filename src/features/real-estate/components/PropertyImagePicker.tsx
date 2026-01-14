@@ -123,19 +123,20 @@ export function PropertyImagePicker({
             <TouchableOpacity
               onPress={pickImages}
               disabled={disabled}
-              className={`w-24 h-24 rounded-xl items-center justify-center border-2 border-dashed ${
-                disabled ? 'bg-muted/50 border-muted' : 'bg-muted border-border'
-              }`}
+              style={{
+                backgroundColor: disabled ? `${colors.muted}80` : colors.muted,
+                borderColor: disabled ? colors.muted : colors.border,
+              }}
+              className="w-24 h-24 rounded-xl items-center justify-center border-2 border-dashed"
               activeOpacity={0.7}
             >
               <ImagePlus
                 size={24}
-                className={disabled ? 'text-muted' : 'text-muted-foreground'}
+                color={disabled ? colors.muted : colors.mutedForeground}
               />
               <Text
-                className={`text-xs mt-1 ${
-                  disabled ? 'text-muted' : 'text-muted-foreground'
-                }`}
+                style={{ color: disabled ? colors.muted : colors.mutedForeground }}
+                className="text-xs mt-1"
               >
                 Gallery
               </Text>
@@ -147,19 +148,20 @@ export function PropertyImagePicker({
             <TouchableOpacity
               onPress={takePhoto}
               disabled={disabled}
-              className={`w-24 h-24 rounded-xl items-center justify-center border-2 border-dashed ${
-                disabled ? 'bg-muted/50 border-muted' : 'bg-muted border-border'
-              }`}
+              style={{
+                backgroundColor: disabled ? `${colors.muted}80` : colors.muted,
+                borderColor: disabled ? colors.muted : colors.border,
+              }}
+              className="w-24 h-24 rounded-xl items-center justify-center border-2 border-dashed"
               activeOpacity={0.7}
             >
               <Camera
                 size={24}
-                className={disabled ? 'text-muted' : 'text-muted-foreground'}
+                color={disabled ? colors.muted : colors.mutedForeground}
               />
               <Text
-                className={`text-xs mt-1 ${
-                  disabled ? 'text-muted' : 'text-muted-foreground'
-                }`}
+                style={{ color: disabled ? colors.muted : colors.mutedForeground }}
+                className="text-xs mt-1"
               >
                 Camera
               </Text>
@@ -177,15 +179,16 @@ export function PropertyImagePicker({
               {!disabled && (
                 <TouchableOpacity
                   onPress={() => removeImage(index)}
-                  className="absolute -top-2 -right-2 bg-destructive rounded-full w-6 h-6 items-center justify-center shadow-sm"
+                  style={{ backgroundColor: colors.destructive }}
+                  className="absolute -top-2 -right-2 rounded-full w-6 h-6 items-center justify-center shadow-sm"
                   activeOpacity={0.7}
                 >
                   <X size={14} color={colors.destructiveForeground} />
                 </TouchableOpacity>
               )}
               {index === 0 && (
-                <View className="absolute bottom-1 left-1 bg-primary/80 px-1.5 py-0.5 rounded">
-                  <Text className="text-white text-xs font-medium">Primary</Text>
+                <View style={{ backgroundColor: `${colors.primary}CC` }} className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded">
+                  <Text style={{ color: colors.primaryForeground }} className="text-xs font-medium">Primary</Text>
                 </View>
               )}
             </View>
@@ -195,13 +198,13 @@ export function PropertyImagePicker({
 
       {/* Photo Count */}
       <View className="flex-row justify-between items-center mt-2 px-1">
-        <Text className="text-xs text-muted-foreground">
+        <Text style={{ color: colors.mutedForeground }} className="text-xs">
           {images.length}/{maxImages} photos
         </Text>
         {images.length === 0 && (
           <View className="flex-row items-center">
-            <ImageIcon size={12} className="text-muted-foreground" />
-            <Text className="text-xs text-muted-foreground ml-1">
+            <ImageIcon size={12} color={colors.mutedForeground} />
+            <Text style={{ color: colors.mutedForeground }} className="text-xs ml-1">
               Add photos to showcase your property
             </Text>
           </View>

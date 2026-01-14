@@ -12,14 +12,9 @@ import {
   Trash2,
   Edit2,
 } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 import { RepairEstimate, RepairCategory } from '../types';
 import { formatCurrency } from '../utils/formatters';
-
-const PRIORITY_COLORS = {
-  low: 'bg-success/20 text-success',
-  medium: 'bg-warning/20 text-warning',
-  high: 'bg-destructive/20 text-destructive',
-};
 
 interface CategorySummary {
   category: RepairCategory;
@@ -48,54 +43,57 @@ export function RepairCategorySection({
   onDeleteRepair,
   onToggleCompleted,
 }: RepairCategorySectionProps) {
+  const colors = useThemeColors();
+
   return (
-    <View className="bg-card rounded-xl border border-border overflow-hidden">
+    <View className="rounded-xl border overflow-hidden" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
       {/* Category Header */}
       <TouchableOpacity
         onPress={onToggle}
         className="flex-row items-center justify-between p-4"
       >
         <View className="flex-row items-center flex-1">
-          <View className="bg-primary/10 p-2 rounded-lg">
-            <Wrench size={16} className="text-primary" />
+          <View className="p-2 rounded-lg" style={{ backgroundColor: `${colors.primary}1A` }}>
+            <Wrench size={16} color={colors.primary} />
           </View>
           <View className="ml-3 flex-1">
-            <Text className="text-foreground font-semibold">{summary.label}</Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="font-semibold" style={{ color: colors.foreground }}>{summary.label}</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {summary.items.length} item{summary.items.length !== 1 ? 's' : ''} •{' '}
               {summary.completedCount} completed
             </Text>
           </View>
         </View>
         <View className="flex-row items-center">
-          <Text className="text-foreground font-semibold mr-2">
+          <Text className="font-semibold mr-2" style={{ color: colors.foreground }}>
             {formatCurrency(summary.totalEstimate)}
           </Text>
           {isExpanded ? (
-            <ChevronDown size={20} className="text-muted-foreground" />
+            <ChevronDown size={20} color={colors.mutedForeground} />
           ) : (
-            <ChevronRight size={20} className="text-muted-foreground" />
+            <ChevronRight size={20} color={colors.mutedForeground} />
           )}
         </View>
       </TouchableOpacity>
 
       {/* Category Items */}
       {isExpanded && (
-        <View className="border-t border-border">
+        <View className="border-t" style={{ borderColor: colors.border }}>
           {summary.items.map((repair, index) => (
             <View
               key={repair.id}
-              className={`p-4 ${index > 0 ? 'border-t border-border' : ''}`}
+              className="p-4"
+              style={index > 0 ? { borderTopWidth: 1, borderColor: colors.border } : undefined}
             >
               <View className="flex-row items-start">
                 {/* Completed checkbox */}
                 <TouchableOpacity
                   onPress={() => onToggleCompleted(repair)}
-                  className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3 ${
-                    repair.completed
-                      ? 'bg-success border-success'
-                      : 'border-muted-foreground'
-                  }`}
+                  className="w-6 h-6 rounded-full border-2 items-center justify-center mr-3"
+                  style={{
+                    backgroundColor: repair.completed ? colors.success : 'transparent',
+                    borderColor: repair.completed ? colors.success : colors.mutedForeground,
+                  }}
                 >
                   {repair.completed && <Check size={14} color="white" />}
                 </TouchableOpacity>
@@ -104,13 +102,14 @@ export function RepairCategorySection({
                 <View className="flex-1">
                   <View className="flex-row items-center justify-between">
                     <Text
-                      className={`text-foreground font-medium flex-1 ${
+                      className={`font-medium flex-1 ${
                         repair.completed ? 'line-through opacity-60' : ''
                       }`}
+                      style={{ color: colors.foreground }}
                     >
                       {repair.description}
                     </Text>
-                    <Text className="text-foreground font-semibold ml-2">
+                    <Text className="font-semibold ml-2" style={{ color: colors.foreground }}>
                       {formatCurrency(repair.estimate)}
                     </Text>
                   </View>
@@ -118,15 +117,35 @@ export function RepairCategorySection({
                   {/* Priority badge */}
                   <View className="flex-row items-center mt-1">
                     <View
-                      className={`px-2 py-0.5 rounded ${PRIORITY_COLORS[repair.priority]}`}
+                      className="px-2 py-0.5 rounded"
+                      style={{
+                        backgroundColor:
+                          repair.priority === 'low'
+                            ? `${colors.success}33`
+                            : repair.priority === 'medium'
+                              ? `${colors.warning}33`
+                              : `${colors.destructive}33`,
+                      }}
                     >
-                      <Text className="text-xs capitalize">{repair.priority}</Text>
+                      <Text
+                        className="text-xs capitalize"
+                        style={{
+                          color:
+                            repair.priority === 'low'
+                              ? colors.success
+                              : repair.priority === 'medium'
+                                ? colors.warning
+                                : colors.destructive,
+                        }}
+                      >
+                        {repair.priority}
+                      </Text>
                     </View>
                   </View>
 
                   {/* Notes */}
                   {repair.notes && (
-                    <Text className="text-xs text-muted-foreground mt-2">
+                    <Text className="text-xs mt-2" style={{ color: colors.mutedForeground }}>
                       {repair.notes}
                     </Text>
                   )}
@@ -136,15 +155,17 @@ export function RepairCategorySection({
                 <View className="flex-row gap-1 ml-2">
                   <TouchableOpacity
                     onPress={() => onEditRepair(repair)}
-                    className="p-1.5 bg-muted rounded-lg"
+                    className="p-1.5 rounded-lg"
+                    style={{ backgroundColor: colors.muted }}
                   >
-                    <Edit2 size={14} className="text-muted-foreground" />
+                    <Edit2 size={14} color={colors.mutedForeground} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => onDeleteRepair(repair)}
-                    className="p-1.5 bg-destructive/10 rounded-lg"
+                    className="p-1.5 rounded-lg"
+                    style={{ backgroundColor: `${colors.destructive}1A` }}
                   >
-                    <Trash2 size={14} className="text-destructive" />
+                    <Trash2 size={14} color={colors.destructive} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -154,10 +175,11 @@ export function RepairCategorySection({
           {/* Add to category */}
           <TouchableOpacity
             onPress={onAddToCategory}
-            className="flex-row items-center justify-center py-3 bg-muted/50 border-t border-border"
+            className="flex-row items-center justify-center py-3 border-t"
+            style={{ backgroundColor: `${colors.muted}80`, borderColor: colors.border }}
           >
-            <Plus size={14} className="text-primary" />
-            <Text className="text-primary font-medium ml-1">Add to {summary.label}</Text>
+            <Plus size={14} color={colors.primary} />
+            <Text className="font-medium ml-1" style={{ color: colors.primary }}>Add to {summary.label}</Text>
           </TouchableOpacity>
         </View>
       )}

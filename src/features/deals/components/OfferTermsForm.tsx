@@ -50,7 +50,7 @@ export function OfferTermsForm({
         </CardHeader>
         <CardContent className="gap-3">
           <View>
-            <Text className="text-sm font-medium text-foreground mb-1">
+            <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
               Purchase Price
             </Text>
             <Input
@@ -63,7 +63,7 @@ export function OfferTermsForm({
           </View>
 
           <View>
-            <Text className="text-sm font-medium text-foreground mb-1">
+            <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
               Earnest Money
             </Text>
             <Input
@@ -76,7 +76,7 @@ export function OfferTermsForm({
           </View>
 
           <View>
-            <Text className="text-sm font-medium text-foreground mb-1">
+            <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
               Closing Date
             </Text>
             <Input
@@ -97,7 +97,7 @@ export function OfferTermsForm({
           </CardHeader>
           <CardContent className="gap-3">
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Down Payment
               </Text>
               <Input
@@ -110,7 +110,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Interest Rate (%)
               </Text>
               <Input
@@ -123,7 +123,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Term (Years)
               </Text>
               <Input
@@ -136,7 +136,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Monthly Payment
               </Text>
               <Input
@@ -149,7 +149,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Balloon Payment
               </Text>
               <Input
@@ -162,7 +162,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Balloon Due (Years)
               </Text>
               <Input
@@ -185,7 +185,7 @@ export function OfferTermsForm({
           </CardHeader>
           <CardContent className="gap-3">
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Existing Loan Balance
               </Text>
               <Input
@@ -198,7 +198,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Current Monthly Payment
               </Text>
               <Input
@@ -211,7 +211,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Existing Interest Rate (%)
               </Text>
               <Input
@@ -224,7 +224,7 @@ export function OfferTermsForm({
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-foreground mb-1">
+              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                 Arrears to Catch Up
               </Text>
               <Input

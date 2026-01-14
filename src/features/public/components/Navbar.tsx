@@ -40,7 +40,7 @@ export function Navbar() {
         onPress={onPress}
         className="px-3 py-2"
       >
-        <Text className="text-foreground hover:text-primary transition-colors">
+        <Text style={{ color: colors.foreground }}>
           {children}
         </Text>
       </Pressable>
@@ -48,7 +48,7 @@ export function Navbar() {
   );
 
   return (
-    <View className="border-b border-border/50 bg-background/70 backdrop-blur-xl absolute top-0 left-0 right-0 z-50">
+    <View className="border-b backdrop-blur-xl absolute top-0 left-0 right-0 z-50" style={{ borderColor: colors.border, backgroundColor: colors.background }}>
       <View className="px-4 sm:px-6 lg:px-8 mx-auto max-w-[1200px] flex-row items-center justify-between h-16">
         {/* Logo */}
         <Link href="/" asChild>
@@ -58,7 +58,7 @@ export function Navbar() {
               style={{ width: 32, height: 32 }}
               resizeMode="contain"
             />
-            <Text className="text-3xl tracking-tight text-primary font-lobster">
+            <Text className="text-3xl tracking-tight font-lobster" style={{ color: colors.primary }}>
               Doughy
             </Text>
           </Pressable>
@@ -74,13 +74,14 @@ export function Navbar() {
                 onPress={() => setShowSolutionsDropdown(!showSolutionsDropdown)}
                 className="flex-row items-center gap-1 px-3 py-2"
               >
-                <Text className="text-foreground">Solutions</Text>
+                <Text style={{ color: colors.foreground }}>Solutions</Text>
                 <ChevronDown size={16} color={colors.foreground} />
               </Pressable>
 
               {showSolutionsDropdown && (
                 <View
-                  className="absolute top-full right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 w-48"
+                  className="absolute top-full right-0 mt-1 border rounded-lg shadow-lg z-50 w-48"
+                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
                   onPointerLeave={() => setShowSolutionsDropdown(false)}
                 >
                   <View className="py-1">
@@ -88,9 +89,9 @@ export function Navbar() {
                       <Link key={href} href={href as Href} asChild>
                         <Pressable
                           onPress={() => setShowSolutionsDropdown(false)}
-                          className="px-4 py-2 hover:bg-muted"
+                          className="px-4 py-2"
                         >
-                          <Text className="text-foreground">{label}</Text>
+                          <Text style={{ color: colors.foreground }}>{label}</Text>
                         </Pressable>
                       </Link>
                     ))}
@@ -107,7 +108,7 @@ export function Navbar() {
                 className="flex-row items-center gap-1 px-3 py-2"
               >
                 <Search size={16} color={colors.primary} />
-                <Text className="text-primary font-medium">Ask Doughy</Text>
+                <Text className="font-medium" style={{ color: colors.primary }}>Ask Doughy</Text>
               </Pressable>
             )}
             <NavLink href="/contact">Contact</NavLink>
@@ -119,20 +120,20 @@ export function Navbar() {
               <Button variant="outline" onPress={handleSignOut}>
                 <View className="flex-row items-center gap-1">
                   <LogOut size={16} color={colors.foreground} />
-                  <Text className="text-foreground text-sm font-medium">Sign Out</Text>
+                  <Text className="text-sm font-medium" style={{ color: colors.foreground }}>Sign Out</Text>
                 </View>
               </Button>
             ) : (
               <Link href="/(auth)/sign-in" asChild>
                 <Button variant="outline">
-                  <Text className="text-foreground text-sm font-medium">Sign In</Text>
+                  <Text className="text-sm font-medium" style={{ color: colors.foreground }}>Sign In</Text>
                 </Button>
               </Link>
             )}
 
             <Link href={isAuthenticated ? "/(tabs)" : "/pricing"} asChild>
               <Button>
-                <Text className="text-primary-foreground text-sm font-medium">
+                <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>
                   {isAuthenticated ? 'Dashboard' : 'Get Started'}
                 </Text>
               </Button>
@@ -142,7 +143,7 @@ export function Navbar() {
           {/* Theme Toggle */}
           <TouchableOpacity
             onPress={toggleTheme}
-            className="p-2 rounded-lg hover:bg-muted ml-4"
+            className="p-2 rounded-lg ml-4"
             accessibilityLabel="Toggle theme"
           >
             {isDark ? (
@@ -183,31 +184,31 @@ export function Navbar() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <View className="md:hidden bg-background border-t border-border">
+        <View className="md:hidden border-t" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
           <View className="px-4 pt-2 pb-4 gap-1">
-            <Text className="px-3 py-2 font-medium text-foreground">Solutions</Text>
+            <Text className="px-3 py-2 font-medium" style={{ color: colors.foreground }}>Solutions</Text>
 
             {SOLUTIONS_ITEMS.map(({ href, label }) => (
               <Link key={href} href={href as Href} asChild>
                 <Pressable onPress={() => setIsMenuOpen(false)} className="px-6 py-2">
-                  <Text className="text-foreground">{label}</Text>
+                  <Text style={{ color: colors.foreground }}>{label}</Text>
                 </Pressable>
               </Link>
             ))}
 
             <Link href="/pricing" asChild>
               <Pressable onPress={() => setIsMenuOpen(false)} className="px-3 py-2">
-                <Text className="text-foreground">Pricing</Text>
+                <Text style={{ color: colors.foreground }}>Pricing</Text>
               </Pressable>
             </Link>
             <Link href="/docs" asChild>
               <Pressable onPress={() => setIsMenuOpen(false)} className="px-3 py-2">
-                <Text className="text-foreground">Docs</Text>
+                <Text style={{ color: colors.foreground }}>Docs</Text>
               </Pressable>
             </Link>
             <Link href="/contact" asChild>
               <Pressable onPress={() => setIsMenuOpen(false)} className="px-3 py-2">
-                <Text className="text-foreground">Contact</Text>
+                <Text style={{ color: colors.foreground }}>Contact</Text>
               </Pressable>
             </Link>
 
@@ -216,20 +217,20 @@ export function Navbar() {
                 <Button onPress={handleSignOut} className="w-full">
                   <View className="flex-row items-center gap-2">
                     <LogOut size={16} color={colors.primaryForeground} />
-                    <Text className="text-primary-foreground text-sm font-medium">Sign Out</Text>
+                    <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>Sign Out</Text>
                   </View>
                 </Button>
               ) : (
                 <Link href="/(auth)/sign-in" asChild>
                   <Button className="w-full" onPress={() => setIsMenuOpen(false)}>
-                    <Text className="text-primary-foreground text-sm font-medium">Sign In</Text>
+                    <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>Sign In</Text>
                   </Button>
                 </Link>
               )}
 
               <Link href={isAuthenticated ? "/(tabs)" : "/pricing"} asChild>
                 <Button variant="outline" className="w-full" onPress={() => setIsMenuOpen(false)}>
-                  <Text className="text-foreground text-sm font-medium">
+                  <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
                     {isAuthenticated ? 'Dashboard' : 'Get Started'}
                   </Text>
                 </Button>

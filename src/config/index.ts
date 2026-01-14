@@ -41,21 +41,22 @@ export const APP_CONFIG = {
   },
 } as const;
 
-// Theme colors (matches tailwind.config.js)
+// Theme colors - must match ThemeContext.tsx light theme colors
+// These are fallback values; prefer using useThemeColors() hook for runtime values
 export const THEME_COLORS = {
-  primary: '#2563eb',
-  primaryForeground: '#f8fafc',
+  primary: '#4d7c5f',           // Sage green
+  primaryForeground: '#ffffff',
   secondary: '#f1f5f9',
-  secondaryForeground: '#1e293b',
+  secondaryForeground: '#0f172a',
   destructive: '#ef4444',
-  destructiveForeground: '#f8fafc',
+  destructiveForeground: '#ffffff',
   muted: '#f1f5f9',
   mutedForeground: '#64748b',
   accent: '#f1f5f9',
-  accentForeground: '#1e293b',
-  background: '#ffffff',
+  accentForeground: '#0f172a',
+  background: '#fafafa',
   foreground: '#0f172a',
   border: '#e2e8f0',
   input: '#e2e8f0',
-  ring: '#2563eb',
+  ring: '#4d7c5f',             // Sage green
 } as const;

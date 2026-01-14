@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useColorScheme as useRNColorScheme, Appearance } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { colorScheme as nativeWindColorScheme } from 'nativewind';
 
 // Theme types
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -163,6 +164,19 @@ export function ThemeProvider({
   // Determine if dark mode should be active
   const isDark =
     mode === 'dark' || (mode === 'system' && systemColorScheme === 'dark');
+
+  // Sync color scheme with both React Native and NativeWind APIs
+  // This ensures dark mode works for:
+  // - useThemeColors() hook (via isDark state)
+  // - NativeWind Tailwind classes (via media query in global.css)
+  // - System UI elements like StatusBar
+  useEffect(() => {
+    const scheme = isDark ? 'dark' : 'light';
+    // React Native's Appearance API - triggers @media (prefers-color-scheme) in CSS
+    Appearance.setColorScheme(scheme);
+    // NativeWind's colorScheme API - ensures NativeWind is in sync
+    nativeWindColorScheme.set(scheme);
+  }, [isDark]);
 
   // Get current colors
   const colors = isDark ? darkColors : lightColors;

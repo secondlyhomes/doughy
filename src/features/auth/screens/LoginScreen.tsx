@@ -1,5 +1,6 @@
 // src/features/auth/screens/LoginScreen.tsx
 // Login screen converted from web SignInForm
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useState } from 'react';
 import {
@@ -31,7 +32,6 @@ export function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogin = async () => {
-    // Validate inputs
     if (!email.trim()) {
       setError('Please enter your email');
       return;
@@ -46,7 +46,6 @@ export function LoginScreen() {
 
     try {
       await signIn(email.trim(), password);
-      // Navigation will happen automatically via auth state change
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to sign in';
       setError(message);
@@ -78,31 +77,34 @@ export function LoginScreen() {
         <View className="flex-1 justify-center px-6 py-12">
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-3xl font-bold text-foreground text-center">
+            <Text className="text-3xl font-bold text-center" style={{ color: colors.foreground }}>
               Welcome Back
             </Text>
-            <Text className="text-base text-muted-foreground text-center mt-2">
+            <Text className="text-base text-center mt-2" style={{ color: colors.mutedForeground }}>
               Sign in to your account
             </Text>
           </View>
 
           {/* Error Message */}
           {error && (
-            <View className="flex-row items-center bg-destructive/10 rounded-lg p-4 mb-6">
+            <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
               <AlertCircle size={20} color={colors.destructive} />
-              <Text className="text-destructive ml-2 flex-1">{error}</Text>
+              <Text className="ml-2 flex-1" style={{ color: colors.destructive }}>{error}</Text>
             </View>
           )}
 
           {/* Email Input */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Email</Text>
+            <View
+              className="flex-row items-center rounded-lg"
+              style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}
+            >
               <View className="pl-4">
                 <Mail size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
                 placeholder="name@example.com"
                 placeholderTextColor={colors.mutedForeground}
                 value={email}
@@ -112,19 +114,23 @@ export function LoginScreen() {
                 autoCorrect={false}
                 autoComplete="email"
                 editable={!loading}
+                style={{ color: colors.foreground }}
               />
             </View>
           </View>
 
           {/* Password Input */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-foreground mb-2">Password</Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Password</Text>
+            <View
+              className="flex-row items-center rounded-lg"
+              style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}
+            >
               <View className="pl-4">
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
                 placeholder="Enter your password"
                 placeholderTextColor={colors.mutedForeground}
                 value={password}
@@ -133,6 +139,7 @@ export function LoginScreen() {
                 autoCapitalize="none"
                 autoComplete="password"
                 editable={!loading}
+                style={{ color: colors.foreground }}
               />
               <TouchableOpacity
                 className="pr-4"
@@ -154,20 +161,20 @@ export function LoginScreen() {
             onPress={handleForgotPassword}
             disabled={loading}
           >
-            <Text className="text-primary text-sm">Forgot password?</Text>
+            <Text className="text-sm" style={{ color: colors.primary }}>Forgot password?</Text>
           </TouchableOpacity>
 
           {/* Sign In Button */}
           <TouchableOpacity
-            className="bg-primary rounded-lg py-4 items-center"
-            style={{ opacity: loading ? 0.5 : 1 }}
+            className="rounded-lg py-4 items-center"
+            style={{ backgroundColor: colors.primary, opacity: loading ? 0.5 : 1 }}
             onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.primaryForeground} />
             ) : (
-              <Text className="text-primary-foreground font-semibold text-base">
+              <Text className="font-semibold text-base" style={{ color: colors.primaryForeground }}>
                 Sign In
               </Text>
             )}
@@ -175,45 +182,47 @@ export function LoginScreen() {
 
           {/* Sign Up Link */}
           <View className="flex-row justify-center mt-6">
-            <Text className="text-muted-foreground">Don't have an account? </Text>
+            <Text style={{ color: colors.mutedForeground }}>Don't have an account? </Text>
             <TouchableOpacity onPress={handleSignUp} disabled={loading}>
-              <Text className="text-primary font-medium">Sign up</Text>
+              <Text className="font-medium" style={{ color: colors.primary }}>Sign up</Text>
             </TouchableOpacity>
           </View>
 
           {/* Dev Login - Only visible in development */}
           {__DEV__ && (
-            <View className="mt-8 pt-6 border-t border-border">
-              <Text className="text-xs text-muted-foreground text-center mb-3">
+            <View className="mt-8 pt-6" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
+              <Text className="text-xs text-center mb-3" style={{ color: colors.mutedForeground }}>
                 Development Mode
               </Text>
               <View className="flex-row gap-3">
                 <TouchableOpacity
-                  className="flex-1 bg-primary rounded-lg py-3 items-center"
+                  className="flex-1 rounded-lg py-3 items-center"
+                  style={{ backgroundColor: colors.primary }}
                   onPress={async () => {
                     await devBypassAuth();
                     router.replace('/(tabs)');
                   }}
                   disabled={loading}
                 >
-                  <Text className="text-primary-foreground font-semibold text-sm">
+                  <Text className="font-semibold text-sm" style={{ color: colors.primaryForeground }}>
                     User Console
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  className="flex-1 bg-warning rounded-lg py-3 items-center"
+                  className="flex-1 rounded-lg py-3 items-center"
+                  style={{ backgroundColor: colors.warning }}
                   onPress={async () => {
                     await devBypassAuth();
                     router.replace('/(admin)');
                   }}
                   disabled={loading}
                 >
-                  <Text className="text-white font-semibold text-sm">
+                  <Text className="font-semibold text-sm" style={{ color: '#ffffff' }}>
                     Admin Console
                   </Text>
                 </TouchableOpacity>
               </View>
-              <Text className="text-xs text-muted-foreground text-center mt-3">
+              <Text className="text-xs text-center mt-3" style={{ color: colors.mutedForeground }}>
                 Bypasses auth with mock admin user
               </Text>
             </View>

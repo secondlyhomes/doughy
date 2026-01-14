@@ -1,8 +1,9 @@
 // src/components/ui/Tabs.tsx
-// React Native Tabs component with NativeWind styling
+// React Native Tabs component with inline styles for dark mode support
 import React, { createContext, useContext, useState } from 'react';
 import { View, Text, Pressable, ViewProps, TextProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Tabs context
 interface TabsContextType {
@@ -60,13 +61,12 @@ export interface TabsListProps extends ViewProps {
   children?: React.ReactNode;
 }
 
-export function TabsList({ className, children, ...props }: TabsListProps) {
+export function TabsList({ className, children, style, ...props }: TabsListProps) {
+  const colors = useThemeColors();
   return (
     <View
-      className={cn(
-        'flex-row h-10 items-center justify-start bg-muted rounded-md p-1',
-        className
-      )}
+      className={cn('flex-row h-10 items-center justify-start rounded-md p-1', className)}
+      style={[{ backgroundColor: colors.muted }, style]}
       {...props}
     >
       {children}
@@ -91,26 +91,24 @@ export function TabsTrigger({
   children,
 }: TabsTriggerProps) {
   const { value: selectedValue, onValueChange } = useTabsContext();
+  const colors = useThemeColors();
   const isActive = value === selectedValue;
 
   return (
     <Pressable
       className={cn(
         'flex-1 items-center justify-center rounded-sm px-3 py-1.5',
-        isActive && 'bg-background shadow-sm',
         disabled && 'opacity-50',
         className
       )}
+      style={isActive ? { backgroundColor: colors.background, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 } : undefined}
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
     >
       {typeof children === 'string' ? (
         <Text
-          className={cn(
-            'text-sm font-medium',
-            isActive ? 'text-foreground' : 'text-muted-foreground',
-            textClassName
-          )}
+          className={cn('text-sm font-medium', textClassName)}
+          style={{ color: isActive ? colors.foreground : colors.mutedForeground }}
         >
           {children}
         </Text>

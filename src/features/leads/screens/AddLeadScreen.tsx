@@ -110,13 +110,14 @@ export function AddLeadScreen() {
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
         {/* Name */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-2">
-            Name <Text className="text-destructive">*</Text>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
+            Name <Text style={{ color: colors.destructive }}>*</Text>
           </Text>
-          <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
+          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
             <User size={18} color={colors.mutedForeground} />
             <TextInput
-              className="flex-1 ml-3 text-foreground text-base"
+              className="flex-1 ml-3 text-base"
+              style={{ color: colors.foreground }}
               placeholder="Enter lead name"
               placeholderTextColor={colors.mutedForeground}
               value={formData.name}
@@ -128,11 +129,12 @@ export function AddLeadScreen() {
 
         {/* Email */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
-          <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Email</Text>
+          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
             <Mail size={18} color={colors.mutedForeground} />
             <TextInput
-              className="flex-1 ml-3 text-foreground text-base"
+              className="flex-1 ml-3 text-base"
+              style={{ color: colors.foreground }}
               placeholder="email@example.com"
               placeholderTextColor={colors.mutedForeground}
               value={formData.email}
@@ -146,11 +148,12 @@ export function AddLeadScreen() {
 
         {/* Phone */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-2">Phone</Text>
-          <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Phone</Text>
+          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
             <Phone size={18} color={colors.mutedForeground} />
             <TextInput
-              className="flex-1 ml-3 text-foreground text-base"
+              className="flex-1 ml-3 text-base"
+              style={{ color: colors.foreground }}
               placeholder="(555) 123-4567"
               placeholderTextColor={colors.mutedForeground}
               value={formData.phone}
@@ -162,11 +165,12 @@ export function AddLeadScreen() {
 
         {/* Company */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-2">Company</Text>
-          <View className="flex-row items-center bg-muted rounded-lg px-3 py-3">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Company</Text>
+          <View className="flex-row items-center rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
             <Building2 size={18} color={colors.mutedForeground} />
             <TextInput
-              className="flex-1 ml-3 text-foreground text-base"
+              className="flex-1 ml-3 text-base"
+              style={{ color: colors.foreground }}
               placeholder="Company name"
               placeholderTextColor={colors.mutedForeground}
               value={formData.company}
@@ -178,33 +182,37 @@ export function AddLeadScreen() {
 
         {/* Status */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-2">Status</Text>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Status</Text>
           <TouchableOpacity
-            className="flex-row items-center justify-between bg-muted rounded-lg px-3 py-3"
+            className="flex-row items-center justify-between rounded-lg px-3 py-3"
+            style={{ backgroundColor: colors.muted }}
             onPress={() => setShowStatusPicker(!showStatusPicker)}
           >
-            <Text className="text-foreground text-base">
+            <Text className="text-base" style={{ color: colors.foreground }}>
               {getStatusLabel(formData.status)}
             </Text>
             <ChevronDown size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
 
           {showStatusPicker && (
-            <View className="bg-card border border-border rounded-lg mt-2 overflow-hidden">
+            <View className="rounded-lg mt-2 overflow-hidden" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
               {STATUS_OPTIONS.map((option) => (
                 <TouchableOpacity
                   key={option.value}
-                  className={`px-4 py-3 border-b border-border ${
-                    formData.status === option.value ? 'bg-primary/10' : ''
-                  }`}
+                  className="px-4 py-3"
+                  style={{
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    backgroundColor: formData.status === option.value ? `${colors.primary}15` : 'transparent'
+                  }}
                   onPress={() => handleStatusSelect(option.value)}
                 >
                   <Text
-                    className={`text-base ${
-                      formData.status === option.value
-                        ? 'text-primary font-medium'
-                        : 'text-foreground'
-                    }`}
+                    className="text-base"
+                    style={{
+                      color: formData.status === option.value ? colors.primary : colors.foreground,
+                      fontWeight: formData.status === option.value ? '500' : 'normal'
+                    }}
                   >
                     {option.label}
                   </Text>
@@ -216,11 +224,12 @@ export function AddLeadScreen() {
 
         {/* Tags */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-2">Tags</Text>
-          <View className="flex-row items-center bg-muted rounded-lg px-3 py-2">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Tags</Text>
+          <View className="flex-row items-center rounded-lg px-3 py-2" style={{ backgroundColor: colors.muted }}>
             <Tag size={18} color={colors.mutedForeground} />
             <TextInput
-              className="flex-1 ml-3 text-foreground text-base"
+              className="flex-1 ml-3 text-base"
+              style={{ color: colors.foreground }}
               placeholder="Add a tag"
               placeholderTextColor={colors.mutedForeground}
               value={tagInput}
@@ -229,10 +238,11 @@ export function AddLeadScreen() {
               returnKeyType="done"
             />
             <TouchableOpacity
-              className="bg-primary px-3 py-1.5 rounded-md"
+              className="px-3 py-1.5 rounded-md"
+              style={{ backgroundColor: colors.primary }}
               onPress={handleAddTag}
             >
-              <Text className="text-primary-foreground text-sm font-medium">Add</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>Add</Text>
             </TouchableOpacity>
           </View>
 
@@ -241,9 +251,10 @@ export function AddLeadScreen() {
               {formData.tags.map((tag, index) => (
                 <View
                   key={index}
-                  className="flex-row items-center bg-secondary px-3 py-1.5 rounded-full"
+                  className="flex-row items-center px-3 py-1.5 rounded-full"
+                  style={{ backgroundColor: colors.secondary }}
                 >
-                  <Text className="text-secondary-foreground text-sm">{tag}</Text>
+                  <Text className="text-sm" style={{ color: colors.mutedForeground }}>{tag}</Text>
                   <TouchableOpacity
                     className="ml-2"
                     onPress={() => handleRemoveTag(tag)}
@@ -258,12 +269,13 @@ export function AddLeadScreen() {
 
         {/* Notes */}
         <View className="mb-6">
-          <Text className="text-sm font-medium text-foreground mb-2">Notes</Text>
-          <View className="bg-muted rounded-lg px-3 py-3">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Notes</Text>
+          <View className="rounded-lg px-3 py-3" style={{ backgroundColor: colors.muted }}>
             <View className="flex-row items-start">
               <FileText size={18} color={colors.mutedForeground} className="mt-0.5" />
               <TextInput
-                className="flex-1 ml-3 text-foreground text-base min-h-[100px]"
+                className="flex-1 ml-3 text-base min-h-[100px]"
+                style={{ color: colors.foreground }}
                 placeholder="Add notes about this lead..."
                 placeholderTextColor={colors.mutedForeground}
                 value={formData.notes}
@@ -277,16 +289,15 @@ export function AddLeadScreen() {
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`rounded-lg py-4 items-center ${
-            createLead.isPending ? 'bg-primary/50' : 'bg-primary'
-          }`}
+          className="rounded-lg py-4 items-center"
+          style={{ backgroundColor: createLead.isPending ? `${colors.primary}80` : colors.primary }}
           onPress={handleSubmit}
           disabled={createLead.isPending}
         >
           {createLead.isPending ? (
             <ActivityIndicator color={colors.primaryForeground} />
           ) : (
-            <Text className="text-primary-foreground font-semibold text-base">
+            <Text className="font-semibold text-base" style={{ color: colors.primaryForeground }}>
               Create Lead
             </Text>
           )}
@@ -297,7 +308,7 @@ export function AddLeadScreen() {
             className="rounded-lg py-4 items-center mt-3"
             onPress={() => router.back()}
           >
-            <Text className="text-muted-foreground font-medium text-base">Cancel</Text>
+            <Text className="font-medium text-base" style={{ color: colors.mutedForeground }}>Cancel</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

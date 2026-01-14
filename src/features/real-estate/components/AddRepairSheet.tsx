@@ -160,20 +160,21 @@ export function AddRepairSheet({
         className="flex-1"
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           <View>
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
               {editRepair ? 'Edit Repair' : 'Add Repair'}
             </Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               Enter repair details
             </Text>
           </View>
           <TouchableOpacity
             onPress={handleClose}
-            className="p-2 bg-muted rounded-full"
+            className="p-2 rounded-full"
+            style={{ backgroundColor: colors.muted }}
           >
-            <X size={20} className="text-foreground" />
+            <X size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
 
@@ -185,24 +186,23 @@ export function AddRepairSheet({
         >
           {/* Category Selection */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">Category</Text>
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Category</Text>
             <View className="flex-row flex-wrap gap-2">
               {REPAIR_CATEGORIES.map(category => (
                 <TouchableOpacity
                   key={category.id}
                   onPress={() => updateField('category', category.id)}
-                  className={`px-3 py-2 rounded-lg border ${
-                    formData.category === category.id
-                      ? 'bg-primary border-primary'
-                      : 'bg-muted border-border'
-                  }`}
+                  className="px-3 py-2 rounded-lg border"
+                  style={{
+                    backgroundColor: formData.category === category.id ? colors.primary : colors.muted,
+                    borderColor: formData.category === category.id ? colors.primary : colors.border,
+                  }}
                 >
                   <Text
-                    className={`text-sm font-medium ${
-                      formData.category === category.id
-                        ? 'text-primary-foreground'
-                        : 'text-foreground'
-                    }`}
+                    className="text-sm font-medium"
+                    style={{
+                      color: formData.category === category.id ? colors.primaryForeground : colors.foreground,
+                    }}
                   >
                     {category.label}
                   </Text>
@@ -213,61 +213,68 @@ export function AddRepairSheet({
 
           {/* Description */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-1.5">Description *</Text>
-            <View className="flex-row items-center bg-muted rounded-lg px-3">
-              <FileText size={16} className="text-muted-foreground" />
+            <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Description *</Text>
+            <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
+              <FileText size={16} color={colors.mutedForeground} />
               <TextInput
                 value={formData.description}
                 onChangeText={(value) => updateField('description', value)}
                 placeholder="e.g., Replace kitchen cabinets"
                 placeholderTextColor={colors.mutedForeground}
-                className="flex-1 py-3 ml-2 text-foreground"
+                className="flex-1 py-3 ml-2"
+                style={{ color: colors.foreground }}
               />
             </View>
             {errors.description && (
-              <Text className="text-xs text-destructive mt-1">{errors.description}</Text>
+              <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.description}</Text>
             )}
           </View>
 
           {/* Estimate */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-1.5">Estimated Cost *</Text>
-            <View className="flex-row items-center bg-muted rounded-lg px-3">
-              <DollarSign size={16} className="text-muted-foreground" />
+            <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Estimated Cost *</Text>
+            <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
+              <DollarSign size={16} color={colors.mutedForeground} />
               <TextInput
                 value={formData.estimate}
                 onChangeText={(value) => updateField('estimate', value)}
                 placeholder="0"
                 placeholderTextColor={colors.mutedForeground}
                 keyboardType="numeric"
-                className="flex-1 py-3 text-foreground text-lg font-semibold"
+                className="flex-1 py-3 text-lg font-semibold"
+                style={{ color: colors.foreground }}
               />
             </View>
             {errors.estimate && (
-              <Text className="text-xs text-destructive mt-1">{errors.estimate}</Text>
+              <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.estimate}</Text>
             )}
           </View>
 
           {/* Priority */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">Priority</Text>
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Priority</Text>
             <View className="flex-row gap-2">
               {PRIORITY_OPTIONS.map(option => (
                 <TouchableOpacity
                   key={option.value}
                   onPress={() => updateField('priority', option.value)}
-                  className={`flex-1 py-2.5 rounded-lg border items-center ${
-                    formData.priority === option.value
-                      ? 'bg-primary border-primary'
-                      : 'bg-muted border-border'
-                  }`}
+                  className="flex-1 py-2.5 rounded-lg border items-center"
+                  style={{
+                    backgroundColor: formData.priority === option.value ? colors.primary : colors.muted,
+                    borderColor: formData.priority === option.value ? colors.primary : colors.border,
+                  }}
                 >
                   <Text
-                    className={`text-sm font-medium ${
-                      formData.priority === option.value
-                        ? 'text-primary-foreground'
-                        : option.color
-                    }`}
+                    className="text-sm font-medium"
+                    style={{
+                      color: formData.priority === option.value
+                        ? colors.primaryForeground
+                        : option.value === 'low'
+                          ? colors.success
+                          : option.value === 'medium'
+                            ? colors.warning
+                            : colors.destructive,
+                    }}
                   >
                     {option.label}
                   </Text>
@@ -278,7 +285,7 @@ export function AddRepairSheet({
 
           {/* Notes */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-foreground mb-1.5">Notes (Optional)</Text>
+            <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>Notes (Optional)</Text>
             <TextInput
               value={formData.notes}
               onChangeText={(value) => updateField('notes', value)}
@@ -287,7 +294,8 @@ export function AddRepairSheet({
               multiline
               numberOfLines={3}
               textAlignVertical="top"
-              className="bg-muted rounded-lg px-3 py-3 text-foreground min-h-[80]"
+              className="rounded-lg px-3 py-3 min-h-[80]"
+              style={{ backgroundColor: colors.muted, color: colors.foreground }}
             />
           </View>
 
@@ -295,18 +303,19 @@ export function AddRepairSheet({
         </ScrollView>
 
         {/* Submit Button */}
-        <View className="p-4 border-t border-border">
+        <View className="p-4 border-t" style={{ borderColor: colors.border }}>
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={isLoading}
-            className="bg-primary py-3.5 rounded-xl flex-row items-center justify-center"
+            className="py-3.5 rounded-xl flex-row items-center justify-center"
+            style={{ backgroundColor: colors.primary }}
           >
             {isLoading ? (
               <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <>
                 <Wrench size={18} color={colors.primaryForeground} />
-                <Text className="text-primary-foreground font-semibold ml-2">
+                <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>
                   {editRepair ? 'Save Changes' : 'Add Repair'}
                 </Text>
               </>

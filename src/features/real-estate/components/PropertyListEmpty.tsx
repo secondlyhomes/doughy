@@ -35,7 +35,7 @@ export function PropertyListEmpty({
   if (error) {
     return (
       <View className="flex-1 items-center justify-center py-20 px-4">
-        <Text className="text-destructive text-center mb-4">Error loading properties</Text>
+        <Text className="text-center mb-4" style={{ color: colors.destructive }}>Error loading properties</Text>
         <Button onPress={onRetry}>Try Again</Button>
       </View>
     );
@@ -44,9 +44,9 @@ export function PropertyListEmpty({
   if (hasFilters) {
     return (
       <View className="flex-1 items-center justify-center py-20">
-        <Search size={48} className="text-muted-foreground mb-4" />
-        <Text className="text-lg font-semibold text-foreground mb-2">No Results Found</Text>
-        <Text className="text-muted-foreground text-center mb-6 px-8">
+        <Search size={48} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
+        <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Results Found</Text>
+        <Text className="text-center mb-6 px-8" style={{ color: colors.mutedForeground }}>
           Try adjusting your search or filters to find what you're looking for.
         </Text>
         <Button variant="secondary" onPress={onClearFilters}>Clear All Filters</Button>
@@ -56,13 +56,13 @@ export function PropertyListEmpty({
 
   return (
     <View className="flex-1 items-center justify-center py-20">
-      <Text className="text-xl font-semibold text-foreground mb-2">No Properties Yet</Text>
-      <Text className="text-muted-foreground text-center mb-6 px-8">
+      <Text className="text-xl font-semibold mb-2" style={{ color: colors.foreground }}>No Properties Yet</Text>
+      <Text className="text-center mb-6 px-8" style={{ color: colors.mutedForeground }}>
         Add your first property to get started tracking your real estate investments.
       </Text>
       <Button onPress={onAddProperty} size="lg">
         <Plus size={20} color={colors.primaryForeground} />
-        <Text className="text-primary-foreground font-semibold ml-2">Add Property</Text>
+        <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>Add Property</Text>
       </Button>
     </View>
   );

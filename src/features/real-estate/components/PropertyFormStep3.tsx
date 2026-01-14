@@ -1,5 +1,6 @@
 // src/features/real-estate/components/PropertyFormStep3.tsx
 // Step 3: Pricing & Value (ARV, purchase price, repair cost)
+// Uses useThemeColors() for reliable dark mode support
 
 import React from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
@@ -21,6 +22,7 @@ interface PropertyFormStep3Props {
 
 export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3Props) {
   const colors = useThemeColors();
+
   // Calculate deal metrics
   const arv = parseFloat(data.arv) || 0;
   const purchasePrice = parseFloat(data.purchase_price) || 0;
@@ -50,30 +52,39 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
     >
       <View className="gap-4">
         {/* ARV */}
-        <View className="bg-card rounded-xl p-4 border border-border">
+        <View
+          className="rounded-xl p-4"
+          style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+        >
           <View className="flex-row items-center mb-4">
-            <TrendingUp size={20} className="text-primary" />
-            <Text className="text-lg font-semibold text-foreground ml-2">After Repair Value (ARV)</Text>
+            <TrendingUp size={20} color={colors.primary} />
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>After Repair Value (ARV)</Text>
           </View>
 
-          <View className="flex-row items-center bg-muted rounded-lg px-4">
-            <Text className="text-lg text-muted-foreground">$</Text>
+          <View
+            className="flex-row items-center rounded-lg px-4"
+            style={{ backgroundColor: colors.muted }}
+          >
+            <Text className="text-lg" style={{ color: colors.mutedForeground }}>$</Text>
             <TextInput
               value={data.arv}
               onChangeText={(value) => onChange({ arv: formatInputCurrency(value) })}
               placeholder="350,000"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className={`flex-1 py-3 ml-1 text-foreground text-lg ${
-                errors.arv ? 'border-b border-destructive' : ''
-              }`}
+              className="flex-1 py-3 ml-1 text-lg"
+              style={{
+                color: colors.foreground,
+                borderBottomWidth: errors.arv ? 1 : 0,
+                borderBottomColor: errors.arv ? colors.destructive : undefined,
+              }}
             />
           </View>
           {errors.arv && (
-            <Text className="text-xs text-destructive mt-1">{errors.arv}</Text>
+            <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.arv}</Text>
           )}
 
-          <Text className="text-xs text-muted-foreground mt-2">
+          <Text className="text-xs mt-2" style={{ color: colors.mutedForeground }}>
             The estimated value of the property after all repairs are completed.
           </Text>
 
@@ -83,14 +94,17 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
               <TouchableOpacity
                 key={value}
                 onPress={() => onChange({ arv: value })}
-                className={`px-3 py-1.5 rounded-full ${
-                  data.arv === value ? 'bg-primary' : 'bg-muted'
-                }`}
+                className="px-3 py-1.5 rounded-full"
+                style={{
+                  backgroundColor: data.arv === value ? colors.primary : colors.muted,
+                }}
               >
                 <Text
-                  className={`text-xs ${
-                    data.arv === value ? 'text-primary-foreground font-medium' : 'text-foreground'
-                  }`}
+                  className="text-xs"
+                  style={{
+                    color: data.arv === value ? colors.primaryForeground : colors.foreground,
+                    fontWeight: data.arv === value ? '500' : '400',
+                  }}
                 >
                   {formatCurrency(parseInt(value))}
                 </Text>
@@ -100,59 +114,77 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
         </View>
 
         {/* Purchase Price */}
-        <View className="bg-card rounded-xl p-4 border border-border">
+        <View
+          className="rounded-xl p-4"
+          style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+        >
           <View className="flex-row items-center mb-4">
-            <DollarSign size={20} className="text-primary" />
-            <Text className="text-lg font-semibold text-foreground ml-2">Purchase Price</Text>
+            <DollarSign size={20} color={colors.primary} />
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Purchase Price</Text>
           </View>
 
-          <View className="flex-row items-center bg-muted rounded-lg px-4">
-            <Text className="text-lg text-muted-foreground">$</Text>
+          <View
+            className="flex-row items-center rounded-lg px-4"
+            style={{ backgroundColor: colors.muted }}
+          >
+            <Text className="text-lg" style={{ color: colors.mutedForeground }}>$</Text>
             <TextInput
               value={data.purchase_price}
               onChangeText={(value) => onChange({ purchase_price: formatInputCurrency(value) })}
               placeholder="280,000"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className={`flex-1 py-3 ml-1 text-foreground text-lg ${
-                errors.purchase_price ? 'border-b border-destructive' : ''
-              }`}
+              className="flex-1 py-3 ml-1 text-lg"
+              style={{
+                color: colors.foreground,
+                borderBottomWidth: errors.purchase_price ? 1 : 0,
+                borderBottomColor: errors.purchase_price ? colors.destructive : undefined,
+              }}
             />
           </View>
           {errors.purchase_price && (
-            <Text className="text-xs text-destructive mt-1">{errors.purchase_price}</Text>
+            <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.purchase_price}</Text>
           )}
 
-          <Text className="text-xs text-muted-foreground mt-2">
+          <Text className="text-xs mt-2" style={{ color: colors.mutedForeground }}>
             The price you're paying or planning to pay for the property.
           </Text>
         </View>
 
         {/* Repair Cost */}
-        <View className="bg-card rounded-xl p-4 border border-border">
+        <View
+          className="rounded-xl p-4"
+          style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+        >
           <View className="flex-row items-center mb-4">
-            <Wrench size={20} className="text-primary" />
-            <Text className="text-lg font-semibold text-foreground ml-2">Estimated Repair Cost</Text>
+            <Wrench size={20} color={colors.primary} />
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Estimated Repair Cost</Text>
           </View>
 
-          <View className="flex-row items-center bg-muted rounded-lg px-4">
-            <Text className="text-lg text-muted-foreground">$</Text>
+          <View
+            className="flex-row items-center rounded-lg px-4"
+            style={{ backgroundColor: colors.muted }}
+          >
+            <Text className="text-lg" style={{ color: colors.mutedForeground }}>$</Text>
             <TextInput
               value={data.repair_cost}
               onChangeText={(value) => onChange({ repair_cost: formatInputCurrency(value) })}
               placeholder="25,000"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
-              className={`flex-1 py-3 ml-1 text-foreground text-lg ${
-                errors.repair_cost ? 'border-b border-destructive' : ''
-              }`}
+              className="flex-1 py-3 ml-1 text-lg"
+              style={{
+                color: colors.foreground,
+                borderBottomWidth: errors.repair_cost ? 1 : 0,
+                borderBottomColor: errors.repair_cost ? colors.destructive : undefined,
+              }}
             />
           </View>
           {errors.repair_cost && (
-            <Text className="text-xs text-destructive mt-1">{errors.repair_cost}</Text>
+            <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors.repair_cost}</Text>
           )}
 
-          <Text className="text-xs text-muted-foreground mt-2">
+          <Text className="text-xs mt-2" style={{ color: colors.mutedForeground }}>
             Total estimated cost for repairs and renovations.
           </Text>
 
@@ -160,65 +192,81 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
           <View className="flex-row gap-2 mt-4">
             <TouchableOpacity
               onPress={() => onChange({ repair_cost: '10000' })}
-              className="flex-1 bg-muted py-2 rounded-lg items-center"
+              className="flex-1 py-2 rounded-lg items-center"
+              style={{ backgroundColor: colors.muted }}
             >
-              <Text className="text-xs text-foreground font-medium">Light</Text>
-              <Text className="text-xs text-muted-foreground">~$10k</Text>
+              <Text className="text-xs font-medium" style={{ color: colors.foreground }}>Light</Text>
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>~$10k</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => onChange({ repair_cost: '30000' })}
-              className="flex-1 bg-muted py-2 rounded-lg items-center"
+              className="flex-1 py-2 rounded-lg items-center"
+              style={{ backgroundColor: colors.muted }}
             >
-              <Text className="text-xs text-foreground font-medium">Medium</Text>
-              <Text className="text-xs text-muted-foreground">~$30k</Text>
+              <Text className="text-xs font-medium" style={{ color: colors.foreground }}>Medium</Text>
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>~$30k</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => onChange({ repair_cost: '60000' })}
-              className="flex-1 bg-muted py-2 rounded-lg items-center"
+              className="flex-1 py-2 rounded-lg items-center"
+              style={{ backgroundColor: colors.muted }}
             >
-              <Text className="text-xs text-foreground font-medium">Heavy</Text>
-              <Text className="text-xs text-muted-foreground">~$60k</Text>
+              <Text className="text-xs font-medium" style={{ color: colors.foreground }}>Heavy</Text>
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>~$60k</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Deal Analysis Summary */}
         {(arv > 0 || purchasePrice > 0) && (
-          <View className="bg-primary/10 rounded-xl p-4 border border-primary/20">
+          <View
+            className="rounded-xl p-4"
+            style={{
+              backgroundColor: `${colors.primary}15`,
+              borderWidth: 1,
+              borderColor: `${colors.primary}30`,
+            }}
+          >
             <View className="flex-row items-center mb-3">
-              <Target size={18} className="text-primary" />
-              <Text className="text-lg font-semibold text-primary ml-2">Deal Analysis</Text>
+              <Target size={18} color={colors.primary} />
+              <Text className="text-lg font-semibold ml-2" style={{ color: colors.primary }}>Deal Analysis</Text>
             </View>
 
             <View className="gap-2">
               <View className="flex-row justify-between">
-                <Text className="text-foreground">Total Investment</Text>
-                <Text className="text-foreground font-medium">{formatCurrency(totalInvestment)}</Text>
+                <Text style={{ color: colors.foreground }}>Total Investment</Text>
+                <Text className="font-medium" style={{ color: colors.foreground }}>{formatCurrency(totalInvestment)}</Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-foreground">Gross Profit</Text>
-                <Text className={`font-semibold ${grossProfit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <Text style={{ color: colors.foreground }}>Gross Profit</Text>
+                <Text
+                  className="font-semibold"
+                  style={{ color: grossProfit >= 0 ? colors.success : colors.destructive }}
+                >
                   {formatCurrency(grossProfit)}
                 </Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-foreground">ROI</Text>
-                <Text className={`font-semibold ${roi >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <Text style={{ color: colors.foreground }}>ROI</Text>
+                <Text
+                  className="font-semibold"
+                  style={{ color: roi >= 0 ? colors.success : colors.destructive }}
+                >
                   {roi.toFixed(1)}%
                 </Text>
               </View>
-              <View className="h-px bg-primary/20 my-2" />
+              <View className="h-px my-2" style={{ backgroundColor: `${colors.primary}30` }} />
               <View className="flex-row justify-between">
-                <Text className="text-primary font-medium">Max Offer (70% Rule)</Text>
-                <Text className="text-primary font-bold">{formatCurrency(mao)}</Text>
+                <Text className="font-medium" style={{ color: colors.primary }}>Max Offer (70% Rule)</Text>
+                <Text className="font-bold" style={{ color: colors.primary }}>{formatCurrency(mao)}</Text>
               </View>
             </View>
           </View>
         )}
 
         {/* Info note */}
-        <View className="bg-muted rounded-xl p-4">
-          <Text className="text-sm text-muted-foreground">
+        <View className="rounded-xl p-4" style={{ backgroundColor: colors.muted }}>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             These values help calculate profitability. You can update them later from the property detail screen.
           </Text>
         </View>

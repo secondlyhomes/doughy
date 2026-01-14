@@ -38,35 +38,38 @@ export function LeadQuickActions({ name, phone, email }: LeadQuickActionsProps) 
     <View className="flex-row gap-3">
       {phone && (
         <TouchableOpacity
-          className="flex-1 bg-primary rounded-lg py-3 flex-row items-center justify-center"
+          className="flex-1 rounded-lg py-3 flex-row items-center justify-center"
+          style={{ backgroundColor: colors.primary }}
           onPress={handleCall}
           accessibilityLabel={`Call ${name}`}
           accessibilityRole="button"
         >
           <Phone size={18} color={colors.primaryForeground} />
-          <Text className="text-primary-foreground font-medium ml-2">Call</Text>
+          <Text className="font-medium ml-2" style={{ color: colors.primaryForeground }}>Call</Text>
         </TouchableOpacity>
       )}
       {email && (
         <TouchableOpacity
-          className="flex-1 bg-secondary rounded-lg py-3 flex-row items-center justify-center"
+          className="flex-1 rounded-lg py-3 flex-row items-center justify-center"
+          style={{ backgroundColor: colors.secondary }}
           onPress={handleEmail}
           accessibilityLabel={`Email ${name}`}
           accessibilityRole="button"
         >
-          <Mail size={18} color={colors.secondaryForeground} />
-          <Text className="text-secondary-foreground font-medium ml-2">Email</Text>
+          <Mail size={18} color={colors.mutedForeground} />
+          <Text className="font-medium ml-2" style={{ color: colors.mutedForeground }}>Email</Text>
         </TouchableOpacity>
       )}
       {phone && (
         <TouchableOpacity
-          className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
+          className="flex-1 rounded-lg py-3 flex-row items-center justify-center"
+          style={{ backgroundColor: colors.muted }}
           onPress={handleSMS}
           accessibilityLabel={`Send SMS to ${name}`}
           accessibilityRole="button"
         >
           <MessageSquare size={18} color={colors.mutedForeground} />
-          <Text className="text-muted-foreground font-medium ml-2">SMS</Text>
+          <Text className="font-medium ml-2" style={{ color: colors.mutedForeground }}>SMS</Text>
         </TouchableOpacity>
       )}
     </View>

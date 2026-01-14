@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface SuggestionChipsProps {
   suggestions: string[];
@@ -15,6 +16,8 @@ export function SuggestionChips({
   onPress,
   compact = false
 }: SuggestionChipsProps) {
+  const colors = useThemeColors();
+
   if (compact) {
     return (
       <ScrollView
@@ -25,11 +28,12 @@ export function SuggestionChips({
         {suggestions.map((suggestion, index) => (
           <TouchableOpacity
             key={index}
-            className="bg-muted px-3 py-1.5 rounded-full"
+            className="px-3 py-1.5 rounded-full"
+            style={{ backgroundColor: colors.muted }}
             onPress={() => onPress(suggestion)}
             activeOpacity={0.7}
           >
-            <Text className="text-sm text-muted-foreground">{suggestion}</Text>
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>{suggestion}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -41,11 +45,12 @@ export function SuggestionChips({
       {suggestions.map((suggestion, index) => (
         <TouchableOpacity
           key={index}
-          className="bg-card border border-border rounded-xl px-4 py-3"
+          className="rounded-xl px-4 py-3"
+          style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
           onPress={() => onPress(suggestion)}
           activeOpacity={0.7}
         >
-          <Text className="text-sm text-foreground text-center">
+          <Text className="text-sm text-center" style={{ color: colors.foreground }}>
             {suggestion}
           </Text>
         </TouchableOpacity>

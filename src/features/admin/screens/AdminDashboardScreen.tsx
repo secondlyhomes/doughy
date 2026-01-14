@@ -109,8 +109,8 @@ export function AdminDashboardScreen() {
       <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center p-6">
           <AlertTriangle size={48} color={colors.destructive} />
-          <Text className="text-xl font-semibold text-foreground mt-4">Access Denied</Text>
-          <Text className="text-muted-foreground text-center mt-2">
+          <Text className="text-xl font-semibold mt-4" style={{ color: colors.foreground }}>Access Denied</Text>
+          <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
             You don't have permission to access the admin dashboard.
           </Text>
           <Button onPress={() => router.back()} className="mt-6">
@@ -142,7 +142,7 @@ export function AdminDashboardScreen() {
       >
         {/* Stats Cards */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
             OVERVIEW
           </Text>
           <View className="flex-row flex-wrap">
@@ -180,22 +180,21 @@ export function AdminDashboardScreen() {
 
         {/* System Status */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
             SYSTEM STATUS
           </Text>
           <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             {systems.map((system, index) => (
               <View
                 key={system.name}
-                className={`flex-row items-center p-4 ${
-                  index !== systems.length - 1 ? 'border-b border-border' : ''
-                }`}
+                className="flex-row items-center p-4"
+                style={index !== systems.length - 1 ? { borderBottomWidth: 1, borderColor: colors.border } : undefined}
               >
                 <Server size={20} color={colors.mutedForeground} />
                 <View className="flex-1 ml-3">
-                  <Text className="text-foreground font-medium">{system.name}</Text>
+                  <Text className="font-medium" style={{ color: colors.foreground }}>{system.name}</Text>
                   {system.latency != null && (
-                    <Text className="text-xs text-muted-foreground">
+                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                       Response: {system.latency}ms
                     </Text>
                   )}
@@ -216,7 +215,7 @@ export function AdminDashboardScreen() {
 
         {/* Quick Actions */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
             QUICK ACTIONS
           </Text>
           <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
@@ -265,12 +264,13 @@ interface StatCardProps {
 }
 
 function StatCard({ icon, title, value, subtitle, onPress, cardColor }: StatCardProps) {
+  const colors = useThemeColors();
   const content = (
     <View className="rounded-lg p-4" style={{ backgroundColor: cardColor }}>
       {icon}
-      <Text className="text-2xl font-bold text-foreground mt-2">{value}</Text>
-      <Text className="text-sm text-foreground">{title}</Text>
-      <Text className="text-xs text-muted-foreground">{subtitle}</Text>
+      <Text className="text-2xl font-bold mt-2" style={{ color: colors.foreground }}>{value}</Text>
+      <Text className="text-sm" style={{ color: colors.foreground }}>{title}</Text>
+      <Text className="text-xs" style={{ color: colors.mutedForeground }}>{subtitle}</Text>
     </View>
   );
 
@@ -297,13 +297,14 @@ function AdminActionItem({ icon, title, subtitle, onPress, hideBorder }: AdminAc
   const colors = useThemeColors();
   return (
     <TouchableOpacity
-      className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}
+      className="flex-row items-center p-4"
+      style={!hideBorder ? { borderBottomWidth: 1, borderColor: colors.border } : undefined}
       onPress={onPress}
     >
       {icon}
       <View className="flex-1 ml-3">
-        <Text className="text-foreground font-medium">{title}</Text>
-        <Text className="text-sm text-muted-foreground">{subtitle}</Text>
+        <Text className="font-medium" style={{ color: colors.foreground }}>{title}</Text>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{subtitle}</Text>
       </View>
       <ChevronRight size={20} color={colors.mutedForeground} />
     </TouchableOpacity>

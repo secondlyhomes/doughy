@@ -3,7 +3,7 @@
 import { View, Text, Image, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Calculator, TrendingUp, Clock, PiggyBank, CheckCircle, ArrowRight } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 
@@ -44,22 +44,22 @@ const benefits = [
 ];
 
 export function ROIScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {/* Hero Section */}
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <View className="max-w-[1200px] mx-auto">
           <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-12 items-center`}>
             <View className={`${isMobile ? 'w-full' : 'flex-1'}`}>
-              <Text className="text-sm text-primary font-medium mb-4">ROI & TIME SAVINGS</Text>
-              <Text className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              <Text className="text-sm font-medium mb-4" style={{ color: colors.primary }}>ROI & TIME SAVINGS</Text>
+              <Text className="text-4xl md:text-5xl font-bold mb-6" style={{ color: colors.foreground }}>
                 Know Your Numbers, Close More Deals
               </Text>
-              <Text className="text-lg text-muted-foreground mb-8">
+              <Text className="text-lg mb-8" style={{ color: colors.mutedForeground }}>
                 Make confident investment decisions with accurate ROI calculations, profit
                 projections, and financing scenario modeling.
               </Text>
@@ -67,14 +67,14 @@ export function ROIScreen() {
                 <Link href="/pricing" asChild>
                   <Button size="lg">
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-primary-foreground font-medium">Get Started</Text>
+                      <Text className="font-medium" style={{ color: colors.primaryForeground }}>Get Started</Text>
                       <ArrowRight size={16} color={colors.primaryForeground} />
                     </View>
                   </Button>
                 </Link>
                 <Link href="/docs/deal-calculator" asChild>
                   <Button variant="outline" size="lg">
-                    <Text className="text-foreground font-medium">Learn More</Text>
+                    <Text className="font-medium" style={{ color: colors.foreground }}>Learn More</Text>
                   </Button>
                 </Link>
               </View>
@@ -93,13 +93,13 @@ export function ROIScreen() {
       </View>
 
       {/* Stats Section */}
-      <View className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-card">
+      <View className="py-12 md:py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.card }}>
         <View className="max-w-[1200px] mx-auto">
           <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-8 justify-center`}>
             {stats.map((stat, index) => (
               <View key={index} className="items-center">
-                <Text className="text-4xl md:text-5xl font-bold text-primary mb-2">{stat.value}</Text>
-                <Text className="text-muted-foreground text-center">{stat.label}</Text>
+                <Text className="text-4xl md:text-5xl font-bold mb-2" style={{ color: colors.primary }}>{stat.value}</Text>
+                <Text className="text-center" style={{ color: colors.mutedForeground }}>{stat.label}</Text>
               </View>
             ))}
           </View>
@@ -110,10 +110,10 @@ export function ROIScreen() {
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <View className="max-w-[1200px] mx-auto">
           <View className="items-center mb-12">
-            <Text className="text-3xl font-bold text-center text-foreground mb-4">
+            <Text className="text-3xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
               Powerful ROI Tools
             </Text>
-            <Text className="text-lg text-center text-muted-foreground max-w-2xl">
+            <Text className="text-lg text-center max-w-2xl" style={{ color: colors.mutedForeground }}>
               Everything you need to analyze deals and make profitable investment decisions.
             </Text>
           </View>
@@ -122,11 +122,11 @@ export function ROIScreen() {
             {features.map((feature, index) => (
               <View key={index} className={`${isMobile ? 'w-full' : 'flex-1 min-w-[280px]'}`}>
                 <Card className="p-6 h-full">
-                  <View className="w-12 h-12 rounded-lg bg-primary/10 items-center justify-center mb-4">
+                  <View className="w-12 h-12 rounded-lg items-center justify-center mb-4" style={{ backgroundColor: colors.primary + '1A' }}>
                     <feature.Icon size={24} color={colors.primary} />
                   </View>
-                  <Text className="text-xl font-semibold text-foreground mb-2">{feature.title}</Text>
-                  <Text className="text-muted-foreground">{feature.description}</Text>
+                  <Text className="text-xl font-semibold mb-2" style={{ color: colors.foreground }}>{feature.title}</Text>
+                  <Text style={{ color: colors.mutedForeground }}>{feature.description}</Text>
                 </Card>
               </View>
             ))}
@@ -135,7 +135,7 @@ export function ROIScreen() {
       </View>
 
       {/* Benefits Section */}
-      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-card">
+      <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.card }}>
         <View className="max-w-[1200px] mx-auto">
           <View className={`${isMobile ? 'flex-col' : 'flex-row-reverse'} gap-12 items-center`}>
             <View className={`${isMobile ? 'w-full' : 'flex-1'} rounded-xl overflow-hidden shadow-lg`}>
@@ -148,14 +148,14 @@ export function ROIScreen() {
               />
             </View>
             <View className={`${isMobile ? 'w-full' : 'flex-1'}`}>
-              <Text className="text-3xl font-bold text-foreground mb-6">
+              <Text className="text-3xl font-bold mb-6" style={{ color: colors.foreground }}>
                 Never Overpay for a Property Again
               </Text>
               <View className="gap-4">
                 {benefits.map((benefit, index) => (
                   <View key={index} className="flex-row items-start gap-3">
                     <CheckCircle size={20} color={colors.primary} className="mt-0.5" />
-                    <Text className="text-foreground flex-1">{benefit}</Text>
+                    <Text className="flex-1" style={{ color: colors.foreground }}>{benefit}</Text>
                   </View>
                 ))}
               </View>
@@ -165,18 +165,18 @@ export function ROIScreen() {
       </View>
 
       {/* CTA Section */}
-      <View className="py-16 px-4 sm:px-6 lg:px-8 bg-primary">
+      <View className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.primary }}>
         <View className="max-w-3xl mx-auto items-center">
-          <Text className="text-3xl font-bold text-center text-white mb-4">
+          <Text className="text-3xl font-bold text-center mb-4" style={{ color: colors.primaryForeground }}>
             Ready to Make Smarter Investments?
           </Text>
-          <Text className="text-lg text-center text-white/90 mb-8">
+          <Text className="text-lg text-center mb-8" style={{ color: colors.primaryForeground, opacity: 0.9 }}>
             Start analyzing deals with confidence today.
           </Text>
           <Link href="/pricing" asChild>
-            <Button className="bg-white">
+            <Button style={{ backgroundColor: '#ffffff' }}>
               <View className="flex-row items-center gap-2">
-                <Text className="text-primary font-medium">Start Free Trial</Text>
+                <Text className="font-medium" style={{ color: colors.primary }}>Start Free Trial</Text>
                 <ArrowRight size={16} color={colors.primary} />
               </View>
             </Button>

@@ -91,13 +91,13 @@ export function VerifyEmailScreen() {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center px-6" edges={['top']}>
         <View className="items-center">
-          <View className="w-20 h-20 rounded-full bg-success/20 items-center justify-center mb-6">
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.success}33` }}>
             <CheckCircle size={48} color={colors.success} />
           </View>
-          <Text className="text-2xl font-bold text-foreground text-center">
+          <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
             Email Verified!
           </Text>
-          <Text className="text-muted-foreground text-center mt-2">
+          <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
             Redirecting you to the app...
           </Text>
           <ActivityIndicator size="small" color={colors.info} className="mt-4" />
@@ -119,23 +119,23 @@ export function VerifyEmailScreen() {
         <View className="flex-1 justify-center px-6 py-12">
           {/* Header */}
           <View className="items-center mb-8">
-            <View className="w-20 h-20 rounded-full bg-primary/10 items-center justify-center mb-6">
+            <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.primary}15` }}>
               <Mail size={40} color={colors.info} />
             </View>
-            <Text className="text-2xl font-bold text-foreground text-center">
+            <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
               Verify Your Email
             </Text>
-            <Text className="text-muted-foreground text-center mt-2">
+            <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
               We've sent a verification link to
             </Text>
-            <Text className="text-foreground font-medium text-center mt-1">
+            <Text className="font-medium text-center mt-1" style={{ color: colors.foreground }}>
               {user?.email || 'your email'}
             </Text>
           </View>
 
           {/* Instructions */}
-          <View className="bg-muted/50 rounded-lg p-4 mb-6">
-            <Text className="text-sm text-muted-foreground text-center">
+          <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.muted}80` }}>
+            <Text className="text-sm text-center" style={{ color: colors.mutedForeground }}>
               Click the link in your email to verify your account.
               {'\n'}Check your spam folder if you don't see it.
             </Text>
@@ -144,14 +144,12 @@ export function VerifyEmailScreen() {
           {/* Message */}
           {message && (
             <View
-              className={`rounded-lg p-4 mb-6 ${
-                message.type === 'success' ? 'bg-success/20' : 'bg-destructive/10'
-              }`}
+              className="rounded-lg p-4 mb-6"
+              style={{ backgroundColor: message.type === 'success' ? `${colors.success}33` : `${colors.destructive}15` }}
             >
               <Text
-                className={`text-sm text-center ${
-                  message.type === 'success' ? 'text-success' : 'text-destructive'
-                }`}
+                className="text-sm text-center"
+                style={{ color: message.type === 'success' ? colors.success : colors.destructive }}
               >
                 {message.text}
               </Text>
@@ -160,11 +158,8 @@ export function VerifyEmailScreen() {
 
           {/* Resend Button */}
           <TouchableOpacity
-            className={`flex-row items-center justify-center py-4 rounded-lg ${
-              resendCooldown > 0 || isResending
-                ? 'bg-muted'
-                : 'bg-primary'
-            }`}
+            className="flex-row items-center justify-center py-4 rounded-lg"
+            style={{ backgroundColor: resendCooldown > 0 || isResending ? colors.muted : colors.primary }}
             onPress={handleResendEmail}
             disabled={resendCooldown > 0 || isResending}
           >
@@ -177,11 +172,8 @@ export function VerifyEmailScreen() {
                   color={resendCooldown > 0 ? colors.mutedForeground : colors.primaryForeground}
                 />
                 <Text
-                  className={`ml-2 font-semibold ${
-                    resendCooldown > 0
-                      ? 'text-muted-foreground'
-                      : 'text-primary-foreground'
-                  }`}
+                  className="ml-2 font-semibold"
+                  style={{ color: resendCooldown > 0 ? colors.mutedForeground : colors.primaryForeground }}
                 >
                   {resendCooldown > 0
                     ? `Resend in ${resendCooldown}s`
@@ -194,7 +186,7 @@ export function VerifyEmailScreen() {
           {/* Checking status indicator */}
           <View className="flex-row items-center justify-center mt-6">
             <ActivityIndicator size="small" color={colors.info} />
-            <Text className="text-sm text-muted-foreground ml-2">
+            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>
               Waiting for verification...
             </Text>
           </View>
@@ -205,7 +197,7 @@ export function VerifyEmailScreen() {
             onPress={handleSignOut}
           >
             <ArrowLeft size={16} color={colors.mutedForeground} />
-            <Text className="text-muted-foreground ml-1">
+            <Text className="ml-1" style={{ color: colors.mutedForeground }}>
               Sign in with a different account
             </Text>
           </TouchableOpacity>

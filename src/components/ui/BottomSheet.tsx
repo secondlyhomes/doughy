@@ -241,10 +241,14 @@ export function BottomSheetSection({
   children,
   className,
 }: BottomSheetSectionProps) {
+  const colors = useThemeColors();
   return (
     <View className={cn('py-4', className)}>
       {title && (
-        <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+        <Text
+          className="text-sm font-medium mb-3 uppercase tracking-wide"
+          style={{ color: colors.mutedForeground }}
+        >
           {title}
         </Text>
       )}

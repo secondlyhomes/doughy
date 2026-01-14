@@ -38,7 +38,7 @@ export function LoadingSpinner({
     >
       <ActivityIndicator size={size} color={color ?? colors.primary} />
       {text && (
-        <Text className="text-muted-foreground mt-2">{text}</Text>
+        <Text className="mt-2" style={{ color: colors.mutedForeground }}>{text}</Text>
       )}
     </View>
   );

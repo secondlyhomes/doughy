@@ -39,7 +39,7 @@ export function DealDocsScreen() {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
         <FolderOpen size={48} color={colors.destructive} />
-        <Text className="text-destructive text-center mt-4 mb-4">
+        <Text className="text-center mt-4 mb-4" style={{ color: colors.destructive }}>
           {error?.message || 'Deal not found'}
         </Text>
         <Button onPress={handleBack}>Go Back</Button>
@@ -52,7 +52,7 @@ export function DealDocsScreen() {
     return (
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
         {/* Header */}
-        <View className="flex-row items-center px-4 py-3 border-b border-border">
+        <View className="flex-row items-center px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           <TouchableOpacity
             onPress={handleBack}
             accessibilityLabel="Go back"
@@ -61,16 +61,16 @@ export function DealDocsScreen() {
           >
             <ArrowLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
-          <Text className="text-lg font-semibold text-foreground">Documents</Text>
+          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
         </View>
 
         {/* Empty state */}
         <View className="flex-1 items-center justify-center px-8">
           <FolderOpen size={64} color={colors.mutedForeground} />
-          <Text className="text-lg font-semibold text-foreground mt-4 text-center">
+          <Text className="text-lg font-semibold mt-4 text-center" style={{ color: colors.foreground }}>
             No Property Linked
           </Text>
-          <Text className="text-sm text-muted-foreground mt-2 text-center">
+          <Text className="text-sm mt-2 text-center" style={{ color: colors.mutedForeground }}>
             Link a property to this deal to manage documents.
           </Text>
         </View>
@@ -81,7 +81,7 @@ export function DealDocsScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+      <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
         <View className="flex-row items-center flex-1">
           <TouchableOpacity
             onPress={handleBack}
@@ -92,8 +92,8 @@ export function DealDocsScreen() {
             <ArrowLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-lg font-semibold text-foreground">Documents</Text>
-            <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }} numberOfLines={1}>
               {getDealAddress(deal)}
             </Text>
           </View>

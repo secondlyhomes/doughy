@@ -1,5 +1,6 @@
 // Lead Detail Screen - React Native
 // Converted from web app src/features/leads/pages/LeadsDetailView.tsx
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
@@ -83,14 +84,14 @@ export function LeadDetailScreen() {
 
   const getStatusColor = (status: string | undefined) => {
     const statusColors: Record<string, string> = {
-      new: 'bg-success',
-      active: 'bg-info',
-      won: 'bg-success',
-      lost: 'bg-destructive',
-      closed: 'bg-primary',
-      inactive: 'bg-muted-foreground',
+      new: colors.success,
+      active: colors.info,
+      won: colors.success,
+      lost: colors.destructive,
+      closed: colors.primary,
+      inactive: colors.mutedForeground,
     };
-    return statusColors[status || ''] || 'bg-muted-foreground';
+    return statusColors[status || ''] || colors.mutedForeground;
   };
 
   const formatStatus = (status: string | undefined) => {
@@ -112,7 +113,7 @@ export function LeadDetailScreen() {
   if (!lead) {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={['top']}>
-        <Text className="text-muted-foreground mb-4">Lead not found</Text>
+        <Text className="mb-4" style={{ color: colors.mutedForeground }}>Lead not found</Text>
         <Button onPress={() => router.back()}>Go Back</Button>
       </ThemedSafeAreaView>
     );
@@ -121,11 +122,14 @@ export function LeadDetailScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="bg-card border-b border-border px-4 py-3">
+      <View
+        className="px-4 py-3"
+        style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border }}
+      >
         <View className="flex-row items-center justify-between">
           <TouchableOpacity className="flex-row items-center" onPress={() => router.back()} accessibilityLabel="Go back" accessibilityRole="button">
             <ArrowLeft size={24} color={colors.mutedForeground} />
-            <Text className="text-muted-foreground ml-2">Back</Text>
+            <Text className="ml-2" style={{ color: colors.mutedForeground }}>Back</Text>
           </TouchableOpacity>
 
           <View className="flex-row items-center gap-3">
@@ -144,28 +148,31 @@ export function LeadDetailScreen() {
 
       <ScrollView className="flex-1">
         {/* Lead Header */}
-        <View className="bg-card p-4 mb-4">
+        <View className="p-4 mb-4" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-start justify-between mb-3">
             <View className="flex-1">
-              <Text className="text-2xl font-bold text-foreground">{lead.name || 'Unnamed Lead'}</Text>
+              <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>{lead.name || 'Unnamed Lead'}</Text>
               {lead.company && (
                 <View className="flex-row items-center mt-1">
                   <Building2 size={14} color={colors.mutedForeground} />
-                  <Text className="text-muted-foreground ml-1">{lead.company}</Text>
+                  <Text className="ml-1" style={{ color: colors.mutedForeground }}>{lead.company}</Text>
                 </View>
               )}
             </View>
-            <View className={`${getStatusColor(lead.status)} px-3 py-1 rounded-full`}>
-              <Text className="text-white text-sm font-medium">{formatStatus(lead.status)}</Text>
+            <View
+              className="px-3 py-1 rounded-full"
+              style={{ backgroundColor: getStatusColor(lead.status) }}
+            >
+              <Text className="text-sm font-medium" style={{ color: '#ffffff' }}>{formatStatus(lead.status)}</Text>
             </View>
           </View>
 
           {/* Score */}
           {lead.score !== undefined && (
             <View className="flex-row items-center mb-3">
-              <Text className="text-sm text-muted-foreground">Lead Score:</Text>
-              <View className="ml-2 bg-primary/10 px-2 py-0.5 rounded">
-                <Text className="text-primary font-semibold">{lead.score}</Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Lead Score:</Text>
+              <View className="ml-2 px-2 py-0.5 rounded" style={{ backgroundColor: `${colors.primary}15` }}>
+                <Text className="font-semibold" style={{ color: colors.primary }}>{lead.score}</Text>
               </View>
             </View>
           )}
@@ -187,15 +194,15 @@ export function LeadDetailScreen() {
 
         {/* Tags */}
         {lead.tags && lead.tags.length > 0 && (
-          <View className="bg-card p-4 mb-4">
+          <View className="p-4 mb-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center mb-3">
               <Tag size={18} color={colors.mutedForeground} />
-              <Text className="text-lg font-semibold text-foreground ml-2">Tags</Text>
+              <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Tags</Text>
             </View>
             <View className="flex-row flex-wrap gap-2">
               {lead.tags.map((tag, index) => (
-                <View key={index} className="bg-secondary px-3 py-1.5 rounded-full">
-                  <Text className="text-secondary-foreground text-sm">{tag}</Text>
+                <View key={index} className="px-3 py-1.5 rounded-full" style={{ backgroundColor: colors.secondary }}>
+                  <Text className="text-sm" style={{ color: colors.secondaryForeground }}>{tag}</Text>
                 </View>
               ))}
             </View>
@@ -206,7 +213,7 @@ export function LeadDetailScreen() {
         <LeadNotesSection notes={lead.notes} onAddNote={() => setShowActivitySheet(true)} />
 
         {/* Activity Timeline */}
-        <View className="bg-card p-4 mb-8">
+        <View className="p-4 mb-8" style={{ backgroundColor: colors.card }}>
           <LeadTimeline activities={activities} onAddActivity={() => setShowActivitySheet(true)} />
         </View>
       </ScrollView>

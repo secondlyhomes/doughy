@@ -11,12 +11,14 @@ import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property } from '../types';
 
 export function EditPropertyScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const propertyId = params.id as string;
+  const colors = useThemeColors();
 
   const { property, isLoading: isLoadingProperty, error: loadError } = useProperty(propertyId);
   const { updateProperty, isLoading: isUpdating, error: updateError } = usePropertyMutations();
@@ -54,8 +56,8 @@ export function EditPropertyScreen() {
 
   if (loadError || !property) {
     return (
-      <View className="flex-1 bg-background items-center justify-center px-4">
-        <Text className="text-destructive text-center mb-4">
+      <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: colors.background }}>
+        <Text className="text-center mb-4" style={{ color: colors.destructive }}>
           {loadError?.message || 'Property not found'}
         </Text>
       </View>

@@ -1,6 +1,7 @@
 // src/features/public/screens/PrivacyScreen.tsx
 // Privacy policy page for public website
 import { View, Text, ScrollView } from 'react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 const sections = [
   {
@@ -67,28 +68,29 @@ Address: 123 Dough Street, San Francisco, CA 94107`,
 ];
 
 export function PrivacyScreen() {
+  const colors = useThemeColors();
   const lastUpdated = 'January 1, 2025';
 
   return (
-    <View className="flex-1 bg-background py-12">
+    <View className="flex-1 py-12" style={{ backgroundColor: colors.background }}>
       <View className="px-4 sm:px-6 lg:px-8">
         <View className="max-w-3xl mx-auto">
-          <Text className="text-4xl font-bold text-center text-foreground mb-4">
+          <Text className="text-4xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
             Privacy Policy
           </Text>
-          <Text className="text-center text-muted-foreground mb-12">
+          <Text className="text-center mb-12" style={{ color: colors.mutedForeground }}>
             Last updated: {lastUpdated}
           </Text>
 
-          <Text className="text-foreground mb-8">
+          <Text className="mb-8" style={{ color: colors.foreground }}>
             At Doughy, we take your privacy seriously. This Privacy Policy explains how we collect,
             use, disclose, and safeguard your information when you use our platform.
           </Text>
 
           {sections.map((section, index) => (
             <View key={index} className="mb-8">
-              <Text className="text-xl font-semibold text-foreground mb-4">{section.title}</Text>
-              <Text className="text-muted-foreground whitespace-pre-line">{section.content}</Text>
+              <Text className="text-xl font-semibold mb-4" style={{ color: colors.foreground }}>{section.title}</Text>
+              <Text className="whitespace-pre-line" style={{ color: colors.mutedForeground }}>{section.content}</Text>
             </View>
           ))}
         </View>

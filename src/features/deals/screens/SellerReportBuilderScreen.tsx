@@ -110,7 +110,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+      <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
         <View className="flex-row items-center flex-1">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -121,10 +121,10 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
             <ArrowLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
           <View>
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
               Seller Report
             </Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {viewMode === 'edit' ? 'Edit options' : 'Preview report'}
             </Text>
           </View>
@@ -184,7 +184,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
             </CardHeader>
             <CardContent className="gap-3">
               <View>
-                <Text className="text-sm font-medium text-foreground mb-1">
+                <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                   Seller Name
                 </Text>
                 <Input
@@ -194,7 +194,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
                 />
               </View>
               <View>
-                <Text className="text-sm font-medium text-foreground mb-1">
+                <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
                   Property Address
                 </Text>
                 <Input
@@ -214,7 +214,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
             <CardContent className="gap-3">
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-foreground mb-1">Low</Text>
+                  <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>Low</Text>
                   <Input
                     value={options.cash?.price_low?.toString() || ''}
                     onChangeText={(text) => updateCashOption('price_low', parseCurrency(text))}
@@ -223,7 +223,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-foreground mb-1">High</Text>
+                  <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>High</Text>
                   <Input
                     value={options.cash?.price_high?.toString() || ''}
                     onChangeText={(text) => updateCashOption('price_high', parseCurrency(text))}
@@ -234,7 +234,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
               </View>
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-foreground mb-1">Close Days (Min)</Text>
+                  <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>Close Days (Min)</Text>
                   <Input
                     value={options.cash?.close_days_low?.toString() || ''}
                     onChangeText={(text) => updateCashOption('close_days_low', parseInt(text, 10) || 0)}
@@ -243,7 +243,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-foreground mb-1">Close Days (Max)</Text>
+                  <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>Close Days (Max)</Text>
                   <Input
                     value={options.cash?.close_days_high?.toString() || ''}
                     onChangeText={(text) => updateCashOption('close_days_high', parseInt(text, 10) || 0)}
@@ -263,7 +263,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
             <CardContent className="gap-3">
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-foreground mb-1">Price Low</Text>
+                  <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>Price Low</Text>
                   <Input
                     value={options.seller_finance?.price_low?.toString() || ''}
                     onChangeText={(text) => updateSellerFinanceOption('price_low', parseCurrency(text))}
@@ -272,7 +272,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
                   />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-medium text-foreground mb-1">Price High</Text>
+                  <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>Price High</Text>
                   <Input
                     value={options.seller_finance?.price_high?.toString() || ''}
                     onChangeText={(text) => updateSellerFinanceOption('price_high', parseCurrency(text))}
@@ -282,7 +282,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
                 </View>
               </View>
               <View>
-                <Text className="text-sm font-medium text-foreground mb-1">Monthly Payment</Text>
+                <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>Monthly Payment</Text>
                 <Input
                   value={options.seller_finance?.monthly_payment?.toString() || ''}
                   onChangeText={(text) => updateSellerFinanceOption('monthly_payment', parseCurrency(text))}
@@ -313,8 +313,8 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
 
       {/* Bottom action bar */}
       <View
-        className="absolute bottom-0 left-0 right-0 p-4 border-t border-border"
-        style={{ backgroundColor: colors.background }}
+        className="absolute bottom-0 left-0 right-0 p-4 border-t"
+        style={{ borderColor: colors.border, backgroundColor: colors.background }}
       >
         <TouchableOpacity
           onPress={toggleViewMode}
@@ -323,7 +323,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
           accessibilityLabel={viewMode === 'edit' ? 'Preview report' : 'Back to editing'}
           accessibilityRole="button"
         >
-          <Text className="text-base font-semibold text-primary-foreground">
+          <Text className="text-base font-semibold" style={{ color: colors.primaryForeground }}>
             {viewMode === 'edit' ? 'Preview Report' : 'Back to Edit'}
           </Text>
         </TouchableOpacity>

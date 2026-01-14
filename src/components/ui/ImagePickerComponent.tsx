@@ -141,7 +141,8 @@ export function ImagePickerComponent({
       />
       {!disabled && (
         <TouchableOpacity
-          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-destructive"
+          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full"
+          style={{ backgroundColor: colors.destructive }}
           onPress={() => handleRemove(index)}
           accessibilityRole="button"
           accessibilityLabel="Remove image"
@@ -157,7 +158,7 @@ export function ImagePickerComponent({
   return (
     <View className={cn('w-full', className)} {...props}>
       {label && (
-        <Text className="mb-1.5 text-sm font-medium text-foreground">{label}</Text>
+        <Text className="mb-1.5 text-sm font-medium" style={{ color: colors.foreground }}>{label}</Text>
       )}
 
       {/* Image grid */}
@@ -179,10 +180,14 @@ export function ImagePickerComponent({
           {showCamera && (
             <TouchableOpacity
               className={cn(
-                'flex-1 flex-row items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-3',
-                disabled && 'opacity-50',
-                error && 'border-destructive'
+                'flex-1 flex-row items-center justify-center gap-2 rounded-md px-4 py-3',
+                disabled && 'opacity-50'
               )}
+              style={{
+                borderWidth: 1,
+                borderColor: error ? colors.destructive : colors.input,
+                backgroundColor: colors.background,
+              }}
               onPress={handleCamera}
               disabled={disabled}
               activeOpacity={0.7}
@@ -190,17 +195,21 @@ export function ImagePickerComponent({
               accessibilityLabel="Take photo with camera"
             >
               <Camera size={20} color={colors.mutedForeground} />
-              <Text className="text-sm font-medium text-foreground">Camera</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.foreground }}>Camera</Text>
             </TouchableOpacity>
           )}
 
           {showGallery && (
             <TouchableOpacity
               className={cn(
-                'flex-1 flex-row items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-3',
-                disabled && 'opacity-50',
-                error && 'border-destructive'
+                'flex-1 flex-row items-center justify-center gap-2 rounded-md px-4 py-3',
+                disabled && 'opacity-50'
               )}
+              style={{
+                borderWidth: 1,
+                borderColor: error ? colors.destructive : colors.input,
+                backgroundColor: colors.background,
+              }}
               onPress={handleGallery}
               disabled={disabled}
               activeOpacity={0.7}
@@ -208,7 +217,7 @@ export function ImagePickerComponent({
               accessibilityLabel="Select photo from gallery"
             >
               <ImageIcon size={20} color={colors.mutedForeground} />
-              <Text className="text-sm font-medium text-foreground">Gallery</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.foreground }}>Gallery</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -218,9 +227,15 @@ export function ImagePickerComponent({
       {!canAddMore && multiple && value.length < maxImages && (
         <TouchableOpacity
           className={cn(
-            'mt-2 flex-row items-center justify-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-4 py-3',
+            'mt-2 flex-row items-center justify-center gap-2 rounded-md px-4 py-3',
             disabled && 'opacity-50'
           )}
+          style={{
+            borderWidth: 1,
+            borderStyle: 'dashed',
+            borderColor: colors.border,
+            backgroundColor: `${colors.muted}4D`,
+          }}
           onPress={handleGallery}
           disabled={disabled}
           activeOpacity={0.7}
@@ -228,7 +243,7 @@ export function ImagePickerComponent({
           accessibilityLabel="Add more images"
         >
           <Plus size={16} color={colors.mutedForeground} />
-          <Text className="text-sm text-muted-foreground">Add more</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>Add more</Text>
         </TouchableOpacity>
       )}
 
@@ -236,7 +251,7 @@ export function ImagePickerComponent({
       {permissionError && (
         <View className="mt-2 flex-row items-center gap-1" accessibilityRole="alert">
           <AlertCircle size={14} color={colors.warning} />
-          <Text className="text-sm text-warning">{permissionError}</Text>
+          <Text className="text-sm" style={{ color: colors.warning }}>{permissionError}</Text>
         </View>
       )}
 
@@ -244,13 +259,13 @@ export function ImagePickerComponent({
       {error && (
         <View className="mt-2 flex-row items-center gap-1" accessibilityRole="alert">
           <AlertCircle size={14} color={colors.destructive} />
-          <Text className="text-sm text-destructive">{error}</Text>
+          <Text className="text-sm" style={{ color: colors.destructive }}>{error}</Text>
         </View>
       )}
 
       {/* Image count info */}
       {multiple && value.length > 0 && (
-        <Text className="mt-2 text-xs text-muted-foreground">
+        <Text className="mt-2 text-xs" style={{ color: colors.mutedForeground }}>
           {value.length} of {maxImages} images selected
         </Text>
       )}

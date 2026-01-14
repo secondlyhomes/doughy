@@ -54,7 +54,7 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
           >
             <View className="flex-row items-center gap-2">
               <AlertTriangle size={18} color={colors.warning} />
-              <Text className="text-base font-semibold text-foreground">
+              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
                 Issues Found
               </Text>
               <View
@@ -74,10 +74,10 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
           </TouchableOpacity>
 
           {expandedSections.issues && (
-            <View className="ml-6 pl-2 border-l-2" style={{ borderLeftColor: colors.warning + '40' }}>
+            <View className="ml-6 pl-2" style={{ borderLeftWidth: 2, borderLeftColor: colors.warning + '40' }}>
               {summary.issues.map((issue, index) => (
                 <View key={index} className="py-1.5">
-                  <Text className="text-sm text-foreground">{issue}</Text>
+                  <Text className="text-sm" style={{ color: colors.foreground }}>{issue}</Text>
                 </View>
               ))}
             </View>
@@ -94,7 +94,7 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
           >
             <View className="flex-row items-center gap-2">
               <HelpCircle size={18} color={colors.info} />
-              <Text className="text-base font-semibold text-foreground">
+              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
                 Questions to Verify
               </Text>
               <View
@@ -114,10 +114,10 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
           </TouchableOpacity>
 
           {expandedSections.questions && (
-            <View className="ml-6 pl-2 border-l-2" style={{ borderLeftColor: colors.info + '40' }}>
+            <View className="ml-6 pl-2" style={{ borderLeftWidth: 2, borderLeftColor: colors.info + '40' }}>
               {summary.questions.map((question, index) => (
                 <View key={index} className="py-1.5">
-                  <Text className="text-sm text-foreground">{question}</Text>
+                  <Text className="text-sm" style={{ color: colors.foreground }}>{question}</Text>
                 </View>
               ))}
             </View>
@@ -134,7 +134,7 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
           >
             <View className="flex-row items-center gap-2">
               <ClipboardList size={18} color={colors.success} />
-              <Text className="text-base font-semibold text-foreground">
+              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
                 Scope of Work
               </Text>
               <View
@@ -154,10 +154,10 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
           </TouchableOpacity>
 
           {expandedSections.scope && (
-            <View className="ml-6 pl-2 border-l-2" style={{ borderLeftColor: colors.success + '40' }}>
+            <View className="ml-6 pl-2" style={{ borderLeftWidth: 2, borderLeftColor: colors.success + '40' }}>
               {summary.scope_bullets.map((bullet, index) => (
                 <View key={index} className="py-1.5">
-                  <Text className="text-sm text-foreground">{bullet}</Text>
+                  <Text className="text-sm" style={{ color: colors.foreground }}>{bullet}</Text>
                 </View>
               ))}
             </View>
@@ -181,10 +181,10 @@ export function WalkthroughSummaryPlaceholder() {
         >
           <Sparkles size={32} color={colors.primary} />
         </View>
-        <Text className="text-base font-semibold text-foreground text-center mb-2">
+        <Text className="text-base font-semibold text-center mb-2" style={{ color: colors.foreground }}>
           Ready to Organize
         </Text>
-        <Text className="text-sm text-muted-foreground text-center px-4">
+        <Text className="text-sm text-center px-4" style={{ color: colors.mutedForeground }}>
           Add photos and voice memos, then tap "AI Organize" to generate an
           intelligent summary of issues, questions, and scope of work.
         </Text>

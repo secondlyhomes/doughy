@@ -107,7 +107,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
   if (error) {
     return (
       <View className="flex-1 items-center justify-center py-12">
-        <Text className="text-destructive mb-4">Failed to load comparables</Text>
+        <Text className="mb-4" style={{ color: colors.destructive }}>Failed to load comparables</Text>
         <Button variant="secondary" onPress={refetch}>
           <RefreshCw size={16} color={colors.foreground} />
           Try Again
@@ -126,17 +126,18 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
         {/* Header */}
         <View className="flex-row justify-between items-center">
           <View>
-            <Text className="text-lg font-semibold text-foreground">Comparable Properties</Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Comparable Properties</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {comps.length} comp{comps.length !== 1 ? 's' : ''} added
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => setShowAddSheet(true)}
-            className="flex-row items-center bg-primary px-3 py-2 rounded-lg"
+            className="flex-row items-center px-3 py-2 rounded-lg"
+            style={{ backgroundColor: colors.primary }}
           >
             <Plus size={16} color={colors.primaryForeground} />
-            <Text className="text-primary-foreground font-medium ml-1">Add Comp</Text>
+            <Text className="font-medium ml-1" style={{ color: colors.primaryForeground }}>Add Comp</Text>
           </TouchableOpacity>
         </View>
 
@@ -149,20 +150,21 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
 
         {/* Empty State */}
         {!hasComps && (
-          <View className="items-center justify-center py-12 bg-card rounded-xl border border-border">
-            <View className="bg-muted rounded-full p-4 mb-4">
-              <MapPin size={32} className="text-muted-foreground" />
+          <View className="items-center justify-center py-12 rounded-xl" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <View className="rounded-full p-4 mb-4" style={{ backgroundColor: colors.muted }}>
+              <MapPin size={32} color={colors.mutedForeground} />
             </View>
-            <Text className="text-lg font-semibold text-foreground mb-2">No Comparable Properties</Text>
-            <Text className="text-muted-foreground text-center px-8 mb-4">
+            <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Comparable Properties</Text>
+            <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
               Add recently sold properties similar to yours to calculate an accurate ARV.
             </Text>
             <TouchableOpacity
               onPress={() => setShowAddSheet(true)}
-              className="flex-row items-center bg-muted px-4 py-2 rounded-lg"
+              className="flex-row items-center px-4 py-2 rounded-lg"
+              style={{ backgroundColor: colors.muted }}
             >
-              <Plus size={16} className="text-foreground" />
-              <Text className="text-foreground font-medium ml-2">Add First Comp</Text>
+              <Plus size={16} color={colors.foreground} />
+              <Text className="font-medium ml-2" style={{ color: colors.foreground }}>Add First Comp</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -170,7 +172,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
         {/* Comps List */}
         {hasComps && (
           <View className="gap-3">
-            <Text className="text-sm font-medium text-muted-foreground">
+            <Text className="text-sm font-medium" style={{ color: colors.mutedForeground }}>
               Comparable Properties
             </Text>
             {comps.map((comp) => (

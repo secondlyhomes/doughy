@@ -92,16 +92,16 @@ export function SystemLogsScreen() {
     }
   };
 
-  const getLevelColor = (level: LogLevel) => {
+  const getLevelStyles = (level: LogLevel) => {
     switch (level) {
       case 'error':
-        return 'bg-destructive/10 border-destructive/30';
+        return { backgroundColor: `${colors.destructive}1A`, borderColor: `${colors.destructive}4D` };
       case 'warning':
-        return 'bg-warning/10 border-warning/30';
+        return { backgroundColor: `${colors.warning}1A`, borderColor: `${colors.warning}4D` };
       case 'info':
-        return 'bg-info/10 border-info/30';
+        return { backgroundColor: `${colors.info}1A`, borderColor: `${colors.info}4D` };
       case 'debug':
-        return 'bg-muted border-border';
+        return { backgroundColor: colors.muted, borderColor: colors.border };
     }
   };
 
@@ -124,31 +124,33 @@ export function SystemLogsScreen() {
 
   const renderLog = ({ item }: { item: LogEntry }) => {
     const isExpanded = expandedLog === item.id;
+    const levelStyles = getLevelStyles(item.level);
 
     return (
       <TouchableOpacity
-        className={`mx-4 mb-2 p-3 rounded-lg border ${getLevelColor(item.level)}`}
+        className="mx-4 mb-2 p-3 rounded-lg border"
+        style={{ backgroundColor: levelStyles.backgroundColor, borderColor: levelStyles.borderColor }}
         onPress={() => setExpandedLog(isExpanded ? null : item.id)}
         activeOpacity={0.7}
       >
         <View className="flex-row items-start">
           <View className="mt-0.5">{getLevelIcon(item.level)}</View>
           <View className="flex-1 ml-2">
-            <Text className="text-foreground" numberOfLines={isExpanded ? undefined : 2}>
+            <Text style={{ color: colors.foreground }} numberOfLines={isExpanded ? undefined : 2}>
               {item.message}
             </Text>
             <View className="flex-row items-center mt-1">
-              <Text className="text-xs text-muted-foreground">
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                 {item.source}
               </Text>
-              <Text className="text-xs text-muted-foreground mx-1">•</Text>
-              <Text className="text-xs text-muted-foreground">
+              <Text className="text-xs mx-1" style={{ color: colors.mutedForeground }}>•</Text>
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                 {formatDate(item.timestamp)} {formatTime(item.timestamp)}
               </Text>
             </View>
             {isExpanded && item.metadata && (
-              <View className="mt-2 p-2 bg-muted rounded">
-                <Text className="text-xs font-mono text-muted-foreground">
+              <View className="mt-2 p-2 rounded" style={{ backgroundColor: colors.muted }}>
+                <Text className="text-xs font-mono" style={{ color: colors.mutedForeground }}>
                   {JSON.stringify(item.metadata, null, 2)}
                 </Text>
               </View>
@@ -183,8 +185,8 @@ export function SystemLogsScreen() {
 
       {/* Filters */}
       {showFilters && (
-        <View className="px-4 py-3 border-b border-border">
-          <Text className="text-sm font-medium text-muted-foreground mb-2">
+        <View className="px-4 py-3 border-b" style={{ borderColor: colors.border }}>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
             Filter by Level
           </Text>
           <View className="flex-row flex-wrap gap-2">
@@ -192,41 +194,46 @@ export function SystemLogsScreen() {
               label="All"
               active={filters.level === 'all'}
               onPress={() => handleFilterChange('all')}
+              colors={colors}
             />
             <FilterPill
               label="Error"
               active={filters.level === 'error'}
               onPress={() => handleFilterChange('error')}
               color={colors.destructive}
+              colors={colors}
             />
             <FilterPill
               label="Warning"
               active={filters.level === 'warning'}
               onPress={() => handleFilterChange('warning')}
               color={colors.warning}
+              colors={colors}
             />
             <FilterPill
               label="Info"
               active={filters.level === 'info'}
               onPress={() => handleFilterChange('info')}
               color={colors.info}
+              colors={colors}
             />
             <FilterPill
               label="Debug"
               active={filters.level === 'debug'}
               onPress={() => handleFilterChange('debug')}
               color={colors.mutedForeground}
+              colors={colors}
             />
           </View>
         </View>
       )}
 
       {/* Stats */}
-      <View className="px-4 py-2 bg-muted/50 flex-row justify-between">
-        <Text className="text-sm text-muted-foreground">
+      <View className="px-4 py-2 flex-row justify-between" style={{ backgroundColor: `${colors.muted}80` }}>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           {total} log{total !== 1 ? 's' : ''}
         </Text>
-        <Text className="text-sm text-muted-foreground">
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           Auto-refreshes every 30s
         </Text>
       </View>
@@ -248,7 +255,7 @@ export function SystemLogsScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-12">
               <Info size={48} color={colors.mutedForeground} />
-              <Text className="text-muted-foreground mt-4">No logs found</Text>
+              <Text className="mt-4" style={{ color: colors.mutedForeground }}>No logs found</Text>
             </View>
           }
         />
@@ -262,20 +269,19 @@ interface FilterPillProps {
   active: boolean;
   onPress: () => void;
   color?: string;
+  colors: ReturnType<typeof useThemeColors>;
 }
 
-function FilterPill({ label, active, onPress, color }: FilterPillProps) {
+function FilterPill({ label, active, onPress, color, colors }: FilterPillProps) {
   return (
     <TouchableOpacity
-      className={`px-3 py-1.5 rounded-full ${
-        active ? 'bg-primary' : 'bg-muted'
-      }`}
+      className="px-3 py-1.5 rounded-full"
+      style={{ backgroundColor: active ? colors.primary : colors.muted }}
       onPress={onPress}
     >
       <Text
-        className={`text-sm ${
-          active ? 'text-primary-foreground' : 'text-muted-foreground'
-        }`}
+        className="text-sm"
+        style={{ color: active ? colors.primaryForeground : colors.mutedForeground }}
       >
         {label}
       </Text>

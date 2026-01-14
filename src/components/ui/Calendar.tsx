@@ -97,8 +97,23 @@ export function Calendar({
     setCurrentMonth(addMonths(currentMonth, 1));
   }, [currentMonth]);
 
+  const getDateTextColor = (
+    isCurrentMonth: boolean,
+    isSelected: boolean,
+    isTodayDate: boolean
+  ) => {
+    if (isSelected) return colors.primaryForeground;
+    if (isTodayDate) return colors.primary;
+    if (!isCurrentMonth) return `${colors.mutedForeground}80`;
+    return colors.foreground;
+  };
+
   return (
-    <View className={cn('w-full rounded-md border border-border bg-background p-4', className)} {...props}>
+    <View
+      className={cn('w-full rounded-md border p-4', className)}
+      style={{ backgroundColor: colors.background, borderColor: colors.border }}
+      {...props}
+    >
       {/* Header with month/year and navigation */}
       <View className="mb-4 flex-row items-center justify-between">
         <TouchableOpacity
@@ -110,7 +125,11 @@ export function Calendar({
         >
           <ChevronLeft size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
-        <Text className="text-sm font-semibold text-foreground" accessibilityRole="header">
+        <Text
+          className="text-sm font-semibold"
+          style={{ color: colors.foreground }}
+          accessibilityRole="header"
+        >
           {format(currentMonth, 'MMMM yyyy')}
         </Text>
         <TouchableOpacity
@@ -128,7 +147,7 @@ export function Calendar({
       <View className="mb-2 flex-row">
         {WEEKDAYS.map((day) => (
           <View key={day} className="flex-1 items-center py-2">
-            <Text className="text-xs font-medium text-muted-foreground">{day}</Text>
+            <Text className="text-xs font-medium" style={{ color: colors.mutedForeground }}>{day}</Text>
           </View>
         ))}
       </View>
@@ -149,23 +168,23 @@ export function Calendar({
                 disabled={isDisabled}
                 className={cn(
                   'h-10 w-10 items-center justify-center rounded-full',
-                  isSelected && 'bg-primary',
-                  !isSelected && isTodayDate && 'border border-primary',
                   isDisabled && 'opacity-30'
                 )}
+                style={[
+                  isSelected && { backgroundColor: colors.primary },
+                  !isSelected && isTodayDate && { borderWidth: 1, borderColor: colors.primary },
+                ]}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={format(date, 'EEEE, MMMM d, yyyy')}
                 accessibilityState={{ selected: isSelected, disabled: isDisabled }}
               >
                 <Text
-                  className={cn(
-                    'text-sm',
-                    !isCurrentMonth && 'text-muted-foreground/50',
-                    isCurrentMonth && !isSelected && 'text-foreground',
-                    isSelected && 'text-primary-foreground font-semibold',
-                    isTodayDate && !isSelected && 'text-primary font-semibold'
-                  )}
+                  className="text-sm"
+                  style={{
+                    color: getDateTextColor(isCurrentMonth, !!isSelected, isTodayDate),
+                    fontWeight: (isSelected || isTodayDate) ? '600' : 'normal',
+                  }}
                 >
                   {format(date, 'd')}
                 </Text>

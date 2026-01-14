@@ -121,19 +121,19 @@ export function SettingsScreen() {
             onPress={() => router.push('/(tabs)/settings/profile')}
           >
             {/* Avatar */}
-            <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
-              <Text className="text-primary-foreground text-xl font-bold">
+            <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary }}>
+              <Text className="text-xl font-bold" style={{ color: colors.primaryForeground }}>
                 {getInitials(profile?.full_name, user?.email)}
               </Text>
             </View>
 
             {/* User Info */}
             <View className="flex-1 ml-4">
-              <Text className="text-lg font-semibold text-foreground">
+              <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
                 {profile?.full_name || 'User'}
               </Text>
-              <Text className="text-sm text-muted-foreground">{user?.email}</Text>
-              <Text className="text-xs text-primary capitalize mt-1">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>{user?.email}</Text>
+              <Text className="text-xs capitalize mt-1" style={{ color: colors.primary }}>
                 {profile?.role || 'user'} account
               </Text>
             </View>
@@ -144,7 +144,7 @@ export function SettingsScreen() {
 
         {/* Account Settings */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             ACCOUNT
           </Text>
 
@@ -165,7 +165,7 @@ export function SettingsScreen() {
 
         {/* Security */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             SECURITY
           </Text>
 
@@ -182,7 +182,7 @@ export function SettingsScreen() {
 
         {/* Preferences */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             PREFERENCES
           </Text>
 
@@ -211,7 +211,7 @@ export function SettingsScreen() {
 
         {/* Deal Preferences - Zone B */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             DEAL PREFERENCES
           </Text>
 
@@ -219,8 +219,8 @@ export function SettingsScreen() {
             <View className="flex-row items-center p-4">
               <Focus size={20} color={colors.mutedForeground} />
               <View className="flex-1 ml-3">
-                <Text className="text-foreground">Focus Mode Default</Text>
-                <Text className="text-sm text-muted-foreground">
+                <Text style={{ color: colors.foreground }}>Focus Mode Default</Text>
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                   Show simplified deal view by default
                 </Text>
               </View>
@@ -236,7 +236,7 @@ export function SettingsScreen() {
 
         {/* About */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             ABOUT
           </Text>
 
@@ -253,18 +253,19 @@ export function SettingsScreen() {
 
         {/* Danger Zone */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             ACCOUNT ACTIONS
           </Text>
 
           <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <TouchableOpacity
-              className="flex-row items-center p-4 border-b border-border"
+              className="flex-row items-center p-4"
+              style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
               onPress={handleSignOut}
               disabled={isSigningOut}
             >
               <LogOut size={20} color={colors.destructive} />
-              <Text className="flex-1 ml-3 text-destructive font-medium">
+              <Text className="flex-1 ml-3 font-medium" style={{ color: colors.destructive }}>
                 {isSigningOut ? 'Signing out...' : 'Sign Out'}
               </Text>
               {isSigningOut && <LoadingSpinner size="small" color={colors.destructive} />}
@@ -275,7 +276,7 @@ export function SettingsScreen() {
               onPress={handleDeleteAccount}
             >
               <Trash2 size={20} color={colors.destructive} />
-              <Text className="flex-1 ml-3 text-destructive font-medium">
+              <Text className="flex-1 ml-3 font-medium" style={{ color: colors.destructive }}>
                 Delete Account
               </Text>
             </TouchableOpacity>
@@ -300,13 +301,14 @@ function SettingsItem({ icon, title, subtitle, onPress, hideBorder }: SettingsIt
   const colors = useThemeColors();
   return (
     <TouchableOpacity
-      className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}
+      className="flex-row items-center p-4"
+      style={!hideBorder ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
       onPress={onPress}
     >
       {icon}
       <View className="flex-1 ml-3">
-        <Text className="text-foreground">{title}</Text>
-        {subtitle && <Text className="text-sm text-muted-foreground">{subtitle}</Text>}
+        <Text style={{ color: colors.foreground }}>{title}</Text>
+        {subtitle && <Text className="text-sm" style={{ color: colors.mutedForeground }}>{subtitle}</Text>}
       </View>
       <ChevronRight size={20} color={colors.mutedForeground} />
     </TouchableOpacity>

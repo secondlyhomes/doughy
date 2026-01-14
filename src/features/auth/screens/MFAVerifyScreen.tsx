@@ -127,16 +127,16 @@ export function MFAVerifyScreen() {
         <View className="flex-1 justify-center px-6">
           {/* Icon */}
           <View className="items-center mb-6">
-            <View className="w-20 h-20 rounded-full bg-primary/10 items-center justify-center">
+            <View className="w-20 h-20 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
               <Shield size={40} color={colors.info} />
             </View>
           </View>
 
           {/* Instructions */}
-          <Text className="text-2xl font-bold text-foreground text-center mb-2">
+          <Text className="text-2xl font-bold text-center mb-2" style={{ color: colors.foreground }}>
             Two-Factor Authentication
           </Text>
-          <Text className="text-muted-foreground text-center mb-8">
+          <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
             Enter the 6-digit code from your authenticator app
           </Text>
 
@@ -152,8 +152,8 @@ export function MFAVerifyScreen() {
 
           {/* Error message */}
           {error && (
-            <View className="bg-destructive/10 rounded-lg p-3 mb-6">
-              <Text className="text-destructive text-sm text-center">{error}</Text>
+            <View className="rounded-lg p-3 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
+              <Text className="text-sm text-center" style={{ color: colors.destructive }}>{error}</Text>
             </View>
           )}
 
@@ -163,7 +163,7 @@ export function MFAVerifyScreen() {
           )}
 
           {/* Help text */}
-          <Text className="text-sm text-muted-foreground text-center mt-8">
+          <Text className="text-sm text-center mt-8" style={{ color: colors.mutedForeground }}>
             Open your authenticator app to view your code.
             {'\n'}If you've lost access, contact support.
           </Text>

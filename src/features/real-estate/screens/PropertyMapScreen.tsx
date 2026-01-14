@@ -19,6 +19,7 @@ import { ArrowLeft, List, X, MapPin, Bed, Bath, Square } from 'lucide-react-nati
 import { ThemedSafeAreaView } from '@/components';
 import { PropertyMap } from '../components/PropertyMap';
 import { useProperties } from '../hooks/useProperties';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property } from '../types';
 import { formatCurrency, formatPropertyType } from '../utils/formatters';
 
@@ -26,6 +27,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export function PropertyMapScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { properties, isLoading } = useProperties();
 
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -63,22 +65,24 @@ export function PropertyMapScreen() {
         <View className="flex-row justify-between items-center">
           <TouchableOpacity
             onPress={handleBack}
-            className="bg-card w-10 h-10 rounded-full items-center justify-center shadow-md"
+            className="w-10 h-10 rounded-full items-center justify-center shadow-md"
+            style={{ backgroundColor: colors.card }}
             activeOpacity={0.7}
           >
-            <ArrowLeft size={20} className="text-foreground" />
+            <ArrowLeft size={20} color={colors.foreground} />
           </TouchableOpacity>
 
-          <View className="bg-card px-4 py-2 rounded-full shadow-md">
-            <Text className="text-foreground font-semibold">Property Map</Text>
+          <View className="px-4 py-2 rounded-full shadow-md" style={{ backgroundColor: colors.card }}>
+            <Text className="font-semibold" style={{ color: colors.foreground }}>Property Map</Text>
           </View>
 
           <TouchableOpacity
             onPress={handleGoToList}
-            className="bg-card w-10 h-10 rounded-full items-center justify-center shadow-md"
+            className="w-10 h-10 rounded-full items-center justify-center shadow-md"
+            style={{ backgroundColor: colors.card }}
             activeOpacity={0.7}
           >
-            <List size={20} className="text-foreground" />
+            <List size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
       </View>
@@ -108,79 +112,80 @@ export function PropertyMapScreen() {
 
           {/* Modal Content */}
           <View
-            className="bg-card rounded-t-3xl shadow-lg"
-            style={{ maxHeight: SCREEN_HEIGHT * 0.5 }}
+            className="rounded-t-3xl shadow-lg"
+            style={{ maxHeight: SCREEN_HEIGHT * 0.5, backgroundColor: colors.card }}
           >
             {/* Handle */}
             <View className="items-center py-3">
-              <View className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+              <View className="w-10 h-1 rounded-full" style={{ backgroundColor: `${colors.mutedForeground}4D` }} />
             </View>
 
             {/* Close Button */}
             <TouchableOpacity
               onPress={handleCloseModal}
-              className="absolute top-3 right-4 w-8 h-8 bg-muted rounded-full items-center justify-center"
+              className="absolute top-3 right-4 w-8 h-8 rounded-full items-center justify-center"
+              style={{ backgroundColor: colors.muted }}
               activeOpacity={0.7}
             >
-              <X size={18} className="text-muted-foreground" />
+              <X size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
 
             {selectedProperty && (
               <ScrollView className="px-4 pb-8" showsVerticalScrollIndicator={false}>
                 {/* Property Address */}
-                <Text className="text-xl font-bold text-foreground mb-1">
+                <Text className="text-xl font-bold mb-1" style={{ color: colors.foreground }}>
                   {selectedProperty.address || 'Address not specified'}
                 </Text>
                 <View className="flex-row items-center mb-4">
-                  <MapPin size={14} className="text-muted-foreground" />
-                  <Text className="text-muted-foreground ml-1">
+                  <MapPin size={14} color={colors.mutedForeground} />
+                  <Text className="ml-1" style={{ color: colors.mutedForeground }}>
                     {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zip}
                   </Text>
                 </View>
 
                 {/* Price */}
                 <View className="flex-row justify-between items-center mb-4">
-                  <Text className="text-2xl font-bold text-primary">
+                  <Text className="text-2xl font-bold" style={{ color: colors.primary }}>
                     {selectedProperty.arv
                       ? formatCurrency(selectedProperty.arv)
                       : 'Price TBD'}
                   </Text>
-                  <View className="bg-primary/10 px-3 py-1 rounded-lg">
-                    <Text className="text-primary font-medium">
+                  <View className="px-3 py-1 rounded-lg" style={{ backgroundColor: `${colors.primary}1A` }}>
+                    <Text className="font-medium" style={{ color: colors.primary }}>
                       {formatPropertyType(selectedProperty.propertyType)}
                     </Text>
                   </View>
                 </View>
 
                 {/* Property Stats */}
-                <View className="flex-row justify-around bg-muted rounded-xl p-4 mb-4">
+                <View className="flex-row justify-around rounded-xl p-4 mb-4" style={{ backgroundColor: colors.muted }}>
                   <View className="items-center">
-                    <Bed size={20} className="text-primary mb-1" />
-                    <Text className="text-foreground font-semibold">
+                    <Bed size={20} color={colors.primary} style={{ marginBottom: 4 }} />
+                    <Text className="font-semibold" style={{ color: colors.foreground }}>
                       {selectedProperty.bedrooms ?? 'N/A'}
                     </Text>
-                    <Text className="text-xs text-muted-foreground">Beds</Text>
+                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>Beds</Text>
                   </View>
                   <View className="items-center">
-                    <Bath size={20} className="text-primary mb-1" />
-                    <Text className="text-foreground font-semibold">
+                    <Bath size={20} color={colors.primary} style={{ marginBottom: 4 }} />
+                    <Text className="font-semibold" style={{ color: colors.foreground }}>
                       {selectedProperty.bathrooms ?? 'N/A'}
                     </Text>
-                    <Text className="text-xs text-muted-foreground">Baths</Text>
+                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>Baths</Text>
                   </View>
                   <View className="items-center">
-                    <Square size={20} className="text-primary mb-1" />
-                    <Text className="text-foreground font-semibold">
+                    <Square size={20} color={colors.primary} style={{ marginBottom: 4 }} />
+                    <Text className="font-semibold" style={{ color: colors.foreground }}>
                       {selectedProperty.square_feet?.toLocaleString() ?? 'N/A'}
                     </Text>
-                    <Text className="text-xs text-muted-foreground">Sqft</Text>
+                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>Sqft</Text>
                   </View>
                 </View>
 
                 {/* Notes Preview */}
                 {selectedProperty.notes && (
                   <View className="mb-4">
-                    <Text className="text-sm text-muted-foreground" numberOfLines={2}>
+                    <Text className="text-sm" numberOfLines={2} style={{ color: colors.mutedForeground }}>
                       {selectedProperty.notes}
                     </Text>
                   </View>
@@ -189,10 +194,11 @@ export function PropertyMapScreen() {
                 {/* View Details Button */}
                 <TouchableOpacity
                   onPress={handleViewDetails}
-                  className="bg-primary py-4 rounded-xl items-center"
+                  className="py-4 rounded-xl items-center"
+                  style={{ backgroundColor: colors.primary }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-primary-foreground font-semibold text-base">
+                  <Text className="font-semibold text-base" style={{ color: colors.primaryForeground }}>
                     View Full Details
                   </Text>
                 </TouchableOpacity>

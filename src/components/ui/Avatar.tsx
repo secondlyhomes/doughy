@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { View, Image, Text, ImageProps, ViewProps, TextProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Avatar Root
 export interface AvatarProps extends ViewProps {
@@ -66,16 +67,18 @@ export interface AvatarFallbackProps extends ViewProps {
 }
 
 export function AvatarFallback({ className, children, ...props }: AvatarFallbackProps) {
+  const colors = useThemeColors();
   return (
     <View
       className={cn(
-        'flex h-full w-full items-center justify-center rounded-full bg-muted',
+        'flex h-full w-full items-center justify-center rounded-full',
         className
       )}
+      style={{ backgroundColor: colors.muted }}
       {...props}
     >
       {typeof children === 'string' ? (
-        <Text className="text-sm font-medium text-muted-foreground">
+        <Text className="text-sm font-medium" style={{ color: colors.mutedForeground }}>
           {children}
         </Text>
       ) : (

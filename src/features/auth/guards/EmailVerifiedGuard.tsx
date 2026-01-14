@@ -7,6 +7,7 @@ import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { LoadingSpinner } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface EmailVerifiedGuardProps {
   children: React.ReactNode;
@@ -20,11 +21,12 @@ interface EmailVerifiedGuardProps {
 export function EmailVerifiedGuard({ children, fallback }: EmailVerifiedGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const { isEmailVerified } = usePermissions();
+  const colors = useThemeColors();
 
   // Still loading
   if (isLoading) {
     return fallback ?? (
-      <View className="flex-1 bg-background">
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
         <LoadingSpinner fullScreen />
       </View>
     );

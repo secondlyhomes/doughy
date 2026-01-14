@@ -119,7 +119,7 @@ export function OnboardingScreen() {
               onPress={handleSkip}
               disabled={isSubmitting}
             >
-              <Text className="text-muted-foreground">Skip</Text>
+              <Text style={{ color: colors.mutedForeground }}>Skip</Text>
             </TouchableOpacity>
           </View>
           <OnboardingProgress currentStep={currentStep} totalSteps={STEPS.length} />
@@ -133,13 +133,13 @@ export function OnboardingScreen() {
           {/* Welcome message on first step */}
           {currentStep === 0 && (
             <View className="items-center mb-6 mt-4">
-              <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center mb-4">
+              <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: `${colors.primary}15` }}>
                 <Sparkles size={32} color={colors.info} />
               </View>
-              <Text className="text-xl font-semibold text-foreground text-center">
+              <Text className="text-xl font-semibold text-center" style={{ color: colors.foreground }}>
                 Let's personalize your experience
               </Text>
-              <Text className="text-muted-foreground text-center mt-2">
+              <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
                 Answer a few quick questions to help us serve you better
               </Text>
             </View>
@@ -147,11 +147,11 @@ export function OnboardingScreen() {
 
           {/* Question */}
           <View className="mb-6">
-            <Text className="text-lg font-semibold text-foreground mb-1">
+            <Text className="text-lg font-semibold mb-1" style={{ color: colors.foreground }}>
               {currentQuestion.question}
             </Text>
             {isOptional && (
-              <Text className="text-sm text-muted-foreground">Optional</Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Optional</Text>
             )}
           </View>
 
@@ -170,8 +170,8 @@ export function OnboardingScreen() {
 
           {/* Error message */}
           {error && (
-            <View className="bg-destructive/10 rounded-lg p-3 mt-4">
-              <Text className="text-destructive text-sm text-center">{error}</Text>
+            <View className="rounded-lg p-3 mt-4" style={{ backgroundColor: `${colors.destructive}15` }}>
+              <Text className="text-sm text-center" style={{ color: colors.destructive }}>{error}</Text>
             </View>
           )}
         </ScrollView>
@@ -190,7 +190,7 @@ export function OnboardingScreen() {
           </Button>
 
           {/* Step indicator text */}
-          <Text className="text-muted-foreground text-sm text-center mt-3">
+          <Text className="text-sm text-center mt-3" style={{ color: colors.mutedForeground }}>
             Step {currentStep + 1} of {STEPS.length}
           </Text>
         </View>

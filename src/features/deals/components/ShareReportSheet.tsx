@@ -65,10 +65,10 @@ export function ShareReportSheet({
     disabled?: boolean;
   }) => (
     <TouchableOpacity
-      className="flex-row items-center py-3 border-b border-border"
+      className="flex-row items-center py-3 border-b"
+      style={{ borderColor: colors.border, opacity: disabled ? 0.5 : 1 }}
       onPress={onPress}
       disabled={disabled}
-      style={{ opacity: disabled ? 0.5 : 1 }}
       accessibilityLabel={label}
       accessibilityRole="button"
     >
@@ -79,8 +79,8 @@ export function ShareReportSheet({
         <Icon size={20} color={colors.primary} />
       </View>
       <View className="flex-1">
-        <Text className="text-sm font-medium text-foreground">{label}</Text>
-        <Text className="text-xs text-muted-foreground">{description}</Text>
+        <Text className="text-sm font-medium" style={{ color: colors.foreground }}>{label}</Text>
+        <Text className="text-xs" style={{ color: colors.mutedForeground }}>{description}</Text>
       </View>
       <Copy size={18} color={colors.mutedForeground} />
     </TouchableOpacity>
@@ -133,8 +133,8 @@ export function ShareReportSheet({
             <Download size={20} color={colors.mutedForeground} />
           </View>
           <View className="flex-1">
-            <Text className="text-sm font-medium text-muted-foreground">Download PDF</Text>
-            <Text className="text-xs text-muted-foreground">Coming soon</Text>
+            <Text className="text-sm font-medium" style={{ color: colors.mutedForeground }}>Download PDF</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Coming soon</Text>
           </View>
         </TouchableOpacity>
       </BottomSheetSection>
@@ -144,8 +144,8 @@ export function ShareReportSheet({
         className="mt-4 p-3 rounded-lg"
         style={{ backgroundColor: colors.muted }}
       >
-        <Text className="text-xs text-muted-foreground mb-1">Share Link Preview</Text>
-        <Text className="text-sm text-foreground font-mono" numberOfLines={1}>
+        <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Share Link Preview</Text>
+        <Text className="text-sm font-mono" style={{ color: colors.foreground }} numberOfLines={1}>
           {shareLink}
         </Text>
       </View>

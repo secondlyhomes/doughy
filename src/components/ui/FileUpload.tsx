@@ -97,14 +97,21 @@ export function FileUpload({
     item: DocumentPicker.DocumentPickerAsset;
     index: number;
   }) => (
-    <View className="flex-row items-center gap-3 rounded-md border border-border bg-muted/30 p-3">
+    <View
+      className="flex-row items-center gap-3 rounded-md p-3"
+      style={{
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: `${colors.muted}4D`,
+      }}
+    >
       <File size={20} color={colors.mutedForeground} />
       <View className="flex-1">
-        <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
+        <Text className="text-sm font-medium" style={{ color: colors.foreground }} numberOfLines={1}>
           {item.name}
         </Text>
         {item.size && (
-          <Text className="text-xs text-muted-foreground">{formatSize(item.size)}</Text>
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>{formatSize(item.size)}</Text>
         )}
       </View>
       {!disabled && (
@@ -125,17 +132,22 @@ export function FileUpload({
   return (
     <View className={cn('w-full', className)} {...props}>
       {label && (
-        <Text className="mb-1.5 text-sm font-medium text-foreground">{label}</Text>
+        <Text className="mb-1.5 text-sm font-medium" style={{ color: colors.foreground }}>{label}</Text>
       )}
 
       {/* Drop zone */}
       {canAddMore && (
         <TouchableOpacity
           className={cn(
-            'items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/30 p-6',
-            disabled && 'opacity-50',
-            error && 'border-destructive'
+            'items-center justify-center rounded-lg p-6',
+            disabled && 'opacity-50'
           )}
+          style={{
+            borderWidth: 2,
+            borderStyle: 'dashed',
+            borderColor: error ? colors.destructive : colors.border,
+            backgroundColor: `${colors.muted}4D`,
+          }}
           onPress={handlePick}
           disabled={disabled}
           activeOpacity={0.7}
@@ -143,14 +155,14 @@ export function FileUpload({
           accessibilityLabel={`Select ${multiple ? 'files' : 'a file'}`}
         >
           <Upload size={24} color={colors.mutedForeground} />
-          <Text className="mt-2 text-sm font-medium text-foreground">
+          <Text className="mt-2 text-sm font-medium" style={{ color: colors.foreground }}>
             Tap to select {multiple ? 'files' : 'a file'}
           </Text>
-          <Text className="mt-1 text-xs text-muted-foreground">
+          <Text className="mt-1 text-xs" style={{ color: colors.mutedForeground }}>
             {accept ? `Accepted: ${accept.join(', ')}` : 'All file types accepted'}
           </Text>
           {maxSize && (
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               Max size: {formatSize(maxSize)}
             </Text>
           )}
@@ -174,13 +186,13 @@ export function FileUpload({
       {error && (
         <View className="mt-2 flex-row items-center gap-1" accessibilityRole="alert">
           <AlertCircle size={14} color={colors.destructive} />
-          <Text className="text-sm text-destructive">{error}</Text>
+          <Text className="text-sm" style={{ color: colors.destructive }}>{error}</Text>
         </View>
       )}
 
       {/* File count info */}
       {multiple && value.length > 0 && (
-        <Text className="mt-2 text-xs text-muted-foreground">
+        <Text className="mt-2 text-xs" style={{ color: colors.mutedForeground }}>
           {value.length} of {maxFiles} files selected
         </Text>
       )}

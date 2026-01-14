@@ -80,13 +80,13 @@ export function AssistantScreen() {
           onContentSizeChange={scrollToEnd}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-8">
-              <View className="bg-primary/10 rounded-full p-4 mb-4">
+              <View className="rounded-full p-4 mb-4" style={{ backgroundColor: `${colors.primary}15` }}>
                 <Sparkles size={32} color={colors.info} />
               </View>
-              <Text className="text-lg font-semibold text-foreground mb-2">
+              <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>
                 AI Assistant
               </Text>
-              <Text className="text-sm text-muted-foreground text-center px-8 mb-6">
+              <Text className="text-sm text-center px-8 mb-6" style={{ color: colors.mutedForeground }}>
                 Ask me anything about your leads, properties, or get help with tasks
               </Text>
 
@@ -100,10 +100,10 @@ export function AssistantScreen() {
           ListFooterComponent={
             isLoading ? (
               <View className="flex-row items-center py-4">
-                <View className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3">
+                <View className="rounded-2xl rounded-bl-sm px-4 py-3" style={{ backgroundColor: colors.muted }}>
                   <View className="flex-row items-center">
                     <ActivityIndicator size="small" color={colors.info} />
-                    <Text className="text-muted-foreground ml-2">Thinking...</Text>
+                    <Text className="ml-2" style={{ color: colors.mutedForeground }}>Thinking...</Text>
                   </View>
                 </View>
               </View>
@@ -112,7 +112,7 @@ export function AssistantScreen() {
         />
 
         {/* Input Bar */}
-        <View className="border-t border-border px-4 py-3 bg-background">
+        <View className="px-4 py-3" style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background }}>
           {/* Quick Suggestions when there are messages */}
           {messages.length > 0 && !isLoading && (
             <View className="mb-3">
@@ -125,9 +125,10 @@ export function AssistantScreen() {
           )}
 
           <View className="flex-row items-end gap-2">
-            <View className="flex-1 bg-muted rounded-2xl px-4 py-2 min-h-[44px] max-h-32">
+            <View className="flex-1 rounded-2xl px-4 py-2 min-h-[44px] max-h-32" style={{ backgroundColor: colors.muted }}>
               <TextInput
-                className="text-foreground text-base leading-5"
+                className="text-base leading-5"
+                style={{ color: colors.foreground }}
                 placeholder="Ask me anything..."
                 placeholderTextColor={colors.mutedForeground}
                 value={input}
@@ -140,9 +141,8 @@ export function AssistantScreen() {
               />
             </View>
             <TouchableOpacity
-              className={`w-11 h-11 rounded-full items-center justify-center ${
-                input.trim() && !isLoading ? 'bg-primary' : 'bg-muted'
-              }`}
+              className="w-11 h-11 rounded-full items-center justify-center"
+              style={{ backgroundColor: input.trim() && !isLoading ? colors.primary : colors.muted }}
               onPress={handleSend}
               disabled={!input.trim() || isLoading}
               activeOpacity={0.7}

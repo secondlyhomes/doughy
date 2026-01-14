@@ -20,6 +20,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { useThemeColors } from '@/context/ThemeContext';
 import { Property } from '../types';
 import { PropertyStatus, PropertyConstants } from '../types/constants';
 import { usePropertyActions } from '../hooks/usePropertyActions';
@@ -35,16 +36,6 @@ interface PropertyActionsSheetProps {
 
 type ActionView = 'main' | 'share' | 'status';
 
-// Status badge colors
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active: { bg: 'bg-success/10', text: 'text-success' },
-  Pending: { bg: 'bg-warning/10', text: 'text-warning' },
-  Sold: { bg: 'bg-info/10', text: 'text-info' },
-  Withdrawn: { bg: 'bg-muted', text: 'text-muted-foreground' },
-  Expired: { bg: 'bg-destructive/10', text: 'text-destructive' },
-  'Off Market': { bg: 'bg-primary/10', text: 'text-primary' },
-};
-
 export function PropertyActionsSheet({
   property,
   isOpen,
@@ -53,11 +44,32 @@ export function PropertyActionsSheet({
   onDelete,
   onStatusChange,
 }: PropertyActionsSheetProps) {
+  const colors = useThemeColors();
   const { shareProperty, exportPropertySummary, copyPropertyLink, updatePropertyStatus, isLoading } =
     usePropertyActions();
 
   const [currentView, setCurrentView] = useState<ActionView>('main');
   const [processingAction, setProcessingAction] = useState<string | null>(null);
+
+  // Status colors using theme
+  const getStatusColors = (status: string) => {
+    switch (status) {
+      case 'Active':
+        return { bg: `${colors.success}1A`, text: colors.success, solid: colors.success };
+      case 'Pending':
+        return { bg: `${colors.warning}1A`, text: colors.warning, solid: colors.warning };
+      case 'Sold':
+        return { bg: `${colors.info}1A`, text: colors.info, solid: colors.info };
+      case 'Withdrawn':
+        return { bg: colors.muted, text: colors.mutedForeground, solid: colors.mutedForeground };
+      case 'Expired':
+        return { bg: `${colors.destructive}1A`, text: colors.destructive, solid: colors.destructive };
+      case 'Off Market':
+        return { bg: `${colors.primary}1A`, text: colors.primary, solid: colors.primary };
+      default:
+        return { bg: colors.muted, text: colors.foreground, solid: colors.foreground };
+    }
+  };
 
   const handleClose = useCallback(() => {
     setCurrentView('main');
@@ -144,24 +156,25 @@ export function PropertyActionsSheet({
     }
   ) => {
     const isProcessing = processingAction === options?.processingKey;
-    const textColor = options?.destructive ? 'text-destructive' : 'text-foreground';
+    const textColor = options?.destructive ? colors.destructive : colors.foreground;
 
     return (
       <TouchableOpacity
         onPress={onPress}
         disabled={isLoading || options?.disabled}
-        className={`flex-row items-center justify-between py-4 px-2 border-b border-border ${
+        className={`flex-row items-center justify-between py-4 px-2 border-b ${
           options?.disabled ? 'opacity-50' : ''
         }`}
+        style={{ borderColor: colors.border }}
       >
         <View className="flex-row items-center flex-1">
           {icon}
-          <Text className={`${textColor} font-medium ml-3`}>{label}</Text>
+          <Text className="font-medium ml-3" style={{ color: textColor }}>{label}</Text>
         </View>
         {isProcessing ? (
           <ActivityIndicator size="small" />
         ) : options?.showArrow ? (
-          <ChevronRight size={20} className="text-muted-foreground" />
+          <ChevronRight size={20} color={colors.mutedForeground} />
         ) : null}
       </TouchableOpacity>
     );
@@ -172,7 +185,7 @@ export function PropertyActionsSheet({
     <View>
       {/* Share Options */}
       {renderActionButton(
-        <Share2 size={20} className="text-primary" />,
+        <Share2 size={20} color={colors.primary} />,
         'Share Property',
         () => setCurrentView('share'),
         { showArrow: true }
@@ -180,7 +193,7 @@ export function PropertyActionsSheet({
 
       {/* Copy to Clipboard */}
       {renderActionButton(
-        <Copy size={20} className="text-primary" />,
+        <Copy size={20} color={colors.primary} />,
         'Copy Details',
         handleCopy,
         { processingKey: 'copy' }
@@ -188,7 +201,7 @@ export function PropertyActionsSheet({
 
       {/* Export Summary */}
       {renderActionButton(
-        <FileDown size={20} className="text-primary" />,
+        <FileDown size={20} color={colors.primary} />,
         'Export Summary',
         handleExport,
         { processingKey: 'export' }
@@ -196,7 +209,7 @@ export function PropertyActionsSheet({
 
       {/* Change Status */}
       {renderActionButton(
-        <CircleDot size={20} className="text-primary" />,
+        <CircleDot size={20} color={colors.primary} />,
         'Change Status',
         () => setCurrentView('status'),
         { showArrow: true }
@@ -207,12 +220,12 @@ export function PropertyActionsSheet({
 
       {/* Edit Property */}
       {onEdit &&
-        renderActionButton(<Edit2 size={20} className="text-foreground" />, 'Edit Property', handleEdit)}
+        renderActionButton(<Edit2 size={20} color={colors.foreground} />, 'Edit Property', handleEdit)}
 
       {/* Delete Property */}
       {onDelete &&
         renderActionButton(
-          <Trash2 size={20} className="text-destructive" />,
+          <Trash2 size={20} color={colors.destructive} />,
           'Delete Property',
           handleDelete,
           { destructive: true }
@@ -228,28 +241,28 @@ export function PropertyActionsSheet({
         onPress={() => setCurrentView('main')}
         className="flex-row items-center py-2 mb-2"
       >
-        <ChevronRight size={20} className="text-muted-foreground rotate-180" />
-        <Text className="text-muted-foreground ml-1">Back</Text>
+        <ChevronRight size={20} color={colors.mutedForeground} style={{ transform: [{ rotate: '180deg' }] }} />
+        <Text className="ml-1" style={{ color: colors.mutedForeground }}>Back</Text>
       </TouchableOpacity>
 
-      <Text className="text-lg font-semibold text-foreground mb-4">Share Property</Text>
+      <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>Share Property</Text>
 
       {renderActionButton(
-        <Share2 size={20} className="text-primary" />,
+        <Share2 size={20} color={colors.primary} />,
         'Quick Share (Basic Info)',
         () => handleShare('text'),
         { processingKey: 'share-text' }
       )}
 
       {renderActionButton(
-        <Share2 size={20} className="text-primary" />,
+        <Share2 size={20} color={colors.primary} />,
         'Full Details',
         () => handleShare('full'),
         { processingKey: 'share-full' }
       )}
 
       {renderActionButton(
-        <Copy size={20} className="text-primary" />,
+        <Copy size={20} color={colors.primary} />,
         'Copy to Clipboard',
         handleCopy,
         { processingKey: 'copy' }
@@ -268,19 +281,19 @@ export function PropertyActionsSheet({
           onPress={() => setCurrentView('main')}
           className="flex-row items-center py-2 mb-2"
         >
-          <ChevronRight size={20} className="text-muted-foreground rotate-180" />
-          <Text className="text-muted-foreground ml-1">Back</Text>
+          <ChevronRight size={20} color={colors.mutedForeground} style={{ transform: [{ rotate: '180deg' }] }} />
+          <Text className="ml-1" style={{ color: colors.mutedForeground }}>Back</Text>
         </TouchableOpacity>
 
-        <Text className="text-lg font-semibold text-foreground mb-2">Change Status</Text>
-        <Text className="text-sm text-muted-foreground mb-4">
-          Current: <Text className="font-medium text-foreground">{currentStatus}</Text>
+        <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>Change Status</Text>
+        <Text className="text-sm mb-4" style={{ color: colors.mutedForeground }}>
+          Current: <Text className="font-medium" style={{ color: colors.foreground }}>{currentStatus}</Text>
         </Text>
 
         <View className="gap-2">
           {PropertyConstants.STATUS_OPTIONS.map((option) => {
             const isSelected = currentStatus === option.value;
-            const colors = STATUS_COLORS[option.value] || { bg: 'bg-muted', text: 'text-foreground' };
+            const statusColors = getStatusColors(option.value);
             const isProcessing = processingAction === `status-${option.value}`;
 
             return (
@@ -288,14 +301,17 @@ export function PropertyActionsSheet({
                 key={option.value}
                 onPress={() => handleStatusChange(option.value as PropertyStatus)}
                 disabled={isLoading}
-                className={`flex-row items-center justify-between p-4 rounded-xl border ${
-                  isSelected ? 'border-primary bg-primary/5' : 'border-border bg-card'
-                }`}
+                className="flex-row items-center justify-between p-4 rounded-xl border"
+                style={{
+                  borderColor: isSelected ? colors.primary : colors.border,
+                  backgroundColor: isSelected ? `${colors.primary}0D` : colors.card,
+                }}
               >
                 <View className="flex-row items-center">
-                  <View className={`w-3 h-3 rounded-full mr-3 ${colors.bg.replace('/10', '')}`} />
+                  <View className="w-3 h-3 rounded-full mr-3" style={{ backgroundColor: statusColors.solid }} />
                   <Text
-                    className={`font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}
+                    className="font-medium"
+                    style={{ color: isSelected ? colors.primary : colors.foreground }}
                   >
                     {option.label}
                   </Text>
@@ -303,7 +319,7 @@ export function PropertyActionsSheet({
                 {isProcessing ? (
                   <ActivityIndicator size="small" />
                 ) : isSelected ? (
-                  <Check size={20} className="text-primary" />
+                  <Check size={20} color={colors.primary} />
                 ) : null}
               </TouchableOpacity>
             );

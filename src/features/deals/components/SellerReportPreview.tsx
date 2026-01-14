@@ -56,14 +56,14 @@ export function SellerReportPreview({
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View className="items-center py-6 border-b border-border mb-4">
-        <Text className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+      <View className="items-center py-6 border-b mb-4" style={{ borderColor: colors.border }}>
+        <Text className="text-xs uppercase tracking-wide mb-1" style={{ color: colors.mutedForeground }}>
           Property Options Report
         </Text>
-        <Text className="text-lg font-bold text-foreground text-center">
+        <Text className="text-lg font-bold text-center" style={{ color: colors.foreground }}>
           {propertyAddress}
         </Text>
-        <Text className="text-sm text-muted-foreground mt-1">
+        <Text className="text-sm mt-1" style={{ color: colors.mutedForeground }}>
           Prepared for {sellerName}
         </Text>
       </View>
@@ -84,16 +84,16 @@ export function SellerReportPreview({
           </CardHeader>
           <CardContent>
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm text-muted-foreground">Offer Range</Text>
-              <Text className="text-lg font-bold text-success">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Offer Range</Text>
+              <Text className="text-lg font-bold" style={{ color: colors.success }}>
                 {formatPriceRange(options.cash.price_low, options.cash.price_high)}
               </Text>
             </View>
             <View className="flex-row justify-between items-center">
-              <Text className="text-sm text-muted-foreground">Close Time</Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Close Time</Text>
               <View className="flex-row items-center gap-1">
                 <Clock size={14} color={colors.mutedForeground} />
-                <Text className="text-sm text-foreground">
+                <Text className="text-sm" style={{ color: colors.foreground }}>
                   {formatCloseRange(options.cash.close_days_low, options.cash.close_days_high)}
                 </Text>
               </View>
@@ -102,7 +102,7 @@ export function SellerReportPreview({
               className="mt-3 p-2 rounded-md"
               style={{ backgroundColor: colors.success + '10' }}
             >
-              <Text className="text-xs text-muted-foreground">
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                 Quick, hassle-free sale with no financing contingencies
               </Text>
             </View>
@@ -126,28 +126,28 @@ export function SellerReportPreview({
           </CardHeader>
           <CardContent>
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm text-muted-foreground">Price Range</Text>
-              <Text className="text-lg font-bold text-primary">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Price Range</Text>
+              <Text className="text-lg font-bold" style={{ color: colors.primary }}>
                 {formatPriceRange(options.seller_finance.price_low, options.seller_finance.price_high)}
               </Text>
             </View>
             {options.seller_finance.down_payment && (
               <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-sm text-muted-foreground">Down Payment</Text>
-                <Text className="text-sm text-foreground">
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>Down Payment</Text>
+                <Text className="text-sm" style={{ color: colors.foreground }}>
                   {formatCurrency(options.seller_finance.down_payment)}
                 </Text>
               </View>
             )}
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm text-muted-foreground">Monthly Payment</Text>
-              <Text className="text-sm text-foreground font-medium">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Monthly Payment</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
                 {formatCurrency(options.seller_finance.monthly_payment)}/mo
               </Text>
             </View>
             <View className="flex-row justify-between items-center">
-              <Text className="text-sm text-muted-foreground">Term</Text>
-              <Text className="text-sm text-foreground">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Term</Text>
+              <Text className="text-sm" style={{ color: colors.foreground }}>
                 {options.seller_finance.term_years} years
               </Text>
             </View>
@@ -155,7 +155,7 @@ export function SellerReportPreview({
               className="mt-3 p-2 rounded-md"
               style={{ backgroundColor: colors.primary + '10' }}
             >
-              <Text className="text-xs text-muted-foreground">
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                 Higher price with steady monthly income, secured by the property
               </Text>
             </View>
@@ -179,15 +179,15 @@ export function SellerReportPreview({
           </CardHeader>
           <CardContent>
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm text-muted-foreground">Price Range</Text>
-              <Text className="text-lg font-bold text-warning">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Price Range</Text>
+              <Text className="text-lg font-bold" style={{ color: colors.warning }}>
                 {formatPriceRange(options.subject_to.price_low, options.subject_to.price_high)}
               </Text>
             </View>
             {options.subject_to.catch_up_amount && options.subject_to.catch_up_amount > 0 && (
               <View className="flex-row justify-between items-center">
-                <Text className="text-sm text-muted-foreground">We Catch Up</Text>
-                <Text className="text-sm text-foreground">
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>We Catch Up</Text>
+                <Text className="text-sm" style={{ color: colors.foreground }}>
                   {formatCurrency(options.subject_to.catch_up_amount)}
                 </Text>
               </View>
@@ -196,7 +196,7 @@ export function SellerReportPreview({
               className="mt-3 p-2 rounded-md"
               style={{ backgroundColor: colors.warning + '10' }}
             >
-              <Text className="text-xs text-muted-foreground">
+              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                 We take over your existing payments, protecting your credit
               </Text>
             </View>
@@ -222,7 +222,7 @@ export function SellerReportPreview({
                 >
                   <CheckCircle2 size={12} color={colors.success} />
                 </View>
-                <Text className="text-sm text-foreground">{item}</Text>
+                <Text className="text-sm" style={{ color: colors.foreground }}>{item}</Text>
               </View>
             ))}
           </CardContent>
@@ -239,22 +239,22 @@ export function SellerReportPreview({
         </CardHeader>
         <CardContent>
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-sm text-muted-foreground">Estimated ARV</Text>
-            <Text className="text-sm text-foreground">
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>Estimated ARV</Text>
+            <Text className="text-sm" style={{ color: colors.foreground }}>
               {formatCurrency(assumptions.arv_estimate)}
             </Text>
           </View>
-          <Text className="text-xs text-muted-foreground mb-3">
+          <Text className="text-xs mb-3" style={{ color: colors.mutedForeground }}>
             {assumptions.arv_source}
           </Text>
 
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-sm text-muted-foreground">Repair Estimate</Text>
-            <Text className="text-sm text-foreground">
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>Repair Estimate</Text>
+            <Text className="text-sm" style={{ color: colors.foreground }}>
               {formatCurrency(assumptions.repair_estimate)}
             </Text>
           </View>
-          <Text className="text-xs text-muted-foreground">
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             {assumptions.repair_source}
           </Text>
         </CardContent>

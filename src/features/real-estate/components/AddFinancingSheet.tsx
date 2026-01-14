@@ -71,15 +71,15 @@ export function AddFinancingSheet({
     <BottomSheet visible={visible} onClose={handleClose} snapPoints={['90%']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           <View>
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
               {editScenario ? 'Edit Scenario' : 'New Financing Scenario'}
             </Text>
-            <Text className="text-xs text-muted-foreground">Compare different loan options</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Compare different loan options</Text>
           </View>
-          <TouchableOpacity onPress={handleClose} className="p-2 bg-muted rounded-full">
-            <X size={20} className="text-foreground" />
+          <TouchableOpacity onPress={handleClose} className="p-2 rounded-full" style={{ backgroundColor: colors.muted }}>
+            <X size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
 
@@ -99,7 +99,7 @@ export function AddFinancingSheet({
         </ScrollView>
 
         {/* Submit Button */}
-        <View className="p-4 border-t border-border">
+        <View className="p-4 border-t" style={{ borderColor: colors.border }}>
           <Button
             onPress={handleSubmit}
             disabled={isLoading}

@@ -280,24 +280,25 @@ export function AddressAutocomplete({
     ({ item }: { item: AddressResult }) => (
       <TouchableOpacity
         onPress={() => handleAddressSelect(item)}
-        className="flex-row items-start p-3 border-b border-border"
+        className="flex-row items-start p-3"
+        style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
       >
         <MapPin size={16} color={colors.mutedForeground} className="mt-1 mr-2" />
         <View className="flex-1">
-          <Text className="text-foreground font-medium">{item.address}</Text>
-          <Text className="text-muted-foreground text-sm">
+          <Text className="font-medium" style={{ color: colors.foreground }}>{item.address}</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             {item.city}, {item.state} {item.zip}
           </Text>
         </View>
       </TouchableOpacity>
     ),
-    [handleAddressSelect]
+    [handleAddressSelect, colors]
   );
 
   return (
     <View>
       {/* Input Field */}
-      <View className="flex-row items-center bg-input border border-border rounded-lg">
+      <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border }}>
         <MapPin size={18} color={colors.mutedForeground} className="ml-3" />
         <TextInput
           value={value}
@@ -305,7 +306,8 @@ export function AddressAutocomplete({
           placeholder={placeholder}
           placeholderTextColor={colors.mutedForeground}
           editable={!disabled}
-          className="flex-1 px-3 py-3 text-foreground"
+          className="flex-1 px-3 py-3"
+          style={{ color: colors.foreground }}
           autoCapitalize="words"
           autoCorrect={false}
         />
@@ -323,7 +325,7 @@ export function AddressAutocomplete({
 
       {/* Results Dropdown */}
       {isOpen && results.length > 0 && (
-        <View className="absolute top-14 left-0 right-0 z-50 bg-card border border-border rounded-lg shadow-lg max-h-64">
+        <View className="absolute top-14 left-0 right-0 z-50 rounded-lg shadow-lg max-h-64" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
           <FlatList
             data={results}
             renderItem={renderItem}

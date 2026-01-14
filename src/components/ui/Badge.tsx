@@ -1,81 +1,126 @@
 // src/components/ui/Badge.tsx
-// React Native Badge component with NativeWind styling
+// React Native Badge component with inline styles for dark mode support
 import React from 'react';
-import { View, Text, ViewProps } from 'react-native';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { View, Text, ViewProps, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
-const badgeVariants = cva(
-  'flex-row items-center rounded-full border',
-  {
-    variants: {
-      variant: {
-        default: 'border-transparent bg-primary',
-        secondary: 'border-transparent bg-secondary',
-        destructive: 'border-transparent bg-destructive',
-        outline: 'border-foreground',
-        success: 'border-transparent bg-success/20',
-        warning: 'border-transparent bg-warning/20',
-        danger: 'border-transparent bg-destructive/20',
-        inactive: 'border-transparent bg-muted',
-      },
-      size: {
-        default: 'px-2.5 py-0.5',
-        sm: 'px-2 py-0.5',
-        lg: 'px-3 py-1',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  }
-);
+type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'danger' | 'inactive';
+type BadgeSize = 'default' | 'sm' | 'lg';
 
-const badgeTextVariants = cva('font-semibold', {
-  variants: {
-    variant: {
-      default: 'text-primary-foreground',
-      secondary: 'text-secondary-foreground',
-      destructive: 'text-destructive-foreground',
-      outline: 'text-foreground',
-      success: 'text-success-foreground',
-      warning: 'text-warning-foreground',
-      danger: 'text-destructive-foreground',
-      inactive: 'text-muted-foreground',
-    },
-    size: {
-      default: 'text-xs',
-      sm: 'text-xs',
-      lg: 'text-sm',
-    },
-  },
-  defaultVariants: {
-    variant: 'default',
-    size: 'default',
-  },
-});
-
-export interface BadgeProps
-  extends ViewProps,
-    VariantProps<typeof badgeVariants> {
+export interface BadgeProps extends ViewProps {
   className?: string;
   textClassName?: string;
+  variant?: BadgeVariant;
+  size?: BadgeSize;
   children?: React.ReactNode;
 }
 
 export function Badge({
   className,
   textClassName,
-  variant,
-  size,
+  variant = 'default',
+  size = 'default',
   children,
+  style,
   ...props
 }: BadgeProps) {
+  const colors = useThemeColors();
+
+  const getBackgroundColor = () => {
+    switch (variant) {
+      case 'default':
+        return colors.primary;
+      case 'secondary':
+        return colors.secondary;
+      case 'destructive':
+        return colors.destructive;
+      case 'outline':
+        return 'transparent';
+      case 'success':
+        return `${colors.success}33`;
+      case 'warning':
+        return `${colors.warning}33`;
+      case 'danger':
+        return `${colors.destructive}33`;
+      case 'inactive':
+        return colors.muted;
+      default:
+        return colors.primary;
+    }
+  };
+
+  const getBorderColor = () => {
+    switch (variant) {
+      case 'outline':
+        return colors.foreground;
+      default:
+        return 'transparent';
+    }
+  };
+
+  const getTextColor = () => {
+    switch (variant) {
+      case 'default':
+        return colors.primaryForeground;
+      case 'secondary':
+        return colors.mutedForeground;
+      case 'destructive':
+        return colors.destructiveForeground;
+      case 'outline':
+        return colors.foreground;
+      case 'success':
+        return colors.success;
+      case 'warning':
+        return colors.warning;
+      case 'danger':
+        return colors.destructive;
+      case 'inactive':
+        return colors.mutedForeground;
+      default:
+        return colors.primaryForeground;
+    }
+  };
+
+  const getSizeStyles = () => {
+    switch (size) {
+      case 'sm':
+        return styles.sizeSm;
+      case 'lg':
+        return styles.sizeLg;
+      default:
+        return styles.sizeDefault;
+    }
+  };
+
+  const getTextSize = () => {
+    switch (size) {
+      case 'lg':
+        return styles.textLg;
+      default:
+        return styles.textDefault;
+    }
+  };
+
   return (
-    <View className={cn(badgeVariants({ variant, size }), className)} {...props}>
+    <View
+      className={cn('flex-row items-center rounded-full', className)}
+      style={[
+        getSizeStyles(),
+        {
+          backgroundColor: getBackgroundColor(),
+          borderWidth: 1,
+          borderColor: getBorderColor(),
+        },
+        style,
+      ]}
+      {...props}
+    >
       {typeof children === 'string' ? (
-        <Text className={cn(badgeTextVariants({ variant, size }), textClassName)}>
+        <Text
+          className={cn('font-semibold', textClassName)}
+          style={[getTextSize(), { color: getTextColor() }]}
+        >
           {children}
         </Text>
       ) : (
@@ -85,4 +130,25 @@ export function Badge({
   );
 }
 
-export { badgeVariants };
+const styles = StyleSheet.create({
+  sizeDefault: {
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+  },
+  sizeSm: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  sizeLg: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  textDefault: {
+    fontSize: 12,
+  },
+  textLg: {
+    fontSize: 14,
+  },
+});
+
+export { Badge as default };

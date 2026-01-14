@@ -188,7 +188,7 @@ export function PropertyForm({
     } = {}
   ) => (
     <View className="mb-4">
-      <Text className="text-sm font-medium text-foreground mb-1">{label}</Text>
+      <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>{label}</Text>
       <TextInput
         value={formData[field] as string}
         onChangeText={(value) => updateField(field, value)}
@@ -198,13 +198,18 @@ export function PropertyForm({
         multiline={options.multiline}
         numberOfLines={options.numberOfLines}
         maxLength={options.maxLength}
-        className={`bg-muted rounded-lg px-4 py-3 text-foreground ${
+        className={`rounded-lg px-4 py-3 ${
           options.multiline ? 'min-h-[100]' : ''
-        } ${errors[field] ? 'border border-destructive' : ''}`}
+        } ${errors[field] ? 'border' : ''}`}
+        style={{
+          backgroundColor: colors.muted,
+          color: colors.foreground,
+          ...(errors[field] ? { borderColor: colors.destructive, borderWidth: 1 } : {}),
+        }}
         editable={!isLoading}
       />
       {errors[field] && (
-        <Text className="text-xs text-destructive mt-1">{errors[field]}</Text>
+        <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors[field]}</Text>
       )}
     </View>
   );
@@ -220,14 +225,15 @@ export function PropertyForm({
       className="flex-1"
     >
       <ScrollView
-        className="flex-1 bg-background"
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* Property Images */}
         <View className="mb-6">
-          <Text className="text-sm font-medium text-foreground mb-2">Photos</Text>
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Photos</Text>
           <PropertyImagePicker
             images={formData.images}
             onChange={(images) => updateField('images', images)}
@@ -237,7 +243,7 @@ export function PropertyForm({
         </View>
 
         {/* Address Section */}
-        <Text className="text-lg font-semibold text-foreground mb-3">Address</Text>
+        <Text className="text-lg font-semibold mb-3" style={{ color: colors.foreground }}>Address</Text>
         {renderInput('Street Address *', 'address', { placeholder: '123 Main Street' })}
         {renderInput('Unit/Apt (optional)', 'address_line_2', { placeholder: 'Apt 4B' })}
 
@@ -256,24 +262,25 @@ export function PropertyForm({
         {renderInput('County (optional)', 'county', { placeholder: 'County' })}
 
         {/* Property Details Section */}
-        <Text className="text-lg font-semibold text-foreground mb-3 mt-4">Property Details</Text>
+        <Text className="text-lg font-semibold mb-3 mt-4" style={{ color: colors.foreground }}>Property Details</Text>
 
         {/* Property Type Picker */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-foreground mb-1">Property Type</Text>
+          <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>Property Type</Text>
           <TouchableOpacity
             onPress={() => setShowPropertyTypePicker(!showPropertyTypePicker)}
-            className="bg-muted rounded-lg px-4 py-3 flex-row justify-between items-center"
+            className="rounded-lg px-4 py-3 flex-row justify-between items-center"
+            style={{ backgroundColor: colors.muted }}
             disabled={isLoading}
           >
-            <Text className="text-foreground">
+            <Text style={{ color: colors.foreground }}>
               {getPropertyTypeLabel(formData.propertyType)}
             </Text>
-            <ChevronDown size={20} className="text-muted-foreground" />
+            <ChevronDown size={20} color={colors.mutedForeground} />
           </TouchableOpacity>
 
           {showPropertyTypePicker && (
-            <View className="bg-card border border-border rounded-lg mt-2 max-h-60">
+            <View className="rounded-lg mt-2 max-h-60 border" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
               <ScrollView nestedScrollEnabled>
                 {PropertyConstants.TYPE_OPTIONS.map((option) => (
                   <TouchableOpacity
@@ -282,16 +289,17 @@ export function PropertyForm({
                       updateField('propertyType', option.value);
                       setShowPropertyTypePicker(false);
                     }}
-                    className={`px-4 py-3 border-b border-border ${
-                      formData.propertyType === option.value ? 'bg-primary/10' : ''
-                    }`}
+                    className="px-4 py-3 border-b"
+                    style={{
+                      borderColor: colors.border,
+                      backgroundColor: formData.propertyType === option.value ? colors.primary + '1A' : undefined,
+                    }}
                   >
                     <Text
-                      className={`${
-                        formData.propertyType === option.value
-                          ? 'text-primary font-medium'
-                          : 'text-foreground'
-                      }`}
+                      style={{
+                        color: formData.propertyType === option.value ? colors.primary : colors.foreground,
+                        fontWeight: formData.propertyType === option.value ? '500' : 'normal',
+                      }}
                     >
                       {option.label}
                     </Text>
@@ -323,7 +331,7 @@ export function PropertyForm({
         {renderInput('Year Built', 'year_built', { keyboardType: 'numeric', placeholder: '1990' })}
 
         {/* Financial Section */}
-        <Text className="text-lg font-semibold text-foreground mb-3 mt-4">Financial</Text>
+        <Text className="text-lg font-semibold mb-3 mt-4" style={{ color: colors.foreground }}>Financial</Text>
 
         <View className="flex-row gap-3">
           <View className="flex-1">
@@ -335,7 +343,7 @@ export function PropertyForm({
         </View>
 
         {/* Notes Section */}
-        <Text className="text-lg font-semibold text-foreground mb-3 mt-4">Notes</Text>
+        <Text className="text-lg font-semibold mb-3 mt-4" style={{ color: colors.foreground }}>Notes</Text>
         {renderInput('Notes', 'notes', {
           multiline: true,
           numberOfLines: 4,
@@ -344,26 +352,28 @@ export function PropertyForm({
       </ScrollView>
 
       {/* Bottom Action Buttons */}
-      <View className="flex-row gap-3 p-4 bg-background border-t border-border">
+      <View className="flex-row gap-3 p-4 border-t" style={{ backgroundColor: colors.background, borderColor: colors.border }}>
         <TouchableOpacity
           onPress={onCancel}
           disabled={isLoading}
-          className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center"
+          className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
+          style={{ backgroundColor: colors.muted }}
         >
-          <X size={20} className="text-foreground" />
-          <Text className="text-foreground font-semibold ml-2">Cancel</Text>
+          <X size={20} color={colors.foreground} />
+          <Text className="font-semibold ml-2" style={{ color: colors.foreground }}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={isLoading}
-          className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center"
+          className="flex-1 py-3 rounded-xl flex-row items-center justify-center"
+          style={{ backgroundColor: colors.primary }}
         >
           {isLoading ? (
             <ActivityIndicator color={colors.primaryForeground} />
           ) : (
             <>
               <Save size={20} color={colors.primaryForeground} />
-              <Text className="text-primary-foreground font-semibold ml-2">{submitLabel}</Text>
+              <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>{submitLabel}</Text>
             </>
           )}
         </TouchableOpacity>

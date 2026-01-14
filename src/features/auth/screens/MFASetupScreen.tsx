@@ -110,13 +110,13 @@ export function MFASetupScreen() {
     return (
       <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-success/20 items-center justify-center mb-6">
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.success}33` }}>
             <CheckCircle size={48} color={colors.success} />
           </View>
-          <Text className="text-2xl font-bold text-foreground text-center">
+          <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
             MFA Enabled!
           </Text>
-          <Text className="text-muted-foreground text-center mt-2 mb-8">
+          <Text className="text-center mt-2 mb-8" style={{ color: colors.mutedForeground }}>
             Your account is now protected with two-factor authentication.
           </Text>
           <Button onPress={handleDone} size="lg">
@@ -140,23 +140,23 @@ export function MFASetupScreen() {
           <>
             {/* Icon */}
             <View className="items-center mb-6">
-              <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
+              <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
                 <Shield size={32} color={colors.info} />
               </View>
             </View>
 
             {/* Instructions */}
-            <Text className="text-lg font-semibold text-foreground text-center mb-2">
+            <Text className="text-lg font-semibold text-center mb-2" style={{ color: colors.foreground }}>
               Scan QR Code
             </Text>
-            <Text className="text-muted-foreground text-center mb-6">
+            <Text className="text-center mb-6" style={{ color: colors.mutedForeground }}>
               Open your authenticator app (like Google Authenticator or Authy) and scan this QR code.
             </Text>
 
             {/* QR Code */}
             {enrollmentData?.qrCode && (
               <View className="items-center mb-6">
-                <View className="bg-white p-4 rounded-lg">
+                <View className="p-4 rounded-lg" style={{ backgroundColor: '#FFFFFF' }}>
                   <Image
                     source={{ uri: enrollmentData.qrCode }}
                     style={{ width: 200, height: 200 }}
@@ -167,12 +167,12 @@ export function MFASetupScreen() {
             )}
 
             {/* Manual entry */}
-            <View className="bg-muted/50 rounded-lg p-4 mb-6">
-              <Text className="text-sm text-muted-foreground text-center mb-2">
+            <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.muted}80` }}>
+              <Text className="text-sm text-center mb-2" style={{ color: colors.mutedForeground }}>
                 Or enter this code manually:
               </Text>
               <View className="flex-row items-center justify-center">
-                <Text className="text-foreground font-mono text-sm mr-2">
+                <Text className="font-mono text-sm mr-2" style={{ color: colors.foreground }}>
                   {enrollmentData?.secret}
                 </Text>
                 <TouchableOpacity onPress={handleCopySecret}>
@@ -196,16 +196,16 @@ export function MFASetupScreen() {
           <>
             {/* Icon */}
             <View className="items-center mb-6">
-              <View className="w-16 h-16 rounded-full bg-primary/10 items-center justify-center">
+              <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}15` }}>
                 <Shield size={32} color={colors.info} />
               </View>
             </View>
 
             {/* Instructions */}
-            <Text className="text-lg font-semibold text-foreground text-center mb-2">
+            <Text className="text-lg font-semibold text-center mb-2" style={{ color: colors.foreground }}>
               Enter Verification Code
             </Text>
-            <Text className="text-muted-foreground text-center mb-8">
+            <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
               Enter the 6-digit code from your authenticator app to verify setup.
             </Text>
 
@@ -221,8 +221,8 @@ export function MFASetupScreen() {
 
             {/* Error message */}
             {error && (
-              <View className="bg-destructive/10 rounded-lg p-3 mb-6">
-                <Text className="text-destructive text-sm text-center">{error}</Text>
+              <View className="rounded-lg p-3 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
+                <Text className="text-sm text-center" style={{ color: colors.destructive }}>{error}</Text>
               </View>
             )}
 
@@ -239,7 +239,7 @@ export function MFASetupScreen() {
               onPress={() => setStep('scan')}
               disabled={isVerifying}
             >
-              <Text className="text-primary text-center">Back to QR Code</Text>
+              <Text className="text-center" style={{ color: colors.primary }}>Back to QR Code</Text>
             </TouchableOpacity>
           </>
         )}

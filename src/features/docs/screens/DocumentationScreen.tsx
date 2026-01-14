@@ -20,7 +20,7 @@ import {
   Settings,
   Database,
 } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/context/ThemeContext';
 import {
   documentationData,
   getDocContent,
@@ -55,7 +55,7 @@ interface SidebarProps {
 }
 
 function Sidebar({ currentSlug, onNavigate }: SidebarProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const [expandedSections, setExpandedSections] = useState<string[]>(
     documentationData.map((s) => s.section) // All expanded by default
   );
@@ -81,7 +81,7 @@ function Sidebar({ currentSlug, onNavigate }: SidebarProps) {
               >
                 <View className="flex-row items-center gap-2">
                   <Icon size={18} color={colors.foreground} />
-                  <Text className="font-medium text-foreground">{section.section}</Text>
+                  <Text className="font-medium" style={{ color: colors.foreground }}>{section.section}</Text>
                 </View>
                 {isExpanded ? (
                   <ChevronDown size={16} color={colors.mutedForeground} />
@@ -98,10 +98,12 @@ function Sidebar({ currentSlug, onNavigate }: SidebarProps) {
                       <Link key={page.slug} href={`/docs/${page.slug}`} asChild>
                         <Pressable
                           onPress={onNavigate}
-                          className={`px-4 py-2 rounded-lg ${isActive ? 'bg-primary/10' : ''}`}
+                          className="px-4 py-2 rounded-lg"
+                          style={isActive ? { backgroundColor: `${colors.primary}1A` } : undefined}
                         >
                           <Text
-                            className={`text-sm ${isActive ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                            className={`text-sm ${isActive ? 'font-medium' : ''}`}
+                            style={{ color: isActive ? colors.primary : colors.mutedForeground }}
                           >
                             {page.title}
                           </Text>
@@ -121,15 +123,16 @@ function Sidebar({ currentSlug, onNavigate }: SidebarProps) {
 
 // Table of Contents for right sidebar
 function TableOfContents({ headings }: { headings: string[] }) {
+  const colors = useThemeColors();
   return (
     <View className="py-6 px-4">
-      <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+      <Text className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: colors.mutedForeground }}>
         On This Page
       </Text>
       <View className="gap-2">
         {headings.map((heading, index) => (
           <Pressable key={index} className="py-1">
-            <Text className="text-sm text-muted-foreground">
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
               {heading}
             </Text>
           </Pressable>
@@ -141,6 +144,7 @@ function TableOfContents({ headings }: { headings: string[] }) {
 
 export function DocumentationScreen() {
   const { colors } = useTheme();
+  const themeColors = useThemeColors();
   const { slug } = useLocalSearchParams<{ slug?: string }>();
   const { width } = useWindowDimensions();
   const isMobile = width < 1024;
@@ -159,14 +163,14 @@ export function DocumentationScreen() {
     return lines.map((line, index) => {
       if (line.startsWith('# ')) {
         return (
-          <Text key={index} className="text-3xl font-bold text-foreground mb-6">
+          <Text key={index} className="text-3xl font-bold mb-6" style={{ color: themeColors.foreground }}>
             {line.substring(2)}
           </Text>
         );
       }
       if (line.startsWith('## ')) {
         return (
-          <Text key={index} className="text-xl font-semibold text-foreground mt-8 mb-4">
+          <Text key={index} className="text-xl font-semibold mt-8 mb-4" style={{ color: themeColors.foreground }}>
             {line.substring(3)}
           </Text>
         );
@@ -174,16 +178,16 @@ export function DocumentationScreen() {
       if (line.startsWith('- ')) {
         return (
           <View key={index} className="flex-row items-start gap-2 ml-4 mb-2">
-            <Text className="text-foreground">{'•'}</Text>
-            <Text className="text-muted-foreground flex-1">{line.substring(2)}</Text>
+            <Text style={{ color: themeColors.foreground }}>{'•'}</Text>
+            <Text className="flex-1" style={{ color: themeColors.mutedForeground }}>{line.substring(2)}</Text>
           </View>
         );
       }
       if (line.match(/^\d+\. /)) {
         return (
           <View key={index} className="flex-row items-start gap-2 ml-4 mb-2">
-            <Text className="text-foreground">{line.match(/^\d+/)![0]}.</Text>
-            <Text className="text-muted-foreground flex-1">{line.replace(/^\d+\. /, '')}</Text>
+            <Text style={{ color: themeColors.foreground }}>{line.match(/^\d+/)![0]}.</Text>
+            <Text className="flex-1" style={{ color: themeColors.mutedForeground }}>{line.replace(/^\d+\. /, '')}</Text>
           </View>
         );
       }
@@ -191,7 +195,7 @@ export function DocumentationScreen() {
         return <View key={index} className="h-4" />;
       }
       return (
-        <Text key={index} className="text-muted-foreground mb-2">
+        <Text key={index} className="mb-2" style={{ color: themeColors.mutedForeground }}>
           {line}
         </Text>
       );
@@ -199,20 +203,23 @@ export function DocumentationScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1" style={{ backgroundColor: themeColors.background }}>
       {/* Mobile Header */}
       {isMobile && (
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-border bg-card">
-          <Text className="font-semibold text-foreground">Documentation</Text>
+        <View
+          className="flex-row items-center justify-between px-4 py-3"
+          style={{ borderBottomWidth: 1, borderBottomColor: themeColors.border, backgroundColor: themeColors.card }}
+        >
+          <Text className="font-semibold" style={{ color: themeColors.foreground }}>Documentation</Text>
           <View className="flex-row items-center gap-3">
             <Pressable onPress={() => setShowAskDoughy(true)}>
-              <Search size={22} color={colors.primary} />
+              <Search size={22} color={themeColors.primary} />
             </Pressable>
             <Pressable onPress={() => setShowMobileSidebar(!showMobileSidebar)}>
               {showMobileSidebar ? (
-                <X size={24} color={colors.foreground} />
+                <X size={24} color={themeColors.foreground} />
               ) : (
-                <Menu size={24} color={colors.foreground} />
+                <Menu size={24} color={themeColors.foreground} />
               )}
             </Pressable>
           </View>
@@ -223,9 +230,10 @@ export function DocumentationScreen() {
         {/* Sidebar */}
         {(!isMobile || showMobileSidebar) && (
           <View
-            className={`${
-              isMobile ? 'absolute top-0 left-0 right-0 bottom-0 z-50 bg-background' : 'w-64 border-r border-border'
-            }`}
+            style={isMobile
+              ? { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: themeColors.background }
+              : { width: 256, borderRightWidth: 1, borderRightColor: themeColors.border }
+            }
           >
             <Sidebar
               currentSlug={currentSlug}
@@ -240,20 +248,20 @@ export function DocumentationScreen() {
             <View className="w-full">
               {pageData && (
                 <View className="mb-4">
-                  <Text className="text-sm text-primary">{pageData.section}</Text>
+                  <Text className="text-sm" style={{ color: themeColors.primary }}>{pageData.section}</Text>
                 </View>
               )}
               {renderContent(content)}
 
               {/* Navigation */}
-              <View className="flex-row justify-between mt-12 pt-8 border-t border-border">
+              <View className="flex-row justify-between mt-12 pt-8" style={{ borderTopWidth: 1, borderTopColor: themeColors.border }}>
                 {prev ? (
                   <Link href={`/docs/${prev.slug}`} asChild>
                     <Pressable className="py-2 flex-row items-center gap-2">
-                      <ChevronLeft size={16} color={colors.primary} />
+                      <ChevronLeft size={16} color={themeColors.primary} />
                       <View>
-                        <Text className="text-sm text-muted-foreground">Previous</Text>
-                        <Text className="text-primary">{prev.title}</Text>
+                        <Text className="text-sm" style={{ color: themeColors.mutedForeground }}>Previous</Text>
+                        <Text style={{ color: themeColors.primary }}>{prev.title}</Text>
                       </View>
                     </Pressable>
                   </Link>
@@ -264,17 +272,17 @@ export function DocumentationScreen() {
                   <Link href={`/docs/${next.slug}`} asChild>
                     <Pressable className="py-2 flex-row items-center gap-2">
                       <View className="items-end">
-                        <Text className="text-sm text-muted-foreground">Next</Text>
-                        <Text className="text-primary">{next.title}</Text>
+                        <Text className="text-sm" style={{ color: themeColors.mutedForeground }}>Next</Text>
+                        <Text style={{ color: themeColors.primary }}>{next.title}</Text>
                       </View>
-                      <ChevronRight size={16} color={colors.primary} />
+                      <ChevronRight size={16} color={themeColors.primary} />
                     </Pressable>
                   </Link>
                 ) : (
                   <Link href="/contact" asChild>
                     <Pressable className="py-2 items-end">
-                      <Text className="text-sm text-muted-foreground">Need Help?</Text>
-                      <Text className="text-primary">Contact Support</Text>
+                      <Text className="text-sm" style={{ color: themeColors.mutedForeground }}>Need Help?</Text>
+                      <Text style={{ color: themeColors.primary }}>Contact Support</Text>
                     </Pressable>
                   </Link>
                 )}
@@ -285,7 +293,7 @@ export function DocumentationScreen() {
 
         {/* Right TOC - desktop only */}
         {!isMobile && headings.length > 0 && (
-          <View className="w-52 border-l border-border">
+          <View className="w-52" style={{ borderLeftWidth: 1, borderLeftColor: themeColors.border }}>
             <TableOfContents headings={headings} />
           </View>
         )}

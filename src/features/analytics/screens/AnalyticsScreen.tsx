@@ -1,5 +1,6 @@
 // Analytics Screen - React Native
 // Zone D: Analytics dashboard with metrics and charts
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useState } from 'react';
 import {
@@ -40,12 +41,15 @@ function MetricCard({ title, value, change, icon, suffix }: MetricCardProps) {
   const isNegative = change && change < 0;
 
   return (
-    <View className="bg-card rounded-xl p-4 flex-1 min-w-[45%]">
+    <View
+      className="rounded-xl p-4 flex-1 min-w-[45%]"
+      style={{ backgroundColor: colors.card }}
+    >
       <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-sm text-muted-foreground">{title}</Text>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{title}</Text>
         {icon}
       </View>
-      <Text className="text-2xl font-bold text-foreground">
+      <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>
         {value}{suffix}
       </Text>
       {change !== undefined && (
@@ -56,13 +60,14 @@ function MetricCard({ title, value, change, icon, suffix }: MetricCardProps) {
             <TrendingDown size={12} color={colors.destructive} />
           ) : null}
           <Text
-            className={`text-xs ml-1 ${
-              isPositive
-                ? 'text-success'
+            className="text-xs ml-1"
+            style={{
+              color: isPositive
+                ? colors.success
                 : isNegative
-                ? 'text-destructive'
-                : 'text-muted-foreground'
-            }`}
+                ? colors.destructive
+                : colors.mutedForeground
+            }}
           >
             {isPositive ? '+' : ''}{change}% vs last period
           </Text>
@@ -120,40 +125,47 @@ export function AnalyticsScreen() {
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className="text-2xl font-bold text-foreground">Analytics</Text>
-            <Text className="text-muted-foreground">Track your performance</Text>
+            <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>Analytics</Text>
+            <Text style={{ color: colors.mutedForeground }}>Track your performance</Text>
           </View>
 
           {/* Date Range Picker */}
           <View className="relative">
             <TouchableOpacity
-              className="flex-row items-center bg-muted px-3 py-2 rounded-lg"
+              className="flex-row items-center px-3 py-2 rounded-lg"
+              style={{ backgroundColor: colors.muted }}
               onPress={() => setShowDatePicker(!showDatePicker)}
             >
               <Calendar size={16} color={colors.mutedForeground} />
-              <Text className="text-sm text-foreground ml-2">{getDateRangeLabel()}</Text>
+              <Text className="text-sm ml-2" style={{ color: colors.foreground }}>{getDateRangeLabel()}</Text>
               <ChevronDown size={16} color={colors.mutedForeground} className="ml-1" />
             </TouchableOpacity>
 
             {showDatePicker && (
-              <View className="absolute top-12 right-0 bg-card border border-border rounded-lg overflow-hidden shadow-lg z-10 min-w-[160px]">
+              <View
+                className="absolute top-12 right-0 rounded-lg overflow-hidden shadow-lg z-10 min-w-[160px]"
+                style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+              >
                 {DATE_RANGES.map((range) => (
                   <TouchableOpacity
                     key={range.value}
-                    className={`px-4 py-3 border-b border-border ${
-                      dateRange === range.value ? 'bg-primary/10' : ''
-                    }`}
+                    className="px-4 py-3"
+                    style={{
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.border,
+                      backgroundColor: dateRange === range.value ? `${colors.primary}15` : undefined,
+                    }}
                     onPress={() => {
                       setDateRange(range.value);
                       setShowDatePicker(false);
                     }}
                   >
                     <Text
-                      className={`text-sm ${
-                        dateRange === range.value
-                          ? 'text-primary font-medium'
-                          : 'text-foreground'
-                      }`}
+                      className="text-sm"
+                      style={{
+                        color: dateRange === range.value ? colors.primary : colors.foreground,
+                        fontWeight: dateRange === range.value ? '500' : '400',
+                      }}
                     >
                       {range.label}
                     </Text>
@@ -202,26 +214,29 @@ export function AnalyticsScreen() {
         </View>
 
         {/* Summary Card */}
-        <View className="bg-card rounded-xl p-4 mt-4 mb-8">
-          <Text className="text-lg font-semibold text-foreground mb-3">Performance Summary</Text>
+        <View
+          className="rounded-xl p-4 mt-4 mb-8"
+          style={{ backgroundColor: colors.card }}
+        >
+          <Text className="text-lg font-semibold mb-3" style={{ color: colors.foreground }}>Performance Summary</Text>
           <View className="gap-3">
             <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">New leads this period</Text>
-              <Text className="text-foreground font-medium">+{metrics.totalLeads}</Text>
+              <Text style={{ color: colors.mutedForeground }}>New leads this period</Text>
+              <Text className="font-medium" style={{ color: colors.foreground }}>+{metrics.totalLeads}</Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">Leads converted</Text>
-              <Text className="text-foreground font-medium">
+              <Text style={{ color: colors.mutedForeground }}>Leads converted</Text>
+              <Text className="font-medium" style={{ color: colors.foreground }}>
                 {Math.round(metrics.totalLeads * (metrics.conversionRate / 100))}
               </Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">Properties added</Text>
-              <Text className="text-foreground font-medium">+{metrics.activeProperties}</Text>
+              <Text style={{ color: colors.mutedForeground }}>Properties added</Text>
+              <Text className="font-medium" style={{ color: colors.foreground }}>+{metrics.activeProperties}</Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">AI conversations</Text>
-              <Text className="text-foreground font-medium">48</Text>
+              <Text style={{ color: colors.mutedForeground }}>AI conversations</Text>
+              <Text className="font-medium" style={{ color: colors.foreground }}>48</Text>
             </View>
           </View>
         </View>

@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -18,11 +19,12 @@ interface AuthGuardProps {
  */
 export function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
+  const colors = useThemeColors();
 
   // Show loading state
   if (isLoading) {
     return fallback ?? (
-      <View className="flex-1 bg-background">
+      <View className="flex-1" style={{ backgroundColor: colors.background }}>
         <LoadingSpinner fullScreen />
       </View>
     );

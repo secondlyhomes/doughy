@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Note: We use inline styles with useThemeColors() for colors, not Tailwind color classes.
+  // This is because NativeWind has limitations with programmatic dark mode switching.
+  // See docs/TROUBLESHOOTING.md for details.
   darkMode: 'class',
   content: [
     "./App.{js,jsx,ts,tsx}",

@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface UserInfoRowProps {
   icon: React.ReactNode;
@@ -12,11 +13,15 @@ interface UserInfoRowProps {
 }
 
 export function UserInfoRow({ icon, label, value, hideBorder }: UserInfoRowProps) {
+  const colors = useThemeColors();
   return (
-    <View className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}>
+    <View
+      className={`flex-row items-center p-4 ${!hideBorder ? 'border-b' : ''}`}
+      style={!hideBorder ? { borderColor: colors.border } : undefined}
+    >
       {icon}
-      <Text className="text-muted-foreground ml-3 w-28">{label}</Text>
-      <Text className="flex-1 text-foreground">{value}</Text>
+      <Text className="ml-3 w-28" style={{ color: colors.mutedForeground }}>{label}</Text>
+      <Text className="flex-1" style={{ color: colors.foreground }}>{value}</Text>
     </View>
   );
 }

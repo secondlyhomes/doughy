@@ -1,5 +1,6 @@
 // Conversations List Screen - React Native
 // Zone D: List of AI chat conversations
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useCallback } from 'react';
 import {
@@ -74,28 +75,28 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
       accessibilityHint="Opens conversation"
     >
       <View className="flex-row items-start">
-        <View className="bg-primary/10 rounded-full p-2 mr-3">
+        <View className="rounded-full p-2 mr-3" style={{ backgroundColor: `${colors.primary}15` }}>
           <MessageCircle size={20} color={colors.info} />
         </View>
 
         <View className="flex-1">
-          <Text className="text-base font-semibold text-foreground mb-1" numberOfLines={1}>
+          <Text className="text-base font-semibold mb-1" style={{ color: colors.foreground }} numberOfLines={1}>
             {conversation.title || 'Untitled Conversation'}
           </Text>
 
           {conversation.last_message && (
-            <Text className="text-sm text-muted-foreground mb-2" numberOfLines={2}>
+            <Text className="text-sm mb-2" style={{ color: colors.mutedForeground }} numberOfLines={2}>
               {conversation.last_message}
             </Text>
           )}
 
           <View className="flex-row items-center">
             <Clock size={12} color={colors.mutedForeground} />
-            <Text className="text-xs text-muted-foreground ml-1">
+            <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>
               {formatTimeAgo(conversation.last_message_at)}
             </Text>
-            <View className="mx-2 w-1 h-1 rounded-full bg-muted-foreground" />
-            <Text className="text-xs text-muted-foreground">
+            <View className="mx-2 w-1 h-1 rounded-full" style={{ backgroundColor: colors.mutedForeground }} />
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {conversation.message_count} messages
             </Text>
           </View>
@@ -129,7 +130,6 @@ export function ConversationsListScreen() {
   const handleNewConversation = async () => {
     try {
       const newConversation = await createConversation.mutateAsync('New Conversation');
-      // Navigate to the chat screen with the new conversation
       router.push(`/(tabs)/conversations/${newConversation.id}`);
     } catch (error) {
       Alert.alert('Error', 'Failed to create conversation');
@@ -183,22 +183,23 @@ export function ConversationsListScreen() {
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
-              <View className="bg-primary/10 rounded-full p-4 mb-4">
+              <View className="rounded-full p-4 mb-4" style={{ backgroundColor: `${colors.primary}15` }}>
                 <Sparkles size={32} color={colors.info} />
               </View>
-              <Text className="text-lg font-semibold text-foreground mb-2">
+              <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>
                 No conversations yet
               </Text>
-              <Text className="text-muted-foreground text-center px-8 mb-4">
+              <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
                 Start a conversation with the AI assistant to get help with your leads and properties
               </Text>
               <TouchableOpacity
-                className="bg-primary px-6 py-3 rounded-lg"
+                className="px-6 py-3 rounded-lg"
+                style={{ backgroundColor: colors.primary }}
                 onPress={handleNewConversation}
                 accessibilityLabel="Start a new conversation"
                 accessibilityRole="button"
               >
-                <Text className="text-primary-foreground font-medium">Start Chatting</Text>
+                <Text className="font-medium" style={{ color: colors.primaryForeground }}>Start Chatting</Text>
               </TouchableOpacity>
             </View>
           }

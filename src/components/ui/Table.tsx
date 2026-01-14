@@ -3,6 +3,7 @@
 import React from 'react';
 import { View, Text, FlatList, ScrollView, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Simple Table API with columns configuration
 export interface TableColumn<T> {
@@ -39,13 +40,15 @@ export function Table<T>({
   showBorder = true,
   ...props
 }: TableProps<T>) {
+  const colors = useThemeColors();
+
   const renderHeader = () => (
     <View
-      className={cn(
-        'flex-row bg-muted',
-        showBorder && 'border-b border-border',
-        headerClassName
-      )}
+      className={cn('flex-row', headerClassName)}
+      style={[
+        { backgroundColor: colors.muted },
+        showBorder && { borderBottomWidth: 1, borderBottomColor: colors.border },
+      ]}
     >
       {columns.map((column) => (
         <View
@@ -59,10 +62,11 @@ export function Table<T>({
         >
           <Text
             className={cn(
-              'text-xs font-medium uppercase text-muted-foreground',
+              'text-xs font-medium uppercase',
               column.align === 'center' && 'text-center',
               column.align === 'right' && 'text-right'
             )}
+            style={{ color: colors.mutedForeground }}
           >
             {column.header}
           </Text>
@@ -73,12 +77,11 @@ export function Table<T>({
 
   const renderRow = ({ item, index }: { item: T; index: number }) => (
     <View
-      className={cn(
-        'flex-row',
-        showBorder && 'border-b border-border',
-        index % 2 === 1 && 'bg-muted/30',
-        rowClassName
-      )}
+      className={cn('flex-row', rowClassName)}
+      style={[
+        showBorder && { borderBottomWidth: 1, borderBottomColor: colors.border },
+        index % 2 === 1 && { backgroundColor: `${colors.muted}4D` },
+      ]}
     >
       {columns.map((column) => (
         <View
@@ -95,10 +98,11 @@ export function Table<T>({
           ) : (
             <Text
               className={cn(
-                'text-sm text-foreground',
+                'text-sm',
                 column.align === 'center' && 'text-center',
                 column.align === 'right' && 'text-right'
               )}
+              style={{ color: colors.foreground }}
             >
               {String((item as Record<string, unknown>)[column.key] ?? '')}
             </Text>
@@ -110,16 +114,14 @@ export function Table<T>({
 
   const renderEmpty = () => (
     <View className="items-center justify-center py-8">
-      <Text className="text-sm text-muted-foreground">{emptyMessage}</Text>
+      <Text className="text-sm" style={{ color: colors.mutedForeground }}>{emptyMessage}</Text>
     </View>
   );
 
   return (
     <View
-      className={cn(
-        showBorder && 'rounded-md border border-border',
-        className
-      )}
+      className={cn('rounded-md', className)}
+      style={showBorder ? { borderWidth: 1, borderColor: colors.border } : undefined}
       {...props}
     >
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -146,8 +148,13 @@ export interface TableRootProps extends ViewProps {
 }
 
 export function TableRoot({ children, className, ...props }: TableRootProps) {
+  const colors = useThemeColors();
   return (
-    <View className={cn('rounded-md border border-border', className)} {...props}>
+    <View
+      className={cn('rounded-md', className)}
+      style={{ borderWidth: 1, borderColor: colors.border }}
+      {...props}
+    >
       {children}
     </View>
   );
@@ -159,8 +166,13 @@ export interface TableHeaderProps extends ViewProps {
 }
 
 export function TableHeader({ children, className, ...props }: TableHeaderProps) {
+  const colors = useThemeColors();
   return (
-    <View className={cn('flex-row bg-muted', className)} {...props}>
+    <View
+      className={cn('flex-row', className)}
+      style={{ backgroundColor: colors.muted }}
+      {...props}
+    >
       {children}
     </View>
   );
@@ -185,8 +197,13 @@ export interface TableRowProps extends ViewProps {
 }
 
 export function TableRow({ children, className, ...props }: TableRowProps) {
+  const colors = useThemeColors();
   return (
-    <View className={cn('flex-row border-b border-border', className)} {...props}>
+    <View
+      className={cn('flex-row', className)}
+      style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+      {...props}
+    >
       {children}
     </View>
   );
@@ -198,10 +215,11 @@ export interface TableHeadProps extends ViewProps {
 }
 
 export function TableHead({ children, className, ...props }: TableHeadProps) {
+  const colors = useThemeColors();
   return (
     <View className={cn('px-4 py-3', className)} {...props}>
       {typeof children === 'string' ? (
-        <Text className="text-xs font-medium uppercase text-muted-foreground">
+        <Text className="text-xs font-medium uppercase" style={{ color: colors.mutedForeground }}>
           {children}
         </Text>
       ) : (
@@ -217,10 +235,11 @@ export interface TableCellProps extends ViewProps {
 }
 
 export function TableCell({ children, className, ...props }: TableCellProps) {
+  const colors = useThemeColors();
   return (
     <View className={cn('justify-center px-4 py-3', className)} {...props}>
       {typeof children === 'string' ? (
-        <Text className="text-sm text-foreground">{children}</Text>
+        <Text className="text-sm" style={{ color: colors.foreground }}>{children}</Text>
       ) : (
         children
       )}

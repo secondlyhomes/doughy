@@ -124,26 +124,27 @@ export function PropertyLocationMap({
   if (!hasValidCoords) {
     return (
       <View
-        className="bg-muted rounded-xl overflow-hidden"
-        style={{ height }}
+        className="rounded-xl overflow-hidden"
+        style={{ height, backgroundColor: colors.muted }}
       >
         <View className="flex-1 items-center justify-center p-4">
-          <AlertCircle size={32} className="text-muted-foreground mb-2" />
-          <Text className="text-muted-foreground text-center text-sm">
+          <AlertCircle size={32} color={colors.mutedForeground} style={{ marginBottom: 8 }} />
+          <Text className="text-center text-sm" style={{ color: colors.mutedForeground }}>
             Location not available
           </Text>
-          <Text className="text-xs text-muted-foreground text-center mt-1">
+          <Text className="text-xs text-center mt-1" style={{ color: colors.mutedForeground }}>
             No coordinates found for this address
           </Text>
 
           {showDirectionsButton && (
             <TouchableOpacity
               onPress={openDirections}
-              className="flex-row items-center bg-primary px-4 py-2 rounded-lg mt-4"
+              className="flex-row items-center px-4 py-2 rounded-lg mt-4"
+              style={{ backgroundColor: colors.primary }}
               activeOpacity={0.7}
             >
               <Navigation size={16} color={colors.primaryForeground} />
-              <Text className="text-primary-foreground font-medium ml-2">
+              <Text className="font-medium ml-2" style={{ color: colors.primaryForeground }}>
                 Get Directions
               </Text>
             </TouchableOpacity>
@@ -205,11 +206,12 @@ export function PropertyLocationMap({
       {/* Tap to open indicator */}
       <TouchableOpacity
         onPress={openInMaps}
-        className="absolute top-2 right-2 bg-card/90 px-2 py-1 rounded-md flex-row items-center"
+        className="absolute top-2 right-2 px-2 py-1 rounded-md flex-row items-center"
+        style={{ backgroundColor: `${colors.card}E6` }}
         activeOpacity={0.7}
       >
-        <ExternalLink size={12} className="text-muted-foreground" />
-        <Text className="text-xs text-muted-foreground ml-1">Open in Maps</Text>
+        <ExternalLink size={12} color={colors.mutedForeground} />
+        <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>Open in Maps</Text>
       </TouchableOpacity>
     </View>
   );

@@ -85,13 +85,13 @@ export function ChangePasswordScreen() {
     return (
       <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full bg-success/20 items-center justify-center mb-6">
+          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: `${colors.success}33` }}>
             <CheckCircle size={48} color={colors.success} />
           </View>
-          <Text className="text-2xl font-bold text-foreground text-center">
+          <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
             Password Changed!
           </Text>
-          <Text className="text-muted-foreground text-center mt-2 mb-8">
+          <Text className="text-center mt-2 mb-8" style={{ color: colors.mutedForeground }}>
             Your password has been successfully updated.
           </Text>
           <Button onPress={() => router.back()} size="lg">
@@ -118,15 +118,16 @@ export function ChangePasswordScreen() {
         >
           {/* Current Password */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-foreground mb-2">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
               Current Password
             </Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.input }}>
               <View className="pl-4">
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
+                style={{ color: colors.foreground }}
                 placeholder="Enter current password"
                 placeholderTextColor={colors.mutedForeground}
                 value={currentPassword}
@@ -150,15 +151,16 @@ export function ChangePasswordScreen() {
 
           {/* New Password */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
               New Password
             </Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.input }}>
               <View className="pl-4">
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
+                style={{ color: colors.foreground }}
                 placeholder="Enter new password"
                 placeholderTextColor={colors.mutedForeground}
                 value={newPassword}
@@ -186,15 +188,16 @@ export function ChangePasswordScreen() {
 
           {/* Confirm New Password */}
           <View className="mb-6">
-            <Text className="text-sm font-medium text-foreground mb-2">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
               Confirm New Password
             </Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.input }}>
               <View className="pl-4">
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
+                style={{ color: colors.foreground }}
                 placeholder="Confirm new password"
                 placeholderTextColor={colors.mutedForeground}
                 value={confirmPassword}
@@ -216,12 +219,12 @@ export function ChangePasswordScreen() {
               </TouchableOpacity>
             </View>
             {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-              <Text className="text-xs text-destructive mt-1">
+              <Text className="text-xs mt-1" style={{ color: colors.destructive }}>
                 Passwords do not match
               </Text>
             )}
             {confirmPassword.length > 0 && newPassword === confirmPassword && (
-              <Text className="text-xs text-success mt-1">
+              <Text className="text-xs mt-1" style={{ color: colors.success }}>
                 Passwords match
               </Text>
             )}

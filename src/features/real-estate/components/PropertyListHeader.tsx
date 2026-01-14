@@ -63,39 +63,42 @@ export function PropertyListHeader({
         <View className="flex-row gap-2">
           <TouchableOpacity
             onPress={onShowFilters}
-            className={`flex-row items-center px-3 py-2 rounded-lg ${
-              hasActiveFilters ? 'bg-primary' : 'bg-muted'
-            }`}
+            className="flex-row items-center px-3 py-2 rounded-lg"
+            style={{ backgroundColor: hasActiveFilters ? colors.primary : colors.muted }}
           >
             <Filter size={16} color={hasActiveFilters ? colors.primaryForeground : colors.mutedForeground} />
-            <Text className={`ml-2 font-medium ${
-              hasActiveFilters ? 'text-primary-foreground' : 'text-muted-foreground'
-            }`}>
+            <Text
+              className="ml-2 font-medium"
+              style={{ color: hasActiveFilters ? colors.primaryForeground : colors.mutedForeground }}
+            >
               Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={onShowSort}
-            className="flex-row items-center bg-muted px-3 py-2 rounded-lg"
+            className="flex-row items-center px-3 py-2 rounded-lg"
+            style={{ backgroundColor: colors.muted }}
           >
-            <ArrowUpDown size={16} className="text-muted-foreground" />
-            <Text className="text-muted-foreground ml-2 font-medium">
+            <ArrowUpDown size={16} color={colors.mutedForeground} />
+            <Text className="ml-2 font-medium" style={{ color: colors.mutedForeground }}>
               {getCurrentSortLabel()}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View className="flex-row bg-muted rounded-lg">
+        <View className="flex-row rounded-lg" style={{ backgroundColor: colors.muted }}>
           <TouchableOpacity
             onPress={() => onViewModeChange('list')}
-            className={`px-3 py-2 rounded-lg ${viewMode === 'list' ? 'bg-primary' : ''}`}
+            className="px-3 py-2 rounded-lg"
+            style={viewMode === 'list' ? { backgroundColor: colors.primary } : undefined}
           >
             <List size={18} color={viewMode === 'list' ? colors.primaryForeground : colors.mutedForeground} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onViewModeChange('grid')}
-            className={`px-3 py-2 rounded-lg ${viewMode === 'grid' ? 'bg-primary' : ''}`}
+            className="px-3 py-2 rounded-lg"
+            style={viewMode === 'grid' ? { backgroundColor: colors.primary } : undefined}
           >
             <Grid size={18} color={viewMode === 'grid' ? colors.primaryForeground : colors.mutedForeground} />
           </TouchableOpacity>
@@ -106,43 +109,58 @@ export function PropertyListHeader({
       {hasActiveFilters && (
         <View className="flex-row flex-wrap gap-2 mt-3">
           {filters.status.length > 0 && (
-            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
-              <Text className="text-primary text-sm font-medium">
+            <View
+              className="flex-row items-center px-3 py-1 rounded-full"
+              style={{ backgroundColor: `${colors.primary}1A` }}
+            >
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>
                 Status: {filters.status.length}
               </Text>
             </View>
           )}
           {filters.propertyType.length > 0 && (
-            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
-              <Text className="text-primary text-sm font-medium">
+            <View
+              className="flex-row items-center px-3 py-1 rounded-full"
+              style={{ backgroundColor: `${colors.primary}1A` }}
+            >
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>
                 Type: {filters.propertyType.length}
               </Text>
             </View>
           )}
           {(filters.priceMin !== null || filters.priceMax !== null) && (
-            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
-              <Text className="text-primary text-sm font-medium">Price Range</Text>
+            <View
+              className="flex-row items-center px-3 py-1 rounded-full"
+              style={{ backgroundColor: `${colors.primary}1A` }}
+            >
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>Price Range</Text>
             </View>
           )}
           {(filters.arvMin !== null || filters.arvMax !== null) && (
-            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
-              <Text className="text-primary text-sm font-medium">ARV Range</Text>
+            <View
+              className="flex-row items-center px-3 py-1 rounded-full"
+              style={{ backgroundColor: `${colors.primary}1A` }}
+            >
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>ARV Range</Text>
             </View>
           )}
           {(filters.city || filters.state) && (
-            <View className="flex-row items-center bg-primary/10 px-3 py-1 rounded-full">
-              <Text className="text-primary text-sm font-medium">Location</Text>
+            <View
+              className="flex-row items-center px-3 py-1 rounded-full"
+              style={{ backgroundColor: `${colors.primary}1A` }}
+            >
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>Location</Text>
             </View>
           )}
           <TouchableOpacity onPress={onResetFilters} className="flex-row items-center px-3 py-1">
             <X size={14} color={colors.primary} />
-            <Text className="text-primary text-sm font-medium ml-1">Clear</Text>
+            <Text className="text-sm font-medium ml-1" style={{ color: colors.primary }}>Clear</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Results Count */}
-      <Text className="text-muted-foreground text-sm mt-4">
+      <Text className="text-sm mt-4" style={{ color: colors.mutedForeground }}>
         {filteredCount} {filteredCount === 1 ? 'property' : 'properties'}
         {(searchQuery || hasActiveFilters) && totalCount !== filteredCount ? ` of ${totalCount}` : ''}
       </Text>

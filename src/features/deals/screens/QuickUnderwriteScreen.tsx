@@ -90,17 +90,17 @@ function KeyMetricsHeader({ deal, metrics, onEvidencePress }: KeyMetricsHeaderPr
         >
           <View className="flex-row items-center mb-1">
             <DollarSign size={16} color={colors.success} />
-            <Text className="text-xs text-muted-foreground ml-1">MAO</Text>
+            <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>MAO</Text>
             <Info size={12} color={colors.mutedForeground} style={{ marginLeft: 4 }} />
           </View>
-          <Text className="text-2xl font-bold text-foreground">
+          <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>
             {formatCurrency(metrics.mao)}
           </Text>
-          <Text className="text-xs text-muted-foreground mt-1">{arvPercentage}% Rule</Text>
+          <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>{arvPercentage}% Rule</Text>
         </TouchableOpacity>
 
         {/* Divider */}
-        <View className="w-px bg-border mx-2" />
+        <View className="w-px mx-2" style={{ backgroundColor: colors.border }} />
 
         {/* Profit / Cash Flow */}
         <TouchableOpacity
@@ -110,7 +110,7 @@ function KeyMetricsHeader({ deal, metrics, onEvidencePress }: KeyMetricsHeaderPr
         >
           <View className="flex-row items-center mb-1">
             <TrendingUp size={16} color={colors.info} />
-            <Text className="text-xs text-muted-foreground ml-1">{profitLabel}</Text>
+            <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>{profitLabel}</Text>
             <Info size={12} color={colors.mutedForeground} style={{ marginLeft: 4 }} />
           </View>
           <Text
@@ -119,13 +119,13 @@ function KeyMetricsHeader({ deal, metrics, onEvidencePress }: KeyMetricsHeaderPr
           >
             {formatCurrency(profitValue)}
           </Text>
-          <Text className="text-xs text-muted-foreground mt-1">
+          <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
             {showCashFlow ? 'per month' : 'after costs'}
           </Text>
         </TouchableOpacity>
 
         {/* Divider */}
-        <View className="w-px bg-border mx-2" />
+        <View className="w-px mx-2" style={{ backgroundColor: colors.border }} />
 
         {/* Risk Score */}
         <TouchableOpacity
@@ -135,13 +135,13 @@ function KeyMetricsHeader({ deal, metrics, onEvidencePress }: KeyMetricsHeaderPr
         >
           <View className="flex-row items-center mb-1">
             <Shield size={16} color={colors.warning} />
-            <Text className="text-xs text-muted-foreground ml-1">Risk</Text>
+            <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>Risk</Text>
             <Info size={12} color={colors.mutedForeground} style={{ marginLeft: 4 }} />
           </View>
-          <Text className={`text-2xl font-bold ${getRiskScoreColor(riskScore)}`}>
+          <Text className="text-2xl font-bold" style={{ color: riskScore !== undefined ? (riskScore <= 2 ? colors.success : riskScore <= 3 ? colors.warning : colors.destructive) : colors.mutedForeground }}>
             {riskScore !== undefined ? `${riskScore}/5` : '-'}
           </Text>
-          <Text className="text-xs text-muted-foreground mt-1">
+          <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
             {riskScore !== undefined
               ? riskScore <= 2
                 ? 'Low Risk'
@@ -222,7 +222,7 @@ function EvidenceDrawer({
       style={{ backgroundColor: colors.muted }}
     >
       <View className="flex-row items-center justify-between mb-3">
-        <Text className="text-base font-semibold text-foreground">
+        <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
           {getFieldLabel(field)}
         </Text>
         <TouchableOpacity onPress={onToggle}>
@@ -230,13 +230,13 @@ function EvidenceDrawer({
         </TouchableOpacity>
       </View>
 
-      <Text className="text-sm text-muted-foreground mb-3 font-mono">
+      <Text className="text-sm mb-3 font-mono" style={{ color: colors.mutedForeground }}>
         {getFieldExplanation(field)}
       </Text>
 
       {evidence.length > 0 && (
-        <View className="border-t border-border pt-3 mt-2">
-          <Text className="text-xs text-muted-foreground uppercase mb-2">
+        <View className="pt-3 mt-2" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
+          <Text className="text-xs uppercase mb-2" style={{ color: colors.mutedForeground }}>
             Evidence Trail
           </Text>
           {evidence.map((e) => (
@@ -245,11 +245,11 @@ function EvidenceDrawer({
                 className="w-2 h-2 rounded-full mr-2"
                 style={{ backgroundColor: colors.info }}
               />
-              <Text className="text-sm text-foreground flex-1">
+              <Text className="text-sm flex-1" style={{ color: colors.foreground }}>
                 {e.source}: {e.value || 'N/A'}
               </Text>
               {e.changed_at && (
-                <Text className="text-xs text-muted-foreground">
+                <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                   {new Date(e.changed_at).toLocaleDateString()}
                 </Text>
               )}
@@ -310,7 +310,7 @@ export function QuickUnderwriteScreen() {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
         <Calculator size={48} color={colors.destructive} />
-        <Text className="text-destructive text-center mt-4 mb-4">
+        <Text className="text-center mt-4 mb-4" style={{ color: colors.destructive }}>
           {error?.message || 'Deal not found'}
         </Text>
         <Button onPress={handleBack}>Go Back</Button>
@@ -330,7 +330,7 @@ export function QuickUnderwriteScreen() {
         >
           <ArrowLeft size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text className="text-lg font-semibold text-foreground">Quick Underwrite</Text>
+        <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Quick Underwrite</Text>
         <View className="w-10" />
       </View>
 
@@ -350,13 +350,13 @@ export function QuickUnderwriteScreen() {
         <View className="px-4 mb-4">
           <View className="flex-row items-center mb-1">
             <User size={14} color={colors.mutedForeground} />
-            <Text className="text-sm text-muted-foreground ml-2">
+            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>
               {getDealLeadName(deal)}
             </Text>
           </View>
           <View className="flex-row items-center">
             <MapPin size={14} color={colors.mutedForeground} />
-            <Text className="text-sm text-muted-foreground ml-2">
+            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>
               {getDealAddress(deal)}
             </Text>
           </View>
@@ -366,7 +366,7 @@ export function QuickUnderwriteScreen() {
                 className="px-2 py-1 rounded-full"
                 style={{ backgroundColor: `${colors.secondary}30` }}
               >
-                <Text className="text-xs font-medium text-secondary-foreground">
+                <Text className="text-xs font-medium" style={{ color: colors.secondaryForeground }}>
                   {DEAL_STRATEGY_CONFIG[deal.strategy].label}
                 </Text>
               </View>
@@ -394,7 +394,7 @@ export function QuickUnderwriteScreen() {
 
         {/* Existing Property Analysis Tab - Reused Component */}
         <View className="px-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase">
+          <Text className="text-sm font-medium mb-3 uppercase" style={{ color: colors.mutedForeground }}>
             Detailed Analysis
           </Text>
           <PropertyAnalysisTab property={property} />
@@ -402,25 +402,25 @@ export function QuickUnderwriteScreen() {
 
         {/* Quick Tips */}
         <View className="mx-4 mt-6 p-4 rounded-xl" style={{ backgroundColor: `${colors.info}10` }}>
-          <Text className="text-sm font-medium text-foreground mb-2">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
             Underwriting Tips
           </Text>
           <View className="gap-2">
             <View className="flex-row items-start">
-              <Text className="text-info mr-2">•</Text>
-              <Text className="text-sm text-muted-foreground flex-1">
+              <Text className="mr-2" style={{ color: colors.info }}>•</Text>
+              <Text className="text-sm flex-1" style={{ color: colors.mutedForeground }}>
                 Tap any metric for calculation details and evidence
               </Text>
             </View>
             <View className="flex-row items-start">
-              <Text className="text-info mr-2">•</Text>
-              <Text className="text-sm text-muted-foreground flex-1">
+              <Text className="mr-2" style={{ color: colors.info }}>•</Text>
+              <Text className="text-sm flex-1" style={{ color: colors.mutedForeground }}>
                 Toggle between Flip and Rental modes for different strategies
               </Text>
             </View>
             <View className="flex-row items-start">
-              <Text className="text-info mr-2">•</Text>
-              <Text className="text-sm text-muted-foreground flex-1">
+              <Text className="mr-2" style={{ color: colors.info }}>•</Text>
+              <Text className="text-sm flex-1" style={{ color: colors.mutedForeground }}>
                 MAO uses {Math.round(DEFAULT_FLIP_CONSTANTS.maoRulePct * 100)}% rule - adjust based on local market conditions
               </Text>
             </View>

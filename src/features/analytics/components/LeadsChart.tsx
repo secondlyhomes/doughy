@@ -1,5 +1,6 @@
 // Leads Chart Component - React Native
 // Displays lead analytics using react-native-chart-kit
+// Uses useThemeColors() for reliable dark mode support
 
 import React from 'react';
 import { View, Text, useWindowDimensions } from 'react-native';
@@ -67,10 +68,10 @@ export function LeadsOverTimeChart({
   };
 
   return (
-    <View className="bg-card rounded-xl p-4">
+    <View className="rounded-xl p-4" style={{ backgroundColor: colors.card }}>
       <View className="flex-row items-center mb-4">
         <TrendingUp size={20} color={colors.info} />
-        <Text className="text-lg font-semibold text-foreground ml-2">{title}</Text>
+        <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>{title}</Text>
       </View>
       <LineChart
         data={lineData}
@@ -152,8 +153,8 @@ export function LeadSourceChart({
   }));
 
   return (
-    <View className="bg-card rounded-xl p-4">
-      <Text className="text-lg font-semibold text-foreground mb-4">{title}</Text>
+    <View className="rounded-xl p-4" style={{ backgroundColor: colors.card }}>
+      <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>{title}</Text>
       <PieChart
         data={formattedData}
         width={screenWidth - 64}
@@ -210,8 +211,8 @@ export function ConversionChart({
   };
 
   return (
-    <View className="bg-card rounded-xl p-4">
-      <Text className="text-lg font-semibold text-foreground mb-4">{title}</Text>
+    <View className="rounded-xl p-4" style={{ backgroundColor: colors.card }}>
+      <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>{title}</Text>
       <BarChart
         data={barData}
         width={screenWidth - 64}

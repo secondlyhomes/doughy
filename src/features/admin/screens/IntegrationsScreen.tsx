@@ -155,13 +155,13 @@ export function IntegrationsScreen() {
   const getStatusColor = (status: IntegrationStatus) => {
     switch (status) {
       case 'active':
-        return 'text-success';
+        return colors.success;
       case 'inactive':
-        return 'text-muted-foreground';
+        return colors.mutedForeground;
       case 'error':
-        return 'text-destructive';
+        return colors.destructive;
       case 'pending':
-        return 'text-warning';
+        return colors.warning;
     }
   };
 
@@ -195,17 +195,17 @@ export function IntegrationsScreen() {
       <ScreenHeader title="Integrations" backButton bordered />
 
       {/* Stats */}
-      <View className="flex-row px-4 py-3 bg-muted/50 gap-4">
+      <View className="flex-row px-4 py-3 gap-4" style={{ backgroundColor: `${colors.muted}80` }}>
         <View className="flex-row items-center">
           <CheckCircle size={16} color={colors.success} />
-          <Text className="text-sm text-muted-foreground ml-1">
+          <Text className="text-sm ml-1" style={{ color: colors.mutedForeground }}>
             {activeCount} Active
           </Text>
         </View>
         {errorCount > 0 && (
           <View className="flex-row items-center">
             <AlertCircle size={16} color={colors.destructive} />
-            <Text className="text-sm text-destructive ml-1">
+            <Text className="text-sm ml-1" style={{ color: colors.destructive }}>
               {errorCount} Error{errorCount !== 1 ? 's' : ''}
             </Text>
           </View>
@@ -221,30 +221,31 @@ export function IntegrationsScreen() {
         {integrations.map((integration) => (
           <View
             key={integration.id}
-            className="mx-4 my-2 p-4 bg-card rounded-lg border border-border"
+            className="mx-4 my-2 p-4 rounded-lg border"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
           >
             <View className="flex-row items-start">
-              <View className="w-12 h-12 rounded-lg bg-primary/10 items-center justify-center">
+              <View className="w-12 h-12 rounded-lg items-center justify-center" style={{ backgroundColor: `${colors.primary}1A` }}>
                 {getIcon(integration.icon)}
               </View>
               <View className="flex-1 ml-3">
                 <View className="flex-row items-center">
-                  <Text className="text-foreground font-medium">
+                  <Text className="font-medium" style={{ color: colors.foreground }}>
                     {integration.name}
                   </Text>
                   <View className="ml-2">{getStatusIcon(integration.status)}</View>
                 </View>
-                <Text className="text-sm text-muted-foreground mt-0.5">
+                <Text className="text-sm mt-0.5" style={{ color: colors.mutedForeground }}>
                   {integration.description}
                 </Text>
                 <View className="flex-row items-center mt-2">
-                  <Text className={`text-xs capitalize ${getStatusColor(integration.status)}`}>
+                  <Text className="text-xs capitalize" style={{ color: getStatusColor(integration.status) }}>
                     {integration.status}
                   </Text>
                   {integration.lastSync && (
                     <>
-                      <Text className="text-xs text-muted-foreground mx-2">•</Text>
-                      <Text className="text-xs text-muted-foreground">
+                      <Text className="text-xs mx-2" style={{ color: colors.mutedForeground }}>•</Text>
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         Synced {formatLastSync(integration.lastSync)}
                       </Text>
                     </>
@@ -262,7 +263,7 @@ export function IntegrationsScreen() {
 
             {/* Action Buttons */}
             {integration.status === 'active' && (
-              <View className="flex-row mt-3 pt-3 border-t border-border">
+              <View className="flex-row mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -279,8 +280,8 @@ export function IntegrationsScreen() {
             )}
 
             {integration.status === 'error' && (
-              <View className="mt-3 p-2 bg-destructive/10 rounded">
-                <Text className="text-xs text-destructive">
+              <View className="mt-3 p-2 rounded" style={{ backgroundColor: `${colors.destructive}1A` }}>
+                <Text className="text-xs" style={{ color: colors.destructive }}>
                   Connection error. Please check your API credentials and try again.
                 </Text>
               </View>

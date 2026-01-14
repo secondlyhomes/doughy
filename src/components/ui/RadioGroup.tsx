@@ -3,6 +3,7 @@
 import React, { createContext, useContext } from 'react';
 import { View, Text, TouchableOpacity, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 // Radio Group Context
 interface RadioGroupContextType {
@@ -59,6 +60,7 @@ export function RadioGroupItem({
   className,
 }: RadioGroupItemProps) {
   const { value: selectedValue, onValueChange } = useRadioGroupContext();
+  const colors = useThemeColors();
   const isSelected = value === selectedValue;
 
   return (
@@ -73,21 +75,22 @@ export function RadioGroupItem({
     >
       <View
         className={cn(
-          'h-5 w-5 items-center justify-center rounded-full border-2',
-          isSelected ? 'border-primary' : 'border-input',
+          'h-5 w-5 items-center justify-center rounded-full',
           disabled && 'opacity-50'
         )}
+        style={{
+          borderWidth: 2,
+          borderColor: isSelected ? colors.primary : colors.input,
+        }}
       >
         {isSelected && (
-          <View className="h-2.5 w-2.5 rounded-full bg-primary" />
+          <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors.primary }} />
         )}
       </View>
       {label && (
         <Text
-          className={cn(
-            'ml-2 text-sm text-foreground',
-            disabled && 'opacity-50'
-          )}
+          className={cn('ml-2 text-sm', disabled && 'opacity-50')}
+          style={{ color: colors.foreground }}
         >
           {label}
         </Text>

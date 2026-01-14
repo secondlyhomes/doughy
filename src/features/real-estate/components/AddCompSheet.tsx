@@ -160,10 +160,10 @@ export function AddCompSheet({
     } = {}
   ) => (
     <View className="mb-4">
-      <Text className="text-sm font-medium text-foreground mb-1.5">{label}</Text>
-      <View className="flex-row items-center bg-muted rounded-lg px-3">
+      <Text className="text-sm font-medium mb-1.5" style={{ color: colors.foreground }}>{label}</Text>
+      <View className="flex-row items-center rounded-lg px-3" style={{ backgroundColor: colors.muted }}>
         {options.prefix && (
-          <Text className="text-muted-foreground mr-1">{options.prefix}</Text>
+          <Text className="mr-1" style={{ color: colors.mutedForeground }}>{options.prefix}</Text>
         )}
         <TextInput
           value={formData[field]}
@@ -171,11 +171,12 @@ export function AddCompSheet({
           placeholder={options.placeholder}
           placeholderTextColor={colors.mutedForeground}
           keyboardType={options.keyboardType || 'default'}
-          className="flex-1 py-3 text-foreground"
+          className="flex-1 py-3"
+          style={{ color: colors.foreground }}
         />
       </View>
       {errors[field] && (
-        <Text className="text-xs text-destructive mt-1">{errors[field]}</Text>
+        <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{errors[field]}</Text>
       )}
     </View>
   );
@@ -191,20 +192,21 @@ export function AddCompSheet({
         className="flex-1"
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           <View>
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
               {editComp ? 'Edit Comparable' : 'Add Comparable'}
             </Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               Enter property details
             </Text>
           </View>
           <TouchableOpacity
             onPress={handleClose}
-            className="p-2 bg-muted rounded-full"
+            className="p-2 rounded-full"
+            style={{ backgroundColor: colors.muted }}
           >
-            <X size={20} className="text-foreground" />
+            <X size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
 
@@ -215,10 +217,10 @@ export function AddCompSheet({
           keyboardShouldPersistTaps="handled"
         >
           {/* Address Section */}
-          <View className="bg-card rounded-xl p-4 border border-border mb-4">
+          <View className="rounded-xl p-4 border mb-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <View className="flex-row items-center mb-4">
-              <MapPin size={18} className="text-primary" />
-              <Text className="text-base font-semibold text-foreground ml-2">Address</Text>
+              <MapPin size={18} color={colors.primary} />
+              <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Address</Text>
             </View>
 
             {renderInput('Street Address *', 'address', { placeholder: '123 Main St' })}
@@ -246,10 +248,10 @@ export function AddCompSheet({
           </View>
 
           {/* Sale Info Section */}
-          <View className="bg-card rounded-xl p-4 border border-border mb-4">
+          <View className="rounded-xl p-4 border mb-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <View className="flex-row items-center mb-4">
-              <DollarSign size={18} className="text-primary" />
-              <Text className="text-base font-semibold text-foreground ml-2">Sale Information</Text>
+              <DollarSign size={18} color={colors.primary} />
+              <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Sale Information</Text>
             </View>
 
             {renderInput('Sale Price *', 'sold_price', {
@@ -264,10 +266,10 @@ export function AddCompSheet({
           </View>
 
           {/* Property Details Section */}
-          <View className="bg-card rounded-xl p-4 border border-border mb-4">
+          <View className="rounded-xl p-4 border mb-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
             <View className="flex-row items-center mb-4">
-              <Home size={18} className="text-primary" />
-              <Text className="text-base font-semibold text-foreground ml-2">Property Details</Text>
+              <Home size={18} color={colors.primary} />
+              <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Property Details</Text>
             </View>
 
             <View className="flex-row gap-3">
@@ -302,9 +304,9 @@ export function AddCompSheet({
           </View>
 
           {/* Info Note */}
-          <View className="flex-row bg-primary/5 rounded-xl p-3 border border-primary/10 mb-6">
-            <Info size={16} className="text-primary mt-0.5" />
-            <Text className="text-xs text-foreground ml-2 flex-1">
+          <View className="flex-row rounded-xl p-3 border mb-6" style={{ backgroundColor: colors.primary + '0D', borderColor: colors.primary + '1A' }}>
+            <Info size={16} color={colors.primary} className="mt-0.5" />
+            <Text className="text-xs ml-2 flex-1" style={{ color: colors.foreground }}>
               Add recently sold properties similar to your subject property.
               The more comparable properties you add, the more accurate your ARV estimate will be.
             </Text>
@@ -314,16 +316,17 @@ export function AddCompSheet({
         </ScrollView>
 
         {/* Submit Button */}
-        <View className="p-4 border-t border-border">
+        <View className="p-4 border-t" style={{ borderColor: colors.border }}>
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={isLoading}
-            className="bg-primary py-3.5 rounded-xl flex-row items-center justify-center"
+            className="py-3.5 rounded-xl flex-row items-center justify-center"
+            style={{ backgroundColor: colors.primary }}
           >
             {isLoading ? (
               <ActivityIndicator color={colors.primaryForeground} />
             ) : (
-              <Text className="text-primary-foreground font-semibold">
+              <Text className="font-semibold" style={{ color: colors.primaryForeground }}>
                 {editComp ? 'Save Changes' : 'Add Comparable'}
               </Text>
             )}

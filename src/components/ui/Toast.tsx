@@ -107,15 +107,15 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
   const getBorderColor = () => {
     switch (type) {
       case 'success':
-        return 'border-success';
+        return colors.success;
       case 'error':
-        return 'border-destructive';
+        return colors.destructive;
       case 'warning':
-        return 'border-warning';
+        return colors.warning;
       case 'info':
-        return 'border-info';
+        return colors.info;
       default:
-        return 'border-border';
+        return colors.border;
     }
   };
 
@@ -124,19 +124,19 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
       style={{
         transform: [{ translateY }],
         opacity,
+        backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: getBorderColor(),
       }}
-      className={cn(
-        'mx-4 mb-2 flex-row items-start rounded-lg border bg-background p-4 shadow-lg',
-        getBorderColor()
-      )}
+      className="mx-4 mb-2 flex-row items-start rounded-lg p-4 shadow-lg"
     >
       {getIcon() && <View className="mr-3">{getIcon()}</View>}
       <View className="flex-1">
         {title && (
-          <Text className="font-semibold text-foreground">{title}</Text>
+          <Text className="font-semibold" style={{ color: colors.foreground }}>{title}</Text>
         )}
         {description && (
-          <Text className="text-sm text-muted-foreground">{description}</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>{description}</Text>
         )}
       </View>
       <TouchableOpacity onPress={animateOut} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityRole="button" accessibilityLabel="Dismiss">

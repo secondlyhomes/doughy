@@ -3,13 +3,17 @@
  *
  * A card component for displaying property information in lists.
  * Optimized for mobile with touch interactions.
+ *
+ * Note: Uses useThemeColors() for reliable dark mode support.
+ * See docs/TROUBLESHOOTING.md for why we use inline styles instead of Tailwind color classes.
  */
 
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { Home, MapPin, Bed, Bath, Square, User, FileText } from 'lucide-react-native';
+import { Home, MapPin, Bed, Bath, Square, FileText } from 'lucide-react-native';
 import { Property } from '../types';
 import { formatPropertyType, getPropertyTypeBadgeColor } from '../utils/formatters';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface PropertyCardProps {
   property: Property;
@@ -24,6 +28,8 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
   onPress,
   compact = false,
 }) => {
+  const colors = useThemeColors();
+
   const handlePress = useCallback(() => {
     onPress(property);
   }, [onPress, property]);
@@ -37,9 +43,12 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
     return (
       <TouchableOpacity
         onPress={handlePress}
-        className={`bg-card rounded-xl overflow-hidden shadow-sm border ${
-          isSelected ? 'border-primary border-2' : 'border-border'
-        }`}
+        className="rounded-xl overflow-hidden shadow-sm"
+        style={{
+          backgroundColor: colors.card,
+          borderWidth: isSelected ? 2 : 1,
+          borderColor: isSelected ? colors.primary : colors.border,
+        }}
         activeOpacity={0.7}
       >
         {/* Property Image */}
@@ -50,20 +59,34 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
             resizeMode="cover"
           />
         ) : (
-          <View className="w-full h-32 bg-muted items-center justify-center">
-            <Home size={32} className="text-muted-foreground" />
+          <View
+            className="w-full h-32 items-center justify-center"
+            style={{ backgroundColor: colors.muted }}
+          >
+            <Home size={32} color={colors.mutedForeground} />
           </View>
         )}
 
         <View className="p-3">
-          <Text className="text-sm font-semibold text-foreground" numberOfLines={1}>
+          <Text
+            className="text-sm font-semibold"
+            style={{ color: colors.foreground }}
+            numberOfLines={1}
+          >
             {property.address || 'Address not specified'}
           </Text>
-          <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={1}>
+          <Text
+            className="text-xs mt-0.5"
+            style={{ color: colors.mutedForeground }}
+            numberOfLines={1}
+          >
             {property.city}, {property.state}
           </Text>
           {property.arv && (
-            <Text className="text-sm font-bold text-primary mt-1">
+            <Text
+              className="text-sm font-bold mt-1"
+              style={{ color: colors.primary }}
+            >
               ${property.arv.toLocaleString()}
             </Text>
           )}
@@ -76,9 +99,12 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
   return (
     <TouchableOpacity
       onPress={handlePress}
-      className={`bg-card rounded-xl overflow-hidden shadow-sm border ${
-        isSelected ? 'border-primary border-2' : 'border-border'
-      }`}
+      className="rounded-xl overflow-hidden shadow-sm"
+      style={{
+        backgroundColor: colors.card,
+        borderWidth: isSelected ? 2 : 1,
+        borderColor: isSelected ? colors.primary : colors.border,
+      }}
       activeOpacity={0.7}
     >
       {/* Property Image */}
@@ -89,9 +115,12 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
           resizeMode="cover"
         />
       ) : (
-        <View className="w-full h-48 bg-muted items-center justify-center">
-          <Home size={48} className="text-muted-foreground" />
-          <Text className="text-muted-foreground mt-2">No Image</Text>
+        <View
+          className="w-full h-48 items-center justify-center"
+          style={{ backgroundColor: colors.muted }}
+        >
+          <Home size={48} color={colors.mutedForeground} />
+          <Text className="mt-2" style={{ color: colors.mutedForeground }}>No Image</Text>
         </View>
       )}
 
@@ -99,7 +128,10 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
       <View className="p-4">
         {/* Price and Type */}
         <View className="flex-row justify-between items-start mb-2">
-          <Text className="text-lg font-bold text-foreground">
+          <Text
+            className="text-lg font-bold"
+            style={{ color: colors.foreground }}
+          >
             {property.arv
               ? `$${property.arv.toLocaleString()}`
               : 'Price TBD'}
@@ -112,14 +144,21 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
         </View>
 
         {/* Address */}
-        <Text className="text-base font-semibold text-foreground mb-1" numberOfLines={1}>
+        <Text
+          className="text-base font-semibold mb-1"
+          style={{ color: colors.foreground }}
+          numberOfLines={1}
+        >
           {property.address || 'Address not specified'}
         </Text>
 
         {/* Location */}
         <View className="flex-row items-center mb-3">
-          <MapPin size={14} className="text-muted-foreground" />
-          <Text className="text-sm text-muted-foreground ml-1">
+          <MapPin size={14} color={colors.mutedForeground} />
+          <Text
+            className="text-sm ml-1"
+            style={{ color: colors.mutedForeground }}
+          >
             {property.city && property.state
               ? `${property.city}, ${property.state} ${property.zip || ''}`
               : 'Location not specified'}
@@ -129,22 +168,31 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
         {/* Property Stats */}
         <View className="flex-row gap-4">
           <View className="flex-row items-center">
-            <Bed size={16} className="text-muted-foreground" />
-            <Text className="text-sm text-muted-foreground ml-1">
+            <Bed size={16} color={colors.mutedForeground} />
+            <Text
+              className="text-sm ml-1"
+              style={{ color: colors.mutedForeground }}
+            >
               {property.bedrooms ?? 'N/A'} beds
             </Text>
           </View>
 
           <View className="flex-row items-center">
-            <Bath size={16} className="text-muted-foreground" />
-            <Text className="text-sm text-muted-foreground ml-1">
+            <Bath size={16} color={colors.mutedForeground} />
+            <Text
+              className="text-sm ml-1"
+              style={{ color: colors.mutedForeground }}
+            >
               {property.bathrooms ?? 'N/A'} baths
             </Text>
           </View>
 
           <View className="flex-row items-center">
-            <Square size={16} className="text-muted-foreground" />
-            <Text className="text-sm text-muted-foreground ml-1">
+            <Square size={16} color={colors.mutedForeground} />
+            <Text
+              className="text-sm ml-1"
+              style={{ color: colors.mutedForeground }}
+            >
               {property.square_feet
                 ? `${property.square_feet.toLocaleString()} sqft`
                 : 'N/A'}
@@ -154,12 +202,24 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
 
         {/* Notes Preview */}
         {property.notes && (
-          <View className="mt-3 pt-3 border-t border-border">
+          <View
+            className="mt-3 pt-3"
+            style={{ borderTopWidth: 1, borderTopColor: colors.border }}
+          >
             <View className="flex-row items-center mb-1">
-              <FileText size={12} className="text-muted-foreground" />
-              <Text className="text-xs text-muted-foreground ml-1">Notes</Text>
+              <FileText size={12} color={colors.mutedForeground} />
+              <Text
+                className="text-xs ml-1"
+                style={{ color: colors.mutedForeground }}
+              >
+                Notes
+              </Text>
             </View>
-            <Text className="text-xs text-muted-foreground" numberOfLines={2}>
+            <Text
+              className="text-xs"
+              style={{ color: colors.mutedForeground }}
+              numberOfLines={2}
+            >
               {property.notes}
             </Text>
           </View>

@@ -84,21 +84,29 @@ export function AddressAutocomplete({
 
   return (
     <View className={cn('w-full', className)} {...props}>
-      {label && <Text className="mb-1.5 text-sm font-medium text-foreground">{label}</Text>}
+      {label && <Text className="mb-1.5 text-sm font-medium" style={{ color: colors.foreground }}>{label}</Text>}
 
       {/* Input trigger */}
       <TouchableOpacity
         className={cn(
-          'min-h-[40px] flex-row items-center rounded-md border border-input bg-background px-3 py-2',
-          disabled && 'opacity-50',
-          error && 'border-destructive'
+          'min-h-[40px] flex-row items-center rounded-md px-3 py-2',
+          disabled && 'opacity-50'
         )}
+        style={{
+          borderWidth: 1,
+          borderColor: error ? colors.destructive : colors.input,
+          backgroundColor: colors.background,
+        }}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
         activeOpacity={0.7}
       >
         <MapPin size={16} color={colors.mutedForeground} />
-        <Text className={cn('ml-2 flex-1 text-sm', value?.formatted ? 'text-foreground' : 'text-muted-foreground')} numberOfLines={2}>
+        <Text
+          className="ml-2 flex-1 text-sm"
+          style={{ color: value?.formatted ? colors.foreground : colors.mutedForeground }}
+          numberOfLines={2}
+        >
           {value?.formatted || placeholder}
         </Text>
         {value && !disabled && (
@@ -108,13 +116,16 @@ export function AddressAutocomplete({
         )}
       </TouchableOpacity>
 
-      {error && <Text className="mt-1 text-sm text-destructive">{error}</Text>}
+      {error && <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>{error}</Text>}
 
       {/* Search modal */}
       <RNModal visible={isOpen} animationType="slide" onRequestClose={() => setIsOpen(false)}>
-        <View className="flex-1 bg-background">
+        <View className="flex-1" style={{ backgroundColor: colors.background }}>
           {/* Header */}
-          <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
+          <View
+            className="flex-row items-center gap-3 px-4 py-3"
+            style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+          >
             <SearchBar
               value={searchText}
               onChangeText={setSearchText}
@@ -126,7 +137,7 @@ export function AddressAutocomplete({
               className="flex-1"
             />
             <TouchableOpacity onPress={() => setIsOpen(false)}>
-              <Text className="text-sm font-medium text-primary">Cancel</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.primary }}>Cancel</Text>
             </TouchableOpacity>
           </View>
 

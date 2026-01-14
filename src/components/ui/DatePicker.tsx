@@ -108,16 +108,19 @@ export function DatePicker({
     return (
       <RNModal visible={isOpen} transparent animationType="slide" onRequestClose={() => setIsOpen(false)}>
         <TouchableWithoutFeedback onPress={() => setIsOpen(false)}>
-          <View className="flex-1 justify-end bg-black/50">
+          <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <TouchableWithoutFeedback>
-              <View className="rounded-t-xl bg-background pb-8">
-                <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
+              <View className="rounded-t-xl pb-8" style={{ backgroundColor: colors.background }}>
+                <View
+                  className="flex-row items-center justify-between px-4 py-3"
+                  style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+                >
                   <TouchableOpacity onPress={() => setIsOpen(false)}>
-                    <Text className="text-base text-muted-foreground">Cancel</Text>
+                    <Text className="text-base" style={{ color: colors.mutedForeground }}>Cancel</Text>
                   </TouchableOpacity>
-                  <Text className="text-base font-semibold text-foreground">Select Date</Text>
+                  <Text className="text-base font-semibold" style={{ color: colors.foreground }}>Select Date</Text>
                   <TouchableOpacity onPress={handleIOSConfirm}>
-                    <Text className="text-base font-semibold text-primary">Done</Text>
+                    <Text className="text-base font-semibold" style={{ color: colors.primary }}>Done</Text>
                   </TouchableOpacity>
                 </View>
                 <DateTimePicker
@@ -146,7 +149,7 @@ export function DatePicker({
     return (
       <RNModal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>
         <TouchableWithoutFeedback onPress={() => setIsOpen(false)}>
-          <View className="flex-1 items-center justify-center bg-black/50 px-4">
+          <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <TouchableWithoutFeedback>
               <View className="w-full max-w-sm">
                 <Calendar
@@ -166,15 +169,19 @@ export function DatePicker({
   return (
     <View className={cn('w-full', className)}>
       {label && (
-        <Text className="mb-1.5 text-sm font-medium text-foreground">{label}</Text>
+        <Text className="mb-1.5 text-sm font-medium" style={{ color: colors.foreground }}>{label}</Text>
       )}
 
       <TouchableOpacity
         className={cn(
-          'h-10 flex-row items-center justify-between rounded-md border border-input bg-background px-3',
-          disabled && 'opacity-50',
-          error && 'border-destructive'
+          'h-10 flex-row items-center justify-between rounded-md px-3',
+          disabled && 'opacity-50'
         )}
+        style={{
+          borderWidth: 1,
+          borderColor: error ? colors.destructive : colors.input,
+          backgroundColor: colors.background,
+        }}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
         activeOpacity={0.7}
@@ -184,10 +191,8 @@ export function DatePicker({
         <View className="flex-1 flex-row items-center gap-2">
           <CalendarIcon size={16} color={colors.mutedForeground} />
           <Text
-            className={cn(
-              'text-sm',
-              displayValue ? 'text-foreground' : 'text-muted-foreground'
-            )}
+            className="text-sm"
+            style={{ color: displayValue ? colors.foreground : colors.mutedForeground }}
           >
             {displayValue || placeholder}
           </Text>
@@ -206,7 +211,7 @@ export function DatePicker({
       </TouchableOpacity>
 
       {error && (
-        <Text className="mt-1 text-sm text-destructive">{error}</Text>
+        <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>{error}</Text>
       )}
 
       {mode === 'native' && renderNativePicker()}

@@ -130,7 +130,7 @@ export function PropertyDetailScreen() {
   if (error || !property) {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
-        <Text className="text-destructive text-center mb-4">
+        <Text className="text-center mb-4" style={{ color: colors.destructive }}>
           {error?.message || 'Property not found'}
         </Text>
         <Button onPress={handleBack}>Go Back</Button>
@@ -158,20 +158,33 @@ export function PropertyDetailScreen() {
         />
 
         {/* Tab Bar - Simple inline implementation (no custom components) */}
-        <View className="bg-background px-4 pt-2 pb-0">
+        <View className="px-4 pt-2 pb-0" style={{ backgroundColor: colors.background }}>
           <PropertyQuickStats property={property} />
 
           <View className="mt-4">
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row bg-muted rounded-md p-1">
+              <View className="flex-row rounded-md p-1" style={{ backgroundColor: colors.muted }}>
                 {Object.entries(TAB_IDS).map(([key, value]) => (
                   <Pressable
                     key={value}
                     onPress={() => setActiveTab(value)}
-                    className={`px-4 py-2 rounded-md ${activeTab === value ? 'bg-background shadow-sm' : ''}`}
+                    style={[
+                      { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
+                      activeTab === value && {
+                        backgroundColor: colors.background,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.1,
+                        shadowRadius: 2,
+                        shadowOffset: { width: 0, height: 1 },
+                      },
+                    ]}
                   >
                     <Text
-                      className={`text-sm font-medium ${activeTab === value ? 'text-foreground' : 'text-muted-foreground'}`}
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: activeTab === value ? colors.foreground : colors.mutedForeground,
+                      }}
                     >
                       {key.charAt(0) + key.slice(1).toLowerCase()}
                     </Text>
@@ -194,7 +207,7 @@ export function PropertyDetailScreen() {
       </ScrollView>
 
       {/* Bottom Action Bar */}
-      <View className="flex-row gap-3 p-4 bg-background border-t border-border">
+      <View className="flex-row gap-3 p-4" style={{ backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border }}>
         <Button onPress={handleEdit} className="flex-1">
           <Edit2 size={20} color={colors.primaryForeground} />
           Edit

@@ -28,21 +28,21 @@ export function Footer() {
     if (external) {
       return (
         <Pressable onPress={() => openExternalLink(href)}>
-          <Text className="text-muted-foreground hover:text-primary text-sm">{children}</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>{children}</Text>
         </Pressable>
       );
     }
     return (
       <Link href={href as any} asChild>
         <Pressable>
-          <Text className="text-muted-foreground hover:text-primary text-sm">{children}</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>{children}</Text>
         </Pressable>
       </Link>
     );
   };
 
   return (
-    <View className="py-12 border-t border-primary bg-background w-full">
+    <View className="py-12 border-t w-full" style={{ borderColor: colors.primary, backgroundColor: colors.background }}>
       <View className="px-4 sm:px-6 lg:px-8 mx-auto max-w-[1200px]">
         <View className="flex-row flex-wrap gap-8 mb-8">
           {/* Company Info Column */}
@@ -53,15 +53,15 @@ export function Footer() {
                 style={{ width: 32, height: 32 }}
                 resizeMode="contain"
               />
-              <Text className="text-3xl tracking-tight text-primary font-lobster">
+              <Text className="text-3xl tracking-tight font-lobster" style={{ color: colors.primary }}>
                 Doughy
               </Text>
             </View>
-            <Text className="text-sm text-muted-foreground mb-4">
+            <Text className="text-sm mb-4" style={{ color: colors.mutedForeground }}>
               Lead management for real estate investors
             </Text>
-            <Text className="text-sm text-muted-foreground">
-              {currentYear} <Text className="text-primary font-lobster">Doughy</Text>
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+              {currentYear} <Text className="font-lobster" style={{ color: colors.primary }}>Doughy</Text>
             </Text>
             <View className="flex-row gap-4 mt-4">
               <SocialLink href="https://twitter.com/doughy" Icon={Twitter} label="Twitter" />
@@ -73,7 +73,7 @@ export function Footer() {
 
           {/* Features & Products Column */}
           <View className="flex-1 min-w-[150px]">
-            <Text className="text-lg font-semibold text-foreground mb-4">Features & Products</Text>
+            <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>Features & Products</Text>
             <View className="gap-2">
               <FooterLink href="/features/real-estate">Real Estate Investing</FooterLink>
               <FooterLink href="/features/lead-management">Core Lead Management</FooterLink>
@@ -84,7 +84,7 @@ export function Footer() {
 
           {/* Resources Column */}
           <View className="flex-1 min-w-[150px]">
-            <Text className="text-lg font-semibold text-foreground mb-4">Resources</Text>
+            <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>Resources</Text>
             <View className="gap-2">
               <FooterLink href="/docs">Documentation</FooterLink>
               <FooterLink href="/contact">Support</FooterLink>
@@ -95,7 +95,7 @@ export function Footer() {
 
           {/* Company Column */}
           <View className="flex-1 min-w-[150px]">
-            <Text className="text-lg font-semibold text-foreground mb-4">Company</Text>
+            <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>Company</Text>
             <View className="gap-2">
               <FooterLink href="/about">About Us</FooterLink>
               <FooterLink href="/contact">Contact</FooterLink>

@@ -75,11 +75,11 @@ export function PropertyHeader({
           </ScrollView>
         ) : (
           <View
-            className="bg-muted items-center justify-center"
-            style={{ width: SCREEN_WIDTH, height: 280 }}
+            className="items-center justify-center"
+            style={{ width: SCREEN_WIDTH, height: 280, backgroundColor: colors.muted }}
           >
-            <Home size={64} className="text-muted-foreground" />
-            <Text className="text-muted-foreground mt-2">No Images</Text>
+            <Home size={64} color={colors.mutedForeground} />
+            <Text className="mt-2" style={{ color: colors.mutedForeground }}>No Images</Text>
           </View>
         )}
 
@@ -132,11 +132,11 @@ export function PropertyHeader({
         {/* Price and Type */}
         <View className="flex-row justify-between items-start mb-3">
           <View>
-            <Text className="text-2xl font-bold text-foreground">
+            <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>
               {property.arv ? formatCurrency(property.arv) : 'Price TBD'}
             </Text>
             {property.purchase_price && (
-              <Text className="text-sm text-muted-foreground">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                 Purchase: {formatCurrency(property.purchase_price)}
               </Text>
             )}
@@ -150,12 +150,12 @@ export function PropertyHeader({
 
         {/* Address */}
         <View className="mb-2">
-          <Text className="text-lg font-semibold text-foreground">
+          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
             {property.address || 'Address not specified'}
           </Text>
           <View className="flex-row items-center mt-1">
-            <MapPin size={16} className="text-muted-foreground" />
-            <Text className="text-muted-foreground ml-1">
+            <MapPin size={16} color={colors.mutedForeground} />
+            <Text className="ml-1" style={{ color: colors.mutedForeground }}>
               {property.city && property.state
                 ? `${property.city}, ${property.state} ${property.zip || ''}`
                 : 'Location not specified'}

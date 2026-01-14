@@ -46,17 +46,27 @@ interface ActivityTypeConfig {
   label: string;
   iconComponent: typeof Phone;
   colorKey: 'info' | 'success' | 'primary' | 'warning' | 'mutedForeground';
-  bgClass: string;
 }
 
 const ACTIVITY_TYPE_CONFIG: ActivityTypeConfig[] = [
-  { type: 'call', label: 'Phone Call', iconComponent: Phone, colorKey: 'info', bgClass: 'bg-info/20' },
-  { type: 'email', label: 'Email', iconComponent: Mail, colorKey: 'success', bgClass: 'bg-success/20' },
-  { type: 'text', label: 'Text Message', iconComponent: MessageSquare, colorKey: 'primary', bgClass: 'bg-primary/20' },
-  { type: 'meeting', label: 'Meeting', iconComponent: Calendar, colorKey: 'warning', bgClass: 'bg-warning/20' },
-  { type: 'note', label: 'Note', iconComponent: FileText, colorKey: 'mutedForeground', bgClass: 'bg-muted' },
-  { type: 'property_shown', label: 'Property Shown', iconComponent: Home, colorKey: 'info', bgClass: 'bg-info/20' },
+  { type: 'call', label: 'Phone Call', iconComponent: Phone, colorKey: 'info' },
+  { type: 'email', label: 'Email', iconComponent: Mail, colorKey: 'success' },
+  { type: 'text', label: 'Text Message', iconComponent: MessageSquare, colorKey: 'primary' },
+  { type: 'meeting', label: 'Meeting', iconComponent: Calendar, colorKey: 'warning' },
+  { type: 'note', label: 'Note', iconComponent: FileText, colorKey: 'mutedForeground' },
+  { type: 'property_shown', label: 'Property Shown', iconComponent: Home, colorKey: 'info' },
 ];
+
+function getActivityBgColor(colorKey: string, colors: ReturnType<typeof useThemeColors>) {
+  switch (colorKey) {
+    case 'info': return `${colors.info}33`;
+    case 'success': return `${colors.success}33`;
+    case 'primary': return `${colors.primary}33`;
+    case 'warning': return `${colors.warning}33`;
+    case 'mutedForeground': return colors.muted;
+    default: return colors.muted;
+  }
+}
 
 const DURATION_OPTIONS = ['5 min', '10 min', '15 min', '30 min', '45 min', '1 hour', '2+ hours'];
 
@@ -126,13 +136,13 @@ export function AddActivitySheet({
           className="flex-1"
         >
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
+          <View className="flex-row items-center justify-between px-4 py-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
             <TouchableOpacity onPress={handleClose} className="p-1">
               <X size={24} color={colors.mutedForeground} />
             </TouchableOpacity>
             <View className="flex-1 items-center">
-              <Text className="text-lg font-semibold text-foreground">Log Activity</Text>
-              <Text className="text-sm text-muted-foreground">{leadName}</Text>
+              <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Log Activity</Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>{leadName}</Text>
             </View>
             <Button
               onPress={handleSave}
@@ -146,36 +156,38 @@ export function AddActivitySheet({
           <ScrollView className="flex-1 px-4 pt-4">
             {/* Activity Type Selection */}
             <View className="mb-6">
-              <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
                 Activity Type
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {ACTIVITY_TYPE_CONFIG.map((activity) => {
                   const IconComponent = activity.iconComponent;
                   const iconColor = colors[activity.colorKey];
+                  const isSelected = selectedType === activity.type;
                   return (
                     <TouchableOpacity
                       key={activity.type}
-                      className={`flex-row items-center px-4 py-3 rounded-lg ${
-                        selectedType === activity.type
-                          ? 'bg-primary/10 border border-primary'
-                          : 'bg-muted'
-                      }`}
+                      className="flex-row items-center px-4 py-3 rounded-lg"
+                      style={{
+                        backgroundColor: isSelected ? `${colors.primary}15` : colors.muted,
+                        borderWidth: isSelected ? 1 : 0,
+                        borderColor: isSelected ? colors.primary : 'transparent',
+                      }}
                       onPress={() => setSelectedType(activity.type)}
                     >
-                      <View className={`${activity.bgClass} p-1.5 rounded-full mr-2`}>
+                      <View className="p-1.5 rounded-full mr-2" style={{ backgroundColor: getActivityBgColor(activity.colorKey, colors) }}>
                         <IconComponent size={20} color={iconColor} />
                       </View>
                       <Text
-                        className={`text-sm ${
-                          selectedType === activity.type
-                            ? 'text-primary font-medium'
-                            : 'text-foreground'
-                        }`}
+                        className="text-sm"
+                        style={{
+                          color: isSelected ? colors.primary : colors.foreground,
+                          fontWeight: isSelected ? '500' : 'normal',
+                        }}
                       >
                         {activity.label}
                       </Text>
-                      {selectedType === activity.type && (
+                      {isSelected && (
                         <Check size={16} color={colors.primary} className="ml-2" />
                       )}
                     </TouchableOpacity>
@@ -186,11 +198,12 @@ export function AddActivitySheet({
 
             {/* Description */}
             <View className="mb-6">
-              <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
                 Description
               </Text>
               <TextInput
-                className="bg-muted rounded-lg px-4 py-3 text-foreground min-h-[100px]"
+                className="rounded-lg px-4 py-3 min-h-[100px]"
+                style={{ backgroundColor: colors.muted, color: colors.foreground }}
                 placeholder="What happened? Add details about the interaction..."
                 placeholderTextColor={colors.mutedForeground}
                 value={description}
@@ -203,32 +216,32 @@ export function AddActivitySheet({
             {/* Duration Picker */}
             {showDurationPicker && (
               <View className="mb-6">
-                <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
                   Duration
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View className="flex-row gap-2">
-                    {DURATION_OPTIONS.map((opt) => (
-                      <TouchableOpacity
-                        key={opt}
-                        className={`px-4 py-2 rounded-lg ${
-                          duration === opt
-                            ? 'bg-primary'
-                            : 'bg-muted'
-                        }`}
-                        onPress={() => setDuration(duration === opt ? null : opt)}
-                      >
-                        <Text
-                          className={`text-sm ${
-                            duration === opt
-                              ? 'text-primary-foreground font-medium'
-                              : 'text-foreground'
-                          }`}
+                    {DURATION_OPTIONS.map((opt) => {
+                      const isSelected = duration === opt;
+                      return (
+                        <TouchableOpacity
+                          key={opt}
+                          className="px-4 py-2 rounded-lg"
+                          style={{ backgroundColor: isSelected ? colors.primary : colors.muted }}
+                          onPress={() => setDuration(isSelected ? null : opt)}
                         >
-                          {opt}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                          <Text
+                            className="text-sm"
+                            style={{
+                              color: isSelected ? colors.primaryForeground : colors.foreground,
+                              fontWeight: isSelected ? '500' : 'normal',
+                            }}
+                          >
+                            {opt}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 </ScrollView>
               </View>
@@ -237,31 +250,31 @@ export function AddActivitySheet({
             {/* Outcome Picker */}
             {showOutcomePicker && (
               <View className="mb-6">
-                <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
                   Outcome
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
-                  {OUTCOME_OPTIONS.map((opt) => (
-                    <TouchableOpacity
-                      key={opt.value}
-                      className={`px-4 py-2 rounded-lg ${
-                        outcome === opt.value
-                          ? 'bg-primary'
-                          : 'bg-muted'
-                      }`}
-                      onPress={() => setOutcome(outcome === opt.value ? null : opt.value)}
-                    >
-                      <Text
-                        className={`text-sm ${
-                          outcome === opt.value
-                            ? 'text-primary-foreground font-medium'
-                            : 'text-foreground'
-                        }`}
+                  {OUTCOME_OPTIONS.map((opt) => {
+                    const isSelected = outcome === opt.value;
+                    return (
+                      <TouchableOpacity
+                        key={opt.value}
+                        className="px-4 py-2 rounded-lg"
+                        style={{ backgroundColor: isSelected ? colors.primary : colors.muted }}
+                        onPress={() => setOutcome(isSelected ? null : opt.value)}
                       >
-                        {opt.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text
+                          className="text-sm"
+                          style={{
+                            color: isSelected ? colors.primaryForeground : colors.foreground,
+                            fontWeight: isSelected ? '500' : 'normal',
+                          }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
             )}

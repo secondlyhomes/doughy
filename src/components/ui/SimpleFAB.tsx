@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import { Plus } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useThemeColors } from '@/context/ThemeContext';
 import { LoadingSpinner } from './LoadingSpinner';
 
 export interface SimpleFABProps extends Omit<TouchableOpacityProps, 'children'> {
@@ -19,13 +19,14 @@ export function SimpleFAB({
   style,
   ...props
 }: SimpleFABProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
 
   return (
     <TouchableOpacity
-      className="absolute bottom-32 right-6 bg-primary w-14 h-14 rounded-full items-center justify-center shadow-lg"
+      className="absolute bottom-32 right-6 w-14 h-14 rounded-full items-center justify-center shadow-lg"
       style={[
         {
+          backgroundColor: colors.primary,
           shadowColor: colors.primary,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,

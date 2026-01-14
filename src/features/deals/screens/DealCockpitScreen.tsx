@@ -217,9 +217,9 @@ function DealMetrics({ deal }: DealMetricsProps) {
       >
         <View className="flex-row items-center mb-1">
           <DollarSign size={14} color={colors.success} />
-          <Text className="text-xs text-muted-foreground ml-1">MAO</Text>
+          <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>MAO</Text>
         </View>
-        <Text className="text-lg font-bold text-foreground">
+        <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
           {formatCurrency(analysis.mao)}
         </Text>
       </View>
@@ -231,7 +231,7 @@ function DealMetrics({ deal }: DealMetricsProps) {
       >
         <View className="flex-row items-center mb-1">
           <TrendingUp size={14} color={colors.info} />
-          <Text className="text-xs text-muted-foreground ml-1">{profitLabel}</Text>
+          <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>{profitLabel}</Text>
         </View>
         <Text
           className="text-lg font-bold"
@@ -248,9 +248,9 @@ function DealMetrics({ deal }: DealMetricsProps) {
       >
         <View className="flex-row items-center mb-1">
           <Shield size={14} color={colors.warning} />
-          <Text className="text-xs text-muted-foreground ml-1">Risk</Text>
+          <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>Risk</Text>
         </View>
-        <Text className={`text-lg font-bold ${getRiskScoreColor(riskScore)}`}>
+        <Text className="text-lg font-bold" style={{ color: riskScore !== undefined ? (riskScore <= 2 ? colors.success : riskScore <= 3 ? colors.warning : colors.destructive) : colors.mutedForeground }}>
           {riskScore !== undefined ? `${riskScore}/5` : '-'}
         </Text>
       </View>
@@ -304,7 +304,7 @@ function ActionCard({
         </View>
         <View className="flex-1">
           <View className="flex-row items-center">
-            <Text className="text-base font-semibold text-foreground">{title}</Text>
+            <Text className="text-base font-semibold" style={{ color: colors.foreground }}>{title}</Text>
             {badge && (
               <View
                 className="ml-2 px-2 py-0.5 rounded-full"
@@ -319,7 +319,7 @@ function ActionCard({
               </View>
             )}
           </View>
-          <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }} numberOfLines={1}>
             {subtitle}
           </Text>
         </View>
@@ -479,7 +479,7 @@ export function DealCockpitScreen() {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
         <AlertCircle size={48} color={colors.destructive} />
-        <Text className="text-destructive text-center mt-4 mb-4">
+        <Text className="text-center mt-4 mb-4" style={{ color: colors.destructive }}>
           {error?.message || 'Deal not found'}
         </Text>
         <Button onPress={handleBack}>Go Back</Button>
@@ -551,13 +551,13 @@ export function DealCockpitScreen() {
         <View className="mb-4">
           <View className="flex-row items-center mb-1">
             <User size={14} color={colors.mutedForeground} />
-            <Text className="text-lg font-bold text-foreground ml-2">
+            <Text className="text-lg font-bold ml-2" style={{ color: colors.foreground }}>
               {getDealLeadName(deal)}
             </Text>
           </View>
           <View className="flex-row items-center">
             <MapPin size={14} color={colors.mutedForeground} />
-            <Text className="text-sm text-muted-foreground ml-2">
+            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>
               {getDealAddress(deal)}
             </Text>
           </View>
@@ -567,7 +567,7 @@ export function DealCockpitScreen() {
                 className="px-2 py-1 rounded-full"
                 style={{ backgroundColor: `${colors.secondary}30` }}
               >
-                <Text className="text-xs font-medium text-secondary-foreground">
+                <Text className="text-xs font-medium" style={{ color: colors.secondaryForeground }}>
                   {DEAL_STRATEGY_CONFIG[deal.strategy].label}
                 </Text>
               </View>
@@ -584,7 +584,7 @@ export function DealCockpitScreen() {
         {/* Action Cards - Collapsed in Focus Mode */}
         {!focusMode && (
           <>
-            <Text className="text-sm font-medium text-muted-foreground mb-2 mt-2">
+            <Text className="text-sm font-medium mb-2 mt-2" style={{ color: colors.mutedForeground }}>
               ACTIONS
             </Text>
 
@@ -668,7 +668,7 @@ export function DealCockpitScreen() {
               >
                 {deal.stage === 'closed_won' ? 'Deal Closed - Won!' : 'Deal Closed'}
               </Text>
-              <Text className="text-sm text-muted-foreground">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                 {deal.updated_at
                   ? `Closed on ${new Date(deal.updated_at).toLocaleDateString()}`
                   : 'Deal has been finalized'}

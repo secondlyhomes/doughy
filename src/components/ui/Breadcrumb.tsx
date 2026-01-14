@@ -76,6 +76,7 @@ export function BreadcrumbLink({
   className,
   textClassName,
 }: BreadcrumbLinkProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={cn(className)}
@@ -84,7 +85,7 @@ export function BreadcrumbLink({
       accessibilityRole="link"
     >
       {typeof children === 'string' ? (
-        <Text className={cn('text-sm text-muted-foreground', textClassName)}>
+        <Text className={cn('text-sm', textClassName)} style={{ color: colors.mutedForeground }}>
           {children}
         </Text>
       ) : (
@@ -105,9 +106,11 @@ export function BreadcrumbPage({
   className,
   ...props
 }: BreadcrumbPageProps) {
+  const colors = useThemeColors();
   return (
     <Text
-      className={cn('text-sm font-medium text-foreground', className)}
+      className={cn('text-sm font-medium', className)}
+      style={{ color: colors.foreground }}
       {...props}
     >
       {children}
@@ -139,9 +142,10 @@ export interface BreadcrumbEllipsisProps {
 }
 
 export function BreadcrumbEllipsis({ className }: BreadcrumbEllipsisProps) {
+  const colors = useThemeColors();
   return (
     <View className={cn('flex-row items-center', className)}>
-      <Text className="text-sm text-muted-foreground">...</Text>
+      <Text className="text-sm" style={{ color: colors.mutedForeground }}>...</Text>
     </View>
   );
 }

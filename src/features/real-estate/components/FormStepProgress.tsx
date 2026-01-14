@@ -28,26 +28,33 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
           const isCurrent = index === currentStepIndex;
           const isUpcoming = index > currentStepIndex;
 
+          const getCircleStyle = () => {
+            if (isCompleted || isCurrent) {
+              return { backgroundColor: colors.primary };
+            }
+            return { backgroundColor: colors.muted, borderColor: colors.border, borderWidth: 2 };
+          };
+
+          const getLabelStyle = () => {
+            if (isCurrent) return { color: colors.primary };
+            if (isCompleted) return { color: colors.foreground };
+            return { color: colors.mutedForeground };
+          };
+
           return (
             <React.Fragment key={step.id}>
               {/* Step circle */}
               <View className="items-center">
                 <View
-                  className={`w-8 h-8 rounded-full items-center justify-center ${
-                    isCompleted
-                      ? 'bg-primary'
-                      : isCurrent
-                      ? 'bg-primary'
-                      : 'bg-muted border-2 border-border'
-                  }`}
+                  style={getCircleStyle()}
+                  className="w-8 h-8 rounded-full items-center justify-center"
                 >
                   {isCompleted ? (
                     <Check size={16} color={colors.primaryForeground} strokeWidth={3} />
                   ) : (
                     <Text
-                      className={`text-sm font-semibold ${
-                        isCurrent ? 'text-primary-foreground' : 'text-muted-foreground'
-                      }`}
+                      style={{ color: isCurrent ? colors.primaryForeground : colors.mutedForeground }}
+                      className="text-sm font-semibold"
                     >
                       {index + 1}
                     </Text>
@@ -55,13 +62,8 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
                 </View>
                 {/* Step label */}
                 <Text
-                  className={`text-xs mt-1 ${
-                    isCurrent
-                      ? 'text-primary font-medium'
-                      : isCompleted
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
-                  }`}
+                  style={getLabelStyle()}
+                  className={`text-xs mt-1 ${isCurrent ? 'font-medium' : ''}`}
                 >
                   {step.shortTitle}
                 </Text>
@@ -70,9 +72,8 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
               {/* Connector line */}
               {index < steps.length - 1 && (
                 <View
-                  className={`flex-1 h-0.5 mx-2 ${
-                    index < currentStepIndex ? 'bg-primary' : 'bg-border'
-                  }`}
+                  style={{ backgroundColor: index < currentStepIndex ? colors.primary : colors.border }}
+                  className="flex-1 h-0.5 mx-2"
                 />
               )}
             </React.Fragment>
@@ -82,10 +83,10 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
 
       {/* Current step title */}
       <View className="mt-4">
-        <Text className="text-lg font-semibold text-foreground">
+        <Text style={{ color: colors.foreground }} className="text-lg font-semibold">
           {steps[currentStepIndex]?.title}
         </Text>
-        <Text className="text-sm text-muted-foreground">
+        <Text style={{ color: colors.mutedForeground }} className="text-sm">
           Step {currentStepIndex + 1} of {steps.length}
         </Text>
       </View>

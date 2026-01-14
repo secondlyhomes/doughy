@@ -44,12 +44,12 @@ export function AdminGuard({
       return <Redirect href="/(tabs)" />;
     }
     return fallback ?? (
-      <View className="flex-1 items-center justify-center bg-background p-6">
+      <View className="flex-1 items-center justify-center p-6" style={{ backgroundColor: colors.background }}>
         <ShieldAlert size={64} color={colors.destructive} />
-        <Text className="text-xl font-semibold text-foreground mt-4">
+        <Text className="text-xl font-semibold mt-4" style={{ color: colors.foreground }}>
           Access Denied
         </Text>
-        <Text className="text-muted-foreground text-center mt-2">
+        <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
           You don't have permission to access this area.
           {'\n'}Please contact an administrator if you believe this is an error.
         </Text>

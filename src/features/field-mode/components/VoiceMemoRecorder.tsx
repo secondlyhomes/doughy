@@ -93,12 +93,12 @@ export function VoiceMemoRecorder({
         </View>
 
         {/* Duration display */}
-        <Text className="text-3xl font-mono font-bold text-foreground mb-2">
+        <Text className="text-3xl font-mono font-bold mb-2" style={{ color: colors.foreground }}>
           {formatDuration(state.duration)}
         </Text>
 
         {/* Status text */}
-        <Text className="text-sm text-muted-foreground mb-6">
+        <Text className="text-sm mb-6" style={{ color: colors.mutedForeground }}>
           {!state.isRecording && !state.uri && 'Tap to start recording'}
           {state.isRecording && !state.isPaused && 'Recording...'}
           {state.isRecording && state.isPaused && 'Paused'}
@@ -106,7 +106,7 @@ export function VoiceMemoRecorder({
 
         {/* Error message */}
         {error && (
-          <Text className="text-sm text-destructive mb-4">{error}</Text>
+          <Text className="text-sm mb-4" style={{ color: colors.destructive }}>{error}</Text>
         )}
 
         {/* Controls */}
@@ -169,7 +169,7 @@ export function VoiceMemoRecorder({
 
         {/* Instructions */}
         <View className="mt-8 px-4">
-          <Text className="text-xs text-muted-foreground text-center">
+          <Text className="text-xs text-center" style={{ color: colors.mutedForeground }}>
             Record observations about {bucketLabel.toLowerCase()}.
             {'\n'}Your notes will be transcribed and organized by AI.
           </Text>

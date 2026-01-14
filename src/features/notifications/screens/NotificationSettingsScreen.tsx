@@ -1,5 +1,6 @@
 // src/features/notifications/screens/NotificationSettingsScreen.tsx
 // Notification settings screen for mobile
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useState } from 'react';
 import {
@@ -63,21 +64,24 @@ export function NotificationSettingsScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center p-4 border-b border-border">
+      <View
+        className="flex-row items-center p-4"
+        style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+      >
         <TouchableOpacity onPress={() => router.back()} className="mr-4">
           <ArrowLeft size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text className="text-xl font-semibold text-foreground">Notifications</Text>
+        <Text className="text-xl font-semibold" style={{ color: colors.foreground }}>Notifications</Text>
       </View>
 
       <ScrollView className="flex-1">
         {/* Push Notifications Section */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             PUSH NOTIFICATIONS
           </Text>
 
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <NotificationToggle
               icon={<Smartphone size={20} color={colors.mutedForeground} />}
               title="Push Notifications"
@@ -115,11 +119,11 @@ export function NotificationSettingsScreen() {
 
         {/* Email Notifications Section */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-2 px-2">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
             EMAIL NOTIFICATIONS
           </Text>
 
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <NotificationToggle
               icon={<Mail size={20} color={colors.mutedForeground} />}
               title="Email Notifications"
@@ -148,11 +152,11 @@ export function NotificationSettingsScreen() {
 
         {/* Info */}
         <View className="p-4">
-          <View className="bg-primary/10 rounded-lg p-4">
-            <Text className="text-sm text-primary font-medium mb-1">
+          <View className="rounded-lg p-4" style={{ backgroundColor: `${colors.primary}15` }}>
+            <Text className="text-sm font-medium mb-1" style={{ color: colors.primary }}>
               Need to manage permissions?
             </Text>
-            <Text className="text-sm text-muted-foreground">
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
               To change push notification permissions, go to your device Settings {'>'} {APP_CONFIG.APP_NAME} {'>'} Notifications.
             </Text>
           </View>
@@ -198,13 +202,17 @@ function NotificationToggle({
   const colors = useThemeColors();
   return (
     <View
-      className={`flex-row items-center p-4 ${!hideBorder ? 'border-b border-border' : ''}`}
-      style={{ opacity: disabled ? 0.5 : 1 }}
+      className="flex-row items-center p-4"
+      style={{
+        opacity: disabled ? 0.5 : 1,
+        borderBottomWidth: hideBorder ? 0 : 1,
+        borderBottomColor: colors.border,
+      }}
     >
       {icon}
       <View className="flex-1 ml-3">
-        <Text className="text-foreground font-medium">{title}</Text>
-        <Text className="text-sm text-muted-foreground">{description}</Text>
+        <Text className="font-medium" style={{ color: colors.foreground }}>{title}</Text>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{description}</Text>
       </View>
       <Switch
         value={value}

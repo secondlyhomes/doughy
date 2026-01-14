@@ -3,6 +3,7 @@
 import React from 'react';
 import { View, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useThemeColors } from '@/context/ThemeContext';
 
 export interface ProgressProps extends ViewProps {
   value?: number;
@@ -18,14 +19,16 @@ export function Progress({
   indicatorClassName,
   ...props
 }: ProgressProps) {
+  const colors = useThemeColors();
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
   return (
     <View
       className={cn(
-        'h-4 w-full overflow-hidden rounded-full bg-secondary',
+        'h-4 w-full overflow-hidden rounded-full',
         className
       )}
+      style={{ backgroundColor: colors.secondary }}
       accessibilityRole="progressbar"
       accessibilityValue={{
         min: 0,
@@ -35,8 +38,8 @@ export function Progress({
       {...props}
     >
       <View
-        className={cn('h-full bg-primary', indicatorClassName)}
-        style={{ width: `${percentage}%` }}
+        className={cn('h-full', indicatorClassName)}
+        style={{ width: `${percentage}%`, backgroundColor: colors.primary }}
       />
     </View>
   );

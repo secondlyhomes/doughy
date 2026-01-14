@@ -130,7 +130,7 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
   if (error) {
     return (
       <View className="flex-1 items-center justify-center py-12">
-        <Text className="text-destructive mb-4">Failed to load repairs</Text>
+        <Text style={{ color: colors.destructive }} className="mb-4">Failed to load repairs</Text>
         <Button variant="secondary" onPress={refetch}>
           <RefreshCw size={16} color={colors.foreground} />
           Try Again
@@ -145,8 +145,8 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
         {/* Header */}
         <View className="flex-row justify-between items-center">
           <View>
-            <Text className="text-lg font-semibold text-foreground">Repair Estimates</Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text style={{ color: colors.foreground }} className="text-lg font-semibold">Repair Estimates</Text>
+            <Text style={{ color: colors.mutedForeground }} className="text-xs">
               {repairs.length} item{repairs.length !== 1 ? 's' : ''} • {formatCurrency(totalEstimate)} total
             </Text>
           </View>
@@ -167,19 +167,19 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
         {/* Empty State */}
         {!hasRepairs && (
           <>
-            <View className="items-center justify-center py-12 bg-card rounded-xl border border-border">
-              <View className="bg-muted rounded-full p-4 mb-4">
-                <Wrench size={32} className="text-muted-foreground" />
+            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="items-center justify-center py-12 rounded-xl border">
+              <View style={{ backgroundColor: colors.muted }} className="rounded-full p-4 mb-4">
+                <Wrench size={32} color={colors.mutedForeground} />
               </View>
-              <Text className="text-lg font-semibold text-foreground mb-2">No Repair Estimates</Text>
-              <Text className="text-muted-foreground text-center px-8 mb-4">
+              <Text style={{ color: colors.foreground }} className="text-lg font-semibold mb-2">No Repair Estimates</Text>
+              <Text style={{ color: colors.mutedForeground }} className="text-center px-8 mb-4">
                 Add repair estimates by category to track renovation costs.
               </Text>
             </View>
 
             {/* Quick Add Categories */}
-            <View className="bg-card rounded-xl p-4 border border-border">
-              <Text className="text-sm font-medium text-foreground mb-3">Quick Add by Category</Text>
+            <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="rounded-xl p-4 border">
+              <Text style={{ color: colors.foreground }} className="text-sm font-medium mb-3">Quick Add by Category</Text>
               <View className="flex-row flex-wrap gap-2">
                 {REPAIR_CATEGORIES.map(category => (
                   <Button

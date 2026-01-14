@@ -29,20 +29,20 @@ export function LeadContactInfo({
   const hasAddress = addressLine1 || city || state;
 
   return (
-    <View className="bg-card p-4 mb-4">
-      <Text className="text-lg font-semibold text-foreground mb-3">Contact Information</Text>
+    <View className="p-4 mb-4" style={{ backgroundColor: colors.card }}>
+      <Text className="text-lg font-semibold mb-3" style={{ color: colors.foreground }}>Contact Information</Text>
 
       {email && (
-        <View className="flex-row items-center py-3 border-b border-border">
+        <View className="flex-row items-center py-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <Mail size={18} color={colors.mutedForeground} />
-          <Text className="flex-1 text-foreground ml-3">{email}</Text>
+          <Text className="flex-1 ml-3" style={{ color: colors.foreground }}>{email}</Text>
         </View>
       )}
 
       {phone && (
-        <View className="flex-row items-center py-3 border-b border-border">
+        <View className="flex-row items-center py-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <Phone size={18} color={colors.mutedForeground} />
-          <Text className="flex-1 text-foreground ml-3">{phone}</Text>
+          <Text className="flex-1 ml-3" style={{ color: colors.foreground }}>{phone}</Text>
         </View>
       )}
 
@@ -50,9 +50,9 @@ export function LeadContactInfo({
         <View className="flex-row items-start py-3">
           <MapPin size={18} color={colors.mutedForeground} />
           <View className="flex-1 ml-3">
-            {addressLine1 && <Text className="text-foreground">{addressLine1}</Text>}
-            {addressLine2 && <Text className="text-foreground">{addressLine2}</Text>}
-            <Text className="text-muted-foreground">
+            {addressLine1 && <Text style={{ color: colors.foreground }}>{addressLine1}</Text>}
+            {addressLine2 && <Text style={{ color: colors.foreground }}>{addressLine2}</Text>}
+            <Text style={{ color: colors.mutedForeground }}>
               {[city, state, zip].filter(Boolean).join(', ')}
             </Text>
           </View>

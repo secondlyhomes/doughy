@@ -178,14 +178,14 @@ export function AddDealEventSheet({
           className="flex-1"
         >
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
+          <View className="flex-row items-center justify-between px-4 py-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
             <TouchableOpacity onPress={handleClose} className="p-1">
               <X size={24} color={colors.mutedForeground} />
             </TouchableOpacity>
             <View className="flex-1 items-center">
-              <Text className="text-lg font-semibold text-foreground">Add Note</Text>
+              <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Add Note</Text>
               {dealAddress && (
-                <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+                <Text className="text-sm" style={{ color: colors.mutedForeground }} numberOfLines={1}>
                   {dealAddress}
                 </Text>
               )}
@@ -202,7 +202,7 @@ export function AddDealEventSheet({
           <View className="flex-1 px-4 pt-4">
             {/* Event Type Selection */}
             <View className="mb-6">
-              <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
                 Type
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -211,25 +211,33 @@ export function AddDealEventSheet({
                   const iconColor = colors[option.colorKey];
                   const isSelected = selectedType === option.type;
 
+                  // Get icon background color based on colorKey
+                  const getIconBgColor = () => {
+                    switch (option.colorKey) {
+                      case 'info': return `${colors.info}33`;
+                      case 'success': return `${colors.success}33`;
+                      case 'warning': return `${colors.warning}33`;
+                      default: return colors.muted;
+                    }
+                  };
+
                   return (
                     <TouchableOpacity
                       key={option.type}
-                      className={`flex-row items-center px-4 py-3 rounded-lg ${
-                        isSelected
-                          ? 'bg-primary/10 border border-primary'
-                          : 'bg-muted'
-                      }`}
+                      className="flex-row items-center px-4 py-3 rounded-lg"
+                      style={{
+                        backgroundColor: isSelected ? `${colors.primary}15` : colors.muted,
+                        borderWidth: isSelected ? 1 : 0,
+                        borderColor: isSelected ? colors.primary : 'transparent',
+                      }}
                       onPress={() => setSelectedType(option.type)}
                     >
-                      <View className={`${option.bgClass} p-1.5 rounded-full mr-2`}>
+                      <View className="p-1.5 rounded-full mr-2" style={{ backgroundColor: getIconBgColor() }}>
                         <IconComponent size={18} color={iconColor} />
                       </View>
                       <Text
-                        className={`text-sm ${
-                          isSelected
-                            ? 'text-primary font-medium'
-                            : 'text-foreground'
-                        }`}
+                        className="text-sm"
+                        style={{ color: isSelected ? colors.primary : colors.foreground, fontWeight: isSelected ? '500' : '400' }}
                       >
                         {option.label}
                       </Text>
@@ -244,18 +252,18 @@ export function AddDealEventSheet({
 
             {/* Description Input */}
             <View className="flex-1">
-              <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
                 Details
               </Text>
               <TextInput
-                className="bg-muted rounded-lg px-4 py-3 text-foreground flex-1"
+                className="rounded-lg px-4 py-3 flex-1"
                 placeholder={getPlaceholder()}
                 placeholderTextColor={colors.mutedForeground}
                 value={description}
                 onChangeText={setDescription}
                 multiline
                 textAlignVertical="top"
-                style={{ minHeight: 120 }}
+                style={{ minHeight: 120, backgroundColor: colors.muted, color: colors.foreground }}
               />
             </View>
 

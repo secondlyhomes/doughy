@@ -17,24 +17,32 @@ export function TextArea({
   label,
   editable = true,
   numberOfLines = 4,
+  style,
   ...props
 }: TextAreaProps) {
   const colors = useThemeColors();
   return (
     <View className="w-full">
       {label && (
-        <Text className="mb-1.5 text-sm font-medium text-foreground">
+        <Text className="mb-1.5 text-sm font-medium" style={{ color: colors.foreground }}>
           {label}
         </Text>
       )}
       <TextInput
         className={cn(
-          'min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground',
-          'placeholder:text-muted-foreground',
+          'min-h-[80px] w-full rounded-md px-3 py-2 text-base',
           !editable && 'opacity-50',
-          error && 'border-destructive',
           className
         )}
+        style={[
+          {
+            backgroundColor: colors.background,
+            borderWidth: 1,
+            borderColor: error ? colors.destructive : colors.input,
+            color: colors.foreground,
+          },
+          style,
+        ]}
         placeholderTextColor={colors.mutedForeground}
         editable={editable}
         multiline
@@ -43,7 +51,7 @@ export function TextArea({
         {...props}
       />
       {error && (
-        <Text className="mt-1 text-sm text-destructive">{error}</Text>
+        <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>{error}</Text>
       )}
     </View>
   );

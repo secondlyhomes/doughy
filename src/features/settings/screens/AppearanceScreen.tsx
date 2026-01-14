@@ -58,7 +58,7 @@ export function AppearanceScreen() {
 
       <ScrollView className="flex-1 p-4">
         {/* Theme Selection */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           THEME
         </Text>
 
@@ -66,17 +66,16 @@ export function AppearanceScreen() {
           {themeOptions.map((option, index) => (
             <TouchableOpacity
               key={option.value}
-              className={`flex-row items-center p-4 ${
-                index < themeOptions.length - 1 ? 'border-b border-border' : ''
-              }`}
+              className="flex-row items-center p-4"
+              style={index < themeOptions.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
               onPress={() => handleSelectTheme(option.value)}
             >
-              <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
+              <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.muted }}>
                 {option.icon}
               </View>
               <View className="flex-1 ml-4">
-                <Text className="text-foreground font-medium">{option.label}</Text>
-                <Text className="text-sm text-muted-foreground">
+                <Text className="font-medium" style={{ color: colors.foreground }}>{option.label}</Text>
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                   {option.description}
                 </Text>
               </View>
@@ -89,31 +88,31 @@ export function AppearanceScreen() {
 
         {/* Preview */}
         <View className="mt-8">
-          <Text className="text-sm font-medium text-muted-foreground mb-3">
+          <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
             PREVIEW
           </Text>
 
           <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row gap-4">
               {/* Light Preview */}
-              <View className="flex-1 rounded-lg overflow-hidden border border-border">
-                <View className="h-20 bg-white p-3">
-                  <View className="h-2 w-16 bg-gray-200 rounded mb-2" />
-                  <View className="h-2 w-12 bg-gray-300 rounded" />
+              <View className="flex-1 rounded-lg overflow-hidden" style={{ borderWidth: 1, borderColor: colors.border }}>
+                <View className="h-20 p-3" style={{ backgroundColor: '#ffffff' }}>
+                  <View className="h-2 w-16 rounded mb-2" style={{ backgroundColor: '#e5e7eb' }} />
+                  <View className="h-2 w-12 rounded" style={{ backgroundColor: '#d1d5db' }} />
                 </View>
-                <View className="h-6 bg-gray-100 items-center justify-center">
-                  <Text className="text-xs text-gray-500">Light</Text>
+                <View className="h-6 items-center justify-center" style={{ backgroundColor: '#f3f4f6' }}>
+                  <Text className="text-xs" style={{ color: '#6b7280' }}>Light</Text>
                 </View>
               </View>
 
               {/* Dark Preview */}
-              <View className="flex-1 rounded-lg overflow-hidden border border-border">
-                <View className="h-20 bg-gray-900 p-3">
-                  <View className="h-2 w-16 bg-gray-700 rounded mb-2" />
-                  <View className="h-2 w-12 bg-gray-600 rounded" />
+              <View className="flex-1 rounded-lg overflow-hidden" style={{ borderWidth: 1, borderColor: colors.border }}>
+                <View className="h-20 p-3" style={{ backgroundColor: '#111827' }}>
+                  <View className="h-2 w-16 rounded mb-2" style={{ backgroundColor: '#374151' }} />
+                  <View className="h-2 w-12 rounded" style={{ backgroundColor: '#4b5563' }} />
                 </View>
-                <View className="h-6 bg-gray-800 items-center justify-center">
-                  <Text className="text-xs text-gray-400">Dark</Text>
+                <View className="h-6 items-center justify-center" style={{ backgroundColor: '#1f2937' }}>
+                  <Text className="text-xs" style={{ color: '#9ca3af' }}>Dark</Text>
                 </View>
               </View>
             </View>
@@ -121,7 +120,7 @@ export function AppearanceScreen() {
         </View>
 
         {/* Info */}
-        <Text className="text-sm text-muted-foreground mt-6 text-center">
+        <Text className="text-sm mt-6 text-center" style={{ color: colors.mutedForeground }}>
           Theme changes will apply immediately across the app.
         </Text>
       </ScrollView>

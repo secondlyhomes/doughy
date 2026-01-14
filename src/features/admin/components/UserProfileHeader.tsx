@@ -15,20 +15,20 @@ interface UserProfileHeaderProps {
 export function UserProfileHeader({ name, email, isDeleted }: UserProfileHeaderProps) {
   const colors = useThemeColors();
   return (
-    <View className="items-center py-8 border-b border-border">
-      <View className="w-24 h-24 rounded-full bg-primary/10 items-center justify-center">
+    <View className="items-center py-8 border-b" style={{ borderColor: colors.border }}>
+      <View className="w-24 h-24 rounded-full items-center justify-center" style={{ backgroundColor: `${colors.primary}1A` }}>
         <User size={48} color={colors.info} />
       </View>
-      <Text className="text-xl font-semibold text-foreground mt-4">
+      <Text className="text-xl font-semibold mt-4" style={{ color: colors.foreground }}>
         {name || 'No Name'}
       </Text>
-      <Text className="text-muted-foreground">{email}</Text>
+      <Text style={{ color: colors.mutedForeground }}>{email}</Text>
       <View className="flex-row items-center mt-2">
         <View
           className="w-2 h-2 rounded-full mr-2"
           style={{ backgroundColor: isDeleted ? colors.destructive : colors.success }}
         />
-        <Text className="text-sm text-muted-foreground">
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           {isDeleted ? 'Deleted' : 'Active'}
         </Text>
       </View>

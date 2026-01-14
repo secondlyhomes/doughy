@@ -49,9 +49,9 @@ export function ScreenHeader({
     <View
       className={cn(
         'px-4 pt-4 pb-2 flex-row items-center justify-between',
-        bordered && 'border-b border-border',
         className
       )}
+      style={bordered ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
     >
       <View className="flex-row items-center flex-1">
         {backButton && (
@@ -65,9 +65,9 @@ export function ScreenHeader({
           </TouchableOpacity>
         )}
         <View className="flex-1">
-          <Text className="text-2xl font-bold text-foreground">{title}</Text>
+          <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>{title}</Text>
           {subtitle && (
-            <Text className="text-muted-foreground">{subtitle}</Text>
+            <Text style={{ color: colors.mutedForeground }}>{subtitle}</Text>
           )}
         </View>
       </View>

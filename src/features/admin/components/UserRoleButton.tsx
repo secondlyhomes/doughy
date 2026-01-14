@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { TouchableOpacity, Text } from 'react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 interface UserRoleButtonProps {
   label: string;
@@ -12,13 +13,19 @@ interface UserRoleButtonProps {
 }
 
 export function UserRoleButton({ label, active, onPress, disabled }: UserRoleButtonProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
-      className={`flex-1 py-3 rounded-lg items-center ${active ? 'bg-primary' : 'bg-card border border-border'} ${disabled ? 'opacity-50' : ''}`}
+      className={`flex-1 py-3 rounded-lg items-center ${disabled ? 'opacity-50' : ''}`}
+      style={{
+        backgroundColor: active ? colors.primary : colors.card,
+        borderWidth: active ? 0 : 1,
+        borderColor: colors.border,
+      }}
       onPress={onPress}
       disabled={disabled || active}
     >
-      <Text className={`font-medium ${active ? 'text-primary-foreground' : 'text-foreground'}`}>
+      <Text className="font-medium" style={{ color: active ? colors.primaryForeground : colors.foreground }}>
         {label}
       </Text>
     </TouchableOpacity>

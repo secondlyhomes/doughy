@@ -1,6 +1,6 @@
 // src/features/deals/screens/DealsListScreen.tsx
 // Deals List Screen - Shows all deals with stage filters
-// Adapted from LeadsListScreen pattern
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useState, useCallback, useMemo } from 'react';
 import {
@@ -58,10 +58,16 @@ function DealCard({ deal, onPress }: DealCardProps) {
   const nextAction = useNextAction(deal);
   const stageConfig = DEAL_STAGE_CONFIG[deal.stage];
   const riskScore = getDealRiskScore(deal);
-  const riskColor = getRiskScoreColor(riskScore);
+
+  // Get risk color based on score
+  const getRiskColorValue = (score: number | undefined) => {
+    if (score === undefined) return colors.mutedForeground;
+    if (score <= 2) return colors.success;
+    if (score <= 3) return colors.warning;
+    return colors.destructive;
+  };
 
   // Create a minimal Property object for analysis
-  // Using the same pattern as DealCockpitScreen for consistency
   const propertyForAnalysis: Partial<Property> = {
     id: deal.property?.id || '',
     address: deal.property?.address || '',
@@ -78,7 +84,6 @@ function DealCard({ deal, onPress }: DealCardProps) {
   };
 
   // Use the centralized analysis hook for MAO calculation
-  // This ensures consistency with Deal Cockpit and respects buyingCriteria
   const analysis = useDealAnalysis(propertyForAnalysis as Property);
   const mao = analysis.mao > 0 ? analysis.mao : null;
 
@@ -119,7 +124,7 @@ function DealCard({ deal, onPress }: DealCardProps) {
               {stageConfig.label}
             </Text>
           </View>
-          <Text className="text-base font-semibold text-foreground" numberOfLines={1}>
+          <Text className="text-base font-semibold" style={{ color: colors.foreground }} numberOfLines={1}>
             {getDealLeadName(deal)}
           </Text>
         </View>
@@ -129,7 +134,7 @@ function DealCard({ deal, onPress }: DealCardProps) {
       {/* Address */}
       <View className="flex-row items-center mb-3">
         <MapPin size={14} color={colors.mutedForeground} />
-        <Text className="text-sm text-muted-foreground ml-1" numberOfLines={1}>
+        <Text className="text-sm ml-1" style={{ color: colors.mutedForeground }} numberOfLines={1}>
           {getDealAddress(deal)}
         </Text>
       </View>
@@ -138,21 +143,21 @@ function DealCard({ deal, onPress }: DealCardProps) {
       <View className="flex-row items-center gap-4 mb-3">
         <View className="flex-row items-center">
           <DollarSign size={14} color={colors.success} />
-          <Text className="text-sm font-medium text-foreground ml-1">
+          <Text className="text-sm font-medium ml-1" style={{ color: colors.foreground }}>
             MAO: {formatCurrency(mao)}
           </Text>
         </View>
         {riskScore !== undefined && (
           <View className="flex-row items-center">
-            <Text className="text-sm text-muted-foreground">Risk: </Text>
-            <Text className={`text-sm font-medium ${riskColor}`}>
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>Risk: </Text>
+            <Text className="text-sm font-medium" style={{ color: getRiskColorValue(riskScore) }}>
               {riskScore}/5
             </Text>
           </View>
         )}
         {deal.strategy && (
-          <View className="bg-muted px-2 py-0.5 rounded">
-            <Text className="text-xs text-muted-foreground capitalize">
+          <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.muted }}>
+            <Text className="text-xs capitalize" style={{ color: colors.mutedForeground }}>
               {deal.strategy.replace('_', ' ')}
             </Text>
           </View>
@@ -169,17 +174,17 @@ function DealCard({ deal, onPress }: DealCardProps) {
             className="w-6 h-6 rounded-full items-center justify-center mr-2"
             style={{ backgroundColor: colors.primary }}
           >
-            <Text className="text-xs text-white font-bold">!</Text>
+            <Text className="text-xs font-bold" style={{ color: '#ffffff' }}>!</Text>
           </View>
           <View className="flex-1">
-            <Text className="text-xs text-muted-foreground">Next Action</Text>
-            <Text className="text-sm text-foreground" numberOfLines={1}>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Next Action</Text>
+            <Text className="text-sm" style={{ color: colors.foreground }} numberOfLines={1}>
               {nextAction.action}
             </Text>
           </View>
           {nextAction.isOverdue && (
-            <View className="bg-destructive px-2 py-0.5 rounded">
-              <Text className="text-xs text-white font-medium">Overdue</Text>
+            <View className="px-2 py-0.5 rounded" style={{ backgroundColor: colors.destructive }}>
+              <Text className="text-xs font-medium" style={{ color: '#ffffff' }}>Overdue</Text>
             </View>
           )}
         </View>
@@ -188,7 +193,7 @@ function DealCard({ deal, onPress }: DealCardProps) {
       {/* Footer: Updated date */}
       <View className="flex-row items-center justify-end mt-2">
         <Calendar size={12} color={colors.mutedForeground} />
-        <Text className="text-xs text-muted-foreground ml-1">
+        <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>
           {formatRelativeDate(deal.updated_at)}
         </Text>
       </View>
@@ -207,12 +212,10 @@ export function DealsListScreen() {
   const [activeStage, setActiveStage] = useState<DealStage | 'all'>('all');
 
   // Build filters
-  // Always filter out closed deals from pipeline views (closed deals are "done")
-  // Users can view closed deals in a separate archive view if needed
   const filters: DealsFilters = useMemo(() => ({
     stage: activeStage,
     search: searchQuery || undefined,
-    activeOnly: true, // Always exclude closed deals from pipeline views
+    activeOnly: true,
     sortBy: 'updated_at',
     sortDirection: 'desc',
   }), [activeStage, searchQuery]);
@@ -234,8 +237,6 @@ export function DealsListScreen() {
   }, [router]);
 
   const handleAddDeal = useCallback(() => {
-    // TODO: Navigate to add deal screen
-    // For now, just show a console message
     console.log('Add deal pressed');
   }, []);
 
@@ -279,31 +280,27 @@ export function DealsListScreen() {
               const count = stageCounts[item.key] || 0;
               return (
                 <TouchableOpacity
-                  className={`mr-2 px-4 py-2 rounded-full flex-row items-center ${
-                    isActive ? 'bg-primary' : 'bg-muted'
-                  }`}
+                  className="mr-2 px-4 py-2 rounded-full flex-row items-center"
+                  style={{ backgroundColor: isActive ? colors.primary : colors.muted }}
                   onPress={() => setActiveStage(item.key)}
                   accessibilityLabel={`Filter by ${item.label}, ${count} deals`}
                   accessibilityRole="button"
                   accessibilityState={{ selected: isActive }}
                 >
                   <Text
-                    className={`text-sm font-medium ${
-                      isActive ? 'text-primary-foreground' : 'text-muted-foreground'
-                    }`}
+                    className="text-sm font-medium"
+                    style={{ color: isActive ? colors.primaryForeground : colors.mutedForeground }}
                   >
                     {item.label}
                   </Text>
                   {count > 0 && (
                     <View
-                      className={`ml-1.5 px-1.5 py-0.5 rounded-full ${
-                        isActive ? 'bg-white/20' : 'bg-primary/20'
-                      }`}
+                      className="ml-1.5 px-1.5 py-0.5 rounded-full"
+                      style={{ backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : `${colors.primary}20` }}
                     >
                       <Text
-                        className={`text-xs font-medium ${
-                          isActive ? 'text-primary-foreground' : 'text-primary'
-                        }`}
+                        className="text-xs font-medium"
+                        style={{ color: isActive ? colors.primaryForeground : colors.primary }}
                       >
                         {count}
                       </Text>
@@ -317,7 +314,7 @@ export function DealsListScreen() {
 
         {/* Deals Count */}
         <View className="px-4 pb-2">
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             {deals?.length || 0} deals
           </Text>
         </View>
@@ -341,16 +338,17 @@ export function DealsListScreen() {
             }
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center py-20">
-                <Text className="text-muted-foreground text-center">
+                <Text className="text-center" style={{ color: colors.mutedForeground }}>
                   {searchQuery ? 'No deals match your search' : 'No deals yet'}
                 </Text>
                 <TouchableOpacity
-                  className="mt-4 bg-primary px-4 py-2 rounded-lg"
+                  className="mt-4 px-4 py-2 rounded-lg"
+                  style={{ backgroundColor: colors.primary }}
                   onPress={handleAddDeal}
                   accessibilityLabel="Create your first deal"
                   accessibilityRole="button"
                 >
-                  <Text className="text-primary-foreground font-medium">Create First Deal</Text>
+                  <Text className="font-medium" style={{ color: colors.primaryForeground }}>Create First Deal</Text>
                 </TouchableOpacity>
               </View>
             }

@@ -1,5 +1,6 @@
 // src/features/real-estate/components/ARVCalculator.tsx
 // ARV (After Repair Value) calculator based on comparable properties
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
@@ -104,12 +105,15 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
 
   if (!stats) {
     return (
-      <View className="bg-muted/50 rounded-xl p-4 border border-border">
+      <View
+        className="rounded-xl p-4"
+        style={{ backgroundColor: `${colors.muted}80`, borderWidth: 1, borderColor: colors.border }}
+      >
         <View className="flex-row items-center mb-2">
-          <Calculator size={18} className="text-muted-foreground" />
-          <Text className="text-base font-semibold text-foreground ml-2">ARV Calculator</Text>
+          <Calculator size={18} color={colors.mutedForeground} />
+          <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>ARV Calculator</Text>
         </View>
-        <Text className="text-sm text-muted-foreground">
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           Add comparable properties to calculate the After Repair Value.
         </Text>
       </View>
@@ -120,16 +124,25 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
   const arvChanged = arvDifference !== null && arvDifference !== 0;
 
   return (
-    <View className="bg-card rounded-xl border border-border overflow-hidden">
+    <View
+      className="rounded-xl overflow-hidden"
+      style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
+    >
       {/* Header */}
-      <View className="px-4 py-3 bg-primary/5 border-b border-border">
+      <View
+        className="px-4 py-3"
+        style={{ backgroundColor: `${colors.primary}08`, borderBottomWidth: 1, borderBottomColor: colors.border }}
+      >
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
-            <Calculator size={18} className="text-primary" />
-            <Text className="text-base font-semibold text-foreground ml-2">ARV Calculator</Text>
+            <Calculator size={18} color={colors.primary} />
+            <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>ARV Calculator</Text>
           </View>
-          <View className="bg-primary/10 px-2 py-1 rounded-full">
-            <Text className="text-xs font-medium text-primary">
+          <View
+            className="px-2 py-1 rounded-full"
+            style={{ backgroundColor: `${colors.primary}15` }}
+          >
+            <Text className="text-xs font-medium" style={{ color: colors.primary }}>
               {stats.validComps} comp{stats.validComps !== 1 ? 's' : ''}
             </Text>
           </View>
@@ -137,13 +150,13 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
       </View>
 
       {/* Calculated ARV */}
-      <View className="p-4 bg-primary/5">
-        <Text className="text-xs text-muted-foreground mb-1">Calculated ARV</Text>
-        <Text className="text-3xl font-bold text-primary">
+      <View className="p-4" style={{ backgroundColor: `${colors.primary}08` }}>
+        <Text className="text-xs mb-1" style={{ color: colors.mutedForeground }}>Calculated ARV</Text>
+        <Text className="text-3xl font-bold" style={{ color: colors.primary }}>
           {formatCurrency(stats.calculatedARV)}
         </Text>
         {subjectSqft > 0 && stats.avgPricePerSqft > 0 && (
-          <Text className="text-sm text-muted-foreground mt-1">
+          <Text className="text-sm mt-1" style={{ color: colors.mutedForeground }}>
             Based on {formatCurrency(stats.avgPricePerSqft)}/sf × {formatNumber(subjectSqft)} sf
           </Text>
         )}
@@ -152,21 +165,30 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
       {/* Stats Grid */}
       <View className="p-4">
         <View className="flex-row flex-wrap gap-3">
-          <View className="flex-1 min-w-[100] bg-muted/50 rounded-lg p-3">
-            <Text className="text-xs text-muted-foreground">Low</Text>
-            <Text className="text-sm font-semibold text-foreground">
+          <View
+            className="flex-1 min-w-[100] rounded-lg p-3"
+            style={{ backgroundColor: `${colors.muted}80` }}
+          >
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Low</Text>
+            <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
               {formatCurrency(stats.lowARV)}
             </Text>
           </View>
-          <View className="flex-1 min-w-[100] bg-muted/50 rounded-lg p-3">
-            <Text className="text-xs text-muted-foreground">Median</Text>
-            <Text className="text-sm font-semibold text-foreground">
+          <View
+            className="flex-1 min-w-[100] rounded-lg p-3"
+            style={{ backgroundColor: `${colors.muted}80` }}
+          >
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Median</Text>
+            <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
               {formatCurrency(stats.medianPrice)}
             </Text>
           </View>
-          <View className="flex-1 min-w-[100] bg-muted/50 rounded-lg p-3">
-            <Text className="text-xs text-muted-foreground">High</Text>
-            <Text className="text-sm font-semibold text-foreground">
+          <View
+            className="flex-1 min-w-[100] rounded-lg p-3"
+            style={{ backgroundColor: `${colors.muted}80` }}
+          >
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>High</Text>
+            <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
               {formatCurrency(stats.highARV)}
             </Text>
           </View>
@@ -174,10 +196,13 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
 
         {/* Price per sqft */}
         {stats.avgPricePerSqft > 0 && (
-          <View className="mt-3 bg-muted/50 rounded-lg p-3">
+          <View
+            className="mt-3 rounded-lg p-3"
+            style={{ backgroundColor: `${colors.muted}80` }}
+          >
             <View className="flex-row justify-between items-center">
-              <Text className="text-sm text-muted-foreground">Avg Price/SqFt</Text>
-              <Text className="text-sm font-semibold text-foreground">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Avg Price/SqFt</Text>
+              <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
                 {formatCurrency(stats.avgPricePerSqft)}/sf
               </Text>
             </View>
@@ -186,16 +211,19 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
 
         {/* Current vs Calculated */}
         {currentARV && arvChanged && (
-          <View className="mt-4 pt-4 border-t border-border">
+          <View className="mt-4 pt-4" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
             <View className="flex-row justify-between items-center mb-3">
-              <Text className="text-sm text-muted-foreground">Current ARV</Text>
-              <Text className="text-sm font-medium text-foreground">
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Current ARV</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
                 {formatCurrency(currentARV)}
               </Text>
             </View>
             <View className="flex-row justify-between items-center">
-              <Text className="text-sm text-muted-foreground">Difference</Text>
-              <Text className={`text-sm font-semibold ${arvDifference && arvDifference > 0 ? 'text-success' : 'text-destructive'}`}>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Difference</Text>
+              <Text
+                className="text-sm font-semibold"
+                style={{ color: arvDifference && arvDifference > 0 ? colors.success : colors.destructive }}
+              >
                 {arvDifference && arvDifference > 0 ? '+' : ''}{formatCurrency(arvDifference || 0)}
               </Text>
             </View>
@@ -208,10 +236,11 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
         <View className="px-4 pb-4">
           <TouchableOpacity
             onPress={() => onUpdateARV(stats.calculatedARV)}
-            className="bg-primary py-3 rounded-xl flex-row items-center justify-center"
+            className="py-3 rounded-xl flex-row items-center justify-center"
+            style={{ backgroundColor: colors.primary }}
           >
             <TrendingUp size={18} color={colors.primaryForeground} />
-            <Text className="text-primary-foreground font-semibold ml-2">
+            <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>
               Update ARV to {formatCurrency(stats.calculatedARV)}
             </Text>
           </TouchableOpacity>
@@ -220,9 +249,12 @@ export function ARVCalculator({ comps, property, onUpdateARV }: ARVCalculatorPro
 
       {/* Info Note */}
       <View className="px-4 pb-4">
-        <View className="flex-row bg-muted/50 rounded-lg p-3">
-          <Info size={14} className="text-muted-foreground mt-0.5" />
-          <Text className="text-xs text-muted-foreground ml-2 flex-1">
+        <View
+          className="flex-row rounded-lg p-3"
+          style={{ backgroundColor: `${colors.muted}80` }}
+        >
+          <Info size={14} color={colors.mutedForeground} className="mt-0.5" />
+          <Text className="text-xs ml-2 flex-1" style={{ color: colors.mutedForeground }}>
             ARV is calculated using size-adjusted average price from comparable properties.
             Add more comps for a more accurate estimate.
           </Text>

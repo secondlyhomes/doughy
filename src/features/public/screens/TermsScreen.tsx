@@ -1,6 +1,7 @@
 // src/features/public/screens/TermsScreen.tsx
 // Terms of service page for public website
 import { View, Text } from 'react-native';
+import { useThemeColors } from '@/context/ThemeContext';
 
 const sections = [
   {
@@ -69,28 +70,29 @@ Address: 123 Dough Street, San Francisco, CA 94107`,
 ];
 
 export function TermsScreen() {
+  const colors = useThemeColors();
   const lastUpdated = 'January 1, 2025';
 
   return (
-    <View className="flex-1 bg-background py-12">
+    <View className="flex-1 py-12" style={{ backgroundColor: colors.background }}>
       <View className="px-4 sm:px-6 lg:px-8">
         <View className="max-w-3xl mx-auto">
-          <Text className="text-4xl font-bold text-center text-foreground mb-4">
+          <Text className="text-4xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
             Terms of Service
           </Text>
-          <Text className="text-center text-muted-foreground mb-12">
+          <Text className="text-center mb-12" style={{ color: colors.mutedForeground }}>
             Last updated: {lastUpdated}
           </Text>
 
-          <Text className="text-foreground mb-8">
+          <Text className="mb-8" style={{ color: colors.foreground }}>
             Please read these Terms of Service carefully before using the Doughy platform operated
             by Doughy, Inc.
           </Text>
 
           {sections.map((section, index) => (
             <View key={index} className="mb-8">
-              <Text className="text-xl font-semibold text-foreground mb-4">{section.title}</Text>
-              <Text className="text-muted-foreground whitespace-pre-line">{section.content}</Text>
+              <Text className="text-xl font-semibold mb-4" style={{ color: colors.foreground }}>{section.title}</Text>
+              <Text className="whitespace-pre-line" style={{ color: colors.mutedForeground }}>{section.content}</Text>
             </View>
           ))}
         </View>

@@ -1,22 +1,14 @@
 // app/index.tsx
-// Root index - platform-specific behavior
+// Root index - platform-specific redirects
 import { Redirect } from 'expo-router';
 import { Platform } from 'react-native';
 
-// Import the landing screen for web
-import { LandingScreen } from '@/features/public/screens/LandingScreen';
-import { PublicLayout } from '@/features/public/components/PublicLayout';
-
 export default function RootIndex() {
-  // On mobile, redirect to auth (the AuthRouter will handle the rest)
+  // On mobile, redirect to sign-in (tabs layout will handle auth check)
   if (Platform.OS !== 'web') {
     return <Redirect href="/(auth)/sign-in" />;
   }
 
-  // On web, show the landing page with navbar and footer
-  return (
-    <PublicLayout>
-      <LandingScreen />
-    </PublicLayout>
-  );
+  // On web, redirect to public landing page (which has its own layout with Navbar/Footer)
+  return <Redirect href="/(public)" />;
 }

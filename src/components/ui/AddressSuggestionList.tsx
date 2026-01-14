@@ -34,17 +34,18 @@ export function AddressSuggestionList({
 
   const renderPrediction = ({ item }: { item: PlacePrediction }) => (
     <TouchableOpacity
-      className="flex-row items-center gap-3 border-b border-border px-4 py-3"
+      className="flex-row items-center gap-3 px-4 py-3"
+      style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
       onPress={() => onSelectPrediction(item)}
       activeOpacity={0.7}
     >
       <MapPin size={16} color={colors.mutedForeground} />
       <View className="flex-1">
-        <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
+        <Text className="text-sm font-medium" style={{ color: colors.foreground }} numberOfLines={1}>
           {item.structured_formatting?.main_text || item.description}
         </Text>
         {item.structured_formatting?.secondary_text && (
-          <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+          <Text className="text-xs" style={{ color: colors.mutedForeground }} numberOfLines={1}>
             {item.structured_formatting.secondary_text}
           </Text>
         )}
@@ -57,7 +58,8 @@ export function AddressSuggestionList({
       {/* Current location button */}
       {showCurrentLocation && (
         <TouchableOpacity
-          className="flex-row items-center gap-3 border-b border-border px-4 py-3"
+          className="flex-row items-center gap-3 px-4 py-3"
+          style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
           onPress={onCurrentLocation}
           disabled={locationLoading}
           activeOpacity={0.7}
@@ -67,7 +69,7 @@ export function AddressSuggestionList({
           ) : (
             <Navigation size={16} color={colors.primary} />
           )}
-          <Text className="text-sm font-medium text-primary">
+          <Text className="text-sm font-medium" style={{ color: colors.primary }}>
             {locationLoading ? 'Getting location...' : 'Use current location'}
           </Text>
         </TouchableOpacity>
@@ -82,18 +84,22 @@ export function AddressSuggestionList({
         />
       ) : searchText.length >= 3 && !isLoading ? (
         <View className="items-center py-8">
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             {hasApiKey ? 'No addresses found' : 'Enter address manually'}
           </Text>
           {searchText && (
-            <TouchableOpacity className="mt-4 rounded-md bg-primary px-4 py-2" onPress={onManualEntry}>
-              <Text className="text-sm font-medium text-primary-foreground">Use "{searchText}"</Text>
+            <TouchableOpacity
+              className="mt-4 rounded-md px-4 py-2"
+              style={{ backgroundColor: colors.primary }}
+              onPress={onManualEntry}
+            >
+              <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>Use "{searchText}"</Text>
             </TouchableOpacity>
           )}
         </View>
       ) : (
         <View className="items-center py-8">
-          <Text className="text-sm text-muted-foreground">Type at least 3 characters to search</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>Type at least 3 characters to search</Text>
         </View>
       )}
     </>

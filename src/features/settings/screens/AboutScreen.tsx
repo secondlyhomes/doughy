@@ -62,15 +62,15 @@ export function AboutScreen() {
       <ScrollView className="flex-1 p-4">
         {/* App Logo and Info */}
         <View className="items-center mb-8">
-          <View className="w-24 h-24 rounded-2xl bg-primary items-center justify-center mb-4">
-            <Text className="text-white text-3xl font-bold">D</Text>
+          <View className="w-24 h-24 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: colors.primary }}>
+            <Text className="text-3xl font-bold" style={{ color: '#FFFFFF' }}>D</Text>
           </View>
-          <Text className="text-2xl font-lobster text-foreground">Doughy AI</Text>
-          <Text className="text-muted-foreground mt-1">
+          <Text className="text-2xl font-lobster" style={{ color: colors.foreground }}>Doughy AI</Text>
+          <Text className="mt-1" style={{ color: colors.mutedForeground }}>
             Real Estate Investment Platform
           </Text>
           <View className="flex-row items-center mt-2">
-            <Text className="text-sm text-muted-foreground">
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
               Version {APP_VERSION} ({BUILD_NUMBER})
             </Text>
           </View>
@@ -78,14 +78,14 @@ export function AboutScreen() {
 
         {/* App Description */}
         <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: colors.card }}>
-          <Text className="text-foreground leading-6">
+          <Text className="leading-6" style={{ color: colors.foreground }}>
             Doughy AI helps real estate investors analyze deals, manage leads,
             and make smarter investment decisions with AI-powered insights.
           </Text>
         </View>
 
         {/* Links */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           RESOURCES
         </Text>
 
@@ -109,7 +109,7 @@ export function AboutScreen() {
         </View>
 
         {/* Support */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           SUPPORT
         </Text>
 
@@ -131,10 +131,10 @@ export function AboutScreen() {
 
         {/* Credits */}
         <View className="items-center mt-4 mb-8">
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
             Made with love for real estate investors
           </Text>
-          <Text className="text-xs text-muted-foreground mt-2">
+          <Text className="text-xs mt-2" style={{ color: colors.mutedForeground }}>
             © {new Date().getFullYear()} Doughy AI. All rights reserved.
           </Text>
         </View>
@@ -155,18 +155,17 @@ function AboutLink({ icon, title, subtitle, onPress, hideBorder }: AboutLinkProp
   const colors = useThemeColors();
   return (
     <TouchableOpacity
-      className={`flex-row items-center p-4 ${
-        !hideBorder ? 'border-b border-border' : ''
-      }`}
+      className="flex-row items-center p-4"
+      style={!hideBorder ? { borderBottomWidth: 1, borderColor: colors.border } : undefined}
       onPress={onPress}
     >
-      <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
+      <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.muted }}>
         {icon}
       </View>
       <View className="flex-1 ml-4">
-        <Text className="text-foreground font-medium">{title}</Text>
+        <Text className="font-medium" style={{ color: colors.foreground }}>{title}</Text>
         {subtitle && (
-          <Text className="text-sm text-muted-foreground">{subtitle}</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>{subtitle}</Text>
         )}
       </View>
       <ExternalLink size={18} color={colors.mutedForeground} />

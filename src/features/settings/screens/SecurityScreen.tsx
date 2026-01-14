@@ -108,29 +108,29 @@ export function SecurityScreen() {
 
       <ScrollView className="flex-1 p-4">
         {/* Two-Factor Authentication */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           TWO-FACTOR AUTHENTICATION
         </Text>
 
         <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
-          <View className="flex-row items-center p-4 border-b border-border">
-            <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+          <View className="flex-row items-center p-4 border-b" style={{ borderColor: colors.border }}>
+            <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary + '1A' }}>
               <Shield size={20} color={colors.info} />
             </View>
             <View className="flex-1 ml-4">
-              <Text className="text-foreground font-medium">
+              <Text className="font-medium" style={{ color: colors.foreground }}>
                 Two-Factor Authentication
               </Text>
               <View className="flex-row items-center mt-1">
                 {mfaEnabled ? (
                   <>
                     <CheckCircle size={14} color={colors.success} />
-                    <Text className="text-sm text-success ml-1">Enabled</Text>
+                    <Text className="text-sm ml-1" style={{ color: colors.success }}>Enabled</Text>
                   </>
                 ) : (
                   <>
                     <XCircle size={14} color={colors.destructive} />
-                    <Text className="text-sm text-destructive ml-1">Not enabled</Text>
+                    <Text className="text-sm ml-1" style={{ color: colors.destructive }}>Not enabled</Text>
                   </>
                 )}
               </View>
@@ -141,16 +141,17 @@ export function SecurityScreen() {
           {mfaFactors.filter(f => f.status === 'verified').map((factor) => (
             <View
               key={factor.id}
-              className="flex-row items-center p-4 border-b border-border"
+              className="flex-row items-center p-4 border-b"
+              style={{ borderColor: colors.border }}
             >
-              <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
+              <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.muted }}>
                 <Smartphone size={20} color={colors.mutedForeground} />
               </View>
               <View className="flex-1 ml-4">
-                <Text className="text-foreground">
+                <Text style={{ color: colors.foreground }}>
                   {factor.friendlyName || 'Authenticator App'}
                 </Text>
-                <Text className="text-sm text-muted-foreground">
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                   Added {new Date(factor.createdAt).toLocaleDateString()}
                 </Text>
               </View>
@@ -171,10 +172,10 @@ export function SecurityScreen() {
             className="flex-row items-center p-4"
             onPress={handleSetupMFA}
           >
-            <View className="w-10 h-10 rounded-full bg-success/20 items-center justify-center">
+            <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.success + '33' }}>
               <Shield size={20} color={colors.success} />
             </View>
-            <Text className="flex-1 ml-4 text-primary font-medium">
+            <Text className="flex-1 ml-4 font-medium" style={{ color: colors.primary }}>
               {mfaEnabled ? 'Add Another Device' : 'Set Up 2FA'}
             </Text>
             <ChevronRight size={20} color={colors.mutedForeground} />
@@ -182,15 +183,15 @@ export function SecurityScreen() {
         </View>
 
         {/* Info */}
-        <View className="bg-info/10 rounded-lg p-4 mb-6">
-          <Text className="text-info-foreground text-sm">
+        <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: colors.info + '1A' }}>
+          <Text className="text-sm" style={{ color: colors.info }}>
             Two-factor authentication adds an extra layer of security to your account
             by requiring a code from your authenticator app when signing in.
           </Text>
         </View>
 
         {/* Password */}
-        <Text className="text-sm font-medium text-muted-foreground mb-3">
+        <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           PASSWORD
         </Text>
 
@@ -199,12 +200,12 @@ export function SecurityScreen() {
             className="flex-row items-center p-4"
             onPress={handleChangePassword}
           >
-            <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">
+            <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: colors.muted }}>
               <Key size={20} color={colors.mutedForeground} />
             </View>
             <View className="flex-1 ml-4">
-              <Text className="text-foreground font-medium">Change Password</Text>
-              <Text className="text-sm text-muted-foreground">
+              <Text className="font-medium" style={{ color: colors.foreground }}>Change Password</Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                 Update your account password
               </Text>
             </View>
@@ -214,20 +215,20 @@ export function SecurityScreen() {
 
         {/* Security Tips */}
         <View className="mt-8">
-          <Text className="text-sm font-medium text-muted-foreground mb-3">
+          <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
             SECURITY TIPS
           </Text>
           <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
-            <Text className="text-sm text-foreground mb-2">
+            <Text className="text-sm mb-2" style={{ color: colors.foreground }}>
               • Use a unique, strong password
             </Text>
-            <Text className="text-sm text-foreground mb-2">
+            <Text className="text-sm mb-2" style={{ color: colors.foreground }}>
               • Enable two-factor authentication
             </Text>
-            <Text className="text-sm text-foreground mb-2">
+            <Text className="text-sm mb-2" style={{ color: colors.foreground }}>
               • Don't share your login credentials
             </Text>
-            <Text className="text-sm text-foreground">
+            <Text className="text-sm" style={{ color: colors.foreground }}>
               • Sign out from shared devices
             </Text>
           </View>

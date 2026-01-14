@@ -107,7 +107,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
   if (error) {
     return (
       <View className="flex-1 items-center justify-center py-12">
-        <Text className="text-destructive mb-4">Failed to load scenarios</Text>
+        <Text className="mb-4" style={{ color: colors.destructive }}>Failed to load scenarios</Text>
         <Button variant="secondary" onPress={refetch}>
           <RefreshCw size={16} color={colors.foreground} />
           Try Again
@@ -124,8 +124,8 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
         {/* Header */}
         <View className="flex-row justify-between items-center">
           <View>
-            <Text className="text-lg font-semibold text-foreground">Financing Scenarios</Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Financing Scenarios</Text>
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {scenarios.length} scenario{scenarios.length !== 1 ? 's' : ''}
             </Text>
           </View>
@@ -140,12 +140,12 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
 
         {/* Empty State */}
         {!hasScenarios && (
-          <View className="items-center justify-center py-12 bg-card rounded-xl border border-border">
-            <View className="bg-muted rounded-full p-4 mb-4">
-              <CreditCard size={32} className="text-muted-foreground" />
+          <View className="items-center justify-center py-12 rounded-xl" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <View className="rounded-full p-4 mb-4" style={{ backgroundColor: colors.muted }}>
+              <CreditCard size={32} color={colors.mutedForeground} />
             </View>
-            <Text className="text-lg font-semibold text-foreground mb-2">No Financing Scenarios</Text>
-            <Text className="text-muted-foreground text-center px-8 mb-4">
+            <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Financing Scenarios</Text>
+            <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
               Create financing scenarios to compare different loan options and calculate monthly payments.
             </Text>
             <Button variant="secondary" onPress={() => setShowAddSheet(true)}>
@@ -158,7 +158,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
         {/* Scenarios List */}
         {hasScenarios && (
           <View className="gap-3">
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               Tap to select scenarios for comparison (max 3)
             </Text>
             {scenarios.map((scenario) => (
@@ -175,12 +175,12 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
         )}
 
         {/* Tips */}
-        <View className="bg-muted rounded-xl p-4">
+        <View className="rounded-xl p-4" style={{ backgroundColor: colors.muted }}>
           <View className="flex-row items-center mb-2">
-            <Calculator size={16} className="text-muted-foreground" />
-            <Text className="text-sm font-medium text-foreground ml-2">Tips</Text>
+            <Calculator size={16} color={colors.mutedForeground} />
+            <Text className="text-sm font-medium ml-2" style={{ color: colors.foreground }}>Tips</Text>
           </View>
-          <Text className="text-xs text-muted-foreground">
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             Create multiple scenarios with different loan types, down payments, and terms to find the best financing option for your deal.
           </Text>
         </View>

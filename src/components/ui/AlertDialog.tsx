@@ -216,19 +216,24 @@ export function AlertDialogAction({
   textClassName,
   children,
 }: AlertDialogActionProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
       className={cn(
-        'h-10 items-center justify-center rounded-md bg-destructive px-4',
+        'h-10 items-center justify-center rounded-md px-4',
         disabled && 'opacity-50',
         className
       )}
+      style={{ backgroundColor: colors.destructive }}
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
     >
       {typeof children === 'string' ? (
-        <Text className={cn('text-sm font-medium text-destructive-foreground', textClassName)}>
+        <Text
+          className={cn('text-sm font-medium', textClassName)}
+          style={{ color: colors.destructiveForeground }}
+        >
           {children}
         </Text>
       ) : (

@@ -47,7 +47,7 @@ export function PasswordStrengthIndicator({
       {showSuggestions && strength.suggestions.length > 0 && (
         <View className="mt-2">
           {strength.suggestions.map((suggestion, index) => (
-            <Text key={index} className="text-xs text-muted-foreground">
+            <Text key={index} className="text-xs" style={{ color: colors.mutedForeground }}>
               • {suggestion}
             </Text>
           ))}

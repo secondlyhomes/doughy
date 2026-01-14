@@ -92,20 +92,21 @@ export function SignupScreen() {
   if (success) {
     return (
       <ThemedSafeAreaView className="flex-1 justify-center items-center px-6" edges={['top']}>
-        <View className="bg-primary/10 rounded-full p-6 mb-6">
+        <View className="rounded-full p-6 mb-6" style={{ backgroundColor: `${colors.primary}15` }}>
           <Check size={48} color={colors.success} />
         </View>
-        <Text className="text-2xl font-bold text-foreground text-center mb-4">
+        <Text className="text-2xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
           Check Your Email
         </Text>
-        <Text className="text-muted-foreground text-center mb-8">
+        <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
           We've sent a confirmation link to {email}. Please check your email to verify your account.
         </Text>
         <TouchableOpacity
-          className="bg-primary rounded-lg py-4 px-8"
+          className="rounded-lg py-4 px-8"
+          style={{ backgroundColor: colors.primary }}
           onPress={handleLogin}
         >
-          <Text className="text-primary-foreground font-semibold">
+          <Text className="font-semibold" style={{ color: colors.primaryForeground }}>
             Back to Sign In
           </Text>
         </TouchableOpacity>
@@ -126,31 +127,31 @@ export function SignupScreen() {
         <View className="flex-1 justify-center px-6 py-12">
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-3xl font-bold text-foreground text-center">
+            <Text className="text-3xl font-bold text-center" style={{ color: colors.foreground }}>
               Create Account
             </Text>
-            <Text className="text-base text-muted-foreground text-center mt-2">
+            <Text className="text-base text-center mt-2" style={{ color: colors.mutedForeground }}>
               Sign up to get started
             </Text>
           </View>
 
           {/* Error Message */}
           {error && (
-            <View className="flex-row items-center bg-destructive/10 rounded-lg p-4 mb-6">
+            <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: `${colors.destructive}15` }}>
               <AlertCircle size={20} color={colors.destructive} />
-              <Text className="text-destructive ml-2 flex-1">{error}</Text>
+              <Text className="ml-2 flex-1" style={{ color: colors.destructive }}>{error}</Text>
             </View>
           )}
 
           {/* Full Name Input */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">Full Name</Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Full Name</Text>
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}>
               <View className="pl-4">
                 <User size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
                 placeholder="John Doe"
                 placeholderTextColor={colors.mutedForeground}
                 value={fullName}
@@ -158,19 +159,20 @@ export function SignupScreen() {
                 autoCapitalize="words"
                 autoComplete="name"
                 editable={!loading}
+                style={{ color: colors.foreground }}
               />
             </View>
           </View>
 
           {/* Email Input */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">Email</Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Email</Text>
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}>
               <View className="pl-4">
                 <Mail size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
                 placeholder="name@example.com"
                 placeholderTextColor={colors.mutedForeground}
                 value={email}
@@ -180,19 +182,20 @@ export function SignupScreen() {
                 autoCorrect={false}
                 autoComplete="email"
                 editable={!loading}
+                style={{ color: colors.foreground }}
               />
             </View>
           </View>
 
           {/* Password Input */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">Password</Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Password</Text>
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}>
               <View className="pl-4">
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
                 placeholder="Create a password"
                 placeholderTextColor={colors.mutedForeground}
                 value={password}
@@ -201,6 +204,7 @@ export function SignupScreen() {
                 autoCapitalize="none"
                 autoComplete="new-password"
                 editable={!loading}
+                style={{ color: colors.foreground }}
               />
               <TouchableOpacity
                 className="pr-4"
@@ -240,13 +244,13 @@ export function SignupScreen() {
 
           {/* Confirm Password Input */}
           <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">Confirm Password</Text>
-            <View className="flex-row items-center border border-input rounded-lg bg-background">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Confirm Password</Text>
+            <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}>
               <View className="pl-4">
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
-                className="flex-1 px-4 py-3 text-foreground"
+                className="flex-1 px-4 py-3"
                 placeholder="Confirm your password"
                 placeholderTextColor={colors.mutedForeground}
                 value={confirmPassword}
@@ -255,6 +259,7 @@ export function SignupScreen() {
                 autoCapitalize="none"
                 autoComplete="new-password"
                 editable={!loading}
+                style={{ color: colors.foreground }}
               />
               <TouchableOpacity
                 className="pr-4"
@@ -277,28 +282,31 @@ export function SignupScreen() {
             disabled={loading}
           >
             <View
-              className={`w-5 h-5 rounded border mr-3 items-center justify-center ${
-                agreeToTerms ? 'bg-primary border-primary' : 'border-input'
-              }`}
+              className="w-5 h-5 rounded mr-3 items-center justify-center"
+              style={{
+                backgroundColor: agreeToTerms ? colors.primary : 'transparent',
+                borderWidth: 1,
+                borderColor: agreeToTerms ? colors.primary : colors.border,
+              }}
             >
               {agreeToTerms && <Check size={14} color={colors.primaryForeground} />}
             </View>
-            <Text className="text-sm text-muted-foreground flex-1">
+            <Text className="text-sm flex-1" style={{ color: colors.mutedForeground }}>
               I agree to the Terms of Service and Privacy Policy
             </Text>
           </TouchableOpacity>
 
           {/* Sign Up Button */}
           <TouchableOpacity
-            className="bg-primary rounded-lg py-4 items-center"
-            style={{ opacity: loading ? 0.5 : 1 }}
+            className="rounded-lg py-4 items-center"
+            style={{ backgroundColor: colors.primary, opacity: loading ? 0.5 : 1 }}
             onPress={handleSignup}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.primaryForeground} />
             ) : (
-              <Text className="text-primary-foreground font-semibold text-base">
+              <Text className="font-semibold text-base" style={{ color: colors.primaryForeground }}>
                 Create Account
               </Text>
             )}
@@ -306,9 +314,9 @@ export function SignupScreen() {
 
           {/* Sign In Link */}
           <View className="flex-row justify-center mt-6">
-            <Text className="text-muted-foreground">Already have an account? </Text>
+            <Text style={{ color: colors.mutedForeground }}>Already have an account? </Text>
             <TouchableOpacity onPress={handleLogin} disabled={loading}>
-              <Text className="text-primary font-medium">Sign in</Text>
+              <Text className="font-medium" style={{ color: colors.primary }}>Sign in</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -326,7 +334,7 @@ function PasswordRequirement({ met, text }: { met: boolean; text: string }) {
       {met ? (
         <Check size={14} color={colors.success} />
       ) : (
-        <View className="w-3.5 h-3.5 rounded-full border border-muted-foreground" />
+        <View className="w-3.5 h-3.5 rounded-full" style={{ borderWidth: 1, borderColor: colors.mutedForeground }} />
       )}
       <Text
         className="ml-2 text-sm"

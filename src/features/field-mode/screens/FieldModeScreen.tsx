@@ -103,7 +103,7 @@ export function FieldModeScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
+      <View className="flex-row items-center justify-between px-4 py-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <View className="flex-row items-center flex-1">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -114,10 +114,10 @@ export function FieldModeScreen() {
             <ArrowLeft size={24} color={colors.foreground} />
           </TouchableOpacity>
           <View>
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
               Field Mode
             </Text>
-            <Text className="text-xs text-muted-foreground">
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               {progress.totalPhotos} photos • {progress.totalMemos} memos
             </Text>
           </View>
@@ -155,12 +155,12 @@ export function FieldModeScreen() {
             ) : (
               <Camera size={20} color={colors.mutedForeground} />
             )}
-            <Text className="text-sm text-foreground">
+            <Text className="text-sm" style={{ color: colors.foreground }}>
               {progress.bucketsWithContent.length} of {buckets.length} areas documented
             </Text>
           </View>
           {progress.isComplete && (
-            <Text className="text-xs text-success font-medium">Ready to organize</Text>
+            <Text className="text-xs font-medium" style={{ color: colors.success }}>Ready to organize</Text>
           )}
         </View>
 
@@ -198,14 +198,14 @@ export function FieldModeScreen() {
           {isOrganizing ? (
             <>
               <LoadingSpinner size="small" color={colors.primaryForeground} />
-              <Text className="text-base font-semibold text-primary-foreground">
+              <Text className="text-base font-semibold" style={{ color: colors.primaryForeground }}>
                 Organizing...
               </Text>
             </>
           ) : (
             <>
               <Sparkles size={20} color={colors.primaryForeground} />
-              <Text className="text-base font-semibold text-primary-foreground">
+              <Text className="text-base font-semibold" style={{ color: colors.primaryForeground }}>
                 AI Organize
               </Text>
             </>

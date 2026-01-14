@@ -2,7 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NativeWind CSS Variables for dark mode */
+/*
+ * NativeWind CSS Variables for Theme System
+ *
+ * Uses @media (prefers-color-scheme: dark) instead of .dark class selector.
+ * This allows CSS variables to automatically update when Appearance.setColorScheme()
+ * is called, without needing to apply a className to a root element.
+ *
+ * See docs/TROUBLESHOOTING.md for details on why this approach is used.
+ */
+
+/* Light mode (default) */
 :root {
   --color-background: #fafafa;
   --color-foreground: #0f172a;
@@ -32,31 +42,34 @@
   --color-info-foreground: #1e3a8a;
 }
 
-.dark {
-  --color-background: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-card: #1e293b;
-  --color-card-foreground: #f8fafc;
-  --color-popover: #1e293b;
-  --color-popover-foreground: #f8fafc;
-  --color-primary: #6b9b7e;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #334155;
-  --color-secondary-foreground: #f8fafc;
-  --color-muted: #334155;
-  --color-muted-foreground: #94a3b8;
-  --color-accent: #334155;
-  --color-accent-foreground: #f8fafc;
-  --color-destructive: #f87171;
-  --color-destructive-foreground: #ffffff;
-  --color-border: #334155;
-  --color-input: #334155;
-  --color-ring: #6b9b7e;
-  /* Semantic status colors (lighter for dark mode) */
-  --color-success: #4ade80;
-  --color-success-foreground: #052e16;
-  --color-warning: #fbbf24;
-  --color-warning-foreground: #451a03;
-  --color-info: #60a5fa;
-  --color-info-foreground: #172554;
+/* Dark mode - responds to Appearance.setColorScheme('dark') */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0f172a;
+    --color-foreground: #f8fafc;
+    --color-card: #1e293b;
+    --color-card-foreground: #f8fafc;
+    --color-popover: #1e293b;
+    --color-popover-foreground: #f8fafc;
+    --color-primary: #6b9b7e;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #334155;
+    --color-secondary-foreground: #f8fafc;
+    --color-muted: #334155;
+    --color-muted-foreground: #94a3b8;
+    --color-accent: #334155;
+    --color-accent-foreground: #f8fafc;
+    --color-destructive: #f87171;
+    --color-destructive-foreground: #ffffff;
+    --color-border: #334155;
+    --color-input: #334155;
+    --color-ring: #6b9b7e;
+    /* Semantic status colors (lighter for dark mode) */
+    --color-success: #4ade80;
+    --color-success-foreground: #052e16;
+    --color-warning: #fbbf24;
+    --color-warning-foreground: #451a03;
+    --color-info: #60a5fa;
+    --color-info-foreground: #172554;
+  }
 }

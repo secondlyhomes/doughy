@@ -115,21 +115,21 @@ function getEventIcon(eventType: DealEventType, colors: ThemeColors) {
   }
 }
 
-function getEventBgColor(eventType: DealEventType): string {
+function getEventBgColorValue(eventType: DealEventType, colors: ThemeColors): string {
   const config = EVENT_TYPE_CONFIG[eventType];
   switch (config.colorKey) {
     case 'primary':
-      return 'bg-primary/20';
+      return `${colors.primary}33`;
     case 'info':
-      return 'bg-info/20';
+      return `${colors.info}33`;
     case 'success':
-      return 'bg-success/20';
+      return `${colors.success}33`;
     case 'warning':
-      return 'bg-warning/20';
+      return `${colors.warning}33`;
     case 'destructive':
-      return 'bg-destructive/20';
+      return `${colors.destructive}33`;
     default:
-      return 'bg-muted';
+      return colors.muted;
   }
 }
 
@@ -167,28 +167,29 @@ function TimelineItem({ event, isLast, colors }: TimelineItemProps) {
       {/* Timeline connector */}
       <View className="items-center mr-3">
         <View
-          className={`w-8 h-8 rounded-full ${getEventBgColor(event.event_type)} items-center justify-center`}
+          className="w-8 h-8 rounded-full items-center justify-center"
+          style={{ backgroundColor: getEventBgColorValue(event.event_type, colors) }}
         >
           {getEventIcon(event.event_type, colors)}
         </View>
-        {!isLast && <View className="w-0.5 flex-1 bg-border my-1" />}
+        {!isLast && <View className="w-0.5 flex-1 my-1" style={{ backgroundColor: colors.border }} />}
       </View>
 
       {/* Content */}
       <View className="flex-1 pb-4">
         <View className="flex-row items-center justify-between mb-1">
           <View className="flex-row items-center flex-1">
-            <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
+            <Text className="text-sm font-medium" style={{ color: colors.foreground }} numberOfLines={1}>
               {event.title}
             </Text>
             {getSourceBadge(event.source, colors)}
           </View>
-          <Text className="text-xs text-muted-foreground ml-2">
+          <Text className="text-xs ml-2" style={{ color: colors.mutedForeground }}>
             {formatTimeAgo(event.created_at)}
           </Text>
         </View>
         {event.description && (
-          <Text className="text-sm text-muted-foreground" numberOfLines={2}>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }} numberOfLines={2}>
             {event.description}
           </Text>
         )}
@@ -236,7 +237,7 @@ export function DealTimeline({
   if (error) {
     return (
       <View className="py-4 items-center">
-        <Text className="text-destructive text-sm">Failed to load timeline</Text>
+        <Text className="text-sm" style={{ color: colors.destructive }}>Failed to load timeline</Text>
       </View>
     );
   }
@@ -248,7 +249,7 @@ export function DealTimeline({
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
             <Calendar size={18} color={colors.mutedForeground} />
-            <Text className="text-lg font-semibold text-foreground ml-2">
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>
               Activity
             </Text>
             {keyEventsOnly && (
@@ -256,17 +257,18 @@ export function DealTimeline({
                 className="ml-2 px-2 py-0.5 rounded"
                 style={{ backgroundColor: colors.card }}
               >
-                <Text className="text-xs text-muted-foreground">Focus Mode</Text>
+                <Text className="text-xs" style={{ color: colors.mutedForeground }}>Focus Mode</Text>
               </View>
             )}
           </View>
           {onAddActivity && (
             <TouchableOpacity
-              className="flex-row items-center bg-primary/10 px-3 py-1.5 rounded-lg"
+              className="flex-row items-center px-3 py-1.5 rounded-lg"
+              style={{ backgroundColor: `${colors.primary}15` }}
               onPress={onAddActivity}
             >
               <Plus size={14} color={colors.primary} />
-              <Text className="text-primary text-sm ml-1">Add Note</Text>
+              <Text className="text-sm ml-1" style={{ color: colors.primary }}>Add Note</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -285,7 +287,7 @@ export function DealTimeline({
           ))}
           {maxEvents && displayEvents && displayEvents.length > maxEvents && (
             <TouchableOpacity className="flex-row items-center justify-center py-2">
-              <Text className="text-primary text-sm">
+              <Text className="text-sm" style={{ color: colors.primary }}>
                 View {displayEvents.length - maxEvents} more events
               </Text>
             </TouchableOpacity>
@@ -294,17 +296,18 @@ export function DealTimeline({
       ) : (
         <View className="py-8 items-center">
           <Clock size={32} color={colors.border} />
-          <Text className="text-muted-foreground text-center mt-2">
+          <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
             {keyEventsOnly
               ? 'No key events yet'
               : 'No activity recorded yet'}
           </Text>
           {onAddActivity && (
             <TouchableOpacity
-              className="mt-3 bg-primary px-4 py-2 rounded-lg"
+              className="mt-3 px-4 py-2 rounded-lg"
+              style={{ backgroundColor: colors.primary }}
               onPress={onAddActivity}
             >
-              <Text className="text-primary-foreground font-medium">Add First Note</Text>
+              <Text className="font-medium" style={{ color: colors.primaryForeground }}>Add First Note</Text>
             </TouchableOpacity>
           )}
         </View>

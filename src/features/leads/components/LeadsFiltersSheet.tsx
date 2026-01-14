@@ -65,9 +65,10 @@ interface FilterSectionProps {
 }
 
 function FilterSection({ title, children }: FilterSectionProps) {
+  const colors = useThemeColors();
   return (
     <View className="mb-6">
-      <Text className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+      <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
         {title}
       </Text>
       {children}
@@ -85,15 +86,20 @@ function OptionButton({ label, selected, onPress }: OptionButtonProps) {
   const colors = useThemeColors();
   return (
     <TouchableOpacity
-      className={`flex-row items-center justify-between px-4 py-3 rounded-lg mb-2 ${
-        selected ? 'bg-primary/10 border border-primary' : 'bg-muted'
-      }`}
+      className="flex-row items-center justify-between px-4 py-3 rounded-lg mb-2"
+      style={{
+        backgroundColor: selected ? `${colors.primary}15` : colors.muted,
+        borderWidth: selected ? 1 : 0,
+        borderColor: selected ? colors.primary : 'transparent',
+      }}
       onPress={onPress}
     >
       <Text
-        className={`text-base ${
-          selected ? 'text-primary font-medium' : 'text-foreground'
-        }`}
+        className="text-base"
+        style={{
+          color: selected ? colors.primary : colors.foreground,
+          fontWeight: selected ? '500' : 'normal',
+        }}
       >
         {label}
       </Text>
@@ -148,14 +154,14 @@ export function LeadsFiltersSheet({
     >
       <ThemedSafeAreaView className="flex-1" edges={['top', 'bottom']}>
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
+        <View className="flex-row items-center justify-between px-4 py-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <TouchableOpacity onPress={onClose} className="p-1">
             <X size={24} color={colors.mutedForeground} />
           </TouchableOpacity>
-          <Text className="text-lg font-semibold text-foreground">Filters</Text>
+          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Filters</Text>
           <TouchableOpacity onPress={handleReset} className="flex-row items-center">
             <RotateCcw size={16} color={colors.info} />
-            <Text className="text-primary ml-1">Reset</Text>
+            <Text className="ml-1" style={{ color: colors.primary }}>Reset</Text>
           </TouchableOpacity>
         </View>
 
@@ -213,37 +219,33 @@ export function LeadsFiltersSheet({
           <FilterSection title="Sort Order">
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className={`flex-1 py-3 rounded-lg items-center ${
-                  localFilters.sortOrder === 'desc'
-                    ? 'bg-primary'
-                    : 'bg-muted'
-                }`}
+                className="flex-1 py-3 rounded-lg items-center"
+                style={{
+                  backgroundColor: localFilters.sortOrder === 'desc' ? colors.primary : colors.muted,
+                }}
                 onPress={() => updateFilter('sortOrder', 'desc')}
               >
                 <Text
-                  className={`font-medium ${
-                    localFilters.sortOrder === 'desc'
-                      ? 'text-primary-foreground'
-                      : 'text-foreground'
-                  }`}
+                  className="font-medium"
+                  style={{
+                    color: localFilters.sortOrder === 'desc' ? colors.primaryForeground : colors.foreground,
+                  }}
                 >
                   Newest First
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 py-3 rounded-lg items-center ${
-                  localFilters.sortOrder === 'asc'
-                    ? 'bg-primary'
-                    : 'bg-muted'
-                }`}
+                className="flex-1 py-3 rounded-lg items-center"
+                style={{
+                  backgroundColor: localFilters.sortOrder === 'asc' ? colors.primary : colors.muted,
+                }}
                 onPress={() => updateFilter('sortOrder', 'asc')}
               >
                 <Text
-                  className={`font-medium ${
-                    localFilters.sortOrder === 'asc'
-                      ? 'text-primary-foreground'
-                      : 'text-foreground'
-                  }`}
+                  className="font-medium"
+                  style={{
+                    color: localFilters.sortOrder === 'asc' ? colors.primaryForeground : colors.foreground,
+                  }}
                 >
                   Oldest First
                 </Text>
@@ -256,7 +258,7 @@ export function LeadsFiltersSheet({
         </ScrollView>
 
         {/* Apply Button */}
-        <View className="px-4 pb-4 pt-2 border-t border-border">
+        <View className="px-4 pb-4 pt-2" style={{ borderTopWidth: 1, borderTopColor: colors.border }}>
           <Button onPress={handleApply} size="lg" className="w-full">
             Apply Filters
           </Button>

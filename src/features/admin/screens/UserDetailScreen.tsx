@@ -123,7 +123,7 @@ export function UserDetailScreen() {
       <ThemedSafeAreaView className="flex-1">
         <ScreenHeader title="User Details" backButton bordered />
         <View className="flex-1 items-center justify-center">
-          {isLoading ? <LoadingSpinner fullScreen /> : <Text className="text-muted-foreground">User not found</Text>}
+          {isLoading ? <LoadingSpinner fullScreen /> : <Text style={{ color: colors.mutedForeground }}>User not found</Text>}
         </View>
       </ThemedSafeAreaView>
     );
@@ -147,16 +147,16 @@ export function UserDetailScreen() {
 
       {/* Actions Menu */}
       {showActions && !isSelf && (
-        <View className="absolute top-16 right-4 bg-card border border-border rounded-lg shadow-lg z-10">
+        <View className="absolute top-16 right-4 rounded-lg shadow-lg z-10 border" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
           {user.isDeleted ? (
             <TouchableOpacity className="flex-row items-center px-4 py-3" onPress={() => { setShowActions(false); handleRestoreUser(); }}>
               <RotateCcw size={18} color={colors.success} />
-              <Text className="ml-3 text-success">Restore User</Text>
+              <Text className="ml-3" style={{ color: colors.success }}>Restore User</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity className="flex-row items-center px-4 py-3" onPress={() => { setShowActions(false); handleDeleteUser(); }}>
               <Trash2 size={18} color={colors.destructive} />
-              <Text className="ml-3 text-destructive">Delete User</Text>
+              <Text className="ml-3" style={{ color: colors.destructive }}>Delete User</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -164,8 +164,8 @@ export function UserDetailScreen() {
 
       <ScrollView className="flex-1">
         {isSelf && (
-          <View className="mx-4 mt-4 p-3 bg-info/10 rounded-lg">
-            <Text className="text-info text-sm">This is your account. Some actions are restricted.</Text>
+          <View className="mx-4 mt-4 p-3 rounded-lg" style={{ backgroundColor: `${colors.info}1A` }}>
+            <Text className="text-sm" style={{ color: colors.info }}>This is your account. Some actions are restricted.</Text>
           </View>
         )}
 
@@ -174,8 +174,8 @@ export function UserDetailScreen() {
 
         {/* Info Section */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">ACCOUNT INFORMATION</Text>
-          <View className="bg-card rounded-lg">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>ACCOUNT INFORMATION</Text>
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <UserInfoRow icon={<Mail size={20} color={colors.mutedForeground} />} label="Email" value={user.email} />
             <UserInfoRow icon={<Shield size={20} color={colors.mutedForeground} />} label="Role" value={getRoleLabel(user.role)} />
             <UserInfoRow icon={<Calendar size={20} color={colors.mutedForeground} />} label="Joined" value={formatDate(user.createdAt)} />
@@ -186,7 +186,7 @@ export function UserDetailScreen() {
         {/* Role Management */}
         {!isSelf && (
           <View className="p-4">
-            <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">CHANGE ROLE</Text>
+            <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>CHANGE ROLE</Text>
             <View className="flex-row gap-2">
               <UserRoleButton label="User" active={user.role === 'user'} onPress={() => handleChangeRole('user')} disabled={isUpdating} />
               <UserRoleButton label="Support" active={user.role === 'support'} onPress={() => handleChangeRole('support')} disabled={isUpdating} />

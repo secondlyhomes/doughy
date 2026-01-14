@@ -1,5 +1,6 @@
 // src/features/teams/screens/TeamSettingsScreen.tsx
 // Team settings and member management screen for mobile
+// Uses useThemeColors() for reliable dark mode support
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -196,33 +197,40 @@ export function TeamSettingsScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between p-4 border-b border-border">
+      <View
+        className="flex-row items-center justify-between p-4"
+        style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+      >
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
             <ArrowLeft size={24} color={colors.mutedForeground} />
           </TouchableOpacity>
-          <Text className="text-xl font-semibold text-foreground">Team</Text>
+          <Text className="text-xl font-semibold" style={{ color: colors.foreground }}>Team</Text>
         </View>
         <TouchableOpacity
-          className="bg-primary rounded-lg px-4 py-2 flex-row items-center"
+          className="rounded-lg px-4 py-2 flex-row items-center"
+          style={{ backgroundColor: colors.primary }}
           onPress={() => setShowInviteModal(true)}
         >
           <UserPlus size={18} color={colors.primaryForeground} />
-          <Text className="text-primary-foreground font-medium ml-2">Invite</Text>
+          <Text className="font-medium ml-2" style={{ color: colors.primaryForeground }}>Invite</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView className="flex-1">
         {/* Team Info */}
         <View className="p-4">
-          <View className="bg-card rounded-lg p-4">
+          <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center">
-              <View className="w-12 h-12 rounded-full bg-primary items-center justify-center">
+              <View
+                className="w-12 h-12 rounded-full items-center justify-center"
+                style={{ backgroundColor: colors.primary }}
+              >
                 <Users size={24} color={colors.primaryForeground} />
               </View>
               <View className="ml-4">
-                <Text className="text-lg font-semibold text-foreground">My Workspace</Text>
-                <Text className="text-sm text-muted-foreground">
+                <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>My Workspace</Text>
+                <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                   {members.length} member{members.length !== 1 ? 's' : ''}
                 </Text>
               </View>
@@ -232,36 +240,38 @@ export function TeamSettingsScreen() {
 
         {/* Members List */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
             MEMBERS
           </Text>
-          <View className="bg-card rounded-lg">
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             {members.map((member, index) => (
               <View
                 key={member.id}
-                className={`flex-row items-center p-4 ${
-                  index !== members.length - 1 ? 'border-b border-border' : ''
-                }`}
+                className="flex-row items-center p-4"
+                style={index !== members.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : {}}
               >
                 {/* Avatar */}
-                <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center">
-                  <Text className="text-primary font-semibold">{member.avatarInitials}</Text>
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center"
+                  style={{ backgroundColor: `${colors.primary}20` }}
+                >
+                  <Text className="font-semibold" style={{ color: colors.primary }}>{member.avatarInitials}</Text>
                 </View>
 
                 {/* Info */}
                 <View className="flex-1 ml-3">
                   <View className="flex-row items-center">
-                    <Text className="text-foreground font-medium">{member.name}</Text>
+                    <Text className="font-medium" style={{ color: colors.foreground }}>{member.name}</Text>
                     {getRoleIcon(member.role) && (
                       <View className="ml-2">{getRoleIcon(member.role)}</View>
                     )}
                   </View>
-                  <Text className="text-sm text-muted-foreground">{member.email}</Text>
+                  <Text className="text-sm" style={{ color: colors.mutedForeground }}>{member.email}</Text>
                 </View>
 
                 {/* Role Badge */}
-                <View className="bg-muted px-2 py-1 rounded mr-2">
-                  <Text className="text-xs text-muted-foreground capitalize">
+                <View className="px-2 py-1 rounded mr-2" style={{ backgroundColor: colors.muted }}>
+                  <Text className="text-xs capitalize" style={{ color: colors.mutedForeground }}>
                     {getRoleLabel(member.role)}
                   </Text>
                 </View>
@@ -296,29 +306,32 @@ export function TeamSettingsScreen() {
 
         {/* Pending Invites (placeholder) */}
         <View className="p-4">
-          <Text className="text-sm font-medium text-muted-foreground mb-3 px-2">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
             PENDING INVITES
           </Text>
-          <View className="bg-card rounded-lg p-4">
-            <Text className="text-muted-foreground text-center">No pending invites</Text>
+          <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
+            <Text className="text-center" style={{ color: colors.mutedForeground }}>No pending invites</Text>
           </View>
         </View>
       </ScrollView>
 
       {/* Invite Modal */}
       {showInviteModal && (
-        <View className="absolute inset-0 bg-black/50 justify-end">
-          <View className="bg-background rounded-t-3xl p-6">
-            <Text className="text-xl font-semibold text-foreground mb-4">Invite Team Member</Text>
+        <View className="absolute inset-0 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View className="rounded-t-3xl p-6" style={{ backgroundColor: colors.background }}>
+            <Text className="text-xl font-semibold mb-4" style={{ color: colors.foreground }}>Invite Team Member</Text>
 
             <View className="mb-4">
-              <Text className="text-sm font-medium text-foreground mb-2">Email Address</Text>
-              <View className="flex-row items-center border border-input rounded-lg bg-background">
+              <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Email Address</Text>
+              <View
+                className="flex-row items-center rounded-lg"
+                style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}
+              >
                 <View className="pl-4">
                   <Mail size={20} color={colors.mutedForeground} />
                 </View>
                 <TextInput
-                  className="flex-1 px-4 py-3 text-foreground"
+                  className="flex-1 px-4 py-3"
                   placeholder="colleague@example.com"
                   placeholderTextColor={colors.mutedForeground}
                   value={inviteEmail}
@@ -326,29 +339,32 @@ export function TeamSettingsScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  style={{ color: colors.foreground }}
                 />
               </View>
             </View>
 
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                className="flex-1 bg-muted rounded-lg py-3 items-center mr-2"
+                className="flex-1 rounded-lg py-3 items-center mr-2"
+                style={{ backgroundColor: colors.muted }}
                 onPress={() => {
                   setShowInviteModal(false);
                   setInviteEmail('');
                 }}
               >
-                <Text className="text-foreground font-medium">Cancel</Text>
+                <Text className="font-medium" style={{ color: colors.foreground }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 bg-primary rounded-lg py-3 items-center ml-2"
+                className="flex-1 rounded-lg py-3 items-center ml-2"
+                style={{ backgroundColor: colors.primary }}
                 onPress={handleInviteMember}
                 disabled={isInviting}
               >
                 {isInviting ? (
                   <ActivityIndicator color={colors.primaryForeground} size="small" />
                 ) : (
-                  <Text className="text-primary-foreground font-medium">Send Invite</Text>
+                  <Text className="font-medium" style={{ color: colors.primaryForeground }}>Send Invite</Text>
                 )}
               </TouchableOpacity>
             </View>

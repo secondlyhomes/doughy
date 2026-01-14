@@ -88,32 +88,33 @@ export function UserManagementScreen() {
 
   const renderUser = ({ item }: { item: AdminUser }) => (
     <TouchableOpacity
-      className="flex-row items-center bg-card p-4 border-b border-border"
+      className="flex-row items-center p-4"
+      style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderColor: colors.border }}
       onPress={() => handleUserPress(item)}
     >
-      <View className="w-12 h-12 rounded-full bg-primary/10 items-center justify-center">
+      <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary + '1A' }}>
         <User size={24} color={colors.info} />
       </View>
       <View className="flex-1 ml-3">
         <View className="flex-row items-center">
-          <Text className="text-foreground font-medium">
+          <Text className="font-medium" style={{ color: colors.foreground }}>
             {item.name || 'No Name'}
           </Text>
           {isAdminRole(item.role) && (
             <Shield size={14} color={colors.primary} style={{ marginLeft: 4 }} />
           )}
         </View>
-        <Text className="text-sm text-muted-foreground">{item.email}</Text>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{item.email}</Text>
         <View className="flex-row items-center mt-1">
           <View
             className="w-2 h-2 rounded-full mr-1"
             style={{ backgroundColor: getStatusColor(item.isDeleted) }}
           />
-          <Text className="text-xs text-muted-foreground">
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             {item.isDeleted ? 'Deleted' : 'Active'}
           </Text>
-          <Text className="text-xs text-muted-foreground mx-2">•</Text>
-          <Text className="text-xs text-muted-foreground">
+          <Text className="text-xs mx-2" style={{ color: colors.mutedForeground }}>•</Text>
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             {getRoleLabel(item.role)}
           </Text>
         </View>
@@ -140,7 +141,7 @@ export function UserManagementScreen() {
       />
 
       {/* Search Bar */}
-      <View className="px-4 py-3 border-b border-border">
+      <View className="px-4 py-3" style={{ borderBottomWidth: 1, borderColor: colors.border }}>
         <SearchBar
           value={search}
           onChangeText={setSearch}
@@ -189,8 +190,8 @@ export function UserManagementScreen() {
       </View>
 
       {/* Stats */}
-      <View className="px-4 py-2 bg-muted/50">
-        <Text className="text-sm text-muted-foreground">
+      <View className="px-4 py-2" style={{ backgroundColor: colors.muted + '80' }}>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
           {total} user{total !== 1 ? 's' : ''} found
         </Text>
       </View>
@@ -211,7 +212,7 @@ export function UserManagementScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-12">
               <User size={48} color={colors.mutedForeground} />
-              <Text className="text-muted-foreground mt-4">No users found</Text>
+              <Text className="mt-4" style={{ color: colors.mutedForeground }}>No users found</Text>
             </View>
           }
         />
@@ -227,17 +228,16 @@ interface FilterPillProps {
 }
 
 function FilterPill({ label, active, onPress }: FilterPillProps) {
+  const colors = useThemeColors();
   return (
     <TouchableOpacity
-      className={`px-3 py-1.5 rounded-full ${
-        active ? 'bg-primary' : 'bg-muted'
-      }`}
+      className="px-3 py-1.5 rounded-full"
+      style={{ backgroundColor: active ? colors.primary : colors.muted }}
       onPress={onPress}
     >
       <Text
-        className={`text-sm ${
-          active ? 'text-primary-foreground' : 'text-muted-foreground'
-        }`}
+        className="text-sm"
+        style={{ color: active ? colors.primaryForeground : colors.mutedForeground }}
       >
         {label}
       </Text>
