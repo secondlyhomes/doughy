@@ -1,5 +1,7 @@
 # Zone A ↔ Zone B Integration Status
 
+**Related Documentation:** [AI_ASSISTANT.md](./AI_ASSISTANT.md) - Complete AI Assistant system guide
+
 ## ✅ Integration Complete
 
 All integration points between Zone A (AI Assistant) and Zone B (Data Layer & Timeline) are properly connected and working.
