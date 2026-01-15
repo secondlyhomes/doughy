@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -23,9 +24,11 @@ import {
   XCircle,
   Link,
   FileText,
+  LogOut,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
+import { LoadingSpinner, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
@@ -39,10 +42,12 @@ import {
 export function AdminDashboardScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const { isLoading: authLoading } = useAuth();
+  const insets = useSafeAreaInsets();
+  const { isLoading: authLoading, signOut } = useAuth();
   const { canViewAdminPanel } = usePermissions();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [systems, setSystems] = useState<SystemHealth[]>([]);
@@ -76,6 +81,30 @@ export function AdminDashboardScreen() {
     await loadDashboardData();
     setIsRefreshing(false);
   }, [loadDashboardData]);
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            setIsSigningOut(true);
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            } finally {
+              setIsSigningOut(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -123,19 +152,17 @@ export function AdminDashboardScreen() {
 
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1">
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
         <LoadingSpinner fullScreen text="Loading dashboard..." />
       </ThemedSafeAreaView>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader title="Admin Dashboard" subtitle="System overview and management" bordered />
-
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         className="flex-1"
+        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
@@ -143,7 +170,7 @@ export function AdminDashboardScreen() {
         {/* Stats Cards */}
         <View className="p-4">
           <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
-            OVERVIEW
+            Overview
           </Text>
           <View className="flex-row flex-wrap">
             <StatCard
@@ -181,7 +208,7 @@ export function AdminDashboardScreen() {
         {/* System Status */}
         <View className="p-4">
           <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
-            SYSTEM STATUS
+            System Status
           </Text>
           <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             {systems.map((system, index) => (
@@ -216,7 +243,7 @@ export function AdminDashboardScreen() {
         {/* Quick Actions */}
         <View className="p-4">
           <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
-            QUICK ACTIONS
+            Quick Actions
           </Text>
           <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
             <AdminActionItem
@@ -238,6 +265,26 @@ export function AdminDashboardScreen() {
               onPress={() => router.push('/(admin)/logs')}
               hideBorder
             />
+          </View>
+        </View>
+
+        {/* Account Actions */}
+        <View className="p-4">
+          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
+            Account
+          </Text>
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+            <TouchableOpacity
+              className="flex-row items-center p-4"
+              onPress={handleSignOut}
+              disabled={isSigningOut}
+            >
+              <LogOut size={20} color={colors.destructive} />
+              <Text className="flex-1 ml-3 font-medium" style={{ color: colors.destructive }}>
+                {isSigningOut ? 'Signing out...' : 'Sign Out'}
+              </Text>
+              {isSigningOut && <LoadingSpinner size="small" color={colors.destructive} />}
+            </TouchableOpacity>
           </View>
         </View>
 

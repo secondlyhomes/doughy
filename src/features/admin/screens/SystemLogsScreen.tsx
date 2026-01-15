@@ -11,23 +11,23 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  ArrowLeft,
-  Filter,
   AlertCircle,
   AlertTriangle,
   Info,
   Bug,
   ChevronDown,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner } from '@/components/ui';
+import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
 
 export function SystemLogsScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -40,6 +40,7 @@ export function SystemLogsScreen() {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   const loadLogs = useCallback(async (reset = false) => {
     const currentFilters = reset ? { ...filters, page: 1 } : filters;
@@ -167,76 +168,69 @@ export function SystemLogsScreen() {
     );
   };
 
+  // Filter logs by search term
+  const filteredLogs = logs.filter((log) =>
+    !search || log.message.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader
-        title="System Logs"
-        backButton
-        bordered
-        rightAction={
-          <TouchableOpacity
-            className="p-2"
-            onPress={() => setShowFilters(!showFilters)}
-          >
-            <Filter size={20} color={showFilters ? colors.info : colors.mutedForeground} />
-          </TouchableOpacity>
-        }
-      />
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      {/* Search Bar */}
+      <View className="px-4 py-3">
+        <SearchBar
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search logs..."
+          size="lg"
+          glass={true}
+          onFilter={() => setShowFilters(!showFilters)}
+          hasActiveFilters={filters.level !== 'all'}
+        />
 
-      {/* Filters */}
-      {showFilters && (
-        <View className="px-4 py-3 border-b" style={{ borderColor: colors.border }}>
-          <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
-            Filter by Level
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            <FilterPill
-              label="All"
-              active={filters.level === 'all'}
-              onPress={() => handleFilterChange('all')}
-              colors={colors}
-            />
-            <FilterPill
-              label="Error"
-              active={filters.level === 'error'}
-              onPress={() => handleFilterChange('error')}
-              color={colors.destructive}
-              colors={colors}
-            />
-            <FilterPill
-              label="Warning"
-              active={filters.level === 'warning'}
-              onPress={() => handleFilterChange('warning')}
-              color={colors.warning}
-              colors={colors}
-            />
-            <FilterPill
-              label="Info"
-              active={filters.level === 'info'}
-              onPress={() => handleFilterChange('info')}
-              color={colors.info}
-              colors={colors}
-            />
-            <FilterPill
-              label="Debug"
-              active={filters.level === 'debug'}
-              onPress={() => handleFilterChange('debug')}
-              color={colors.mutedForeground}
-              colors={colors}
-            />
+        {/* Filter Pills */}
+        {showFilters && (
+          <View className="mt-3">
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
+              Filter by Level
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              <FilterPill
+                label="All"
+                active={filters.level === 'all'}
+                onPress={() => handleFilterChange('all')}
+                colors={colors}
+              />
+              <FilterPill
+                label="Error"
+                active={filters.level === 'error'}
+                onPress={() => handleFilterChange('error')}
+                color={colors.destructive}
+                colors={colors}
+              />
+              <FilterPill
+                label="Warning"
+                active={filters.level === 'warning'}
+                onPress={() => handleFilterChange('warning')}
+                color={colors.warning}
+                colors={colors}
+              />
+              <FilterPill
+                label="Info"
+                active={filters.level === 'info'}
+                onPress={() => handleFilterChange('info')}
+                color={colors.info}
+                colors={colors}
+              />
+              <FilterPill
+                label="Debug"
+                active={filters.level === 'debug'}
+                onPress={() => handleFilterChange('debug')}
+                color={colors.mutedForeground}
+                colors={colors}
+              />
+            </View>
           </View>
-        </View>
-      )}
-
-      {/* Stats */}
-      <View className="px-4 py-2 flex-row justify-between" style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}>
-        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-          {total} log{total !== 1 ? 's' : ''}
-        </Text>
-        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-          Auto-refreshes every 30s
-        </Text>
+        )}
       </View>
 
       {/* Logs List */}
@@ -244,7 +238,7 @@ export function SystemLogsScreen() {
         <LoadingSpinner fullScreen />
       ) : (
         <FlatList
-          data={logs}
+          data={filteredLogs}
           keyExtractor={(item) => item.id}
           renderItem={renderLog}
           refreshControl={
@@ -252,11 +246,11 @@ export function SystemLogsScreen() {
           }
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          contentContainerStyle={{ paddingVertical: 8 }}
+          contentContainerStyle={{ paddingVertical: 8, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center py-12">
+            <View className="flex-1 items-center justify-center py-24">
               <Info size={48} color={colors.mutedForeground} />
-              <Text className="mt-4" style={{ color: colors.mutedForeground }}>No logs found</Text>
+              <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No logs found</Text>
             </View>
           }
         />

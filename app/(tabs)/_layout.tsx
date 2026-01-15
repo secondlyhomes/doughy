@@ -7,7 +7,7 @@ import { Inbox, Briefcase, Building, Users, MessageCircle, Settings } from 'luci
 import { useUnreadCounts } from '@/features/layout';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { FloatingGlassTabBar, TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
+import { FloatingGlassTabBar } from '@/components/ui/FloatingGlassTabBar';
 
 export default function TabLayout() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,9 +35,6 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-      }}
-      sceneContainerStyle={{
-        paddingBottom: TAB_BAR_SAFE_PADDING,
       }}
     >
       {/* MVP Tab Order: Inbox → Deals → Properties → Settings */}

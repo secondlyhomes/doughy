@@ -4,3 +4,4 @@
 export { useDebounce } from './useDebounce';
 export { useRefresh } from './useRefresh';
 export { useKeyboard, useDismissKeyboard } from './useKeyboard';
+export { useTabBarPadding } from './useTabBarPadding';

@@ -4,8 +4,9 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { MapPin, Plus, RefreshCw } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Property, PropertyComp } from '../types';
 import { useComps, useCompMutations } from '../hooks/useComps';
 import { usePropertyMutations } from '../hooks/useProperties';
@@ -20,6 +21,7 @@ interface PropertyCompsTabProps {
 
 export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTabProps) {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { comps, isLoading, error, refetch } = useComps({ propertyId: property.id });
   const { createComp, updateComp, deleteComp, isLoading: isMutating } = useCompMutations();
   const { updateProperty } = usePropertyMutations();
@@ -120,7 +122,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 20 }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
     >
       <View className="gap-4">
         {/* Header */}

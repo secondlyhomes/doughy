@@ -10,15 +10,17 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Filter, User, Shield, ChevronRight } from 'lucide-react-native';
+import { User, Shield, ChevronRight } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, ScreenHeader, LoadingSpinner } from '@/components/ui';
+import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { getUsers, getRoleLabel, isAdminRole, type AdminUser, type UserFilters, type UserRole } from '../services/userService';
 
 export function UserManagementScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
@@ -124,31 +126,26 @@ export function UserManagementScreen() {
   );
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader
-        title="User Management"
-        backButton
-        bordered
-        rightAction={
-          <TouchableOpacity
-            className="p-2"
-            onPress={() => setShowFilters(!showFilters)}
-          >
-            <Filter size={20} color={showFilters ? colors.info : colors.mutedForeground} />
-          </TouchableOpacity>
-        }
-      />
-
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Search Bar */}
-      <View className="px-4 py-3" style={{ borderBottomWidth: 1, borderColor: colors.border }}>
+      <View className="px-4 py-3">
         <SearchBar
           value={search}
           onChangeText={setSearch}
           placeholder="Search users..."
           size="lg"
           onSubmit={handleSearch}
+          glass={true}
+          onFilter={() => setShowFilters(!showFilters)}
+          hasActiveFilters={filters.role !== 'all'}
         />
+
+        {/* Subtle count text */}
+        {total > 0 && (
+          <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
+            {total} user{total !== 1 ? 's' : ''} found
+          </Text>
+        )}
 
         {/* Filter Pills */}
         {showFilters && (
@@ -189,13 +186,6 @@ export function UserManagementScreen() {
         )}
       </View>
 
-      {/* Stats */}
-      <View className="px-4 py-2" style={{ backgroundColor: colors.muted + '80' }}>
-        <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-          {total} user{total !== 1 ? 's' : ''} found
-        </Text>
-      </View>
-
       {/* User List */}
       {isLoading ? (
         <LoadingSpinner fullScreen />
@@ -209,10 +199,11 @@ export function UserManagementScreen() {
           }
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
+          contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center py-12">
+            <View className="flex-1 items-center justify-center py-24">
               <User size={48} color={colors.mutedForeground} />
-              <Text className="mt-4" style={{ color: colors.mutedForeground }}>No users found</Text>
+              <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No users found</Text>
             </View>
           }
         />

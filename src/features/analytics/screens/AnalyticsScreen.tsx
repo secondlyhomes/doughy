@@ -23,6 +23,8 @@ import {
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 import { LeadsOverTimeChart, LeadSourceChart, ConversionChart } from '../components/LeadsChart';
 
@@ -87,6 +89,7 @@ const DATE_RANGES: { label: string; value: DateRange }[] = [
 
 export function AnalyticsScreen() {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const [dateRange, setDateRange] = useState<DateRange>('30d');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -118,6 +121,7 @@ export function AnalyticsScreen() {
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         className="flex-1"
+        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

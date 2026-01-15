@@ -194,7 +194,7 @@ export function PropertyDetailScreen() {
         </View>
 
         {/* Tab Content - Simple conditional rendering */}
-        <View className="px-4 pb-24 mt-2">
+        <View className="px-4 mt-2">
           {activeTab === TAB_IDS.OVERVIEW && <PropertyOverviewTab property={property} />}
           {activeTab === TAB_IDS.ANALYSIS && <PropertyAnalysisTab property={property} />}
           {activeTab === TAB_IDS.COMPS && <PropertyCompsTab property={property} onPropertyUpdate={refetch} />}

@@ -5,12 +5,14 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { TrendingUp, DollarSign, Percent, Calculator } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Property } from '../types';
 import { useDealAnalysis } from '../hooks/useDealAnalysis';
 import { CashFlowAnalysis } from './CashFlowAnalysis';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 interface PropertyAnalysisTabProps {
   property: Property;
@@ -20,6 +22,7 @@ type AnalysisMode = 'flip' | 'rental';
 
 export function PropertyAnalysisTab({ property }: PropertyAnalysisTabProps) {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<AnalysisMode>('flip');
   const metrics = useDealAnalysis(property);
 
@@ -44,7 +47,7 @@ export function PropertyAnalysisTab({ property }: PropertyAnalysisTabProps) {
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 20 }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
     >
       <View className="gap-4">
         {/* Mode Toggle */}

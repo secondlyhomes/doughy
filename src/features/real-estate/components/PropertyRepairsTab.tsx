@@ -4,8 +4,9 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
 import { Wrench, Plus, RefreshCw } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Property, RepairEstimate, RepairCategory } from '../types';
 import { useRepairEstimate, useRepairEstimateMutations, REPAIR_CATEGORIES } from '../hooks/useRepairEstimate';
 import { usePropertyMutations } from '../hooks/useProperties';
@@ -21,6 +22,7 @@ interface PropertyRepairsTabProps {
 
 export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepairsTabProps) {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { repairs, isLoading, error, refetch, totalEstimate, totalCompleted, categorySummaries } =
     useRepairEstimate({ propertyId: property.id });
   const { createRepair, updateRepair, deleteRepair, toggleCompleted, isLoading: isMutating } =
@@ -140,7 +142,7 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
   }
 
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
       <View className="gap-4">
         {/* Header */}
         <View className="flex-row justify-between items-center">

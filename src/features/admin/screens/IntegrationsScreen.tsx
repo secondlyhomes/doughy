@@ -1,5 +1,5 @@
 // src/features/admin/screens/IntegrationsScreen.tsx
-// Integrations management screen for admin
+// Integrations management screen with API key configuration
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -8,288 +8,548 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Switch,
-  Alert,
+  StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
-  Home,
-  MapPin,
-  Database,
-  CreditCard,
-  Mail,
-  Phone,
-  Map,
-  FileText,
-  Link,
-  RefreshCw,
   CheckCircle,
   XCircle,
   AlertCircle,
   Clock,
+  RefreshCw,
+  Activity,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors, type ThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
-import {
-  getIntegrations,
-  toggleIntegration,
-  syncIntegration,
-  type Integration,
-  type IntegrationStatus,
-} from '../services/integrationsService';
+import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { INTEGRATIONS, getIntegrationsByGroup, getIntegrationGroups } from '../data/integrationData';
+import { ApiKeyFormItem } from '../components/ApiKeyFormItem';
+import { IntegrationHealthCard } from '../components/IntegrationHealthCard';
+import { checkAllIntegrations } from '../services/apiKeyHealthService';
+import type { ServiceGroup, IntegrationHealth, IntegrationStatus } from '../types/integrations';
+
+type TabType = 'Health' | ServiceGroup;
 
 export function IntegrationsScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
 
-  const [integrations, setIntegrations] = useState<Integration[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>('Health');
+  const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [healthStatuses, setHealthStatuses] = useState<Map<string, IntegrationHealth>>(new Map());
+  const [allHealths, setAllHealths] = useState<IntegrationHealth[]>([]);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
 
-  const loadIntegrations = useCallback(async () => {
-    const result = await getIntegrations();
-    if (result.success && result.integrations) {
-      setIntegrations(result.integrations);
+  const serviceGroups = getIntegrationGroups() as ServiceGroup[];
+  const tabs: TabType[] = ['Health', ...serviceGroups];
+  const activeIntegrations = activeTab !== 'Health' ? getIntegrationsByGroup(activeTab) : [];
+
+  // Load all health statuses
+  const loadAllHealth = useCallback(async () => {
+    try {
+      setIsCheckingHealth(true);
+      const allServices = INTEGRATIONS.map((i) => i.service);
+      const results = await checkAllIntegrations(allServices);
+
+      // Add group info to each health result
+      const healthsWithGroups = results.map((health) => {
+        const integration = INTEGRATIONS.find((i) => i.service === health.service);
+        return {
+          ...health,
+          group: integration?.group,
+        };
+      });
+
+      setAllHealths(healthsWithGroups);
+      setLastChecked(new Date());
+
+      // Update the health status map
+      const healthMap = new Map<string, IntegrationHealth>();
+      healthsWithGroups.forEach((health) => {
+        healthMap.set(health.service, health);
+      });
+      setHealthStatuses(healthMap);
+    } catch (error) {
+      console.error('Error loading health:', error);
+    } finally {
+      setIsCheckingHealth(false);
     }
   }, []);
 
   useEffect(() => {
     setIsLoading(true);
-    loadIntegrations().finally(() => setIsLoading(false));
-  }, [loadIntegrations]);
+    loadAllHealth().finally(() => setIsLoading(false));
+  }, [loadAllHealth]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadIntegrations();
+    await loadAllHealth();
     setIsRefreshing(false);
-  }, [loadIntegrations]);
-
-  const handleToggle = useCallback(async (integration: Integration, enabled: boolean) => {
-    const action = enabled ? 'enable' : 'disable';
-    Alert.alert(
-      `${action.charAt(0).toUpperCase() + action.slice(1)} Integration`,
-      `Are you sure you want to ${action} ${integration.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: action.charAt(0).toUpperCase() + action.slice(1),
-          onPress: async () => {
-            const result = await toggleIntegration(integration.id, enabled);
-            if (result.success) {
-              setIntegrations((prev) =>
-                prev.map((i) =>
-                  i.id === integration.id
-                    ? { ...i, status: enabled ? 'active' : 'inactive' }
-                    : i
-                )
-              );
-            } else {
-              Alert.alert('Error', result.error || `Failed to ${action} integration`);
-            }
-          },
-        },
-      ]
-    );
-  }, []);
-
-  const handleSync = useCallback(async (integration: Integration) => {
-    setSyncingId(integration.id);
-    const result = await syncIntegration(integration.id);
-
-    if (result.success) {
-      setIntegrations((prev) =>
-        prev.map((i) =>
-          i.id === integration.id
-            ? { ...i, lastSync: new Date().toISOString() }
-            : i
-        )
-      );
-      Alert.alert('Success', `${integration.name} synced successfully`);
-    } else {
-      Alert.alert('Error', result.error || 'Failed to sync integration');
-    }
-
-    setSyncingId(null);
-  }, []);
-
-  const getIcon = (iconName: string) => {
-    const iconProps = { size: 24, color: colors.info };
-    switch (iconName) {
-      case 'home':
-        return <Home {...iconProps} />;
-      case 'map-pin':
-        return <MapPin {...iconProps} />;
-      case 'database':
-        return <Database {...iconProps} />;
-      case 'credit-card':
-        return <CreditCard {...iconProps} />;
-      case 'mail':
-        return <Mail {...iconProps} />;
-      case 'phone':
-        return <Phone {...iconProps} />;
-      case 'map':
-        return <Map {...iconProps} />;
-      case 'file-signature':
-        return <FileText {...iconProps} />;
-      default:
-        return <Link {...iconProps} />;
-    }
-  };
-
-  const getStatusIcon = (status: IntegrationStatus) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle size={16} color={colors.success} />;
-      case 'inactive':
-        return <XCircle size={16} color={colors.mutedForeground} />;
-      case 'error':
-        return <AlertCircle size={16} color={colors.destructive} />;
-      case 'pending':
-        return <Clock size={16} color={colors.warning} />;
-    }
-  };
-
-  const getStatusColor = (status: IntegrationStatus) => {
-    switch (status) {
-      case 'active':
-        return colors.success;
-      case 'inactive':
-        return colors.mutedForeground;
-      case 'error':
-        return colors.destructive;
-      case 'pending':
-        return colors.warning;
-    }
-  };
-
-  const formatLastSync = (timestamp: string | undefined) => {
-    if (!timestamp) return 'Never';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return date.toLocaleDateString();
-  };
+  }, [loadAllHealth]);
 
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1">
-        <ScreenHeader title="Integrations" backButton bordered />
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
         <LoadingSpinner fullScreen />
       </ThemedSafeAreaView>
     );
   }
 
-  const activeCount = integrations.filter((i) => i.status === 'active').length;
-  const errorCount = integrations.filter((i) => i.status === 'error').length;
+  // Get health counts by status
+  const getStatusCount = (status: IntegrationStatus) => {
+    return allHealths.filter((h) => h.status === status).length;
+  };
+
+  // Group healths by service group
+  const healthsByGroup = serviceGroups.reduce(
+    (acc, group) => {
+      acc[group] = allHealths.filter((h) => h.group === group);
+      return acc;
+    },
+    {} as Record<ServiceGroup, IntegrationHealth[]>
+  );
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader title="Integrations" backButton bordered />
-
-      {/* Stats */}
-      <View className="flex-row px-4 py-3 gap-4" style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}>
-        <View className="flex-row items-center">
-          <CheckCircle size={16} color={colors.success} />
-          <Text className="text-sm ml-1" style={{ color: colors.mutedForeground }}>
-            {activeCount} Active
-          </Text>
-        </View>
-        {errorCount > 0 && (
-          <View className="flex-row items-center">
-            <AlertCircle size={16} color={colors.destructive} />
-            <Text className="text-sm ml-1" style={{ color: colors.destructive }}>
-              {errorCount} Error{errorCount !== 1 ? 's' : ''}
-            </Text>
-          </View>
-        )}
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      {/* Tabs - wrapped in View to prevent flex expansion */}
+      <View style={[styles.tabWrapper, { backgroundColor: withOpacity(colors.muted, 'opaque'), borderBottomColor: colors.border }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabContent}
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab;
+            const isHealthTab = tab === 'Health';
+            return (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.tab,
+                  { borderBottomColor: isActive ? colors.primary : 'transparent' },
+                ]}
+                onPress={() => setActiveTab(tab)}
+              >
+                <View style={styles.tabInner}>
+                  {isHealthTab && <Activity size={14} color={isActive ? colors.primary : colors.mutedForeground} />}
+                  <Text
+                    style={[
+                      styles.tabText,
+                      { color: isActive ? colors.primary : colors.mutedForeground },
+                    ]}
+                  >
+                    {tab}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-      >
-        {integrations.map((integration) => (
-          <View
-            key={integration.id}
-            className="mx-4 my-2 p-4 rounded-lg border"
-            style={{ backgroundColor: colors.card, borderColor: colors.border }}
-          >
-            <View className="flex-row items-start">
-              <View className="w-12 h-12 rounded-lg items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                {getIcon(integration.icon)}
-              </View>
-              <View className="flex-1 ml-3">
-                <View className="flex-row items-center">
-                  <Text className="font-medium" style={{ color: colors.foreground }}>
-                    {integration.name}
-                  </Text>
-                  <View className="ml-2">{getStatusIcon(integration.status)}</View>
-                </View>
-                <Text className="text-sm mt-0.5" style={{ color: colors.mutedForeground }}>
-                  {integration.description}
-                </Text>
-                <View className="flex-row items-center mt-2">
-                  <Text className="text-xs capitalize" style={{ color: getStatusColor(integration.status) }}>
-                    {integration.status}
-                  </Text>
-                  {integration.lastSync && (
-                    <>
-                      <Text className="text-xs mx-2" style={{ color: colors.mutedForeground }}>•</Text>
-                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                        Synced {formatLastSync(integration.lastSync)}
-                      </Text>
-                    </>
-                  )}
-                </View>
-              </View>
-              <Switch
-                value={integration.status === 'active'}
-                onValueChange={(enabled) => handleToggle(integration, enabled)}
-                trackColor={{ false: colors.muted, true: colors.info }}
-                thumbColor={integration.status === 'active' ? colors.primary : colors.mutedForeground}
-                disabled={integration.status === 'pending'}
-              />
+      {/* Health Tab Content */}
+      {activeTab === 'Health' ? (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
+        >
+          {/* Database Connection Health */}
+          <IntegrationHealthCard />
+
+          {/* Health Summary Card */}
+          <View style={[styles.healthSummaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.healthSummaryHeader}>
+              <Text style={[styles.healthSummaryTitle, { color: colors.foreground }]}>
+                Integration Health Overview
+              </Text>
+              <TouchableOpacity
+                style={styles.refreshButton}
+                onPress={handleRefresh}
+                disabled={isCheckingHealth}
+              >
+                {isCheckingHealth ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <RefreshCw size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
             </View>
 
-            {/* Action Buttons */}
-            {integration.status === 'active' && (
-              <View className="flex-row mt-3 pt-3 border-t" style={{ borderColor: colors.border }}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onPress={() => handleSync(integration)}
-                  disabled={syncingId === integration.id}
-                  loading={syncingId === integration.id}
-                >
-                  {syncingId !== integration.id && (
-                    <RefreshCw size={16} color={colors.mutedForeground} />
-                  )}
-                  {syncingId === integration.id ? 'Syncing...' : 'Sync Now'}
-                </Button>
-              </View>
-            )}
-
-            {integration.status === 'error' && (
-              <View className="mt-3 p-2 rounded" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
-                <Text className="text-xs" style={{ color: colors.destructive }}>
-                  Connection error. Please check your API credentials and try again.
+            <View style={styles.healthStatsRow}>
+              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.success, 'subtle') }]}>
+                <CheckCircle size={20} color={colors.success} />
+                <Text style={[styles.healthStatNumber, { color: colors.success }]}>
+                  {getStatusCount('operational')}
                 </Text>
+                <Text style={[styles.healthStatLabel, { color: colors.success }]}>Operational</Text>
               </View>
+              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.info, 'subtle') }]}>
+                <Clock size={20} color={colors.info} />
+                <Text style={[styles.healthStatNumber, { color: colors.info }]}>
+                  {getStatusCount('configured')}
+                </Text>
+                <Text style={[styles.healthStatLabel, { color: colors.info }]}>Configured</Text>
+              </View>
+              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.destructive, 'subtle') }]}>
+                <AlertCircle size={20} color={colors.destructive} />
+                <Text style={[styles.healthStatNumber, { color: colors.destructive }]}>
+                  {getStatusCount('error')}
+                </Text>
+                <Text style={[styles.healthStatLabel, { color: colors.destructive }]}>Error</Text>
+              </View>
+              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.muted, 'medium') }]}>
+                <XCircle size={20} color={colors.mutedForeground} />
+                <Text style={[styles.healthStatNumber, { color: colors.mutedForeground }]}>
+                  {getStatusCount('not-configured')}
+                </Text>
+                <Text style={[styles.healthStatLabel, { color: colors.mutedForeground }]}>Not Set</Text>
+              </View>
+            </View>
+
+            {lastChecked && (
+              <Text style={[styles.lastCheckedText, { color: colors.mutedForeground }]}>
+                Last checked: {lastChecked.toLocaleTimeString()}
+              </Text>
             )}
           </View>
-        ))}
-      </ScrollView>
+
+          {/* Health by Group */}
+          {serviceGroups.map((group) => {
+            const groupHealths = healthsByGroup[group] || [];
+            if (groupHealths.length === 0) return null;
+
+            return (
+              <View key={group} style={[styles.healthGroupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <TouchableOpacity
+                  style={styles.healthGroupHeader}
+                  onPress={() => setActiveTab(group)}
+                >
+                  <Text style={[styles.healthGroupTitle, { color: colors.foreground }]}>{group}</Text>
+                  <Text style={[styles.healthGroupCount, { color: colors.mutedForeground }]}>
+                    {groupHealths.length} integration{groupHealths.length !== 1 ? 's' : ''}
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={[styles.healthGroupList, { borderTopColor: colors.border }]}>
+                  {groupHealths.map((health) => (
+                    <View key={health.service} style={styles.healthItem}>
+                      <View style={styles.healthItemInfo}>
+                        {getStatusIcon(health.status, colors)}
+                        <Text style={[styles.healthItemName, { color: colors.foreground }]}>
+                          {health.name}
+                        </Text>
+                      </View>
+                      <View style={styles.healthItemStatus}>
+                        {health.latency && (
+                          <Text style={[styles.healthItemLatency, { color: colors.mutedForeground }]}>
+                            {health.latency}
+                          </Text>
+                        )}
+                        <Text
+                          style={[
+                            styles.healthItemStatusText,
+                            { color: getStatusColor(health.status, colors) },
+                          ]}
+                        >
+                          {getStatusLabel(health.status)}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        /* Integrations List for other tabs */
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          }
+        >
+          {activeIntegrations.map((integration) => (
+            <View
+              key={integration.id}
+              style={[styles.integrationCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              {/* Integration Header */}
+              <View style={styles.integrationHeader}>
+                <View style={styles.integrationInfo}>
+                  <Text style={[styles.integrationName, { color: colors.foreground }]}>
+                    {integration.name}
+                  </Text>
+                  <Text style={[styles.integrationDescription, { color: colors.mutedForeground }]}>
+                    {integration.description}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Integration Fields */}
+              <View style={styles.fieldsContainer}>
+                {integration.fields.map((field) => (
+                  <ApiKeyFormItem
+                    key={field.key}
+                    service={field.key}
+                    label={field.label}
+                    type={field.type}
+                    required={field.required}
+                    options={field.options}
+                    placeholder={field.placeholder}
+                    description={field.description}
+                    healthStatus={healthStatuses.get(field.key)?.status}
+                    onSaved={handleRefresh}
+                  />
+                ))}
+              </View>
+
+              {/* Documentation Link */}
+              {integration.docsUrl && (
+                <TouchableOpacity
+                  style={styles.docsLink}
+                  onPress={() => {
+                    // TODO: Open docs URL in browser
+                    console.log('Open docs:', integration.docsUrl);
+                  }}
+                >
+                  <Text style={[styles.docsLinkText, { color: colors.primary }]}>
+                    View Documentation →
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+
+          {activeIntegrations.length === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                No integrations in this category
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </ThemedSafeAreaView>
   );
 }
+
+// Helper functions
+function getStatusIcon(status: IntegrationStatus, colors: ThemeColors) {
+  switch (status) {
+    case 'operational':
+      return <CheckCircle size={16} color={colors.success} />;
+    case 'error':
+      return <XCircle size={16} color={colors.destructive} />;
+    case 'configured':
+      return <Clock size={16} color={colors.info} />;
+    case 'checking':
+      return <ActivityIndicator size="small" color={colors.info} />;
+    default:
+      return <XCircle size={16} color={colors.mutedForeground} />;
+  }
+}
+
+function getStatusColor(status: IntegrationStatus, colors: ThemeColors): string {
+  switch (status) {
+    case 'operational':
+      return colors.success;
+    case 'error':
+      return colors.destructive;
+    case 'configured':
+      return colors.info;
+    default:
+      return colors.mutedForeground;
+  }
+}
+
+function getStatusLabel(status: IntegrationStatus): string {
+  switch (status) {
+    case 'operational':
+      return 'Operational';
+    case 'error':
+      return 'Error';
+    case 'configured':
+      return 'Configured';
+    case 'not-configured':
+      return 'Not Set';
+    case 'checking':
+      return 'Checking...';
+    default:
+      return 'Unknown';
+  }
+}
+
+const styles = StyleSheet.create({
+  tabWrapper: {
+    borderBottomWidth: 1,
+  },
+  tabContent: {
+    paddingHorizontal: 16,
+    gap: 4,
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: 2,
+  },
+  tabInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  // Health Tab Styles
+  healthSummaryCard: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  healthSummaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  healthSummaryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  refreshButton: {
+    padding: 4,
+  },
+  healthStatsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  healthStat: {
+    flex: 1,
+    minWidth: '45%',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    gap: 4,
+  },
+  healthStatNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  healthStatLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  lastCheckedText: {
+    fontSize: 11,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  healthGroupCard: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  healthGroupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  healthGroupTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  healthGroupCount: {
+    fontSize: 12,
+  },
+  healthGroupList: {
+    borderTopWidth: 1,
+  },
+  healthItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  healthItemInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  healthItemName: {
+    fontSize: 14,
+  },
+  healthItemStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  healthItemLatency: {
+    fontSize: 11,
+  },
+  healthItemStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  // Integration Card Styles
+  integrationCard: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  integrationHeader: {
+    marginBottom: 16,
+  },
+  integrationInfo: {
+    gap: 4,
+  },
+  integrationName: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  integrationDescription: {
+    fontSize: 13,
+  },
+  fieldsContainer: {
+    gap: 8,
+  },
+  docsLink: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  docsLinkText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+  },
+  emptyText: {
+    fontSize: 14,
+  },
+});

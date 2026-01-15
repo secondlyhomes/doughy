@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, ScreenHeader, LoadingSpinner, ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useRouter } from 'expo-router';
@@ -41,6 +42,7 @@ const defaultFilters: LeadFilters = {
 export function LeadsListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
@@ -197,7 +199,7 @@ export function LeadsListScreen() {
           data={filteredLeads}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
           ItemSeparatorComponent={() => <View className="h-3" />}
           refreshControl={
             <RefreshControl

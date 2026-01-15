@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   RefreshControl
 } from 'react-native';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedSafeAreaView } from '@/components';
 import { useRouter } from 'expo-router';
 import {
@@ -35,7 +35,7 @@ import {
 } from 'lucide-react-native';
 
 // Zone A UI Components
-import { Card, CardContent, CardHeader, CardTitle, Badge, Progress } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Progress, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { getTrendColor } from '@/utils';
@@ -138,7 +138,7 @@ function getPriorityColorValue(priority: 'high' | 'medium' | 'low', colors: Retu
 export function DashboardScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const tabBarHeight = useBottomTabBarHeight();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
 
@@ -174,7 +174,7 @@ export function DashboardScreen() {
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: tabBarHeight }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -359,8 +359,6 @@ export function DashboardScreen() {
           </View>
         </View>
 
-        {/* Bottom padding for FAB */}
-        <View className="h-20" />
         </View>
       </ScrollView>
 

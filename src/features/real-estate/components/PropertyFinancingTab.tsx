@@ -4,8 +4,9 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { CreditCard, Plus, Calculator, RefreshCw } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Property, FinancingScenario } from '../types';
 import { useFinancingScenarios, useFinancingScenarioMutations, LoanType } from '../hooks/useFinancingScenarios';
 import { AddFinancingSheet } from './AddFinancingSheet';
@@ -18,6 +19,7 @@ interface PropertyFinancingTabProps {
 
 export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { scenarios, isLoading, error, refetch } = useFinancingScenarios({ propertyId: property.id });
   const { createScenario, updateScenario, deleteScenario, isLoading: isMutating } =
     useFinancingScenarioMutations();
@@ -119,7 +121,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
   const comparisonScenarios = scenarios.filter(s => selectedScenarios.has(s.id));
 
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
       <View className="gap-4">
         {/* Header */}
         <View className="flex-row justify-between items-center">

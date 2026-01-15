@@ -13,8 +13,9 @@ import {
   CheckCircle2,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner } from '@/components/ui';
+import { LoadingSpinner, TAB_BAR_HEIGHT, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PhotoBucket, PHOTO_BUCKET_CONFIG } from '../../deals/types';
 import { useWalkthrough } from '../hooks/useWalkthrough';
 import { PhotoBucketCard } from '../components/PhotoBucketCard';
@@ -28,6 +29,7 @@ export function FieldModeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ dealId: string }>();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const dealId = params.dealId || 'demo';
 
   const {
@@ -141,7 +143,7 @@ export function FieldModeScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
         showsVerticalScrollIndicator={false}
       >
         {/* Progress indicator */}
@@ -188,8 +190,8 @@ export function FieldModeScreen() {
       {/* AI Organize FAB */}
       {!aiSummary && (
         <TouchableOpacity
-          className="absolute bottom-24 right-4 flex-row items-center gap-2 px-5 py-3 rounded-full shadow-lg"
-          style={{ backgroundColor: colors.primary }}
+          className="absolute right-4 flex-row items-center gap-2 px-5 py-3 rounded-full shadow-lg"
+          style={{ bottom: TAB_BAR_HEIGHT + insets.bottom + 16, backgroundColor: colors.primary }}
           onPress={handleOrganize}
           disabled={isOrganizing || items.length === 0}
           accessibilityLabel="Organize with AI"

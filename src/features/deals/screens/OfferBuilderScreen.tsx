@@ -6,8 +6,9 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { LoadingSpinner, TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DealStrategy, OfferTerms, DEAL_STRATEGY_CONFIG } from '../types';
 import { getEmptyOfferTerms } from '../data/mockOffers';
 import { StrategySelector } from '../components/StrategySelector';
@@ -24,6 +25,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
   const router = useRouter();
   const params = useLocalSearchParams<{ dealId: string }>();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const effectiveDealId = dealId || params.dealId || 'demo';
 
   // State
@@ -160,8 +162,8 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
 
       {/* Bottom action bar */}
       <View
-        className="absolute bottom-0 left-0 right-0 p-4"
-        style={{ backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border }}
+        className="absolute left-0 right-0 p-4"
+        style={{ bottom: TAB_BAR_HEIGHT + insets.bottom, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border }}
       >
         <TouchableOpacity
           onPress={toggleViewMode}

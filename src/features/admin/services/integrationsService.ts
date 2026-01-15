@@ -1,20 +1,15 @@
 // src/features/admin/services/integrationsService.ts
-// Integrations management service for admin
-// Note: This uses mock data as the integrations table is not yet in the database schema
+// Real integrations management service using Supabase
 
-export type IntegrationStatus = 'active' | 'inactive' | 'error' | 'pending';
+import { supabase } from '@/lib/supabase';
+import { INTEGRATIONS } from '../data/integrationData';
+import type { Integration, IntegrationHealth } from '../types/integrations';
+import { checkIntegrationHealth, getHealthStatusFromDB } from './apiKeyHealthService';
+import { normalizeServiceName } from '../utils/serviceHelpers';
 
-export interface Integration {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  status: IntegrationStatus;
-  lastSync?: string;
-  config?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-}
+// Re-export types from integrationData for backward compatibility
+export type { Integration };
+export type IntegrationStatus = 'operational' | 'configured' | 'error' | 'not-configured' | 'checking';
 
 export interface IntegrationsResult {
   success: boolean;
@@ -28,157 +23,152 @@ export interface IntegrationResult {
   error?: string;
 }
 
-// In-memory store for demo purposes
-let mockIntegrations: Integration[] | null = null;
-
-function getOrCreateMockIntegrations(): Integration[] {
-  if (!mockIntegrations) {
-    mockIntegrations = createMockIntegrations();
-  }
-  return mockIntegrations;
+export interface IntegrationHealthResult {
+  success: boolean;
+  health?: IntegrationHealth;
+  error?: string;
 }
 
 /**
- * Fetch all integrations
+ * Get all available integrations from configuration
  */
 export async function getIntegrations(): Promise<IntegrationsResult> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return { success: true, integrations: getOrCreateMockIntegrations() };
+  try {
+    // Return all configured integrations from integrationData
+    return { success: true, integrations: INTEGRATIONS };
+  } catch (error) {
+    console.error('Error getting integrations:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get integrations',
+    };
+  }
 }
 
 /**
- * Toggle integration status
+ * Get configured integrations (integrations with API keys stored)
+ */
+export async function getConfiguredIntegrations(): Promise<IntegrationsResult> {
+  try {
+    // Query api_keys table for configured services
+    const { data: apiKeys, error } = await supabase
+      .from('api_keys')
+      .select('service, status, last_used, last_checked');
+
+    if (error) {
+      throw error;
+    }
+
+    // Map API keys to integrations
+    const configuredServices = new Set(apiKeys?.map((k) => k.service) || []);
+
+    const configured = INTEGRATIONS.filter((integration) =>
+      configuredServices.has(integration.service)
+    );
+
+    return { success: true, integrations: configured };
+  } catch (error) {
+    console.error('Error getting configured integrations:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get configured integrations',
+    };
+  }
+}
+
+/**
+ * Get integration by service name
+ */
+export async function getIntegrationByService(service: string): Promise<IntegrationResult> {
+  try {
+    const normalizedService = normalizeServiceName(service);
+    const integration = INTEGRATIONS.find(
+      (i) => i.service === normalizedService || i.id === normalizedService
+    );
+
+    if (!integration) {
+      return { success: false, error: 'Integration not found' };
+    }
+
+    return { success: true, integration };
+  } catch (error) {
+    console.error('Error getting integration:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get integration',
+    };
+  }
+}
+
+/**
+ * Test integration health
+ */
+export async function testIntegrationHealth(service: string): Promise<IntegrationHealthResult> {
+  try {
+    const health = await checkIntegrationHealth(service, true); // Skip cache for manual test
+    return { success: true, health };
+  } catch (error) {
+    console.error('Error testing integration health:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to test integration health',
+    };
+  }
+}
+
+/**
+ * Toggle integration (enable/disable)
+ * Note: This updates the status in the api_keys table
  */
 export async function toggleIntegration(
-  integrationId: string,
+  service: string,
   enabled: boolean
 ): Promise<IntegrationResult> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  try {
+    const normalizedService = normalizeServiceName(service);
 
-  const integrations = getOrCreateMockIntegrations();
-  const index = integrations.findIndex((i) => i.id === integrationId);
+    const { error } = await supabase
+      .from('api_keys')
+      .update({
+        status: enabled ? 'active' : 'inactive',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('service', normalizedService);
 
-  if (index !== -1) {
-    integrations[index] = {
-      ...integrations[index],
-      status: enabled ? 'active' : 'inactive',
-      updatedAt: new Date().toISOString(),
+    if (error) {
+      throw error;
+    }
+
+    const integration = INTEGRATIONS.find((i) => i.service === normalizedService);
+
+    return { success: true, integration };
+  } catch (error) {
+    console.error('Error toggling integration:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to toggle integration',
     };
-    return { success: true, integration: integrations[index] };
   }
-
-  return { success: false, error: 'Integration not found' };
 }
 
 /**
- * Sync an integration
+ * Trigger integration sync (runs health check)
  */
-export async function syncIntegration(integrationId: string): Promise<IntegrationResult> {
-  // Simulate network delay and sync operation
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+export async function syncIntegration(service: string): Promise<IntegrationResult> {
+  try {
+    const normalizedService = normalizeServiceName(service);
 
-  const integrations = getOrCreateMockIntegrations();
-  const index = integrations.findIndex((i) => i.id === integrationId);
+    // Run health check which will update last_used and status
+    await checkIntegrationHealth(normalizedService, true);
 
-  if (index !== -1) {
-    integrations[index] = {
-      ...integrations[index],
-      lastSync: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const integration = INTEGRATIONS.find((i) => i.service === normalizedService);
+
+    return { success: true, integration };
+  } catch (error) {
+    console.error('Error syncing integration:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to sync integration',
     };
-    return { success: true, integration: integrations[index] };
   }
-
-  return { success: false, error: 'Integration not found' };
-}
-
-/**
- * Create mock integrations for demo/development
- */
-function createMockIntegrations(): Integration[] {
-  const now = new Date().toISOString();
-  const yesterday = new Date(Date.now() - 86400000).toISOString();
-
-  return [
-    {
-      id: 'int-1',
-      name: 'Zillow',
-      description: 'Property listings and market data from Zillow',
-      icon: 'home',
-      status: 'active',
-      lastSync: yesterday,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: 'int-2',
-      name: 'Redfin',
-      description: 'Real estate listings and neighborhood data',
-      icon: 'map-pin',
-      status: 'active',
-      lastSync: yesterday,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: 'int-3',
-      name: 'MLS',
-      description: 'Multiple Listing Service integration',
-      icon: 'database',
-      status: 'inactive',
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: 'int-4',
-      name: 'Stripe',
-      description: 'Payment processing and subscriptions',
-      icon: 'credit-card',
-      status: 'active',
-      lastSync: now,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: 'int-5',
-      name: 'SendGrid',
-      description: 'Email delivery and notifications',
-      icon: 'mail',
-      status: 'active',
-      lastSync: yesterday,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: 'int-6',
-      name: 'Twilio',
-      description: 'SMS notifications and phone verification',
-      icon: 'phone',
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: 'int-7',
-      name: 'Google Maps',
-      description: 'Maps, geocoding, and location services',
-      icon: 'map',
-      status: 'active',
-      lastSync: now,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: 'int-8',
-      name: 'DocuSign',
-      description: 'Electronic signature and document management',
-      icon: 'file-signature',
-      status: 'error',
-      lastSync: yesterday,
-      createdAt: now,
-      updatedAt: now,
-    },
-  ];
 }

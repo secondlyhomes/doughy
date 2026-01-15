@@ -11,10 +11,9 @@ import {
   RefreshControl,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, LoadingSpinner, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState } from '@/components/ui';
+import { SearchBar, LoadingSpinner, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { SlidersHorizontal, MapPin, Calendar, DollarSign, ChevronRight, Briefcase, Search } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -226,7 +225,6 @@ export function DealsListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
-  const tabBarHeight = useBottomTabBarHeight();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStage, setActiveStage] = useState<DealStage | 'all'>('all');
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
@@ -296,7 +294,7 @@ export function DealsListScreen() {
             contentContainerStyle={{
               paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
               paddingHorizontal: 16,
-              paddingBottom: tabBarHeight
+              paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom,
             }}
             ItemSeparatorComponent={() => <View className="h-3" />}
             refreshControl={

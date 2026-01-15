@@ -21,8 +21,9 @@ import {
   Info,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader } from '@/components/ui';
+import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 
 const APP_VERSION = Constants.expoConfig?.version || '1.0.0';
@@ -31,6 +32,7 @@ const BUILD_NUMBER = Constants.expoConfig?.ios?.buildNumber || '1';
 export function AboutScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -59,7 +61,7 @@ export function AboutScreen() {
       {/* Header */}
       <ScreenHeader title="About" backButton bordered />
 
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
         {/* App Logo and Info */}
         <View className="items-center mb-8">
           <View className="w-24 h-24 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: colors.primary }}>

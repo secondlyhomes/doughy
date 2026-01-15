@@ -52,7 +52,7 @@ export function SellerReportPreview({
   return (
     <ScrollView
       className="flex-1"
-      contentContainerStyle={{ paddingBottom: 40 }}
+      contentContainerStyle={{ paddingBottom: 80 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}

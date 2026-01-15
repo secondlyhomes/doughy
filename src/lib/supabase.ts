@@ -27,11 +27,18 @@ if (!USE_MOCK_DATA && (!SUPABASE_URL || !SUPABASE_ANON_KEY)) {
 
 // Log mode on startup
 if (__DEV__) {
-  console.log(
-    USE_MOCK_DATA
-      ? '[Supabase] Running in MOCK DATA mode - no database connection'
-      : `[Supabase] Connected to ${SUPABASE_URL}`
-  );
+  if (USE_MOCK_DATA) {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔶 [Supabase] MOCK DATA MODE');
+    console.log('🔶 No database connection - using in-memory data');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  } else {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('✅ [Supabase] CONNECTED TO REAL DATABASE');
+    console.log(`✅ Project: ${SUPABASE_URL}`);
+    console.log('✅ All queries will hit production Supabase');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  }
 }
 
 // Custom storage adapter that uses SecureStore for sensitive auth data

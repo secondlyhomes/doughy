@@ -1,12 +1,13 @@
 // src/components/ui/FloatingGlassTabBar.tsx
 // Floating liquid glass tab bar for iOS 26+ with animated selector
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Platform, LayoutChangeEvent, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, Platform, LayoutChangeEvent } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { BlurView } from 'expo-blur';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancelAnimation } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancelAnimation, withTiming } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useTheme, useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
@@ -45,9 +46,9 @@ const PILL_BORDER_RADIUS = 30;
 const SELECTOR_SIZE = 70;
 const SPRING_CONFIG = { damping: 42, stiffness: 180 };
 
-// Tab labels mapping
-const TAB_LABELS: Record<string, string> = {
-  index: 'Inbox',
+// Tab labels fallback mapping (only used if options.title is not set)
+const TAB_LABELS_FALLBACK: Record<string, string> = {
+  index: 'Dashboard',
   deals: 'Deals',
   properties: 'Properties',
   settings: 'Settings',
@@ -106,80 +107,13 @@ export function FloatingGlassTabBar({
 
   // Track tab positions for selector animation
   const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
-  const tabLayoutsRef = useRef<{ x: number; width: number }[]>([]);
   const selectorX = useSharedValue(0);
 
-  // Drag state management
-  const isDragging = useRef(false);
-  const dragStartX = useRef(0); // Store initial position when drag starts
-  const containerWidth = useRef(0);
-
-  // PanResponder for draggable selector
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // EDGE CASE 1: Prevent drag if container not measured
-        if (containerWidth.current === 0) return false;
-
-        // EDGE CASE 2: Prevent drag if tab layouts not ready
-        if (tabLayoutsRef.current.length === 0 || !tabLayoutsRef.current.every(t => t)) return false;
-
-        // 5px threshold prevents accidental drag (preserves tap)
-        // Horizontal-only drag
-        return Math.abs(gestureState.dx) > 5 &&
-               Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-      },
-
-      onPanResponderGrant: () => {
-        isDragging.current = true;
-
-        // EDGE CASE 3: Cancel any running spring animation
-        cancelAnimation(selectorX);
-
-        // Store the starting position
-        dragStartX.current = selectorX.value;
-      },
-
-      onPanResponderMove: (_, gestureState) => {
-        // Update selectorX directly (Reanimated shared value)
-        const newX = dragStartX.current + gestureState.dx;
-
-        const minX = 8; // Left padding
-        const maxX = containerWidth.current - SELECTOR_SIZE - 8; // Right boundary
-
-        // EDGE CASE 4: Clamp to boundaries (prevents infinity loops)
-        selectorX.value = Math.max(minX, Math.min(newX, maxX));
-      },
-
-      onPanResponderRelease: () => {
-        isDragging.current = false;
-
-        // Find nearest tab based on current position
-        const centerX = selectorX.value + SELECTOR_SIZE / 2;
-
-        let nearestIndex = 0;
-        let minDistance = Infinity;
-
-        tabLayoutsRef.current.forEach((layout, index) => {
-          if (!layout) return;
-          const tabCenterX = layout.x + layout.width / 2;
-          const distance = Math.abs(tabCenterX - centerX);
-          if (distance < minDistance) {
-            minDistance = distance;
-            nearestIndex = index;
-          }
-        });
-
-        // EDGE CASE 5: Don't call withSpring here - let useEffect handle it
-        // The useEffect watches activeVisibleIndex and will spring selector
-        // to the correct position when navigation completes
-        runOnJS(navigateToTab)(nearestIndex);
-
-        // Selector stays at release position, then useEffect springs it to tab
-      },
-    })
-  ).current;
+  // Drag state for visual feedback
+  const selectorScale = useSharedValue(1);
+  const selectorOpacity = useSharedValue(1);
+  const dragStartX = useSharedValue(0);
+  const containerWidth = useSharedValue(0);
 
   // Calculate selector position for a given visible tab index
   const getTabCenterX = useCallback((visibleIndex: number) => {
@@ -197,7 +131,11 @@ export function FloatingGlassTabBar({
   }, [activeVisibleIndex, tabLayouts, getTabCenterX, selectorX, visibleRoutes.length]);
 
   const selectorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: selectorX.value }],
+    transform: [
+      { translateX: selectorX.value },
+      { scale: selectorScale.value }
+    ],
+    opacity: selectorOpacity.value,
   }));
 
   const onTabLayout = useCallback((visibleIndex: number, e: LayoutChangeEvent) => {
@@ -209,16 +147,8 @@ export function FloatingGlassTabBar({
     });
   }, []);
 
-  // Keep ref in sync with state for PanResponder closure
-  useEffect(() => {
-    tabLayoutsRef.current = tabLayouts;
-  }, [tabLayouts]);
-
   // Navigate to tab with haptic feedback (takes visible index)
   const navigateToTab = useCallback((visibleIndex: number) => {
-    // Don't navigate if dragging to avoid conflicts
-    if (isDragging.current) return;
-
     const actualIndex = visibleToActualIndex[visibleIndex];
     if (actualIndex === state.index) return; // Already on this tab
 
@@ -234,6 +164,60 @@ export function FloatingGlassTabBar({
       navigation.navigate(route.name);
     }
   }, [state.index, state.routes, navigation, visibleToActualIndex]);
+
+  // Find nearest tab and navigate
+  const findNearestTab = useCallback((currentX: number) => {
+    if (tabLayouts.length === 0) return;
+
+    let nearestIndex = 0;
+    let minDistance = Infinity;
+
+    for (let i = 0; i < visibleRoutes.length; i++) {
+      const tabCenterX = getTabCenterX(i);
+      const distance = Math.abs(currentX - tabCenterX);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestIndex = i;
+      }
+    }
+
+    // Snap to nearest tab
+    selectorX.value = withSpring(getTabCenterX(nearestIndex), SPRING_CONFIG);
+
+    // Navigate to that tab
+    navigateToTab(nearestIndex);
+  }, [tabLayouts, visibleRoutes, getTabCenterX, navigateToTab, selectorX]);
+
+  // Draggable selector gesture
+  const selectorDragGesture = Gesture.Pan()
+    .onBegin(() => {
+      'worklet';
+      cancelAnimation(selectorX);
+      dragStartX.value = selectorX.value;
+
+      // Visual feedback: grow + become transparent
+      selectorScale.value = withSpring(1.2);
+      selectorOpacity.value = withTiming(0.5);
+    })
+    .onUpdate((e) => {
+      'worklet';
+      // Update position as user drags
+      const newX = dragStartX.value + e.translationX;
+
+      // Clamp within bounds
+      const minX = 8;
+      const maxX = containerWidth.value - SELECTOR_SIZE - 8;
+      selectorX.value = Math.max(minX, Math.min(newX, maxX));
+    })
+    .onEnd(() => {
+      'worklet';
+      // Visual feedback: return to normal size + opaque
+      selectorScale.value = withSpring(1);
+      selectorOpacity.value = withTiming(1);
+
+      // Find nearest tab and snap
+      runOnJS(findNearestTab)(selectorX.value);
+    });
 
   // ─────────────────────────────────────────────────────────────
   // FALLBACK: Non-iOS 26 devices get blurred pill tab bar
@@ -253,21 +237,18 @@ export function FloatingGlassTabBar({
           styles.wrapper,
           { bottom: insets.bottom + bottomOffset, left: horizontalMargin, right: horizontalMargin }
         ]}
-        onLayout={(e) => {
-          containerWidth.current = e.nativeEvent.layout.width;
-        }}
       >
-        <BlurView
-          intensity={60}
-          tint={isDark ? 'dark' : 'light'}
-          style={[styles.pill, { overflow: 'hidden' }]}
-        >
-          <View style={styles.iconsLayer}>
+          <BlurView
+            intensity={60}
+            tint={isDark ? 'dark' : 'light'}
+            style={[styles.pill, { overflow: 'hidden' }]}
+          >
+            <View style={styles.iconsLayer}>
             {visibleRoutes.map((route, visibleIndex) => {
               const { options } = descriptors[route.key];
               const isFocused = visibleIndex === activeVisibleIndex;
               const badge = options.tabBarBadge;
-              const label = TAB_LABELS[route.name] || route.name;
+              const label = options.title || TAB_LABELS_FALLBACK[route.name] || route.name;
               const icon = options.tabBarIcon?.({
                 focused: isFocused,
                 color: isFocused ? colors.primary : colors.mutedForeground,
@@ -318,7 +299,7 @@ export function FloatingGlassTabBar({
         { bottom: insets.bottom + bottomOffset, left: horizontalMargin, right: horizontalMargin }
       ]}
       onLayout={(e) => {
-        containerWidth.current = e.nativeEvent.layout.width;
+        containerWidth.value = e.nativeEvent.layout.width;
       }}
     >
       {/* Glass layer - Allows selector to receive touches */}
@@ -334,19 +315,17 @@ export function FloatingGlassTabBar({
           colorScheme={isDark ? 'dark' : 'light'}
         />
 
-        {/* Animated selector circle - Draggable */}
+        {/* Animated selector circle - DRAGGABLE */}
         {isLayoutReady && activeVisibleIndex >= 0 && (
-          <Animated.View
-            style={[styles.selectorWrapper, selectorStyle]}
-            pointerEvents="auto"
-            {...panResponder.panHandlers}
-          >
-            <LiquidGlassView
-              style={styles.selector}
-              effect="clear"
-              colorScheme={isDark ? 'dark' : 'light'}
-            />
-          </Animated.View>
+          <GestureDetector gesture={selectorDragGesture}>
+            <Animated.View style={[styles.selectorWrapper, selectorStyle]}>
+              <LiquidGlassView
+                style={styles.selector}
+                effect="clear"
+                colorScheme={isDark ? 'dark' : 'light'}
+              />
+            </Animated.View>
+          </GestureDetector>
         )}
       </LiquidGlassContainerView>
 
@@ -356,7 +335,7 @@ export function FloatingGlassTabBar({
           const { options } = descriptors[route.key];
           const isFocused = visibleIndex === activeVisibleIndex;
           const badge = options.tabBarBadge;
-          const label = TAB_LABELS[route.name] || route.name;
+          const label = options.title || TAB_LABELS_FALLBACK[route.name] || route.name;
           const icon = options.tabBarIcon?.({
             focused: isFocused,
             color: isFocused ? colors.primary : colors.mutedForeground,

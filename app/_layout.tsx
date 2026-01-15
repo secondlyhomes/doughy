@@ -1,5 +1,6 @@
 // app/_layout.tsx
 // Root layout for Expo Router - handles providers
+import 'react-native-get-random-values'; // Polyfill for crypto.getRandomValues
 import '../global.css';
 import { View, LogBox } from 'react-native';
 import { useFonts } from 'expo-font';

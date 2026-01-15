@@ -6,9 +6,10 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Save, Eye, Edit3, Share2 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Input, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { LoadingSpinner, Input, TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   SellerReportOptions,
   WeHandleOptions,
@@ -34,6 +35,7 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
   const router = useRouter();
   const params = useLocalSearchParams<{ dealId: string }>();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const effectiveDealId = dealId || params.dealId || 'demo';
 
   // State
@@ -313,8 +315,8 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
 
       {/* Bottom action bar */}
       <View
-        className="absolute bottom-0 left-0 right-0 p-4 border-t"
-        style={{ borderColor: colors.border, backgroundColor: colors.background }}
+        className="absolute left-0 right-0 p-4 border-t"
+        style={{ bottom: TAB_BAR_HEIGHT + insets.bottom, borderColor: colors.border, backgroundColor: colors.background }}
       >
         <TouchableOpacity
           onPress={toggleViewMode}

@@ -62,18 +62,9 @@ export async function decryptServer(ciphertext: string): Promise<string> {
 
     // Get decryption key from environment
     // Try multiple possible environment variable names
-    // Log the available environment variables
-    console.log('Available environment variables:', Object.keys(Deno.env.toObject()).filter(k => k.includes('SECRET') || k.includes('KEY')).join(', '));
-    
-    // Prioritize KEY_SECRET as the primary env var since that's what your environment uses
-    const keySecret = Deno.env.get("KEY_SECRET") || Deno.env.get("VITE_KEY_SECRET") || 
+    // Prioritize KEY_SECRET as the primary env var
+    const keySecret = Deno.env.get("KEY_SECRET") || Deno.env.get("VITE_KEY_SECRET") ||
                       Deno.env.get("ENCRYPTION_SECRET") || Deno.env.get("VITE_ENCRYPTION_SECRET");
-    
-    // Log which secret was found
-    if (Deno.env.get("KEY_SECRET")) console.log('Using KEY_SECRET');
-    else if (Deno.env.get("VITE_KEY_SECRET")) console.log('Using VITE_KEY_SECRET');
-    else if (Deno.env.get("ENCRYPTION_SECRET")) console.log('Using ENCRYPTION_SECRET');
-    else if (Deno.env.get("VITE_ENCRYPTION_SECRET")) console.log('Using VITE_ENCRYPTION_SECRET');
     if (!keySecret) {
       console.error("[crypto-server] CRITICAL: Missing KEY_SECRET or alternative environment variable");
       throw new Error("Missing encryption configuration");

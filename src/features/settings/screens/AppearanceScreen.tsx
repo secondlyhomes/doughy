@@ -12,7 +12,8 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Sun, Moon, Smartphone, Check } from 'lucide-react-native';
 import { useTheme, ThemeMode, useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader } from '@/components/ui';
+import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ThemeOption {
   value: ThemeMode;
@@ -45,6 +46,7 @@ const themeOptions: ThemeOption[] = [
 export function AppearanceScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { mode, setMode } = useTheme();
 
   const handleSelectTheme = (theme: ThemeMode) => {
@@ -56,7 +58,7 @@ export function AppearanceScreen() {
       {/* Header */}
       <ScreenHeader title="Appearance" backButton bordered />
 
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
         {/* Theme Selection */}
         <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           THEME

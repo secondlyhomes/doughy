@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -335,6 +336,7 @@ export function DealCockpitScreen() {
   const params = useLocalSearchParams();
   const dealId = params.dealId as string;
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
 
   const { deal, isLoading, error, refetch } = useDeal(dealId);
   const { mutate: updateStage } = useUpdateDealStage();
@@ -534,7 +536,7 @@ export function DealCockpitScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
+        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}

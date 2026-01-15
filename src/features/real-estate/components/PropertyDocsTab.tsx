@@ -2,7 +2,7 @@
 // Documents tab content for property detail
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Linking, ScrollView } from 'react-native';
 import {
   FileText,
   Upload,
@@ -16,9 +16,10 @@ import {
   ChevronDown,
   ChevronRight,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Property, Document } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
 import {
@@ -45,6 +46,7 @@ const DOC_TYPE_ICONS: Record<string, any> = {
 
 export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { documents, isLoading, error, refetch, documentsByCategory } = usePropertyDocuments({
     propertyId: property.id,
   });
@@ -209,9 +211,14 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
   }
 
   return (
-    <View className="gap-4">
-      {/* Header */}
-      <View className="flex-row justify-between items-center">
+    <ScrollView
+      className="flex-1"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+    >
+      <View className="gap-4">
+        {/* Header */}
+        <View className="flex-row justify-between items-center">
         <View className="flex-row items-center">
           <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
           {documents.length > 0 && (
@@ -328,6 +335,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
         onClose={() => setShowUploadSheet(false)}
         onSuccess={handleUploadSuccess}
       />
-    </View>
+      </View>
+    </ScrollView>
   );
 }
