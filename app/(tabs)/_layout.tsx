@@ -48,6 +48,7 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="deals">
         <Icon sf={{ default: 'doc.text', selected: 'doc.text.fill' }} />
         <Label>Deals</Label>
+        {counts.overdueDeals > 0 && <Badge value={String(counts.overdueDeals)} />}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="properties">

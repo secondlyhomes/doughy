@@ -31,7 +31,7 @@ async function getTwilioCredentials(
   try {
     // Fetch all Twilio-related keys
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('service, key_ciphertext')
       .or('service.ilike.%twilio%');
 

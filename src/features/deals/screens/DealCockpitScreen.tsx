@@ -2,8 +2,9 @@
 // Deal Cockpit - The main "Apple screen" for managing a single deal
 // Shows stage, NBA, metrics, and action cards
 // Zone B: Added Focus Mode toggle and Timeline (Task B5)
+// Zone G: Added tabbed interface, MetricCards, breadcrumbs, and AI suggestions
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -34,15 +35,31 @@ import {
   Shield,
   Focus,
   Layers,
+  MessageSquare,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
+import {
+  Button,
+  LoadingSpinner,
+  TAB_BAR_SAFE_PADDING,
+  FAB_BOTTOM_OFFSET,
+  FAB_SIZE,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '@/components/ui';
+import { MetricCard, EvidenceTrailModal } from '@/components/deals';
 import { useDeal, useUpdateDealStage } from '../hooks/useDeals';
 import { useNextAction, getActionButtonText, getActionIcon } from '../hooks/useNextAction';
-import { useDealAnalysis } from '../../real-estate/hooks/useDealAnalysis';
+import { useDealAnalysis, DEFAULT_FLIP_CONSTANTS } from '../../real-estate/hooks/useDealAnalysis';
 import type { Property } from '../../real-estate/types';
 import {
   Deal,
@@ -58,6 +75,12 @@ import {
 } from '../types';
 import { DealTimeline } from '../components/DealTimeline';
 import { AddDealEventSheet } from '../components/AddDealEventSheet';
+import { StageStepper } from '../components/StageStepper';
+import { SuggestionList } from '../components/SuggestionCard';
+import { getSuggestionsForDeal, AISuggestion } from '../services/aiSuggestions';
+import { ConversationsView, ConversationType } from '@/features/conversations/components';
+import { useDealConversations } from '@/features/conversations/hooks';
+import { SmartBackButton } from '@/components/navigation';
 import { DealAssistant } from '@/features/assistant/components';
 
 // ============================================
@@ -164,14 +187,15 @@ function NextActionButton({ deal, onPress }: NextActionButtonProps) {
 }
 
 // ============================================
-// Deal Metrics Component
+// Deal Metrics Component (Zone G - Progressive Disclosure)
 // ============================================
 
 interface DealMetricsProps {
   deal: Deal;
+  onEvidencePress?: (field: 'mao' | 'profit' | 'risk') => void;
 }
 
-function DealMetrics({ deal }: DealMetricsProps) {
+function DealMetrics({ deal, onEvidencePress }: DealMetricsProps) {
   const colors = useThemeColors();
 
   // Create a properly typed Property object for analysis
@@ -207,52 +231,90 @@ function DealMetrics({ deal }: DealMetricsProps) {
     return `${prefix}$${Math.abs(value).toLocaleString()}`;
   };
 
+  // Calculate confidence based on data completeness
+  const getConfidence = (hasData: boolean, hasMultipleSources: boolean): 'high' | 'medium' | 'low' => {
+    if (hasData && hasMultipleSources) return 'high';
+    if (hasData) return 'medium';
+    return 'low';
+  };
+
+  const arvPercentage = Math.round(DEFAULT_FLIP_CONSTANTS.maoRulePct * 100);
+
+  // Build MAO breakdown
+  const maoBreakdown = {
+    formula: `${arvPercentage}% ARV - Repairs - Costs`,
+    items: [
+      { label: `ARV × ${arvPercentage}%`, value: formatCurrency((analysis.arv || 0) * DEFAULT_FLIP_CONSTANTS.maoRulePct) },
+      { label: 'Repairs', value: formatCurrency(analysis.repairCost || 0), isSubtraction: true },
+      { label: 'Closing costs', value: formatCurrency((analysis.arv || 0) * 0.03), isSubtraction: true },
+    ],
+  };
+
+  // Build profit breakdown
+  const profitBreakdown = showCashFlow
+    ? {
+        formula: 'Rent - PITI - Expenses',
+        items: [
+          { label: 'Monthly rent', value: formatCurrency(analysis.monthlyRent || 0) },
+          { label: 'PITI', value: formatCurrency((analysis.monthlyRent || 0) * 0.5), isSubtraction: true },
+        ],
+      }
+    : {
+        formula: 'ARV - Purchase - Repairs - Costs',
+        items: [
+          { label: 'ARV', value: formatCurrency(analysis.arv || 0) },
+          { label: 'Purchase price', value: formatCurrency(analysis.purchasePrice || 0), isSubtraction: true },
+          { label: 'Repairs', value: formatCurrency(analysis.repairCost || 0), isSubtraction: true },
+          { label: 'Holding + Closing', value: formatCurrency((analysis.arv || 0) * 0.08), isSubtraction: true },
+        ],
+      };
+
   return (
-    <View className="flex-row gap-2 mb-4">
+    <View className="gap-3 mb-4">
       {/* MAO */}
-      <View
-        className="flex-1 rounded-xl p-3"
-        style={{ backgroundColor: colors.card }}
-      >
-        <View className="flex-row items-center mb-1">
-          <DollarSign size={14} color={colors.success} />
-          <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>MAO</Text>
-        </View>
-        <Text className="text-lg font-bold" style={{ color: colors.foreground }}>
-          {formatCurrency(analysis.mao)}
-        </Text>
-      </View>
+      <MetricCard
+        label="MAO"
+        value={formatCurrency(analysis.mao)}
+        icon={<DollarSign size={16} color={colors.success} />}
+        confidence={getConfidence(!!analysis.arv, !!deal.property?.arv)}
+        breakdown={maoBreakdown}
+        actions={[
+          { label: 'Override', onPress: () => onEvidencePress?.('mao'), variant: 'outline' },
+          { label: 'View Comps', onPress: () => {}, variant: 'ghost' },
+        ]}
+        onEvidencePress={() => onEvidencePress?.('mao')}
+      />
 
       {/* Profit / Cash Flow */}
-      <View
-        className="flex-1 rounded-xl p-3"
-        style={{ backgroundColor: colors.card }}
-      >
-        <View className="flex-row items-center mb-1">
-          <TrendingUp size={14} color={colors.info} />
-          <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>{profitLabel}</Text>
-        </View>
-        <Text
-          className="text-lg font-bold"
-          style={{ color: profitValue >= 0 ? colors.success : colors.destructive }}
-        >
-          {formatCurrency(profitValue)}
-        </Text>
-      </View>
+      <MetricCard
+        label={profitLabel}
+        value={formatCurrency(profitValue)}
+        icon={<TrendingUp size={16} color={colors.info} />}
+        confidence={getConfidence(!!analysis.arv && !!analysis.repairCost, false)}
+        breakdown={profitBreakdown}
+        actions={[
+          { label: 'Override', onPress: () => onEvidencePress?.('profit'), variant: 'outline' },
+          { label: 'Scenarios', onPress: () => {}, variant: 'ghost' },
+        ]}
+        onEvidencePress={() => onEvidencePress?.('profit')}
+      />
 
       {/* Risk Score */}
-      <View
-        className="flex-1 rounded-xl p-3"
-        style={{ backgroundColor: colors.card }}
-      >
-        <View className="flex-row items-center mb-1">
-          <Shield size={14} color={colors.warning} />
-          <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>Risk</Text>
-        </View>
-        <Text className="text-lg font-bold" style={{ color: riskScore !== undefined ? (riskScore <= 2 ? colors.success : riskScore <= 3 ? colors.warning : colors.destructive) : colors.mutedForeground }}>
-          {riskScore !== undefined ? `${riskScore}/5` : '-'}
-        </Text>
-      </View>
+      <MetricCard
+        label="Risk Score"
+        value={riskScore !== undefined ? `${riskScore}/5` : '-'}
+        icon={<Shield size={16} color={colors.warning} />}
+        confidence={riskScore !== undefined ? (riskScore <= 2 ? 'high' : riskScore <= 3 ? 'medium' : 'low') : 'low'}
+        breakdown={{
+          formula: 'Data + Market + Structure',
+          items: [
+            { label: 'Data completeness', value: deal.property?.arv ? 'Good' : 'Missing' },
+            { label: 'Market conditions', value: 'Stable' },
+            { label: 'Deal structure', value: deal.strategy || 'Not set' },
+          ],
+        }}
+        onEvidencePress={() => onEvidencePress?.('risk')}
+      />
     </View>
   );
 }
@@ -342,6 +404,16 @@ export function DealCockpitScreen() {
   const { deal, isLoading, error, refetch } = useDeal(dealId);
   const { mutate: updateStage } = useUpdateDealStage();
 
+  // Fetch conversations for this deal - Zone G Week 8
+  const {
+    conversations,
+    isLoading: loadingConversations,
+    refetch: refetchConversations,
+  } = useDealConversations({
+    dealId,
+    leadId: deal?.lead_id,
+  });
+
   // Get next action at component level (not inside callback - Rules of Hooks)
   const nextActionData = useNextAction(deal || undefined);
 
@@ -350,6 +422,81 @@ export function DealCockpitScreen() {
 
   // Local UI state
   const [showAddEventSheet, setShowAddEventSheet] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [evidenceModal, setEvidenceModal] = useState<{
+    visible: boolean;
+    field: 'mao' | 'profit' | 'risk' | null;
+  }>({ visible: false, field: null });
+
+  // AI Suggestions state - Zone G Week 9
+  const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  // Fetch AI suggestions when deal changes
+  useEffect(() => {
+    if (!deal || isDealClosed(deal)) return;
+
+    let mounted = true;
+    setLoadingSuggestions(true);
+
+    getSuggestionsForDeal(deal)
+      .then((results) => {
+        if (mounted) {
+          setSuggestions(results);
+        }
+      })
+      .catch((error) => {
+        console.error('[DealCockpit] Error fetching suggestions:', error);
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoadingSuggestions(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [deal?.id, deal?.stage]);
+
+  // Evidence modal handlers
+  const handleEvidencePress = useCallback((field: 'mao' | 'profit' | 'risk') => {
+    setEvidenceModal({ visible: true, field });
+  }, []);
+
+  const handleCloseEvidenceModal = useCallback(() => {
+    setEvidenceModal({ visible: false, field: null });
+  }, []);
+
+  // AI Suggestion handlers - Zone G Week 9
+  const handleSuggestionAction = useCallback((suggestion: AISuggestion) => {
+    // Route to appropriate action based on category
+    switch (suggestion.category) {
+      case 'contact':
+      case 'followup':
+        handleCallSeller();
+        break;
+      case 'walkthrough':
+        handleWalkthrough();
+        break;
+      case 'underwrite':
+      case 'analyze':
+        handleUnderwrite();
+        break;
+      case 'offer':
+        handleOffer();
+        break;
+      case 'document':
+        handleDocs();
+        break;
+      default:
+        Alert.alert('Action', suggestion.action, [{ text: 'OK' }]);
+    }
+  }, []);
+
+  const handleSuggestionDismiss = useCallback((suggestion: AISuggestion) => {
+    setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
+  }, []);
 
   // Add event handlers
   const handleAddActivity = useCallback(() => {
@@ -502,16 +649,23 @@ export function DealCockpitScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      {/* Breadcrumbs - Zone G */}
+      <View className="px-4 pt-2">
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink onPress={() => router.push('/(tabs)/deals')}>
+              Deals
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <BreadcrumbPage>{getDealAddress(deal) || 'Deal'}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </Breadcrumb>
+      </View>
+
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3">
-        <TouchableOpacity
-          onPress={handleBack}
-          accessibilityLabel="Go back"
-          accessibilityRole="button"
-          className="p-2 -ml-2"
-        >
-          <ArrowLeft size={24} color={colors.foreground} />
-        </TouchableOpacity>
+      <View className="flex-row items-center justify-between px-4 py-2">
+        <SmartBackButton variant="default" />
 
         <StageBadge stage={deal.stage} onPress={handleStageChange} />
 
@@ -548,83 +702,174 @@ export function DealCockpitScreen() {
         </View>
       </View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          padding: 16,
-          paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,  // Pattern 2: offset + height + breathing (172px)
-        }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={refetch}
-            tintColor={colors.primary}
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Lead & Property Info - Clickable for navigation */}
-        <View className="mb-4">
-          <TouchableOpacity
-            onPress={handleLeadPress}
-            className="flex-row items-center mb-1"
-            disabled={!deal.lead_id}
-            accessibilityLabel={`View ${getDealLeadName(deal)} profile`}
-            accessibilityRole="link"
-          >
-            <User size={14} color={colors.mutedForeground} />
-            <Text className="text-lg font-bold ml-2" style={{ color: deal.lead_id ? colors.primary : colors.foreground }}>
-              {getDealLeadName(deal)}
-            </Text>
-            {deal.lead_id && <ChevronRight size={16} color={colors.primary} style={{ marginLeft: 4 }} />}
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handlePropertyPress}
-            className="flex-row items-center"
-            disabled={!deal.property_id}
-            accessibilityLabel={`View property at ${getDealAddress(deal)}`}
-            accessibilityRole="link"
-          >
-            <MapPin size={14} color={colors.mutedForeground} />
-            <Text className="text-sm ml-2" style={{ color: deal.property_id ? colors.primary : colors.mutedForeground }}>
-              {getDealAddress(deal)}
-            </Text>
-            {deal.property_id && <ChevronRight size={14} color={colors.primary} style={{ marginLeft: 4 }} />}
-          </TouchableOpacity>
-          {deal.strategy && (
-            <View className="flex-row items-center mt-2">
-              <View
-                className="px-2 py-1 rounded-full"
-                style={{ backgroundColor: withOpacity(colors.secondary, 'medium') }}
-              >
-                <Text className="text-xs font-medium" style={{ color: colors.secondaryForeground }}>
-                  {DEAL_STRATEGY_CONFIG[deal.strategy].label}
-                </Text>
-              </View>
-            </View>
-          )}
+      {/* Stage Stepper - Zone G Week 7 */}
+      <View className="px-4 pb-2">
+        <StageStepper
+          currentStage={deal.stage}
+          dealId={deal.id}
+          onStagePress={handleStageChange}
+          compact
+        />
+      </View>
+
+      {/* Tabbed Interface - Zone G */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+        <View className="px-4 pb-2">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="underwrite">Underwrite</TabsTrigger>
+            <TabsTrigger value="offers">Offers</TabsTrigger>
+            <TabsTrigger value="conversations">Convos</TabsTrigger>
+            <TabsTrigger value="docs">Docs</TabsTrigger>
+          </TabsList>
         </View>
 
-        {/* Next Action Button */}
-        <NextActionButton deal={deal} onPress={handleNextAction} />
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="flex-1">
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{
+              padding: 16,
+              paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={refetch}
+                tintColor={colors.primary}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Lead & Property Info - Clickable for navigation */}
+            <View className="mb-4">
+              <TouchableOpacity
+                onPress={handleLeadPress}
+                className="flex-row items-center mb-1"
+                disabled={!deal.lead_id}
+                accessibilityLabel={`View ${getDealLeadName(deal)} profile`}
+                accessibilityRole="link"
+              >
+                <User size={14} color={colors.mutedForeground} />
+                <Text className="text-lg font-bold ml-2" style={{ color: deal.lead_id ? colors.primary : colors.foreground }}>
+                  {getDealLeadName(deal)}
+                </Text>
+                {deal.lead_id && <ChevronRight size={16} color={colors.primary} style={{ marginLeft: 4 }} />}
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handlePropertyPress}
+                className="flex-row items-center"
+                disabled={!deal.property_id}
+                accessibilityLabel={`View property at ${getDealAddress(deal)}`}
+                accessibilityRole="link"
+              >
+                <MapPin size={14} color={colors.mutedForeground} />
+                <Text className="text-sm ml-2" style={{ color: deal.property_id ? colors.primary : colors.mutedForeground }}>
+                  {getDealAddress(deal)}
+                </Text>
+                {deal.property_id && <ChevronRight size={14} color={colors.primary} style={{ marginLeft: 4 }} />}
+              </TouchableOpacity>
+              {deal.strategy && (
+                <View className="flex-row items-center mt-2">
+                  <View
+                    className="px-2 py-1 rounded-full"
+                    style={{ backgroundColor: withOpacity(colors.secondary, 'medium') }}
+                  >
+                    <Text className="text-xs font-medium" style={{ color: colors.secondaryForeground }}>
+                      {DEAL_STRATEGY_CONFIG[deal.strategy].label}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
-        {/* Key Metrics */}
-        <DealMetrics deal={deal} />
+            {/* Next Action Button */}
+            <NextActionButton deal={deal} onPress={handleNextAction} />
 
-        {/* Action Cards - Collapsed in Focus Mode */}
-        {!focusMode && (
-          <>
-            <Text className="text-sm font-medium mb-2 mt-2" style={{ color: colors.mutedForeground }}>
-              ACTIONS
+            {/* AI Suggestions - Zone G Week 9 */}
+            {suggestions.length > 0 && !focusMode && (
+              <View className="mb-4">
+                <SuggestionList
+                  suggestions={suggestions}
+                  onAction={handleSuggestionAction}
+                  onDismiss={handleSuggestionDismiss}
+                  title="AI Suggestions"
+                  maxVisible={3}
+                />
+              </View>
+            )}
+
+            {/* Key Metrics - Zone G Progressive Disclosure */}
+            <DealMetrics deal={deal} onEvidencePress={handleEvidencePress} />
+
+            {/* Action Cards - Collapsed in Focus Mode */}
+            {!focusMode && (
+              <>
+                <Text className="text-sm font-medium mb-2 mt-2" style={{ color: colors.mutedForeground }}>
+                  QUICK ACTIONS
+                </Text>
+
+                <ActionCard
+                  title="Quick Underwrite"
+                  subtitle="MAO, profit, and financing scenarios"
+                  icon={<Calculator size={20} color={colors.primary} />}
+                  onPress={handleUnderwrite}
+                />
+
+                <ActionCard
+                  title="Walkthrough"
+                  subtitle={getWalkthroughStatus.subtitle}
+                  icon={<Camera size={20} color={colors.primary} />}
+                  onPress={handleWalkthrough}
+                  badge={deal.walkthrough ? getWalkthroughStatus.label : undefined}
+                />
+
+                <ActionCard
+                  title="Seller Report"
+                  subtitle="Generate transparent options for seller"
+                  icon={<Share2 size={20} color={colors.primary} />}
+                  onPress={handleSellerReport}
+                  badge={deal.seller_report ? 'Generated' : undefined}
+                  badgeColor={deal.seller_report ? colors.success : undefined}
+                />
+              </>
+            )}
+
+            {/* Deal Timeline */}
+            <View className="mt-4">
+              <DealTimeline
+                dealId={deal.id}
+                keyEventsOnly={focusMode}
+                maxEvents={focusMode ? 3 : undefined}
+                onAddActivity={handleAddActivity}
+              />
+            </View>
+          </ScrollView>
+        </TabsContent>
+
+        {/* Underwrite Tab */}
+        <TabsContent value="underwrite" className="flex-1">
+          <View className="flex-1 items-center justify-center p-4">
+            <Calculator size={48} color={colors.mutedForeground} />
+            <Text className="text-lg font-semibold mt-4" style={{ color: colors.foreground }}>
+              Quick Underwrite
             </Text>
+            <Text className="text-sm text-center mt-2" style={{ color: colors.mutedForeground }}>
+              Detailed analysis with MAO, profit projections, and financing scenarios
+            </Text>
+            <Button className="mt-4" onPress={handleUnderwrite}>
+              Open Full Analysis
+            </Button>
+          </View>
+        </TabsContent>
 
-            <ActionCard
-              title="Quick Underwrite"
-              subtitle="MAO, profit, and financing scenarios"
-              icon={<Calculator size={20} color={colors.primary} />}
-              onPress={handleUnderwrite}
-            />
-
+        {/* Offers Tab */}
+        <TabsContent value="offers" className="flex-1">
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ padding: 16 }}
+            showsVerticalScrollIndicator={false}
+          >
             <ActionCard
               title="Offer Package"
               subtitle={
@@ -637,76 +882,96 @@ export function DealCockpitScreen() {
               badge={getOfferStatus.label}
               badgeColor={getOfferStatus.color}
             />
+            {deal.offers && deal.offers.length > 0 && (
+              <View className="mt-4">
+                <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
+                  OFFER HISTORY
+                </Text>
+                {deal.offers.map((offer, index) => (
+                  <View
+                    key={offer.id || index}
+                    className="p-3 rounded-lg mb-2"
+                    style={{ backgroundColor: colors.card }}
+                  >
+                    <Text style={{ color: colors.foreground }}>
+                      Offer #{index + 1}: ${offer.amount?.toLocaleString() || 'N/A'}
+                    </Text>
+                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                      Status: {offer.status || 'Draft'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        </TabsContent>
 
-            <ActionCard
-              title="Walkthrough"
-              subtitle={getWalkthroughStatus.subtitle}
-              icon={<Camera size={20} color={colors.primary} />}
-              onPress={handleWalkthrough}
-              badge={deal.walkthrough ? getWalkthroughStatus.label : undefined}
-            />
+        {/* Conversations Tab - Zone G Week 8 */}
+        <TabsContent value="conversations" className="flex-1">
+          <ConversationsView
+            items={conversations}
+            isLoading={loadingConversations}
+            onRefresh={refetchConversations}
+            onAddConversation={(type) => {
+              // TODO: Open appropriate modal based on type
+              Alert.alert('Add Conversation', `Would add ${type}`, [{ text: 'OK' }]);
+            }}
+            onItemPress={(item) => {
+              // TODO: Navigate to conversation detail
+              Alert.alert('Conversation', item.content || item.transcript || 'No content', [{ text: 'OK' }]);
+            }}
+          />
+        </TabsContent>
 
+        {/* Docs Tab */}
+        <TabsContent value="docs" className="flex-1">
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ padding: 16 }}
+            showsVerticalScrollIndicator={false}
+          >
             <ActionCard
               title="Documents"
               subtitle="Contracts, disclosures, and files"
               icon={<Folder size={20} color={colors.primary} />}
               onPress={handleDocs}
             />
+          </ScrollView>
+        </TabsContent>
+      </Tabs>
 
-            <ActionCard
-              title="Seller Report"
-              subtitle="Generate transparent options for seller"
-              icon={<Share2 size={20} color={colors.primary} />}
-              onPress={handleSellerReport}
-              badge={deal.seller_report ? 'Generated' : undefined}
-              badgeColor={deal.seller_report ? colors.success : undefined}
-            />
-          </>
-        )}
-
-        {/* Deal Timeline */}
-        <View className="mt-4">
-          <DealTimeline
-            dealId={deal.id}
-            keyEventsOnly={focusMode}
-            maxEvents={focusMode ? 3 : undefined}
-            onAddActivity={handleAddActivity}
+      {/* Deal Closed Banner - Fixed at bottom */}
+      {isDealClosed(deal) && (
+        <View
+          className="mx-4 mb-4 rounded-xl p-4 flex-row items-center"
+          style={{
+            backgroundColor:
+              deal.stage === 'closed_won'
+                ? withOpacity(colors.success, 'light')
+                : `${colors.muted}`,
+          }}
+        >
+          <Check
+            size={24}
+            color={deal.stage === 'closed_won' ? colors.success : colors.mutedForeground}
           />
-        </View>
-
-        {/* Deal Closed Banner */}
-        {isDealClosed(deal) && (
-          <View
-            className="rounded-xl p-4 mt-4 flex-row items-center"
-            style={{
-              backgroundColor:
-                deal.stage === 'closed_won'
-                  ? withOpacity(colors.success, 'light')
-                  : `${colors.muted}`,
-            }}
-          >
-            <Check
-              size={24}
-              color={deal.stage === 'closed_won' ? colors.success : colors.mutedForeground}
-            />
-            <View className="ml-3">
-              <Text
-                className="font-semibold"
-                style={{
-                  color: deal.stage === 'closed_won' ? colors.success : colors.mutedForeground,
-                }}
-              >
-                {deal.stage === 'closed_won' ? 'Deal Closed - Won!' : 'Deal Closed'}
-              </Text>
-              <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-                {deal.updated_at
-                  ? `Closed on ${new Date(deal.updated_at).toLocaleDateString()}`
-                  : 'Deal has been finalized'}
-              </Text>
-            </View>
+          <View className="ml-3">
+            <Text
+              className="font-semibold"
+              style={{
+                color: deal.stage === 'closed_won' ? colors.success : colors.mutedForeground,
+              }}
+            >
+              {deal.stage === 'closed_won' ? 'Deal Closed - Won!' : 'Deal Closed'}
+            </Text>
+            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+              {deal.updated_at
+                ? `Closed on ${new Date(deal.updated_at).toLocaleDateString()}`
+                : 'Deal has been finalized'}
+            </Text>
           </View>
-        )}
-      </ScrollView>
+        </View>
+      )}
 
       {/* AI Assistant (Zone A) */}
       <DealAssistant dealId={deal.id} />
@@ -718,6 +983,36 @@ export function DealCockpitScreen() {
         dealAddress={getDealAddress(deal)}
         onClose={handleCloseAddEventSheet}
         onSaved={refetch}
+      />
+
+      {/* Evidence Trail Modal - Zone G */}
+      <EvidenceTrailModal
+        visible={evidenceModal.visible}
+        onClose={handleCloseEvidenceModal}
+        fieldName={
+          evidenceModal.field === 'mao' ? 'Maximum Allowable Offer' :
+          evidenceModal.field === 'profit' ? 'Profit / Cash Flow' :
+          evidenceModal.field === 'risk' ? 'Risk Score' : ''
+        }
+        currentValue={
+          evidenceModal.field === 'mao' ? '$0' :
+          evidenceModal.field === 'profit' ? '$0' : '0/5'
+        }
+        confidence="medium"
+        sources={[
+          {
+            id: '1',
+            source: 'AI Estimate',
+            value: 'Calculated from property data',
+            confidence: 'medium',
+            timestamp: new Date().toISOString(),
+            isActive: true,
+          },
+        ]}
+        onOverride={(value) => {
+          Alert.alert('Override', `Would set value to: ${value}`);
+          handleCloseEvidenceModal();
+        }}
       />
     </ThemedSafeAreaView>
   );

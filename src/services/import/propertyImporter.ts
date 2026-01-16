@@ -8,7 +8,7 @@ import { normalizeAddress } from './validation';
 import { normalizePropertyData } from './propertyNormalizer';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const propertiesTable = () => supabase.from('properties' as any);
+const propertiesTable = () => supabase.from('re_properties' as any);
 
 export async function importProperties(
   data: Record<string, unknown>[],

@@ -92,7 +92,7 @@ serve(async (req) => {
 
     // Get API key from database
     const { data: apiKeyData, error: apiKeyError } = await supabase
-      .from("api_keys")
+      .from("security_api_keys")
       .select("key_ciphertext")
       .or('service.eq.perplexity,service.eq.perplexity-key')
       .maybeSingle();

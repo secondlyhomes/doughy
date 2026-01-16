@@ -51,6 +51,9 @@ export interface Lead {
 
   // Import tracking
   import_id?: string;
+
+  // Activity tracking (Zone G)
+  last_contacted_at?: string;
 }
 
 export interface Note {

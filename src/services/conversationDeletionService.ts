@@ -18,7 +18,7 @@ import { supabase } from '@/lib/supabase';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const conversationsTable = () => supabase.from('conversations' as any);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const messagesTable = () => supabase.from('messages' as any);
+const messagesTable = () => supabase.from('comms_messages' as any);
 
 export interface DeleteConversationResult {
   success: boolean;

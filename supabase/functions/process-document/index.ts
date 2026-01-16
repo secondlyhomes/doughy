@@ -62,7 +62,7 @@ serve(async (req: Request) => {
 
     // Fetch OpenAI API key from database
     const { data: apiKeyData, error: apiKeyError } = await supabaseClient
-      .from("api_keys")
+      .from("security_api_keys")
       .select("key_ciphertext")
       .or('service.eq.openai,service.eq.openai-key')
       .single();

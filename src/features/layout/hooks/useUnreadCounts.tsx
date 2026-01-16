@@ -1,5 +1,6 @@
 // useUnreadCounts Hook - React Native
 // Zone D: Track unread counts for tab badges using React Context
+// Zone G: Added overdueDeals for deals tab badge
 
 import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 
@@ -7,6 +8,7 @@ export interface UnreadCounts {
   leads: number;
   conversations: number;
   notifications: number;
+  overdueDeals: number; // Zone G: Deals with overdue actions
 }
 
 interface UnreadCountsContextValue {
@@ -17,6 +19,7 @@ interface UnreadCountsContextValue {
   incrementLeads: (count?: number) => void;
   incrementConversations: (count?: number) => void;
   incrementNotifications: (count?: number) => void;
+  setOverdueDeals: (count: number) => void; // Zone G
   clearAllCounts: () => void;
 }
 
@@ -26,6 +29,7 @@ const DEFAULT_COUNTS: UnreadCounts = {
   leads: 3, // Mock: New leads
   conversations: 2, // Mock: Unread conversations
   notifications: 5, // Mock: Unread notifications
+  overdueDeals: 2, // Mock: Overdue deal actions
 };
 
 interface UnreadCountsProviderProps {
@@ -85,8 +89,16 @@ export function UnreadCountsProvider({
     }));
   }, []);
 
+  // Zone G: Set overdue deals count
+  const setOverdueDeals = useCallback((count: number) => {
+    setCounts(prev => ({
+      ...prev,
+      overdueDeals: Math.max(0, count),
+    }));
+  }, []);
+
   const clearAllCounts = useCallback(() => {
-    setCounts({ leads: 0, conversations: 0, notifications: 0 });
+    setCounts({ leads: 0, conversations: 0, notifications: 0, overdueDeals: 0 });
   }, []);
 
   const value = useMemo(() => ({
@@ -97,6 +109,7 @@ export function UnreadCountsProvider({
     incrementLeads,
     incrementConversations,
     incrementNotifications,
+    setOverdueDeals,
     clearAllCounts,
   }), [
     counts,
@@ -106,6 +119,7 @@ export function UnreadCountsProvider({
     incrementLeads,
     incrementConversations,
     incrementNotifications,
+    setOverdueDeals,
     clearAllCounts,
   ]);
 

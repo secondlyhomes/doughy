@@ -83,7 +83,7 @@ describe('adminService', () => {
       const mockEqResolved = jest.fn().mockResolvedValue({ count: 10, error: null });
 
       mockSupabase.from = jest.fn().mockImplementation((table) => {
-        if (table === 'leads') {
+        if (table === 'crm_leads') {
           return {
             select: jest.fn().mockResolvedValue({ count: null, error: new Error('Leads error') }),
           };
@@ -107,7 +107,7 @@ describe('adminService', () => {
             select: jest.fn().mockResolvedValue({ count: null, error: new Error('Properties error') }),
           };
         }
-        if (table === 'leads') {
+        if (table === 'crm_leads') {
           return {
             select: jest.fn().mockResolvedValue({ count: 50, error: null }),
           };
@@ -131,7 +131,7 @@ describe('adminService', () => {
             select: jest.fn().mockResolvedValue({ count: 25, error: null }),
           };
         }
-        if (table === 'leads') {
+        if (table === 'crm_leads') {
           return {
             select: jest.fn().mockResolvedValue({ count: 50, error: null }),
           };
@@ -162,7 +162,7 @@ describe('adminService', () => {
             select: jest.fn().mockResolvedValue({ count: 25, error: null }),
           };
         }
-        if (table === 'leads') {
+        if (table === 'crm_leads') {
           leadsCalls++;
           if (leadsCalls === 1) {
             return {

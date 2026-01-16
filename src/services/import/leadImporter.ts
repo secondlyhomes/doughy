@@ -8,7 +8,7 @@ import { validateEmail, validatePhone, normalizeEmail } from './validation';
 import { normalizeLeadData } from './leadNormalizer';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const leadsTable = () => supabase.from('leads' as any);
+const leadsTable = () => supabase.from('crm_leads' as any);
 
 export async function importLeads(
   data: Record<string, unknown>[],

@@ -36,7 +36,7 @@ Deno.test('Auth Flow: User signup creates profile automatically', async () => {
 
     // Check if profile was auto-created by trigger
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .eq('id', authData.user!.id)
       .single();
@@ -154,7 +154,7 @@ Deno.test('Auth Flow: User can view their own profile', async () => {
 
     // Query own profile (should succeed due to RLS policy)
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .eq('id', authData.user!.id)
       .single();
@@ -201,7 +201,7 @@ Deno.test('Auth Flow: User cannot view other users profiles', async () => {
 
     // User 1 tries to view User 2's profile (should fail due to RLS)
     const { data: otherProfile, error: otherProfileError } = await supabase1
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .eq('id', user2Data.user!.id)
       .single();
@@ -246,7 +246,7 @@ Deno.test('Auth Flow: User can update their own profile', async () => {
 
     // Update own profile
     const { data: updatedProfile, error: updateError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ full_name: 'Test User' })
       .eq('id', authData.user!.id)
       .select()
@@ -286,7 +286,7 @@ Deno.test('Auth Flow: User cannot escalate their own role', async () => {
 
     // Try to escalate role to admin (should fail due to RLS policy)
     const { error: updateError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ role: 'admin' })
       .eq('id', authData.user!.id);
 
@@ -294,7 +294,7 @@ Deno.test('Auth Flow: User cannot escalate their own role', async () => {
 
     // Verify role is still 'user'
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('role')
       .eq('id', authData.user!.id)
       .single();

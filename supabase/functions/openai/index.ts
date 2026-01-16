@@ -111,7 +111,7 @@ async function getApiKey() {
     // Query the api_keys table for the OpenAI key using the correct column name
     // Try both 'openai' and 'openai-key' for backward compatibility
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('key_ciphertext, service')
       .or('service.eq.openai,service.eq.openai-key,service.eq.openai_key,service.eq.openai_api_key')
       .maybeSingle();

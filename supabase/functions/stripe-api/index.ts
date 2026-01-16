@@ -117,7 +117,7 @@ async function getStripeApiKey(supabase: any): Promise<string> {
     // Query the api_keys table for the Stripe key using the correct column name
     // Try both 'stripe' and 'stripe-key' and 'stripe-secret' for backward compatibility
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('key_ciphertext')
       .or('service.eq.stripe,service.eq.stripe-key,service.eq.stripe-secret')
       .eq('is_active', true)
@@ -602,7 +602,7 @@ serve(async (req) => {
           
           // Get webhook secret from database
           const { data: webhookData, error: webhookError } = await supabase
-            .from('api_keys')
+            .from('security_api_keys')
             .select('key_ciphertext')
             .or('service.eq.stripe_webhook,service.eq.stripe-webhook')
             .eq('is_active', true)

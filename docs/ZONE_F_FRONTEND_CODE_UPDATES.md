@@ -1,5 +1,16 @@
 # Zone F: Frontend Code Updates for Table Renames
 
+> ⚠️ **OUTDATED DOCUMENT - DO NOT FOLLOW**
+>
+> This document was written before DBA review and contains incorrect assumptions.
+>
+> **Key Changes:**
+> - `deals` → `re_pipeline` rename was REJECTED by DBA
+> - `deals` and `deal_events` kept AS-IS (correct entity names)
+> - Most work already complete via Phase 2 migration
+>
+> **See:** `ZONE_F_ACTUAL_STATUS.md` for accurate current state
+
 **Owner:** Frontend Developer
 **Timeline:** Weeks 3-4
 **Dependencies:** Zone E must complete first (database migration)

@@ -155,7 +155,11 @@
       "Bash(rg:*)",
       "Bash(for file in src/features/real-estate/components/Property*Tab.tsx)",
       "Bash(jq:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(./scripts/verify-zone-f.sh:*)",
+      "Bash(__NEW_LINE_f43cb12def792f8c__ echo \"=== ANALYSIS OF TABLE NAME ISSUES ===\")",
+      "Bash(shellcheck:*)",
+      "mcp__plugin_supabase_supabase__deploy_edge_function"
     ]
   }
 }

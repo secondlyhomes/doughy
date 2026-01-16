@@ -35,7 +35,7 @@ interface EmailResponse {
 // Helper to get email preferences for a user
 async function getUserEmailPreferences(supabase: any, userId: string) {
   const { data, error } = await supabase
-    .from('email_preferences')
+    .from('user_email_preferences')
     .select('*')
     .eq('user_id', userId)
     .single();
@@ -64,7 +64,7 @@ async function getUserEmailPreferences(supabase: any, userId: string) {
 // Get Resend API key from database
 async function getResendApiKey(supabase: any) {
   const { data, error } = await supabase
-    .from('api_keys')
+    .from('security_api_keys')
     .select('key_ciphertext')
     .or('service.eq.resend,service.eq.resend-key')
     .single();
@@ -152,7 +152,7 @@ async function logEmail(
 ) {
   try {
     const { data, error } = await supabase
-      .from('email_logs')
+      .from('comms_email_logs')
       .insert({
         user_id: userId,
         email_type: type,
@@ -308,7 +308,7 @@ async function sendSecurityEmail(
       // Update log with error status
       if (emailLogId) {
         await supabase
-          .from('email_logs')
+          .from('comms_email_logs')
           .update({
             status: 'failed',
             metadata: { ...template_data, error: error.message }
@@ -333,7 +333,7 @@ async function sendSecurityEmail(
     // Update log with success status
     if (emailLogId) {
       await supabase
-        .from('email_logs')
+        .from('comms_email_logs')
         .update({
           status: 'sent',
           external_id: data?.id
@@ -486,7 +486,7 @@ async function sendWelcomeEmail(
       // Update log with error status
       if (emailLogId) {
         await supabase
-          .from('email_logs')
+          .from('comms_email_logs')
           .update({
             status: 'failed',
             metadata: { ...template_data, error: error.message }
@@ -500,7 +500,7 @@ async function sendWelcomeEmail(
     // Update log with success status
     if (emailLogId) {
       await supabase
-        .from('email_logs')
+        .from('comms_email_logs')
         .update({
           status: 'sent',
           external_id: data?.id
@@ -553,7 +553,7 @@ async function sendReminderEmail(
   if (preferences.unsubscribed_all || !preferences.reminder_emails) {
     // Log the skipped reminder
     await supabase
-      .from('reminder_logs')
+      .from('user_reminder_logs')
       .insert({
         user_id: user_id,
         reminder_type: template_data.reminder_type || 'generic',
@@ -674,7 +674,7 @@ async function sendReminderEmail(
       // Update log with error status
       if (emailLogId) {
         await supabase
-          .from('email_logs')
+          .from('comms_email_logs')
           .update({
             status: 'failed',
             metadata: { ...template_data, error: error.message }
@@ -687,7 +687,7 @@ async function sendReminderEmail(
 
     // Log the reminder
     const reminderLogId = await supabase
-      .from('reminder_logs')
+      .from('user_reminder_logs')
       .insert({
         user_id: user_id,
         reminder_type: reminderType,
@@ -700,7 +700,7 @@ async function sendReminderEmail(
 
     // Update reminder state if it exists
     const { data: reminderState } = await supabase
-      .from('reminder_states')
+      .from('user_reminder_states')
       .select('id, reminder_count')
       .eq('user_id', user_id)
       .eq('reminder_type', reminderType)
@@ -709,7 +709,7 @@ async function sendReminderEmail(
     if (reminderState) {
       // Update existing reminder state
       await supabase
-        .from('reminder_states')
+        .from('user_reminder_states')
         .update({
           reminder_count: (reminderState.reminder_count || 0) + 1,
           updated_at: new Date().toISOString()
@@ -718,7 +718,7 @@ async function sendReminderEmail(
     } else {
       // Create new reminder state
       await supabase
-        .from('reminder_states')
+        .from('user_reminder_states')
         .insert({
           user_id: user_id,
           reminder_type: reminderType,
@@ -731,7 +731,7 @@ async function sendReminderEmail(
     // Update email log with success status
     if (emailLogId) {
       await supabase
-        .from('email_logs')
+        .from('comms_email_logs')
         .update({
           status: 'sent',
           external_id: data?.id
@@ -834,7 +834,7 @@ async function sendTestEmail(
       // Update log with error status
       if (emailLogId) {
         await supabase
-          .from('email_logs')
+          .from('comms_email_logs')
           .update({
             status: 'failed',
             metadata: { ...template_data, error: error.message }
@@ -848,7 +848,7 @@ async function sendTestEmail(
     // Update log with success status
     if (emailLogId) {
       await supabase
-        .from('email_logs')
+        .from('comms_email_logs')
         .update({
           status: 'sent',
           external_id: data?.id

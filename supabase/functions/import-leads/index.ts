@@ -346,7 +346,7 @@ serve(async (req) => {
         // Insert lead - minimal fields only
         // Explicitly set all status fields to 'new' instead of relying on database defaults
         const { data: lead, error: leadError } = await supabase
-          .from("leads")
+          .from("crm_leads")
           .insert({
             name: fullName || null,
             

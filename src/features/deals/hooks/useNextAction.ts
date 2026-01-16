@@ -1,6 +1,7 @@
 // src/features/deals/hooks/useNextAction.ts
 // Next Best Action (NBA) engine for deals
 // Rule-based system that suggests the next action based on deal state
+// Zone G Week 9: Enhanced with granular context and AI suggestion support
 
 import { useMemo } from 'react';
 import {
@@ -20,6 +21,26 @@ export interface NextAction {
   category: ActionCategory;
   dueDate?: string;
   isOverdue?: boolean;
+  context?: ActionContext;
+}
+
+export interface ActionContext {
+  /** Walkthrough completion percentage (0-100) */
+  walkthroughProgress?: number;
+  /** Missing photo buckets for walkthrough */
+  missingPhotoBuckets?: string[];
+  /** Days since last contact with seller */
+  daysSinceLastContact?: number;
+  /** Time since last conversation (any type) */
+  timeSinceLastConversation?: string;
+  /** Recent conversation sentiment */
+  recentSentiment?: 'positive' | 'neutral' | 'negative';
+  /** Key phrases from recent conversations */
+  recentKeyPhrases?: string[];
+  /** Pending action items from conversations */
+  pendingActionItems?: string[];
+  /** Reason for this suggestion */
+  reason?: string;
 }
 
 export type ActionCategory =
@@ -32,6 +53,22 @@ export type ActionCategory =
   | 'close'
   | 'followup'
   | 'document';
+
+// Photo buckets for walkthrough completeness
+export const PHOTO_BUCKETS = [
+  'exterior_front',
+  'exterior_back',
+  'kitchen',
+  'bathroom_primary',
+  'living_room',
+  'bedroom_primary',
+  'roof',
+  'hvac',
+  'electrical_panel',
+  'plumbing',
+] as const;
+
+export type PhotoBucket = typeof PHOTO_BUCKETS[number];
 
 // ============================================
 // NBA Rules Engine
@@ -83,10 +120,105 @@ const STAGE_DEFAULT_ACTIONS: Record<DealStage, { action: string; category: Actio
   },
 };
 
+// ============================================
+// Context Calculation Helpers
+// ============================================
+
+/**
+ * Calculate walkthrough progress based on available photos
+ */
+export function calculateWalkthroughProgress(deal: Deal): {
+  progress: number;
+  missingBuckets: string[];
+} {
+  const photos = deal.photos || [];
+  const taggedPhotos = new Set(
+    photos
+      .filter((p) => p.bucket || p.category)
+      .map((p) => (p.bucket || p.category)?.toLowerCase())
+  );
+
+  const missingBuckets: string[] = [];
+  PHOTO_BUCKETS.forEach((bucket) => {
+    if (!taggedPhotos.has(bucket)) {
+      missingBuckets.push(bucket);
+    }
+  });
+
+  const completedCount = PHOTO_BUCKETS.length - missingBuckets.length;
+  const progress = Math.round((completedCount / PHOTO_BUCKETS.length) * 100);
+
+  return { progress, missingBuckets };
+}
+
+/**
+ * Calculate days since last contact
+ */
+export function calculateDaysSinceLastContact(deal: Deal): number | undefined {
+  // Check for last_contacted_at on lead or deal
+  const lastContact = deal.lead?.last_contacted_at || deal.last_activity_at;
+  if (!lastContact) return undefined;
+
+  const contactDate = new Date(lastContact);
+  const now = new Date();
+  const diffMs = now.getTime() - contactDate.getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Format time since last conversation for display
+ */
+export function formatTimeSince(dateString: string | undefined): string | undefined {
+  if (!dateString) return undefined;
+
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return `${Math.floor(diffDays / 7)}w ago`;
+}
+
+/**
+ * Build action context from deal data
+ */
+function buildActionContext(deal: Deal): ActionContext {
+  const context: ActionContext = {};
+
+  // Walkthrough progress (for appointment_set and analyzing stages)
+  if (deal.stage === 'appointment_set' || deal.stage === 'analyzing') {
+    const { progress, missingBuckets } = calculateWalkthroughProgress(deal);
+    context.walkthroughProgress = progress;
+    if (missingBuckets.length > 0 && missingBuckets.length <= 5) {
+      context.missingPhotoBuckets = missingBuckets;
+    }
+  }
+
+  // Days since last contact
+  const daysSince = calculateDaysSinceLastContact(deal);
+  if (daysSince !== undefined) {
+    context.daysSinceLastContact = daysSince;
+    context.timeSinceLastConversation = formatTimeSince(
+      deal.lead?.last_contacted_at || deal.last_activity_at
+    );
+  }
+
+  return context;
+}
+
 /**
  * Calculate the next best action for a deal
  */
 export function calculateNextAction(deal: Deal): NextAction {
+  // Build context for enhanced suggestions
+  const context = buildActionContext(deal);
+
   // If deal has a manual next_action set, use that
   if (deal.next_action) {
     // Normalize dates to start-of-day for consistent timezone-safe comparison
@@ -108,19 +240,32 @@ export function calculateNextAction(deal: Deal): NextAction {
       category: inferCategoryFromAction(deal.next_action, deal.stage),
       dueDate: deal.next_action_due,
       isOverdue,
+      context,
     };
+  }
+
+  // Check for contact recency issues (more than 3 days without contact in active stages)
+  const contactRecencyAction = checkContactRecency(deal, context);
+  if (contactRecencyAction) {
+    return { ...contactRecencyAction, context };
   }
 
   // Check for missing critical data
   const missingDataAction = checkMissingData(deal);
   if (missingDataAction) {
-    return missingDataAction;
+    return { ...missingDataAction, context };
+  }
+
+  // Check for walkthrough completeness
+  const walkthroughAction = checkWalkthroughCompleteness(deal, context);
+  if (walkthroughAction) {
+    return { ...walkthroughAction, context };
   }
 
   // Check for stage-specific conditions
   const stageSpecificAction = checkStageConditions(deal);
   if (stageSpecificAction) {
-    return stageSpecificAction;
+    return { ...stageSpecificAction, context };
   }
 
   // Fall back to default stage action
@@ -132,6 +277,7 @@ export function calculateNextAction(deal: Deal): NextAction {
       action: 'Review deal and update stage',
       priority: 'medium',
       category: 'followup',
+      context,
     };
   }
 
@@ -139,7 +285,73 @@ export function calculateNextAction(deal: Deal): NextAction {
     action: defaultAction.action,
     priority: getPriorityForStage(deal.stage),
     category: defaultAction.category,
+    context,
   };
+}
+
+/**
+ * Check if contact is overdue based on recency
+ */
+function checkContactRecency(deal: Deal, context: ActionContext): NextAction | null {
+  const { daysSinceLastContact } = context;
+
+  // Only for active deal stages
+  const activeStages: DealStage[] = ['contacted', 'appointment_set', 'analyzing', 'offer_sent', 'negotiating'];
+  if (!activeStages.includes(deal.stage)) return null;
+
+  if (daysSinceLastContact !== undefined && daysSinceLastContact >= 7) {
+    return {
+      action: `Follow up with seller (${daysSinceLastContact} days since last contact)`,
+      priority: 'high',
+      category: 'followup',
+      context: {
+        ...context,
+        reason: 'No contact in over a week',
+      },
+    };
+  }
+
+  if (daysSinceLastContact !== undefined && daysSinceLastContact >= 3 && deal.stage === 'negotiating') {
+    return {
+      action: `Check in with seller on negotiations`,
+      priority: 'high',
+      category: 'contact',
+      context: {
+        ...context,
+        reason: 'Active negotiation needs attention',
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Check walkthrough completeness and suggest next photos
+ */
+function checkWalkthroughCompleteness(deal: Deal, context: ActionContext): NextAction | null {
+  const { walkthroughProgress, missingPhotoBuckets } = context;
+
+  // Only for walkthrough stage
+  if (deal.stage !== 'appointment_set' && deal.stage !== 'analyzing') return null;
+
+  // If walkthrough started but incomplete
+  if (walkthroughProgress !== undefined && walkthroughProgress > 0 && walkthroughProgress < 70) {
+    const nextBucket = missingPhotoBuckets?.[0];
+    const friendlyBucketName = nextBucket?.replace(/_/g, ' ') || 'remaining areas';
+
+    return {
+      action: `Continue walkthrough - capture ${friendlyBucketName} (${walkthroughProgress}% complete)`,
+      priority: 'medium',
+      category: 'walkthrough',
+      context: {
+        ...context,
+        reason: `Walkthrough ${walkthroughProgress}% complete`,
+      },
+    };
+  }
+
+  return null;
 }
 
 /**

@@ -3,6 +3,7 @@
  * Description: Receives incoming SMS from Twilio, stores in sms_inbox, and triggers AI extraction
  * Phase: Sprint 3 - AI & Automation
  * Enhanced by Zone D: Added AI-powered property data extraction
+ * Enhanced by Zone G: Added conversation_items integration for unified timeline
  */
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
@@ -28,12 +29,122 @@ interface ExtractedPropertyData {
 }
 
 /**
+ * Conversation analysis data from AI
+ */
+interface ConversationAnalysis {
+  sentiment: 'positive' | 'neutral' | 'negative';
+  keyPhrases: string[];
+  actionItems: string[];
+  summary: string;
+}
+
+/**
+ * Combined extraction result (property + conversation analysis)
+ */
+interface CombinedExtractionResult {
+  property: ExtractedPropertyData;
+  conversation: ConversationAnalysis;
+}
+
+/**
+ * Find lead by phone number for conversation linking
+ */
+async function findLeadByPhone(
+  supabase: ReturnType<typeof createClient>,
+  phoneNumber: string
+): Promise<{ leadId: string | null; userId: string | null; workspaceId: string | null }> {
+  try {
+    // Normalize phone number for comparison (remove non-digits except +)
+    const normalizedPhone = phoneNumber.replace(/[^\d+]/g, '');
+
+    // Search crm_leads for matching phone
+    const { data, error } = await supabase
+      .from('crm_leads')
+      .select('id, user_id, workspace_id, phone')
+      .or(`phone.eq.${normalizedPhone},phone.ilike.%${normalizedPhone.slice(-10)}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[SMS-Webhook] Error finding lead:', error);
+      return { leadId: null, userId: null, workspaceId: null };
+    }
+
+    return {
+      leadId: data?.id || null,
+      userId: data?.user_id || null,
+      workspaceId: data?.workspace_id || null,
+    };
+  } catch (error) {
+    console.error('[SMS-Webhook] Error in findLeadByPhone:', error);
+    return { leadId: null, userId: null, workspaceId: null };
+  }
+}
+
+/**
+ * Insert SMS into conversation_items for unified timeline
+ */
+async function insertConversationItem(
+  supabase: ReturnType<typeof createClient>,
+  params: {
+    smsInboxId: string;
+    phoneNumber: string;
+    content: string;
+    twilioMessageSid: string;
+    leadId: string | null;
+    userId: string | null;
+    workspaceId: string | null;
+  }
+): Promise<string | null> {
+  try {
+    // If no user/workspace found, we can't insert (RLS would block it anyway)
+    if (!params.userId) {
+      console.log('[SMS-Webhook] No user found for phone, skipping conversation_items insert');
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('conversation_items')
+      .insert({
+        workspace_id: params.workspaceId,
+        user_id: params.userId,
+        lead_id: params.leadId,
+        type: 'sms',
+        direction: 'inbound',
+        content: params.content,
+        phone_number: params.phoneNumber,
+        twilio_message_sid: params.twilioMessageSid,
+        sms_inbox_id: params.smsInboxId,
+        occurred_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      // Ignore duplicate constraint violations (same twilio_message_sid)
+      if (error.code === '23505') {
+        console.log('[SMS-Webhook] Duplicate conversation_item ignored');
+        return null;
+      }
+      console.error('[SMS-Webhook] Error inserting conversation_item:', error);
+      return null;
+    }
+
+    console.log('[SMS-Webhook] Conversation item created:', data.id);
+    return data.id;
+  } catch (error) {
+    console.error('[SMS-Webhook] Error in insertConversationItem:', error);
+    return null;
+  }
+}
+
+/**
  * Get OpenAI API key from encrypted storage
  */
 async function getOpenAIKey(supabase: ReturnType<typeof createClient>): Promise<string | null> {
   try {
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('key_ciphertext')
       .or('service.eq.openai,service.eq.openai-key,service.eq.openai_key')
       .maybeSingle();
@@ -51,32 +162,46 @@ async function getOpenAIKey(supabase: ReturnType<typeof createClient>): Promise<
 }
 
 /**
- * Extract property data from SMS text using GPT-4
+ * Extract property data AND analyze conversation in a single API call
+ * Combined to reduce API costs and latency (was previously 2 separate calls)
  */
-async function extractPropertyFromSMS(
+async function extractAndAnalyzeSMS(
   smsBody: string,
   apiKey: string
-): Promise<ExtractedPropertyData> {
-  const systemPrompt = `You are a real estate data extraction assistant. Extract property details from incoming SMS messages.
-Return ONLY a JSON object with these fields (omit if not mentioned):
-- address: string
-- bedrooms: number
-- bathrooms: number
-- sqft: number
-- condition: string (e.g., "needs work", "good condition", "updated")
-- notes: string (repair needs, features, motivation to sell)
-- sellerName: string
-- sellerPhone: string
-- askingPrice: number
-- yearBuilt: number
-- lotSize: number (in sqft)
+): Promise<CombinedExtractionResult> {
+  const systemPrompt = `You are a real estate AI assistant. Analyze this SMS message and return a JSON object with two sections:
 
-SMS messages are often informal. Look for:
+1. "property" - Extract property details (omit fields if not mentioned):
+   - address: string
+   - bedrooms: number
+   - bathrooms: number
+   - sqft: number
+   - condition: string (e.g., "needs work", "good condition", "updated")
+   - notes: string (repair needs, features, motivation to sell)
+   - sellerName: string
+   - sellerPhone: string
+   - askingPrice: number
+   - yearBuilt: number
+   - lotSize: number (in sqft)
+
+2. "conversation" - Analyze the message:
+   - sentiment: "positive" | "neutral" | "negative"
+   - keyPhrases: string[] (important topics, numbers, names, addresses)
+   - actionItems: string[] (follow-up tasks mentioned or implied)
+   - summary: string (1-2 sentence summary)
+
+SMS parsing tips:
 - "3/2" means 3 bedrooms, 2 bathrooms
 - "ARV", "as-is" values are asking prices
-- Names might follow "call", "text", "contact"
+- Names often follow "call", "text", "contact"
 
-If information is not mentioned, omit that field. Do not make assumptions.`;
+Focus on real estate context: property details, seller motivation, urgency, deal terms.
+
+Return JSON format:
+{
+  "property": { ... },
+  "conversation": { sentiment, keyPhrases, actionItems, summary }
+}`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -90,8 +215,8 @@ If information is not mentioned, omit that field. Do not make assumptions.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: smsBody },
       ],
-      temperature: 0.1,
-      max_tokens: 500,
+      temperature: 0.2,
+      max_tokens: 800,
       response_format: { type: 'json_object' },
     }),
   });
@@ -103,47 +228,62 @@ If information is not mentioned, omit that field. Do not make assumptions.`;
 
   const result = await response.json();
   const content = result.choices?.[0]?.message?.content || '{}';
-  return JSON.parse(content) as ExtractedPropertyData;
+  const parsed = JSON.parse(content);
+
+  // Ensure proper structure with defaults
+  return {
+    property: parsed.property || {},
+    conversation: {
+      sentiment: parsed.conversation?.sentiment || 'neutral',
+      keyPhrases: parsed.conversation?.keyPhrases || [],
+      actionItems: parsed.conversation?.actionItems || [],
+      summary: parsed.conversation?.summary || '',
+    },
+  };
 }
 
 /**
  * Validate Twilio webhook signature
  */
-function validateTwilioSignature(
+async function validateTwilioSignature(
   url: string,
   params: Record<string, string>,
   signature: string,
   authToken: string
-): boolean {
-  // Build the data string from params
-  const data = Object.keys(params)
-    .sort()
-    .map(key => key + params[key])
-    .join('');
+): Promise<boolean> {
+  try {
+    // Build the data string from params
+    const data = Object.keys(params)
+      .sort()
+      .map(key => key + params[key])
+      .join('');
 
-  const fullData = url + data;
+    const fullData = url + data;
 
-  // Create HMAC-SHA1 hash
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(authToken);
-  const messageData = encoder.encode(fullData);
+    // Create HMAC-SHA1 hash
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(authToken);
+    const messageData = encoder.encode(fullData);
 
-  return crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-1' },
-    false,
-    ['sign']
-  ).then(key =>
-    crypto.subtle.sign('HMAC', key, messageData)
-  ).then(signatureBuffer => {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, messageData);
+
     // Convert to base64
     const signatureArray = Array.from(new Uint8Array(signatureBuffer));
     const signatureBase64 = btoa(String.fromCharCode(...signatureArray));
 
     // Constant-time comparison to prevent timing attacks
     return signatureBase64 === signature;
-  }).catch(() => false);
+  } catch {
+    return false;
+  }
 }
 
 serve(async (req) => {
@@ -271,7 +411,25 @@ serve(async (req) => {
       console.log('SMS stored in inbox:', data.id);
     }
 
-    // AI-powered property extraction (Zone D enhancement)
+    // Zone G: Add to conversation_items for unified timeline
+    // Find the lead associated with this phone number
+    const { leadId, userId, workspaceId } = await findLeadByPhone(supabase, from);
+
+    // Insert into conversation_items (linked to lead if found)
+    let conversationItemId: string | null = null;
+    if (data?.id) {
+      conversationItemId = await insertConversationItem(supabase, {
+        smsInboxId: data.id,
+        phoneNumber: from,
+        content: body,
+        twilioMessageSid: messageId,
+        leadId,
+        userId,
+        workspaceId,
+      });
+    }
+
+    // AI-powered extraction and analysis (combined into single API call)
     // Run async - don't block Twilio response (must reply within 10s)
     const smsId = data?.id;
     if (smsId && body.length > 10) {
@@ -290,12 +448,16 @@ serve(async (req) => {
             throw new Error('OpenAI API key not available');
           }
 
-          // Extract property data using GPT-4
-          console.log('[SMS-Webhook] Extracting property data from SMS...');
-          const extractedData = await extractPropertyFromSMS(body, apiKey);
-          console.log('[SMS-Webhook] Extraction complete:', Object.keys(extractedData));
+          // Single API call for both property extraction AND conversation analysis
+          // (Combined to reduce costs - was previously 2 separate calls)
+          console.log('[SMS-Webhook] Extracting property data and analyzing conversation...');
+          const { property: extractedData, conversation: analysis } = await extractAndAnalyzeSMS(body, apiKey);
+          console.log('[SMS-Webhook] Combined extraction complete:', {
+            propertyFields: Object.keys(extractedData),
+            sentiment: analysis.sentiment,
+          });
 
-          // Update SMS record with extracted data
+          // Update SMS record with extracted property data
           const hasUsefulData = Object.keys(extractedData).length > 0;
           await supabase
             .from('sms_inbox')
@@ -307,6 +469,21 @@ serve(async (req) => {
             .eq('id', smsId);
 
           console.log('[SMS-Webhook] SMS processed successfully:', smsId);
+
+          // Update conversation_item with analysis (if we created one)
+          if (conversationItemId) {
+            await supabase
+              .from('conversation_items')
+              .update({
+                sentiment: analysis.sentiment,
+                key_phrases: analysis.keyPhrases,
+                action_items: analysis.actionItems,
+                ai_summary: analysis.summary || null,
+              })
+              .eq('id', conversationItemId);
+
+            console.log('[SMS-Webhook] Conversation analysis saved:', conversationItemId);
+          }
         } catch (aiError) {
           console.error('[SMS-Webhook] AI extraction failed:', aiError);
           // Mark as error but don't fail the webhook

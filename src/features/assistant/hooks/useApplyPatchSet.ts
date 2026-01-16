@@ -23,7 +23,7 @@ const ENTITY_TABLE_MAP: Record<PatchEntity, string> = {
   DealEvidence: 'deal_evidence',
   DealWalkthrough: 'deal_walkthroughs',
   Property: 're_properties',
-  Lead: 'leads',
+  Lead: 'crm_leads',
   Task: 'tasks',
 };
 

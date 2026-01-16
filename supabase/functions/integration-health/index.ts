@@ -116,7 +116,7 @@ serve(async (req) => {
 
     // Get the API key from the database if this is an API key-based service
     const { data: apiKeyData, error: apiKeyError } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('key_ciphertext, service, group_name, description')
       .eq('service', serviceToCheck)
       .maybeSingle();
@@ -167,7 +167,7 @@ serve(async (req) => {
           
           // Update the flag silently in the background
           await supabase
-            .from('api_keys')
+            .from('security_api_keys')
             .update({ encrypted: true })
             .eq('service', serviceToCheck);
         }
@@ -312,7 +312,7 @@ async function updateHealthCheck(supabase, service: string, result: any, groupNa
   try {
     // Only update the api_keys table with last_used timestamp
     const { error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .update({ 
         last_used: new Date().toISOString(),
         status: result.status || 'error'

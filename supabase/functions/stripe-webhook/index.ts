@@ -68,7 +68,7 @@ const logger = {
 async function getStripeWebhookSecret(supabase: SupabaseClient): Promise<string> {
   try {
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('key_value')
       .eq('service', 'stripe_webhook')
       .eq('is_active', true)
@@ -98,7 +98,7 @@ async function getStripeWebhookSecret(supabase: SupabaseClient): Promise<string>
 async function getStripeApiKey(supabase: SupabaseClient): Promise<string> {
   try {
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('key_value')
       .eq('service', 'stripe')
       .eq('is_active', true)
@@ -290,7 +290,7 @@ async function handleCheckoutCompleted(
     // If no client_reference_id, try to find user from customer
     if (!userId) {
       const { data: customerData } = await supabase
-        .from('stripe_customers')
+        .from('billing_stripe_customers')
         .select('user_id')
         .eq('customer_id', customerId)
         .single();
@@ -329,7 +329,7 @@ async function handleCheckoutCompleted(
     
     // Create customer record if it doesn't exist
     const { error: customerError } = await supabase
-      .from('stripe_customers')
+      .from('billing_stripe_customers')
       .upsert({
         user_id: userId,
         customer_id: customerId,
@@ -406,7 +406,7 @@ async function handleSubscriptionUpdated(
     if (userError || !subscriptionUserData) {
       // Try finding by customer ID
       const { data: customerData, error: customerError } = await supabase
-        .from('stripe_customers')
+        .from('billing_stripe_customers')
         .select('user_id')
         .eq('customer_id', customerId)
         .single();

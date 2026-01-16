@@ -46,7 +46,7 @@ async function fetchDeals(filters?: DealsFilters): Promise<Deal[]> {
     .from('deals')
     .select(`
       *,
-      lead:leads(id, name, phone, email, status, score),
+      lead:crm_leads(id, name, phone, email, status, score),
       property:re_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
     `);
 
@@ -119,7 +119,7 @@ async function fetchDealById(id: string): Promise<Deal | null> {
     .from('deals')
     .select(`
       *,
-      lead:leads(id, name, phone, email, status, score, tags),
+      lead:crm_leads(id, name, phone, email, status, score, tags),
       property:re_properties(id, address_line_1, address_line_2, city, state, zip, county, bedrooms, bathrooms, square_feet, lot_size, year_built, property_type, arv, purchase_price, notes, status)
     `)
     .eq('id', id)

@@ -167,7 +167,7 @@ serve(async (req) => {
         next_action,
         next_action_due,
         status,
-        lead:leads(id, name, email, phone),
+        lead:crm_leads(id, name, email, phone),
         property:re_properties(id, address_line_1, city, state)
       `)
       .gte('next_action_due', now.toISOString())
@@ -209,7 +209,7 @@ serve(async (req) => {
     // Fetch user profiles with push tokens
     const userIds = Array.from(dealsByUser.keys());
     const { data: userProfiles, error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('id, email, expo_push_token, notification_preferences')
       .in('id', userIds);
 

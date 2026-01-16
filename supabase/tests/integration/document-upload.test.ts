@@ -148,7 +148,7 @@ Deno.test('Document Upload: Lead documents are properly isolated', async () => {
   try {
     // User 1 creates a lead and document
     const { data: lead1 } = await user1.supabase
-      .from('leads')
+      .from('crm_leads')
       .insert({
         user_id: user1.userId,
         name: 'Test Lead',
@@ -351,7 +351,7 @@ Deno.test('Document Upload: Lead document type validation works', async () => {
   try {
     // Create lead
     const { data: lead } = await supabase
-      .from('leads')
+      .from('crm_leads')
       .insert({
         user_id: userId,
         name: 'Doc Type Test Lead',

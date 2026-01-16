@@ -28,7 +28,7 @@ export function seedMockData(store: MockDataStore): void {
     email: DEV_USER_EMAIL,
     role: 'admin',
   });
-  store.insert('profiles', devProfile);
+  store.insert('user_profiles', devProfile);
 
   // Create user plan for dev user
   const devUserPlan = createMockUserPlan({
@@ -84,7 +84,7 @@ export function seedMockData(store: MockDataStore): void {
   ];
 
   for (const lead of leads) {
-    store.insert('leads', lead);
+    store.insert('crm_leads', lead);
   }
 
   // Create sample properties
@@ -168,7 +168,7 @@ export function seedMockData(store: MockDataStore): void {
   ];
 
   for (const contact of contacts) {
-    store.insert('contacts', contact);
+    store.insert('crm_contacts', contact);
   }
 
   // Create sample messages
@@ -198,7 +198,7 @@ export function seedMockData(store: MockDataStore): void {
   ];
 
   for (const message of messages) {
-    store.insert('messages', message);
+    store.insert('comms_messages', message);
   }
 
   // Create sample deals linking leads and properties
@@ -291,13 +291,13 @@ export function seedMockData(store: MockDataStore): void {
   }
 
   console.log('[MOCK] Seeded mock data store:', {
-    profiles: store.getAll('profiles').length,
+    profiles: store.getAll('user_profiles').length,
     user_plans: store.getAll('user_plans').length,
-    leads: store.getAll('leads').length,
+    leads: store.getAll('crm_leads').length,
     re_properties: store.getAll('re_properties').length,
     re_comps: store.getAll('re_comps').length,
-    contacts: store.getAll('contacts').length,
-    messages: store.getAll('messages').length,
+    contacts: store.getAll('crm_contacts').length,
+    comms_messages: store.getAll('comms_messages').length,
     deals: store.getAll('deals').length,
     deal_events: store.getAll('deal_events').length,
   });

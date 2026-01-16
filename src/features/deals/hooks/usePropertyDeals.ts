@@ -30,7 +30,7 @@ export function usePropertyDeals(propertyId: string | null) {
         .from('deals')
         .select(`
           *,
-          lead:leads(id, name, phone, email)
+          lead:crm_leads(id, name, phone, email)
         `)
         .eq('property_id', propertyId)
         .order('created_at', { ascending: false });

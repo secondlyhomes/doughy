@@ -76,7 +76,7 @@ async function getZillowApiKey(
 ): Promise<string | null> {
   try {
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('key_ciphertext')
       .or('service.ilike.%zillow%,service.ilike.%rapidapi%')
       .maybeSingle();

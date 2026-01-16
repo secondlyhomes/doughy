@@ -71,6 +71,22 @@ export interface Deal {
   evidence?: DealEvidence[];
   walkthrough?: DealWalkthrough;
   seller_report?: DealSellerReport;
+
+  // Activity tracking (Zone G)
+  photos?: DealPhoto[];
+  last_activity_at?: string;
+}
+
+/**
+ * Deal photo for walkthrough progress tracking
+ */
+export interface DealPhoto {
+  id: string;
+  deal_id?: string;
+  bucket?: string;
+  category?: string;
+  file_url?: string;
+  created_at?: string;
 }
 
 /**

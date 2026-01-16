@@ -17,6 +17,14 @@ export {
   logMockOperation,
 } from './devMode';
 
+export {
+  VOICE_MEMO_CONFIG,
+  NOTIFICATION_CONFIG,
+  CONVERSATION_LIST_CONFIG,
+  AI_ANALYSIS_CONFIG,
+  CONVERSATION_CONFIG,
+} from './conversations';
+
 // App configuration
 export const APP_CONFIG = {
   // App name

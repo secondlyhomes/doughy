@@ -1,6 +1,7 @@
 // src/features/deals/screens/QuickUnderwriteScreen.tsx
 // Quick Underwrite Screen - Simplified 3-number header wrapping existing PropertyAnalysisTab
 // Reuses existing proprietary components for deal analysis
+// Zone G: Added sticky header with compact metrics
 
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -10,6 +11,13 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedScrollHandler,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -26,8 +34,11 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
+import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { MetricCard } from '@/components/deals';
+import { SmartBackButton } from '@/components/navigation';
 import { useDeal } from '../hooks/useDeals';
 import { useDealAnalysis, DealMetrics, DEFAULT_FLIP_CONSTANTS } from '../../real-estate/hooks/useDealAnalysis';
 import { PropertyAnalysisTab } from '../../real-estate/components/PropertyAnalysisTab';
@@ -260,8 +271,84 @@ function EvidenceDrawer({
 }
 
 // ============================================
+// Sticky Metrics Header - Zone G
+// Shows compact metrics when scrolled past the main header
+// ============================================
+
+interface StickyMetricsHeaderProps {
+  metrics: DealMetrics;
+  riskScore: number | undefined;
+  visible: boolean;
+}
+
+function StickyMetricsHeader({ metrics, riskScore, visible }: StickyMetricsHeaderProps) {
+  const colors = useThemeColors();
+
+  const formatCurrency = (value: number) => {
+    if (!value || value === 0) return '-';
+    const prefix = value < 0 ? '-' : '';
+    return `${prefix}$${Math.abs(value).toLocaleString()}`;
+  };
+
+  // Animated visibility
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(visible ? 1 : 0, [0, 1], [0, 1]),
+    transform: [
+      { translateY: interpolate(visible ? 1 : 0, [0, 1], [-20, 0]) },
+    ],
+    pointerEvents: visible ? 'auto' : 'none',
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: colors.background,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          paddingHorizontal: SPACING.md,
+          paddingVertical: SPACING.sm,
+          zIndex: 100,
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          ...getShadowStyle(colors, { size: 'sm' }),
+        },
+        animatedStyle,
+      ]}
+    >
+      <MetricCard
+        label="MAO"
+        value={formatCurrency(metrics.mao)}
+        icon={<DollarSign size={12} color={colors.success} />}
+        compact
+      />
+      <View style={{ width: 1, backgroundColor: colors.border }} />
+      <MetricCard
+        label="Profit"
+        value={formatCurrency(metrics.netProfit)}
+        icon={<TrendingUp size={12} color={colors.info} />}
+        compact
+      />
+      <View style={{ width: 1, backgroundColor: colors.border }} />
+      <MetricCard
+        label="Risk"
+        value={riskScore !== undefined ? `${riskScore}/5` : '-'}
+        icon={<Shield size={12} color={colors.warning} />}
+        compact
+      />
+    </Animated.View>
+  );
+}
+
+// ============================================
 // Main Screen
 // ============================================
+
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 export function QuickUnderwriteScreen() {
   const router = useRouter();
@@ -272,6 +359,25 @@ export function QuickUnderwriteScreen() {
 
   const { deal, isLoading, error, refetch } = useDeal(dealId);
   const [expandedField, setExpandedField] = useState<string | null>(null);
+
+  // Scroll tracking for sticky header - Zone G
+  const scrollY = useSharedValue(0);
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const STICKY_THRESHOLD = 180; // Show sticky header after scrolling past key metrics
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  // Update sticky header visibility based on scroll position
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setShowStickyHeader(scrollY.value > STICKY_THRESHOLD);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [scrollY]);
 
   // Get property for analysis - use empty default if not available
   const property: Property = useMemo(() => {
@@ -317,23 +423,26 @@ export function QuickUnderwriteScreen() {
     );
   }
 
+  // Get risk score for sticky header
+  const riskScore = getDealRiskScore(deal);
+
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3">
-        <TouchableOpacity
-          onPress={handleBack}
-          accessibilityLabel="Go back"
-          accessibilityRole="button"
-          className="p-2 -ml-2"
-        >
-          <ArrowLeft size={24} color={colors.foreground} />
-        </TouchableOpacity>
+        <SmartBackButton variant="default" />
         <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Quick Underwrite</Text>
         <View className="w-10" />
       </View>
 
-      <ScrollView
+      {/* Sticky Header - Zone G */}
+      <StickyMetricsHeader
+        metrics={metrics}
+        riskScore={riskScore}
+        visible={showStickyHeader}
+      />
+
+      <AnimatedScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
@@ -344,6 +453,8 @@ export function QuickUnderwriteScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         {/* Deal Context */}
         <View className="px-4 mb-4">
@@ -425,7 +536,7 @@ export function QuickUnderwriteScreen() {
             </View>
           </View>
         </View>
-      </ScrollView>
+      </AnimatedScrollView>
     </ThemedSafeAreaView>
   );
 }

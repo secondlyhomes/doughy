@@ -90,7 +90,7 @@ describe('userService', () => {
       expect(result.success).toBe(true);
       expect(result.users).toHaveLength(1);
       expect(result.total).toBe(1);
-      expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
+      expect(mockSupabase.from).toHaveBeenCalledWith('user_profiles');
     });
 
     it('applies search filter with sanitized input', async () => {
