@@ -15,6 +15,58 @@ This document establishes naming standards for database tables, columns, indexes
 
 ## Table Naming Patterns
 
+### Exception: Root Entities
+
+Root entities may remain unprefixed when **ALL** of these conditions are met:
+
+1. **Globally unique and unambiguous** - The name clearly represents a single, well-defined concept (e.g., `deals`, `workspaces`)
+2. **Primary object of their domain** - They represent the main entity, not a supporting table
+3. **Prefixing would create redundancy** - Adding a prefix would result in awkward repetition (e.g., `deal_deals`, `workspace_workspaces`)
+
+#### Examples of Root Entities
+
+**✅ Correct unprefixed roots:**
+- `deals` (root entity) + `deal_events` (prefixed child)
+- `workspaces` (root entity) + `workspace_members` (prefixed child)
+
+**Why these work:**
+- Short, clear, and unambiguous
+- The root IS the domain name
+- Child tables use the parent as prefix
+- Unlikely to collide with future features
+
+**❌ Would be incorrect:**
+- `deal_deals` - redundant
+- `workspace_workspaces` - redundant
+- `messages` without prefix - too generic, would collide
+
+#### When to Use Domain Prefixes
+
+Use domain prefixes when:
+- **The name is generic** and needs context (e.g., `messages` → `comms_messages`)
+- **The name could collide** with future features (e.g., `profiles` → `user_profiles`)
+- **Grouping related tables** is valuable for clarity (e.g., `user_*`, `system_*`, `re_*`)
+
+#### Industry Precedent
+
+This pattern is common in well-designed production schemas:
+
+**Stripe:**
+- `customers` (unprefixed root) + `customer_tax_ids` (prefixed child)
+- `subscriptions` (unprefixed root) + `subscription_items` (prefixed child)
+
+**GitHub:**
+- `repositories` (unprefixed root) + `repository_collaborators` (prefixed child)
+- `users` (unprefixed root) + `user_emails` (prefixed child)
+
+#### Guardrail
+
+**⚠️ No new root entities may be added without DBA approval.**
+
+This prevents "exception creep" where developers add unprefixed tables because "my table is important too." The current list (`deals`, `workspaces`) should remain fixed unless a truly top-level object is introduced (e.g., `organizations`, `projects`).
+
+---
+
 ### Current Patterns (Keep As-Is)
 
 #### 1. Auth/User Domain
