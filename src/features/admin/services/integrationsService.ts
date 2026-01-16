@@ -52,7 +52,7 @@ export async function getConfiguredIntegrations(): Promise<IntegrationsResult> {
   try {
     // Query api_keys table for configured services
     const { data: apiKeys, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('service, status, last_used, last_checked');
 
     if (error) {
@@ -128,7 +128,7 @@ export async function toggleIntegration(
     const normalizedService = normalizeServiceName(service);
 
     const { error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .update({
         status: enabled ? 'active' : 'inactive',
         updated_at: new Date().toISOString(),

@@ -135,7 +135,7 @@ export async function getHealthStatusFromDB(service: string): Promise<Integratio
     const normalizedService = normalizeServiceName(service);
 
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('security_api_keys')
       .select('status, last_checked')
       .eq('service', normalizedService)
       .maybeSingle();

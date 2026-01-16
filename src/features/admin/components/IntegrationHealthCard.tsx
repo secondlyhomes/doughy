@@ -27,7 +27,7 @@ export function IntegrationHealthCard() {
     try {
       // Test connection by querying api_keys table
       const { data, error, count } = await supabase
-        .from('api_keys')
+        .from('security_api_keys')
         .select('*', { count: 'exact', head: false });
 
       const latency = Date.now() - startTime;

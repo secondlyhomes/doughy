@@ -13,7 +13,7 @@ export async function getAuthenticatedUserId(): Promise<string> {
 
 export async function getStoredToken(userId: string) {
   const { data, error } = await supabase
-    .from('oauth_tokens')
+    .from('security_oauth_tokens')
     .select('access_token, refresh_token, expiry_date')
     .eq('user_id', userId)
     .eq('provider', 'google')
@@ -32,7 +32,7 @@ export async function storeToken(userId: string, tokenData: {
 }) {
   // Use type assertion for upsert since schema types may not match exactly
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('oauth_tokens') as any)
+  const { error } = await (supabase.from('security_oauth_tokens') as any)
     .upsert({
       user_id: userId,
       provider: 'google',
@@ -55,7 +55,7 @@ export async function updateToken(userId: string, tokenData: {
 }) {
   // Use type assertion since schema types may not match exactly
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('oauth_tokens') as any)
+  const { error } = await (supabase.from('security_oauth_tokens') as any)
     .update({
       access_token: tokenData.access_token,
       expiry_date: tokenData.expires_in
@@ -71,7 +71,7 @@ export async function updateToken(userId: string, tokenData: {
 
 export async function deleteToken(userId: string) {
   const { error } = await supabase
-    .from('oauth_tokens')
+    .from('security_oauth_tokens')
     .delete()
     .eq('user_id', userId)
     .eq('provider', 'google');

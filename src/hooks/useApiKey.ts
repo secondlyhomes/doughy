@@ -47,7 +47,7 @@ export function useApiKey(service: string) {
 
         // Query for API key
         const { data, error: fetchError } = await supabase
-          .from('api_keys')
+          .from('security_api_keys')
           .select('key_ciphertext, service')
           .eq('service', normalizedService)
           .maybeSingle();
@@ -139,7 +139,7 @@ export function useApiKey(service: string) {
 
       // Check if key already exists
       const { data: existingKey } = await supabase
-        .from('api_keys')
+        .from('security_api_keys')
         .select('*')
         .eq('service', normalizedService)
         .maybeSingle();
@@ -149,7 +149,7 @@ export function useApiKey(service: string) {
       if (existingKey) {
         // Update existing key
         result = await supabase
-          .from('api_keys')
+          .from('security_api_keys')
           .update({
             key_ciphertext: ciphertext,
             encrypted: true,
@@ -159,7 +159,7 @@ export function useApiKey(service: string) {
       } else {
         // Insert new key
         result = await supabase
-          .from('api_keys')
+          .from('security_api_keys')
           .insert({
             service: normalizedService,
             key_ciphertext: ciphertext,
@@ -201,7 +201,7 @@ export function useApiKey(service: string) {
       const normalizedService = normalizeServiceName(service);
 
       const { error: deleteError } = await supabase
-        .from('api_keys')
+        .from('security_api_keys')
         .delete()
         .eq('service', normalizedService);
 
