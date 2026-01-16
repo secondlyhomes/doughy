@@ -62,51 +62,6 @@ export type Database = {
         }
         Relationships: []
       }
-      api_keys: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          encrypted: boolean | null
-          group_name: string
-          id: string
-          key_ciphertext: string
-          last_checked: string | null
-          last_used: string | null
-          service: string
-          status: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          encrypted?: boolean | null
-          group_name?: string
-          id?: string
-          key_ciphertext: string
-          last_checked?: string | null
-          last_used?: string | null
-          service: string
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          encrypted?: boolean | null
-          group_name?: string
-          id?: string
-          key_ciphertext?: string
-          last_checked?: string | null
-          last_used?: string | null
-          service?: string
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       assistant_jobs: {
         Row: {
           completed_at: string | null
@@ -187,6 +142,144 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_stripe_customers: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          id: string
+          last_updated: string | null
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          last_updated?: string | null
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          last_updated?: string | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_stripe_products: {
+        Row: {
+          created_at: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          reference_id: string | null
+          sort_order: number | null
+          stripe_price_id_monthly: string
+          stripe_price_id_yearly: string
+          stripe_product_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          reference_id?: string | null
+          sort_order?: number | null
+          stripe_price_id_monthly: string
+          stripe_price_id_yearly: string
+          stripe_product_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          reference_id?: string | null
+          sort_order?: number | null
+          stripe_price_id_monthly?: string
+          stripe_price_id_yearly?: string
+          stripe_product_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      billing_subscription_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_subscription_notifications: {
+        Row: {
+          channels: string[]
+          created_at: string | null
+          data: Json | null
+          id: string
+          scheduled_for: string
+          sent: boolean | null
+          sent_at: string | null
+          subscription_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          channels: string[]
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          scheduled_for: string
+          sent?: boolean | null
+          sent_at?: string | null
+          subscription_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          channels?: string[]
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          scheduled_for?: string
+          sent?: boolean | null
+          sent_at?: string | null
+          subscription_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       call_logs: {
         Row: {
           created_at: string
@@ -216,6 +309,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "calls_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "calls_lead_id_fkey"
             columns: ["lead_id"]
@@ -345,10 +445,62 @@ export type Database = {
             foreignKeyName: "transcripts_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcripts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
+      }
+      comms_email_logs: {
+        Row: {
+          clicked_at: string | null
+          created_at: string | null
+          email_type: string
+          external_id: string | null
+          id: string
+          metadata: Json | null
+          opened_at: string | null
+          recipient: string
+          status: string
+          subject: string
+          template_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          created_at?: string | null
+          email_type: string
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          recipient: string
+          status: string
+          subject: string
+          template_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          created_at?: string | null
+          email_type?: string
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          recipient?: string
+          status?: string
+          subject?: string
+          template_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       comms_messages: {
         Row: {
@@ -428,6 +580,13 @@ export type Database = {
             foreignKeyName: "messages_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
@@ -472,7 +631,7 @@ export type Database = {
         }
         Relationships: []
       }
-      contacts: {
+      crm_contacts: {
         Row: {
           address: Json | null
           city: string | null
@@ -532,240 +691,7 @@ export type Database = {
         }
         Relationships: []
       }
-      deal_events: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          deal_id: string
-          description: string | null
-          event_type: string
-          id: string
-          metadata: Json | null
-          source: string
-          title: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          deal_id: string
-          description?: string | null
-          event_type: string
-          id?: string
-          metadata?: Json | null
-          source?: string
-          title: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          deal_id?: string
-          description?: string | null
-          event_type?: string
-          id?: string
-          metadata?: Json | null
-          source?: string
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "deal_events_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      deals: {
-        Row: {
-          created_at: string | null
-          estimated_value: number | null
-          expected_close_date: string | null
-          id: string
-          lead_id: string | null
-          next_action: string | null
-          next_action_due: string | null
-          notes: string | null
-          probability: number | null
-          property_id: string | null
-          stage: string
-          status: string
-          title: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          estimated_value?: number | null
-          expected_close_date?: string | null
-          id?: string
-          lead_id?: string | null
-          next_action?: string | null
-          next_action_due?: string | null
-          notes?: string | null
-          probability?: number | null
-          property_id?: string | null
-          stage?: string
-          status?: string
-          title: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          estimated_value?: number | null
-          expected_close_date?: string | null
-          id?: string
-          lead_id?: string | null
-          next_action?: string | null
-          next_action_due?: string | null
-          notes?: string | null
-          probability?: number | null
-          property_id?: string | null
-          stage?: string
-          status?: string
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "deals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deals_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "re_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      email_change_history: {
-        Row: {
-          changed_at: string
-          changed_by: string | null
-          id: string
-          new_email: string
-          previous_email: string
-          user_id: string
-          verified: boolean
-        }
-        Insert: {
-          changed_at?: string
-          changed_by?: string | null
-          id?: string
-          new_email: string
-          previous_email: string
-          user_id: string
-          verified?: boolean
-        }
-        Update: {
-          changed_at?: string
-          changed_by?: string | null
-          id?: string
-          new_email?: string
-          previous_email?: string
-          user_id?: string
-          verified?: boolean
-        }
-        Relationships: []
-      }
-      email_logs: {
-        Row: {
-          clicked_at: string | null
-          created_at: string | null
-          email_type: string
-          external_id: string | null
-          id: string
-          metadata: Json | null
-          opened_at: string | null
-          recipient: string
-          status: string
-          subject: string
-          template_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          clicked_at?: string | null
-          created_at?: string | null
-          email_type: string
-          external_id?: string | null
-          id?: string
-          metadata?: Json | null
-          opened_at?: string | null
-          recipient: string
-          status: string
-          subject: string
-          template_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          clicked_at?: string | null
-          created_at?: string | null
-          email_type?: string
-          external_id?: string | null
-          id?: string
-          metadata?: Json | null
-          opened_at?: string | null
-          recipient?: string
-          status?: string
-          subject?: string
-          template_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      email_preferences: {
-        Row: {
-          created_at: string | null
-          document_emails: boolean | null
-          email_frequency: string | null
-          lead_update_emails: boolean | null
-          marketing_emails: boolean | null
-          property_emails: boolean | null
-          reminder_emails: boolean | null
-          security_emails: boolean | null
-          unsubscribed_all: boolean | null
-          updated_at: string | null
-          user_id: string
-          welcome_emails: boolean | null
-        }
-        Insert: {
-          created_at?: string | null
-          document_emails?: boolean | null
-          email_frequency?: string | null
-          lead_update_emails?: boolean | null
-          marketing_emails?: boolean | null
-          property_emails?: boolean | null
-          reminder_emails?: boolean | null
-          security_emails?: boolean | null
-          unsubscribed_all?: boolean | null
-          updated_at?: string | null
-          user_id: string
-          welcome_emails?: boolean | null
-        }
-        Update: {
-          created_at?: string | null
-          document_emails?: boolean | null
-          email_frequency?: string | null
-          lead_update_emails?: boolean | null
-          marketing_emails?: boolean | null
-          property_emails?: boolean | null
-          reminder_emails?: boolean | null
-          security_emails?: boolean | null
-          unsubscribed_all?: boolean | null
-          updated_at?: string | null
-          user_id?: string
-          welcome_emails?: boolean | null
-        }
-        Relationships: []
-      }
-      lead_contacts: {
+      crm_lead_contacts: {
         Row: {
           contact_id: string
           created_at: string
@@ -802,6 +728,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lead_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "lead_contacts_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
@@ -810,7 +750,7 @@ export type Database = {
           },
         ]
       }
-      lead_notes: {
+      crm_lead_notes: {
         Row: {
           content: string
           created_at: string | null
@@ -840,12 +780,19 @@ export type Database = {
             foreignKeyName: "lead_notes_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
       }
-      leads: {
+      crm_leads: {
         Row: {
           address_line_1: string | null
           address_line_2: string | null
@@ -955,107 +902,125 @@ export type Database = {
         }
         Relationships: []
       }
-      oauth_tokens: {
+      deal_events: {
         Row: {
-          access_token: string
-          created_at: string | null
-          expiry_date: string
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          description: string | null
+          event_type: string
           id: string
-          provider: string
-          raw_token: Json
-          refresh_token: string
-          scopes: string[]
+          metadata: Json | null
+          source: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          description?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          source?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          source?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          created_at: string | null
+          estimated_value: number | null
+          expected_close_date: string | null
+          id: string
+          lead_id: string | null
+          next_action: string | null
+          next_action_due: string | null
+          notes: string | null
+          probability: number | null
+          property_id: string | null
+          stage: string
+          status: string
+          title: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          access_token: string
           created_at?: string | null
-          expiry_date: string
+          estimated_value?: number | null
+          expected_close_date?: string | null
           id?: string
-          provider: string
-          raw_token: Json
-          refresh_token: string
-          scopes: string[]
+          lead_id?: string | null
+          next_action?: string | null
+          next_action_due?: string | null
+          notes?: string | null
+          probability?: number | null
+          property_id?: string | null
+          stage?: string
+          status?: string
+          title: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          access_token?: string
           created_at?: string | null
-          expiry_date?: string
+          estimated_value?: number | null
+          expected_close_date?: string | null
           id?: string
-          provider?: string
-          raw_token?: Json
-          refresh_token?: string
-          scopes?: string[]
+          lead_id?: string | null
+          next_action?: string | null
+          next_action_due?: string | null
+          notes?: string | null
+          probability?: number | null
+          property_id?: string | null
+          stage?: string
+          status?: string
+          title?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          account_type: string
-          created_at: string | null
-          deleted_at: string | null
-          deleted_by: string | null
-          deletion_reason: string | null
-          email: string
-          email_verified: boolean | null
-          first_name: string | null
-          id: string
-          is_deleted: boolean | null
-          last_name: string | null
-          name: string | null
-          onboarding_completed: boolean | null
-          original_email: string | null
-          original_id: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          account_type?: string
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          email: string
-          email_verified?: boolean | null
-          first_name?: string | null
-          id: string
-          is_deleted?: boolean | null
-          last_name?: string | null
-          name?: string | null
-          onboarding_completed?: boolean | null
-          original_email?: string | null
-          original_id?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          account_type?: string
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          email?: string
-          email_verified?: boolean | null
-          first_name?: string | null
-          id?: string
-          is_deleted?: boolean | null
-          last_name?: string | null
-          name?: string | null
-          onboarding_completed?: boolean | null
-          original_email?: string | null
-          original_id?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       re_buying_criteria: {
         Row: {
@@ -2000,44 +1965,6 @@ export type Database = {
           },
         ]
       }
-      reminder_logs: {
-        Row: {
-          action_taken: boolean | null
-          action_taken_at: string | null
-          email_id: string | null
-          id: string
-          reminder_type: string
-          sent_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action_taken?: boolean | null
-          action_taken_at?: string | null
-          email_id?: string | null
-          id?: string
-          reminder_type: string
-          sent_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action_taken?: boolean | null
-          action_taken_at?: string | null
-          email_id?: string | null
-          id?: string
-          reminder_type?: string
-          sent_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reminder_logs_email_id_fkey"
-            columns: ["email_id"]
-            isOneToOne: false
-            referencedRelation: "email_logs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       secure_spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -2059,6 +1986,81 @@ export type Database = {
           proj4text?: string | null
           srid?: number | null
           srtext?: string | null
+        }
+        Relationships: []
+      }
+      security_api_keys: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          encrypted: boolean | null
+          group_name: string
+          id: string
+          key_ciphertext: string
+          last_checked: string | null
+          last_used: string | null
+          service: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          encrypted?: boolean | null
+          group_name?: string
+          id?: string
+          key_ciphertext: string
+          last_checked?: string | null
+          last_used?: string | null
+          service: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          encrypted?: boolean | null
+          group_name?: string
+          id?: string
+          key_ciphertext?: string
+          last_checked?: string | null
+          last_used?: string | null
+          service?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_email_change_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_email: string
+          previous_email: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_email: string
+          previous_email: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_email?: string
+          previous_email?: string
+          user_id?: string
+          verified?: boolean
         }
         Relationships: []
       }
@@ -2107,10 +2109,56 @@ export type Database = {
             foreignKeyName: "security_event_logs_email_id_fkey"
             columns: ["email_id"]
             isOneToOne: false
+            referencedRelation: "comms_email_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "security_event_logs_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
             referencedRelation: "email_logs"
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_oauth_tokens: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          expiry_date: string
+          id: string
+          provider: string
+          raw_token: Json
+          refresh_token: string
+          scopes: string[]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          expiry_date: string
+          id?: string
+          provider: string
+          raw_token: Json
+          refresh_token: string
+          scopes: string[]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          expiry_date?: string
+          id?: string
+          provider?: string
+          raw_token?: Json
+          refresh_token?: string
+          scopes?: string[]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       security_reset_tokens: {
         Row: {
@@ -2172,144 +2220,6 @@ export type Database = {
           proj4text?: string | null
           srid?: number
           srtext?: string | null
-        }
-        Relationships: []
-      }
-      stripe_customers: {
-        Row: {
-          created_at: string | null
-          customer_id: string
-          id: string
-          last_updated: string | null
-          subscription_id: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          customer_id: string
-          id?: string
-          last_updated?: string | null
-          subscription_id?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          customer_id?: string
-          id?: string
-          last_updated?: string | null
-          subscription_id?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      stripe_products: {
-        Row: {
-          created_at: string | null
-          display_name: string
-          id: string
-          is_active: boolean | null
-          name: string
-          notes: string | null
-          reference_id: string | null
-          sort_order: number | null
-          stripe_price_id_monthly: string
-          stripe_price_id_yearly: string
-          stripe_product_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          display_name: string
-          id?: string
-          is_active?: boolean | null
-          name: string
-          notes?: string | null
-          reference_id?: string | null
-          sort_order?: number | null
-          stripe_price_id_monthly: string
-          stripe_price_id_yearly: string
-          stripe_product_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          display_name?: string
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          notes?: string | null
-          reference_id?: string | null
-          sort_order?: number | null
-          stripe_price_id_monthly?: string
-          stripe_price_id_yearly?: string
-          stripe_product_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      subscription_events: {
-        Row: {
-          created_at: string | null
-          event_data: Json | null
-          event_type: string
-          id: string
-          subscription_id: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          event_data?: Json | null
-          event_type: string
-          id?: string
-          subscription_id?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          event_data?: Json | null
-          event_type?: string
-          id?: string
-          subscription_id?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      subscription_notifications: {
-        Row: {
-          channels: string[]
-          created_at: string | null
-          data: Json | null
-          id: string
-          scheduled_for: string
-          sent: boolean | null
-          sent_at: string | null
-          subscription_id: string | null
-          type: string
-          user_id: string
-        }
-        Insert: {
-          channels: string[]
-          created_at?: string | null
-          data?: Json | null
-          id?: string
-          scheduled_for: string
-          sent?: boolean | null
-          sent_at?: string | null
-          subscription_id?: string | null
-          type: string
-          user_id: string
-        }
-        Update: {
-          channels?: string[]
-          created_at?: string | null
-          data?: Json | null
-          id?: string
-          scheduled_for?: string
-          sent?: boolean | null
-          sent_at?: string | null
-          subscription_id?: string | null
-          type?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -2616,6 +2526,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_email_preferences: {
+        Row: {
+          created_at: string | null
+          document_emails: boolean | null
+          email_frequency: string | null
+          lead_update_emails: boolean | null
+          marketing_emails: boolean | null
+          property_emails: boolean | null
+          reminder_emails: boolean | null
+          security_emails: boolean | null
+          unsubscribed_all: boolean | null
+          updated_at: string | null
+          user_id: string
+          welcome_emails: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_emails?: boolean | null
+          email_frequency?: string | null
+          lead_update_emails?: boolean | null
+          marketing_emails?: boolean | null
+          property_emails?: boolean | null
+          reminder_emails?: boolean | null
+          security_emails?: boolean | null
+          unsubscribed_all?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          welcome_emails?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          document_emails?: boolean | null
+          email_frequency?: string | null
+          lead_update_emails?: boolean | null
+          marketing_emails?: boolean | null
+          property_emails?: boolean | null
+          reminder_emails?: boolean | null
+          security_emails?: boolean | null
+          unsubscribed_all?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          welcome_emails?: boolean | null
+        }
+        Relationships: []
+      }
       user_import_mappings: {
         Row: {
           created_at: string
@@ -2639,36 +2594,6 @@ export type Database = {
           mapping?: Json
           name?: string
           updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_mfa: {
-        Row: {
-          created_at: string
-          id: string
-          is_primary: boolean
-          last_used_at: string | null
-          method: string
-          secret: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_primary?: boolean
-          last_used_at?: string | null
-          method: string
-          secret: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_primary?: boolean
-          last_used_at?: string | null
-          method?: string
-          secret?: string
           user_id?: string
         }
         Relationships: []
@@ -2723,6 +2648,36 @@ export type Database = {
           id?: string
           used?: boolean
           used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_mfa_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          last_used_at: string | null
+          method: string
+          secret: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          last_used_at?: string | null
+          method: string
+          secret: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          last_used_at?: string | null
+          method?: string
+          secret?: string
           user_id?: string
         }
         Relationships: []
@@ -2921,6 +2876,114 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          account_type: string
+          created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
+          email: string
+          email_verified: boolean | null
+          first_name: string | null
+          id: string
+          is_deleted: boolean | null
+          last_name: string | null
+          name: string | null
+          onboarding_completed: boolean | null
+          original_email: string | null
+          original_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          account_type?: string
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email: string
+          email_verified?: boolean | null
+          first_name?: string | null
+          id: string
+          is_deleted?: boolean | null
+          last_name?: string | null
+          name?: string | null
+          onboarding_completed?: boolean | null
+          original_email?: string | null
+          original_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          account_type?: string
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email?: string
+          email_verified?: boolean | null
+          first_name?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          last_name?: string | null
+          name?: string | null
+          onboarding_completed?: boolean | null
+          original_email?: string | null
+          original_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      user_reminder_logs: {
+        Row: {
+          action_taken: boolean | null
+          action_taken_at: string | null
+          email_id: string | null
+          id: string
+          reminder_type: string
+          sent_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_taken?: boolean | null
+          action_taken_at?: string | null
+          email_id?: string | null
+          id?: string
+          reminder_type: string
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_taken?: boolean | null
+          action_taken_at?: string | null
+          email_id?: string | null
+          id?: string
+          reminder_type?: string
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_logs_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "comms_email_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_logs_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "email_logs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_reminder_states: {
         Row: {
@@ -3199,6 +3262,51 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          encrypted: boolean | null
+          group_name: string | null
+          id: string | null
+          key_ciphertext: string | null
+          last_checked: string | null
+          last_used: string | null
+          service: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          encrypted?: boolean | null
+          group_name?: string | null
+          id?: string | null
+          key_ciphertext?: string | null
+          last_checked?: string | null
+          last_used?: string | null
+          service?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          encrypted?: boolean | null
+          group_name?: string | null
+          id?: string | null
+          key_ciphertext?: string | null
+          last_checked?: string | null
+          last_used?: string | null
+          service?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       calls: {
         Row: {
           created_at: string | null
@@ -3232,10 +3340,197 @@ export type Database = {
             foreignKeyName: "calls_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calls_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
+      }
+      contacts: {
+        Row: {
+          address: Json | null
+          city: string | null
+          company: string | null
+          created_at: string | null
+          email: string | null
+          emails: Json | null
+          first_name: string | null
+          id: string | null
+          is_deleted: boolean | null
+          job_title: string | null
+          last_name: string | null
+          phone: string | null
+          phones: Json | null
+          sms_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
+          state: string | null
+          updated_at: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: Json | null
+          city?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          emails?: Json | null
+          first_name?: string | null
+          id?: string | null
+          is_deleted?: boolean | null
+          job_title?: string | null
+          last_name?: string | null
+          phone?: string | null
+          phones?: Json | null
+          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          state?: string | null
+          updated_at?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: Json | null
+          city?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          emails?: Json | null
+          first_name?: string | null
+          id?: string | null
+          is_deleted?: boolean | null
+          job_title?: string | null
+          last_name?: string | null
+          phone?: string | null
+          phones?: Json | null
+          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          state?: string | null
+          updated_at?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      email_change_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string | null
+          new_email: string | null
+          previous_email: string | null
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string | null
+          new_email?: string | null
+          previous_email?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string | null
+          new_email?: string | null
+          previous_email?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          clicked_at: string | null
+          created_at: string | null
+          email_type: string | null
+          external_id: string | null
+          id: string | null
+          metadata: Json | null
+          opened_at: string | null
+          recipient: string | null
+          status: string | null
+          subject: string | null
+          template_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          created_at?: string | null
+          email_type?: string | null
+          external_id?: string | null
+          id?: string | null
+          metadata?: Json | null
+          opened_at?: string | null
+          recipient?: string | null
+          status?: string | null
+          subject?: string | null
+          template_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          created_at?: string | null
+          email_type?: string | null
+          external_id?: string | null
+          id?: string | null
+          metadata?: Json | null
+          opened_at?: string | null
+          recipient?: string | null
+          status?: string | null
+          subject?: string | null
+          template_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_preferences: {
+        Row: {
+          created_at: string | null
+          document_emails: boolean | null
+          email_frequency: string | null
+          lead_update_emails: boolean | null
+          marketing_emails: boolean | null
+          property_emails: boolean | null
+          reminder_emails: boolean | null
+          security_emails: boolean | null
+          unsubscribed_all: boolean | null
+          updated_at: string | null
+          user_id: string | null
+          welcome_emails: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_emails?: boolean | null
+          email_frequency?: string | null
+          lead_update_emails?: boolean | null
+          marketing_emails?: boolean | null
+          property_emails?: boolean | null
+          reminder_emails?: boolean | null
+          security_emails?: boolean | null
+          unsubscribed_all?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+          welcome_emails?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          document_emails?: boolean | null
+          email_frequency?: string | null
+          lead_update_emails?: boolean | null
+          marketing_emails?: boolean | null
+          property_emails?: boolean | null
+          reminder_emails?: boolean | null
+          security_emails?: boolean | null
+          unsubscribed_all?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+          welcome_emails?: boolean | null
+        }
+        Relationships: []
       }
       geography_columns: {
         Row: {
@@ -3276,6 +3571,217 @@ export type Database = {
           f_table_schema?: unknown
           srid?: number | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      lead_contacts: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          id: string | null
+          is_primary: boolean | null
+          lead_id: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          lead_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          lead_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_notes: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string | null
+          lead_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          lead_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          lead_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          address_line_1: string | null
+          address_line_2: string | null
+          city: string | null
+          company: string | null
+          created_at: string | null
+          email: string | null
+          email_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
+          email_opt_status_updated_at: string | null
+          emails: Json | null
+          has_conversation: boolean | null
+          id: string | null
+          import_id: string | null
+          inserted_at: string | null
+          is_deleted: boolean | null
+          name: string | null
+          opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
+          opt_status_updated_at: string | null
+          phone: string | null
+          phone_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
+          phone_opt_status_updated_at: string | null
+          phones: Json | null
+          score: number | null
+          state: string | null
+          status: Database["public"]["Enums"]["lead_status"] | null
+          tags: string[] | null
+          text_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
+          text_opt_status_updated_at: string | null
+          updated_at: string | null
+          user_id: string | null
+          workspace_id: string | null
+          zip: string | null
+        }
+        Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_opt_status?:
+            | Database["public"]["Enums"]["sms_opt_status"]
+            | null
+          email_opt_status_updated_at?: string | null
+          emails?: Json | null
+          has_conversation?: boolean | null
+          id?: string | null
+          import_id?: string | null
+          inserted_at?: string | null
+          is_deleted?: boolean | null
+          name?: string | null
+          opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          opt_status_updated_at?: string | null
+          phone?: string | null
+          phone_opt_status?:
+            | Database["public"]["Enums"]["sms_opt_status"]
+            | null
+          phone_opt_status_updated_at?: string | null
+          phones?: Json | null
+          score?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          tags?: string[] | null
+          text_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          text_opt_status_updated_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_opt_status?:
+            | Database["public"]["Enums"]["sms_opt_status"]
+            | null
+          email_opt_status_updated_at?: string | null
+          emails?: Json | null
+          has_conversation?: boolean | null
+          id?: string | null
+          import_id?: string | null
+          inserted_at?: string | null
+          is_deleted?: boolean | null
+          name?: string | null
+          opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          opt_status_updated_at?: string | null
+          phone?: string | null
+          phone_opt_status?:
+            | Database["public"]["Enums"]["sms_opt_status"]
+            | null
+          phone_opt_status_updated_at?: string | null
+          phones?: Json | null
+          score?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          tags?: string[] | null
+          text_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          text_opt_status_updated_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+          zip?: string | null
         }
         Relationships: []
       }
@@ -3357,7 +3863,161 @@ export type Database = {
             foreignKeyName: "messages_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_tokens: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          expiry_date: string | null
+          id: string | null
+          provider: string | null
+          raw_token: Json | null
+          refresh_token: string | null
+          scopes: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string | null
+          provider?: string | null
+          raw_token?: Json | null
+          refresh_token?: string | null
+          scopes?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string | null
+          provider?: string | null
+          raw_token?: Json | null
+          refresh_token?: string | null
+          scopes?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_type: string | null
+          created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
+          email: string | null
+          email_verified: boolean | null
+          first_name: string | null
+          id: string | null
+          is_deleted: boolean | null
+          last_name: string | null
+          name: string | null
+          onboarding_completed: boolean | null
+          original_email: string | null
+          original_id: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          account_type?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email?: string | null
+          email_verified?: boolean | null
+          first_name?: string | null
+          id?: string | null
+          is_deleted?: boolean | null
+          last_name?: string | null
+          name?: string | null
+          onboarding_completed?: boolean | null
+          original_email?: string | null
+          original_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          account_type?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          email?: string | null
+          email_verified?: boolean | null
+          first_name?: string | null
+          id?: string | null
+          is_deleted?: boolean | null
+          last_name?: string | null
+          name?: string | null
+          onboarding_completed?: boolean | null
+          original_email?: string | null
+          original_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      reminder_logs: {
+        Row: {
+          action_taken: boolean | null
+          action_taken_at: string | null
+          email_id: string | null
+          id: string | null
+          reminder_type: string | null
+          sent_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_taken?: boolean | null
+          action_taken_at?: string | null
+          email_id?: string | null
+          id?: string | null
+          reminder_type?: string | null
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_taken?: boolean | null
+          action_taken_at?: string | null
+          email_id?: string | null
+          id?: string | null
+          reminder_type?: string | null
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_logs_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "comms_email_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_logs_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "email_logs"
             referencedColumns: ["id"]
           },
         ]
@@ -3397,6 +4057,144 @@ export type Database = {
           status?: string | null
           subject?: string | null
           updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      stripe_customers: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          id: string | null
+          last_updated: string | null
+          subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          last_updated?: string | null
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          last_updated?: string | null
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      stripe_products: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          notes: string | null
+          reference_id: string | null
+          sort_order: number | null
+          stripe_price_id_monthly: string | null
+          stripe_price_id_yearly: string | null
+          stripe_product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          notes?: string | null
+          reference_id?: string | null
+          sort_order?: number | null
+          stripe_price_id_monthly?: string | null
+          stripe_price_id_yearly?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          notes?: string | null
+          reference_id?: string | null
+          sort_order?: number | null
+          stripe_price_id_monthly?: string | null
+          stripe_price_id_yearly?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subscription_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string | null
+          id: string | null
+          subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string | null
+          id?: string | null
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string | null
+          id?: string | null
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      subscription_notifications: {
+        Row: {
+          channels: string[] | null
+          created_at: string | null
+          data: Json | null
+          id: string | null
+          scheduled_for: string | null
+          sent: boolean | null
+          sent_at: string | null
+          subscription_id: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channels?: string[] | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string | null
+          scheduled_for?: string | null
+          sent?: boolean | null
+          sent_at?: string | null
+          subscription_id?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channels?: string[] | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string | null
+          scheduled_for?: string | null
+          sent?: boolean | null
+          sent_at?: string | null
+          subscription_id?: string | null
+          type?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -3521,10 +4319,47 @@ export type Database = {
             foreignKeyName: "transcripts_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcripts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_mfa: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_primary: boolean | null
+          last_used_at: string | null
+          method: string | null
+          secret: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          last_used_at?: string | null
+          method?: string | null
+          secret?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          last_used_at?: string | null
+          method?: string | null
+          secret?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       workspace: {
         Row: {
@@ -4030,7 +4865,7 @@ export type Database = {
         }[]
         SetofOptions: {
           from: "*"
-          to: "stripe_products"
+          to: "billing_stripe_products"
           isOneToOne: false
           isSetofReturn: true
         }
@@ -4085,7 +4920,7 @@ export type Database = {
         }[]
         SetofOptions: {
           from: "*"
-          to: "email_preferences"
+          to: "user_email_preferences"
           isOneToOne: false
           isSetofReturn: true
         }
