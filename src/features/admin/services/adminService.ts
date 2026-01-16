@@ -41,7 +41,7 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
 
     // Get total users (excluding deleted)
     const { count: totalUsers, error: usersError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .eq('is_deleted', false);
 
@@ -50,7 +50,7 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
     // Get active users (not deleted)
     // Note: We count non-deleted users as "active" since we don't have last_sign_in_at
     const { count: activeUsers, error: activeError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .eq('is_deleted', false);
 
@@ -72,7 +72,7 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
 
     // Get new users this week
     const { count: newUsersThisWeek, error: newUsersError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', weekAgo.toISOString())
       .eq('is_deleted', false);
@@ -117,7 +117,7 @@ export async function getSystemHealth(): Promise<SystemHealthResult> {
   // Check Database connection
   try {
     const start = Date.now();
-    const { error } = await supabase.from('profiles').select('id').limit(1);
+    const { error } = await supabase.from('user_profiles').select('id').limit(1);
     const latency = Date.now() - start;
 
     systems.push({

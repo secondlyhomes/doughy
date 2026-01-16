@@ -58,7 +58,7 @@ export function ProfileScreen() {
 
       // DB schema has: name, first_name, last_name (not full_name)
       const { error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({
           name: fullName,
           first_name: firstName.trim() || null,

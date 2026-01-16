@@ -88,7 +88,7 @@ export async function getUsers(filters: UserFilters = {}): Promise<UserListResul
     } = filters;
 
     let query = supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*', { count: 'exact' });
 
     // Filter deleted users unless explicitly requested
@@ -151,7 +151,7 @@ export async function getUsers(filters: UserFilters = {}): Promise<UserListResul
 export async function getUserById(userId: string): Promise<UserResult> {
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .single();
@@ -187,7 +187,7 @@ export async function updateUserRole(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ role, updated_at: new Date().toISOString() })
       .eq('id', userId);
 
@@ -210,7 +210,7 @@ export async function restoreUser(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({ is_deleted: false, updated_at: new Date().toISOString() })
       .eq('id', userId);
 
@@ -234,7 +234,7 @@ export async function deleteUser(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({
         is_deleted: true,
         updated_at: new Date().toISOString(),

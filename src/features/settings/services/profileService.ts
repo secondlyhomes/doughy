@@ -38,7 +38,7 @@ export async function updateProfile(data: ProfileUpdateData): Promise<ProfileRes
     const fullName = [data.firstName, data.lastName].filter(Boolean).join(' ');
 
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({
         first_name: data.firstName,
         last_name: data.lastName,
@@ -156,7 +156,7 @@ export async function uploadAvatar(uri: string): Promise<AvatarUploadResult> {
 
     // Update profile with avatar URL
     const { error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({
         avatar_url: publicUrl,
         updated_at: new Date().toISOString(),
@@ -194,7 +194,7 @@ export async function deleteAvatar(): Promise<ProfileResult> {
 
     // Update profile to remove avatar URL (even if storage delete fails)
     const { error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({
         avatar_url: null,
         updated_at: new Date().toISOString(),

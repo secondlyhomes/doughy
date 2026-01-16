@@ -83,7 +83,7 @@ export async function saveOnboardingResponses(
     // Save responses to profiles table
     // Using type assertion for fields that may not be in generated types yet
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({
         onboarding_responses: responses,
         onboarding_complete: true,
@@ -125,7 +125,7 @@ export async function skipOnboarding(): Promise<OnboardingResult> {
 
     // Using type assertion for fields that may not be in generated types yet
     const { error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update({
         onboarding_complete: true,
         onboarding_skipped: true,
@@ -162,7 +162,7 @@ export async function checkOnboardingStatus(): Promise<boolean> {
 
     // Using type assertion for fields that may not be in generated types yet
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('onboarding_complete')
       .eq('id', user.id)
       .single();
