@@ -316,13 +316,6 @@ export type Database = {
             referencedRelation: "crm_leads"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "calls_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
         ]
       }
       call_transcript_segments: {
@@ -365,13 +358,6 @@ export type Database = {
             columns: ["transcript_id"]
             isOneToOne: false
             referencedRelation: "call_transcripts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transcript_segments_transcript_id_fkey"
-            columns: ["transcript_id"]
-            isOneToOne: false
-            referencedRelation: "transcripts"
             referencedColumns: ["id"]
           },
         ]
@@ -446,13 +432,6 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transcripts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -581,13 +560,6 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -724,13 +696,6 @@ export type Database = {
             foreignKeyName: "lead_contacts_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_contacts_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
             referencedRelation: "crm_contacts"
             referencedColumns: ["id"]
           },
@@ -739,13 +704,6 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_contacts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -781,13 +739,6 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_notes_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -1007,13 +958,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "deals_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "deals_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -1170,13 +1114,6 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "re_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_comps_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
           {
@@ -1379,13 +1316,6 @@ export type Database = {
             foreignKeyName: "re_financing_scenarios_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "workspace"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_financing_scenarios_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -1431,13 +1361,6 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "re_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_lead_properties_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
           {
@@ -1548,13 +1471,6 @@ export type Database = {
             foreignKeyName: "re_properties_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "workspace"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_properties_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -1603,13 +1519,6 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "re_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_property_analyses_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
           {
@@ -1667,13 +1576,6 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: true
             referencedRelation: "re_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_property_debt_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
           {
@@ -1746,13 +1648,6 @@ export type Database = {
             foreignKeyName: "re_property_documents_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "workspace"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_property_documents_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -1798,13 +1693,6 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "re_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_property_images_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
           {
@@ -1886,13 +1774,6 @@ export type Database = {
             foreignKeyName: "re_property_mortgages_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "workspace"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_property_mortgages_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -1947,13 +1828,6 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "re_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "re_repair_estimates_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
           {
@@ -2110,13 +1984,6 @@ export type Database = {
             columns: ["email_id"]
             isOneToOne: false
             referencedRelation: "comms_email_logs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "security_event_logs_email_id_fkey"
-            columns: ["email_id"]
-            isOneToOne: false
-            referencedRelation: "email_logs"
             referencedColumns: ["id"]
           },
         ]
@@ -2976,13 +2843,6 @@ export type Database = {
             referencedRelation: "comms_email_logs"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "reminder_logs_email_id_fkey"
-            columns: ["email_id"]
-            isOneToOne: false
-            referencedRelation: "email_logs"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_reminder_states: {
@@ -3120,13 +2980,6 @@ export type Database = {
             foreignKeyName: "workspace_members_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
-            referencedRelation: "workspace"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "workspace_members_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
@@ -3206,332 +3059,6 @@ export type Database = {
       }
     }
     Views: {
-      ai_jobs: {
-        Row: {
-          completed_at: string | null
-          created_at: string | null
-          created_by: string | null
-          deal_id: string | null
-          error_message: string | null
-          id: string | null
-          input_json: Json | null
-          job_type: string | null
-          progress: number | null
-          result_artifact_ids: string[] | null
-          result_json: Json | null
-          started_at: string | null
-          status: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          deal_id?: string | null
-          error_message?: string | null
-          id?: string | null
-          input_json?: Json | null
-          job_type?: string | null
-          progress?: number | null
-          result_artifact_ids?: string[] | null
-          result_json?: Json | null
-          started_at?: string | null
-          status?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          deal_id?: string | null
-          error_message?: string | null
-          id?: string | null
-          input_json?: Json | null
-          job_type?: string | null
-          progress?: number | null
-          result_artifact_ids?: string[] | null
-          result_json?: Json | null
-          started_at?: string | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_jobs_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "deals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      api_keys: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          encrypted: boolean | null
-          group_name: string | null
-          id: string | null
-          key_ciphertext: string | null
-          last_checked: string | null
-          last_used: string | null
-          service: string | null
-          status: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          encrypted?: boolean | null
-          group_name?: string | null
-          id?: string | null
-          key_ciphertext?: string | null
-          last_checked?: string | null
-          last_used?: string | null
-          service?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          encrypted?: boolean | null
-          group_name?: string | null
-          id?: string | null
-          key_ciphertext?: string | null
-          last_checked?: string | null
-          last_used?: string | null
-          service?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      calls: {
-        Row: {
-          created_at: string | null
-          duration_secs: number | null
-          id: string | null
-          lead_id: string | null
-          recording_url: string | null
-          summary: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          duration_secs?: number | null
-          id?: string | null
-          lead_id?: string | null
-          recording_url?: string | null
-          summary?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          duration_secs?: number | null
-          id?: string | null
-          lead_id?: string | null
-          recording_url?: string | null
-          summary?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "calls_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calls_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      contacts: {
-        Row: {
-          address: Json | null
-          city: string | null
-          company: string | null
-          created_at: string | null
-          email: string | null
-          emails: Json | null
-          first_name: string | null
-          id: string | null
-          is_deleted: boolean | null
-          job_title: string | null
-          last_name: string | null
-          phone: string | null
-          phones: Json | null
-          sms_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          state: string | null
-          updated_at: string | null
-          zip: string | null
-        }
-        Insert: {
-          address?: Json | null
-          city?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          emails?: Json | null
-          first_name?: string | null
-          id?: string | null
-          is_deleted?: boolean | null
-          job_title?: string | null
-          last_name?: string | null
-          phone?: string | null
-          phones?: Json | null
-          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          state?: string | null
-          updated_at?: string | null
-          zip?: string | null
-        }
-        Update: {
-          address?: Json | null
-          city?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          emails?: Json | null
-          first_name?: string | null
-          id?: string | null
-          is_deleted?: boolean | null
-          job_title?: string | null
-          last_name?: string | null
-          phone?: string | null
-          phones?: Json | null
-          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          state?: string | null
-          updated_at?: string | null
-          zip?: string | null
-        }
-        Relationships: []
-      }
-      email_change_history: {
-        Row: {
-          changed_at: string | null
-          changed_by: string | null
-          id: string | null
-          new_email: string | null
-          previous_email: string | null
-          user_id: string | null
-          verified: boolean | null
-        }
-        Insert: {
-          changed_at?: string | null
-          changed_by?: string | null
-          id?: string | null
-          new_email?: string | null
-          previous_email?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          changed_at?: string | null
-          changed_by?: string | null
-          id?: string | null
-          new_email?: string | null
-          previous_email?: string | null
-          user_id?: string | null
-          verified?: boolean | null
-        }
-        Relationships: []
-      }
-      email_logs: {
-        Row: {
-          clicked_at: string | null
-          created_at: string | null
-          email_type: string | null
-          external_id: string | null
-          id: string | null
-          metadata: Json | null
-          opened_at: string | null
-          recipient: string | null
-          status: string | null
-          subject: string | null
-          template_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          clicked_at?: string | null
-          created_at?: string | null
-          email_type?: string | null
-          external_id?: string | null
-          id?: string | null
-          metadata?: Json | null
-          opened_at?: string | null
-          recipient?: string | null
-          status?: string | null
-          subject?: string | null
-          template_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          clicked_at?: string | null
-          created_at?: string | null
-          email_type?: string | null
-          external_id?: string | null
-          id?: string | null
-          metadata?: Json | null
-          opened_at?: string | null
-          recipient?: string | null
-          status?: string | null
-          subject?: string | null
-          template_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      email_preferences: {
-        Row: {
-          created_at: string | null
-          document_emails: boolean | null
-          email_frequency: string | null
-          lead_update_emails: boolean | null
-          marketing_emails: boolean | null
-          property_emails: boolean | null
-          reminder_emails: boolean | null
-          security_emails: boolean | null
-          unsubscribed_all: boolean | null
-          updated_at: string | null
-          user_id: string | null
-          welcome_emails: boolean | null
-        }
-        Insert: {
-          created_at?: string | null
-          document_emails?: boolean | null
-          email_frequency?: string | null
-          lead_update_emails?: boolean | null
-          marketing_emails?: boolean | null
-          property_emails?: boolean | null
-          reminder_emails?: boolean | null
-          security_emails?: boolean | null
-          unsubscribed_all?: boolean | null
-          updated_at?: string | null
-          user_id?: string | null
-          welcome_emails?: boolean | null
-        }
-        Update: {
-          created_at?: string | null
-          document_emails?: boolean | null
-          email_frequency?: string | null
-          lead_update_emails?: boolean | null
-          marketing_emails?: boolean | null
-          property_emails?: boolean | null
-          reminder_emails?: boolean | null
-          security_emails?: boolean | null
-          unsubscribed_all?: boolean | null
-          updated_at?: string | null
-          user_id?: string | null
-          welcome_emails?: boolean | null
-        }
-        Relationships: []
-      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
@@ -3571,829 +3098,6 @@ export type Database = {
           f_table_schema?: unknown
           srid?: number | null
           type?: string | null
-        }
-        Relationships: []
-      }
-      lead_contacts: {
-        Row: {
-          contact_id: string | null
-          created_at: string | null
-          id: string | null
-          is_primary: boolean | null
-          lead_id: string | null
-          role: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          contact_id?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_primary?: boolean | null
-          lead_id?: string | null
-          role?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          contact_id?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_primary?: boolean | null
-          lead_id?: string | null
-          role?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lead_contacts_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_contacts_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_contacts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_contacts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      lead_notes: {
-        Row: {
-          content: string | null
-          created_at: string | null
-          id: string | null
-          lead_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          lead_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          lead_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lead_notes_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_notes_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      leads: {
-        Row: {
-          address_line_1: string | null
-          address_line_2: string | null
-          city: string | null
-          company: string | null
-          created_at: string | null
-          email: string | null
-          email_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          email_opt_status_updated_at: string | null
-          emails: Json | null
-          has_conversation: boolean | null
-          id: string | null
-          import_id: string | null
-          inserted_at: string | null
-          is_deleted: boolean | null
-          name: string | null
-          opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          opt_status_updated_at: string | null
-          phone: string | null
-          phone_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          phone_opt_status_updated_at: string | null
-          phones: Json | null
-          score: number | null
-          state: string | null
-          status: Database["public"]["Enums"]["lead_status"] | null
-          tags: string[] | null
-          text_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          text_opt_status_updated_at: string | null
-          updated_at: string | null
-          user_id: string | null
-          workspace_id: string | null
-          zip: string | null
-        }
-        Insert: {
-          address_line_1?: string | null
-          address_line_2?: string | null
-          city?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          email_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          email_opt_status_updated_at?: string | null
-          emails?: Json | null
-          has_conversation?: boolean | null
-          id?: string | null
-          import_id?: string | null
-          inserted_at?: string | null
-          is_deleted?: boolean | null
-          name?: string | null
-          opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          opt_status_updated_at?: string | null
-          phone?: string | null
-          phone_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          phone_opt_status_updated_at?: string | null
-          phones?: Json | null
-          score?: number | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["lead_status"] | null
-          tags?: string[] | null
-          text_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          text_opt_status_updated_at?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          workspace_id?: string | null
-          zip?: string | null
-        }
-        Update: {
-          address_line_1?: string | null
-          address_line_2?: string | null
-          city?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          email_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          email_opt_status_updated_at?: string | null
-          emails?: Json | null
-          has_conversation?: boolean | null
-          id?: string | null
-          import_id?: string | null
-          inserted_at?: string | null
-          is_deleted?: boolean | null
-          name?: string | null
-          opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          opt_status_updated_at?: string | null
-          phone?: string | null
-          phone_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          phone_opt_status_updated_at?: string | null
-          phones?: Json | null
-          score?: number | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["lead_status"] | null
-          tags?: string[] | null
-          text_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          text_opt_status_updated_at?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          workspace_id?: string | null
-          zip?: string | null
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          body: string | null
-          channel: Database["public"]["Enums"]["message_channel"] | null
-          channel_extended:
-            | Database["public"]["Enums"]["channel_type_extended"]
-            | null
-          conversation_status: string | null
-          created_at: string | null
-          deleted_at: string | null
-          deleted_by: string | null
-          deletion_reason: string | null
-          deletion_scheduled_at: string | null
-          direction: Database["public"]["Enums"]["message_direction"] | null
-          id: string | null
-          is_deleted: boolean | null
-          lead_deleted: boolean | null
-          lead_deleted_at: string | null
-          lead_deleted_by: string | null
-          lead_id: string | null
-          status: Database["public"]["Enums"]["message_status"] | null
-          subject: string | null
-          testing: boolean | null
-          updated_at: string | null
-        }
-        Insert: {
-          body?: string | null
-          channel?: Database["public"]["Enums"]["message_channel"] | null
-          channel_extended?:
-            | Database["public"]["Enums"]["channel_type_extended"]
-            | null
-          conversation_status?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          deletion_scheduled_at?: string | null
-          direction?: Database["public"]["Enums"]["message_direction"] | null
-          id?: string | null
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id?: string | null
-          status?: Database["public"]["Enums"]["message_status"] | null
-          subject?: string | null
-          testing?: boolean | null
-          updated_at?: string | null
-        }
-        Update: {
-          body?: string | null
-          channel?: Database["public"]["Enums"]["message_channel"] | null
-          channel_extended?:
-            | Database["public"]["Enums"]["channel_type_extended"]
-            | null
-          conversation_status?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          deletion_scheduled_at?: string | null
-          direction?: Database["public"]["Enums"]["message_direction"] | null
-          id?: string | null
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id?: string | null
-          status?: Database["public"]["Enums"]["message_status"] | null
-          subject?: string | null
-          testing?: boolean | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      oauth_tokens: {
-        Row: {
-          access_token: string | null
-          created_at: string | null
-          expiry_date: string | null
-          id: string | null
-          provider: string | null
-          raw_token: Json | null
-          refresh_token: string | null
-          scopes: string[] | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          access_token?: string | null
-          created_at?: string | null
-          expiry_date?: string | null
-          id?: string | null
-          provider?: string | null
-          raw_token?: Json | null
-          refresh_token?: string | null
-          scopes?: string[] | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          access_token?: string | null
-          created_at?: string | null
-          expiry_date?: string | null
-          id?: string | null
-          provider?: string | null
-          raw_token?: Json | null
-          refresh_token?: string | null
-          scopes?: string[] | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          account_type: string | null
-          created_at: string | null
-          deleted_at: string | null
-          deleted_by: string | null
-          deletion_reason: string | null
-          email: string | null
-          email_verified: boolean | null
-          first_name: string | null
-          id: string | null
-          is_deleted: boolean | null
-          last_name: string | null
-          name: string | null
-          onboarding_completed: boolean | null
-          original_email: string | null
-          original_id: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          account_type?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          email?: string | null
-          email_verified?: boolean | null
-          first_name?: string | null
-          id?: string | null
-          is_deleted?: boolean | null
-          last_name?: string | null
-          name?: string | null
-          onboarding_completed?: boolean | null
-          original_email?: string | null
-          original_id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          account_type?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          email?: string | null
-          email_verified?: boolean | null
-          first_name?: string | null
-          id?: string | null
-          is_deleted?: boolean | null
-          last_name?: string | null
-          name?: string | null
-          onboarding_completed?: boolean | null
-          original_email?: string | null
-          original_id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: []
-      }
-      reminder_logs: {
-        Row: {
-          action_taken: boolean | null
-          action_taken_at: string | null
-          email_id: string | null
-          id: string | null
-          reminder_type: string | null
-          sent_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action_taken?: boolean | null
-          action_taken_at?: string | null
-          email_id?: string | null
-          id?: string | null
-          reminder_type?: string | null
-          sent_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action_taken?: boolean | null
-          action_taken_at?: string | null
-          email_id?: string | null
-          id?: string | null
-          reminder_type?: string | null
-          sent_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reminder_logs_email_id_fkey"
-            columns: ["email_id"]
-            isOneToOne: false
-            referencedRelation: "comms_email_logs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reminder_logs_email_id_fkey"
-            columns: ["email_id"]
-            isOneToOne: false
-            referencedRelation: "email_logs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      scheduled_messages: {
-        Row: {
-          channel: Database["public"]["Enums"]["message_channel"] | null
-          content: string | null
-          created_at: string | null
-          id: string | null
-          lead_id: string | null
-          scheduled_for: string | null
-          status: string | null
-          subject: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          channel?: Database["public"]["Enums"]["message_channel"] | null
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          lead_id?: string | null
-          scheduled_for?: string | null
-          status?: string | null
-          subject?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          channel?: Database["public"]["Enums"]["message_channel"] | null
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          lead_id?: string | null
-          scheduled_for?: string | null
-          status?: string | null
-          subject?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      stripe_customers: {
-        Row: {
-          created_at: string | null
-          customer_id: string | null
-          id: string | null
-          last_updated: string | null
-          subscription_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string | null
-          last_updated?: string | null
-          subscription_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string | null
-          last_updated?: string | null
-          subscription_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      stripe_products: {
-        Row: {
-          created_at: string | null
-          display_name: string | null
-          id: string | null
-          is_active: boolean | null
-          name: string | null
-          notes: string | null
-          reference_id: string | null
-          sort_order: number | null
-          stripe_price_id_monthly: string | null
-          stripe_price_id_yearly: string | null
-          stripe_product_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          display_name?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          notes?: string | null
-          reference_id?: string | null
-          sort_order?: number | null
-          stripe_price_id_monthly?: string | null
-          stripe_price_id_yearly?: string | null
-          stripe_product_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          display_name?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          notes?: string | null
-          reference_id?: string | null
-          sort_order?: number | null
-          stripe_price_id_monthly?: string | null
-          stripe_price_id_yearly?: string | null
-          stripe_product_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      subscription_events: {
-        Row: {
-          created_at: string | null
-          event_data: Json | null
-          event_type: string | null
-          id: string | null
-          subscription_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          event_data?: Json | null
-          event_type?: string | null
-          id?: string | null
-          subscription_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          event_data?: Json | null
-          event_type?: string | null
-          id?: string | null
-          subscription_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      subscription_notifications: {
-        Row: {
-          channels: string[] | null
-          created_at: string | null
-          data: Json | null
-          id: string | null
-          scheduled_for: string | null
-          sent: boolean | null
-          sent_at: string | null
-          subscription_id: string | null
-          type: string | null
-          user_id: string | null
-        }
-        Insert: {
-          channels?: string[] | null
-          created_at?: string | null
-          data?: Json | null
-          id?: string | null
-          scheduled_for?: string | null
-          sent?: boolean | null
-          sent_at?: string | null
-          subscription_id?: string | null
-          type?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          channels?: string[] | null
-          created_at?: string | null
-          data?: Json | null
-          id?: string | null
-          scheduled_for?: string | null
-          sent?: boolean | null
-          sent_at?: string | null
-          subscription_id?: string | null
-          type?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      transcript_segments: {
-        Row: {
-          content: string | null
-          created_at: string | null
-          end_time: number | null
-          id: string | null
-          segment_number: number | null
-          speaker: string | null
-          start_time: number | null
-          transcript_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string | null
-          end_time?: number | null
-          id?: string | null
-          segment_number?: number | null
-          speaker?: string | null
-          start_time?: number | null
-          transcript_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string | null
-          end_time?: number | null
-          id?: string | null
-          segment_number?: number | null
-          speaker?: string | null
-          start_time?: number | null
-          transcript_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transcript_segments_transcript_id_fkey"
-            columns: ["transcript_id"]
-            isOneToOne: false
-            referencedRelation: "call_transcripts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transcript_segments_transcript_id_fkey"
-            columns: ["transcript_id"]
-            isOneToOne: false
-            referencedRelation: "transcripts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      transcripts: {
-        Row: {
-          call_id: string | null
-          created_at: string | null
-          created_by: string | null
-          duration: number | null
-          id: string | null
-          is_deleted: boolean | null
-          lead_deleted: boolean | null
-          lead_deleted_at: string | null
-          lead_deleted_by: string | null
-          lead_id: string | null
-          recorded_at: string | null
-          recording_url: string | null
-          source: string | null
-          status: string | null
-          summary: string | null
-          title: string | null
-          transcript_text: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          call_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          duration?: number | null
-          id?: string | null
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id?: string | null
-          recorded_at?: string | null
-          recording_url?: string | null
-          source?: string | null
-          status?: string | null
-          summary?: string | null
-          title?: string | null
-          transcript_text?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          call_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          duration?: number | null
-          id?: string | null
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id?: string | null
-          recorded_at?: string | null
-          recording_url?: string | null
-          source?: string | null
-          status?: string | null
-          summary?: string | null
-          title?: string | null
-          transcript_text?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transcripts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transcripts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_mfa: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          is_primary: boolean | null
-          last_used_at: string | null
-          method: string | null
-          secret: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          is_primary?: boolean | null
-          last_used_at?: string | null
-          method?: string | null
-          secret?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          is_primary?: boolean | null
-          last_used_at?: string | null
-          method?: string | null
-          secret?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      workspace: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string | null
-          is_active: boolean | null
-          name: string | null
-          owner_id: string | null
-          settings: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          owner_id?: string | null
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          owner_id?: string | null
-          settings?: Json | null
-          updated_at?: string | null
         }
         Relationships: []
       }
