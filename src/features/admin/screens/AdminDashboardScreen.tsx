@@ -18,12 +18,9 @@ import {
   AlertTriangle,
   TrendingUp,
   Activity,
-  ChevronRight,
   RefreshCw,
   CheckCircle,
   XCircle,
-  Link,
-  FileText,
   LogOut,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -162,7 +159,7 @@ export function AdminDashboardScreen() {
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
@@ -240,34 +237,6 @@ export function AdminDashboardScreen() {
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <View className="p-4">
-          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
-            Quick Actions
-          </Text>
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
-            <AdminActionItem
-              icon={<Users size={20} color={colors.mutedForeground} />}
-              title="Manage Users"
-              subtitle="View and manage user accounts"
-              onPress={() => router.push('/(admin)/users')}
-            />
-            <AdminActionItem
-              icon={<Link size={20} color={colors.mutedForeground} />}
-              title="Integrations"
-              subtitle="Manage external integrations"
-              onPress={() => router.push('/(admin)/integrations')}
-            />
-            <AdminActionItem
-              icon={<FileText size={20} color={colors.mutedForeground} />}
-              title="System Logs"
-              subtitle="View system and error logs"
-              onPress={() => router.push('/(admin)/logs')}
-              hideBorder
-            />
-          </View>
-        </View>
-
         {/* Account Actions */}
         <View className="p-4">
           <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
@@ -332,28 +301,3 @@ function StatCard({ icon, title, value, subtitle, onPress, cardColor }: StatCard
   return <View className="w-1/2 p-2">{content}</View>;
 }
 
-interface AdminActionItemProps {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-  hideBorder?: boolean;
-}
-
-function AdminActionItem({ icon, title, subtitle, onPress, hideBorder }: AdminActionItemProps) {
-  const colors = useThemeColors();
-  return (
-    <TouchableOpacity
-      className="flex-row items-center p-4"
-      style={!hideBorder ? { borderBottomWidth: 1, borderColor: colors.border } : undefined}
-      onPress={onPress}
-    >
-      {icon}
-      <View className="flex-1 ml-3">
-        <Text className="font-medium" style={{ color: colors.foreground }}>{title}</Text>
-        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{subtitle}</Text>
-      </View>
-      <ChevronRight size={20} color={colors.mutedForeground} />
-    </TouchableOpacity>
-  );
-}

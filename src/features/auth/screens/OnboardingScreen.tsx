@@ -17,6 +17,7 @@ import { Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { useAuth } from '../hooks/useAuth';
+import { usePermissions } from '../hooks/usePermissions';
 import { OnboardingProgress } from '../components/OnboardingProgress';
 import { SurveyOption } from '../components/SurveyOption';
 import {
@@ -33,6 +34,7 @@ export function OnboardingScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const { refetchProfile } = useAuth();
+  const { canViewAdminPanel } = usePermissions();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [responses, setResponses] = useState<OnboardingResponse>({});
@@ -68,7 +70,7 @@ export function OnboardingScreen() {
 
       if (result.success) {
         await refetchProfile();
-        router.replace('/(tabs)');
+        router.replace(canViewAdminPanel ? '/(admin)' : '/(tabs)');
       } else {
         setError(result.error || 'Failed to save responses');
         setIsSubmitting(false);
@@ -93,7 +95,7 @@ export function OnboardingScreen() {
 
     if (result.success) {
       await refetchProfile();
-      router.replace('/(tabs)');
+      router.replace(canViewAdminPanel ? '/(admin)' : '/(tabs)');
     } else {
       setError(result.error || 'Failed to skip onboarding');
       setIsSubmitting(false);

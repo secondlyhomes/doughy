@@ -10,6 +10,47 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { DataCard } from './DataCard';
 export type { DataCardProps, DataCardField, DataCardBadge, DataCardAction } from './DataCard';
 
+export { DocumentCard, DocumentCardCompact } from './DocumentCard';
+export type { DocumentCardProps, DocumentCardDocument } from './DocumentCard';
+
+export { PortfolioSummaryCard } from './PortfolioSummaryCard';
+export type { PortfolioSummaryCardProps, PortfolioMetrics } from './PortfolioSummaryCard';
+
+export { PortfolioPropertyCard } from './PortfolioPropertyCard';
+export type { PortfolioPropertyCardProps, PortfolioProperty, PropertyStatus } from './PortfolioPropertyCard';
+
+export { RelatedDealsCard } from './RelatedDealsCard';
+export type { RelatedDealsCardProps, RelatedDeal, RelatedDealType } from './RelatedDealsCard';
+
+export {
+  EmptyPortfolioState,
+  EmptyPortfolioFirstTime,
+  EmptyPortfolioFiltered,
+  EmptyPortfolioError,
+} from './EmptyPortfolioState';
+export type { EmptyPortfolioStateProps, EmptyPortfolioStateType, EmptyPortfolioAction } from './EmptyPortfolioState';
+
+// AI & Automation UI components
+export { VoiceRecordButton } from './VoiceRecordButton';
+export type { VoiceRecordButtonProps } from './VoiceRecordButton';
+
+export { PhotoCaptureButton } from './PhotoCaptureButton';
+export type { PhotoCaptureButtonProps } from './PhotoCaptureButton';
+
+export { AIExtractionPreview } from './AIExtractionPreview';
+export type { AIExtractionPreviewProps, ExtractedField, ConfidenceLevel } from './AIExtractionPreview';
+
+export { CalculationEvidence } from './CalculationEvidence';
+export type {
+  CalculationEvidenceProps,
+  CalculationStep,
+  EvidenceSource,
+  CalculationStatus,
+} from './CalculationEvidence';
+
+export { OverrideCalculationSheet } from './OverrideCalculationSheet';
+export type { OverrideCalculationSheetProps, CalculationOverride } from './OverrideCalculationSheet';
+
 export { Timeline } from './Timeline';
 export type { TimelineProps, TimelineEvent, TimelineEventConfig } from './Timeline';
 
@@ -217,6 +258,9 @@ export type { SimpleFABProps } from './SimpleFAB';
 export { GlassView, GlassBackdrop, isLiquidGlassSupported } from './GlassView';
 export type { GlassViewProps, GlassBackdropProps } from './GlassView';
 
+export { GlassButton } from './GlassButton';
+export type { GlassButtonProps } from './GlassButton';
+
 // Navigation components
 export {
   FloatingGlassTabBar,
@@ -244,6 +288,8 @@ export {
   SPACING,
   BORDER_RADIUS,
   OPACITY,
+  OPACITY_VALUES,
+  GLASS_BLUR,
   SHADOWS,
   ICON_SIZES,
   FONT_SIZES,

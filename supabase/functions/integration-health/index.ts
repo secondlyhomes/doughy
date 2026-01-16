@@ -351,7 +351,7 @@ async function checkOpenAI(apiKey: string) {
     const latency = endTime - startTime;
     
     logInfo(`OpenAI API response status: ${response.status}`, {});
-    
+
     if (response.ok) {
       return {
         status: 'operational',
@@ -360,15 +360,38 @@ async function checkOpenAI(apiKey: string) {
         latency: `${latency}ms`
       };
     }
-    
-    // If HEAD request fails, provide error information
-    logError(`OpenAI API error: ${response.status} ${response.statusText}`, {});
-    
+
+    // Read response body to get detailed error message
+    let errorDetails = '';
+    try {
+      const responseBody = await response.json();
+      errorDetails = responseBody?.error?.message || '';
+      logError(`OpenAI API error details:`, { httpStatus: response.status, body: responseBody });
+    } catch (e) {
+      // If response body can't be parsed, just log status
+      logError(`OpenAI API error (no body):`, { httpStatus: response.status });
+    }
+
+    // Provide specific error messages based on HTTP status
+    let errorMessage = '';
+    if (response.status === 401) {
+      errorMessage = errorDetails || 'Invalid or expired API key';
+    } else if (response.status === 429) {
+      errorMessage = 'Rate limit exceeded';
+    } else if (response.status >= 500) {
+      errorMessage = 'OpenAI service temporarily unavailable';
+    } else {
+      errorMessage = errorDetails || `OpenAI API error: ${response.status} ${response.statusText}`;
+    }
+
+    logError(errorMessage, { httpStatus: response.status });
+
     return {
       status: 'error',
-      message: `OpenAI API error: ${response.status} ${response.statusText}`,
+      message: errorMessage,
       service: 'openai',
-      latency: `${latency}ms`
+      latency: `${latency}ms`,
+      http_status: response.status  // Include HTTP status for debugging
     };
   } catch (error) {
     logError('OpenAI health check error:', error);

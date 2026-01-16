@@ -164,13 +164,13 @@ export function PropertyDetailScreen() {
 
           <View className="mt-4">
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row rounded-md p-1" style={{ backgroundColor: colors.muted }}>
+              <View className="flex-row rounded-xl p-1" style={{ backgroundColor: colors.muted }}>
                 {Object.entries(TAB_IDS).map(([key, value]) => (
                   <Pressable
                     key={value}
                     onPress={() => setActiveTab(value)}
                     style={[
-                      { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
+                      { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
                       activeTab === value && {
                         backgroundColor: colors.background,
                         ...getShadowStyle(colors, { size: 'sm' }),

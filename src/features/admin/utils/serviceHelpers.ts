@@ -158,20 +158,26 @@ export function validateApiKeyFormat(key: string, service: string): ApiKeyValida
     return { isValid: false, warning: 'API key is too short' };
   }
 
-  // OpenAI validation - flexible but with warnings
+  // OpenAI validation - supports sk-, sk-proj-, sk-org- formats
   if (service.includes('openai')) {
-    if (!key.startsWith('sk-')) {
+    // Check for valid OpenAI key prefixes
+    const validPrefixes = ['sk-', 'sk-proj-', 'sk-org-'];
+    const hasValidPrefix = validPrefixes.some(prefix => key.startsWith(prefix));
+
+    if (!hasValidPrefix) {
       return {
         isValid: true,
-        warning: "OpenAI API keys typically start with 'sk-'",
+        warning: "OpenAI API keys typically start with 'sk-', 'sk-proj-', or 'sk-org-'",
       };
     }
 
-    // Length check with flexibility
-    if (key.length < 30 || key.length > 100) {
+    // Modern OpenAI keys can be 30-200 characters depending on type
+    // Project keys (sk-proj-) are typically 50-100 characters
+    // Older keys (sk-) were 40-60 characters
+    if (key.length < 30 || key.length > 250) {
       return {
         isValid: true,
-        warning: 'OpenAI API keys are typically 40-60 characters long',
+        warning: 'OpenAI API key length is outside typical range (30-250 characters)',
       };
     }
 

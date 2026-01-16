@@ -7,6 +7,40 @@ import type { Integration } from '../types/integrations';
  * All supported integrations with their configuration
  */
 export const INTEGRATIONS: Integration[] = [
+  // ===== HOSTING SERVICES (Primary) =====
+  {
+    id: 'netlify',
+    name: 'Netlify',
+    service: 'netlify',
+    description: 'Deployment and hosting management',
+    icon: 'cloud',
+    group: 'Hosting',
+    docsUrl: 'https://docs.netlify.com',
+    fields: [
+      {
+        key: 'netlify_api_token',
+        label: 'API Token',
+        type: 'password',
+        required: true,
+        description: 'Netlify personal access token',
+      },
+      {
+        key: 'netlify_site_id',
+        label: 'Site ID',
+        type: 'text',
+        required: true,
+        description: 'Production site ID',
+      },
+      {
+        key: 'netlify_stage_site_id',
+        label: 'Staging Site ID',
+        type: 'text',
+        required: false,
+        description: 'Staging site ID (optional)',
+      },
+    ],
+  },
+
   // ===== AI SERVICES =====
   {
     id: 'openai',
@@ -312,39 +346,6 @@ export const INTEGRATIONS: Integration[] = [
     ],
   },
 
-  // ===== HOSTING SERVICES =====
-  {
-    id: 'netlify',
-    name: 'Netlify',
-    service: 'netlify',
-    description: 'Deployment and hosting management',
-    icon: 'cloud',
-    group: 'Hosting',
-    docsUrl: 'https://docs.netlify.com',
-    fields: [
-      {
-        key: 'netlify_api_token',
-        label: 'API Token',
-        type: 'password',
-        required: true,
-        description: 'Netlify personal access token',
-      },
-      {
-        key: 'netlify_site_id',
-        label: 'Site ID',
-        type: 'text',
-        required: true,
-        description: 'Production site ID',
-      },
-      {
-        key: 'netlify_stage_site_id',
-        label: 'Staging Site ID',
-        type: 'text',
-        required: false,
-        description: 'Staging site ID (optional)',
-      },
-    ],
-  },
 ];
 
 /**

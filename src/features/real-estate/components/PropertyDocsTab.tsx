@@ -1,7 +1,7 @@
 // src/features/real-estate/components/PropertyDocsTab.tsx
 // Documents tab content for property detail
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Alert, Linking, ScrollView } from 'react-native';
 import {
   FileText,
@@ -29,9 +29,18 @@ import {
   DocumentCategory,
 } from '../hooks/usePropertyDocuments';
 import { UploadDocumentSheet } from './UploadDocumentSheet';
+import { DocumentFilterType } from './DocumentTypeFilter';
+
+// Document type classifications for filtering
+const RESEARCH_TYPES = ['inspection', 'appraisal', 'title_search', 'survey', 'photo', 'comp'];
+const TRANSACTION_TYPES = ['offer', 'counter_offer', 'purchase_agreement', 'addendum', 'closing_statement', 'hud1', 'deed', 'contract'];
 
 interface PropertyDocsTabProps {
   property: Property;
+  /** Optional filter type to show only specific document categories */
+  filterType?: DocumentFilterType;
+  /** Hide the header (useful when embedded in another component with its own header) */
+  hideHeader?: boolean;
 }
 
 // Document type icons
@@ -44,7 +53,7 @@ const DOC_TYPE_ICONS: Record<string, any> = {
   other: File,
 };
 
-export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
+export function PropertyDocsTab({ property, filterType = 'all', hideHeader = false }: PropertyDocsTabProps) {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const { documents, isLoading, error, refetch, documentsByCategory } = usePropertyDocuments({
@@ -58,7 +67,40 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
     new Set(['contract', 'inspection', 'appraisal'])
   );
 
-  const hasDocuments = documents.length > 0;
+  // Filter documents based on filterType
+  const filteredDocuments = useMemo(() => {
+    if (filterType === 'all') return documents;
+
+    return documents.filter((doc) => {
+      const docType = (doc.type || doc.category || 'other').toLowerCase();
+      if (filterType === 'research') {
+        return RESEARCH_TYPES.includes(docType);
+      }
+      if (filterType === 'transaction') {
+        return TRANSACTION_TYPES.includes(docType);
+      }
+      // 'seller' filter doesn't apply to property docs (those are in LeadDocsTab)
+      return true;
+    });
+  }, [documents, filterType]);
+
+  // Group filtered documents by category
+  const filteredDocumentsByCategory = useMemo(() => {
+    const map = new Map<DocumentCategory, Document[]>();
+    DOCUMENT_CATEGORIES.forEach(cat => map.set(cat.id, []));
+
+    filteredDocuments.forEach(doc => {
+      const category = (doc.type || doc.category || 'other') as DocumentCategory;
+      const validCategory = DOCUMENT_CATEGORIES.find(c => c.id === category) ? category : 'other';
+      const existing = map.get(validCategory) || [];
+      existing.push(doc);
+      map.set(validCategory, existing);
+    });
+
+    return map;
+  }, [filteredDocuments]);
+
+  const hasDocuments = filteredDocuments.length > 0;
 
   const getDocIcon = (type: string) => {
     return DOC_TYPE_ICONS[type] || File;
@@ -214,24 +256,26 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
     >
       <View className="gap-4">
         {/* Header */}
+      {!hideHeader && (
         <View className="flex-row justify-between items-center">
-        <View className="flex-row items-center">
-          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
-          {documents.length > 0 && (
-            <View className="px-2 py-1 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-              <Text className="text-xs font-medium" style={{ color: colors.primary }}>{documents.length}</Text>
-            </View>
-          )}
+          <View className="flex-row items-center">
+            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
+            {filteredDocuments.length > 0 && (
+              <View className="px-2 py-1 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
+                <Text className="text-xs font-medium" style={{ color: colors.primary }}>{filteredDocuments.length}</Text>
+              </View>
+            )}
+          </View>
+          <Button onPress={() => setShowUploadSheet(true)} size="sm">
+            <Upload size={16} color={colors.primaryForeground} />
+            Upload
+          </Button>
         </View>
-        <Button onPress={() => setShowUploadSheet(true)} size="sm">
-          <Upload size={16} color={colors.primaryForeground} />
-          Upload
-        </Button>
-      </View>
+      )}
 
       {/* Empty State */}
       {!hasDocuments && (
@@ -279,7 +323,7 @@ export function PropertyDocsTab({ property }: PropertyDocsTabProps) {
       {hasDocuments && (
         <View className="gap-3">
           {DOCUMENT_CATEGORIES.map((category) => {
-            const categoryDocs = documentsByCategory.get(category.id) || [];
+            const categoryDocs = filteredDocumentsByCategory.get(category.id) || [];
             if (categoryDocs.length === 0) return null;
 
             const isExpanded = expandedCategories.has(category.id);

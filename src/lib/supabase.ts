@@ -33,10 +33,15 @@ if (__DEV__) {
     console.log('🔶 No database connection - using in-memory data');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   } else {
+    // Detect environment from URL
+    const isProd = SUPABASE_URL?.includes('vpqglbaedcpeprnlnfxd');
+    const envName = isProd ? 'PRODUCTION' : 'DEV/STAGE';
+
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('✅ [Supabase] CONNECTED TO REAL DATABASE');
     console.log(`✅ Project: ${SUPABASE_URL}`);
-    console.log('✅ All queries will hit production Supabase');
+    console.log(`✅ Environment: ${envName}`);
+    console.log(`✅ All queries will hit ${envName} Supabase`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
 }

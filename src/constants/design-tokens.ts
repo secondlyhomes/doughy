@@ -119,3 +119,39 @@ export const FONT_SIZES = {
   '2xl': 24,
   '3xl': 30,
 } as const;
+
+/**
+ * Numeric opacity values for style properties
+ * Use these for opacity, activeOpacity, and other numeric opacity properties (not colors)
+ *
+ * For colors with opacity, use OPACITY tokens with withOpacity() utility instead
+ *
+ * @example
+ * <TouchableOpacity activeOpacity={OPACITY_VALUES.pressed}>
+ * <View style={{ opacity: OPACITY_VALUES.disabled }}>
+ */
+export const OPACITY_VALUES = {
+  disabled: 0.5,    // Disabled interactive elements
+  loading: 0.6,     // Loading/processing states
+  inactive: 0.7,    // Inactive tabs, secondary actions
+  pressed: 0.8,     // Active press state (TouchableOpacity activeOpacity)
+  hover: 0.9,       // Hover state (web)
+} as const;
+
+/**
+ * Glass blur intensity for web platform fallbacks
+ * iOS/Android use native blur via expo-blur or liquid-glass
+ * Web uses CSS backdrop-filter
+ *
+ * @example
+ * // Web fallback
+ * const webStyle = {
+ *   backdropFilter: GLASS_BLUR.regular,
+ *   WebkitBackdropFilter: GLASS_BLUR.regular,
+ * };
+ */
+export const GLASS_BLUR = {
+  subtle: 'blur(8px)',     // Light glass effect - less prominent
+  regular: 'blur(12px)',   // Standard glass (most common use case)
+  strong: 'blur(16px)',    // Prominent glass effect - more visible
+} as const;

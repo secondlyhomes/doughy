@@ -1,82 +1,88 @@
 // src/features/admin/screens/IntegrationsScreen.tsx
-// Integrations management screen with API key configuration
+// Integrations management screen - matches Users/Logs admin pattern
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   RefreshControl,
-  StyleSheet,
-  ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CheckCircle,
   XCircle,
-  AlertCircle,
   Clock,
-  RefreshCw,
-  Activity,
+  ExternalLink,
 } from 'lucide-react-native';
-import { useThemeColors, type ThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { INTEGRATIONS, getIntegrationsByGroup, getIntegrationGroups } from '../data/integrationData';
+import {
+  SearchBar,
+  LoadingSpinner,
+  TAB_BAR_SAFE_PADDING,
+  Skeleton,
+} from '@/components/ui';
+import { SPACING } from '@/constants/design-tokens';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/Accordion';
+import { INTEGRATIONS } from '../data/integrationData';
 import { ApiKeyFormItem } from '../components/ApiKeyFormItem';
 import { IntegrationHealthCard } from '../components/IntegrationHealthCard';
-import { checkAllIntegrations } from '../services/apiKeyHealthService';
-import type { ServiceGroup, IntegrationHealth, IntegrationStatus } from '../types/integrations';
+import { checkAllIntegrations, clearHealthCache } from '../services/apiKeyHealthService';
+import type { Integration, IntegrationHealth, IntegrationStatus } from '../types/integrations';
 
-type TabType = 'Health' | ServiceGroup;
+// Filter type for status filtering
+type StatusFilter = 'all' | 'operational' | 'error' | 'not-configured' | 'configured';
+
+// Spacing constants for floating search bar
+const SEARCH_BAR_CONTAINER_HEIGHT =
+  SPACING.sm +  // pt-2 (8px top padding)
+  48 +          // SearchBar size="lg" height
+  SPACING.xs;   // pb-1 (4px bottom padding)
+  // Total: ~60px
+
+const FILTER_PILLS_HEIGHT = 40; // Approximate height of filter pills row
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
+
+// Extended integration type with health data
+interface IntegrationWithHealth extends Integration {
+  health?: IntegrationHealth;
+  overallStatus: IntegrationStatus;
+}
 
 export function IntegrationsScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
 
-  const [activeTab, setActiveTab] = useState<TabType>('Health');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [healthStatuses, setHealthStatuses] = useState<Map<string, IntegrationHealth>>(new Map());
-  const [allHealths, setAllHealths] = useState<IntegrationHealth[]>([]);
-  const [lastChecked, setLastChecked] = useState<Date | null>(null);
-  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
-
-  const serviceGroups = getIntegrationGroups() as ServiceGroup[];
-  const tabs: TabType[] = ['Health', ...serviceGroups];
-  const activeIntegrations = activeTab !== 'Health' ? getIntegrationsByGroup(activeTab) : [];
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [expandedIntegration, setExpandedIntegration] = useState<string>('');
 
   // Load all health statuses
   const loadAllHealth = useCallback(async () => {
     try {
-      setIsCheckingHealth(true);
-      const allServices = INTEGRATIONS.map((i) => i.service);
+      const allServices = INTEGRATIONS.flatMap((i) => i.fields.map((f) => f.key));
       const results = await checkAllIntegrations(allServices);
 
-      // Add group info to each health result
-      const healthsWithGroups = results.map((health) => {
-        const integration = INTEGRATIONS.find((i) => i.service === health.service);
-        return {
-          ...health,
-          group: integration?.group,
-        };
-      });
-
-      setAllHealths(healthsWithGroups);
-      setLastChecked(new Date());
-
-      // Update the health status map
       const healthMap = new Map<string, IntegrationHealth>();
-      healthsWithGroups.forEach((health) => {
+      results.forEach((health) => {
         healthMap.set(health.service, health);
       });
       setHealthStatuses(healthMap);
     } catch (error) {
       console.error('Error loading health:', error);
-    } finally {
-      setIsCheckingHealth(false);
     }
   }, []);
 
@@ -86,217 +92,124 @@ export function IntegrationsScreen() {
   }, [loadAllHealth]);
 
   const handleRefresh = useCallback(async () => {
+    // Clear all cached health data to force fresh checks
+    clearHealthCache();
     setIsRefreshing(true);
     await loadAllHealth();
     setIsRefreshing(false);
   }, [loadAllHealth]);
 
-  if (isLoading) {
-    return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen />
-      </ThemedSafeAreaView>
-    );
-  }
+  // Get overall status for an integration (based on its fields)
+  const getOverallStatus = useCallback(
+    (integration: Integration): IntegrationStatus => {
+      const fieldStatuses = integration.fields.map(
+        (field) => healthStatuses.get(field.key)?.status || 'not-configured'
+      );
 
-  // Get health counts by status
-  const getStatusCount = (status: IntegrationStatus) => {
-    return allHealths.filter((h) => h.status === status).length;
-  };
-
-  // Group healths by service group
-  const healthsByGroup = serviceGroups.reduce(
-    (acc, group) => {
-      acc[group] = allHealths.filter((h) => h.group === group);
-      return acc;
+      // If any field has error, overall is error
+      if (fieldStatuses.includes('error')) return 'error';
+      // If all required fields are operational, overall is operational
+      const requiredFields = integration.fields.filter((f) => f.required);
+      const requiredStatuses = requiredFields.map(
+        (f) => healthStatuses.get(f.key)?.status || 'not-configured'
+      );
+      if (requiredStatuses.length > 0 && requiredStatuses.every((s) => s === 'operational')) {
+        return 'operational';
+      }
+      // If any field is configured, overall is configured
+      if (fieldStatuses.includes('operational') || fieldStatuses.includes('configured')) {
+        return 'configured';
+      }
+      return 'not-configured';
     },
-    {} as Record<ServiceGroup, IntegrationHealth[]>
+    [healthStatuses]
   );
 
-  return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Tabs - wrapped in View to prevent flex expansion */}
-      <View style={[styles.tabWrapper, { backgroundColor: withOpacity(colors.muted, 'opaque'), borderBottomColor: colors.border }]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabContent}
+  // Merge integrations with health data
+  const integrationsWithHealth: IntegrationWithHealth[] = useMemo(() => {
+    return INTEGRATIONS.map((integration) => ({
+      ...integration,
+      health: healthStatuses.get(integration.service),
+      overallStatus: getOverallStatus(integration),
+    }));
+  }, [healthStatuses, getOverallStatus]);
+
+  // Filter integrations by search and status
+  const filteredIntegrations = useMemo(() => {
+    return integrationsWithHealth.filter((integration) => {
+      // Search filter
+      const matchesSearch =
+        !search ||
+        integration.name.toLowerCase().includes(search.toLowerCase()) ||
+        integration.description.toLowerCase().includes(search.toLowerCase()) ||
+        integration.group.toLowerCase().includes(search.toLowerCase());
+
+      // Status filter
+      const matchesStatus =
+        statusFilter === 'all' || integration.overallStatus === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [integrationsWithHealth, search, statusFilter]);
+
+  // Get status counts for filter badges
+  const statusCounts = useMemo(() => {
+    return {
+      all: integrationsWithHealth.length,
+      operational: integrationsWithHealth.filter((i) => i.overallStatus === 'operational').length,
+      error: integrationsWithHealth.filter((i) => i.overallStatus === 'error').length,
+      configured: integrationsWithHealth.filter((i) => i.overallStatus === 'configured').length,
+      'not-configured': integrationsWithHealth.filter((i) => i.overallStatus === 'not-configured')
+        .length,
+    };
+  }, [integrationsWithHealth]);
+
+  // Render integration accordion item
+  const renderIntegration = ({ item }: { item: IntegrationWithHealth }) => {
+    const isExpanded = expandedIntegration === item.id;
+
+    return (
+      <View
+        className="mx-4 mb-3 rounded-xl overflow-hidden"
+        style={{
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.border,
+        }}
+      >
+        <Accordion
+          type="single"
+          collapsible
+          value={isExpanded ? item.id : ''}
+          onValueChange={(value) => setExpandedIntegration(value)}
         >
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab;
-            const isHealthTab = tab === 'Health';
-            return (
-              <TouchableOpacity
-                key={tab}
-                style={[
-                  styles.tab,
-                  { borderBottomColor: isActive ? colors.primary : 'transparent' },
-                ]}
-                onPress={() => setActiveTab(tab)}
-              >
-                <View style={styles.tabInner}>
-                  {isHealthTab && <Activity size={14} color={isActive ? colors.primary : colors.mutedForeground} />}
+          <AccordionItem value={item.id} className="border-b-0">
+            <AccordionTrigger className="px-4">
+              <View className="flex-row items-center flex-1 pr-2">
+                <View className="flex-1">
+                  <View className="flex-row items-center gap-2">
+                    <Text
+                      className="text-base font-semibold"
+                      style={{ color: colors.foreground }}
+                    >
+                      {item.name}
+                    </Text>
+                    <StatusBadge status={item.overallStatus} colors={colors} />
+                  </View>
                   <Text
-                    style={[
-                      styles.tabText,
-                      { color: isActive ? colors.primary : colors.mutedForeground },
-                    ]}
+                    className="text-sm mt-0.5"
+                    style={{ color: colors.mutedForeground }}
+                    numberOfLines={1}
                   >
-                    {tab}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Health Tab Content */}
-      {activeTab === 'Health' ? (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-          }
-        >
-          {/* Database Connection Health */}
-          <IntegrationHealthCard />
-
-          {/* Health Summary Card */}
-          <View style={[styles.healthSummaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.healthSummaryHeader}>
-              <Text style={[styles.healthSummaryTitle, { color: colors.foreground }]}>
-                Integration Health Overview
-              </Text>
-              <TouchableOpacity
-                style={styles.refreshButton}
-                onPress={handleRefresh}
-                disabled={isCheckingHealth}
-              >
-                {isCheckingHealth ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : (
-                  <RefreshCw size={18} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.healthStatsRow}>
-              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.success, 'subtle') }]}>
-                <CheckCircle size={20} color={colors.success} />
-                <Text style={[styles.healthStatNumber, { color: colors.success }]}>
-                  {getStatusCount('operational')}
-                </Text>
-                <Text style={[styles.healthStatLabel, { color: colors.success }]}>Operational</Text>
-              </View>
-              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.info, 'subtle') }]}>
-                <Clock size={20} color={colors.info} />
-                <Text style={[styles.healthStatNumber, { color: colors.info }]}>
-                  {getStatusCount('configured')}
-                </Text>
-                <Text style={[styles.healthStatLabel, { color: colors.info }]}>Configured</Text>
-              </View>
-              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.destructive, 'subtle') }]}>
-                <AlertCircle size={20} color={colors.destructive} />
-                <Text style={[styles.healthStatNumber, { color: colors.destructive }]}>
-                  {getStatusCount('error')}
-                </Text>
-                <Text style={[styles.healthStatLabel, { color: colors.destructive }]}>Error</Text>
-              </View>
-              <View style={[styles.healthStat, { backgroundColor: withOpacity(colors.muted, 'medium') }]}>
-                <XCircle size={20} color={colors.mutedForeground} />
-                <Text style={[styles.healthStatNumber, { color: colors.mutedForeground }]}>
-                  {getStatusCount('not-configured')}
-                </Text>
-                <Text style={[styles.healthStatLabel, { color: colors.mutedForeground }]}>Not Set</Text>
-              </View>
-            </View>
-
-            {lastChecked && (
-              <Text style={[styles.lastCheckedText, { color: colors.mutedForeground }]}>
-                Last checked: {lastChecked.toLocaleTimeString()}
-              </Text>
-            )}
-          </View>
-
-          {/* Health by Group */}
-          {serviceGroups.map((group) => {
-            const groupHealths = healthsByGroup[group] || [];
-            if (groupHealths.length === 0) return null;
-
-            return (
-              <View key={group} style={[styles.healthGroupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <TouchableOpacity
-                  style={styles.healthGroupHeader}
-                  onPress={() => setActiveTab(group)}
-                >
-                  <Text style={[styles.healthGroupTitle, { color: colors.foreground }]}>{group}</Text>
-                  <Text style={[styles.healthGroupCount, { color: colors.mutedForeground }]}>
-                    {groupHealths.length} integration{groupHealths.length !== 1 ? 's' : ''}
-                  </Text>
-                </TouchableOpacity>
-
-                <View style={[styles.healthGroupList, { borderTopColor: colors.border }]}>
-                  {groupHealths.map((health) => (
-                    <View key={health.service} style={styles.healthItem}>
-                      <View style={styles.healthItemInfo}>
-                        {getStatusIcon(health.status, colors)}
-                        <Text style={[styles.healthItemName, { color: colors.foreground }]}>
-                          {health.name}
-                        </Text>
-                      </View>
-                      <View style={styles.healthItemStatus}>
-                        {health.latency && (
-                          <Text style={[styles.healthItemLatency, { color: colors.mutedForeground }]}>
-                            {health.latency}
-                          </Text>
-                        )}
-                        <Text
-                          style={[
-                            styles.healthItemStatusText,
-                            { color: getStatusColor(health.status, colors) },
-                          ]}
-                        >
-                          {getStatusLabel(health.status)}
-                        </Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            );
-          })}
-        </ScrollView>
-      ) : (
-        /* Integrations List for other tabs */
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-          }
-        >
-          {activeIntegrations.map((integration) => (
-            <View
-              key={integration.id}
-              style={[styles.integrationCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            >
-              {/* Integration Header */}
-              <View style={styles.integrationHeader}>
-                <View style={styles.integrationInfo}>
-                  <Text style={[styles.integrationName, { color: colors.foreground }]}>
-                    {integration.name}
-                  </Text>
-                  <Text style={[styles.integrationDescription, { color: colors.mutedForeground }]}>
-                    {integration.description}
+                    {item.description}
                   </Text>
                 </View>
               </View>
-
+            </AccordionTrigger>
+            <AccordionContent className="px-4">
               {/* Integration Fields */}
-              <View style={styles.fieldsContainer}>
-                {integration.fields.map((field) => (
+              <View className="gap-3 pt-2">
+                {item.fields.map((field) => (
                   <ApiKeyFormItem
                     key={field.key}
                     service={field.key}
@@ -313,243 +226,247 @@ export function IntegrationsScreen() {
               </View>
 
               {/* Documentation Link */}
-              {integration.docsUrl && (
+              {item.docsUrl && (
                 <TouchableOpacity
-                  style={styles.docsLink}
-                  onPress={() => {
-                    // TODO: Open docs URL in browser
-                    console.log('Open docs:', integration.docsUrl);
-                  }}
+                  className="flex-row items-center mt-4 pt-3"
+                  style={{ borderTopWidth: 1, borderTopColor: colors.border }}
+                  onPress={() => Linking.openURL(item.docsUrl!)}
                 >
-                  <Text style={[styles.docsLinkText, { color: colors.primary }]}>
-                    View Documentation →
+                  <ExternalLink size={14} color={colors.primary} />
+                  <Text
+                    className="text-sm ml-1.5 font-medium"
+                    style={{ color: colors.primary }}
+                  >
+                    View Documentation
                   </Text>
                 </TouchableOpacity>
               )}
-            </View>
-          ))}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </View>
+    );
+  };
 
-          {activeIntegrations.length === 0 && (
-            <View style={styles.emptyState}>
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-                No integrations in this category
-              </Text>
+  // Loading state with skeletons - matches floating search bar layout
+  if (isLoading) {
+    return (
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {/* Floating search bar skeleton */}
+        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+          <View className="px-4 pt-2 pb-1">
+            <Skeleton className="h-12 rounded-full" />
+          </View>
+        </View>
+
+        {/* Content skeletons with matching paddingTop */}
+        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP }}>
+          <View className="px-4">
+            {/* IntegrationHealthCard skeleton */}
+            <Skeleton className="h-24 rounded-xl mb-3" />
+            {/* Integration cards skeleton */}
+            {[1, 2, 3, 4].map((i) => (
+              <View key={i} className="mb-3">
+                <Skeleton className="h-20 rounded-xl" />
+              </View>
+            ))}
+          </View>
+        </View>
+      </ThemedSafeAreaView>
+    );
+  }
+
+  // Calculate dynamic padding based on filter visibility (includes insets.top since we handle safe area manually)
+  const listPaddingTop = SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP + (showFilters ? FILTER_PILLS_HEIGHT : 0);
+
+  return (
+    <ThemedSafeAreaView className="flex-1" edges={[]}>
+      {/* Floating Glass Search Bar - positioned absolutely at top */}
+      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+        <View className="px-4 pt-2 pb-1">
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search integrations..."
+            size="lg"
+            glass={true}
+            onFilter={() => setShowFilters(!showFilters)}
+            hasActiveFilters={statusFilter !== 'all'}
+          />
+        </View>
+
+        {/* Filter Pills - same pattern as other screens */}
+        {showFilters && (
+          <View className="px-4 pb-2">
+            <View className="flex-row flex-wrap gap-2">
+              <FilterPill
+                label="All"
+                count={statusCounts.all}
+                active={statusFilter === 'all'}
+                onPress={() => setStatusFilter('all')}
+                colors={colors}
+              />
+              <FilterPill
+                label="Operational"
+                count={statusCounts.operational}
+                active={statusFilter === 'operational'}
+                onPress={() => setStatusFilter('operational')}
+                color={colors.success}
+                colors={colors}
+              />
+              <FilterPill
+                label="Error"
+                count={statusCounts.error}
+                active={statusFilter === 'error'}
+                onPress={() => setStatusFilter('error')}
+                color={colors.destructive}
+                colors={colors}
+              />
+              <FilterPill
+                label="Not Set"
+                count={statusCounts['not-configured']}
+                active={statusFilter === 'not-configured'}
+                onPress={() => setStatusFilter('not-configured')}
+                colors={colors}
+              />
             </View>
-          )}
-        </ScrollView>
-      )}
+          </View>
+        )}
+      </View>
+
+      {/* Integration List - content scrolls beneath search bar */}
+      <FlatList
+        data={filteredIntegrations}
+        keyExtractor={(item) => item.id}
+        renderItem={renderIntegration}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+        ListHeaderComponent={
+          <View className="px-4 mb-3">
+            <IntegrationHealthCard />
+            {/* Subtle count text */}
+            {filteredIntegrations.length !== integrationsWithHealth.length && (
+              <Text
+                className="text-xs mt-2 text-center"
+                style={{ color: colors.mutedForeground }}
+              >
+                Showing {filteredIntegrations.length} of {integrationsWithHealth.length} integrations
+              </Text>
+            )}
+          </View>
+        }
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center py-24">
+            <XCircle size={48} color={colors.mutedForeground} />
+            <Text
+              className="mt-4 text-base"
+              style={{ color: colors.mutedForeground }}
+            >
+              No integrations found
+            </Text>
+          </View>
+        }
+        contentContainerStyle={{
+          paddingTop: listPaddingTop,
+          paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom,
+        }}
+      />
     </ThemedSafeAreaView>
   );
 }
 
-// Helper functions
-function getStatusIcon(status: IntegrationStatus, colors: ThemeColors) {
-  switch (status) {
-    case 'operational':
-      return <CheckCircle size={16} color={colors.success} />;
-    case 'error':
-      return <XCircle size={16} color={colors.destructive} />;
-    case 'configured':
-      return <Clock size={16} color={colors.info} />;
-    case 'checking':
-      return <ActivityIndicator size="small" color={colors.info} />;
-    default:
-      return <XCircle size={16} color={colors.mutedForeground} />;
-  }
+// Status badge component
+interface StatusBadgeProps {
+  status: IntegrationStatus;
+  colors: ReturnType<typeof useThemeColors>;
 }
 
-function getStatusColor(status: IntegrationStatus, colors: ThemeColors): string {
-  switch (status) {
-    case 'operational':
-      return colors.success;
-    case 'error':
-      return colors.destructive;
-    case 'configured':
-      return colors.info;
-    default:
-      return colors.mutedForeground;
-  }
+function StatusBadge({ status, colors }: StatusBadgeProps) {
+  const config = {
+    operational: {
+      icon: CheckCircle,
+      color: colors.success,
+      label: 'Operational',
+    },
+    configured: {
+      icon: Clock,
+      color: colors.info,
+      label: 'Configured',
+    },
+    error: {
+      icon: XCircle,
+      color: colors.destructive,
+      label: 'Error',
+    },
+    'not-configured': {
+      icon: XCircle,
+      color: colors.mutedForeground,
+      label: 'Not Set',
+    },
+    checking: {
+      icon: Clock,
+      color: colors.info,
+      label: 'Checking',
+    },
+  };
+
+  const { icon: Icon, color, label } = config[status] || config['not-configured'];
+
+  return (
+    <View
+      className="flex-row items-center px-2 py-0.5 rounded-full"
+      style={{ backgroundColor: withOpacity(color, 'muted') }}
+    >
+      <Icon size={12} color={color} />
+      <Text className="text-xs ml-1 font-medium" style={{ color }}>
+        {label}
+      </Text>
+    </View>
+  );
 }
 
-function getStatusLabel(status: IntegrationStatus): string {
-  switch (status) {
-    case 'operational':
-      return 'Operational';
-    case 'error':
-      return 'Error';
-    case 'configured':
-      return 'Configured';
-    case 'not-configured':
-      return 'Not Set';
-    case 'checking':
-      return 'Checking...';
-    default:
-      return 'Unknown';
-  }
+// Filter pill component - matches Users/Logs screens
+interface FilterPillProps {
+  label: string;
+  count?: number;
+  active: boolean;
+  onPress: () => void;
+  color?: string;
+  colors: ReturnType<typeof useThemeColors>;
 }
 
-const styles = StyleSheet.create({
-  tabWrapper: {
-    borderBottomWidth: 1,
-  },
-  tabContent: {
-    paddingHorizontal: 16,
-    gap: 4,
-  },
-  tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderBottomWidth: 2,
-  },
-  tabInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  // Health Tab Styles
-  healthSummaryCard: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 8,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  healthSummaryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  healthSummaryTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  refreshButton: {
-    padding: 4,
-  },
-  healthStatsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  healthStat: {
-    flex: 1,
-    minWidth: '45%',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    gap: 4,
-  },
-  healthStatNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  healthStatLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  lastCheckedText: {
-    fontSize: 11,
-    marginTop: 12,
-    textAlign: 'center',
-  },
-  healthGroupCard: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  healthGroupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  healthGroupTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  healthGroupCount: {
-    fontSize: 12,
-  },
-  healthGroupList: {
-    borderTopWidth: 1,
-  },
-  healthItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  healthItemInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  healthItemName: {
-    fontSize: 14,
-  },
-  healthItemStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  healthItemLatency: {
-    fontSize: 11,
-  },
-  healthItemStatusText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  // Integration Card Styles
-  integrationCard: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  integrationHeader: {
-    marginBottom: 16,
-  },
-  integrationInfo: {
-    gap: 4,
-  },
-  integrationName: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  integrationDescription: {
-    fontSize: 13,
-  },
-  fieldsContainer: {
-    gap: 8,
-  },
-  docsLink: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
-  },
-  docsLinkText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 48,
-  },
-  emptyText: {
-    fontSize: 14,
-  },
-});
+function FilterPill({ label, count, active, onPress, color, colors }: FilterPillProps) {
+  return (
+    <TouchableOpacity
+      className="flex-row items-center px-3 py-1.5 rounded-full"
+      style={{ backgroundColor: active ? colors.primary : colors.muted }}
+      onPress={onPress}
+    >
+      {color && !active && (
+        <View
+          className="w-2 h-2 rounded-full mr-1.5"
+          style={{ backgroundColor: color }}
+        />
+      )}
+      <Text
+        className="text-sm"
+        style={{ color: active ? colors.primaryForeground : colors.mutedForeground }}
+      >
+        {label}
+      </Text>
+      {count !== undefined && count > 0 && (
+        <Text
+          className="text-xs ml-1"
+          style={{
+            color: active
+              ? withOpacity(colors.primaryForeground, 'strong')
+              : colors.mutedForeground,
+          }}
+        >
+          ({count})
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+}

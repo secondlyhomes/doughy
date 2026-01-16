@@ -1,17 +1,17 @@
 // app/(tabs)/_layout.tsx
-// Bottom tab navigator layout with floating glass tab bar
-// MVP Deal OS: Inbox → Deals → Properties → Settings
-import { View, ActivityIndicator } from 'react-native';
-import { Tabs, Redirect } from 'expo-router';
-import { Inbox, Briefcase, Building, Users, MessageCircle, Settings } from 'lucide-react-native';
+// Bottom tab navigator layout with NATIVE iOS liquid glass tab bar
+// Uses native UITabBarController on iOS for automatic liquid glass appearance
+import { View, ActivityIndicator, DynamicColorIOS } from 'react-native';
+import { Redirect } from 'expo-router';
+import { NativeTabs, Icon, Label, Badge } from 'expo-router/unstable-native-tabs';
 import { useUnreadCounts } from '@/features/layout';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { FloatingGlassTabBar } from '@/components/ui/FloatingGlassTabBar';
 
 export default function TabLayout() {
   const { isAuthenticated, isLoading } = useAuth();
   const { counts } = useUnreadCounts();
+  const { isDark } = useTheme();
   const colors = useThemeColors();
 
   // Auth guard - show loading while checking auth
@@ -29,60 +29,40 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      tabBar={(props) => <FloatingGlassTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-      }}
+    <NativeTabs
+      backgroundColor="transparent"
+      blurEffect={isDark ? "systemUltraThinMaterialDark" : "systemUltraThinMaterialLight"}
+      tintColor={DynamicColorIOS({
+        light: '#4d7c5f',
+        dark: '#6b9b7e',
+      })}
+      shadowColor="transparent"
     >
       {/* MVP Tab Order: Inbox → Deals → Properties → Settings */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Inbox',
-          tabBarIcon: ({ color, size }) => <Inbox size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="deals"
-        options={{
-          title: 'Deals',
-          tabBarIcon: ({ color, size }) => <Briefcase size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="properties"
-        options={{
-          title: 'Properties',
-          tabBarIcon: ({ color, size }) => <Building size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
-        }}
-      />
+      <NativeTabs.Trigger name="index">
+        <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
+        <Label>Inbox</Label>
+        {counts.leads > 0 && <Badge value={String(counts.leads)} />}
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="deals">
+        <Icon sf={{ default: 'doc.text', selected: 'doc.text.fill' }} />
+        <Label>Deals</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="properties">
+        <Icon sf={{ default: 'building.2', selected: 'building.2.fill' }} />
+        <Label>Properties</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="settings">
+        <Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
+        <Label>Settings</Label>
+      </NativeTabs.Trigger>
+
       {/* Hidden tabs - still accessible via navigation but not in tab bar */}
-      <Tabs.Screen
-        name="leads"
-        options={{
-          title: 'Leads',
-          href: null, // Hide from tab bar (FloatingGlassTabBar filters by href)
-          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="conversations"
-        options={{
-          title: 'AI Chat',
-          href: null, // Hide from tab bar (FloatingGlassTabBar filters by href)
-          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
-        }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="leads" hidden />
+      <NativeTabs.Trigger name="conversations" hidden />
+    </NativeTabs>
   );
 }

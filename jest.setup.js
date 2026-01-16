@@ -106,9 +106,11 @@ jest.mock('lucide-react-native', () => {
     ArrowLeft: createMockIcon('ArrowLeft'),
     Users: createMockIcon('Users'),
     Database: createMockIcon('Database'),
+    DollarSign: createMockIcon('DollarSign'),
     Server: createMockIcon('Server'),
     AlertTriangle: createMockIcon('AlertTriangle'),
     TrendingUp: createMockIcon('TrendingUp'),
+    TrendingDown: createMockIcon('TrendingDown'),
     Activity: createMockIcon('Activity'),
     ChevronRight: createMockIcon('ChevronRight'),
     ChevronDown: createMockIcon('ChevronDown'),
@@ -117,6 +119,8 @@ jest.mock('lucide-react-native', () => {
     XCircle: createMockIcon('XCircle'),
     Link: createMockIcon('Link'),
     FileText: createMockIcon('FileText'),
+    Eye: createMockIcon('Eye'),
+    Image: createMockIcon('Image'),
     Search: createMockIcon('Search'),
     Filter: createMockIcon('Filter'),
     User: createMockIcon('User'),
@@ -138,6 +142,7 @@ jest.mock('lucide-react-native', () => {
     Power: createMockIcon('Power'),
     RotateCw: createMockIcon('RotateCw'),
     Plus: createMockIcon('Plus'),
+    Package: createMockIcon('Package'),
     Phone: createMockIcon('Phone'),
     Building2: createMockIcon('Building'),
     Building: createMockIcon('Building'),
@@ -168,6 +173,11 @@ jest.mock('lucide-react-native', () => {
     FileDown: createMockIcon('FileDown'),
     CircleDot: createMockIcon('CircleDot'),
     MoreHorizontal: createMockIcon('MoreHorizontal'),
+    Camera: createMockIcon('Camera'),
+    Mic: createMockIcon('Mic'),
+    Square: createMockIcon('Square'),
+    Calculator: createMockIcon('Calculator'),
+    CheckCircle2: createMockIcon('CheckCircle2'),
   };
 });
 
@@ -346,6 +356,45 @@ jest.mock('papaparse', () => ({
     return { data, errors: [] };
   }),
 }));
+
+// Mock expo-blur for glass effect components
+jest.mock('expo-blur', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    BlurView: ({ children, style, ...props }) =>
+      React.createElement(View, { style, ...props }, children),
+  };
+});
+
+// Mock @callstack/liquid-glass for glass effect components
+jest.mock('@callstack/liquid-glass', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    LiquidGlassView: ({ children, style, ...props }) =>
+      React.createElement(View, { style, ...props }, children),
+    LiquidGlassContainerView: ({ children, style, ...props }) =>
+      React.createElement(View, { style, ...props }, children),
+    isLiquidGlassSupported: false,
+  };
+});
+
+// Mock LoadingSpinner component
+jest.mock('@/components/ui/LoadingSpinner', () => {
+  const React = require('react');
+  const { ActivityIndicator } = require('react-native');
+  return {
+    LoadingSpinner: ({ size = 'medium', ...props }) => {
+      const sizeMap = { small: 'small', medium: 'large', large: 'large' };
+      return React.createElement(ActivityIndicator, {
+        size: sizeMap[size] || 'large',
+        testID: 'loading-spinner',
+        ...props,
+      });
+    },
+  };
+});
 
 // Silence console errors in tests
 const originalError = console.error;

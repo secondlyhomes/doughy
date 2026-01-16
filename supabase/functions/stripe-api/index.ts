@@ -44,8 +44,8 @@ for (let i = 0; i < 256; i++) {
  * @returns Object with appropriate CORS headers
  */
 const getCorsHeaders = (requestOrigin?: string): Record<string, string> => {
-  // DEVELOPMENT MODE OVERRIDE - Always consider development mode for local testing
-  const isDevelopment = true; // Force development mode for testing
+  // ENVIRONMENT-BASED MODE - Check actual environment instead of hardcoding
+  const isDevelopment = Deno.env.get('ENVIRONMENT') !== 'production';
 
   // If in development mode and there's a request origin, use that origin
   if (isDevelopment && requestOrigin) {

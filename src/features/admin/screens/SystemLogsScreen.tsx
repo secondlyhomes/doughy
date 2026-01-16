@@ -21,8 +21,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
+import { SPACING } from '@/constants/design-tokens';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
+
+// Spacing constants for floating search bar
+const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 48 + SPACING.xs; // ~60px (pt-2 + searchbar + pb-1)
+const FILTER_PILLS_HEIGHT = 60; // Slightly taller due to "Filter by Level" label
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
 
 export function SystemLogsScreen() {
   const router = useRouter();
@@ -173,23 +179,55 @@ export function SystemLogsScreen() {
     !search || log.message.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Calculate dynamic padding based on filter visibility
+  const listPaddingTop =
+    SEARCH_BAR_CONTAINER_HEIGHT +
+    insets.top +
+    SEARCH_BAR_TO_CONTENT_GAP +
+    (showFilters ? FILTER_PILLS_HEIGHT : 0);
+
+  // Loading state with skeletons - matches floating search bar layout
+  if (isLoading) {
+    return (
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {/* Floating search bar skeleton */}
+        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+          <View className="px-4 pt-2 pb-1">
+            <Skeleton className="h-12 rounded-full" />
+          </View>
+        </View>
+
+        {/* Content skeletons with matching paddingTop */}
+        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP, paddingHorizontal: 16 }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <View key={i} className="mb-2">
+              <Skeleton className="h-16 rounded-lg" />
+            </View>
+          ))}
+        </View>
+      </ThemedSafeAreaView>
+    );
+  }
+
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Search Bar */}
-      <View className="px-4 py-3">
-        <SearchBar
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search logs..."
-          size="lg"
-          glass={true}
-          onFilter={() => setShowFilters(!showFilters)}
-          hasActiveFilters={filters.level !== 'all'}
-        />
+    <ThemedSafeAreaView className="flex-1" edges={[]}>
+      {/* Floating Glass Search Bar - positioned absolutely at top */}
+      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+        <View className="px-4 pt-2 pb-1">
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search logs..."
+            size="lg"
+            glass={true}
+            onFilter={() => setShowFilters(!showFilters)}
+            hasActiveFilters={filters.level !== 'all'}
+          />
+        </View>
 
         {/* Filter Pills */}
         {showFilters && (
-          <View className="mt-3">
+          <View className="px-4 pb-2">
             <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
               Filter by Level
             </Text>
@@ -233,28 +271,27 @@ export function SystemLogsScreen() {
         )}
       </View>
 
-      {/* Logs List */}
-      {isLoading ? (
-        <LoadingSpinner fullScreen />
-      ) : (
-        <FlatList
-          data={filteredLogs}
-          keyExtractor={(item) => item.id}
-          renderItem={renderLog}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-          }
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          contentContainerStyle={{ paddingVertical: 8, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
-          ListEmptyComponent={
-            <View className="flex-1 items-center justify-center py-24">
-              <Info size={48} color={colors.mutedForeground} />
-              <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No logs found</Text>
-            </View>
-          }
-        />
-      )}
+      {/* Logs List - content scrolls beneath search bar */}
+      <FlatList
+        data={filteredLogs}
+        keyExtractor={(item) => item.id}
+        renderItem={renderLog}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={{
+          paddingTop: listPaddingTop,
+          paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom,
+        }}
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center py-24">
+            <Info size={48} color={colors.mutedForeground} />
+            <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No logs found</Text>
+          </View>
+        }
+      />
     </ThemedSafeAreaView>
   );
 }

@@ -72,6 +72,8 @@ export function PropertyListScreen() {
       isSelected={item.id === selectedPropertyId}
       onPress={handlePropertyPress}
       compact={viewMode === 'grid'}
+      variant="glass"
+      glassIntensity={65}
     />
   ), [selectedPropertyId, handlePropertyPress, viewMode]);
 
@@ -107,7 +109,7 @@ export function PropertyListScreen() {
         contentContainerStyle={{
           paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
           paddingHorizontal: 16,
-          paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom
+          paddingBottom: TAB_BAR_SAFE_PADDING
         }}
         columnWrapperStyle={viewMode === 'grid' ? { gap: 12 } : undefined}
         ItemSeparatorComponent={viewMode === 'list' ? ItemSeparator : undefined}

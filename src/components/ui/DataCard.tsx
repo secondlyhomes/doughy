@@ -76,6 +76,11 @@ export interface DataCardProps {
   isSelected?: boolean;
   className?: string;
   style?: ViewStyle;
+
+  /** Card variant: 'default' for solid, 'glass' for glass effect */
+  variant?: 'default' | 'glass';
+  /** Blur intensity for glass variant (0-100). Default: 60 */
+  glassIntensity?: number;
 }
 
 export function DataCard({
@@ -95,6 +100,8 @@ export function DataCard({
   isSelected = false,
   className,
   style,
+  variant = 'default',
+  glassIntensity = 60,
 }: DataCardProps) {
   const colors = useThemeColors();
 
@@ -104,6 +111,8 @@ export function DataCard({
   return (
     <Wrapper {...wrapperProps}>
       <Card
+        variant={variant}
+        glassIntensity={glassIntensity}
         className={className}
         style={[
           {

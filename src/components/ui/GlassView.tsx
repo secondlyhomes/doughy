@@ -9,6 +9,7 @@ import {
 } from '@callstack/liquid-glass';
 import { useTheme, useThemeColors } from '@/context/ThemeContext';
 import { getBackdropColor, withOpacity } from '@/lib/design-utils';
+import { GLASS_BLUR } from '@/constants/design-tokens';
 
 export interface GlassViewProps extends ViewProps {
   /** Blur intensity for expo-blur fallback (0-100). Default: 50 */
@@ -145,15 +146,15 @@ export function GlassBackdrop({
 const styles = StyleSheet.create({
   webGlass: {
     // @ts-ignore - web-only property
-    backdropFilter: 'blur(12px)',
+    backdropFilter: GLASS_BLUR.regular,
     // @ts-ignore - web-only property
-    WebkitBackdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: GLASS_BLUR.regular,
   },
   webBackdrop: {
     // @ts-ignore - web-only property
-    backdropFilter: 'blur(8px)',
+    backdropFilter: GLASS_BLUR.subtle,
     // @ts-ignore - web-only property
-    WebkitBackdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: GLASS_BLUR.subtle,
   },
 });
 

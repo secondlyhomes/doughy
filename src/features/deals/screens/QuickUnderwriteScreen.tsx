@@ -335,7 +335,7 @@ export function QuickUnderwriteScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}

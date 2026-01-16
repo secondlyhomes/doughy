@@ -5,6 +5,7 @@ import { View, Text, ViewProps, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 
 type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'danger' | 'info' | 'inactive';
 type BadgeSize = 'default' | 'sm' | 'lg';
@@ -136,23 +137,23 @@ export function Badge({
 }
 
 const styles = StyleSheet.create({
-  sizeDefault: {
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-  },
   sizeSm: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: SPACING.sm,    // 8
+    paddingVertical: SPACING.xs,      // 4
+  },
+  sizeDefault: {
+    paddingHorizontal: SPACING.md,    // 12
+    paddingVertical: SPACING.xs,      // 4
   },
   sizeLg: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: SPACING.lg,    // 16
+    paddingVertical: SPACING.sm,      // 8
   },
   textDefault: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.xs,          // 12
   },
   textLg: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.sm,          // 14
   },
 });
 

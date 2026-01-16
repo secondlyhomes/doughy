@@ -294,7 +294,7 @@ export function DealsListScreen() {
             contentContainerStyle={{
               paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
               paddingHorizontal: 16,
-              paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom,
+              paddingBottom: TAB_BAR_SAFE_PADDING,
             }}
             ItemSeparatorComponent={() => <View className="h-3" />}
             refreshControl={

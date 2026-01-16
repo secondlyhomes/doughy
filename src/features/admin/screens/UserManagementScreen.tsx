@@ -14,8 +14,15 @@ import { User, Shield, ChevronRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
+import { SPACING } from '@/constants/design-tokens';
 import { getUsers, getRoleLabel, isAdminRole, type AdminUser, type UserFilters, type UserRole } from '../services/userService';
+
+// Spacing constants for floating search bar
+const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 48 + SPACING.xs; // ~60px (pt-2 + searchbar + pb-1)
+const FILTER_PILLS_HEIGHT = 40; // Approximate height of filter pills row
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
+const COUNT_TEXT_HEIGHT = 20; // Height for count text line
 
 export function UserManagementScreen() {
   const router = useRouter();
@@ -125,89 +132,138 @@ export function UserManagementScreen() {
     </TouchableOpacity>
   );
 
+  // Calculate dynamic padding based on filter visibility and count text
+  const listPaddingTop =
+    SEARCH_BAR_CONTAINER_HEIGHT +
+    insets.top +
+    SEARCH_BAR_TO_CONTENT_GAP +
+    (total > 0 ? COUNT_TEXT_HEIGHT : 0) +
+    (showFilters ? FILTER_PILLS_HEIGHT : 0);
+
+  // Loading state with skeletons - matches floating search bar layout
+  if (isLoading) {
+    return (
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {/* Floating search bar skeleton */}
+        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+          <View className="px-4 pt-2 pb-1">
+            <Skeleton className="h-12 rounded-full" />
+          </View>
+        </View>
+
+        {/* Content skeletons with matching paddingTop */}
+        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <View
+              key={i}
+              style={{
+                backgroundColor: colors.card,
+                borderBottomWidth: 1,
+                borderColor: colors.border,
+                padding: 16,
+              }}
+            >
+              <View className="flex-row items-center">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                <View className="flex-1 ml-3">
+                  <Skeleton className="h-4 w-32 rounded mb-2" />
+                  <Skeleton className="h-3 w-48 rounded mb-1" />
+                  <Skeleton className="h-3 w-24 rounded" />
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ThemedSafeAreaView>
+    );
+  }
+
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Search Bar */}
-      <View className="px-4 py-3">
-        <SearchBar
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search users..."
-          size="lg"
-          onSubmit={handleSearch}
-          glass={true}
-          onFilter={() => setShowFilters(!showFilters)}
-          hasActiveFilters={filters.role !== 'all'}
-        />
+    <ThemedSafeAreaView className="flex-1" edges={[]}>
+      {/* Floating Glass Search Bar - positioned absolutely at top */}
+      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
+        <View className="px-4 pt-2 pb-1">
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search users..."
+            size="lg"
+            onSubmit={handleSearch}
+            glass={true}
+            onFilter={() => setShowFilters(!showFilters)}
+            hasActiveFilters={filters.role !== 'all'}
+          />
+        </View>
 
         {/* Subtle count text */}
         {total > 0 && (
-          <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
+          <Text className="text-xs text-center px-4" style={{ color: colors.mutedForeground }}>
             {total} user{total !== 1 ? 's' : ''} found
           </Text>
         )}
 
         {/* Filter Pills */}
         {showFilters && (
-          <View className="flex-row flex-wrap mt-3 gap-2">
-            <FilterPill
-              label="All Roles"
-              active={filters.role === 'all'}
-              onPress={() => {
-                setFilters((prev) => ({ ...prev, role: 'all', page: 1 }));
-                loadUsers(true);
-              }}
-            />
-            <FilterPill
-              label="Admin"
-              active={filters.role === 'admin'}
-              onPress={() => {
-                setFilters((prev) => ({ ...prev, role: 'admin', page: 1 }));
-                loadUsers(true);
-              }}
-            />
-            <FilterPill
-              label="Support"
-              active={filters.role === 'support'}
-              onPress={() => {
-                setFilters((prev) => ({ ...prev, role: 'support', page: 1 }));
-                loadUsers(true);
-              }}
-            />
-            <FilterPill
-              label="User"
-              active={filters.role === 'user'}
-              onPress={() => {
-                setFilters((prev) => ({ ...prev, role: 'user', page: 1 }));
-                loadUsers(true);
-              }}
-            />
+          <View className="px-4 pb-2 mt-2">
+            <View className="flex-row flex-wrap gap-2">
+              <FilterPill
+                label="All Roles"
+                active={filters.role === 'all'}
+                onPress={() => {
+                  setFilters((prev) => ({ ...prev, role: 'all', page: 1 }));
+                  loadUsers(true);
+                }}
+              />
+              <FilterPill
+                label="Admin"
+                active={filters.role === 'admin'}
+                onPress={() => {
+                  setFilters((prev) => ({ ...prev, role: 'admin', page: 1 }));
+                  loadUsers(true);
+                }}
+              />
+              <FilterPill
+                label="Support"
+                active={filters.role === 'support'}
+                onPress={() => {
+                  setFilters((prev) => ({ ...prev, role: 'support', page: 1 }));
+                  loadUsers(true);
+                }}
+              />
+              <FilterPill
+                label="User"
+                active={filters.role === 'user'}
+                onPress={() => {
+                  setFilters((prev) => ({ ...prev, role: 'user', page: 1 }));
+                  loadUsers(true);
+                }}
+              />
+            </View>
           </View>
         )}
       </View>
 
-      {/* User List */}
-      {isLoading ? (
-        <LoadingSpinner fullScreen />
-      ) : (
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.id}
-          renderItem={renderUser}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-          }
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
-          ListEmptyComponent={
-            <View className="flex-1 items-center justify-center py-24">
-              <User size={48} color={colors.mutedForeground} />
-              <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No users found</Text>
-            </View>
-          }
-        />
-      )}
+      {/* User List - content scrolls beneath search bar */}
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.id}
+        renderItem={renderUser}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={{
+          paddingTop: listPaddingTop,
+          paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom,
+        }}
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center py-24">
+            <User size={48} color={colors.mutedForeground} />
+            <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No users found</Text>
+          </View>
+        }
+      />
     </ThemedSafeAreaView>
   );
 }

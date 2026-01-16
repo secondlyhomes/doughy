@@ -58,7 +58,7 @@ export function AppearanceScreen() {
       {/* Header */}
       <ScreenHeader title="Appearance" backButton bordered />
 
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
+      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Theme Selection */}
         <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           THEME

@@ -12,12 +12,15 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { Eye, EyeOff, Check, X, Edit, AlertTriangle, CheckCircle } from 'lucide-react-native';
+import { useToast } from '@/components/ui/Toast';
+import { Eye, EyeOff, Check, X, Edit, AlertTriangle, CheckCircle, XCircle } from 'lucide-react-native';
 import { useApiKey } from '@/hooks/useApiKey';
 import { useThemeColors, type ThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { RefreshCw } from 'lucide-react-native';
 import { validateApiKeyFormat } from '../utils/serviceHelpers';
-import type { IntegrationStatus, IntegrationFieldType } from '../types/integrations';
+import { clearHealthCache, checkIntegrationHealth } from '../services/apiKeyHealthService';
+import type { IntegrationStatus, IntegrationFieldType, IntegrationHealth } from '../types/integrations';
 
 interface ApiKeyFormItemProps {
   service: string;
@@ -29,6 +32,72 @@ interface ApiKeyFormItemProps {
   healthStatus?: IntegrationStatus;
   placeholder?: string;
   description?: string;
+}
+
+/**
+ * Trigger haptic feedback
+ */
+async function triggerHaptic(type: 'success' | 'error' | 'light' = 'light') {
+  try {
+    const Haptics = await import('expo-haptics');
+    if (type === 'success') {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else if (type === 'error') {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } else {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  } catch {
+    // Haptics not available
+  }
+}
+
+/**
+ * Get troubleshooting suggestions based on error message
+ */
+function getTroubleshootingSuggestions(message: string | undefined): string[] {
+  if (!message) return [];
+
+  const messageLower = message.toLowerCase();
+  const suggestions: string[] = [];
+
+  // Authentication errors
+  if (messageLower.includes('401') || messageLower.includes('unauthorized') || messageLower.includes('invalid') && messageLower.includes('key')) {
+    suggestions.push('Check that your API key hasn\'t expired');
+    suggestions.push('Verify the key was copied correctly');
+    suggestions.push('Try generating a new key from the provider\'s dashboard');
+  }
+
+  // Rate limiting
+  if (messageLower.includes('429') || messageLower.includes('rate limit') || messageLower.includes('too many requests')) {
+    suggestions.push('You\'ve hit the rate limit - wait a few minutes');
+    suggestions.push('Consider upgrading your API plan');
+  }
+
+  // Permission errors
+  if (messageLower.includes('403') || messageLower.includes('forbidden') || messageLower.includes('permission')) {
+    suggestions.push('Check that your API key has the required permissions');
+    suggestions.push('Some features may require a paid plan');
+  }
+
+  // HMAC/Decryption errors
+  if (messageLower.includes('hmac') || messageLower.includes('decrypt') || messageLower.includes('verification failed')) {
+    suggestions.push('The key may be corrupted - delete and re-enter it');
+  }
+
+  // Network errors
+  if (messageLower.includes('network') || messageLower.includes('timeout') || messageLower.includes('econnrefused')) {
+    suggestions.push('Check your internet connection');
+    suggestions.push('The API service may be temporarily down');
+  }
+
+  // Generic fallback
+  if (suggestions.length === 0) {
+    suggestions.push('Try deleting the key and re-entering it');
+    suggestions.push('Check the API provider\'s status page');
+  }
+
+  return suggestions;
 }
 
 /**
@@ -75,12 +144,18 @@ export function ApiKeyFormItem({
   description,
 }: ApiKeyFormItemProps) {
   const colors = useThemeColors();
+  const { toast } = useToast();
   const [inputValue, setInputValue] = useState('');
   const [showValue, setShowValue] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isReplacing, setIsReplacing] = useState(false); // Replace mode: test new key before replacing
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { key, setKey, save, deleteKey, loading, isSaving } = useApiKey(service);
+  const { key, keyExistsInDB, setKey, save, deleteKey, loading, isSaving } = useApiKey(service);
   const [hasWarning, setHasWarning] = useState(false);
+
+  // Health test state
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<IntegrationHealth | null>(null);
 
   const initializedRef = useRef(false);
 
@@ -109,7 +184,7 @@ export function ApiKeyFormItem({
   // Handle save
   const handleSave = async () => {
     if (!inputValue) {
-      Alert.alert('Error', 'Please enter a value');
+      toast({ type: 'error', title: 'Missing Value', description: 'Please enter a value' });
       return;
     }
 
@@ -119,31 +194,36 @@ export function ApiKeyFormItem({
     // Show warning if needed
     if (validation.warning) {
       setHasWarning(true);
-      Alert.alert('Warning', validation.warning + '. You can still save this key, but it may not work correctly.');
+      toast({ type: 'warning', title: 'Warning', description: validation.warning, duration: 6000 });
     } else {
       setHasWarning(false);
     }
 
     // Block only if completely invalid
     if (!validation.isValid) {
-      Alert.alert('Error', validation.warning || 'Please enter a valid API key');
+      toast({ type: 'error', title: 'Invalid Key', description: validation.warning || 'Please enter a valid API key' });
       return;
     }
 
     try {
       const result = await save(inputValue);
       if (result.success) {
-        Alert.alert('Success', `${label} saved successfully`);
+        triggerHaptic('success');
+        toast({ type: 'success', title: 'Saved', description: `${label} configured` });
         setInputValue('');
         setShowValue(false);
         setIsEditing(false);
+        // Clear health cache so status refreshes immediately
+        clearHealthCache(service);
         onSaved?.();
       } else {
-        Alert.alert('Error', result.error || 'Failed to save. Please try again.');
+        triggerHaptic('error');
+        toast({ type: 'error', title: 'Save Failed', description: result.error || 'Please try again', duration: 6000 });
       }
     } catch (error) {
+      triggerHaptic('error');
       console.error('Error saving API key:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      toast({ type: 'error', title: 'Error', description: 'An unexpected error occurred', duration: 6000 });
     }
   };
 
@@ -163,18 +243,23 @@ export function ApiKeyFormItem({
               const result = await deleteKey();
 
               if (result.success) {
+                triggerHaptic('success');
                 setKey('');
                 setIsEditing(true);
                 setHasWarning(false);
                 initializedRef.current = true;
-                Alert.alert('Success', `${label} has been removed`);
+                // Clear health cache so status refreshes immediately
+                clearHealthCache(service);
+                toast({ type: 'success', title: 'Deleted', description: `${label} has been removed` });
                 onSaved?.();
               } else {
-                Alert.alert('Error', result.error || 'Failed to delete. Please try again.');
+                triggerHaptic('error');
+                toast({ type: 'error', title: 'Delete Failed', description: result.error || 'Please try again', duration: 6000 });
               }
             } catch (error) {
+              triggerHaptic('error');
               console.error('Error deleting API key:', error);
-              Alert.alert('Error', 'Failed to delete the API key. Please try again.');
+              toast({ type: 'error', title: 'Error', description: 'Failed to delete the API key', duration: 6000 });
             } finally {
               setDeleteLoading(false);
             }
@@ -184,6 +269,139 @@ export function ApiKeyFormItem({
     );
   };
 
+  // Handle test connection
+  const handleTest = async () => {
+    try {
+      setIsTesting(true);
+      setTestResult(null);
+      // Clear cache to force fresh check
+      clearHealthCache(service);
+      const result = await checkIntegrationHealth(service, true);
+      setTestResult(result);
+
+      if (result.status === 'operational') {
+        triggerHaptic('success');
+        toast({
+          type: 'success',
+          title: 'Connection Successful',
+          description: result.latency ? `Response time: ${result.latency}` : 'API is reachable',
+        });
+      } else if (result.status === 'error') {
+        triggerHaptic('error');
+        toast({
+          type: 'error',
+          title: 'Connection Failed',
+          description: result.message || 'Could not connect to the API',
+          duration: 6000,
+        });
+      }
+
+      // Trigger parent refresh to update status
+      onSaved?.();
+    } catch (error) {
+      triggerHaptic('error');
+      console.error('Error testing connection:', error);
+      toast({
+        type: 'error',
+        title: 'Test Failed',
+        description: 'Could not test the connection',
+        duration: 6000,
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  // Handle replace - test new key before saving
+  const handleReplace = async () => {
+    if (!inputValue) {
+      toast({ type: 'error', title: 'Missing Value', description: 'Please enter a new key' });
+      return;
+    }
+
+    // Validate format first
+    const validation = validateApiKeyFormat(inputValue, service);
+    if (!validation.isValid) {
+      toast({ type: 'error', title: 'Invalid Key', description: validation.warning || 'Please enter a valid API key' });
+      return;
+    }
+
+    try {
+      setIsTesting(true);
+      toast({ type: 'info', title: 'Testing...', description: 'Verifying new key before replacing' });
+
+      // Save the new key first (temporarily)
+      const saveResult = await save(inputValue);
+      if (!saveResult.success) {
+        toast({ type: 'error', title: 'Save Failed', description: saveResult.error || 'Could not save the new key', duration: 6000 });
+        return;
+      }
+
+      // Clear cache and test the new key
+      clearHealthCache(service);
+      const testResultData = await checkIntegrationHealth(service, true);
+
+      if (testResultData.status === 'operational') {
+        triggerHaptic('success');
+        toast({
+          type: 'success',
+          title: 'Key Replaced',
+          description: `${label} updated successfully`,
+        });
+        setInputValue('');
+        setShowValue(false);
+        setIsReplacing(false);
+        setTestResult(testResultData);
+        onSaved?.();
+      } else if (testResultData.status === 'error') {
+        // New key failed - notify user but key is already saved
+        triggerHaptic('light');
+        toast({
+          type: 'warning',
+          title: 'Key Saved with Issues',
+          description: 'The key was saved but the connection test failed. You may need to check the key.',
+          duration: 8000,
+        });
+        setInputValue('');
+        setShowValue(false);
+        setIsReplacing(false);
+        setTestResult(testResultData);
+        onSaved?.();
+      } else {
+        // Configured but not tested
+        triggerHaptic('success');
+        toast({ type: 'success', title: 'Key Replaced', description: `${label} updated` });
+        setInputValue('');
+        setShowValue(false);
+        setIsReplacing(false);
+        onSaved?.();
+      }
+    } catch (error) {
+      triggerHaptic('error');
+      console.error('Error replacing key:', error);
+      toast({
+        type: 'error',
+        title: 'Replace Failed',
+        description: 'Could not replace the key',
+        duration: 6000,
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  // Cancel replace mode
+  const handleCancelReplace = () => {
+    setIsReplacing(false);
+    setInputValue('');
+    setShowValue(false);
+  };
+
+  // Get effective status (test result takes precedence)
+  const effectiveStatus = isTesting ? 'checking' : (testResult?.status || healthStatus);
+  const effectiveMessage = testResult?.message;
+  const effectiveLatency = testResult?.latency;
+
   // Select component (for model preferences, etc.)
   if (type === 'select' && options.length > 0) {
     return (
@@ -192,7 +410,7 @@ export function ApiKeyFormItem({
           <Text style={[styles.label, { color: colors.foreground }]}>
             {label} {required && <Text style={styles.required}>*</Text>}
           </Text>
-          <StatusBadge hasKey={!!key} hasWarning={hasWarning} healthStatus={healthStatus} colors={colors} />
+          <StatusBadge hasKey={!!key} hasWarning={hasWarning} healthStatus={effectiveStatus} loading={loading} colors={colors} />
         </View>
         {description && (
           <Text style={[styles.description, { color: colors.mutedForeground }]}>{description}</Text>
@@ -212,88 +430,221 @@ export function ApiKeyFormItem({
         <Text style={[styles.label, { color: colors.foreground }]}>
           {label} {required && <Text style={styles.required}>*</Text>}
         </Text>
-        <StatusBadge hasKey={!!key} hasWarning={hasWarning} healthStatus={healthStatus} colors={colors} />
+        <StatusBadge hasKey={!!key} hasWarning={hasWarning} healthStatus={effectiveStatus} loading={loading} colors={colors} />
       </View>
       {description && (
         <Text style={[styles.description, { color: colors.mutedForeground }]}>{description}</Text>
       )}
 
-      <View style={styles.inputRow}>
-        <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      {/* Replace mode - show current key and new key input */}
+      {isReplacing ? (
+        <View style={styles.replaceContainer}>
+          {/* Current key (read-only) */}
+          <View style={styles.currentKeyRow}>
+            <Text style={[styles.currentKeyLabel, { color: colors.mutedForeground }]}>Current:</Text>
+            <Text style={[styles.currentKeyValue, { color: colors.mutedForeground }]}>
+              {key ? obfuscateKey(key) : '••••••••'}
+            </Text>
+            <View style={[styles.activeIndicator, { backgroundColor: colors.success }]} />
+            <Text style={[styles.activeText, { color: colors.success }]}>Active</Text>
+          </View>
+
+          {/* New key input */}
+          <View style={styles.inputRow}>
+            <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <TextInput
+                style={[styles.input, { color: colors.foreground }]}
+                secureTextEntry={!showValue && type === 'password'}
+                placeholder="Enter new key..."
+                placeholderTextColor={colors.mutedForeground}
+                value={inputValue}
+                onChangeText={setInputValue}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isTesting}
+              />
+              {type === 'password' && (
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowValue(!showValue)}
+                  disabled={isTesting}
+                >
+                  {showValue ? (
+                    <EyeOff size={20} color={colors.mutedForeground} />
+                  ) : (
+                    <Eye size={20} color={colors.mutedForeground} />
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, styles.replaceButton, { backgroundColor: colors.primary }]}
+              onPress={handleReplace}
+              disabled={isTesting || !inputValue}
+            >
+              {isTesting ? (
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              ) : (
+                <>
+                  <Check size={16} color={colors.primaryForeground} />
+                  <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Replace</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.iconButton, { borderColor: colors.border }]}
+              onPress={handleCancelReplace}
+              disabled={isTesting}
+            >
+              <X size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.inputRow}>
+          <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {isEditing ? (
+              <TextInput
+                style={[styles.input, { color: colors.foreground }]}
+                secureTextEntry={!showValue && type === 'password'}
+                placeholder={placeholder || `Enter ${label}`}
+                placeholderTextColor={colors.mutedForeground}
+                value={inputValue}
+                onChangeText={setInputValue}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isSaving}
+              />
+            ) : (
+              <TextInput
+                style={[styles.input, { color: colors.mutedForeground }]}
+                value={key ? obfuscateKey(key) : '••••••••'}
+                editable={false}
+              />
+            )}
+
+            {isEditing && type === 'password' && (
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowValue(!showValue)}
+                disabled={isSaving}
+              >
+                {showValue ? (
+                  <EyeOff size={20} color={colors.mutedForeground} />
+                ) : (
+                  <Eye size={20} color={colors.mutedForeground} />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
           {isEditing ? (
-            <TextInput
-              style={[styles.input, { color: colors.foreground }]}
-              secureTextEntry={!showValue && type === 'password'}
-              placeholder={placeholder || `Enter ${label}`}
-              placeholderTextColor={colors.mutedForeground}
-              value={inputValue}
-              onChangeText={setInputValue}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isSaving}
-            />
+            <TouchableOpacity
+              style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
+              onPress={handleSave}
+              disabled={isSaving || (required && !inputValue)}
+            >
+              {isSaving ? (
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              ) : (
+                <>
+                  <Check size={16} color={colors.primaryForeground} />
+                  <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Save</Text>
+                </>
+              )}
+            </TouchableOpacity>
           ) : (
-            <TextInput
-              style={[styles.input, { color: colors.mutedForeground }]}
-              value={key ? obfuscateKey(key) : '••••••••'}
-              editable={false}
-            />
+            <>
+              {/* Test button - only show when key exists */}
+              {keyExistsInDB && (
+                <TouchableOpacity
+                  style={[styles.button, styles.testButton, { borderColor: colors.border }]}
+                  onPress={handleTest}
+                  disabled={isTesting}
+                >
+                  {isTesting ? (
+                    <ActivityIndicator size="small" color={colors.info} />
+                  ) : (
+                    <>
+                      <RefreshCw size={14} color={colors.info} />
+                      <Text style={[styles.buttonText, { color: colors.info }]}>Test</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+              {/* Replace button - only show when key exists */}
+              {keyExistsInDB ? (
+                <TouchableOpacity
+                  style={[styles.button, styles.editButton, { borderColor: colors.border }]}
+                  onPress={() => setIsReplacing(true)}
+                >
+                  <Edit size={16} color={colors.foreground} />
+                  <Text style={[styles.buttonText, { color: colors.foreground }]}>Replace</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.button, styles.editButton, { borderColor: colors.border }]}
+                  onPress={() => setIsEditing(true)}
+                >
+                  <Edit size={16} color={colors.foreground} />
+                  <Text style={[styles.buttonText, { color: colors.foreground }]}>Add</Text>
+                </TouchableOpacity>
+              )}
+            </>
           )}
 
-          {isEditing && type === 'password' && (
+          {keyExistsInDB && !isEditing && (
             <TouchableOpacity
-              style={styles.eyeButton}
-              onPress={() => setShowValue(!showValue)}
-              disabled={isSaving}
+              style={[styles.iconButton, { borderColor: colors.border }]}
+              onPress={handleDelete}
+              disabled={deleteLoading}
             >
-              {showValue ? (
-                <EyeOff size={20} color={colors.mutedForeground} />
+              {deleteLoading ? (
+                <ActivityIndicator size="small" color={colors.destructive} />
               ) : (
-                <Eye size={20} color={colors.mutedForeground} />
+                <X size={16} color={colors.destructive} />
               )}
             </TouchableOpacity>
           )}
         </View>
+      )}
 
-        {isEditing ? (
-          <TouchableOpacity
-            style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
-            onPress={handleSave}
-            disabled={isSaving || (required && !inputValue)}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color={colors.primaryForeground} />
-            ) : (
-              <>
-                <Check size={16} color={colors.primaryForeground} />
-                <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Save</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.button, styles.editButton, { borderColor: colors.border }]}
-            onPress={() => setIsEditing(true)}
-          >
-            <Edit size={16} color={colors.foreground} />
-            <Text style={[styles.buttonText, { color: colors.foreground }]}>Change</Text>
-          </TouchableOpacity>
-        )}
-
-        {!!key && (
-          <TouchableOpacity
-            style={[styles.iconButton, { borderColor: colors.border }]}
-            onPress={handleDelete}
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? (
-              <ActivityIndicator size="small" color={colors.destructive} />
-            ) : (
-              <X size={16} color={colors.destructive} />
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* Inline status info - show latency or error message with troubleshooting */}
+      {!isEditing && keyExistsInDB && (effectiveLatency || effectiveMessage) && (
+        <View style={styles.statusInfo}>
+          {effectiveStatus === 'error' && effectiveMessage ? (
+            <View style={[styles.errorPanel, { backgroundColor: withOpacity(colors.destructive, 'muted'), borderColor: withOpacity(colors.destructive, 'strong') }]}>
+              <View style={styles.errorHeader}>
+                <AlertTriangle size={14} color={colors.destructive} />
+                <Text style={[styles.errorTitle, { color: colors.destructive }]}>
+                  Connection Error
+                </Text>
+              </View>
+              <Text style={[styles.errorMessage, { color: colors.foreground }]}>
+                {effectiveMessage}
+              </Text>
+              {getTroubleshootingSuggestions(effectiveMessage).length > 0 && (
+                <View style={styles.suggestions}>
+                  <Text style={[styles.suggestionsTitle, { color: colors.mutedForeground }]}>
+                    Suggestions:
+                  </Text>
+                  {getTroubleshootingSuggestions(effectiveMessage).map((suggestion, index) => (
+                    <Text key={index} style={[styles.suggestionItem, { color: colors.mutedForeground }]}>
+                      • {suggestion}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          ) : effectiveLatency ? (
+            <Text style={[styles.latencyText, { color: colors.mutedForeground }]}>
+              Response time: {effectiveLatency}
+            </Text>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }
@@ -303,13 +654,24 @@ function StatusBadge({
   hasKey,
   hasWarning,
   healthStatus,
+  loading,
   colors,
 }: {
   hasKey: boolean;
   hasWarning?: boolean;
   healthStatus?: IntegrationStatus;
+  loading?: boolean;
   colors: ThemeColors;
 }) {
+  // Show loading state while fetching key data
+  if (loading) {
+    return (
+      <View style={[styles.badge, { backgroundColor: withOpacity(colors.muted, 'muted'), borderColor: withOpacity(colors.border, 'strong') }]}>
+        <ActivityIndicator size="small" color={colors.mutedForeground} />
+      </View>
+    );
+  }
+
   if (healthStatus === 'checking') {
     return (
       <View style={[styles.badge, { backgroundColor: withOpacity(colors.info, 'muted'), borderColor: withOpacity(colors.info, 'strong') }]}>
@@ -319,13 +681,22 @@ function StatusBadge({
     );
   }
 
-  if (healthStatus === 'error' || hasWarning) {
+  // Show Error badge for health check failures
+  if (healthStatus === 'error') {
+    return (
+      <View style={[styles.badge, { backgroundColor: withOpacity(colors.destructive, 'muted'), borderColor: withOpacity(colors.destructive, 'strong') }]}>
+        <XCircle size={12} color={colors.destructive} />
+        <Text style={[styles.badgeText, { color: colors.destructive }]}>Error</Text>
+      </View>
+    );
+  }
+
+  // Show Warning badge for validation warnings (key saved but has issues)
+  if (hasWarning) {
     return (
       <View style={[styles.badge, { backgroundColor: withOpacity(colors.warning, 'muted'), borderColor: withOpacity(colors.warning, 'strong') }]}>
         <AlertTriangle size={12} color={colors.warning} />
-        <Text style={[styles.badgeText, { color: colors.warning }]}>
-          {hasKey ? 'Warning' : 'Error'}
-        </Text>
+        <Text style={[styles.badgeText, { color: colors.warning }]}>Warning</Text>
       </View>
     );
   }
@@ -413,6 +784,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     minWidth: 90,
   },
+  testButton: {
+    borderWidth: 1,
+    minWidth: 70,
+  },
+  replaceButton: {
+    minWidth: 90,
+  },
+  replaceContainer: {
+    gap: 8,
+  },
+  currentKeyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    gap: 8,
+  },
+  currentKeyLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  currentKeyValue: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    flex: 1,
+  },
+  activeIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  activeText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
   iconButton: {
     width: 40,
     height: 40,
@@ -437,5 +842,46 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  statusInfo: {
+    marginTop: 8,
+  },
+  errorPanel: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  errorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  errorTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  errorMessage: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  suggestions: {
+    marginTop: 4,
+  },
+  suggestionsTitle: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  suggestionItem: {
+    fontSize: 11,
+    marginLeft: 4,
+    marginBottom: 2,
+  },
+  errorText: {
+    fontSize: 12,
+  },
+  latencyText: {
+    fontSize: 11,
   },
 });

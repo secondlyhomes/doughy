@@ -5,18 +5,20 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag } from 'lucide-react-native';
+import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag, FileText } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button } from '@/components/ui';
+import { LoadingSpinner, Button, GlassButton } from '@/components/ui';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
+import { useLeadDocuments } from '../hooks/useLeadDocuments';
 import { LeadTimeline, LeadActivity, ActivityType } from '../components/LeadTimeline';
 import { AddActivitySheet } from '../components/AddActivitySheet';
 import { LeadQuickActions } from '../components/LeadQuickActions';
 import { LeadContactInfo } from '../components/LeadContactInfo';
 import { LeadNotesSection } from '../components/LeadNotesSection';
+import { LeadDocsTab } from '../components/LeadDocsTab';
 
 export function LeadDetailScreen() {
   const router = useRouter();
@@ -25,6 +27,7 @@ export function LeadDetailScreen() {
   const leadId = params.leadId as string;
 
   const { lead, isLoading } = useLead(leadId);
+  const { documents } = useLeadDocuments({ leadId });
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
 
@@ -128,10 +131,13 @@ export function LeadDetailScreen() {
         style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border }}
       >
         <View className="flex-row items-center justify-between">
-          <TouchableOpacity className="flex-row items-center" onPress={() => router.back()} accessibilityLabel="Go back" accessibilityRole="button">
-            <ArrowLeft size={24} color={colors.mutedForeground} />
-            <Text className="ml-2" style={{ color: colors.mutedForeground }}>Back</Text>
-          </TouchableOpacity>
+          <GlassButton
+            icon={<ArrowLeft size={24} color={colors.foreground} />}
+            onPress={() => router.back()}
+            size={40}
+            effect="clear"
+            accessibilityLabel="Go back"
+          />
 
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={handleToggleStar} accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`} accessibilityRole="button">
@@ -212,6 +218,20 @@ export function LeadDetailScreen() {
 
         {/* Notes Section */}
         <LeadNotesSection notes={lead.notes} onAddNote={() => setShowActivitySheet(true)} />
+
+        {/* Documents Section */}
+        <View className="p-4 mb-4" style={{ backgroundColor: colors.card }}>
+          <View className="flex-row items-center mb-4">
+            <FileText size={18} color={colors.mutedForeground} />
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Documents</Text>
+            {documents.length > 0 && (
+              <View className="px-2 py-0.5 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
+                <Text className="text-xs font-medium" style={{ color: colors.primary }}>{documents.length}</Text>
+              </View>
+            )}
+          </View>
+          <LeadDocsTab leadId={leadId} leadName={lead.name} />
+        </View>
 
         {/* Activity Timeline */}
         <View className="p-4 mb-8" style={{ backgroundColor: colors.card }}>

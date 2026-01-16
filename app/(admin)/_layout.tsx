@@ -1,16 +1,17 @@
 // app/(admin)/_layout.tsx
-// Admin console with bottom tab navigation using floating liquid glass tab bar
-import { Tabs, Redirect } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
-import { Home, Users, FileText, Link } from 'lucide-react-native';
+// Admin console with NATIVE iOS liquid glass tab bar
+// Uses native UITabBarController on iOS for automatic liquid glass appearance
+import { Redirect } from 'expo-router';
+import { View, ActivityIndicator, DynamicColorIOS } from 'react-native';
+import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useThemeColors } from '@/context/ThemeContext';
-import { FloatingGlassTabBar, TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
+import { useTheme, useThemeColors } from '@/context/ThemeContext';
 
 export default function AdminLayout() {
   const { isLoading } = useAuth();
   const { canViewAdminPanel } = usePermissions();
+  const { isDark } = useTheme();
   const colors = useThemeColors();
 
   // Show loading while checking auth
@@ -28,45 +29,34 @@ export default function AdminLayout() {
   }
 
   return (
-    <Tabs
-      tabBar={(props) => <FloatingGlassTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-      }}
-      sceneContainerStyle={{
-        paddingBottom: TAB_BAR_SAFE_PADDING,
-      }}
+    <NativeTabs
+      backgroundColor="transparent"
+      blurEffect={isDark ? "systemUltraThinMaterialDark" : "systemUltraThinMaterialLight"}
+      tintColor={DynamicColorIOS({
+        light: '#4d7c5f',
+        dark: '#6b9b7e',
+      })}
+      shadowColor="transparent"
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="users"
-        options={{
-          title: 'Users',
-          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="logs"
-        options={{
-          title: 'Logs',
-          tabBarIcon: ({ color, size }) => <FileText size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="integrations"
-        options={{
-          title: 'Integrations',
-          tabBarIcon: ({ color, size }) => <Link size={size} color={color} />,
-        }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="index">
+        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
+        <Label>Dashboard</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="users">
+        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
+        <Label>Users</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="logs">
+        <Icon sf={{ default: 'doc.text', selected: 'doc.text.fill' }} />
+        <Label>Logs</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="integrations">
+        <Icon sf={{ default: 'link', selected: 'link.circle.fill' }} />
+        <Label>Integrations</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

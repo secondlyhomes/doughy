@@ -15,9 +15,18 @@ import { sanitizePhone } from '@/utils/sanitize';
 interface SwipeableLeadCardProps {
   lead: Lead;
   onPress: () => void;
+  /** Card variant: 'default' or 'glass' */
+  variant?: 'default' | 'glass';
+  /** Blur intensity for glass variant (0-100). Default: 55 */
+  glassIntensity?: number;
 }
 
-export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
+export function SwipeableLeadCard({
+  lead,
+  onPress,
+  variant = 'default',
+  glassIntensity = 55,
+}: SwipeableLeadCardProps) {
   const swipeableRef = useRef<Swipeable>(null);
   const colors = useThemeColors();
   const updateLead = useUpdateLead();
@@ -200,7 +209,12 @@ export function SwipeableLeadCard({ lead, onPress }: SwipeableLeadCardProps) {
         overshootRight={false}
         friction={2}
       >
-        <LeadCard lead={lead} onPress={onPress} />
+        <LeadCard
+          lead={lead}
+          onPress={onPress}
+          variant={variant}
+          glassIntensity={glassIntensity}
+        />
       </Swipeable>
     </View>
   );

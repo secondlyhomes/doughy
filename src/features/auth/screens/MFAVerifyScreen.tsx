@@ -17,6 +17,7 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { MFACodeInput } from '../components/MFACodeInput';
 import { useAuth } from '../hooks/useAuth';
+import { usePermissions } from '../hooks/usePermissions';
 import {
   createMFAChallenge,
   verifyMFAChallenge,
@@ -27,6 +28,7 @@ export function MFAVerifyScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const params = useLocalSearchParams<{ factorId?: string }>();
+  const { canViewAdminPanel } = usePermissions();
 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +87,7 @@ export function MFAVerifyScreen() {
 
     if (result.success) {
       // MFA verification successful - navigate to main app
-      router.replace('/(tabs)');
+      router.replace(canViewAdminPanel ? '/(admin)' : '/(tabs)');
     } else {
       setError(result.error || 'Invalid code. Please try again.');
       setCode('');

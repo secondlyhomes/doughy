@@ -121,7 +121,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
   const comparisonScenarios = scenarios.filter(s => selectedScenarios.has(s.id));
 
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
       <View className="gap-4">
         {/* Header */}
         <View className="flex-row justify-between items-center">
@@ -171,6 +171,8 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
                 onSelect={() => toggleScenarioSelection(scenario.id)}
                 onEdit={() => handleEditScenario(scenario)}
                 onDelete={() => handleDeleteScenario(scenario)}
+                variant="glass"
+                glassIntensity={50}
               />
             ))}
           </View>

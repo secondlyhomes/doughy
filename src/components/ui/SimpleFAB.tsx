@@ -1,55 +1,58 @@
+// src/components/ui/SimpleFAB.tsx
+// Simple Floating Action Button using GlassButton for consistency
+
 import React from 'react';
-import { TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import { TouchableOpacityProps, ViewStyle } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { LoadingSpinner } from './LoadingSpinner';
+import { GlassButton } from './GlassButton';
 import { FAB_SIZE, FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_Z_INDEX } from './FloatingGlassTabBar';
-import { getFABShadowStyle } from './fab-styles';
 
 export interface SimpleFABProps extends Omit<TouchableOpacityProps, 'children'> {
   /** Whether the FAB is in a loading state */
   loading?: boolean;
+  /** Custom icon to display. Default: Plus icon */
+  icon?: React.ReactNode;
 }
 
 /**
- * Simple Floating Action Button with a + icon.
- * Consistent styling across all screens.
+ * Simple Floating Action Button with liquid glass effect.
+ * Uses GlassButton internally with FAB-specific positioning and styling.
+ * Automatically uses iOS 26+ native liquid glass with fallbacks for older platforms.
  */
 export function SimpleFAB({
   loading = false,
   disabled,
+  icon,
   style,
   ...props
 }: SimpleFABProps) {
   const colors = useThemeColors();
 
+  const positioningStyle: ViewStyle = {
+    position: 'absolute',
+    bottom: FAB_BOTTOM_OFFSET,
+    right: FAB_RIGHT_MARGIN,
+    zIndex: FAB_Z_INDEX.SIMPLE,
+  };
+
+  const content = loading ? (
+    <LoadingSpinner size="small" color="white" />
+  ) : (
+    icon || <Plus size={28} color="white" />
+  );
+
   return (
-    <TouchableOpacity
-      style={[
-        {
-          position: 'absolute',
-          bottom: FAB_BOTTOM_OFFSET,
-          right: FAB_RIGHT_MARGIN,
-          width: FAB_SIZE,
-          height: FAB_SIZE,
-          borderRadius: FAB_SIZE / 2,
-          backgroundColor: colors.primary,
-          zIndex: FAB_Z_INDEX.SIMPLE,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        getFABShadowStyle(colors),
-        style,
-      ]}
+    <GlassButton
+      icon={content}
+      onPress={props.onPress || (() => {})}
+      size={FAB_SIZE}
+      effect="regular"
+      containerStyle={[positioningStyle, style]}
       disabled={disabled || loading}
-      accessibilityRole="button"
+      accessibilityLabel={props.accessibilityLabel || 'Floating action button'}
       {...props}
-    >
-      {loading ? (
-        <LoadingSpinner size="small" color={colors.primaryForeground} />
-      ) : (
-        <Plus size={28} color={colors.primaryForeground} />
-      )}
-    </TouchableOpacity>
+    />
   );
 }

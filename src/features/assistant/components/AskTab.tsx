@@ -102,7 +102,7 @@ export function AskTab({ dealId }: AskTabProps) {
             <View
               style={[
                 styles.emptyIconContainer,
-                { backgroundColor: colors.primary + '15' },
+                { backgroundColor: withOpacity(colors.primary, 'muted') },
               ]}
             >
               <Sparkles size={32} color={colors.primary} />
@@ -198,7 +198,7 @@ function MessageBubble({ message }: { message: Message }) {
           backgroundColor: isUser
             ? colors.primary
             : isSystem
-            ? colors.destructive + '20'
+            ? withOpacity(colors.destructive, 'light')
             : colors.muted,
         },
       ]}
@@ -207,12 +207,12 @@ function MessageBubble({ message }: { message: Message }) {
         <View style={styles.avatarContainer}>
           {isSystem ? (
             <View
-              style={[styles.avatar, { backgroundColor: colors.destructive + '30' }]}
+              style={[styles.avatar, { backgroundColor: withOpacity(colors.destructive, 'medium') }]}
             >
               <Text style={{ fontSize: 12 }}>!</Text>
             </View>
           ) : (
-            <View style={[styles.avatar, { backgroundColor: colors.primary + '20' }]}>
+            <View style={[styles.avatar, { backgroundColor: withOpacity(colors.primary, 'light') }]}>
               <Sparkles size={14} color={colors.primary} />
             </View>
           )}

@@ -16,6 +16,7 @@ import { normalizeServiceName, getGroupForService } from '@/features/admin/utils
  */
 export function useApiKey(service: string) {
   const [key, setKey] = useState<string>('');
+  const [keyExistsInDB, setKeyExistsInDB] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -59,6 +60,9 @@ export function useApiKey(service: string) {
         }
 
         if (data && data.key_ciphertext && isMounted) {
+          // Key exists in DB (even if we can't decrypt it)
+          setKeyExistsInDB(true);
+
           try {
             // Decrypt the key
             const decrypted = await decrypt(data.key_ciphertext);
@@ -87,7 +91,7 @@ export function useApiKey(service: string) {
             }
           } catch (decryptErr) {
             console.error('Error decrypting API key:', decryptErr);
-            setError('Failed to decrypt the API key');
+            setError('Failed to decrypt the API key. You can delete it and re-enter.');
           }
         }
       } catch (err) {
@@ -118,7 +122,10 @@ export function useApiKey(service: string) {
     try {
       setIsSaving(true);
 
-      // Encrypt the key
+      // Allow React to render the loading state before the blocking PBKDF2 operation
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Encrypt the key (note: PBKDF2 blocks the main thread)
       const ciphertext = await encrypt(plaintext);
 
       // Get current user
@@ -208,6 +215,7 @@ export function useApiKey(service: string) {
 
       // Clear local state
       setKey('');
+      setKeyExistsInDB(false);
       return { success: true };
     } catch (err) {
       console.error('Error in delete API key:', err);
@@ -220,6 +228,7 @@ export function useApiKey(service: string) {
 
   return {
     key,
+    keyExistsInDB,
     setKey,
     save,
     deleteKey,

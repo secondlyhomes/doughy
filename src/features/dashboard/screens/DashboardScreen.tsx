@@ -22,7 +22,6 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowRight,
-  X,
   Phone,
   Camera,
   Calculator,
@@ -42,6 +41,10 @@ import { getTrendColor } from '@/utils';
 
 // Zone D Components
 import { QuickActionFAB } from '@/features/layout';
+
+// Dashboard Components
+import { NotificationStack } from '../components/NotificationStack';
+import { useNotifications } from '../hooks/useNotifications';
 
 // Deal imports
 import {
@@ -140,10 +143,10 @@ export function DashboardScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const [showAlert, setShowAlert] = useState(true);
 
   const { deals: actionDeals, isLoading: dealsLoading, refetch: refetchDeals } = useDealsWithActions(5);
   const { deals: allDeals } = useDeals({ activeOnly: true });
+  const { notifications, dismiss, dismissAll } = useNotifications();
 
   const activeDeals = allDeals.length;
   const dealsInNegotiation = allDeals.filter(d => d.stage === 'negotiating' || d.stage === 'under_contract').length;
@@ -174,58 +177,12 @@ export function DashboardScreen() {
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
         <View className="p-4">
-        {/* Alert Banner */}
-        {showAlert && overdueActions > 0 && (
-          <View
-            className="rounded-lg p-4 mb-4"
-            style={{ backgroundColor: colors.card, borderLeftWidth: 4, borderLeftColor: colors.warning }}
-          >
-            <View className="flex-row items-start">
-              <View className="rounded-full p-2 mr-3" style={{ backgroundColor: withOpacity(colors.warning, 'light') }}>
-                <AlertTriangle size={20} color={colors.warning} />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-medium" style={{ color: colors.foreground }}>Overdue Actions</Text>
-                <Text className="text-sm mt-1" style={{ color: colors.mutedForeground }}>
-                  {overdueActions} deal{overdueActions !== 1 ? 's' : ''} {overdueActions !== 1 ? 'have' : 'has'} overdue actions that need attention
-                </Text>
-                <View className="flex-row mt-3 gap-2">
-                  <TouchableOpacity
-                    className="rounded-md px-3 py-2"
-                    style={{ borderWidth: 1, borderColor: colors.border }}
-                    onPress={() => router.push('/(tabs)/deals')}
-                    accessibilityLabel="View deals requiring attention"
-                    accessibilityRole="button"
-                  >
-                    <Text className="text-sm" style={{ color: colors.foreground }}>View Deals</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="px-3 py-2"
-                    onPress={() => setShowAlert(false)}
-                    accessibilityLabel="Dismiss alert"
-                    accessibilityRole="button"
-                  >
-                    <Text className="text-sm" style={{ color: colors.mutedForeground }}>Dismiss</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <TouchableOpacity
-                onPress={() => setShowAlert(false)}
-                accessibilityLabel="Close alert"
-                accessibilityRole="button"
-              >
-                <X size={18} color={colors.mutedForeground} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
         {/* Stats Grid */}
         <View className="flex-row flex-wrap gap-3 mb-6">
           <StatCard
@@ -249,7 +206,16 @@ export function DashboardScreen() {
             icon={<CreditCard size={16} color={colors.info} />}
           />
         </View>
+        </View>
 
+        {/* Notification Stack */}
+        <NotificationStack
+          notifications={notifications}
+          onDismiss={dismiss}
+          onDismissAll={dismissAll}
+        />
+
+        <View className="px-4">
         {/* Top Actions */}
         <View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center mb-2">
@@ -331,34 +297,6 @@ export function DashboardScreen() {
             <ArrowRight size={14} color={colors.primary} />
           </TouchableOpacity>
         </View>
-
-        {/* Quick Actions */}
-        <View className="rounded-xl p-4" style={{ backgroundColor: colors.card }}>
-          <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>Quick Actions</Text>
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              className="flex-1 rounded-lg p-4 items-center"
-              style={{ backgroundColor: colors.primary }}
-              onPress={() => router.push('/(tabs)/deals')}
-              accessibilityLabel="View all deals"
-              accessibilityRole="button"
-            >
-              <Briefcase size={24} color={colors.primaryForeground} />
-              <Text className="font-medium mt-2" style={{ color: colors.primaryForeground }}>All Deals</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-1 rounded-lg p-4 items-center"
-              style={{ backgroundColor: colors.secondary }}
-              onPress={() => router.push('/(tabs)/leads/add')}
-              accessibilityLabel="Add new lead"
-              accessibilityRole="button"
-            >
-              <Phone size={24} color={colors.secondaryForeground} />
-              <Text className="font-medium mt-2" style={{ color: colors.secondaryForeground }}>Add Lead</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         </View>
       </ScrollView>
 

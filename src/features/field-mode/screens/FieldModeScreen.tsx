@@ -143,7 +143,7 @@ export function FieldModeScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
         showsVerticalScrollIndicator={false}
       >
         {/* Progress indicator */}

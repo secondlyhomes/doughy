@@ -122,7 +122,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
     >
       <View className="gap-4">
         {/* Header */}
@@ -184,6 +184,8 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
                 subjectSqft={subjectSqft}
                 onEdit={handleEditComp}
                 onDelete={handleDeleteComp}
+                variant="glass"
+                glassIntensity={50}
               />
             ))}
           </View>

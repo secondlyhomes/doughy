@@ -46,3 +46,6 @@ export { UploadDocumentSheet } from './UploadDocumentSheet';
 
 // Property Actions Components
 export { PropertyActionsSheet } from './PropertyActionsSheet';
+
+// Related Deals Components
+export { RelatedDealsCard } from './RelatedDealsCard';

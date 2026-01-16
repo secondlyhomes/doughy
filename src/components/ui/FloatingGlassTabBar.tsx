@@ -6,7 +6,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { BlurView } from 'expo-blur';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancelAnimation, withTiming } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancelAnimation, withTiming, interpolate } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useTheme, useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -22,13 +22,15 @@ const triggerHaptic = async () => {
 };
 
 // Constants - exported for use in layouts
-export const TAB_BAR_HEIGHT = 80;
+// NOTE: With NativeTabs, iOS automatically handles tab bar + safe area insets.
+// These values are for visual breathing room only, not to clear the tab bar.
+export const TAB_BAR_HEIGHT = 49;           // Native iOS tab bar height (for reference)
 export const TAB_BAR_BOTTOM_OFFSET = 0;
-/** Safe padding for content to clear the floating tab bar */
-export const TAB_BAR_SAFE_PADDING = 100;
+/** Minimal padding for visual breathing room (iOS handles tab bar clearance with NativeTabs) */
+export const TAB_BAR_SAFE_PADDING = 16;
 
-/** Standard FAB positioning */
-export const FAB_BOTTOM_OFFSET = 148;
+/** Standard FAB positioning (above tab bar + safe area) */
+export const FAB_BOTTOM_OFFSET = 100;
 export const FAB_RIGHT_MARGIN = 24;
 export const FAB_LEFT_MARGIN = 24;
 
@@ -106,7 +108,7 @@ export function FloatingGlassTabBar({
   );
 
   // Track tab positions for selector animation
-  const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
+  const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number; contentWidth?: number }[]>([]);
   const selectorX = useSharedValue(0);
 
   // Drag state for visual feedback
@@ -130,19 +132,58 @@ export function FloatingGlassTabBar({
     }
   }, [activeVisibleIndex, tabLayouts, getTabCenterX, selectorX, visibleRoutes.length]);
 
-  const selectorStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: selectorX.value },
-      { scale: selectorScale.value }
-    ],
-    opacity: selectorOpacity.value,
-  }));
+  const selectorStyle = useAnimatedStyle(() => {
+    'worklet';
+
+    // Guard: Wait for all layouts to be measured with contentWidth
+    if (tabLayouts.length === 0 || !tabLayouts.every(t => t && t.contentWidth)) {
+      return { opacity: 0 };
+    }
+
+    // Create input/output ranges from tab positions and widths
+    const inputRange = tabLayouts.map(tab =>
+      tab.x + tab.width / 2 - SELECTOR_SIZE / 2
+    );
+    const outputRange = tabLayouts.map(tab => tab.contentWidth!);
+
+    // Interpolate width based on current X position
+    const dynamicWidth = interpolate(
+      selectorX.value,
+      inputRange,
+      outputRange,
+      'clamp'
+    );
+
+    return {
+      transform: [
+        { translateX: selectorX.value },
+        { scale: selectorScale.value }
+      ],
+      width: dynamicWidth, // Automatically morphs during drag AND spring
+      borderRadius: dynamicWidth / 2, // Maintains capsule shape
+      opacity: selectorOpacity.value,
+    };
+  });
 
   const onTabLayout = useCallback((visibleIndex: number, e: LayoutChangeEvent) => {
     const { x, width } = e.nativeEvent.layout;
     setTabLayouts(prev => {
       const updated = [...prev];
-      updated[visibleIndex] = { x, width };
+      updated[visibleIndex] = { x, width, contentWidth: updated[visibleIndex]?.contentWidth };
+      return updated;
+    });
+  }, []);
+
+  const onTabContentLayout = useCallback((visibleIndex: number, e: LayoutChangeEvent) => {
+    const { width } = e.nativeEvent.layout;
+    setTabLayouts(prev => {
+      const updated = [...prev];
+      if (updated[visibleIndex]) {
+        updated[visibleIndex] = {
+          ...updated[visibleIndex],
+          contentWidth: width + 32, // Add pill padding (16px each side)
+        };
+      }
       return updated;
     });
   }, []);
@@ -265,19 +306,25 @@ export function FloatingGlassTabBar({
                       marginHorizontal: 4,
                     },
                   ]}
+                  onLayout={(e) => onTabLayout(visibleIndex, e)}
                   onTouchEnd={() => navigateToTab(visibleIndex)}
                 >
-                  <View style={styles.iconContainer}>
-                    {icon}
-                    {badge != null && (
-                      <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
-                        <Text style={[styles.badgeText, { color: colors.destructiveForeground }]}>{formatBadge(badge)}</Text>
-                      </View>
-                    )}
+                  <View
+                    style={styles.tabContent}
+                    onLayout={(e) => onTabContentLayout(visibleIndex, e)}
+                  >
+                    <View style={styles.iconContainer}>
+                      {icon}
+                      {badge != null && (
+                        <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
+                          <Text style={[styles.badgeText, { color: colors.destructiveForeground }]}>{formatBadge(badge)}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground }]}>
+                      {label}
+                    </Text>
                   </View>
-                  <Text style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground }]}>
-                    {label}
-                  </Text>
                 </View>
               );
             })}
@@ -290,7 +337,7 @@ export function FloatingGlassTabBar({
   // ─────────────────────────────────────────────────────────────
   // LIQUID GLASS: iOS 26+ with true glass effect and animated selector
   // ─────────────────────────────────────────────────────────────
-  const isLayoutReady = tabLayouts.length === visibleRoutes.length && tabLayouts.every(t => t);
+  const isLayoutReady = tabLayouts.length === visibleRoutes.length && tabLayouts.every(t => t && t.contentWidth);
 
   return (
     <View
@@ -348,17 +395,22 @@ export function FloatingGlassTabBar({
               onLayout={(e) => onTabLayout(visibleIndex, e)}
               onTouchEnd={() => navigateToTab(visibleIndex)}
             >
-              <View style={styles.iconContainer}>
-                {icon}
-                {badge != null && (
-                  <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
-                    <Text style={styles.badgeText}>{formatBadge(badge)}</Text>
-                  </View>
-                )}
+              <View
+                style={styles.tabContent}
+                onLayout={(e) => onTabContentLayout(visibleIndex, e)}
+              >
+                <View style={styles.iconContainer}>
+                  {icon}
+                  {badge != null && (
+                    <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
+                      <Text style={styles.badgeText}>{formatBadge(badge)}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground }]}>
+                  {label}
+                </Text>
               </View>
-              <Text style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground }]}>
-                {label}
-              </Text>
             </View>
           );
         })}
@@ -399,6 +451,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: TAB_BAR_HEIGHT,
     gap: 4,
+  },
+  tabContent: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 8, // Content padding for measurement
   },
   iconContainer: {
     position: 'relative',

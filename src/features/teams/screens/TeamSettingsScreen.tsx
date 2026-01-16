@@ -27,6 +27,7 @@ import {
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
+import { GlassButton } from '@/components/ui';
 import { getBackdropColor, withOpacity } from '@/lib/design-utils';
 
 interface TeamMember {
@@ -205,9 +206,14 @@ export function TeamSettingsScreen() {
         style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
       >
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft size={24} color={colors.mutedForeground} />
-          </TouchableOpacity>
+          <GlassButton
+            icon={<ArrowLeft size={24} color={colors.foreground} />}
+            onPress={() => router.back()}
+            size={40}
+            effect="clear"
+            containerStyle={{ marginRight: 16 }}
+            accessibilityLabel="Go back"
+          />
           <Text className="text-xl font-semibold" style={{ color: colors.foreground }}>Team</Text>
         </View>
         <TouchableOpacity

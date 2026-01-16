@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { usePermissions } from '../hooks/usePermissions';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
@@ -28,6 +29,7 @@ export function VerifyEmailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const { user, signOut, refetchProfile } = useAuth();
+  const { canViewAdminPanel } = usePermissions();
 
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -40,14 +42,14 @@ export function VerifyEmailScreen() {
       setIsVerified(true);
       // Refresh profile to get updated verification status
       await refetchProfile();
-      // Navigate to main app after short delay
+      // Navigate to main app after short delay (route based on role)
       setTimeout(() => {
-        router.replace('/(tabs)');
+        router.replace(canViewAdminPanel ? '/(admin)' : '/(tabs)');
       }, 2000);
     });
 
     return stopPolling;
-  }, [router, refetchProfile]);
+  }, [router, refetchProfile, canViewAdminPanel]);
 
   // Cooldown timer
   useEffect(() => {

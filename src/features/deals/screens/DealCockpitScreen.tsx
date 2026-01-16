@@ -431,6 +431,18 @@ export function DealCockpitScreen() {
     Alert.alert('Call', `Would call: ${deal.lead.phone}`, [{ text: 'OK' }]);
   }, [deal]);
 
+  // Navigate to lead detail screen
+  const handleLeadPress = useCallback(() => {
+    if (!deal?.lead_id) return;
+    router.push(`/(tabs)/leads/${deal.lead_id}`);
+  }, [deal?.lead_id, router]);
+
+  // Navigate to property detail screen
+  const handlePropertyPress = useCallback(() => {
+    if (!deal?.property_id) return;
+    router.push(`/(tabs)/properties/${deal.property_id}`);
+  }, [deal?.property_id, router]);
+
   // Get offer status for badge
   const getOfferStatus = useMemo(() => {
     if (!deal?.offers || deal.offers.length === 0) return { label: 'Create', color: undefined };
@@ -536,7 +548,7 @@ export function DealCockpitScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -546,20 +558,34 @@ export function DealCockpitScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Lead & Property Info */}
+        {/* Lead & Property Info - Clickable for navigation */}
         <View className="mb-4">
-          <View className="flex-row items-center mb-1">
+          <TouchableOpacity
+            onPress={handleLeadPress}
+            className="flex-row items-center mb-1"
+            disabled={!deal.lead_id}
+            accessibilityLabel={`View ${getDealLeadName(deal)} profile`}
+            accessibilityRole="link"
+          >
             <User size={14} color={colors.mutedForeground} />
-            <Text className="text-lg font-bold ml-2" style={{ color: colors.foreground }}>
+            <Text className="text-lg font-bold ml-2" style={{ color: deal.lead_id ? colors.primary : colors.foreground }}>
               {getDealLeadName(deal)}
             </Text>
-          </View>
-          <View className="flex-row items-center">
+            {deal.lead_id && <ChevronRight size={16} color={colors.primary} style={{ marginLeft: 4 }} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handlePropertyPress}
+            className="flex-row items-center"
+            disabled={!deal.property_id}
+            accessibilityLabel={`View property at ${getDealAddress(deal)}`}
+            accessibilityRole="link"
+          >
             <MapPin size={14} color={colors.mutedForeground} />
-            <Text className="text-sm ml-2" style={{ color: colors.mutedForeground }}>
+            <Text className="text-sm ml-2" style={{ color: deal.property_id ? colors.primary : colors.mutedForeground }}>
               {getDealAddress(deal)}
             </Text>
-          </View>
+            {deal.property_id && <ChevronRight size={14} color={colors.primary} style={{ marginLeft: 4 }} />}
+          </TouchableOpacity>
           {deal.strategy && (
             <View className="flex-row items-center mt-2">
               <View

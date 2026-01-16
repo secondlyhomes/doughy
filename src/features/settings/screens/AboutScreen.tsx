@@ -61,7 +61,7 @@ export function AboutScreen() {
       {/* Header */}
       <ScreenHeader title="About" backButton bordered />
 
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
+      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* App Logo and Info */}
         <View className="items-center mb-8">
           <View className="w-24 h-24 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: colors.primary }}>

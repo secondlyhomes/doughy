@@ -181,48 +181,74 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    console.log('[auth] Dev bypass: Setting mock authenticated state');
+    console.log('[auth] Dev bypass: Authenticating for testing');
 
     // If using mock data, update the mock auth state
     if (DEV_MODE_CONFIG.useMockData) {
       const { mockSignIn } = await import('@/lib/mockData');
       mockSignIn();
+
+      // Create mock user and session for development
+      const mockUser = {
+        id: 'dev-user-123',
+        email: 'dev@example.com',
+        email_confirmed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: {},
+      } as User;
+
+      const mockSession = {
+        access_token: 'dev-token',
+        refresh_token: 'dev-refresh-token',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer',
+        user: mockUser,
+      } as Session;
+
+      setUser(mockUser);
+      setSession(mockSession);
+      setProfile({
+        id: mockUser.id,
+        email: mockUser.email!,
+        role: 'admin',
+        email_verified: true,
+        onboarding_complete: true,
+        full_name: 'Dev User',
+      });
+      setIsLoading(false);
+      return;
     }
 
-    // Create mock user and session for development
-    const mockUser = {
-      id: 'dev-user-123',
-      email: 'dev@example.com',
-      email_confirmed_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      aud: 'authenticated',
-      role: 'authenticated',
-      app_metadata: {},
-      user_metadata: {},
-    } as User;
+    // Real Supabase: Actually sign in to create valid JWT token for RLS
+    try {
+      const devEmail = process.env.EXPO_PUBLIC_DEV_EMAIL || 'dev@example.com';
+      const devPassword = process.env.EXPO_PUBLIC_DEV_PASSWORD || 'devpassword123';
 
-    const mockSession = {
-      access_token: 'dev-token',
-      refresh_token: 'dev-refresh-token',
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      token_type: 'bearer',
-      user: mockUser,
-    } as Session;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: devEmail,
+        password: devPassword,
+      });
 
-    setUser(mockUser);
-    setSession(mockSession);
-    setProfile({
-      id: mockUser.id,
-      email: mockUser.email!,
-      role: 'admin', // Give admin access in dev mode for full testing
-      email_verified: true,
-      onboarding_complete: true,
-      full_name: 'Dev User',
-    });
-    setIsLoading(false);
-  }, []);
+      if (error) {
+        console.error('[auth] Dev sign-in failed:', error.message);
+        console.warn('[auth] Make sure test account exists with these credentials');
+        setIsLoading(false);
+        return;
+      }
+
+      // Don't set state here - let onAuthStateChange handle it
+      // This prevents double fetchProfile calls and race conditions
+      console.log('[auth] Dev sign-in successful, waiting for auth state change...');
+    } catch (error) {
+      console.error('[auth] Exception during dev sign-in:', error);
+      setIsLoading(false);
+    }
+  }, [fetchProfile]);
 
   /**
    * Send password reset email
@@ -264,11 +290,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setSession(initialSession);
           setUser(initialSession.user);
           await fetchProfile(initialSession.user.id, initialSession.user);
+          setIsLoading(false); // Only set after profile is loaded
+        } else if (__DEV__ && !DEV_MODE_CONFIG.useMockData) {
+          // Auto-authenticate in DEV mode for easier integration testing
+          console.log('[auth] DEV mode: Auto-authenticating for testing');
+          await devBypassAuth();
+          // devBypassAuth handles setIsLoading internally
+        } else {
+          // No session and not dev mode
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('[auth] Error initializing auth:', error);
-      } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Set to false on error
       }
     };
 
@@ -297,7 +331,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, devBypassAuth]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<AuthContextType>(() => ({

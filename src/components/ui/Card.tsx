@@ -43,7 +43,7 @@ export function Card({
 
   return (
     <View
-      className={cn('rounded-lg shadow-md', className)}
+      className={cn('rounded-xl shadow-md', className)}
       style={[
         {
           backgroundColor: colors.card,
@@ -61,7 +61,7 @@ export function Card({
 
 const cardStyles = StyleSheet.create({
   base: {
-    borderRadius: 8,
+    borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
   },

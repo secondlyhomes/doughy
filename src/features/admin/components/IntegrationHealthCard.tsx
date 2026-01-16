@@ -130,7 +130,6 @@ export function IntegrationHealthCard() {
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 16,
     marginVertical: 8,
     padding: 16,
     borderRadius: 12,

@@ -117,6 +117,8 @@ export function LeadsListScreen() {
     <SwipeableLeadCard
       lead={item}
       onPress={() => handleLeadPress(item)}
+      variant="glass"
+      glassIntensity={55}
     />
   ), [handleLeadPress]);
 
@@ -199,7 +201,7 @@ export function LeadsListScreen() {
           data={filteredLeads}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
           ItemSeparatorComponent={() => <View className="h-3" />}
           refreshControl={
             <RefreshControl

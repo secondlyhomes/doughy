@@ -2,12 +2,15 @@
 // Overview tab content for property detail - basic info and details
 // Uses useThemeColors() for reliable dark mode support
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text } from 'react-native';
 import { FileText, Home, MapPin } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { Property } from '../types';
 import { formatNumber, formatDate } from '../utils/formatters';
 import { useThemeColors } from '@/context/ThemeContext';
+import { usePropertyDeals } from '@/features/deals/hooks/usePropertyDeals';
+import { RelatedDealsCard } from './RelatedDealsCard';
 
 interface PropertyOverviewTabProps {
   property: Property;
@@ -15,6 +18,20 @@ interface PropertyOverviewTabProps {
 
 export function PropertyOverviewTab({ property }: PropertyOverviewTabProps) {
   const colors = useThemeColors();
+  const router = useRouter();
+  const { data: relatedDeals = [] } = usePropertyDeals(property.id);
+
+  const handleDealPress = useCallback((dealId: string) => {
+    router.push(`/(tabs)/deals/${dealId}`);
+  }, [router]);
+
+  const handleCreateDeal = useCallback(() => {
+    // Navigate to create deal with pre-filled property
+    router.push({
+      pathname: '/(tabs)/deals/new',
+      params: { propertyId: property.id },
+    });
+  }, [router, property.id]);
 
   return (
     <View className="gap-4">
@@ -159,6 +176,13 @@ export function PropertyOverviewTab({ property }: PropertyOverviewTabProps) {
           </Text>
         </View>
       )}
+
+      {/* Related Deals Card */}
+      <RelatedDealsCard
+        deals={relatedDeals}
+        onDealPress={handleDealPress}
+        onCreateDeal={handleCreateDeal}
+      />
 
       {/* Timestamps */}
       <View className="px-2 pb-4">

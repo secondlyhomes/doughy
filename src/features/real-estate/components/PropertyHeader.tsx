@@ -7,7 +7,6 @@ import {
   Text,
   Image,
   ScrollView,
-  TouchableOpacity,
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -21,6 +20,7 @@ import {
   MapPin,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { GlassButton } from '@/components/ui/GlassButton';
 import { Property, PropertyImage } from '../types';
 import { formatCurrency, formatPropertyType, getPropertyTypeBadgeColor } from '../utils/formatters';
 
@@ -99,30 +99,42 @@ export function PropertyHeader({
 
         {/* Header Overlay */}
         <View className="absolute top-0 left-0 right-0 flex-row justify-between items-start p-4 pt-12">
-          <TouchableOpacity
+          <GlassButton
+            icon={<ArrowLeft size={24} color="white" />}
             onPress={onBack}
-            className="bg-black/30 rounded-full p-2"
-          >
-            <ArrowLeft size={24} color="white" />
-          </TouchableOpacity>
+            size={40}
+            effect="clear"
+            accessibilityLabel="Go back"
+          />
 
           <View className="flex-row gap-2">
-            <TouchableOpacity
+            <GlassButton
+              icon={
+                <Heart
+                  size={24}
+                  color="white"
+                  fill={isFavorite ? colors.destructive : 'transparent'}
+                />
+              }
               onPress={onFavorite}
-              className="bg-black/30 rounded-full p-2"
-            >
-              <Heart
-                size={24}
-                color="white"
-                fill={isFavorite ? colors.destructive : 'transparent'}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onShare} className="bg-black/30 rounded-full p-2">
-              <Share2 size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onMore} className="bg-black/30 rounded-full p-2">
-              <MoreVertical size={24} color="white" />
-            </TouchableOpacity>
+              size={40}
+              effect="clear"
+              accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            />
+            <GlassButton
+              icon={<Share2 size={24} color="white" />}
+              onPress={onShare}
+              size={40}
+              effect="clear"
+              accessibilityLabel="Share property"
+            />
+            <GlassButton
+              icon={<MoreVertical size={24} color="white" />}
+              onPress={onMore}
+              size={40}
+              effect="clear"
+              accessibilityLabel="More options"
+            />
           </View>
         </View>
       </View>

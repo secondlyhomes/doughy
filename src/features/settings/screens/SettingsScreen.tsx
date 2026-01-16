@@ -111,7 +111,7 @@ export function SettingsScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Profile Section */}
         <View className="px-4 py-2">
           <TouchableOpacity

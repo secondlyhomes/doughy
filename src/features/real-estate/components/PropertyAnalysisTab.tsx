@@ -47,7 +47,7 @@ export function PropertyAnalysisTab({ property }: PropertyAnalysisTabProps) {
     <ScrollView
       className="flex-1"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
     >
       <View className="gap-4">
         {/* Mode Toggle */}

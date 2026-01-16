@@ -27,6 +27,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { withOpacity } from '@/lib/design-utils';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 import { useNextAction, NextAction, ActionCategory } from '@/features/deals/hooks/useNextAction';
@@ -167,7 +168,7 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
             style={[
               styles.nbaCard,
               {
-                backgroundColor: colors.primary + '10',
+                backgroundColor: withOpacity(colors.primary, 'muted'),
                 borderColor: colors.primary,
               },
             ]}
@@ -242,7 +243,7 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
                   {action.label}
                 </Text>
                 {action.isLongRunning && (
-                  <View style={[styles.asyncBadge, { backgroundColor: colors.info + '20' }]}>
+                  <View style={[styles.asyncBadge, { backgroundColor: withOpacity(colors.info, 'light') }]}>
                     <Text style={[styles.asyncBadgeText, { color: colors.info }]}>
                       Async
                     </Text>
