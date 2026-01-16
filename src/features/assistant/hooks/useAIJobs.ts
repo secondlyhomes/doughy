@@ -45,7 +45,7 @@ async function fetchJobs(dealId?: string): Promise<AIJob[]> {
 
   // Note: ai_jobs table type will be available after running migrations
   const { data, error } = await (supabase as any)
-    .from('ai_jobs')
+    .from('assistant_jobs')
     .select('*')
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false });
@@ -73,7 +73,7 @@ async function createJobRequest(input: CreateJobInput): Promise<AIJob> {
   }
 
   const { data, error } = await (supabase as any)
-    .from('ai_jobs')
+    .from('assistant_jobs')
     .insert({
       deal_id: input.deal_id,
       job_type: input.job_type,
@@ -105,7 +105,7 @@ async function cancelJobRequest(jobId: string): Promise<AIJob> {
   }
 
   const { data, error } = await (supabase as any)
-    .from('ai_jobs')
+    .from('assistant_jobs')
     .update({ status: 'cancelled' })
     .eq('id', jobId)
     .select()
@@ -261,7 +261,7 @@ export function useJobStatus(jobId?: string): {
       }
 
       const { data, error } = await (supabase as any)
-        .from('ai_jobs')
+        .from('assistant_jobs')
         .select('*')
         .eq('id', jobId)
         .single();
