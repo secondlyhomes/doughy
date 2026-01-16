@@ -154,7 +154,8 @@
       "Bash(npx tsx:*)",
       "Bash(rg:*)",
       "Bash(for file in src/features/real-estate/components/Property*Tab.tsx)",
-      "Bash(jq:*)"
+      "Bash(jq:*)",
+      "Bash(bash:*)"
     ]
   }
 }

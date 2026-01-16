@@ -1,15 +1,19 @@
 # Zone E: Database Standardization & Schema Migrations
 
 **Owner:** Backend Developer / Database Specialist
-**Timeline:** Weeks 1-2
+**Timeline:** Week 1-2 (Phase 1), Week 5-6 (Phase 2)
 **Dependencies:** None (can start immediately)
-**Risk Level:** HIGH (touches all database tables)
+**Risk Level:** MEDIUM (Phase 1 = 19 tables, Phase 2 = 16 tables)
+**DBA Approved:** ✅ 100% aligned with DBA recommendations
 
 ---
 
 ## Mission
 
-Standardize entire database schema by renaming 22 tables to follow DBA-approved naming conventions, create junction table for package deals, and ensure zero data loss.
+Standardize entire database schema by renaming tables in two phases to follow DBA-approved naming conventions. Phase 1 focuses on system/infrastructure tables with minimal code impact. Phase 2 addresses user-facing tables (profiles, CRM) with higher code impact.
+
+**Phase 1:** 19 tables (16 with zero code impact, 3 with low-medium impact)
+**Phase 2:** 16 additional tables (profiles, CRM domain, security, email, billing)
 
 ---
 
@@ -24,7 +28,8 @@ Standardize entire database schema by renaming 22 tables to follow DBA-approved 
 - `call_*` = call feature domain
 - `comms_*` = outbound messaging (email/SMS)
 - `crm_*` = CRM/lead management domain
-- `re_*` = Real Estate domain (properties, pipeline, documents, analysis)
+- `re_*` = Real Estate domain (properties, documents, analysis)
+- `billing_*` = payments, subscriptions, invoices
 
 ### Rule 2: Use Plural Nouns for Tables
 - `assistant_sessions`, `security_event_logs`, `call_transcripts`
@@ -34,325 +39,358 @@ Standardize entire database schema by renaming 22 tables to follow DBA-approved 
 
 ---
 
-## Complete Rename Manifest (22 Tables)
+## Phase 1: System/Infrastructure Tables (19 Tables)
 
-### PRIMARY: Deal Domain → Real Estate Domain (2 tables)
+**Deploy:** Week 1-2
+**Code Impact:** 13 references across 4 files
+**Risk:** LOW
+
+### GROUP 1: System & Infrastructure (5 tables)
 | Current | New | Reason |
 |---------|-----|--------|
-| `deals` | `re_pipeline` | Deals ARE real estate pipeline entries |
-| `deal_events` | `re_pipeline_events` | Timeline for pipeline |
+| `feature_flags` | `system_feature_flags` | Platform config, not product features |
+| `rate_limits` | `system_rate_limits` | Platform infrastructure |
+| `usage_logs` | `system_usage_logs` | Platform metering |
+| `feature_usage_stats` | `analytics_feature_usage_stats` | Analytics/reporting domain |
+| `scheduled_deletions` | `system_scheduled_deletions` | Lifecycle infrastructure |
 
-**Junction Table:** Create `re_pipeline_properties` (one pipeline → many properties)
+### GROUP 2: User & Auth Domain (7 tables)
+| Current | New | Reason |
+|---------|-----|--------|
+| `mfa_pending_setup` | `user_mfa_pending_setup` | User MFA lifecycle |
+| `mfa_recovery_codes` | `user_mfa_recovery_codes` | User MFA recovery |
+| `reset_tokens` | `security_reset_tokens` | Security/secrets domain |
+| `onboarding_status` | `user_onboarding_status` | User onboarding state |
+| `onboarding_steps` | `user_onboarding_steps` | User onboarding progress |
+| `onboarding_surveys` | `user_onboarding_surveys` | User survey responses |
+| `reminder_states` | `user_reminder_states` | User reminder state tracking |
 
----
+### GROUP 3: Workspace (1 table)
+| Current | New | Reason |
+|---------|-----|--------|
+| `workspace` | `workspaces` | Plural consistency |
 
-### SECONDARY: System Domain (3 tables)
-| Current | New |
-|---------|-----|
-| `feature_flags` | `system_feature_flags` |
-| `rate_limits` | `system_rate_limits` |
-| `usage_logs` | `system_usage_logs` |
+### GROUP 4: Communications Domain (2 tables)
+| Current | New | Reason | Code Impact |
+|---------|-----|--------|-------------|
+| `messages` | `comms_messages` | Avoid future collisions | 3 refs (seed data) |
+| `scheduled_messages` | `comms_scheduled_messages` | Multi-channel messaging | 0 refs |
 
----
+### GROUP 5: Call/Voice Domain (3 tables)
+| Current | New | Reason |
+|---------|-----|--------|
+| `calls` | `call_logs` | Call logging, avoid collision |
+| `transcripts` | `call_transcripts` | Call-specific transcripts |
+| `transcript_segments` | `call_transcript_segments` | Call transcript segments |
 
-### SECONDARY: Security Domain (3 tables)
-| Current | New |
-|---------|-----|
-| `oauth_tokens` | `security_oauth_tokens` |
-| `api_keys` | `security_api_keys` |
-| `reset_tokens` | `security_reset_tokens` |
+### GROUP 6: Deal Management - NO CHANGE ✅
+| Current | Status | DBA Decision |
+|---------|--------|--------------|
+| `deals` | Keep as-is | Entity name is already clear. `deal_pipeline` would be semantic drift (implies workflow, not entity). Optional future rename to `crm_deals` in Phase 2. |
 
----
-
-### SECONDARY: User/MFA Domain (4 tables)
-| Current | New | Notes |
-|---------|-----|-------|
-| `profiles` | `user_profiles` | Prefix + plural |
-| `user_mfa` | `user_mfa_settings` | Optional clarity rename |
-| `mfa_pending_setup` | `user_mfa_pending_setup` | |
-| `mfa_recovery_codes` | `user_mfa_recovery_codes` | |
-
----
-
-### SECONDARY: Analytics Domain (1 table)
-| Current | New |
-|---------|-----|
-| `feature_usage_stats` | `analytics_feature_usage_stats` |
-
----
-
-### SECONDARY: Assistant/AI Domain (1 table)
-| Current | New |
-|---------|-----|
-| `ai_jobs` | `assistant_jobs` |
+### GROUP 7: AI/Assistant (1 table)
+| Current | New | Reason | Code Impact |
+|---------|-----|--------|-------------|
+| `ai_jobs` | `assistant_jobs` | Pattern consistency with assistant_sessions | 10 refs (3 hooks) |
 
 ---
 
-### SECONDARY: Call Domain (2 tables)
-| Current | New |
-|---------|-----|
-| `transcripts` | `call_transcripts` |
-| `transcript_segments` | `call_transcript_segments` |
+## Phase 2: User-Facing Tables (16 Tables)
+
+**Deploy:** After Phase 1 stable in production (2-4 weeks)
+**Code Impact:** HIGH (profiles, leads, contacts used extensively)
+**Risk:** MEDIUM
+
+### GROUP 8: User Profile (1 table) - HIGHEST PRIORITY
+| Current | New | Rationale |
+|---------|-----|-----------|
+| `profiles` | `user_profiles` | Most queried table. Generic name costs brainpower forever. |
+
+### GROUP 9: CRM Domain (4 tables) - HIGH PRIORITY
+| Current | New | Rationale |
+|---------|-----|-----------|
+| `leads` | `crm_leads` | Generic, will collide with other "lead" concepts |
+| `contacts` | `crm_contacts` | Generic, will collide with contact lists |
+| `lead_contacts` | `crm_lead_contacts` | Domain consistency |
+| `lead_notes` | `crm_lead_notes` | Domain consistency |
+
+**Optional:** Also rename `deals` → `crm_deals` and `deal_events` → `crm_deal_events` for complete CRM consistency
+
+### GROUP 10: Security & Auth (3 tables) - MEDIUM PRIORITY
+| Current | New | Rationale |
+|---------|-----|-----------|
+| `oauth_tokens` | `security_oauth_tokens` | Security boundary object |
+| `api_keys` | `security_api_keys` | Security boundary object |
+| `user_mfa` | `user_mfa_settings` | Consistency with user_mfa_* tables |
+
+### GROUP 11: Email Domain (3 tables) - MEDIUM PRIORITY
+| Current | New | Rationale |
+|---------|-----|-----------|
+| `email_logs` | `comms_email_logs` | Delivery logs = comms domain |
+| `email_preferences` | `user_email_preferences` | User settings = user domain |
+| `email_change_history` | `security_email_change_history` | Audit = security domain |
+
+### GROUP 12: Billing Domain (4 tables) - LOW PRIORITY
+| Current | New | Rationale |
+|---------|-----|-----------|
+| `stripe_customers` | `billing_stripe_customers` | Future-proof against provider changes |
+| `stripe_products` | `billing_stripe_products` | Future-proof against provider changes |
+| `subscription_notifications` | `billing_subscription_notifications` | Optional (already clear) |
+| `subscription_events` | `billing_subscription_events` | Optional (already clear) |
+
+### GROUP 13: Reminders (1 table) - LOW PRIORITY
+| Current | New | Rationale |
+|---------|-----|-----------|
+| `reminder_logs` | `user_reminder_logs` | Consistency with user_reminder_states |
 
 ---
 
-### SECONDARY: Communications Domain (2 tables)
-| Current | New |
-|---------|-----|
-| `messages` | `comms_messages` |
-| `scheduled_messages` | `comms_scheduled_messages` |
+## Zero-Downtime Deployment Strategy
 
----
+### Compatibility Views Approach
 
-### SECONDARY: CRM Domain (5 tables)
-| Current | New | Notes |
-|---------|-----|-------|
-| `leads` | `crm_leads` | Avoid generic collision |
-| `contacts` | `crm_contacts` | |
-| `lead_contacts` | `crm_lead_contacts` | Junction table |
-| `lead_notes` | `crm_lead_notes` | |
-| `calls` | `call_logs` | Avoid collision with call_transcripts |
+**Problem:** Renaming tables causes immediate breakage for existing code
 
----
+**Solution:** Create updatable views with old names
 
-### SECONDARY: Workspace (1 table - pure pluralization)
-| Current | New |
-|---------|-----|
-| `workspace` | `workspaces` |
-
----
-
-## Migration Execution Order
-
-**Why order matters:** Dependencies! Tables with fewer FK relationships first.
-
-### Phase 1A: Rename System/Analytics/Workspace (5 tables)
 ```sql
-ALTER TABLE feature_flags RENAME TO system_feature_flags;
-ALTER TABLE rate_limits RENAME TO system_rate_limits;
-ALTER TABLE usage_logs RENAME TO system_usage_logs;
-ALTER TABLE feature_usage_stats RENAME TO analytics_feature_usage_stats;
-ALTER TABLE workspace RENAME TO workspaces;
-```
-
-### Phase 1B: Rename Security/User/Assistant/Call/Comms (10 tables)
-```sql
-ALTER TABLE oauth_tokens RENAME TO security_oauth_tokens;
-ALTER TABLE api_keys RENAME TO security_api_keys;
-ALTER TABLE reset_tokens RENAME TO security_reset_tokens;
-
-ALTER TABLE profiles RENAME TO user_profiles;
-ALTER TABLE user_mfa RENAME TO user_mfa_settings;
-ALTER TABLE mfa_pending_setup RENAME TO user_mfa_pending_setup;
-ALTER TABLE mfa_recovery_codes RENAME TO user_mfa_recovery_codes;
-
-ALTER TABLE ai_jobs RENAME TO assistant_jobs;
-
-ALTER TABLE transcripts RENAME TO call_transcripts;
-ALTER TABLE transcript_segments RENAME TO call_transcript_segments;
-
+-- After renaming
 ALTER TABLE messages RENAME TO comms_messages;
-ALTER TABLE scheduled_messages RENAME TO comms_scheduled_messages;
+
+-- Create compatibility view
+CREATE VIEW messages AS SELECT * FROM comms_messages;
 ```
 
-### Phase 1C: Rename CRM Domain (5 tables)
-```sql
-ALTER TABLE leads RENAME TO crm_leads;
-ALTER TABLE contacts RENAME TO crm_contacts;
-ALTER TABLE lead_contacts RENAME TO crm_lead_contacts;
-ALTER TABLE lead_notes RENAME TO crm_lead_notes;
-ALTER TABLE calls RENAME TO call_logs;
-```
+**Benefits:**
+- Old code continues working during deployment
+- True zero-downtime migration
+- No urgent code updates required
 
-### Phase 1D: PRIMARY - Rename Deals + Create Junction Table
-```sql
-ALTER TABLE deals RENAME TO re_pipeline;
-ALTER TABLE deal_events RENAME TO re_pipeline_events;
-
--- Create junction table
-CREATE TABLE re_pipeline_properties (
-  pipeline_id UUID NOT NULL REFERENCES re_pipeline(id) ON DELETE CASCADE,
-  property_id UUID NOT NULL REFERENCES re_properties(id) ON DELETE CASCADE,
-  is_primary BOOLEAN DEFAULT FALSE,
-  display_order INT DEFAULT 0 CHECK (display_order >= 0),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  PRIMARY KEY (pipeline_id, property_id)
-);
-
--- Indexes
-CREATE INDEX idx_re_pipeline_properties_pipeline_id ON re_pipeline_properties(pipeline_id);
-CREATE INDEX idx_re_pipeline_properties_property_id ON re_pipeline_properties(property_id);
-CREATE INDEX idx_re_pipeline_properties_pipeline_order ON re_pipeline_properties(pipeline_id, display_order, created_at);
-CREATE INDEX idx_re_pipeline_properties_primary ON re_pipeline_properties(pipeline_id) WHERE is_primary = TRUE;
-CREATE UNIQUE INDEX idx_re_pipeline_properties_one_primary ON re_pipeline_properties(pipeline_id) WHERE is_primary = TRUE;
-
--- RLS Policies
-ALTER TABLE re_pipeline_properties ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view pipeline-property links for their pipelines"
-  ON re_pipeline_properties FOR SELECT
-  USING (
-    pipeline_id IN (SELECT id FROM re_pipeline WHERE user_id = auth.uid())
-  );
-
-CREATE POLICY "Users can create links for their pipelines"
-  ON re_pipeline_properties FOR INSERT
-  WITH CHECK (
-    pipeline_id IN (SELECT id FROM re_pipeline WHERE user_id = auth.uid())
-  );
-
-CREATE POLICY "Users can update links for their pipelines"
-  ON re_pipeline_properties FOR UPDATE
-  USING (
-    pipeline_id IN (SELECT id FROM re_pipeline WHERE user_id = auth.uid())
-  );
-
-CREATE POLICY "Users can delete links for their pipelines"
-  ON re_pipeline_properties FOR DELETE
-  USING (
-    pipeline_id IN (SELECT id FROM re_pipeline WHERE user_id = auth.uid())
-  );
-
-CREATE POLICY "Admins can view all pipeline-property links"
-  ON re_pipeline_properties FOR SELECT
-  USING (
-    EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
-  );
-
--- Backfill junction table from legacy property_id column
-INSERT INTO re_pipeline_properties (pipeline_id, property_id, is_primary, created_at)
-SELECT id, property_id, TRUE, created_at
-FROM re_pipeline
-WHERE property_id IS NOT NULL
-ON CONFLICT (pipeline_id, property_id) DO NOTHING;
-
--- Mark legacy column as deprecated (keep for compatibility)
-COMMENT ON COLUMN re_pipeline.property_id IS
-  'DEPRECATED: Use re_pipeline_properties junction table instead.
-   Maintained for backward compatibility only. Will be removed in v2.0.0';
-```
+**Cleanup:**
+- Deploy view cleanup migration 24-48 hours after code updates
+- Remove all compatibility views once verified
 
 ---
 
-## Verification Queries
+## Migration Execution Plan (Phase 1)
 
-Run after EACH phase to ensure data integrity:
+### Step 1: Deploy Migration to Database (~5 seconds)
+
+**File:** `supabase/migrations/20260117_comprehensive_database_standardization.sql`
+
+- Rename all 19 tables
+- Create 6 compatibility views (messages, scheduled_messages, calls, transcripts, transcript_segments, ai_jobs)
+- Verify all tables and views exist
+- Transaction-safe (BEGIN/COMMIT)
+
+### Step 2: Deploy Code Updates (~30 minutes)
+
+**File:** `scripts/standardize-database-references.sh`
+
+- Update `messages` → `comms_messages` (3 refs)
+- Update `ai_jobs` → `assistant_jobs` (10 refs)
+- Regenerate TypeScript types
+- Create 3 git commits
+
+### Step 3: Deploy Cleanup Migration (24-48 hours later)
+
+**File:** `supabase/migrations/20260118_remove_compatibility_views.sql`
+
+- Drop all 6 compatibility views
+- Once all code verified using new table names
+
+---
+
+## Verification & Testing
+
+### Pre-Migration Verification
 
 ```sql
--- 1. Verify table exists
-SELECT EXISTS (
-  SELECT FROM information_schema.tables
-  WHERE table_schema = 'public'
-  AND table_name = 'system_feature_flags'
-);
+-- List all tables to be renamed
+SELECT tablename FROM pg_tables
+WHERE table_schema = 'public'
+AND tablename IN (
+  'feature_flags', 'rate_limits', 'usage_logs', 'feature_usage_stats',
+  'scheduled_deletions', 'mfa_pending_setup', 'mfa_recovery_codes',
+  'reset_tokens', 'onboarding_status', 'onboarding_steps',
+  'onboarding_surveys', 'reminder_states', 'workspace',
+  'messages', 'scheduled_messages', 'calls', 'transcripts',
+  'transcript_segments', 'ai_jobs'
+)
+ORDER BY tablename;
+```
 
--- 2. Verify row count unchanged
-SELECT
-  'system_feature_flags' as table_name,
-  COUNT(*) as row_count
-FROM system_feature_flags;
+### Post-Migration Verification
 
--- 3. Verify RLS policies attached
+```sql
+-- Verify RLS policies auto-updated
 SELECT tablename, policyname
 FROM pg_policies
-WHERE tablename = 're_pipeline_properties';
+WHERE tablename IN (
+  'system_feature_flags', 'comms_messages', 'assistant_jobs'
+-- ... etc
+)
+ORDER BY tablename, policyname;
 
--- 4. Verify foreign keys work
-SELECT COUNT(*)
-FROM re_pipeline_properties rpp
-JOIN re_pipeline rp ON rpp.pipeline_id = rp.id
-JOIN re_properties prop ON rpp.property_id = prop.id;
-
--- 5. Verify junction table backfill
+-- Verify foreign keys intact
 SELECT
-  (SELECT COUNT(*) FROM re_pipeline WHERE property_id IS NOT NULL) as legacy_links,
-  (SELECT COUNT(*) FROM re_pipeline_properties) as junction_links;
--- Should match!
+  tc.table_name,
+  kcu.column_name,
+  ccu.table_name AS foreign_table_name,
+  ccu.column_name AS foreign_column_name
+FROM information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu
+  ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu
+  ON ccu.constraint_name = tc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY'
+AND tc.table_name IN ('comms_messages', 'assistant_jobs')
+ORDER BY tc.table_name;
 
--- 6. Performance check
-EXPLAIN ANALYZE
-SELECT p.*, array_agg(rpp.property_id) as property_ids
-FROM re_pipeline p
-LEFT JOIN re_pipeline_properties rpp ON rpp.pipeline_id = p.id
-WHERE p.user_id = auth.uid()
-GROUP BY p.id;
--- Should use indexes
+-- Check for stored functions referencing old names
+SELECT
+  n.nspname as schema,
+  p.proname as function_name,
+  pg_get_functiondef(p.oid) as definition
+FROM pg_proc p
+JOIN pg_namespace n ON p.pronamespace = n.oid
+WHERE pg_get_functiondef(p.oid) ILIKE '%messages%'
+   OR pg_get_functiondef(p.oid) ILIKE '%ai_jobs%'
+ORDER BY schema, function_name;
 ```
 
 ---
 
 ## Rollback Strategy
 
-If anything goes wrong, rollback in REVERSE order:
+### Phase 1 Rollback
+
+**File:** `supabase/migrations/20260117_comprehensive_database_standardization_ROLLBACK.sql`
 
 ```sql
--- Phase 1D Rollback
-DROP TABLE IF EXISTS re_pipeline_properties;
-ALTER TABLE re_pipeline RENAME TO deals;
-ALTER TABLE re_pipeline_events RENAME TO deal_events;
+BEGIN;
 
--- Phase 1C Rollback
-ALTER TABLE crm_leads RENAME TO leads;
-ALTER TABLE crm_contacts RENAME TO contacts;
-ALTER TABLE crm_lead_contacts RENAME TO lead_contacts;
-ALTER TABLE crm_lead_notes RENAME TO lead_notes;
-ALTER TABLE call_logs RENAME TO calls;
+-- Drop compatibility views first
+DROP VIEW IF EXISTS ai_jobs;
+DROP VIEW IF EXISTS transcript_segments;
+DROP VIEW IF EXISTS transcripts;
+DROP VIEW IF EXISTS calls;
+DROP VIEW IF EXISTS scheduled_messages;
+DROP VIEW IF EXISTS messages;
 
--- Phase 1B Rollback
-ALTER TABLE security_oauth_tokens RENAME TO oauth_tokens;
-ALTER TABLE security_api_keys RENAME TO api_keys;
-ALTER TABLE security_reset_tokens RENAME TO reset_tokens;
-ALTER TABLE user_profiles RENAME TO profiles;
-ALTER TABLE user_mfa_settings RENAME TO user_mfa;
-ALTER TABLE user_mfa_pending_setup RENAME TO mfa_pending_setup;
-ALTER TABLE user_mfa_recovery_codes RENAME TO mfa_recovery_codes;
+-- Reverse all renames (GROUP 7 → GROUP 1)
 ALTER TABLE assistant_jobs RENAME TO ai_jobs;
-ALTER TABLE call_transcripts RENAME TO transcripts;
 ALTER TABLE call_transcript_segments RENAME TO transcript_segments;
-ALTER TABLE comms_messages RENAME TO messages;
+ALTER TABLE call_transcripts RENAME TO transcripts;
+ALTER TABLE call_logs RENAME TO calls;
 ALTER TABLE comms_scheduled_messages RENAME TO scheduled_messages;
-
--- Phase 1A Rollback
-ALTER TABLE system_feature_flags RENAME TO feature_flags;
-ALTER TABLE system_rate_limits RENAME TO rate_limits;
-ALTER TABLE system_usage_logs RENAME TO usage_logs;
-ALTER TABLE analytics_feature_usage_stats RENAME TO feature_usage_stats;
+ALTER TABLE comms_messages RENAME TO messages;
 ALTER TABLE workspaces RENAME TO workspace;
+ALTER TABLE user_reminder_states RENAME TO reminder_states;
+-- ... all other reversals
+
+COMMIT;
 ```
+
+**Rollback Time:** ~5 seconds
 
 ---
 
 ## Deliverables
 
-- [ ] Migration file: `supabase/migrations/20260123_comprehensive_table_standardization.sql`
-- [ ] Rollback file: `supabase/migrations/20260123_comprehensive_table_standardization_ROLLBACK.sql`
-- [ ] Verification report: Document showing all verification queries passed
-- [ ] Performance benchmarks: Query times before/after (<100ms target)
-- [ ] Updated `docs/DATABASE_SCHEMA.md`
-- [ ] Updated `docs/DATABASE_NAMING_CONVENTIONS.md`
+### Phase 1
+- [x] Migration file: `supabase/migrations/20260117_comprehensive_database_standardization.sql`
+- [x] Rollback file: `supabase/migrations/20260117_comprehensive_database_standardization_ROLLBACK.sql`
+- [x] Cleanup file: `supabase/migrations/20260118_remove_compatibility_views.sql`
+- [x] Automation script: `scripts/standardize-database-references.sh`
+- [ ] Test migration on staging
+- [ ] Verify RLS policies
+- [ ] Verify stored functions/triggers
+- [ ] Update `docs/DATABASE_SCHEMA.md`
+- [ ] Update `docs/DATABASE_NAMING_CONVENTIONS.md`
+
+### Phase 2 (Future)
+- [ ] Phase 2 migration manifest
+- [ ] Phase 2 migration file
+- [ ] Phase 2 rollback file
+- [ ] Phase 2 automation script
+- [ ] Code impact analysis for profiles/leads/contacts
 
 ---
 
 ## Testing Checklist
 
-- [ ] Run migration on local database
-- [ ] Verify all 22 tables renamed
-- [ ] Verify all row counts unchanged
-- [ ] Verify all FK relationships intact
-- [ ] Verify RLS policies work for re_pipeline_properties
-- [ ] Verify junction table backfill 100% complete
-- [ ] Test rollback script (on copy of database)
-- [ ] Performance testing: query time <100ms
-- [ ] Deploy to staging Supabase project
-- [ ] Monitor staging for 48 hours
+### Phase 1
+- [ ] Run migration on local/staging Supabase
+- [ ] Verify all 19 tables renamed
+- [ ] Verify all 6 compatibility views created
+- [ ] Verify RLS policies still work
+- [ ] Verify foreign keys intact
+- [ ] Test rollback script (on copy)
+- [ ] Run automation script
+- [ ] Verify 13 code references updated
+- [ ] TypeScript types regenerated
+- [ ] npm run type-check passes
+- [ ] npm test passes
+- [ ] Manual smoke tests:
+  - [ ] View messages/communications
+  - [ ] Trigger AI assistant jobs
+  - [ ] View call logs/transcripts
+  - [ ] Admin dashboard loads
+  - [ ] Seed database works
+- [ ] Deploy to staging
+- [ ] Monitor staging 48 hours
 - [ ] Get stakeholder approval
 
 ---
 
 ## Coordination with Other Zones
 
-**Blocks Zone F:** Frontend code can't update until migration completes
-**Unblocks Zone F:** Once migration deployed to staging, frontend dev can start
+**Independent:** Can execute immediately, no dependencies
 
-**Communication:** Post in #engineering Slack when each phase completes
+**Blocks Zone F:** Frontend code should update table references after migration (but compatibility views allow grace period)
+
+**Communication:**
+- Post in #engineering Slack when Phase 1 migration deployed
+- Notify team when compatibility views will be removed (24-48h notice)
+- Post Phase 2 timeline once Phase 1 is stable
+
+---
+
+## Risk Mitigation
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Migration fails mid-transaction | LOW | HIGH | Transaction-safe SQL, test on staging first |
+| Missed code reference | MEDIUM | MEDIUM | Automated script + manual review + compatibility views buy time |
+| RLS policies break | VERY LOW | HIGH | Postgres auto-updates OID-based policies, but verify manually |
+| Stored functions reference old names | LOW | MEDIUM | Search all functions/triggers pre-migration, update manually if found |
+| Compatibility views cause confusion | LOW | LOW | Clear comments in code, remove views after 48h |
+
+---
+
+## Success Criteria
+
+### Phase 1
+- ✅ All 19 tables renamed
+- ✅ Zero data loss
+- ✅ Zero PostgreSQL errors
+- ✅ All RLS policies working
+- ✅ All foreign keys intact
+- ✅ All 13 code references updated
+- ✅ TypeScript types regenerated
+- ✅ All tests passing
+- ✅ App fully functional in staging
+- ✅ Zero production errors after deployment
+
+### Phase 2 (Future)
+- TBD after Phase 1 completion
+
+---
+
+## Notes
+
+- **deals table:** Kept as-is in Phase 1 per DBA recommendation (no semantic drift)
+- **Junction table:** NOT created in Phase 1 (deferred to future work if needed)
+- **Profiles rename:** Deferred to Phase 2 due to high code impact
+- **CRM domain:** Deferred to Phase 2 for batch consistency
