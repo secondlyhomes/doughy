@@ -98,6 +98,11 @@ export function generateAmortizationSchedule(
   termYears: number,
   balloonDueYears?: number
 ): AmortizationEntry[] {
+  // Validate inputs
+  if (principal <= 0 || termYears <= 0 || annualRate < 0) {
+    return [];
+  }
+
   const schedule: AmortizationEntry[] = [];
   const monthlyRate = annualRate / 12;
   const monthlyPayment = calculateSellerFinancePayment(principal, annualRate, termYears);
@@ -131,6 +136,18 @@ export function generateAmortizationSchedule(
  * Analyze seller finance terms
  */
 export function analyzeSellerFinance(terms: SellerFinanceTerms): SellerFinanceAnalysis {
+  // Validate inputs - return zero-filled result for invalid terms
+  if (terms.purchasePrice <= 0 || terms.termYears <= 0 || terms.downPayment < 0) {
+    return {
+      monthlyPayment: 0,
+      totalPayments: 0,
+      totalInterest: 0,
+      loanAmount: 0,
+      downPaymentPercent: 0,
+      effectiveRate: 0,
+    };
+  }
+
   const loanAmount = terms.purchasePrice - terms.downPayment;
   const monthlyPayment = calculateSellerFinancePayment(
     loanAmount,
@@ -177,6 +194,22 @@ export function analyzeSubjectTo(
   purchasePrice: number,
   arv: number
 ): SubjectToAnalysis {
+  // Validate inputs - return zero-filled result for invalid terms
+  if (
+    terms.existingLoanBalance < 0 ||
+    terms.existingMonthlyPayment < 0 ||
+    terms.existingYearsRemaining < 0
+  ) {
+    return {
+      totalAcquisitionCost: 0,
+      monthlyPayment: 0,
+      remainingLoanTerm: 0,
+      equityAtClose: 0,
+      principalPaydownYear1: 0,
+      totalInterestRemaining: 0,
+    };
+  }
+
   const equityAtClose = arv - terms.existingLoanBalance;
   const totalAcquisitionCost = (terms.catchUpAmount || 0) + (terms.sellerCarryBack || 0);
 

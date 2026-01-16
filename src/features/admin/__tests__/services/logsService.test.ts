@@ -101,6 +101,103 @@ describe('logsService', () => {
       expect(mockQuery.ilike).toHaveBeenCalledWith('message', '%test message%');
     });
 
+    it('sanitizes SQL injection attempts in search', async () => {
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        ilike: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({ data: [], count: 0, error: null }),
+      };
+      mockSupabase.from = jest.fn().mockReturnValue(mockQuery);
+
+      await getLogs({ search: "'; DROP TABLE system_logs; --" });
+
+      // Should sanitize special characters (;, ', etc.) except allowed ones (-, _, spaces)
+      // Result: "DROP TABLE system_logs --" after sanitization and trim (-- is preserved)
+      expect(mockQuery.ilike).toHaveBeenCalledWith('message', '%DROP TABLE system_logs --%');
+    });
+
+    it('sanitizes XSS attempts in search', async () => {
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        ilike: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({ data: [], count: 0, error: null }),
+      };
+      mockSupabase.from = jest.fn().mockReturnValue(mockQuery);
+
+      await getLogs({ search: '<script>alert("xss")</script>' });
+
+      // Should remove < > and ( )
+      expect(mockQuery.ilike).toHaveBeenCalledWith('message', '%scriptalertxssscript%');
+    });
+
+    it('allows valid special characters in search (@, ., -, _)', async () => {
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        ilike: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({ data: [], count: 0, error: null }),
+      };
+      mockSupabase.from = jest.fn().mockReturnValue(mockQuery);
+
+      await getLogs({ search: 'user@example.com test-value_123' });
+
+      // Should preserve @, ., -, and _
+      expect(mockQuery.ilike).toHaveBeenCalledWith('message', '%user@example.com test-value_123%');
+    });
+
+    it('handles empty string after sanitization', async () => {
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        ilike: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({ data: [], count: 0, error: null }),
+      };
+      mockSupabase.from = jest.fn().mockReturnValue(mockQuery);
+
+      await getLogs({ search: '!#$%^&*()' });
+
+      // Should not call ilike if sanitized string is empty
+      expect(mockQuery.ilike).not.toHaveBeenCalled();
+    });
+
+    it('handles whitespace-only search after sanitization', async () => {
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        ilike: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({ data: [], count: 0, error: null }),
+      };
+      mockSupabase.from = jest.fn().mockReturnValue(mockQuery);
+
+      await getLogs({ search: '   ' });
+
+      // Trimmed whitespace should result in no search
+      expect(mockQuery.ilike).not.toHaveBeenCalled();
+    });
+
+    it('handles unicode characters in search', async () => {
+      const mockQuery = {
+        select: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        ilike: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({ data: [], count: 0, error: null }),
+      };
+      mockSupabase.from = jest.fn().mockReturnValue(mockQuery);
+
+      await getLogs({ search: 'test 测试 тест' });
+
+      // Should remove non-ASCII characters and trim spaces
+      expect(mockQuery.ilike).toHaveBeenCalledWith('message', '%test%');
+    });
+
     it('applies date range filters', async () => {
       const mockQuery = {
         select: jest.fn().mockReturnThis(),

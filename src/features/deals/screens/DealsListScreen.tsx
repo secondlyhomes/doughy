@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, LoadingSpinner, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { SearchBar, LoadingSpinner, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState, TAB_BAR_SAFE_PADDING, Input, Select } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SlidersHorizontal, MapPin, Calendar, DollarSign, ChevronRight, Briefcase, Search } from 'lucide-react-native';
@@ -23,13 +23,16 @@ import { SPACING } from '@/constants/design-tokens';
 import {
   Deal,
   DealStage,
+  DealStrategy,
   DEAL_STAGE_CONFIG,
   getDealAddress,
   getDealLeadName,
   getDealRiskScore,
   getRiskScoreColor,
 } from '../types';
-import { useDeals, DealsFilters } from '../hooks/useDeals';
+import { useDeals, DealsFilters, useCreateDeal, CreateDealInput } from '../hooks/useDeals';
+import { useLeads } from '../../leads/hooks/useLeads';
+import { useProperties } from '../../real-estate/hooks/useProperties';
 import { useNextAction, getActionIcon } from '../hooks/useNextAction';
 import { useDealAnalysis } from '../../real-estate/hooks/useDealAnalysis';
 import type { Property } from '../../real-estate/types';
@@ -72,7 +75,8 @@ interface DealCardProps {
 function DealCard({ deal, onPress }: DealCardProps) {
   const colors = useThemeColors();
   const nextAction = useNextAction(deal);
-  const stageConfig = DEAL_STAGE_CONFIG[deal.stage];
+  // Handle unknown stages from database
+  const stageConfig = DEAL_STAGE_CONFIG[deal.stage] || { label: deal.stage || 'Unknown', color: 'bg-gray-500', order: 0 };
   const riskScore = getDealRiskScore(deal);
 
   // Get risk color based on score
@@ -228,6 +232,18 @@ export function DealsListScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStage, setActiveStage] = useState<DealStage | 'all'>('all');
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
+  const [showCreateDealSheet, setShowCreateDealSheet] = useState(false);
+
+  // Create Deal Form State
+  const [selectedLeadId, setSelectedLeadId] = useState<string>('');
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
+  const [selectedStrategy, setSelectedStrategy] = useState<DealStrategy>('wholesale');
+  const [nextAction, setNextAction] = useState('');
+
+  // Data hooks
+  const { leads } = useLeads();
+  const { properties } = useProperties();
+  const createDeal = useCreateDeal();
 
   // Build filters
   const filters: DealsFilters = useMemo(() => ({
@@ -255,8 +271,32 @@ export function DealsListScreen() {
   }, [router]);
 
   const handleAddDeal = useCallback(() => {
-    console.log('Add deal pressed');
+    setShowCreateDealSheet(true);
   }, []);
+
+  const handleCreateDeal = useCallback(() => {
+    const dealData: CreateDealInput = {
+      lead_id: selectedLeadId || undefined,
+      property_id: selectedPropertyId || undefined,
+      stage: 'new',
+      strategy: selectedStrategy,
+      next_action: nextAction || undefined,
+    };
+
+    createDeal.mutate(dealData, {
+      onSuccess: (newDeal) => {
+        // Reset form
+        setSelectedLeadId('');
+        setSelectedPropertyId('');
+        setSelectedStrategy('wholesale');
+        setNextAction('');
+        setShowCreateDealSheet(false);
+
+        // Navigate to the new deal
+        router.push(`/(tabs)/deals/${newDeal.id}`);
+      },
+    });
+  }, [selectedLeadId, selectedPropertyId, selectedStrategy, nextAction, createDeal, router]);
 
   const renderItem = useCallback(({ item }: { item: Deal }) => (
     <DealCard deal={item} onPress={() => handleDealPress(item)} />
@@ -384,6 +424,90 @@ export function DealsListScreen() {
               className="flex-1"
             >
               Done
+            </Button>
+          </View>
+        </BottomSheet>
+
+        {/* Create Deal Sheet */}
+        <BottomSheet
+          visible={showCreateDealSheet}
+          onClose={() => setShowCreateDealSheet(false)}
+          title="Create Deal"
+        >
+          <BottomSheetSection title="Deal Information">
+            {/* Lead Selection */}
+            <Select
+              label="Lead (Optional)"
+              placeholder="Select a lead or leave empty"
+              value={selectedLeadId}
+              onValueChange={setSelectedLeadId}
+              options={[
+                { label: 'None', value: '' },
+                ...leads.map(lead => ({
+                  label: lead.name,
+                  value: lead.id,
+                })),
+              ]}
+              className="mb-4"
+            />
+
+            {/* Property Selection */}
+            <Select
+              label="Property (Optional)"
+              placeholder="Select a property or leave empty"
+              value={selectedPropertyId}
+              onValueChange={setSelectedPropertyId}
+              options={[
+                { label: 'None', value: '' },
+                ...properties.map(property => ({
+                  label: `${property.address}, ${property.city}`,
+                  value: property.id,
+                })),
+              ]}
+              className="mb-4"
+            />
+
+            {/* Strategy Selection */}
+            <Select
+              label="Investment Strategy"
+              value={selectedStrategy}
+              onValueChange={(val) => setSelectedStrategy(val as DealStrategy)}
+              options={[
+                { label: 'Wholesale', value: 'wholesale' },
+                { label: 'Fix & Flip', value: 'fix_and_flip' },
+                { label: 'BRRRR', value: 'brrrr' },
+                { label: 'Buy & Hold', value: 'buy_and_hold' },
+                { label: 'Seller Finance', value: 'seller_finance' },
+              ]}
+              className="mb-4"
+            />
+
+            {/* Next Action */}
+            <Input
+              label="Next Action (Optional)"
+              placeholder="e.g., Schedule property walkthrough"
+              value={nextAction}
+              onChangeText={setNextAction}
+              multiline
+              style={{ color: colors.foreground, backgroundColor: colors.input }}
+            />
+          </BottomSheetSection>
+
+          {/* Action buttons */}
+          <View className="flex-row gap-3 pt-4 pb-6">
+            <Button
+              variant="outline"
+              onPress={() => setShowCreateDealSheet(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onPress={handleCreateDeal}
+              className="flex-1"
+              disabled={createDeal.isPending}
+            >
+              {createDeal.isPending ? 'Creating...' : 'Create Deal'}
             </Button>
           </View>
         </BottomSheet>

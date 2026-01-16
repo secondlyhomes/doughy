@@ -127,13 +127,38 @@ export function ConversationsListScreen() {
   const { conversations, isLoading, refetch } = useConversations();
   const createConversation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleNewConversation = async () => {
+    // Cancel previous operation if still ongoing
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
     try {
       const newConversation = await createConversation.mutateAsync('New Conversation');
-      router.push(`/(tabs)/conversations/${newConversation.id}`);
+      // Only navigate if not aborted
+      if (!abortControllerRef.current.signal.aborted) {
+        router.push(`/(tabs)/conversations/${newConversation.id}`);
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to create conversation');
+      // Don't show error if operation was aborted
+      if (!abortControllerRef.current.signal.aborted) {
+        Alert.alert('Error', 'Failed to create conversation');
+      }
+    } finally {
+      abortControllerRef.current = null;
     }
   };
 
@@ -142,10 +167,15 @@ export function ConversationsListScreen() {
   }, [router]);
 
   const handleDeleteConversation = useCallback(async (id: string) => {
+    const controller = new AbortController();
+
     try {
       await deleteConversation.mutateAsync(id);
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete conversation');
+      // Don't show error if operation was aborted
+      if (!controller.signal.aborted) {
+        Alert.alert('Error', 'Failed to delete conversation');
+      }
     }
   }, [deleteConversation]);
 

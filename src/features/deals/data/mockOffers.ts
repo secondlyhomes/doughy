@@ -80,7 +80,7 @@ export const mockOffers: DealOffer[] = [
 /**
  * Default offer terms by strategy type
  */
-export const defaultOfferTerms: Record<DealStrategy, Partial<OfferTerms>> = {
+export const defaultOfferTerms: Partial<Record<DealStrategy, Partial<OfferTerms>>> = {
   cash: {
     earnest_money: 5000,
     contingencies: ['Inspection', 'Clear title'],
@@ -97,12 +97,28 @@ export const defaultOfferTerms: Record<DealStrategy, Partial<OfferTerms>> = {
     earnest_money: 3000,
     contingencies: ['Loan assumption approval', 'Clear title'],
   },
+  wholesale: {
+    earnest_money: 1000,
+    contingencies: ['Inspection', 'Clear title', 'Assignment'],
+  },
+  fix_and_flip: {
+    earnest_money: 5000,
+    contingencies: ['Inspection', 'Clear title'],
+  },
+  brrrr: {
+    earnest_money: 5000,
+    contingencies: ['Inspection', 'Clear title'],
+  },
+  buy_and_hold: {
+    earnest_money: 5000,
+    contingencies: ['Inspection', 'Clear title'],
+  },
 };
 
 /**
  * Offer script templates by strategy
  */
-export const offerScriptTemplates: Record<DealStrategy, string> = {
+export const offerScriptTemplates: Partial<Record<DealStrategy, string>> = {
   cash: `Hi [SELLER_NAME],
 
 Thank you for taking the time to speak with me about your property at [PROPERTY_ADDRESS].
@@ -173,7 +189,7 @@ This gets you out from under the property while protecting your credit. Does thi
 /**
  * Follow-up email templates by strategy
  */
-export const offerEmailTemplates: Record<DealStrategy, string> = {
+export const offerEmailTemplates: Partial<Record<DealStrategy, string>> = {
   cash: `Subject: Cash Offer for [PROPERTY_ADDRESS]
 
 Dear [SELLER_NAME],
@@ -247,7 +263,7 @@ export const getEmptyOfferTerms = (strategy: DealStrategy): OfferTerms => {
   thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
 
   return {
-    ...defaultOfferTerms[strategy],
+    ...(defaultOfferTerms[strategy] || { earnest_money: 5000, contingencies: ['Clear title'] }),
     closing_date: thirtyDaysOut.toISOString().split('T')[0],
   };
 };

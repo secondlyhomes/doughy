@@ -30,6 +30,7 @@ import {
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
 
@@ -38,6 +39,7 @@ export function SettingsScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const { user, profile, signOut, isLoading } = useAuth();
+  const { canViewAdminPanel } = usePermissions();
 
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -232,6 +234,25 @@ export function SettingsScreen() {
             </View>
           </View>
         </View>
+
+        {/* Admin Panel - Only visible to admin/support users */}
+        {canViewAdminPanel && (
+          <View className="p-4">
+            <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
+              ADMINISTRATION
+            </Text>
+
+            <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+              <SettingsItem
+                icon={<Settings size={20} color={colors.info} />}
+                title="Admin Dashboard"
+                subtitle="System management and developer tools"
+                onPress={() => router.push('/(admin)')}
+                hideBorder
+              />
+            </View>
+          </View>
+        )}
 
         {/* About */}
         <View className="p-4">

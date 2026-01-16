@@ -19,9 +19,12 @@ import {
   FileText,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_Z_INDEX, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
+import { GlassButton } from '@/components/ui/GlassButton';
 import { getFABShadowStyle } from '@/components/ui/fab-styles';
 import { withOpacity } from '@/lib/design-utils';
+import { UI_TIMING } from '@/constants/design-tokens';
 
 export interface FABAction {
   icon: React.ReactNode;
@@ -40,6 +43,7 @@ export function FloatingActionButton({
   mainColor,
 }: FloatingActionButtonProps) {
   const colors = useThemeColors();
+  const { buttonBottom } = useTabBarPadding();
   const fabColor = mainColor ?? colors.primary;
   const [isOpen, setIsOpen] = useState(false);
   const animation = useRef(new Animated.Value(0)).current;
@@ -75,7 +79,7 @@ export function FloatingActionButton({
     // Small delay to let animation start before navigation
     setTimeout(() => {
       action.onPress();
-    }, 100);
+    }, UI_TIMING.ACTION_PRESS_DELAY);
   };
 
   const rotation = rotateAnimation.interpolate({
@@ -111,7 +115,7 @@ export function FloatingActionButton({
       )}
 
       {/* FAB Container */}
-      <View style={{ position: 'absolute', zIndex: FAB_Z_INDEX.EXPANDABLE, bottom: FAB_BOTTOM_OFFSET, right: FAB_RIGHT_MARGIN }}>
+      <View style={{ position: 'absolute', zIndex: FAB_Z_INDEX.EXPANDABLE, bottom: buttonBottom + FAB_BOTTOM_OFFSET, right: FAB_RIGHT_MARGIN }}>
         {/* Action Buttons */}
         {actions.map((action, index) => {
           // Simple vertical stack positioning
@@ -186,32 +190,15 @@ export function FloatingActionButton({
           );
         })}
 
-        {/* Main FAB Button */}
+        {/* Main FAB Button - Glass effect */}
         <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-          <TouchableOpacity
-            style={[
-              {
-                width: FAB_SIZE,
-                height: FAB_SIZE,
-                borderRadius: FAB_SIZE / 2,
-                backgroundColor: fabColor,
-                alignItems: 'center',
-                justifyContent: 'center',
-              },
-              getFABShadowStyle(colors),
-            ]}
+          <GlassButton
+            icon={isOpen ? <X size={28} color="white" /> : <Plus size={28} color="white" />}
             onPress={toggleMenu}
-            activeOpacity={0.8}
+            size={FAB_SIZE}
+            effect="regular"
             accessibilityLabel={isOpen ? 'Close quick actions' : 'Open quick actions'}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: isOpen }}
-          >
-            {isOpen ? (
-              <X size={28} color={colors.primaryForeground} />
-            ) : (
-              <Plus size={28} color={colors.primaryForeground} />
-            )}
-          </TouchableOpacity>
+          />
         </Animated.View>
       </View>
     </>

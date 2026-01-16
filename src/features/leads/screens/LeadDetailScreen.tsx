@@ -5,11 +5,11 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag, FileText } from 'lucide-react-native';
+import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button, GlassButton } from '@/components/ui';
+import { LoadingSpinner, Button, GlassButton, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { useLeadDocuments } from '../hooks/useLeadDocuments';
@@ -19,6 +19,7 @@ import { LeadQuickActions } from '../components/LeadQuickActions';
 import { LeadContactInfo } from '../components/LeadContactInfo';
 import { LeadNotesSection } from '../components/LeadNotesSection';
 import { LeadDocsTab } from '../components/LeadDocsTab';
+import { useCreateDeal, CreateDealInput } from '../../deals/hooks/useDeals';
 
 export function LeadDetailScreen() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export function LeadDetailScreen() {
   const { documents } = useLeadDocuments({ leadId });
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
+  const createDeal = useCreateDeal();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showActivitySheet, setShowActivitySheet] = useState(false);
@@ -79,6 +81,38 @@ export function LeadDetailScreen() {
               Alert.alert('Error', 'Failed to delete lead');
             } finally {
               setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleConvertToDeal = async () => {
+    if (!lead) return;
+
+    Alert.alert(
+      'Convert to Deal',
+      'This will create a new deal from this lead. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Create Deal',
+          onPress: async () => {
+            try {
+              const dealData: CreateDealInput = {
+                lead_id: leadId,
+                stage: 'new',
+                strategy: 'wholesale',
+                next_action: 'Complete property details and underwrite',
+              };
+
+              const newDeal = await createDeal.mutateAsync(dealData);
+
+              // Navigate to the new deal
+              router.push(`/(tabs)/deals/${newDeal.id}`);
+            } catch {
+              Alert.alert('Error', 'Failed to create deal from lead');
             }
           },
         },
@@ -153,7 +187,12 @@ export function LeadDetailScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,  // Pattern 2: offset + height + breathing (172px)
+        }}
+      >
         {/* Lead Header */}
         <View className="p-4 mb-4" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-start justify-between mb-3">
@@ -186,6 +225,29 @@ export function LeadDetailScreen() {
 
           {/* Quick Actions */}
           <LeadQuickActions name={lead.name || 'Lead'} phone={lead.phone} email={lead.email} />
+        </View>
+
+        {/* Convert to Deal Action */}
+        <View className="px-4 mb-4">
+          <TouchableOpacity
+            className="flex-row items-center justify-center py-3 px-4 rounded-xl"
+            style={{ backgroundColor: colors.primary }}
+            onPress={handleConvertToDeal}
+            disabled={createDeal.isPending}
+            accessibilityLabel="Convert lead to deal"
+            accessibilityRole="button"
+          >
+            {createDeal.isPending ? (
+              <ActivityIndicator size="small" color={colors.primaryForeground} />
+            ) : (
+              <>
+                <Text className="text-base font-semibold mr-2" style={{ color: colors.primaryForeground }}>
+                  Convert to Deal
+                </Text>
+                <ArrowRight size={20} color={colors.primaryForeground} />
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Contact Information */}

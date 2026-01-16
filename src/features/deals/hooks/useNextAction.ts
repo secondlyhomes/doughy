@@ -41,6 +41,10 @@ export type ActionCategory =
  * Stage-based default actions
  */
 const STAGE_DEFAULT_ACTIONS: Record<DealStage, { action: string; category: ActionCategory }> = {
+  initial_contact: {
+    action: 'Review lead details and make initial contact',
+    category: 'contact',
+  },
   new: {
     action: 'Review lead details and make initial contact',
     category: 'contact',
@@ -121,6 +125,16 @@ export function calculateNextAction(deal: Deal): NextAction {
 
   // Fall back to default stage action
   const defaultAction = STAGE_DEFAULT_ACTIONS[deal.stage];
+
+  // Handle unknown stages gracefully (e.g., from database with different stage values)
+  if (!defaultAction) {
+    return {
+      action: 'Review deal and update stage',
+      priority: 'medium',
+      category: 'followup',
+    };
+  }
+
   return {
     action: defaultAction.action,
     priority: getPriorityForStage(deal.stage),

@@ -162,7 +162,7 @@ export function formatPhoneNumber(phone: string): string {
   // Remove all non-digit characters except leading +
   let cleaned = phone.replace(/[^\d+]/g, '');
 
-  // If starts with +, preserve it
+  // If starts with +, preserve it (already formatted)
   if (cleaned.startsWith('+')) {
     return cleaned;
   }
@@ -172,12 +172,23 @@ export function formatPhoneNumber(phone: string): string {
     cleaned = cleaned.substring(1);
   }
 
-  // Add US country code
+  // Add US country code for 10-digit numbers
   if (cleaned.length === 10) {
     return `+1${cleaned}`;
   }
 
-  // Return as-is if already in international format
+  // For 11-digit numbers starting with 1, format as US
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    return `+${cleaned}`;
+  }
+
+  // For other lengths, only add + if we have enough digits for a valid number
+  // E.164 requires minimum 7 digits (country code + local number)
+  if (cleaned.length >= 7 && cleaned.length <= 15) {
+    return `+${cleaned}`;
+  }
+
+  // Return with + prefix anyway, validation will catch invalid numbers
   return `+${cleaned}`;
 }
 

@@ -20,7 +20,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { GlassButton } from '@/components/ui';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 export function ProfileScreen() {
   const router = useRouter();
@@ -105,7 +105,7 @@ export function ProfileScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Header */}
         <View
           className="flex-row items-center p-4"

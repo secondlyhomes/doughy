@@ -165,7 +165,7 @@ export function PhotoCaptureButton({
           )}
         </Pressable>
 
-        {/* Flash Overlay */}
+        {/* Flash Overlay - uses primaryForeground for flash effect (white in both themes) */}
         <Animated.View
           style={[
             {
@@ -174,7 +174,7 @@ export function PhotoCaptureButton({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: '#FFFFFF',
+              backgroundColor: colors.primaryForeground,
               borderRadius: BORDER_RADIUS.lg,
               pointerEvents: 'none',
             },

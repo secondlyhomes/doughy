@@ -8,6 +8,7 @@ import { Property } from '../../real-estate/types/property';
  * Deal pipeline stages
  */
 export type DealStage =
+  | 'initial_contact'
   | 'new'
   | 'contacted'
   | 'appointment_set'
@@ -21,7 +22,14 @@ export type DealStage =
 /**
  * Deal strategy types
  */
-export type DealStrategy = 'cash' | 'seller_finance' | 'subject_to';
+export type DealStrategy =
+  | 'cash'
+  | 'seller_finance'
+  | 'subject_to'
+  | 'wholesale'
+  | 'fix_and_flip'
+  | 'brrrr'
+  | 'buy_and_hold';
 
 /**
  * Evidence source types for "Why?" trails
@@ -229,6 +237,7 @@ export interface ReportAssumptions {
 // ============================================
 
 export const DEAL_STAGE_CONFIG: Record<DealStage, { label: string; color: string; order: number }> = {
+  initial_contact: { label: 'Initial Contact', color: 'bg-slate-500', order: 0 },
   new: { label: 'New', color: 'bg-blue-500', order: 1 },
   contacted: { label: 'Contacted', color: 'bg-indigo-500', order: 2 },
   appointment_set: { label: 'Appointment Set', color: 'bg-purple-500', order: 3 },
@@ -252,6 +261,22 @@ export const DEAL_STRATEGY_CONFIG: Record<DealStrategy, { label: string; descrip
   subject_to: {
     label: 'Subject-To',
     description: 'Take over existing mortgage payments',
+  },
+  wholesale: {
+    label: 'Wholesale',
+    description: 'Assign contract to end buyer for assignment fee',
+  },
+  fix_and_flip: {
+    label: 'Fix & Flip',
+    description: 'Renovate and resell for profit',
+  },
+  brrrr: {
+    label: 'BRRRR',
+    description: 'Buy, Rehab, Rent, Refinance, Repeat',
+  },
+  buy_and_hold: {
+    label: 'Buy & Hold',
+    description: 'Long-term rental income property',
   },
 };
 
@@ -313,8 +338,12 @@ export const isDealClosed = (deal: Deal): boolean => {
  * Get next logical stages from current stage
  */
 export const getNextStages = (currentStage: DealStage): DealStage[] => {
-  const order = DEAL_STAGE_CONFIG[currentStage].order;
+  const config = DEAL_STAGE_CONFIG[currentStage];
+  // Handle unknown stages - return empty array (no next stages)
+  if (!config) return [];
+
+  const order = config.order;
   return (Object.entries(DEAL_STAGE_CONFIG) as [DealStage, typeof DEAL_STAGE_CONFIG[DealStage]][])
-    .filter(([_, config]) => config.order === order + 1)
+    .filter(([_, stageConfig]) => stageConfig.order === order + 1)
     .map(([stage]) => stage);
 };

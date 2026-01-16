@@ -309,3 +309,98 @@ export interface MockUserPlan {
   email_domain: string | null;
   trial_ends_at: string | null;
 }
+
+/**
+ * Generate a mock deal
+ */
+export const createMockDeal = (
+  overrides?: Partial<MockDeal>
+): MockDeal => ({
+  id: faker.string.uuid(),
+  user_id: faker.string.uuid(),
+  lead_id: null,
+  property_id: null,
+  status: faker.helpers.arrayElement(['active', 'won', 'lost', 'archived']),
+  stage: faker.helpers.arrayElement([
+    'new',
+    'contacted',
+    'appointment_set',
+    'analyzing',
+    'offer_sent',
+    'negotiating',
+    'under_contract',
+    'closed_won',
+    'closed_lost',
+  ]),
+  title: `${faker.location.streetAddress()} Deal`,
+  estimated_value: faker.number.int({ min: 10000, max: 100000 }),
+  probability: faker.number.int({ min: 10, max: 100 }),
+  expected_close_date: faker.date.future({ years: 1 }).toISOString().split('T')[0],
+  next_action: faker.helpers.arrayElement([
+    'Follow up with seller',
+    'Schedule property walkthrough',
+    'Run comps analysis',
+    'Prepare offer',
+    'Negotiate terms',
+    'Send to title company',
+  ]),
+  next_action_due: faker.date.soon({ days: 7 }).toISOString(),
+  notes: faker.helpers.maybe(() => faker.lorem.paragraph()) ?? null,
+  created_at: faker.date.past({ years: 1 }).toISOString(),
+  updated_at: faker.date.recent({ days: 30 }).toISOString(),
+  ...overrides,
+});
+
+export interface MockDeal {
+  id: string;
+  user_id: string;
+  lead_id: string | null;
+  property_id: string | null;
+  status: string;
+  stage: string;
+  title: string;
+  estimated_value: number | null;
+  probability: number | null;
+  expected_close_date: string | null;
+  next_action: string | null;
+  next_action_due: string | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+/**
+ * Generate a mock deal event (for timeline)
+ */
+export const createMockDealEvent = (
+  overrides?: Partial<MockDealEvent>
+): MockDealEvent => ({
+  id: faker.string.uuid(),
+  deal_id: overrides?.deal_id || faker.string.uuid(),
+  event_type: faker.helpers.arrayElement([
+    'stage_change',
+    'next_action_set',
+    'offer_created',
+    'walkthrough_completed',
+    'note',
+  ]),
+  title: faker.lorem.sentence({ min: 3, max: 6 }),
+  description: faker.helpers.maybe(() => faker.lorem.sentence()) ?? undefined,
+  metadata: {},
+  source: faker.helpers.arrayElement(['system', 'user', 'ai']),
+  created_by: faker.helpers.maybe(() => faker.string.uuid()) ?? undefined,
+  created_at: faker.date.past({ years: 1 }).toISOString(),
+  ...overrides,
+});
+
+export interface MockDealEvent {
+  id: string;
+  deal_id: string;
+  event_type: string;
+  title: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  source: 'system' | 'user' | 'ai';
+  created_by?: string;
+  created_at: string;
+}

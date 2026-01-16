@@ -34,3 +34,10 @@ export {
   type Integration,
   type IntegrationStatus,
 } from './services';
+
+export {
+  seedService,
+  type SeedResult,
+  type ClearResult,
+  type SafetyCheckResult,
+} from './services/seedService';

@@ -106,6 +106,46 @@ If information is not mentioned, omit that field. Do not make assumptions.`;
   return JSON.parse(content) as ExtractedPropertyData;
 }
 
+/**
+ * Validate Twilio webhook signature
+ */
+function validateTwilioSignature(
+  url: string,
+  params: Record<string, string>,
+  signature: string,
+  authToken: string
+): boolean {
+  // Build the data string from params
+  const data = Object.keys(params)
+    .sort()
+    .map(key => key + params[key])
+    .join('');
+
+  const fullData = url + data;
+
+  // Create HMAC-SHA1 hash
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(authToken);
+  const messageData = encoder.encode(fullData);
+
+  return crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  ).then(key =>
+    crypto.subtle.sign('HMAC', key, messageData)
+  ).then(signatureBuffer => {
+    // Convert to base64
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const signatureBase64 = btoa(String.fromCharCode(...signatureArray));
+
+    // Constant-time comparison to prevent timing attacks
+    return signatureBase64 === signature;
+  }).catch(() => false);
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req.headers.get('origin'));
 
@@ -115,6 +155,32 @@ serve(async (req) => {
   }
 
   try {
+    // Validate Twilio signature BEFORE processing
+    const twilioSignature = req.headers.get('X-Twilio-Signature');
+    const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+
+    if (!twilioAuthToken) {
+      console.error('[SMS-Webhook] TWILIO_AUTH_TOKEN not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (!twilioSignature) {
+      console.error('[SMS-Webhook] Missing Twilio signature');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Parse Twilio webhook payload (application/x-www-form-urlencoded)
     const formData = await req.formData();
     const from = formData.get('From') as string;
@@ -125,9 +191,35 @@ serve(async (req) => {
     if (!from || !body || !messageId) {
       console.error('Missing required fields:', { from, body, messageId });
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: From, Body, or MessageSid' }),
+        JSON.stringify({ error: 'Bad request' }),
         {
           status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Build params object for signature validation
+    const params: Record<string, string> = {};
+    for (const [key, value] of formData.entries()) {
+      params[key] = value.toString();
+    }
+
+    // Validate Twilio signature
+    const url = req.url;
+    const isValidSignature = await validateTwilioSignature(
+      url,
+      params,
+      twilioSignature,
+      twilioAuthToken
+    );
+
+    if (!isValidSignature) {
+      console.error('[SMS-Webhook] Invalid Twilio signature');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        {
+          status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
@@ -244,9 +336,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing SMS webhook:', error);
 
-    // Return error to Twilio (will retry)
+    // Return generic error to Twilio (will retry)
+    // Don't expose internal error details for security
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: 'An error occurred processing your request' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

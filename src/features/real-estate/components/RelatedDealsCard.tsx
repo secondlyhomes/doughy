@@ -13,6 +13,8 @@ interface RelatedDealsCardProps {
   deals: PropertyDeal[];
   onDealPress: (dealId: string) => void;
   onCreateDeal?: () => void;
+  /** Handler for "View all" button - if not provided, button won't show */
+  onViewAll?: () => void;
   maxDeals?: number;
 }
 
@@ -20,6 +22,7 @@ export function RelatedDealsCard({
   deals,
   onDealPress,
   onCreateDeal,
+  onViewAll,
   maxDeals = 3,
 }: RelatedDealsCardProps) {
   const colors = useThemeColors();
@@ -106,7 +109,8 @@ export function RelatedDealsCard({
 
       {/* Deal List */}
       {displayedDeals.map((deal, index) => {
-        const stageConfig = DEAL_STAGE_CONFIG[deal.stage];
+        // Handle unknown stages from database
+        const stageConfig = DEAL_STAGE_CONFIG[deal.stage] || { label: deal.stage || 'Unknown', color: 'bg-gray-500', order: 0 };
         const stageColor = getStageColor(deal.stage);
 
         return (
@@ -151,12 +155,13 @@ export function RelatedDealsCard({
         );
       })}
 
-      {/* Show More */}
-      {hasMore && (
+      {/* Show More - only render when onViewAll is provided */}
+      {hasMore && onViewAll && (
         <TouchableOpacity
-          onPress={() => onDealPress(deals[0].id)}
+          onPress={onViewAll}
           className="pt-3 items-center"
           style={{ borderTopWidth: 1, borderTopColor: colors.border }}
+          accessibilityLabel={`View all ${deals.length} deals`}
         >
           <Text className="text-sm font-medium" style={{ color: colors.primary }}>
             View all {deals.length} deals

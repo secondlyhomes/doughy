@@ -369,7 +369,7 @@ export function IntegrationsScreen() {
         }
         contentContainerStyle={{
           paddingTop: listPaddingTop,
-          paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom,
+          paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
         }}
       />
     </ThemedSafeAreaView>

@@ -183,29 +183,25 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
+    // Initialize Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
-    
-    if (!supabaseUrl || !supabaseKey) {
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
+
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
       return new Response(JSON.stringify({
         status: 'error',
-        message: 'Missing Supabase credentials',
+        message: 'Server configuration error',
       }), {
         status: 500,
         headers
       });
     }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Initialize Stripe with API key from database
-    const stripe = await initializeStripe(supabase);
-    
+
     // Parse request data
     const requestData = await req.json();
     const { action, ...params } = requestData;
-    
+
     // Validate the request
     if (!action) {
       return new Response(JSON.stringify({
@@ -216,7 +212,48 @@ serve(async (req) => {
         headers
       });
     }
-    
+
+    // For webhook handler, we use Stripe signature validation (done below)
+    // For all other actions, validate JWT authentication
+    let authenticatedUserId: string | null = null;
+    if (action !== 'handleWebhook') {
+      const authHeader = req.headers.get('Authorization');
+
+      if (!authHeader) {
+        return new Response(JSON.stringify({
+          status: 'error',
+          message: 'Unauthorized',
+        }), {
+          status: 401,
+          headers
+        });
+      }
+
+      // Validate JWT using Supabase client with anon key
+      const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
+
+      if (authError || !user) {
+        logger.error('JWT validation failed:', authError);
+        return new Response(JSON.stringify({
+          status: 'error',
+          message: 'Unauthorized',
+        }), {
+          status: 401,
+          headers
+        });
+      }
+
+      authenticatedUserId = user.id;
+      logger.info('Authenticated user:', user.id);
+    }
+
+    // Initialize Stripe with API key from database (use service role key)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const stripe = await initializeStripe(supabase);
+
     // Process different Stripe actions
     switch (action) {
       case 'createCheckoutSession':

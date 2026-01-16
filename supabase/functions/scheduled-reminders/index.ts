@@ -366,9 +366,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in scheduled-reminders:', error);
 
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
       JSON.stringify({
-        error: error.message || 'Internal server error',
+        error: errorMessage,
       }),
       {
         status: 500,

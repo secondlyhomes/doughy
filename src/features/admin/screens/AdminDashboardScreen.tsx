@@ -22,6 +22,8 @@ import {
   CheckCircle,
   XCircle,
   LogOut,
+  Sprout,
+  Trash2,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedSafeAreaView } from '@/components';
@@ -35,16 +37,19 @@ import {
   type AdminStats,
   type SystemHealth,
 } from '../services/adminService';
+import { seedService } from '../services/seedService';
 
 export function AdminDashboardScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
-  const { isLoading: authLoading, signOut } = useAuth();
-  const { canViewAdminPanel } = usePermissions();
+  const { isLoading: authLoading, signOut, profile } = useAuth();
+  const { canViewAdminPanel, canManageUsers } = usePermissions();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [systems, setSystems] = useState<SystemHealth[]>([]);
@@ -97,6 +102,150 @@ export function AdminDashboardScreen() {
             } finally {
               setIsSigningOut(false);
             }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSeedDatabase = async () => {
+    // Safety checks
+    const safetyCheck = seedService.canSeedDatabase();
+    if (!safetyCheck.allowed) {
+      Alert.alert('Cannot Seed Database', safetyCheck.reason || 'Safety check failed');
+      return;
+    }
+
+    if (!canManageUsers) {
+      Alert.alert('Access Denied', 'You need admin or support permissions to seed the database.');
+      return;
+    }
+
+    if (!profile?.id) {
+      Alert.alert('Error', 'User profile not found. Please sign in again.');
+      return;
+    }
+
+    // Confirm before seeding
+    Alert.alert(
+      'Seed Database',
+      'This will create 50 leads, 20 properties, and 15 deals with test data. Any existing data will be cleared first.\n\nContinue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Seed Database',
+          onPress: async () => {
+            setIsSeeding(true);
+            try {
+              const result = await seedService.seedDatabase(profile.id);
+
+              if (result.success) {
+                Alert.alert(
+                  'Success',
+                  `Database seeded successfully!\n\n` +
+                  `Leads: ${result.counts.leads}\n` +
+                  `Properties: ${result.counts.properties}\n` +
+                  `Deals: ${result.counts.deals}`,
+                  [{ text: 'OK', onPress: handleRefresh }]
+                );
+              } else {
+                Alert.alert(
+                  'Seed Failed',
+                  `Some errors occurred:\n\n${result.errors?.slice(0, 5).join('\n') || 'Unknown error'}\n\n` +
+                  `Created:\n` +
+                  `Leads: ${result.counts.leads}\n` +
+                  `Properties: ${result.counts.properties}\n` +
+                  `Deals: ${result.counts.deals}`
+                );
+              }
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                error instanceof Error ? error.message : 'Failed to seed database'
+              );
+            } finally {
+              setIsSeeding(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleClearDatabase = async () => {
+    // Safety checks
+    const safetyCheck = seedService.canSeedDatabase();
+    if (!safetyCheck.allowed) {
+      Alert.alert('Cannot Clear Database', safetyCheck.reason || 'Safety check failed');
+      return;
+    }
+
+    if (!canManageUsers) {
+      Alert.alert('Access Denied', 'You need admin or support permissions to clear the database.');
+      return;
+    }
+
+    if (!profile?.id) {
+      Alert.alert('Error', 'User profile not found. Please sign in again.');
+      return;
+    }
+
+    // Double confirmation for destructive action
+    Alert.alert(
+      'Clear All Data?',
+      'This will permanently delete ALL leads, properties, deals, and related data for your account.\n\nThis action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Database',
+          style: 'destructive',
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              'Are You Absolutely Sure?',
+              'Last chance - this will delete everything!\n\nAll your leads, properties, deals, documents, messages, and related data will be permanently removed.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, Delete All',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setIsClearing(true);
+                    try {
+                      const result = await seedService.clearDatabase(profile.id);
+
+                      if (result.success) {
+                        Alert.alert(
+                          'Success',
+                          `Database cleared successfully!\n\n` +
+                          `Deleted:\n` +
+                          `Leads: ${result.counts.leads}\n` +
+                          `Properties: ${result.counts.properties}\n` +
+                          `Deals: ${result.counts.deals}`,
+                          [{ text: 'OK', onPress: handleRefresh }]
+                        );
+                      } else {
+                        Alert.alert(
+                          'Clear Failed',
+                          `Some errors occurred:\n\n${result.errors?.slice(0, 5).join('\n') || 'Unknown error'}\n\n` +
+                          `Deleted:\n` +
+                          `Leads: ${result.counts.leads}\n` +
+                          `Properties: ${result.counts.properties}\n` +
+                          `Deals: ${result.counts.deals}`
+                        );
+                      }
+                    } catch (error) {
+                      Alert.alert(
+                        'Error',
+                        error instanceof Error ? error.message : 'Failed to clear database'
+                      );
+                    } finally {
+                      setIsClearing(false);
+                    }
+                  },
+                },
+              ]
+            );
           },
         },
       ]
@@ -236,6 +385,68 @@ export function AdminDashboardScreen() {
             ))}
           </View>
         </View>
+
+        {/* Developer Tools (Dev Mode Only) */}
+        {__DEV__ && canManageUsers && (
+          <View className="p-4">
+            <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
+              Developer Tools
+            </Text>
+            <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
+              {/* Warning Banner */}
+              <View className="flex-row items-center mb-4 p-3 rounded" style={{ backgroundColor: colors.warning + '20' }}>
+                <AlertTriangle size={16} color={colors.warning} />
+                <Text className="ml-2 text-xs font-medium" style={{ color: colors.warning }}>
+                  DEV MODE ONLY - These actions affect your real database
+                </Text>
+              </View>
+
+              {/* Seed Database Button */}
+              <View className="mb-3">
+                <Button
+                  onPress={handleSeedDatabase}
+                  disabled={isSeeding || isClearing}
+                  variant="default"
+                  className="flex-row items-center justify-center"
+                >
+                  {isSeeding ? (
+                    <LoadingSpinner size="small" color={colors.primaryForeground} />
+                  ) : (
+                    <Sprout size={18} color={colors.primaryForeground} />
+                  )}
+                  <Text className="ml-2 font-semibold" style={{ color: colors.primaryForeground }}>
+                    {isSeeding ? 'Seeding Database...' : 'Seed Database'}
+                  </Text>
+                </Button>
+                <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
+                  Creates 50 leads, 20 properties, 15 deals with test data
+                </Text>
+              </View>
+
+              {/* Clear Database Button */}
+              <View>
+                <Button
+                  onPress={handleClearDatabase}
+                  disabled={isSeeding || isClearing}
+                  variant="destructive"
+                  className="flex-row items-center justify-center"
+                >
+                  {isClearing ? (
+                    <LoadingSpinner size="small" color={colors.destructiveForeground} />
+                  ) : (
+                    <Trash2 size={18} color={colors.destructiveForeground} />
+                  )}
+                  <Text className="ml-2 font-semibold" style={{ color: colors.destructiveForeground }}>
+                    {isClearing ? 'Clearing Database...' : 'Clear All Data'}
+                  </Text>
+                </Button>
+                <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
+                  Removes all leads, properties, deals, and related data
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Account Actions */}
         <View className="p-4">

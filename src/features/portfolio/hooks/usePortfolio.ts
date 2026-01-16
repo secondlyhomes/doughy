@@ -3,55 +3,17 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/features/auth/context/AuthProvider';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { PortfolioProperty, PortfolioSummary } from '../types';
 
-// Mock data for development when database tables don't exist yet
-const mockPortfolioData: { properties: PortfolioProperty[]; summary: PortfolioSummary } = {
-  properties: [
-    {
-      id: 'portfolio-1',
-      address: '123 Oak Street',
-      city: 'Austin',
-      state: 'TX',
-      zip: '78701',
-      propertyType: 'single_family',
-      bedrooms: 3,
-      bathrooms: 2,
-      square_feet: 1800,
-      purchase_price: 285000,
-      current_value: 320000,
-      equity: 35000,
-      monthly_rent: 2200,
-      monthly_expenses: 1400,
-      monthly_cash_flow: 800,
-      acquisition_date: '2024-03-15',
-    },
-    {
-      id: 'portfolio-2',
-      address: '456 Pine Avenue',
-      city: 'San Antonio',
-      state: 'TX',
-      zip: '78205',
-      propertyType: 'duplex',
-      bedrooms: 4,
-      bathrooms: 2,
-      square_feet: 2400,
-      purchase_price: 350000,
-      current_value: 385000,
-      equity: 35000,
-      monthly_rent: 3200,
-      monthly_expenses: 2100,
-      monthly_cash_flow: 1100,
-      acquisition_date: '2024-06-01',
-    },
-  ],
+// Empty portfolio state for when no data exists
+const EMPTY_PORTFOLIO: { properties: PortfolioProperty[]; summary: PortfolioSummary } = {
+  properties: [],
   summary: {
-    totalProperties: 2,
-    totalValue: 705000,
-    totalEquity: 70000,
-    monthlyCashFlow: 1900,
-    averageCapRate: 7.2,
+    totalProperties: 0,
+    totalValue: 0,
+    totalEquity: 0,
+    monthlyCashFlow: 0,
   },
 };
 
@@ -77,7 +39,7 @@ export function usePortfolio() {
       try {
         // Get all deals marked as added to portfolio (closed_won deals)
         const { data: deals, error: dealsError } = await supabase
-          .from('re_deals')
+          .from('deals')
           .select(`
             *,
             property:re_properties(*)
@@ -87,13 +49,11 @@ export function usePortfolio() {
 
         if (dealsError) {
           console.error('Error fetching portfolio deals:', dealsError);
-          // Fall back to mock data if table doesn't exist
-          return mockPortfolioData;
+          throw dealsError;
         }
 
         if (!deals || deals.length === 0) {
-          // Return mock data for development/demo
-          return mockPortfolioData;
+          return EMPTY_PORTFOLIO;
         }
 
         // Transform deals into portfolio properties
@@ -146,8 +106,7 @@ export function usePortfolio() {
         return { properties, summary };
       } catch (err) {
         console.error('Error in usePortfolio:', err);
-        // Return mock data as fallback
-        return mockPortfolioData;
+        throw err;
       }
     },
     enabled: !!user?.id,
@@ -157,7 +116,7 @@ export function usePortfolio() {
   const addToPortfolio = useMutation({
     mutationFn: async (dealId: string) => {
       const { error } = await supabase
-        .from('re_deals')
+        .from('deals')
         .update({
           stage: 'closed_won',
           updated_at: new Date().toISOString(),
@@ -176,7 +135,7 @@ export function usePortfolio() {
   const removeFromPortfolio = useMutation({
     mutationFn: async (dealId: string) => {
       const { error } = await supabase
-        .from('re_deals')
+        .from('deals')
         .update({
           stage: 'negotiating', // Revert to negotiating
           updated_at: new Date().toISOString(),

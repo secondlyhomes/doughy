@@ -155,3 +155,31 @@ export const GLASS_BLUR = {
   regular: 'blur(12px)',   // Standard glass (most common use case)
   strong: 'blur(16px)',    // Prominent glass effect - more visible
 } as const;
+
+/**
+ * UI timing constants for animations and interactions
+ * Consistent timing across the application for predictable UX
+ *
+ * @example
+ * // Navigation delay to let animation start
+ * setTimeout(() => navigate(), UI_TIMING.ACTION_PRESS_DELAY);
+ *
+ * // Refresh indicator display duration
+ * setTimeout(() => setRefreshing(false), UI_TIMING.REFRESH_INDICATOR);
+ */
+export const UI_TIMING = {
+  /** Brief delay before executing action to let press animation start (FAB, buttons) */
+  ACTION_PRESS_DELAY: 100,
+
+  /** Duration to show refresh indicator after data refresh completes */
+  REFRESH_INDICATOR: 500,
+
+  /** Debounce delay for search input fields */
+  SEARCH_DEBOUNCE: 300,
+
+  /** Delay before auto-dismissing temporary notifications/toasts */
+  TOAST_AUTO_DISMISS: 3000,
+
+  /** Delay before triggering long-press actions */
+  LONG_PRESS_DELAY: 500,
+} as const;

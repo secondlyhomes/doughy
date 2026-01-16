@@ -10,6 +10,8 @@ import {
   createMockMessage,
   createMockComp,
   createMockUserPlan,
+  createMockDeal,
+  createMockDealEvent,
 } from './factories';
 
 // Dev user ID - used for consistent mock auth
@@ -199,6 +201,95 @@ export function seedMockData(store: MockDataStore): void {
     store.insert('messages', message);
   }
 
+  // Create sample deals linking leads and properties
+  const deals = [
+    createMockDeal({
+      user_id: DEV_USER_ID,
+      lead_id: leads[0].id,
+      property_id: properties[0].id,
+      status: 'active',
+      stage: 'analyzing',
+      title: '123 Main Street Deal',
+      next_action: 'Run comps analysis',
+      next_action_due: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    }),
+    createMockDeal({
+      user_id: DEV_USER_ID,
+      lead_id: leads[1].id,
+      property_id: properties[1].id,
+      status: 'active',
+      stage: 'offer_sent',
+      title: '456 Oak Avenue Deal',
+      next_action: 'Follow up on offer',
+      next_action_due: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+    }),
+    createMockDeal({
+      user_id: DEV_USER_ID,
+      lead_id: leads[2].id,
+      property_id: properties[2].id,
+      status: 'active',
+      stage: 'negotiating',
+      title: '789 Elm Drive Deal',
+      next_action: 'Counter offer discussion',
+      next_action_due: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    }),
+    createMockDeal({
+      user_id: DEV_USER_ID,
+      lead_id: leads[3].id,
+      property_id: null,
+      status: 'active',
+      stage: 'new',
+      title: 'New Seller Lead',
+      next_action: 'Initial contact call',
+      next_action_due: new Date(Date.now() + 0.5 * 24 * 60 * 60 * 1000).toISOString(),
+    }),
+    createMockDeal({
+      user_id: DEV_USER_ID,
+      lead_id: null,
+      property_id: null,
+      status: 'won',
+      stage: 'closed_won',
+      title: 'Previous Closed Deal',
+      next_action: null,
+      next_action_due: null,
+    }),
+  ];
+
+  for (const deal of deals) {
+    store.insert('deals', deal);
+
+    // Create deal events for each deal (for timeline)
+    const dealEvents = [
+      createMockDealEvent({
+        deal_id: deal.id,
+        event_type: 'stage_change',
+        title: `Deal created at ${deal.stage} stage`,
+        description: 'Initial deal creation',
+        source: 'system',
+        created_at: deal.created_at || new Date().toISOString(),
+      }),
+      createMockDealEvent({
+        deal_id: deal.id,
+        event_type: 'next_action_set',
+        title: deal.next_action || 'Follow up with seller',
+        source: 'system',
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+      createMockDealEvent({
+        deal_id: deal.id,
+        event_type: 'note',
+        title: 'Note added',
+        description: 'Initial notes about this deal. Seller seems motivated.',
+        source: 'user',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    ];
+
+    for (const event of dealEvents) {
+      store.insert('deal_events', event);
+    }
+  }
+
   console.log('[MOCK] Seeded mock data store:', {
     profiles: store.getAll('profiles').length,
     user_plans: store.getAll('user_plans').length,
@@ -207,5 +298,7 @@ export function seedMockData(store: MockDataStore): void {
     re_comps: store.getAll('re_comps').length,
     contacts: store.getAll('contacts').length,
     messages: store.getAll('messages').length,
+    deals: store.getAll('deals').length,
+    deal_events: store.getAll('deal_events').length,
   });
 }

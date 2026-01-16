@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { FileText, Upload, X, AlertCircle } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import * as DocumentPicker from 'expo-document-picker';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useLeadDocumentMutations, DOCUMENT_CATEGORIES, DocumentCategory } from '../hooks/useLeadDocuments';
@@ -132,7 +133,7 @@ export function UploadLeadDocumentSheet({
             <View className="rounded-xl p-4 border" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
-                  <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.primary + '1A' }}>
+                  <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                     <FileText size={24} color={colors.primary} />
                   </View>
                   <View className="flex-1">
@@ -255,7 +256,7 @@ export function UploadLeadDocumentSheet({
 
         {/* Error Display */}
         {(validationError || error) && (
-          <View className="rounded-xl p-4 flex-row items-center" style={{ backgroundColor: colors.destructive + '1A' }}>
+          <View className="rounded-xl p-4 flex-row items-center" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
             <AlertCircle size={20} color={colors.destructive} className="mr-2" />
             <Text className="flex-1" style={{ color: colors.destructive }}>
               {validationError || error?.message || 'Upload failed'}
@@ -279,7 +280,7 @@ export function UploadLeadDocumentSheet({
             className="flex-1 py-4 rounded-xl items-center flex-row justify-center"
             style={{
               backgroundColor: isLoading || !selectedFile || !title.trim()
-                ? colors.primary + '80'
+                ? withOpacity(colors.primary, 'medium')
                 : colors.primary,
             }}
           >

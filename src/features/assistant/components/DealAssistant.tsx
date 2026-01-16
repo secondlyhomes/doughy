@@ -23,11 +23,12 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { BORDER_RADIUS } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ErrorBoundary } from '@/features/layout/components/ErrorBoundary';
 import { FAB_SIZE, FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_LEFT_MARGIN, FAB_Z_INDEX } from '@/components/ui/FloatingGlassTabBar';
-import { getFABShadowStyle } from '@/components/ui/fab-styles';
+import { GlassButton } from '@/components/ui/GlassButton';
 
 import { ActionsTab } from './ActionsTab';
 import { AskTab } from './AskTab';
@@ -71,6 +72,7 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
   const colors = useThemeColors();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { buttonBottom } = useTabBarPadding();
   const context = useAssistantContext();
 
   // State
@@ -199,10 +201,15 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
 
   return (
     <>
-      {/* Floating Bubble */}
+      {/* Floating Bubble - Glass effect */}
       <Animated.View
         style={[
-          styles.bubbleContainer,
+          {
+            position: 'absolute',
+            bottom: buttonBottom + FAB_BOTTOM_OFFSET,  // Dynamic: adapts to device safe area
+            right: FAB_RIGHT_MARGIN,
+            zIndex: FAB_Z_INDEX.ASSISTANT,
+          },
           {
             transform: [
               { translateX: bubblePosition.x },
@@ -213,24 +220,19 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
         ]}
         {...panResponder.panHandlers}
       >
-        <TouchableOpacity
+        <GlassButton
+          icon={<Sparkles size={24} color="white" />}
           onPress={handleToggle}
-          style={[
-            styles.bubble,
-            getFABShadowStyle(colors),
-            { backgroundColor: colors.primary },
-          ]}
-          activeOpacity={0.9}
+          size={FAB_SIZE}
+          effect="regular"
           accessibilityLabel="Open AI Assistant"
-        >
-          <Sparkles size={24} color={colors.primaryForeground} />
-          {/* Badge */}
-          {pendingCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
-              <Text style={[styles.badgeText, { color: colors.destructiveForeground }]}>{pendingCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        />
+        {/* Badge - positioned outside GlassButton */}
+        {pendingCount > 0 && (
+          <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
+            <Text style={[styles.badgeText, { color: colors.destructiveForeground }]}>{pendingCount}</Text>
+          </View>
+        )}
       </Animated.View>
 
       {/* Bottom Sheet Panel */}
@@ -344,19 +346,6 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
 }
 
 const styles = StyleSheet.create({
-  bubbleContainer: {
-    position: 'absolute',
-    bottom: FAB_BOTTOM_OFFSET,
-    right: FAB_RIGHT_MARGIN,
-    zIndex: FAB_Z_INDEX.ASSISTANT,
-  },
-  bubble: {
-    width: FAB_SIZE,
-    height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   badge: {
     position: 'absolute',
     top: -4,

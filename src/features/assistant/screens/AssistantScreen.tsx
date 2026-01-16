@@ -18,7 +18,7 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
 // Zone A UI Components
-import { LoadingSpinner } from '@/components/ui';
+import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 import { MessageBubble } from '../components/MessageBubble';
 import { SuggestionChips } from '../components/SuggestionChips';
@@ -76,6 +76,7 @@ export function AssistantScreen() {
           keyExtractor={keyExtractor}
           contentContainerStyle={{
             padding: 16,
+            paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
             flexGrow: 1,
           }}
           onContentSizeChange={scrollToEnd}

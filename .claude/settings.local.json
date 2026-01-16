@@ -149,7 +149,12 @@
       "Bash(wait)",
       "mcp__plugin_supabase_supabase__list_edge_functions",
       "mcp__plugin_supabase_supabase__list_migrations",
-      "mcp__plugin_supabase_supabase__apply_migration"
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "Bash(git fetch:*)",
+      "Bash(npx tsx:*)",
+      "Bash(rg:*)",
+      "Bash(for file in src/features/real-estate/components/Property*Tab.tsx)",
+      "Bash(jq:*)"
     ]
   }
 }

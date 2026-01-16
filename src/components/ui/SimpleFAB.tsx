@@ -5,6 +5,7 @@ import React from 'react';
 import { TouchableOpacityProps, ViewStyle } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { LoadingSpinner } from './LoadingSpinner';
 import { GlassButton } from './GlassButton';
 import { FAB_SIZE, FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_Z_INDEX } from './FloatingGlassTabBar';
@@ -29,10 +30,11 @@ export function SimpleFAB({
   ...props
 }: SimpleFABProps) {
   const colors = useThemeColors();
+  const { buttonBottom } = useTabBarPadding();
 
   const positioningStyle: ViewStyle = {
     position: 'absolute',
-    bottom: FAB_BOTTOM_OFFSET,
+    bottom: buttonBottom + FAB_BOTTOM_OFFSET,  // Dynamic: adapts to device safe area
     right: FAB_RIGHT_MARGIN,
     zIndex: FAB_Z_INDEX.SIMPLE,
   };

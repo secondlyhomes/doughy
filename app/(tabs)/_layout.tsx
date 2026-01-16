@@ -38,7 +38,7 @@ export default function TabLayout() {
       })}
       shadowColor="transparent"
     >
-      {/* MVP Tab Order: Inbox → Deals → Properties → Settings */}
+      {/* Tab Order: Inbox → Deals → Properties → Portfolio → Settings */}
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
         <Label>Inbox</Label>
@@ -53,6 +53,11 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="properties">
         <Icon sf={{ default: 'building.2', selected: 'building.2.fill' }} />
         <Label>Properties</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="portfolio">
+        <Icon sf={{ default: 'briefcase', selected: 'briefcase.fill' }} />
+        <Label>Portfolio</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="settings">

@@ -22,7 +22,7 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
+import { ScreenHeader, LoadingSpinner, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
   listMFAFactors,
@@ -106,7 +106,7 @@ export function SecurityScreen() {
       {/* Header */}
       <ScreenHeader title="Security" backButton bordered />
 
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Two-Factor Authentication */}
         <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           TWO-FACTOR AUTHENTICATION

@@ -677,44 +677,45 @@ Expected result after Phase 1: **0 matches** (excluding acceptable cases)
 
 ### Overview
 
-The app uses a **floating tab bar** (`FloatingGlassTabBar`) that is absolutely positioned at the bottom. All screens with content that scrolls need proper bottom padding to ensure content clears the tab bar on ALL devices.
+The app uses **Expo Router's NativeTabs** (native iOS UITabBarController) which **automatically handles scroll view content insets** for the tab bar and safe area. This is a critical architectural detail that affects how we implement bottom padding.
 
 **Key Constants:**
-- `TAB_BAR_HEIGHT = 80px` - Height of the floating tab bar
-- `TAB_BAR_SAFE_PADDING = 100px` - Tab bar height + 20px buffer
+- `TAB_BAR_HEIGHT = 49px` - Native iOS tab bar height
+- `TAB_BAR_SAFE_PADDING = 16px` - Minimal visual breathing room ONLY (iOS handles the rest)
 
-### The Pattern
+**IMPORTANT:** Do NOT add `insets.bottom` to content padding when using NativeTabs - iOS handles this automatically. Adding it manually causes double-padding.
 
-**✅ ALWAYS use this pattern for screens with scrollable content:**
+### The Pattern for ScrollView/FlatList Content
+
+**✅ CORRECT - Use this pattern for screens with scrollable content:**
 
 ```typescript
 import { useTabBarPadding } from '@/hooks';
 
-function MyScreen() {
+function MyListScreen() {
   const { contentPadding } = useTabBarPadding();
 
   return (
-    <ScrollView
-      contentContainerStyle={{ paddingBottom: contentPadding }}
-    >
-      {/* content */}
-    </ScrollView>
+    <ThemedSafeAreaView edges={['top']}>
+      <FlatList
+        data={items}
+        contentContainerStyle={{ paddingBottom: contentPadding }}
+        // Returns just 16px - iOS auto-handles tab bar + safe area
+      />
+    </ThemedSafeAreaView>
   );
 }
 ```
 
 **Manual alternative (if you can't use the hook):**
 ```typescript
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 function MyScreen() {
-  const insets = useSafeAreaInsets();
-
   return (
     <ScrollView
       contentContainerStyle={{
-        paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom
+        paddingBottom: TAB_BAR_SAFE_PADDING  // Just 16px - NO insets.bottom
       }}
     >
       {/* content */}
@@ -723,48 +724,61 @@ function MyScreen() {
 }
 ```
 
-### Why This Matters
+### Why NativeTabs is Different
 
-The tab bar is positioned at `bottom: bottomOffset + insets.bottom`. On devices with home indicators (iPhone X+), `insets.bottom ≈ 34px`. Content needs to account for BOTH the tab bar AND the safe area:
+**With NativeTabs (current):**
+- iOS UITabBarController automatically adjusts `scrollView.contentInset.bottom`
+- The system accounts for both tab bar height (49px) AND device safe area (~34px on iPhone X+)
+- We only add 16px visual breathing room
+- **Total padding on iPhone 14 Pro**: 16px (breathing room) + auto-handled by iOS
 
-- **iPhone 8/SE**: 100px padding (no home indicator)
-- **iPhone 14 Pro**: 134px padding (100px + 34px home indicator)
+**With Custom Tab Bar (legacy FloatingGlassTabBar - no longer used):**
+- Custom tab bar doesn't auto-adjust content insets
+- We had to manually add `TAB_BAR_SAFE_PADDING + insets.bottom`
+- This was the OLD pattern - don't use it anymore!
 
-**If you only use `TAB_BAR_SAFE_PADDING` without adding `insets.bottom`, content will go under the tab bar on newer devices!**
+### For Absolutely Positioned Bottom Elements
 
-### For Absolutely Positioned Buttons
-
-Buttons positioned absolutely at the bottom (wizard bars, FABs) need special handling:
+Buttons/bars positioned absolutely at the bottom (wizard bars, action bars) need special handling because they're outside the scroll view and iOS doesn't auto-position them:
 
 ```typescript
 import { useTabBarPadding } from '@/hooks';
 
-function MyScreen() {
+const BOTTOM_BAR_HEIGHT = 72;
+
+function MyDetailScreen() {
   const { buttonBottom } = useTabBarPadding();
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView
-        contentContainerStyle={{
-          paddingBottom: 80  // Height of your button bar
-        }}
-      >
-        {/* content */}
-      </ScrollView>
+    <ThemedSafeAreaView edges={['top']}>
+      <View style={{ flex: 1 }}>
+        {/* ScrollView with padding to clear the fixed element */}
+        <ScrollView
+          contentContainerStyle={{
+            paddingBottom: BOTTOM_BAR_HEIGHT + 16  // Element height + margin
+          }}
+        >
+          {/* content */}
+        </ScrollView>
 
-      {/* Wizard button bar */}
-      <View
-        style={{
-          position: 'absolute',
-          bottom: buttonBottom,  // Positions above tab bar + safe area
-          left: 0,
-          right: 0,
-          padding: 16,
-        }}
-      >
-        {/* buttons */}
+        {/* Fixed bottom bar positioned above tab bar + safe area */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: buttonBottom,  // 49px + insets.bottom
+            left: 0,
+            right: 0,
+            height: BOTTOM_BAR_HEIGHT,
+            padding: 16,
+            backgroundColor: colors.background,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+          }}
+        >
+          {/* action buttons */}
+        </View>
       </View>
-    </View>
+    </ThemedSafeAreaView>
   );
 }
 ```
@@ -778,7 +792,12 @@ function MyScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ position: 'absolute', bottom: TAB_BAR_HEIGHT + insets.bottom }}>
+    <View
+      style={{
+        position: 'absolute',
+        bottom: TAB_BAR_HEIGHT + insets.bottom  // Manually position above tab bar
+      }}
+    >
       {/* buttons */}
     </View>
   );
@@ -795,141 +814,160 @@ Centralized hook providing all tab bar spacing values:
 import { useTabBarPadding } from '@/hooks';
 
 const {
-  contentPadding,   // For ScrollView/FlatList: TAB_BAR_SAFE_PADDING + insets.bottom
-  buttonBottom,     // For absolute buttons: TAB_BAR_HEIGHT + insets.bottom
-  tabBarHeight,     // Raw tab bar height (80px)
+  contentPadding,   // For ScrollView/FlatList: 16px (iOS handles tab bar)
+  buttonBottom,     // For absolute buttons: 49px + insets.bottom
+  tabBarHeight,     // Raw tab bar height (49px)
   safeAreaBottom,   // Device safe area inset (0-34px)
 } = useTabBarPadding();
 ```
 
 **When to use:**
 - ✅ All new screens with scrollable content
-- ✅ Screens with wizard bars or FABs at bottom
+- ✅ Screens with absolutely positioned bottom elements (wizard bars, action bars)
 - ✅ Any time you need tab bar-related spacing
 
 **Benefits:**
 - Single source of truth
 - Self-documenting code
-- Automatic updates if tab bar height changes
-- Works on all devices
+- Automatic updates if tab bar constants change
+- Works correctly with NativeTabs auto-handling
 
 ### Common Mistakes
 
-❌ **Missing device insets:**
+❌ **WRONG - Adding insets.bottom to content padding (causes double-padding with NativeTabs):**
 ```typescript
-// BAD - Content goes under tab bar on iPhone X+
-contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
-```
-
-✅ **Including device insets:**
-```typescript
-// GOOD - Works on all devices
+// BAD - iOS already handles this, you'll get 50px+ of extra white space!
+const insets = useSafeAreaInsets();
 contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
 ```
 
-❌ **Hardcoded values:**
+✅ **CORRECT - Let iOS handle it:**
 ```typescript
-// BAD - Magic number, doesn't update with tab bar changes
-contentContainerStyle={{ paddingBottom: 120 }}
+// GOOD - Works perfectly on all devices
+contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
+// Or use the hook:
+const { contentPadding } = useTabBarPadding();
+contentContainerStyle={{ paddingBottom: contentPadding }}
 ```
 
-✅ **Using constants:**
+❌ **WRONG - No padding at all:**
+```typescript
+// BAD - Content will touch tab bar with no visual breathing room
+<ScrollView>
+  {/* content */}
+</ScrollView>
+```
+
+✅ **CORRECT - Add minimal breathing room:**
+```typescript
+// GOOD - 16px gap looks clean
+<ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+  {/* content */}
+</ScrollView>
+```
+
+❌ **WRONG - Hardcoded values:**
+```typescript
+// BAD - Magic number, doesn't update if constants change
+contentContainerStyle={{ paddingBottom: 16 }}
+```
+
+✅ **CORRECT - Using constants or hook:**
 ```typescript
 // GOOD - Updates automatically
-contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }}
-```
-
-❌ **Double padding:**
-```typescript
-// BAD - Parent AND child both add padding
-<View className="pb-24">
-  <ScrollView contentContainerStyle={{ paddingBottom: 20 }} />
-</View>
-```
-
-✅ **Single source:**
-```typescript
-// GOOD - Only child adds padding
-<View>
-  <ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom }} />
-</View>
+const { contentPadding } = useTabBarPadding();
+contentContainerStyle={{ paddingBottom: contentPadding }}
 ```
 
 ### Testing Checklist
 
 When implementing bottom padding:
 
-1. ✅ Test on iPhone SE (no home indicator)
-2. ✅ Test on iPhone 14 Pro (with home indicator)
-3. ✅ Scroll to bottom - content should clear tab bar with comfortable spacing
+1. ✅ Test on iPhone SE (no home indicator, safe area bottom = 0px)
+2. ✅ Test on iPhone 14 Pro (home indicator, safe area bottom ≈ 34px)
+3. ✅ Scroll to bottom - content should have ~16px gap to tab bar
 4. ✅ No content cut off or hidden
-5. ✅ Buttons positioned above tab bar, not underneath
-6. ✅ Spacing feels consistent with other screens
+5. ✅ No excessive white space (>50px gap means double-padding bug)
+6. ✅ Absolutely positioned elements appear above tab bar, not underneath
+7. ✅ Spacing feels consistent with other screens (Conversations, Settings, Portfolio)
 
 ### Examples from the Codebase
 
-**List screens:**
+**List screens (correct pattern):**
 ```typescript
-// src/features/properties/screens/PropertyListScreen.tsx
-const insets = useSafeAreaInsets();
+// src/features/conversations/screens/ConversationsListScreen.tsx
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 <FlatList
+  data={conversations}
   contentContainerStyle={{
-    paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom
+    padding: 16,
+    paddingBottom: TAB_BAR_SAFE_PADDING  // Just 16px
   }}
 />
 ```
 
-**Screens with wizard bars:**
+**Settings screen (correct pattern):**
 ```typescript
-// src/features/deals/screens/OfferBuilderScreen.tsx
-const insets = useSafeAreaInsets();
+// src/features/settings/screens/SettingsScreen.tsx
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+
+<ScrollView
+  contentContainerStyle={{
+    paddingBottom: TAB_BAR_SAFE_PADDING  // Just 16px
+  }}
+>
+  {/* settings sections */}
+</ScrollView>
+```
+
+**Screens with absolutely positioned bottom bars:**
+```typescript
+// src/features/real-estate/screens/PropertyDetailScreen.tsx (after fix)
+import { useTabBarPadding } from '@/hooks';
+
+const { buttonBottom } = useTabBarPadding();
+const BOTTOM_BAR_HEIGHT = 72;
 
 <View style={{ flex: 1 }}>
-  <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-    {/* content */}
+  <ScrollView
+    contentContainerStyle={{
+      paddingBottom: BOTTOM_BAR_HEIGHT + 16  // Clear the fixed bar
+    }}
+  >
+    {/* property details */}
   </ScrollView>
 
-  <View style={{ position: 'absolute', bottom: TAB_BAR_HEIGHT + insets.bottom }}>
-    {/* wizard buttons */}
+  {/* Fixed action bar */}
+  <View
+    style={{
+      position: 'absolute',
+      bottom: buttonBottom,  // Above tab bar
+      left: 0,
+      right: 0,
+    }}
+  >
+    {/* Edit, Delete buttons */}
   </View>
 </View>
 ```
 
-**Screens with FABs:**
-```typescript
-// src/features/field-mode/screens/FieldModeScreen.tsx
-const insets = useSafeAreaInsets();
-
-<ScrollView
-  contentContainerStyle={{
-    paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom
-  }}
->
-  {/* content */}
-</ScrollView>
-
-<TouchableOpacity
-  style={{
-    position: 'absolute',
-    bottom: TAB_BAR_HEIGHT + insets.bottom + 16,  // Tab bar + safe area + margin
-  }}
->
-  {/* FAB */}
-</TouchableOpacity>
-```
-
 ### Related Documentation
 
-- **Troubleshooting Guide:** [TROUBLESHOOTING.md#bottom-padding-with-floating-tab-bar](./TROUBLESHOOTING.md#bottom-padding-with-floating-tab-bar) - Complete troubleshooting guide with common issues
-- **Hook Source:** `/src/hooks/useTabBarPadding.ts` - Inline documentation and usage examples
-- **Tab Bar Component:** `/src/components/ui/FloatingGlassTabBar.tsx` - Tab bar constants and implementation
+- **UI/UX Guide:** [UI_UX_TAB_BAR_SAFE_AREAS.md](./UI_UX_TAB_BAR_SAFE_AREAS.md) - Comprehensive guide with patterns and troubleshooting
+- **Troubleshooting:** [TROUBLESHOOTING.md#content-going-under-tab-bar](./TROUBLESHOOTING.md#content-going-under-tab-bar) - Common issues and solutions
+- **Hook Source:** `/src/hooks/useTabBarPadding.ts` - Inline documentation with detailed comments
+- **Constants Source:** `/src/components/ui/FloatingGlassTabBar.tsx` - Tab bar constants definition
 
-### Key Takeaway
+### Key Takeaways
 
-**Always use `useTabBarPadding()` hook or `TAB_BAR_SAFE_PADDING + insets.bottom` pattern for screens with scrollable content.**
+1. **Use `useTabBarPadding()` hook** for all tab bar spacing needs
+2. **Never add `insets.bottom` to content padding** with NativeTabs - iOS handles it automatically
+3. **Only add 16px breathing room** for scrollable content
+4. **Absolutely positioned elements** need manual positioning with `buttonBottom`
+5. **Test on both iPhone SE and iPhone 14 Pro** to verify correct behavior
 
-This pattern is standardized across 23+ screens in the app. Don't deviate from it unless you have a very good reason!
+This pattern is standardized across the app. The working examples are ConversationsListScreen, SettingsScreen, and PortfolioScreen - use them as reference!
 
 ---
 

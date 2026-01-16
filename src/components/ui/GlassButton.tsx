@@ -55,10 +55,10 @@ export function GlassButton({
           activeOpacity={activeOpacity}
           accessibilityLabel={accessibilityLabel}
           accessibilityRole="button"
-          style={buttonStyle}
+          style={[buttonStyle, { overflow: 'hidden' }]}
         >
           <LiquidGlassView
-            style={StyleSheet.absoluteFill}
+            style={[StyleSheet.absoluteFill, { borderRadius }]}
             effect={effect}
             interactive={true} // Native touch feedback on iOS 26+
             colorScheme={isDark ? 'dark' : 'light'}

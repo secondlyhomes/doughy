@@ -39,7 +39,7 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
 import { useDeal, useUpdateDealStage } from '../hooks/useDeals';
 import { useNextAction, getActionButtonText, getActionIcon } from '../hooks/useNextAction';
 import { useDealAnalysis } from '../../real-estate/hooks/useDealAnalysis';
@@ -71,7 +71,8 @@ interface StageBadgeProps {
 
 function StageBadge({ stage, onPress }: StageBadgeProps) {
   const colors = useThemeColors();
-  const config = DEAL_STAGE_CONFIG[stage];
+  // Handle unknown stages from database
+  const config = DEAL_STAGE_CONFIG[stage] || { label: stage || 'Unknown', color: 'bg-gray-500', order: 0 };
 
   return (
     <TouchableOpacity
@@ -384,9 +385,10 @@ export function DealCockpitScreen() {
       return;
     }
 
+    const nextStageConfig = DEAL_STAGE_CONFIG[nextStages[0]] || { label: nextStages[0] || 'Next', color: 'bg-gray-500', order: 0 };
     Alert.alert(
       'Advance Stage',
-      `Move to ${DEAL_STAGE_CONFIG[nextStages[0]].label}?`,
+      `Move to ${nextStageConfig.label}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -548,7 +550,10 @@ export function DealCockpitScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,  // Pattern 2: offset + height + breathing (172px)
+        }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}

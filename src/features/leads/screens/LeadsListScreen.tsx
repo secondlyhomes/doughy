@@ -47,8 +47,18 @@ export function LeadsListScreen() {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<LeadFilters>(defaultFilters);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   const { leads, isLoading, refetch } = useLeads();
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const filteredLeads = leads?.filter(lead => {
     // Search filter

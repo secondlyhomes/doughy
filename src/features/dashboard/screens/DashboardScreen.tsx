@@ -38,6 +38,7 @@ import { Card, CardContent, CardHeader, CardTitle, Badge, Progress, TAB_BAR_SAFE
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { getTrendColor } from '@/utils';
+import { UI_TIMING } from '@/constants/design-tokens';
 
 // Zone D Components
 import { QuickActionFAB } from '@/features/layout';
@@ -69,7 +70,7 @@ interface StatCardProps {
   };
 }
 
-function StatCard({ title, value, icon, trend }: StatCardProps) {
+const StatCard = React.memo<StatCardProps>(({ title, value, icon, trend }) => {
   const colors = useThemeColors();
   return (
     <View className="rounded-xl p-4 flex-1 min-w-[45%]" style={{ backgroundColor: colors.card }}>
@@ -98,9 +99,9 @@ function StatCard({ title, value, icon, trend }: StatCardProps) {
       )}
     </View>
   );
-}
+});
 
-function ActionIcon({ category, color, size = 16 }: { category: ActionCategory; color: string; size?: number }) {
+const ActionIcon = React.memo<{ category: ActionCategory; color: string; size?: number }>(({ category, color, size = 16 }) => {
   switch (category) {
     case 'contact':
       return <Phone size={size} color={color} />;
@@ -123,7 +124,7 @@ function ActionIcon({ category, color, size = 16 }: { category: ActionCategory; 
     default:
       return <Play size={size} color={color} />;
   }
-}
+});
 
 function getPriorityColorValue(priority: 'high' | 'medium' | 'low', colors: ReturnType<typeof useThemeColors>): string {
   switch (priority) {
@@ -143,10 +144,20 @@ export function DashboardScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   const { deals: actionDeals, isLoading: dealsLoading, refetch: refetchDeals } = useDealsWithActions(5);
   const { deals: allDeals } = useDeals({ activeOnly: true });
   const { notifications, dismiss, dismissAll } = useNotifications();
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const activeDeals = allDeals.length;
   const dealsInNegotiation = allDeals.filter(d => d.stage === 'negotiating' || d.stage === 'under_contract').length;
@@ -156,9 +167,28 @@ export function DashboardScreen() {
   }).length;
 
   const onRefresh = async () => {
+    // Cancel previous refresh if still ongoing
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
     setRefreshing(true);
-    await refetchDeals();
-    setTimeout(() => setRefreshing(false), 500);
+
+    try {
+      await refetchDeals();
+      // Only update state if not aborted
+      if (!abortControllerRef.current.signal.aborted) {
+        setTimeout(() => setRefreshing(false), UI_TIMING.REFRESH_INDICATOR);
+      }
+    } catch (error) {
+      // Ignore abort errors
+      if (!abortControllerRef.current.signal.aborted) {
+        setRefreshing(false);
+      }
+    } finally {
+      abortControllerRef.current = null;
+    }
   };
 
   const handleAddLead = () => {
@@ -239,7 +269,8 @@ export function DashboardScreen() {
           ) : (
             actionDeals.map((deal) => {
               const nextAction = calculateNextAction(deal);
-              const stageConfig = DEAL_STAGE_CONFIG[deal.stage];
+              // Handle unknown stages from database
+              const stageConfig = DEAL_STAGE_CONFIG[deal.stage] || { label: deal.stage || 'Unknown', color: 'bg-gray-500', order: 0 };
               const address = getDealAddress(deal);
               const sellerName = getDealLeadName(deal);
 

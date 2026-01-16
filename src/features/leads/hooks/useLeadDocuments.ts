@@ -20,24 +20,6 @@ export const DOCUMENT_CATEGORIES: { id: DocumentCategory; label: string }[] = [
   { id: 'other', label: 'Other' },
 ];
 
-// Type helper for re_documents table
-type SupabaseDocumentsClient = {
-  from: (table: 're_documents') => {
-    select: (columns: string) => {
-      eq: (field: string, value: string) => {
-        order: (column: string, opts: { ascending: boolean }) => Promise<{ data: Document[] | null; error: Error | null }>;
-      };
-    };
-    insert: (data: Record<string, unknown>) => {
-      select: () => {
-        single: () => Promise<{ data: Document | null; error: Error | null }>;
-      };
-    };
-    delete: () => {
-      eq: (field: string, value: string) => Promise<{ error: Error | null }>;
-    };
-  };
-};
 
 interface UseLeadDocumentsOptions {
   leadId: string | null;
@@ -69,7 +51,15 @@ export function useLeadDocuments({ leadId }: UseLeadDocumentsOptions): UseLeadDo
       setIsLoading(true);
       setError(null);
 
-      const { data, error: queryError } = await (supabase as unknown as SupabaseDocumentsClient)
+      // Note: The re_documents table doesn't have a lead_id column.
+      // Lead documents are not yet supported in the database schema.
+      // For now, return empty array until the schema is updated.
+      // TODO: Add lead_id column to re_documents table or create a separate lead_documents table
+      console.warn('[LeadDocuments] Lead documents feature requires schema update - returning empty');
+      setDocuments([]);
+
+      /* Original query - disabled until schema supports lead_id:
+      const { data, error: queryError } = await supabase
         .from('re_documents')
         .select('*')
         .eq('lead_id', leadId)
@@ -79,7 +69,8 @@ export function useLeadDocuments({ leadId }: UseLeadDocumentsOptions): UseLeadDo
         throw queryError;
       }
 
-      setDocuments((data as Document[]) || []);
+      setDocuments((data || []) as Document[]);
+      */
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error fetching lead documents:', errorMessage);
@@ -219,7 +210,7 @@ export function useLeadDocumentMutations() {
         status: 'active',
       };
 
-      const { data: docData, error: insertError } = await (supabase as unknown as SupabaseDocumentsClient)
+      const { data: docData, error: insertError } = await supabase
         .from('re_documents')
         .insert(insertData)
         .select()
@@ -266,7 +257,7 @@ export function useLeadDocumentMutations() {
       }
 
       // Delete database record
-      const { error: deleteError } = await (supabase as unknown as SupabaseDocumentsClient)
+      const { error: deleteError } = await supabase
         .from('re_documents')
         .delete()
         .eq('id', document.id);

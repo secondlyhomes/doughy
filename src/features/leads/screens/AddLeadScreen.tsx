@@ -2,7 +2,7 @@
 // Zone D: Create new lead form
 // Refactored to use FormField + useForm (Phase 2 Migration)
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,11 +16,13 @@ import {
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { useRouter } from 'expo-router';
-import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown } from 'lucide-react-native';
+import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown, Mic, Camera } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { FormField } from '@/components/ui';
+import { FormField, VoiceRecordButton, PhotoCaptureButton } from '@/components/ui';
 import { useForm } from '@/hooks/useForm';
+import { useVoiceCapture } from '@/features/real-estate/hooks/useVoiceCapture';
+import { usePhotoExtract } from '@/features/real-estate/hooks/usePhotoExtract';
 
 import { useCreateLead } from '../hooks/useLeads';
 import { LeadFormData, LeadStatus } from '../types';
@@ -38,6 +40,10 @@ export function AddLeadScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const createLead = useCreateLead();
+
+  // AI extraction hooks
+  const voiceCapture = useVoiceCapture();
+  const photoExtract = usePhotoExtract();
 
   // Use the new useForm hook for state management and validation
   const { values, errors, updateField, handleSubmit, reset } = useForm<LeadFormData>({
@@ -97,6 +103,39 @@ export function AddLeadScreen() {
     return option?.label || 'Select Status';
   };
 
+  // Voice capture handlers
+  const handleVoiceCapture = useCallback(async () => {
+    if (voiceCapture.state.isRecording) {
+      const result = await voiceCapture.stopCapture();
+      if (result?.extractedData) {
+        // Extract lead info from voice data
+        const data = result.extractedData;
+        if (data.sellerName) updateField('name', data.sellerName);
+        if (data.sellerPhone) updateField('phone', data.sellerPhone);
+        if (data.address) updateField('notes', (values.notes || '') + `\nProperty: ${data.address}`);
+        Alert.alert('Success', 'Voice data extracted and form filled!');
+      }
+    } else {
+      await voiceCapture.startCapture();
+    }
+  }, [voiceCapture, updateField, values.notes]);
+
+  // Photo capture handlers
+  const handlePhotoCapture = useCallback(async () => {
+    const result = await photoExtract.captureAndExtract();
+    if (result?.type === 'business_card' && result.extractedData) {
+      // Extract contact info from business card
+      const data = result.extractedData as Record<string, unknown>;
+      if (data.name && typeof data.name === 'string') updateField('name', data.name);
+      if (data.email && typeof data.email === 'string') updateField('email', data.email);
+      if (data.phone && typeof data.phone === 'string') updateField('phone', data.phone);
+      if (data.company && typeof data.company === 'string') updateField('company', data.company);
+      Alert.alert('Success', 'Business card scanned and form filled!');
+    } else if (result) {
+      Alert.alert('Info', 'Photo captured but no business card detected. Try scanning a business card.');
+    }
+  }, [photoExtract, updateField]);
+
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
@@ -104,6 +143,60 @@ export function AddLeadScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+        {/* AI Quick Capture Section */}
+        <View className="mb-6 p-4 rounded-xl" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
+          <Text className="text-base font-semibold mb-3" style={{ color: colors.foreground }}>
+            Quick Capture
+          </Text>
+          <Text className="text-sm mb-4" style={{ color: colors.mutedForeground }}>
+            Use voice or scan a business card to auto-fill lead information
+          </Text>
+          <View className="flex-row gap-3">
+            {/* Voice Capture Button */}
+            <TouchableOpacity
+              className="flex-1 flex-row items-center justify-center py-3 px-4 rounded-lg"
+              style={{ backgroundColor: voiceCapture.state.isRecording ? colors.destructive : colors.primary }}
+              onPress={handleVoiceCapture}
+              disabled={voiceCapture.state.isTranscribing || voiceCapture.state.isExtracting}
+            >
+              {voiceCapture.state.isTranscribing || voiceCapture.state.isExtracting ? (
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              ) : (
+                <>
+                  <Mic size={18} color={colors.primaryForeground} />
+                  <Text className="ml-2 font-medium" style={{ color: colors.primaryForeground }}>
+                    {voiceCapture.state.isRecording ? 'Stop' : 'Voice'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Photo Capture Button */}
+            <TouchableOpacity
+              className="flex-1 flex-row items-center justify-center py-3 px-4 rounded-lg"
+              style={{ backgroundColor: colors.primary }}
+              onPress={handlePhotoCapture}
+              disabled={photoExtract.state.isCapturing || photoExtract.state.isExtracting}
+            >
+              {photoExtract.state.isCapturing || photoExtract.state.isExtracting ? (
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              ) : (
+                <>
+                  <Camera size={18} color={colors.primaryForeground} />
+                  <Text className="ml-2 font-medium" style={{ color: colors.primaryForeground }}>
+                    Card
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+          {voiceCapture.state.isRecording && (
+            <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
+              Recording: {voiceCapture.formatDuration(voiceCapture.state.duration)}
+            </Text>
+          )}
+        </View>
+
         {/* Name */}
         <FormField
           label="Name"

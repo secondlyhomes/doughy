@@ -32,6 +32,20 @@ export function OfferPreview({
   // Generate the call script
   const callScript = useMemo(() => {
     let script = offerScriptTemplates[strategy];
+
+    // Fallback for strategies without templates
+    if (!script) {
+      return `Hi [SELLER_NAME],
+
+Thank you for discussing ${deal ? getDealAddress(deal) : 'your property'} with me.
+
+I'm interested in purchasing your property for $${terms.purchase_price?.toLocaleString() || '[AMOUNT]'}.
+
+I'll follow up with more details shortly.
+
+Best regards`;
+    }
+
     const address = deal ? getDealAddress(deal) : '[Property Address]';
     const daysToClose = terms.closing_date
       ? Math.ceil((new Date(terms.closing_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
@@ -68,6 +82,26 @@ export function OfferPreview({
   const emailText = useMemo(() => {
     let email = offerEmailTemplates[strategy];
     const address = deal ? getDealAddress(deal) : '[Property Address]';
+
+    // Fallback for strategies without templates
+    if (!email) {
+      return `Subject: Offer for ${address}
+
+Dear ${sellerName},
+
+Thank you for considering my offer on your property at ${address}.
+
+Offer Details:
+- Purchase Price: ${formatCurrency(terms.purchase_price)}
+- Earnest Money: ${formatCurrency(terms.earnest_money)}
+- Closing Date: ${terms.closing_date || '[TBD]'}
+
+Please let me know if you have any questions.
+
+Best regards,
+${yourName}
+${yourPhone}`;
+    }
 
     // Common replacements
     email = email.replace(/\[SELLER_NAME\]/g, sellerName);

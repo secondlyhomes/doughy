@@ -15,7 +15,7 @@ import {
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, Button } from '@/components/ui';
+import { ScreenHeader, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { changePassword } from '../services/profileService';
@@ -114,7 +114,7 @@ export function ChangePasswordScreen() {
       >
         <ScrollView
           className="flex-1 px-4"
-          contentContainerStyle={{ paddingVertical: 24 }}
+          contentContainerStyle={{ paddingVertical: 24, paddingBottom: TAB_BAR_SAFE_PADDING }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Current Password */}

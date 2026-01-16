@@ -1,7 +1,7 @@
 // src/features/real-estate/hooks/useVoiceCapture.ts
 // Convenience hook combining voice recording with AI transcription and property extraction
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useVoiceRecording, formatDuration, isAudioAvailable } from '@/features/field-mode/hooks/useVoiceRecording';
 import { transcribeAudio, extractPropertyData, ExtractedPropertyData } from '@/lib/openai';
 
@@ -54,6 +54,11 @@ interface UseVoiceCaptureReturn {
  */
 export function useVoiceCapture(): UseVoiceCaptureReturn {
   const voiceRecording = useVoiceRecording();
+  const isMountedRef = useRef(true);
+  const cancelRecordingRef = useRef(voiceRecording.cancelRecording);
+
+  // Keep the ref updated with the latest function
+  cancelRecordingRef.current = voiceRecording.cancelRecording;
 
   const [state, setState] = useState<VoiceCaptureState>({
     isRecording: false,
@@ -65,6 +70,19 @@ export function useVoiceCapture(): UseVoiceCaptureReturn {
     extractedData: null,
     error: null,
   });
+
+  // Cleanup on unmount - cancel any active recording
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      // Cancel recording on unmount to prevent memory leaks
+      cancelRecordingRef.current().catch(() => {
+        // Ignore errors during cleanup
+      });
+    };
+  }, []);
 
   // Sync recording state from voice recording hook
   const syncRecordingState = useCallback(() => {
@@ -97,51 +115,61 @@ export function useVoiceCapture(): UseVoiceCaptureReturn {
       const audioUri = await voiceRecording.stopRecording();
 
       if (!audioUri) {
-        setState(prev => ({
-          ...prev,
-          isRecording: false,
-          error: 'Failed to get audio recording',
-        }));
+        if (isMountedRef.current) {
+          setState(prev => ({
+            ...prev,
+            isRecording: false,
+            error: 'Failed to get audio recording',
+          }));
+        }
         return null;
       }
 
       // Transcribe audio
-      setState(prev => ({
-        ...prev,
-        isRecording: false,
-        isTranscribing: true,
-      }));
+      if (isMountedRef.current) {
+        setState(prev => ({
+          ...prev,
+          isRecording: false,
+          isTranscribing: true,
+        }));
+      }
 
       const transcript = await transcribeAudio(audioUri);
 
-      setState(prev => ({
-        ...prev,
-        isTranscribing: false,
-        isExtracting: true,
-        transcript,
-      }));
+      if (isMountedRef.current) {
+        setState(prev => ({
+          ...prev,
+          isTranscribing: false,
+          isExtracting: true,
+          transcript,
+        }));
+      }
 
       // Extract property data from transcript
       const extractedData = await extractPropertyData(transcript);
 
-      setState(prev => ({
-        ...prev,
-        isExtracting: false,
-        extractedData,
-      }));
+      if (isMountedRef.current) {
+        setState(prev => ({
+          ...prev,
+          isExtracting: false,
+          extractedData,
+        }));
+      }
 
       return { transcript, extractedData };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to process audio';
       console.error('[useVoiceCapture] Error:', errorMessage);
 
-      setState(prev => ({
-        ...prev,
-        isRecording: false,
-        isTranscribing: false,
-        isExtracting: false,
-        error: errorMessage,
-      }));
+      if (isMountedRef.current) {
+        setState(prev => ({
+          ...prev,
+          isRecording: false,
+          isTranscribing: false,
+          isExtracting: false,
+          error: errorMessage,
+        }));
+      }
 
       return null;
     }

@@ -1,143 +1,17 @@
 // src/features/deals/hooks/useDeals.ts
 // Deal hooks for fetching and managing deals
-// Client-side first - uses mock data, will connect to Supabase later
+// Uses supabase.from() which auto-switches between mock/real based on EXPO_PUBLIC_USE_MOCK_DATA
 
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import {
   Deal,
   DealStage,
   DealStrategy,
   DEAL_STAGE_CONFIG,
 } from '../types';
-import {
-  mockDeals,
-  getMockDealById,
-  getMockDealsByStage,
-  getActiveMockDeals,
-  getMockDealsWithActions,
-  searchMockDeals,
-} from '../data/mockDeals';
 import { logDealEvent } from './useDealEvents';
-import type { DealEventType } from '../types/events';
-
-// TODO: Import supabase when connecting to database
-// import { supabase } from '@/lib/supabase';
-
-// ============================================
-// Fetch functions (mock data for now)
-// ============================================
-
-async function fetchDeals(filters?: DealsFilters): Promise<Deal[]> {
-  // Simulate network delay for realistic dev experience
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  let deals = [...mockDeals];
-
-  // Apply filters
-  if (filters?.stage && filters.stage !== 'all') {
-    deals = deals.filter((d) => d.stage === filters.stage);
-  }
-
-  if (filters?.strategy) {
-    deals = deals.filter((d) => d.strategy === filters.strategy);
-  }
-
-  if (filters?.search) {
-    const query = filters.search.toLowerCase();
-    deals = deals.filter((d) => {
-      const address = d.property?.address?.toLowerCase() || '';
-      const leadName = d.lead?.name?.toLowerCase() || '';
-      return address.includes(query) || leadName.includes(query);
-    });
-  }
-
-  if (filters?.activeOnly) {
-    deals = deals.filter((d) => d.stage !== 'closed_won' && d.stage !== 'closed_lost');
-  }
-
-  // Apply sorting
-  if (filters?.sortBy) {
-    deals.sort((a, b) => {
-      const direction = filters.sortDirection === 'desc' ? -1 : 1;
-
-      switch (filters.sortBy) {
-        case 'created_at':
-          return direction * (new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
-        case 'updated_at':
-          return direction * (new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime());
-        case 'next_action_due':
-          if (!a.next_action_due) return 1;
-          if (!b.next_action_due) return -1;
-          return direction * (new Date(a.next_action_due).getTime() - new Date(b.next_action_due).getTime());
-        case 'stage':
-          return direction * (a.stage.localeCompare(b.stage));
-        default:
-          return 0;
-      }
-    });
-  }
-
-  return deals;
-}
-
-async function fetchDealById(id: string): Promise<Deal | null> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return getMockDealById(id) || null;
-}
-
-async function createDeal(dealData: CreateDealInput): Promise<Deal> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 400));
-
-  // Generate a new ID (in real app, Supabase would do this)
-  const newDeal: Deal = {
-    id: `deal-${Date.now()}`,
-    lead_id: dealData.lead_id,
-    property_id: dealData.property_id,
-    stage: dealData.stage || 'new',
-    strategy: dealData.strategy,
-    next_action: dealData.next_action || 'Review lead and property details',
-    next_action_due: dealData.next_action_due,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  // In real app, this would insert into Supabase
-  // For now, we can't actually persist to mock data
-  console.log('[Mock] Created deal:', newDeal);
-
-  return newDeal;
-}
-
-async function updateDeal(id: string, dealData: Partial<Deal>): Promise<Deal> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  const existingDeal = getMockDealById(id);
-  if (!existingDeal) {
-    throw new Error(`Deal ${id} not found`);
-  }
-
-  const updatedDeal: Deal = {
-    ...existingDeal,
-    ...dealData,
-    updated_at: new Date().toISOString(),
-  };
-
-  // In real app, this would update Supabase
-  console.log('[Mock] Updated deal:', updatedDeal);
-
-  return updatedDeal;
-}
-
-async function deleteDeal(id: string): Promise<void> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  // In real app, this would soft delete in Supabase
-  console.log('[Mock] Deleted deal:', id);
-}
 
 // ============================================
 // Types
@@ -159,6 +33,252 @@ export interface CreateDealInput {
   strategy?: DealStrategy;
   next_action?: string;
   next_action_due?: string;
+  title?: string;
+}
+
+// ============================================
+// Fetch functions
+// ============================================
+
+async function fetchDeals(filters?: DealsFilters): Promise<Deal[]> {
+  // Build query with related data
+  let query = supabase
+    .from('deals')
+    .select(`
+      *,
+      lead:leads(id, name, phone, email, status, score),
+      property:re_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
+    `);
+
+  // Apply filters
+  if (filters?.stage && filters.stage !== 'all') {
+    query = query.eq('stage', filters.stage);
+  }
+
+  if (filters?.strategy) {
+    query = query.eq('strategy', filters.strategy);
+  }
+
+  if (filters?.activeOnly) {
+    query = query.not('stage', 'in', '(closed_won,closed_lost)');
+  }
+
+  // Apply sorting
+  const sortBy = filters?.sortBy || 'created_at';
+  const ascending = filters?.sortDirection === 'asc';
+  query = query.order(sortBy, { ascending, nullsFirst: false });
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching deals:', error);
+    throw error;
+  }
+
+  // Map database response to Deal type
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    user_id: row.user_id,
+    lead_id: row.lead_id,
+    property_id: row.property_id,
+    stage: row.stage || 'new',
+    strategy: row.strategy,
+    next_action: row.next_action,
+    next_action_due: row.next_action_due,
+    risk_score: row.risk_score,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    // Nested relations
+    lead: row.lead ? {
+      id: row.lead.id,
+      name: row.lead.name,
+      phone: row.lead.phone,
+      email: row.lead.email,
+      status: row.lead.status,
+      score: row.lead.score,
+    } : undefined,
+    property: row.property ? {
+      id: row.property.id,
+      address: row.property.address_line_1,
+      address_line_1: row.property.address_line_1,
+      city: row.property.city,
+      state: row.property.state,
+      zip: row.property.zip,
+      bedrooms: row.property.bedrooms,
+      bathrooms: row.property.bathrooms,
+      sqft: row.property.square_feet,
+      square_feet: row.property.square_feet,
+      arv: row.property.arv,
+      purchase_price: row.property.purchase_price,
+    } : undefined,
+  })) as Deal[];
+}
+
+async function fetchDealById(id: string): Promise<Deal | null> {
+  const { data, error } = await supabase
+    .from('deals')
+    .select(`
+      *,
+      lead:leads(id, name, phone, email, status, score, tags),
+      property:re_properties(id, address_line_1, address_line_2, city, state, zip, county, bedrooms, bathrooms, square_feet, lot_size, year_built, property_type, arv, purchase_price, notes, status)
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // Not found
+      return null;
+    }
+    console.error('Error fetching deal:', error);
+    throw error;
+  }
+
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    lead_id: data.lead_id,
+    property_id: data.property_id,
+    stage: data.stage || 'new',
+    strategy: data.strategy,
+    next_action: data.next_action,
+    next_action_due: data.next_action_due,
+    risk_score: data.risk_score,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    lead: data.lead ? {
+      id: data.lead.id,
+      name: data.lead.name,
+      phone: data.lead.phone,
+      email: data.lead.email,
+      status: data.lead.status,
+      score: data.lead.score,
+      tags: data.lead.tags,
+    } : undefined,
+    property: data.property ? {
+      id: data.property.id,
+      address: data.property.address_line_1,
+      address_line_1: data.property.address_line_1,
+      address_line_2: data.property.address_line_2,
+      city: data.property.city,
+      state: data.property.state,
+      zip: data.property.zip,
+      county: data.property.county,
+      bedrooms: data.property.bedrooms,
+      bathrooms: data.property.bathrooms,
+      sqft: data.property.square_feet,
+      square_feet: data.property.square_feet,
+      lot_size: data.property.lot_size,
+      lotSize: data.property.lot_size,
+      year_built: data.property.year_built,
+      yearBuilt: data.property.year_built,
+      propertyType: data.property.property_type,
+      property_type: data.property.property_type,
+      arv: data.property.arv,
+      purchase_price: data.property.purchase_price,
+      notes: data.property.notes,
+      status: data.property.status,
+    } : undefined,
+  } as Deal;
+}
+
+async function createDeal(dealData: CreateDealInput): Promise<Deal> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  // Note: strategy and risk_score columns don't exist in DB yet
+  // These can be added via migration when needed
+  const insertData = {
+    user_id: user.id,
+    lead_id: dealData.lead_id || null,
+    property_id: dealData.property_id || null,
+    stage: dealData.stage || 'new',
+    next_action: dealData.next_action || 'Review lead and property details',
+    next_action_due: dealData.next_action_due || null,
+    title: dealData.title || 'New Deal',
+    status: 'active',
+  };
+
+  const { data, error } = await supabase
+    .from('deals')
+    .insert(insertData)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating deal:', error);
+    throw error;
+  }
+
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    lead_id: data.lead_id,
+    property_id: data.property_id,
+    stage: data.stage,
+    strategy: data.strategy,
+    next_action: data.next_action,
+    next_action_due: data.next_action_due,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  } as Deal;
+}
+
+async function updateDeal(id: string, updates: Partial<Deal>): Promise<Deal> {
+  const updateData: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  // Map fields - only columns that exist in the database
+  // Note: strategy and risk_score columns don't exist yet
+  if (updates.stage !== undefined) updateData.stage = updates.stage;
+  if (updates.next_action !== undefined) updateData.next_action = updates.next_action;
+  if (updates.next_action_due !== undefined) updateData.next_action_due = updates.next_action_due;
+  if (updates.lead_id !== undefined) updateData.lead_id = updates.lead_id;
+  if (updates.property_id !== undefined) updateData.property_id = updates.property_id;
+
+  const { data, error } = await supabase
+    .from('deals')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating deal:', error);
+    throw error;
+  }
+
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    lead_id: data.lead_id,
+    property_id: data.property_id,
+    stage: data.stage,
+    strategy: data.strategy,
+    next_action: data.next_action,
+    next_action_due: data.next_action_due,
+    risk_score: data.risk_score,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  } as Deal;
+}
+
+async function deleteDeal(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('deals')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting deal:', error);
+    throw error;
+  }
 }
 
 // ============================================
@@ -169,8 +289,6 @@ export interface CreateDealInput {
  * Fetch all deals with optional filters
  */
 export function useDeals(filters?: DealsFilters) {
-  const queryClient = useQueryClient();
-
   const {
     data: deals = [],
     isLoading,
@@ -201,7 +319,7 @@ export function useDeal(id: string) {
   } = useQuery({
     queryKey: ['deal', id],
     queryFn: () => fetchDealById(id),
-    enabled: !!id,
+    enabled: !!id && id !== '',
   });
 
   return {
@@ -224,8 +342,8 @@ export function useDealsWithActions(limit: number = 5) {
   } = useQuery({
     queryKey: ['deals', 'actions', limit],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return getMockDealsWithActions(limit);
+      const allDeals = await fetchDeals({ activeOnly: true, sortBy: 'next_action_due', sortDirection: 'asc' });
+      return allDeals.slice(0, limit);
     },
   });
 
@@ -267,7 +385,7 @@ export function useUpdateDeal() {
 }
 
 /**
- * Delete a deal (soft delete)
+ * Delete a deal (hard delete)
  */
 export function useDeleteDeal() {
   const queryClient = useQueryClient();
@@ -415,7 +533,7 @@ export function useDealsWithEvents() {
     status: 'started' | 'completed',
     metadata?: Record<string, unknown>
   ) => {
-    const eventType: DealEventType = status === 'started' ? 'walkthrough_started' : 'walkthrough_completed';
+    const eventType = status === 'started' ? 'walkthrough_started' : 'walkthrough_completed';
     await logDealEvent({
       deal_id: dealId,
       event_type: eventType,
@@ -448,7 +566,7 @@ export function useDealsWithEvents() {
     action: 'uploaded' | 'signed',
     docName?: string
   ) => {
-    const eventType: DealEventType = action === 'uploaded' ? 'document_uploaded' : 'document_signed';
+    const eventType = action === 'uploaded' ? 'document_uploaded' : 'document_signed';
     await logDealEvent({
       deal_id: dealId,
       event_type: eventType,

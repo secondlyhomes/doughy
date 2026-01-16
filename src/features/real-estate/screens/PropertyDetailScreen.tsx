@@ -21,6 +21,7 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { getShadowStyle } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import {
   PropertyHeader,
   PropertyQuickStats,
@@ -43,6 +44,9 @@ const TAB_IDS = {
   DOCS: 'docs',
 } as const;
 
+// Height of the fixed bottom action bar (padding + button height + border)
+const BOTTOM_BAR_HEIGHT = 72;
+
 export function PropertyDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
@@ -51,8 +55,8 @@ export function PropertyDetailScreen() {
 
   const { property, isLoading, error, refetch } = useProperty(propertyId);
   const { deleteProperty, isLoading: isDeleting } = usePropertyMutations();
+  const { buttonBottom } = useTabBarPadding();
 
-  const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(TAB_IDS.OVERVIEW);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
 
@@ -98,26 +102,6 @@ export function PropertyDetailScreen() {
     refetch();
   }, [refetch]);
 
-  // ============================================================================
-  // TODO: ZONE C CODE REVIEW - NON-FUNCTIONAL FAVORITE FEATURE
-  // ============================================================================
-  // This feature only updates local state - favorites are lost on refresh.
-  // Either implement persistence or remove the feature to avoid user confusion.
-  //
-  // Option A - Implement persistence:
-  //   1. Add 'is_favorite' boolean column to re_properties table
-  //   2. Create updateFavorite mutation in usePropertyActions hook
-  //   3. Call mutation here and update local state on success
-  //
-  // Option B - Remove feature:
-  //   1. Remove isFavorite state and toggleFavorite callback
-  //   2. Remove Heart icon from PropertyHeader component
-  //
-  // ============================================================================
-  const toggleFavorite = useCallback(() => {
-    setIsFavorite(prev => !prev);
-    // WARNING: This only updates local state - not persisted!
-  }, []);
 
 
   if (isLoading) {
@@ -141,21 +125,23 @@ export function PropertyDetailScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
-        }
-        stickyHeaderIndices={[1]} // Make tabs sticky
-      >
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: BOTTOM_BAR_HEIGHT + 16, // Clear the fixed bottom bar
+          }}
+          refreshControl={
+            <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
+          }
+          stickyHeaderIndices={[1]} // Make tabs sticky
+        >
         {/* Property Header with Image and Basic Info */}
         <PropertyHeader
           property={property}
           onBack={handleBack}
           onShare={handleShare}
-          onFavorite={toggleFavorite}
           onMore={handleMore}
-          isFavorite={isFavorite}
         />
 
         {/* Tab Bar - Simple inline implementation (no custom components) */}
@@ -204,24 +190,36 @@ export function PropertyDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View className="flex-row gap-3 p-4" style={{ backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border }}>
-        <Button onPress={handleEdit} className="flex-1">
-          <Edit2 size={20} color={colors.primaryForeground} />
-          Edit
-        </Button>
-        <Button variant="secondary" onPress={() => setShowActionsSheet(true)} size="icon">
-          <MoreHorizontal size={20} color={colors.foreground} />
-        </Button>
-        <Button
-          variant="destructive"
-          onPress={handleDelete}
-          disabled={isDeleting}
-          loading={isDeleting}
-          size="icon"
+        {/* Fixed Bottom Action Bar */}
+        <View
+          className="flex-row gap-3 p-4"
+          style={{
+            position: 'absolute',
+            bottom: buttonBottom, // Positioned above tab bar + safe area
+            left: 0,
+            right: 0,
+            backgroundColor: colors.background,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+          }}
         >
-          {!isDeleting && <Trash2 size={20} color={colors.destructiveForeground} />}
-        </Button>
+          <Button onPress={handleEdit} className="flex-1">
+            <Edit2 size={20} color={colors.primaryForeground} />
+            Edit
+          </Button>
+          <Button variant="secondary" onPress={() => setShowActionsSheet(true)} size="icon">
+            <MoreHorizontal size={20} color={colors.foreground} />
+          </Button>
+          <Button
+            variant="destructive"
+            onPress={handleDelete}
+            disabled={isDeleting}
+            loading={isDeleting}
+            size="icon"
+          >
+            {!isDeleting && <Trash2 size={20} color={colors.destructiveForeground} />}
+          </Button>
+        </View>
       </View>
 
       {/* Property Actions Sheet */}

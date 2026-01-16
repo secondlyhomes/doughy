@@ -25,8 +25,9 @@ export function usePropertyDeals(propertyId: string | null) {
       if (!propertyId) return [];
 
       // Query deals with linked lead data
+      // Note: Table is 'deals', not 're_deals'
       const { data, error } = await supabase
-        .from('re_deals')
+        .from('deals')
         .select(`
           *,
           lead:leads(id, name, phone, email)
@@ -40,15 +41,14 @@ export function usePropertyDeals(propertyId: string | null) {
       }
 
       // Map to our Deal type
+      // Note: strategy and risk_score columns don't exist in DB yet
       return (data || []).map(row => ({
         id: row.id,
         lead_id: row.lead_id,
         property_id: row.property_id,
         stage: row.stage || 'new',
-        strategy: row.strategy,
         next_action: row.next_action,
         next_action_due: row.next_action_due,
-        risk_score: row.risk_score,
         created_at: row.created_at,
         updated_at: row.updated_at,
         lead: row.lead,

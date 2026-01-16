@@ -30,8 +30,9 @@ interface PropertyHeaderProps {
   property: Property;
   onBack: () => void;
   onShare: () => void;
-  onFavorite: () => void;
   onMore: () => void;
+  /** Optional favorite handler - if not provided, favorite button is hidden */
+  onFavorite?: () => void;
   isFavorite?: boolean;
 }
 
@@ -39,8 +40,8 @@ export function PropertyHeader({
   property,
   onBack,
   onShare,
-  onFavorite,
   onMore,
+  onFavorite,
   isFavorite = false,
 }: PropertyHeaderProps) {
   const colors = useThemeColors();
@@ -108,19 +109,21 @@ export function PropertyHeader({
           />
 
           <View className="flex-row gap-2">
-            <GlassButton
-              icon={
-                <Heart
-                  size={24}
-                  color="white"
-                  fill={isFavorite ? colors.destructive : 'transparent'}
-                />
-              }
-              onPress={onFavorite}
-              size={40}
-              effect="clear"
-              accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
-            />
+            {onFavorite && (
+              <GlassButton
+                icon={
+                  <Heart
+                    size={24}
+                    color="white"
+                    fill={isFavorite ? colors.destructive : 'transparent'}
+                  />
+                }
+                onPress={onFavorite}
+                size={40}
+                effect="clear"
+                accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              />
+            )}
             <GlassButton
               icon={<Share2 size={24} color="white" />}
               onPress={onShare}

@@ -330,7 +330,12 @@ If information is not mentioned, omit that field. Do not make assumptions.`;
       }
     );
 
-    return JSON.parse(result) as ExtractedPropertyData;
+    try {
+      return JSON.parse(result) as ExtractedPropertyData;
+    } catch (parseError) {
+      console.error('[OpenAI] Failed to parse property extraction response:', parseError);
+      return {};
+    }
   } catch (error) {
     console.error('[OpenAI] Property extraction error:', error);
     throw new Error('Failed to extract property data');
@@ -437,7 +442,16 @@ Return JSON with: { "type": string, "extractedData": object, "confidence": numbe
     }
 
     const data: OpenAIResponse = await response.json();
-    return JSON.parse(data.pure_text || '{}') as ImageExtractionResult;
+    try {
+      return JSON.parse(data.pure_text || '{}') as ImageExtractionResult;
+    } catch (parseError) {
+      console.error('[OpenAI] Failed to parse image extraction response:', parseError);
+      return {
+        type: 'other',
+        extractedData: {},
+        confidence: 0,
+      };
+    }
   } catch (error) {
     console.error('[OpenAI] Image extraction error:', error);
     throw new Error('Failed to extract data from image');

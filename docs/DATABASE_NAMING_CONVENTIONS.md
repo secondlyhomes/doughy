@@ -95,6 +95,36 @@ CREATE TABLE deal_attachments (...);
 CREATE TABLE deal_stages (...);
 ```
 
+**⚠️ NAMING INCONSISTENCY IDENTIFIED** (Pre-Production)
+
+The Deal domain currently has an inconsistency:
+- `deals` table has NO prefix (legacy naming)
+- `deal_events` table HAS `deal_` prefix (follows convention)
+
+This breaks the established pattern seen in Real Estate domain where ALL tables have the domain prefix (e.g., `re_properties`, `re_documents`, `re_comps`).
+
+**Impact if we standardize:**
+- 15+ foreign key relationships to update
+- Multiple code files using `.from('deals')` queries
+- RLS policies to recreate
+- React Query cache keys to update
+
+**Two options before production launch:**
+
+**Option A: Standardize Now (Recommended for pre-production)**
+- Rename `deals` → `deal_pipeline` (semantically clearer than `deal_deals`)
+- Update all 15+ FK references, code files, queries
+- Achieve 100% naming consistency across all domains
+- See detailed migration plan in `/Users/dinosaur/.claude/plans/streamed-wandering-peach.md`
+
+**Option B: Document Exception (Faster, less risk)**
+- Keep `deals` as-is
+- Document as legacy exception in this file
+- Commit to `deal_*` prefix for ALL future tables
+- Accept permanent inconsistency
+
+**Decision Status**: Pending - Documented for review before production launch
+
 ---
 
 #### 5. System/Admin Domain

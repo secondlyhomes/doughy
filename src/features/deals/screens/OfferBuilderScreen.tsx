@@ -6,14 +6,17 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui';
+import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { DealStrategy, OfferTerms, DEAL_STRATEGY_CONFIG } from '../types';
 import { getEmptyOfferTerms } from '../data/mockOffers';
 import { StrategySelector } from '../components/StrategySelector';
 import { OfferTermsForm } from '../components/OfferTermsForm';
 import { OfferPreview } from '../components/OfferPreview';
+
+// Height of the fixed bottom action bar (padding + button + border)
+const BOTTOM_BAR_HEIGHT = 72;
 
 type ViewMode = 'edit' | 'preview';
 
@@ -25,7 +28,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
   const router = useRouter();
   const params = useLocalSearchParams<{ dealId: string }>();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
+  const { buttonBottom } = useTabBarPadding();
   const effectiveDealId = dealId || params.dealId || 'demo';
 
   // State
@@ -114,7 +117,10 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: BOTTOM_BAR_HEIGHT + 16,  // Pattern 2: Clear the fixed bottom bar
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Strategy selector */}
@@ -163,7 +169,12 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
       {/* Bottom action bar */}
       <View
         className="absolute left-0 right-0 p-4"
-        style={{ bottom: TAB_BAR_HEIGHT + insets.bottom, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border }}
+        style={{
+          bottom: buttonBottom, // Positioned above tab bar + safe area
+          backgroundColor: colors.background,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+        }}
       >
         <TouchableOpacity
           onPress={toggleViewMode}

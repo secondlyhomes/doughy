@@ -255,7 +255,7 @@ export function UserManagementScreen() {
         onEndReachedThreshold={0.5}
         contentContainerStyle={{
           paddingTop: listPaddingTop,
-          paddingBottom: TAB_BAR_SAFE_PADDING + insets.bottom,
+          paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
         }}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center py-24">

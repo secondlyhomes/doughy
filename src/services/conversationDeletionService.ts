@@ -25,6 +25,8 @@ export interface DeleteConversationResult {
   error?: string;
   /** Indicates if partial deletion occurred (e.g., messages deleted but conversation remains) */
   partialFailure?: boolean;
+  /** Non-fatal warnings that don't prevent operation success */
+  warnings?: string[];
 }
 
 export interface DeleteMultipleResult {
@@ -33,6 +35,8 @@ export interface DeleteMultipleResult {
   errors: string[];
   /** IDs of conversations that may have orphaned messages due to partial failures */
   partialFailureIds?: string[];
+  /** Non-fatal warnings about edge cases or partial successes */
+  warnings?: string[];
 }
 
 /**
@@ -71,6 +75,7 @@ export const conversationDeletionService = {
    */
   async deleteConversation(conversationId: string): Promise<DeleteConversationResult> {
     let messagesDeleted = false;
+    const warnings: string[] = [];
 
     try {
       // First delete associated messages
@@ -102,10 +107,11 @@ export const conversationDeletionService = {
 
       // Check if conversation actually existed
       if (count === 0) {
-        return { success: true }; // Idempotent - already deleted or never existed
+        warnings.push('Conversation may have already been deleted or never existed');
+        return { success: true, warnings: warnings.length > 0 ? warnings : undefined };
       }
 
-      return { success: true };
+      return { success: true, warnings: warnings.length > 0 ? warnings : undefined };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error deleting conversation';
       return {
@@ -153,7 +159,7 @@ export const conversationDeletionService = {
    * Note: This operation is not atomic. Partial failures may occur.
    */
   async deleteMultiple(conversationIds: string[]): Promise<DeleteMultipleResult> {
-    const result: DeleteMultipleResult = { deleted: 0, failed: 0, errors: [], partialFailureIds: [] };
+    const result: DeleteMultipleResult = { deleted: 0, failed: 0, errors: [], partialFailureIds: [], warnings: [] };
 
     if (conversationIds.length === 0) {
       return result;
@@ -193,6 +199,7 @@ export const conversationDeletionService = {
         // If fewer conversations were deleted than expected, some may not have existed
         if (actualDeleted < conversationIds.length) {
           result.failed = conversationIds.length - actualDeleted;
+          result.warnings!.push(`${conversationIds.length - actualDeleted} conversations may have already been deleted or never existed`);
         }
       }
     } catch (err) {
@@ -202,6 +209,11 @@ export const conversationDeletionService = {
       if (messagesDeleted) {
         result.partialFailureIds = conversationIds;
       }
+    }
+
+    // Clean up empty warnings array
+    if (result.warnings!.length === 0) {
+      delete result.warnings;
     }
 
     return result;
