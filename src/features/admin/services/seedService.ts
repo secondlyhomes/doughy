@@ -217,7 +217,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     // RLS: workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
     if (workspaceIds.length > 0) {
       const { data: deletedLeads, error: leadsError } = await supabase
-        .from('leads')
+        .from('crm_leads')
         .delete()
         .in('workspace_id', workspaceIds)
         .select('id');
@@ -339,7 +339,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
     for (let i = 0; i < leadCount; i++) {
       const leadData = createTestLead(i, userId, workspaceId);
       const { data, error } = await supabase
-        .from('leads')
+        .from('crm_leads')
         .insert(leadData)
         .select('id')
         .single();

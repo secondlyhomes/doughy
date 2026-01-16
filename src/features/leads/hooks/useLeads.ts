@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase';
 
 async function fetchLeads(): Promise<Lead[]> {
   const { data, error } = await supabase
-    .from('leads')
+    .from('crm_leads')
     .select('*')
     .eq('is_deleted', false)
     .order('created_at', { ascending: false });
@@ -42,7 +42,7 @@ async function fetchLeads(): Promise<Lead[]> {
 
 async function fetchLeadById(id: string): Promise<Lead | null> {
   const { data, error } = await supabase
-    .from('leads')
+    .from('crm_leads')
     .select('*')
     .eq('id', id)
     .single();
@@ -92,7 +92,7 @@ async function createLead(formData: LeadFormData): Promise<Lead> {
   };
 
   const { data, error } = await supabase
-    .from('leads')
+    .from('crm_leads')
     .insert(insertData)
     .select()
     .single();
@@ -132,7 +132,7 @@ async function updateLead(id: string, updates: Partial<Lead>): Promise<Lead> {
   if (updates.opt_status !== undefined) updateData.opt_status = updates.opt_status;
 
   const { data, error } = await supabase
-    .from('leads')
+    .from('crm_leads')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -162,7 +162,7 @@ async function updateLead(id: string, updates: Partial<Lead>): Promise<Lead> {
 async function deleteLead(id: string): Promise<void> {
   // Soft delete by setting is_deleted flag
   const { error } = await supabase
-    .from('leads')
+    .from('crm_leads')
     .update({ is_deleted: true, updated_at: new Date().toISOString() })
     .eq('id', id);
 

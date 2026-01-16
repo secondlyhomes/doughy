@@ -58,7 +58,7 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
 
     // Get total leads
     const { count: totalLeads, error: leadsError } = await supabase
-      .from('leads')
+      .from('crm_leads')
       .select('*', { count: 'exact', head: true });
 
     if (leadsError) throw leadsError;
@@ -81,7 +81,7 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
 
     // Get new leads this week
     const { count: newLeadsThisWeek, error: newLeadsError } = await supabase
-      .from('leads')
+      .from('crm_leads')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', weekAgo.toISOString());
 
