@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_feature_usage_stats: {
+        Row: {
+          date: string
+          feature_name: string
+          id: string
+          unique_users: number
+          usage_count: number
+        }
+        Insert: {
+          date?: string
+          feature_name: string
+          id?: string
+          unique_users?: number
+          usage_count?: number
+        }
+        Update: {
+          date?: string
+          feature_name?: string
+          id?: string
+          unique_users?: number
+          usage_count?: number
+        }
+        Relationships: []
+      }
       analytics_metrics: {
         Row: {
           category: string
@@ -83,6 +107,62 @@ export type Database = {
         }
         Relationships: []
       }
+      assistant_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          error_message: string | null
+          id: string
+          input_json: Json | null
+          job_type: string
+          progress: number
+          result_artifact_ids: string[] | null
+          result_json: Json | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          error_message?: string | null
+          id?: string
+          input_json?: Json | null
+          job_type: string
+          progress?: number
+          result_artifact_ids?: string[] | null
+          result_json?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          error_message?: string | null
+          id?: string
+          input_json?: Json | null
+          job_type?: string
+          progress?: number
+          result_artifact_ids?: string[] | null
+          result_json?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_jobs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_sessions: {
         Row: {
           context: Json | null
@@ -107,7 +187,7 @@ export type Database = {
         }
         Relationships: []
       }
-      calls: {
+      call_logs: {
         Row: {
           created_at: string
           duration_secs: number | null
@@ -144,6 +224,253 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      call_transcript_segments: {
+        Row: {
+          content: string
+          created_at: string | null
+          end_time: number | null
+          id: string
+          segment_number: number
+          speaker: string | null
+          start_time: number | null
+          transcript_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          end_time?: number | null
+          id?: string
+          segment_number: number
+          speaker?: string | null
+          start_time?: number | null
+          transcript_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          end_time?: number | null
+          id?: string
+          segment_number?: number
+          speaker?: string | null
+          start_time?: number | null
+          transcript_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_segments_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "call_transcripts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcript_segments_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_transcripts: {
+        Row: {
+          call_id: string | null
+          created_at: string | null
+          created_by: string | null
+          duration: number | null
+          id: string
+          is_deleted: boolean | null
+          lead_deleted: boolean | null
+          lead_deleted_at: string | null
+          lead_deleted_by: string | null
+          lead_id: string
+          recorded_at: string | null
+          recording_url: string | null
+          source: string
+          status: string | null
+          summary: string | null
+          title: string
+          transcript_text: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          call_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          id?: string
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id: string
+          recorded_at?: string | null
+          recording_url?: string | null
+          source: string
+          status?: string | null
+          summary?: string | null
+          title: string
+          transcript_text: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          call_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          id?: string
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id?: string
+          recorded_at?: string | null
+          recording_url?: string | null
+          source?: string
+          status?: string | null
+          summary?: string | null
+          title?: string
+          transcript_text?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcripts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comms_messages: {
+        Row: {
+          body: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          channel_extended:
+            | Database["public"]["Enums"]["channel_type_extended"]
+            | null
+          conversation_status: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
+          deletion_scheduled_at: string | null
+          direction: Database["public"]["Enums"]["message_direction"]
+          id: string
+          is_deleted: boolean | null
+          lead_deleted: boolean | null
+          lead_deleted_at: string | null
+          lead_deleted_by: string | null
+          lead_id: string
+          status: Database["public"]["Enums"]["message_status"]
+          subject: string | null
+          testing: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          channel_extended?:
+            | Database["public"]["Enums"]["channel_type_extended"]
+            | null
+          conversation_status?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          deletion_scheduled_at?: string | null
+          direction: Database["public"]["Enums"]["message_direction"]
+          id?: string
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id: string
+          status?: Database["public"]["Enums"]["message_status"]
+          subject?: string | null
+          testing?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          channel?: Database["public"]["Enums"]["message_channel"]
+          channel_extended?:
+            | Database["public"]["Enums"]["channel_type_extended"]
+            | null
+          conversation_status?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          deletion_scheduled_at?: string | null
+          direction?: Database["public"]["Enums"]["message_direction"]
+          id?: string
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id?: string
+          status?: Database["public"]["Enums"]["message_status"]
+          subject?: string | null
+          testing?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comms_scheduled_messages: {
+        Row: {
+          channel: Database["public"]["Enums"]["message_channel"]
+          content: string
+          created_at: string
+          id: string
+          lead_id: string
+          scheduled_for: string
+          status: string
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["message_channel"]
+          content: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          scheduled_for: string
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["message_channel"]
+          content?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          scheduled_for?: string
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       contacts: {
         Row: {
@@ -204,6 +531,119 @@ export type Database = {
           zip?: string | null
         }
         Relationships: []
+      }
+      deal_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          description: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          source: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          description?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          source?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          source?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          created_at: string | null
+          estimated_value: number | null
+          expected_close_date: string | null
+          id: string
+          lead_id: string | null
+          next_action: string | null
+          next_action_due: string | null
+          notes: string | null
+          probability: number | null
+          property_id: string | null
+          stage: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          estimated_value?: number | null
+          expected_close_date?: string | null
+          id?: string
+          lead_id?: string | null
+          next_action?: string | null
+          next_action_due?: string | null
+          notes?: string | null
+          probability?: number | null
+          property_id?: string | null
+          stage?: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          estimated_value?: number | null
+          expected_close_date?: string | null
+          id?: string
+          lead_id?: string | null
+          next_action?: string | null
+          next_action_due?: string | null
+          notes?: string | null
+          probability?: number | null
+          property_id?: string | null
+          stage?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_change_history: {
         Row: {
@@ -322,51 +762,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           welcome_emails?: boolean | null
-        }
-        Relationships: []
-      }
-      feature_flags: {
-        Row: {
-          code: string
-          created_at: string | null
-          description: string
-          enabled_for_plan: string[] | null
-        }
-        Insert: {
-          code: string
-          created_at?: string | null
-          description: string
-          enabled_for_plan?: string[] | null
-        }
-        Update: {
-          code?: string
-          created_at?: string | null
-          description?: string
-          enabled_for_plan?: string[] | null
-        }
-        Relationships: []
-      }
-      feature_usage_stats: {
-        Row: {
-          date: string
-          feature_name: string
-          id: string
-          unique_users: number
-          usage_count: number
-        }
-        Insert: {
-          date?: string
-          feature_name: string
-          id?: string
-          unique_users?: number
-          usage_count?: number
-        }
-        Update: {
-          date?: string
-          feature_name?: string
-          id?: string
-          unique_users?: number
-          usage_count?: number
         }
         Relationships: []
       }
@@ -560,143 +955,6 @@ export type Database = {
         }
         Relationships: []
       }
-      messages: {
-        Row: {
-          body: string
-          channel: Database["public"]["Enums"]["message_channel"]
-          channel_extended:
-            | Database["public"]["Enums"]["channel_type_extended"]
-            | null
-          conversation_status: string
-          created_at: string
-          deleted_at: string | null
-          deleted_by: string | null
-          deletion_reason: string | null
-          deletion_scheduled_at: string | null
-          direction: Database["public"]["Enums"]["message_direction"]
-          id: string
-          is_deleted: boolean | null
-          lead_deleted: boolean | null
-          lead_deleted_at: string | null
-          lead_deleted_by: string | null
-          lead_id: string
-          status: Database["public"]["Enums"]["message_status"]
-          subject: string | null
-          testing: boolean | null
-          updated_at: string
-        }
-        Insert: {
-          body: string
-          channel: Database["public"]["Enums"]["message_channel"]
-          channel_extended?:
-            | Database["public"]["Enums"]["channel_type_extended"]
-            | null
-          conversation_status?: string
-          created_at?: string
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          deletion_scheduled_at?: string | null
-          direction: Database["public"]["Enums"]["message_direction"]
-          id?: string
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id: string
-          status?: Database["public"]["Enums"]["message_status"]
-          subject?: string | null
-          testing?: boolean | null
-          updated_at?: string
-        }
-        Update: {
-          body?: string
-          channel?: Database["public"]["Enums"]["message_channel"]
-          channel_extended?:
-            | Database["public"]["Enums"]["channel_type_extended"]
-            | null
-          conversation_status?: string
-          created_at?: string
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deletion_reason?: string | null
-          deletion_scheduled_at?: string | null
-          direction?: Database["public"]["Enums"]["message_direction"]
-          id?: string
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id?: string
-          status?: Database["public"]["Enums"]["message_status"]
-          subject?: string | null
-          testing?: boolean | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      mfa_pending_setup: {
-        Row: {
-          created_at: string
-          expires_at: string
-          id: string
-          method: string
-          secret: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at: string
-          id?: string
-          method: string
-          secret: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          method?: string
-          secret?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      mfa_recovery_codes: {
-        Row: {
-          code: string
-          created_at: string
-          id: string
-          used: boolean
-          used_at: string | null
-          user_id: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          id?: string
-          used?: boolean
-          used_at?: string | null
-          user_id: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          id?: string
-          used?: boolean
-          used_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       oauth_tokens: {
         Row: {
           access_token: string
@@ -732,135 +990,6 @@ export type Database = {
           refresh_token?: string
           scopes?: string[]
           updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      onboarding_status: {
-        Row: {
-          email_verified: boolean
-          id: string
-          is_complete: boolean
-          last_completed_step: string | null
-          last_updated: string
-          profile_complete: boolean
-          step_completed: number
-          total_steps: number
-          user_id: string
-        }
-        Insert: {
-          email_verified?: boolean
-          id?: string
-          is_complete?: boolean
-          last_completed_step?: string | null
-          last_updated?: string
-          profile_complete?: boolean
-          step_completed?: number
-          total_steps?: number
-          user_id: string
-        }
-        Update: {
-          email_verified?: boolean
-          id?: string
-          is_complete?: boolean
-          last_completed_step?: string | null
-          last_updated?: string
-          profile_complete?: boolean
-          step_completed?: number
-          total_steps?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
-      onboarding_steps: {
-        Row: {
-          completed_at: string | null
-          description: string | null
-          id: string
-          is_required: boolean
-          name: string
-          order: number
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          description?: string | null
-          id: string
-          is_required?: boolean
-          name: string
-          order: number
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          description?: string | null
-          id?: string
-          is_required?: boolean
-          name?: string
-          order?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
-      onboarding_surveys: {
-        Row: {
-          competitor_tools: string[] | null
-          competitor_tools_other: string | null
-          completed_at: string | null
-          created_at: string
-          experience_level: string | null
-          feature_interests: string[] | null
-          id: string
-          investment_strategy: string | null
-          is_interested_in_training: boolean | null
-          monthly_property_volume: string | null
-          newsletter_frequency: string | null
-          primary_problem: string | null
-          primary_role: string | null
-          referral_source: string | null
-          referral_source_other: string | null
-          skipped: boolean | null
-          usage_intent: string | null
-          user_id: string
-        }
-        Insert: {
-          competitor_tools?: string[] | null
-          competitor_tools_other?: string | null
-          completed_at?: string | null
-          created_at?: string
-          experience_level?: string | null
-          feature_interests?: string[] | null
-          id?: string
-          investment_strategy?: string | null
-          is_interested_in_training?: boolean | null
-          monthly_property_volume?: string | null
-          newsletter_frequency?: string | null
-          primary_problem?: string | null
-          primary_role?: string | null
-          referral_source?: string | null
-          referral_source_other?: string | null
-          skipped?: boolean | null
-          usage_intent?: string | null
-          user_id: string
-        }
-        Update: {
-          competitor_tools?: string[] | null
-          competitor_tools_other?: string | null
-          completed_at?: string | null
-          created_at?: string
-          experience_level?: string | null
-          feature_interests?: string[] | null
-          id?: string
-          investment_strategy?: string | null
-          is_interested_in_training?: boolean | null
-          monthly_property_volume?: string | null
-          newsletter_frequency?: string | null
-          primary_problem?: string | null
-          primary_role?: string | null
-          referral_source?: string | null
-          referral_source_other?: string | null
-          skipped?: boolean | null
-          usage_intent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -925,36 +1054,6 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
           workspace_id?: string | null
-        }
-        Relationships: []
-      }
-      rate_limits: {
-        Row: {
-          created_at: string
-          id: string
-          last_reset: string
-          request_type: string
-          requests_count: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_reset?: string
-          request_type: string
-          requests_count?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_reset?: string
-          request_type?: string
-          requests_count?: number
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -1115,6 +1214,13 @@ export type Database = {
             referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "re_comps_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       re_document_embeddings: {
@@ -1190,6 +1296,66 @@ export type Database = {
           },
         ]
       }
+      re_documents: {
+        Row: {
+          content_type: string | null
+          created_at: string | null
+          deal_id: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          property_id: string | null
+          title: string
+          type: string
+          updated_at: string | null
+          uploaded_by: string | null
+          user_id: string
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          property_id?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          user_id: string
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          property_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "re_documents_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       re_financing_scenarios: {
         Row: {
           created_at: string | null
@@ -1251,6 +1417,13 @@ export type Database = {
             referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "re_financing_scenarios_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       re_lead_properties: {
@@ -1300,6 +1473,13 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_lead_properties_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1406,6 +1586,13 @@ export type Database = {
             referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "re_properties_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       re_property_analyses: {
@@ -1458,6 +1645,13 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_property_analyses_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1515,6 +1709,13 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_property_debt_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1583,6 +1784,13 @@ export type Database = {
             referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "re_property_documents_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       re_property_images: {
@@ -1632,6 +1840,13 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_property_images_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1709,6 +1924,13 @@ export type Database = {
             referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "re_property_mortgages_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       re_repair_estimates: {
@@ -1769,6 +1991,13 @@ export type Database = {
             referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "re_repair_estimates_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reminder_logs: {
@@ -1808,153 +2037,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      reminder_states: {
-        Row: {
-          created_at: string | null
-          id: string
-          next_reminder_at: string | null
-          reminder_count: number | null
-          reminder_type: string
-          state: Json | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          next_reminder_at?: string | null
-          reminder_count?: number | null
-          reminder_type: string
-          state?: Json | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          next_reminder_at?: string | null
-          reminder_count?: number | null
-          reminder_type?: string
-          state?: Json | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      reset_tokens: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          expires_at: string
-          id: string
-          ip_address: string | null
-          token: string
-          used: boolean
-          used_at: string | null
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          expires_at: string
-          id?: string
-          ip_address?: string | null
-          token: string
-          used?: boolean
-          used_at?: string | null
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string
-          id?: string
-          ip_address?: string | null
-          token?: string
-          used?: boolean
-          used_at?: string | null
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      scheduled_deletions: {
-        Row: {
-          admin_notes: string | null
-          cancelled_at: string | null
-          completed_at: string | null
-          id: string
-          reason: string | null
-          requested_at: string
-          scheduled_for: string
-          status: string
-          user_id: string
-        }
-        Insert: {
-          admin_notes?: string | null
-          cancelled_at?: string | null
-          completed_at?: string | null
-          id?: string
-          reason?: string | null
-          requested_at?: string
-          scheduled_for: string
-          status: string
-          user_id: string
-        }
-        Update: {
-          admin_notes?: string | null
-          cancelled_at?: string | null
-          completed_at?: string | null
-          id?: string
-          reason?: string | null
-          requested_at?: string
-          scheduled_for?: string
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      scheduled_messages: {
-        Row: {
-          channel: Database["public"]["Enums"]["message_channel"]
-          content: string
-          created_at: string
-          id: string
-          lead_id: string
-          scheduled_for: string
-          status: string
-          subject: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          channel: Database["public"]["Enums"]["message_channel"]
-          content: string
-          created_at?: string
-          id?: string
-          lead_id: string
-          scheduled_for: string
-          status?: string
-          subject?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          channel?: Database["public"]["Enums"]["message_channel"]
-          content?: string
-          created_at?: string
-          id?: string
-          lead_id?: string
-          scheduled_for?: string
-          status?: string
-          subject?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       secure_spatial_ref_sys: {
         Row: {
@@ -2029,6 +2111,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_reset_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          token: string
+          used: boolean
+          used_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          token: string
+          used?: boolean
+          used_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          token?: string
+          used?: boolean
+          used_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       spatial_ref_sys: {
         Row: {
@@ -2261,6 +2382,27 @@ export type Database = {
         }
         Relationships: []
       }
+      system_feature_flags: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string
+          enabled_for_plan: string[] | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description: string
+          enabled_for_plan?: string[] | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string
+          enabled_for_plan?: string[] | null
+        }
+        Relationships: []
+      }
       system_logs: {
         Row: {
           client_info: Json | null
@@ -2354,6 +2496,72 @@ export type Database = {
         }
         Relationships: []
       }
+      system_rate_limits: {
+        Row: {
+          created_at: string
+          id: string
+          last_reset: string
+          request_type: string
+          requests_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_reset?: string
+          request_type: string
+          requests_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_reset?: string
+          request_type?: string
+          requests_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      system_scheduled_deletions: {
+        Row: {
+          admin_notes: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          id: string
+          reason: string | null
+          requested_at: string
+          scheduled_for: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_for: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_for?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_settings: {
         Row: {
           created_at: string
@@ -2381,125 +2589,7 @@ export type Database = {
         }
         Relationships: []
       }
-      transcript_segments: {
-        Row: {
-          content: string
-          created_at: string | null
-          end_time: number | null
-          id: string
-          segment_number: number
-          speaker: string | null
-          start_time: number | null
-          transcript_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          end_time?: number | null
-          id?: string
-          segment_number: number
-          speaker?: string | null
-          start_time?: number | null
-          transcript_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          end_time?: number | null
-          id?: string
-          segment_number?: number
-          speaker?: string | null
-          start_time?: number | null
-          transcript_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transcript_segments_transcript_id_fkey"
-            columns: ["transcript_id"]
-            isOneToOne: false
-            referencedRelation: "transcripts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      transcripts: {
-        Row: {
-          call_id: string | null
-          created_at: string | null
-          created_by: string | null
-          duration: number | null
-          id: string
-          is_deleted: boolean | null
-          lead_deleted: boolean | null
-          lead_deleted_at: string | null
-          lead_deleted_by: string | null
-          lead_id: string
-          recorded_at: string | null
-          recording_url: string | null
-          source: string
-          status: string | null
-          summary: string | null
-          title: string
-          transcript_text: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          call_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          duration?: number | null
-          id?: string
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id: string
-          recorded_at?: string | null
-          recording_url?: string | null
-          source: string
-          status?: string | null
-          summary?: string | null
-          title: string
-          transcript_text: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          call_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          duration?: number | null
-          id?: string
-          is_deleted?: boolean | null
-          lead_deleted?: boolean | null
-          lead_deleted_at?: string | null
-          lead_deleted_by?: string | null
-          lead_id?: string
-          recorded_at?: string | null
-          recording_url?: string | null
-          source?: string
-          status?: string | null
-          summary?: string | null
-          title?: string
-          transcript_text?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transcripts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      usage_logs: {
+      system_usage_logs: {
         Row: {
           cost_cents: number | null
           created_at: string | null
@@ -2583,6 +2673,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mfa_pending_setup: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          method: string
+          secret: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          method: string
+          secret: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          method?: string
+          secret?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_mfa_recovery_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          used: boolean
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string | null
@@ -2619,6 +2763,135 @@ export type Database = {
         }
         Relationships: []
       }
+      user_onboarding_status: {
+        Row: {
+          email_verified: boolean
+          id: string
+          is_complete: boolean
+          last_completed_step: string | null
+          last_updated: string
+          profile_complete: boolean
+          step_completed: number
+          total_steps: number
+          user_id: string
+        }
+        Insert: {
+          email_verified?: boolean
+          id?: string
+          is_complete?: boolean
+          last_completed_step?: string | null
+          last_updated?: string
+          profile_complete?: boolean
+          step_completed?: number
+          total_steps?: number
+          user_id: string
+        }
+        Update: {
+          email_verified?: boolean
+          id?: string
+          is_complete?: boolean
+          last_completed_step?: string | null
+          last_updated?: string
+          profile_complete?: boolean
+          step_completed?: number
+          total_steps?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_onboarding_steps: {
+        Row: {
+          completed_at: string | null
+          description: string | null
+          id: string
+          is_required: boolean
+          name: string
+          order: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          description?: string | null
+          id: string
+          is_required?: boolean
+          name: string
+          order: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          description?: string | null
+          id?: string
+          is_required?: boolean
+          name?: string
+          order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_onboarding_surveys: {
+        Row: {
+          competitor_tools: string[] | null
+          competitor_tools_other: string | null
+          completed_at: string | null
+          created_at: string
+          experience_level: string | null
+          feature_interests: string[] | null
+          id: string
+          investment_strategy: string | null
+          is_interested_in_training: boolean | null
+          monthly_property_volume: string | null
+          newsletter_frequency: string | null
+          primary_problem: string | null
+          primary_role: string | null
+          referral_source: string | null
+          referral_source_other: string | null
+          skipped: boolean | null
+          usage_intent: string | null
+          user_id: string
+        }
+        Insert: {
+          competitor_tools?: string[] | null
+          competitor_tools_other?: string | null
+          completed_at?: string | null
+          created_at?: string
+          experience_level?: string | null
+          feature_interests?: string[] | null
+          id?: string
+          investment_strategy?: string | null
+          is_interested_in_training?: boolean | null
+          monthly_property_volume?: string | null
+          newsletter_frequency?: string | null
+          primary_problem?: string | null
+          primary_role?: string | null
+          referral_source?: string | null
+          referral_source_other?: string | null
+          skipped?: boolean | null
+          usage_intent?: string | null
+          user_id: string
+        }
+        Update: {
+          competitor_tools?: string[] | null
+          competitor_tools_other?: string | null
+          completed_at?: string | null
+          created_at?: string
+          experience_level?: string | null
+          feature_interests?: string[] | null
+          id?: string
+          investment_strategy?: string | null
+          is_interested_in_training?: boolean | null
+          monthly_property_volume?: string | null
+          newsletter_frequency?: string | null
+          primary_problem?: string | null
+          primary_role?: string | null
+          referral_source?: string | null
+          referral_source_other?: string | null
+          skipped?: boolean | null
+          usage_intent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_plans: {
         Row: {
           email_domain: string | null
@@ -2646,6 +2919,39 @@ export type Database = {
           tier?: Database["public"]["Enums"]["plan_tier"] | null
           trial_ends_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_reminder_states: {
+        Row: {
+          created_at: string | null
+          id: string
+          next_reminder_at: string | null
+          reminder_count: number | null
+          reminder_type: string
+          state: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          next_reminder_at?: string | null
+          reminder_count?: number | null
+          reminder_type: string
+          state?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          next_reminder_at?: string | null
+          reminder_count?: number | null
+          reminder_type?: string
+          state?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2718,42 +3024,6 @@ export type Database = {
         }
         Relationships: []
       }
-      workspace: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string
-          is_active: boolean
-          name: string
-          owner_id: string
-          settings: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active: boolean
-          name: string
-          owner_id: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          owner_id?: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       workspace_members: {
         Row: {
           created_at: string
@@ -2790,7 +3060,50 @@ export type Database = {
             referencedRelation: "workspace"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      workspaces: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          owner_id: string
+          settings: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active: boolean
+          name: string
+          owner_id: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_id?: string
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       wrappers_fdw_stats: {
         Row: {
@@ -2830,6 +3143,100 @@ export type Database = {
       }
     }
     Views: {
+      ai_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          error_message: string | null
+          id: string | null
+          input_json: Json | null
+          job_type: string | null
+          progress: number | null
+          result_artifact_ids: string[] | null
+          result_json: Json | null
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          error_message?: string | null
+          id?: string | null
+          input_json?: Json | null
+          job_type?: string | null
+          progress?: number | null
+          result_artifact_ids?: string[] | null
+          result_json?: Json | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          error_message?: string | null
+          id?: string | null
+          input_json?: Json | null
+          job_type?: string | null
+          progress?: number | null
+          result_artifact_ids?: string[] | null
+          result_json?: Json | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_jobs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calls: {
+        Row: {
+          created_at: string | null
+          duration_secs: number | null
+          id: string | null
+          lead_id: string | null
+          recording_url: string | null
+          summary: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_secs?: number | null
+          id?: string | null
+          lead_id?: string | null
+          recording_url?: string | null
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_secs?: number | null
+          id?: string | null
+          lead_id?: string | null
+          recording_url?: string | null
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
@@ -2869,6 +3276,289 @@ export type Database = {
           f_table_schema?: unknown
           srid?: number | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string | null
+          channel: Database["public"]["Enums"]["message_channel"] | null
+          channel_extended:
+            | Database["public"]["Enums"]["channel_type_extended"]
+            | null
+          conversation_status: string | null
+          created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
+          deletion_scheduled_at: string | null
+          direction: Database["public"]["Enums"]["message_direction"] | null
+          id: string | null
+          is_deleted: boolean | null
+          lead_deleted: boolean | null
+          lead_deleted_at: string | null
+          lead_deleted_by: string | null
+          lead_id: string | null
+          status: Database["public"]["Enums"]["message_status"] | null
+          subject: string | null
+          testing: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          channel_extended?:
+            | Database["public"]["Enums"]["channel_type_extended"]
+            | null
+          conversation_status?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          deletion_scheduled_at?: string | null
+          direction?: Database["public"]["Enums"]["message_direction"] | null
+          id?: string | null
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+          subject?: string | null
+          testing?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          channel_extended?:
+            | Database["public"]["Enums"]["channel_type_extended"]
+            | null
+          conversation_status?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          deletion_scheduled_at?: string | null
+          direction?: Database["public"]["Enums"]["message_direction"] | null
+          id?: string | null
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+          subject?: string | null
+          testing?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_messages: {
+        Row: {
+          channel: Database["public"]["Enums"]["message_channel"] | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          lead_id: string | null
+          scheduled_for: string | null
+          status: string | null
+          subject: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          lead_id?: string | null
+          scheduled_for?: string | null
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          lead_id?: string | null
+          scheduled_for?: string | null
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      transcript_segments: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          end_time: number | null
+          id: string | null
+          segment_number: number | null
+          speaker: string | null
+          start_time: number | null
+          transcript_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          end_time?: number | null
+          id?: string | null
+          segment_number?: number | null
+          speaker?: string | null
+          start_time?: number | null
+          transcript_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          end_time?: number | null
+          id?: string | null
+          segment_number?: number | null
+          speaker?: string | null
+          start_time?: number | null
+          transcript_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_segments_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "call_transcripts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcript_segments_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcripts: {
+        Row: {
+          call_id: string | null
+          created_at: string | null
+          created_by: string | null
+          duration: number | null
+          id: string | null
+          is_deleted: boolean | null
+          lead_deleted: boolean | null
+          lead_deleted_at: string | null
+          lead_deleted_by: string | null
+          lead_id: string | null
+          recorded_at: string | null
+          recording_url: string | null
+          source: string | null
+          status: string | null
+          summary: string | null
+          title: string | null
+          transcript_text: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          call_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          id?: string | null
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id?: string | null
+          recorded_at?: string | null
+          recording_url?: string | null
+          source?: string | null
+          status?: string | null
+          summary?: string | null
+          title?: string | null
+          transcript_text?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          call_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          id?: string | null
+          is_deleted?: boolean | null
+          lead_deleted?: boolean | null
+          lead_deleted_at?: string | null
+          lead_deleted_by?: string | null
+          lead_id?: string | null
+          recorded_at?: string | null
+          recording_url?: string | null
+          source?: string | null
+          status?: string | null
+          summary?: string | null
+          title?: string | null
+          transcript_text?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcripts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          owner_id: string | null
+          settings: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          owner_id?: string | null
+          settings?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          owner_id?: string | null
+          settings?: Json | null
+          updated_at?: string | null
         }
         Relationships: []
       }
