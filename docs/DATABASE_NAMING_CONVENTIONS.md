@@ -477,8 +477,7 @@ When creating a new table, ensure:
 ## Questions?
 
 For clarification or exceptions to these rules, consult:
-- `ZONE_A_BACKEND.md` - Backend implementation guide
-- `docs/RLS_SECURITY_MODEL.md` - Row Level Security patterns
-- `docs/DATABASE_SCHEMA.md` - Full schema reference
+- [RLS_SECURITY_MODEL.md](./RLS_SECURITY_MODEL.md) - Row Level Security patterns
+- [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Full schema reference
 
 **Maintained by**: Zone A (Backend Developer)

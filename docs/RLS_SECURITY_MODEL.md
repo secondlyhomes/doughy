@@ -551,7 +551,6 @@ psql $DATABASE_URL -f supabase/migrations/20260116_add_rls_profiles_ROLLBACK.sql
 
 - [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Complete schema reference
 - [DATABASE_NAMING_CONVENTIONS.md](./DATABASE_NAMING_CONVENTIONS.md) - Naming standards
-- [ZONE_A_BACKEND.md](../ZONE_A_BACKEND.md) - Backend development roadmap
 
 ---
 

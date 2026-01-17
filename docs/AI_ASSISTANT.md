@@ -4,7 +4,7 @@ Complete guide to the AI Assistant & AI System for the Deal OS platform.
 
 **Last Updated:** January 2026
 **Status:** Production Ready
-**Related Documentation:** [ZONE_A_ZONE_B_INTEGRATION.md](./ZONE_A_ZONE_B_INTEGRATION.md), [PHASE_2_PARALLEL_DEV_PLAN.md](./PHASE_2_PARALLEL_DEV_PLAN.md)
+**Related Documentation:** [ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md) (historical zone integration), [PHASE_2_PARALLEL_DEV_PLAN.md](./PHASE_2_PARALLEL_DEV_PLAN.md)
 
 ---
 
@@ -504,7 +504,7 @@ Per request with full context:
 
 ### Integration with Zone B (Data Layer & Timeline)
 
-See [ZONE_A_ZONE_B_INTEGRATION.md](./ZONE_A_ZONE_B_INTEGRATION.md) for detailed integration documentation.
+See [ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md) for historical zone integration documentation.
 
 #### What Zone A Consumes from Zone B
 
@@ -1068,7 +1068,7 @@ Integration Tests:    Full coverage
 
 ### Documentation
 - This guide - Complete technical reference
-- [ZONE_A_ZONE_B_INTEGRATION.md](./ZONE_A_ZONE_B_INTEGRATION.md) - Integration details
+- [ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md) - Historical zone integration details
 - [PHASE_2_PARALLEL_DEV_PLAN.md](./PHASE_2_PARALLEL_DEV_PLAN.md) - Development roadmap
 - Inline JSDoc comments throughout code
 

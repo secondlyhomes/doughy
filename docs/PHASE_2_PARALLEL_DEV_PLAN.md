@@ -1,7 +1,7 @@
 # Phase 2 Implementation Plan: AI Assistant + Deal Timeline
 
 **Last Updated:** 2026-01-13
-**Related Documentation:** [AI_ASSISTANT.md](./AI_ASSISTANT.md) - Zone A implementation complete, [ZONE_A_ZONE_B_INTEGRATION.md](./ZONE_A_ZONE_B_INTEGRATION.md) - Integration status
+**Related Documentation:** [AI_ASSISTANT.md](./AI_ASSISTANT.md) - Zone A implementation complete, [ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md) - Historical zone integration archive
 
 ## Zone A/Zone B Parallel Development
 

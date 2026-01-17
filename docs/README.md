@@ -80,10 +80,10 @@ Code review summary for UI/UX consolidation work. Documents design system update
 
 ---
 
-### 🔗 Integration Documentation
+### 🔗 Archives & History
 
-**[ZONE_A_ZONE_B_INTEGRATION.md](./ZONE_A_ZONE_B_INTEGRATION.md)**
-Integration documentation between Zone A (AI Assistant) and Zone B (Data Layer & Timeline). Covers data flow, connection points, shared hooks (useDealEvents, logDealEvent, useFocusMode), and database tables.
+**[ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md)**
+Historical archive of zone-based development phases (A-H) completed January 2026. Includes database rename mapping, key decisions, and integration patterns.
 
 ---
 
@@ -101,7 +101,7 @@ Integration documentation between Zone A (AI Assistant) and Zone B (Data Layer &
 1. **[PHASE_2_PARALLEL_DEV_PLAN.md](./PHASE_2_PARALLEL_DEV_PLAN.md)** - Current development roadmap
 2. **[AI_ASSISTANT.md](./AI_ASSISTANT.md)** - AI system architecture and integration
 3. **[FORM_UTILITIES_GUIDE.md](./FORM_UTILITIES_GUIDE.md)** - Building forms with standardized utilities
-4. **[ZONE_A_ZONE_B_INTEGRATION.md](./ZONE_A_ZONE_B_INTEGRATION.md)** - Integration patterns between zones
+4. **[ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md)** - Historical zone integration archive
 
 ### For Code Review
 
@@ -148,8 +148,8 @@ docs/
 │   ├── TROUBLESHOOTING.md .......................... Common issues
 │   └── UI_UX_CONSOLIDATION_CODE_REVIEW.md .......... UI/UX review
 │
-└── Integration Documentation
-    └── ZONE_A_ZONE_B_INTEGRATION.md ................ Zone integration
+└── Archives & History
+    └── ZONES_ARCHIVE.md ............................ Zone A-H project archive
 ```
 
 ---

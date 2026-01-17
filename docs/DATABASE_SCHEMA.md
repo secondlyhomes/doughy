@@ -526,7 +526,6 @@ CREATE TYPE job_status AS ENUM ('queued', 'running', 'succeeded', 'failed', 'can
 
 - [DATABASE_NAMING_CONVENTIONS.md](./DATABASE_NAMING_CONVENTIONS.md) - Naming standards and patterns
 - [RLS_SECURITY_MODEL.md](./RLS_SECURITY_MODEL.md) - Row Level Security implementation
-- [ZONE_A_BACKEND.md](../ZONE_A_BACKEND.md) - Backend development roadmap
 
 ---
 
