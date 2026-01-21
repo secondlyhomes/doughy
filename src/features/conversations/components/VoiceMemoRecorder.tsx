@@ -4,8 +4,24 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
+
+// Lazy-load expo-av to prevent crash when native module isn't available (Expo Go)
+let _Audio: typeof import('expo-av').Audio | null = null;
+let _audioChecked = false;
+
+function getAudio(): typeof import('expo-av').Audio | null {
+  if (!_audioChecked) {
+    _audioChecked = true;
+    try {
+      _Audio = require('expo-av').Audio;
+    } catch {
+      console.warn('[VoiceMemoRecorder] expo-av not available - voice recording disabled. Requires dev build.');
+      _Audio = null;
+    }
+  }
+  return _Audio;
+}
 import { Mic, Square, Play, Pause, X, Check, Loader2 } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
@@ -117,8 +133,9 @@ export function VoiceMemoRecorder({
   const [transcript, setTranscript] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  // Use 'any' for refs since Audio types aren't available when module isn't linked
+  const recordingRef = useRef<any>(null);
+  const soundRef = useRef<any>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const recordingUriRef = useRef<string | null>(null);
   const stopRecordingRef = useRef<(() => Promise<void>) | undefined>(undefined);
@@ -151,6 +168,14 @@ export function VoiceMemoRecorder({
     try {
       setError(null);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Check if expo-av is available
+      const Audio = getAudio();
+      if (!Audio) {
+        Alert.alert('Not Available', 'Voice recording requires a development build');
+        setError('Voice recording requires a development build');
+        return;
+      }
 
       // Request permissions
       const { status } = await Audio.requestPermissionsAsync();
@@ -209,9 +234,12 @@ export function VoiceMemoRecorder({
       recordingRef.current = null;
 
       // Reset audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-      });
+      const Audio = getAudio();
+      if (Audio) {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+        });
+      }
 
       setState('recorded');
     } catch (err) {
@@ -231,6 +259,12 @@ export function VoiceMemoRecorder({
       if (!recordingUriRef.current) return;
 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      const Audio = getAudio();
+      if (!Audio) {
+        Alert.alert('Not Available', 'Audio playback requires a development build');
+        return;
+      }
 
       if (soundRef.current) {
         await soundRef.current.unloadAsync();

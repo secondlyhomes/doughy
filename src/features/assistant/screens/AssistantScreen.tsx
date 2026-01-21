@@ -9,13 +9,13 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { Send, Sparkles, RefreshCw } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { useKeyboardAvoidance } from '@/hooks';
 
 // Zone A UI Components
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
@@ -27,6 +27,7 @@ import { useChat, Message } from '../hooks/useChat';
 export function AssistantScreen() {
   const flatListRef = useRef<FlatList>(null);
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasTabBar: true });
   const [input, setInput] = useState('');
   const { messages, sendMessage, isLoading, clearMessages } = useChat();
 
@@ -65,8 +66,8 @@ export function AssistantScreen() {
     <ThemedSafeAreaView className="flex-1" edges={['bottom']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
       >
         {/* Chat Messages */}
         <FlatList

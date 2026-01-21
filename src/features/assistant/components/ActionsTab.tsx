@@ -26,7 +26,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { BORDER_RADIUS, SPACING, FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
@@ -328,21 +328,22 @@ const styles = StyleSheet.create({
     padding: SPACING['3xl'],
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: FONT_WEIGHTS.semibold,
     marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.sm,
     textAlign: 'center',
+    lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.normal,
   },
   section: {
     marginBottom: SPACING['2xl'],
   },
   sectionTitle: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: FONT_SIZES['2xs'],
+    fontWeight: FONT_WEIGHTS.semibold,
     letterSpacing: 1,
     marginBottom: SPACING.md,
   },
@@ -364,12 +365,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nbaAction: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: FONT_SIZES.sm,
+    fontWeight: FONT_WEIGHTS.semibold,
     marginBottom: SPACING.xs,
   },
   nbaMeta: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.xs,
+    lineHeight: FONT_SIZES.xs * LINE_HEIGHTS.normal,
   },
   actionGrid: {
     flexDirection: 'row',
@@ -390,22 +392,22 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS['10'],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
   },
   actionLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    lineHeight: 18,
+    fontSize: FONT_SIZES.sm,
+    fontWeight: FONT_WEIGHTS.medium,
+    lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.normal,
   },
   asyncBadge: {
     marginTop: SPACING.sm,
-    paddingHorizontal: 8,
+    paddingHorizontal: SPACING.sm,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: BORDER_RADIUS.sm,
   },
   asyncBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: FONT_SIZES['2xs'],
+    fontWeight: FONT_WEIGHTS.semibold,
   },
   quickActions: {
     flexDirection: 'row',
@@ -421,8 +423,8 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS['10'],
   },
   quickActionLabel: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: FONT_SIZES.sm,
+    fontWeight: FONT_WEIGHTS.medium,
   },
 });
 

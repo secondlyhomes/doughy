@@ -52,9 +52,9 @@ interface ConversationCardProps {
   onDelete: () => void;
 }
 
-function ConversationCard({ conversation, onPress, onDelete }: ConversationCardProps) {
+const ConversationCard = React.memo(function ConversationCard({ conversation, onPress, onDelete }: ConversationCardProps) {
   const colors = useThemeColors();
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     Alert.alert(
       'Delete Conversation',
       'Are you sure you want to delete this conversation?',
@@ -63,7 +63,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
         { text: 'Delete', style: 'destructive', onPress: onDelete },
       ]
     );
-  };
+  }, [onDelete]);
 
   return (
     <TouchableOpacity
@@ -119,7 +119,7 @@ function ConversationCard({ conversation, onPress, onDelete }: ConversationCardP
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 export function ConversationsListScreen() {
   const router = useRouter();
@@ -205,6 +205,11 @@ export function ConversationsListScreen() {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
+          // Performance optimizations
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          initialNumToRender={10}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}

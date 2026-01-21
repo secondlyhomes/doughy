@@ -2,7 +2,7 @@
 // Progress indicator for multi-step property form wizard
 
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 
@@ -15,15 +15,21 @@ export interface FormStep {
 interface FormStepProgressProps {
   steps: FormStep[];
   currentStepIndex: number;
+  onStepPress?: (index: number) => void;
 }
 
-export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressProps) {
+export function FormStepProgress({ steps, currentStepIndex, onStepPress }: FormStepProgressProps) {
   const colors = useThemeColors();
   return (
     <View className="px-4 py-4">
-      {/* Step indicators */}
-      <View className="flex-row items-center justify-between">
-        {steps.map((step, index) => {
+      {/* Step indicators - wrapped in horizontal ScrollView for narrow screens */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <View className="flex-row items-center justify-between" style={{ minWidth: '100%' }}>
+          {steps.map((step, index) => {
           const isCompleted = index < currentStepIndex;
           const isCurrent = index === currentStepIndex;
           const isUpcoming = index > currentStepIndex;
@@ -43,8 +49,13 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
 
           return (
             <React.Fragment key={step.id}>
-              {/* Step circle */}
-              <View className="items-center">
+              {/* Step circle - tappable for navigation */}
+              <TouchableOpacity
+                onPress={() => onStepPress?.(index)}
+                disabled={!onStepPress}
+                activeOpacity={onStepPress ? 0.7 : 1}
+                className="items-center"
+              >
                 <View
                   style={getCircleStyle()}
                   className="w-8 h-8 rounded-full items-center justify-center"
@@ -67,7 +78,7 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
                 >
                   {step.shortTitle}
                 </Text>
-              </View>
+              </TouchableOpacity>
 
               {/* Connector line */}
               {index < steps.length - 1 && (
@@ -79,7 +90,8 @@ export function FormStepProgress({ steps, currentStepIndex }: FormStepProgressPr
             </React.Fragment>
           );
         })}
-      </View>
+        </View>
+      </ScrollView>
 
       {/* Current step title */}
       <View className="mt-4">

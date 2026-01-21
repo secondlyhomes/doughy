@@ -10,32 +10,24 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   RefreshControl,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { haptic } from '@/lib/haptics';
 import {
-  ArrowLeft,
-  MoreHorizontal,
-  Phone,
   ChevronRight,
-  MapPin,
-  User,
   Calculator,
   FileText,
-  Camera,
   Folder,
-  Share2,
   AlertCircle,
   Check,
   Clock,
   DollarSign,
   TrendingUp,
   Shield,
-  Focus,
-  Layers,
-  MessageSquare,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
@@ -44,21 +36,12 @@ import { ThemedSafeAreaView } from '@/components';
 import {
   Button,
   LoadingSpinner,
-  TAB_BAR_SAFE_PADDING,
   FAB_BOTTOM_OFFSET,
   FAB_SIZE,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
 } from '@/components/ui';
 import { MetricCard, EvidenceTrailModal } from '@/components/deals';
 import { useDeal, useUpdateDealStage } from '../hooks/useDeals';
-import { useNextAction, getActionButtonText, getActionIcon } from '../hooks/useNextAction';
+import { useNextAction } from '../hooks/useNextAction';
 import { useDealAnalysis, DEFAULT_FLIP_CONSTANTS } from '../../real-estate/hooks/useDealAnalysis';
 import type { Property } from '../../real-estate/types';
 import {
@@ -69,54 +52,21 @@ import {
   getDealAddress,
   getDealLeadName,
   getDealRiskScore,
-  getRiskScoreColor,
   isDealClosed,
   getNextStages,
 } from '../types';
-import { DealTimeline } from '../components/DealTimeline';
-import { AddDealEventSheet } from '../components/AddDealEventSheet';
-import { StageStepper } from '../components/StageStepper';
-import { SuggestionList } from '../components/SuggestionCard';
+import {
+  DealTimeline,
+  AddDealEventSheet,
+  StageStepper,
+  SuggestionList,
+  DealActionsSheet,
+} from '../components';
 import { getSuggestionsForDeal, AISuggestion } from '../services/aiSuggestions';
-import { ConversationsView, ConversationType } from '@/features/conversations/components';
+import { ConversationsView } from '@/features/conversations/components';
 import { useDealConversations } from '@/features/conversations/hooks';
-import { SmartBackButton } from '@/components/navigation';
+import { EntityHeader } from '@/components/navigation';
 import { DealAssistant } from '@/features/assistant/components';
-
-// ============================================
-// Stage Badge Component
-// ============================================
-
-interface StageBadgeProps {
-  stage: DealStage;
-  onPress?: () => void;
-}
-
-function StageBadge({ stage, onPress }: StageBadgeProps) {
-  const colors = useThemeColors();
-  // Handle unknown stages from database
-  const config = DEAL_STAGE_CONFIG[stage] || { label: stage || 'Unknown', color: 'bg-gray-500', order: 0 };
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={!onPress}
-      className="flex-row items-center px-3 py-1.5 rounded-full"
-      style={{ backgroundColor: withOpacity(colors.primary, 'light') }}
-      accessibilityLabel={`Stage: ${config.label}`}
-      accessibilityRole="button"
-    >
-      <View
-        className="w-2 h-2 rounded-full mr-2"
-        style={{ backgroundColor: colors.primary }}
-      />
-      <Text className="text-sm font-medium" style={{ color: colors.primary }}>
-        {config.label}
-      </Text>
-      {onPress && <ChevronRight size={14} color={colors.primary} style={{ marginLeft: 4 }} />}
-    </TouchableOpacity>
-  );
-}
 
 // ============================================
 // Next Action Button Component
@@ -320,77 +270,6 @@ function DealMetrics({ deal, onEvidencePress }: DealMetricsProps) {
 }
 
 // ============================================
-// Action Card Component
-// ============================================
-
-interface ActionCardProps {
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  onPress: () => void;
-  badge?: string;
-  badgeColor?: string;
-  disabled?: boolean;
-}
-
-function ActionCard({
-  title,
-  subtitle,
-  icon,
-  onPress,
-  badge,
-  badgeColor,
-  disabled = false,
-}: ActionCardProps) {
-  const colors = useThemeColors();
-
-  return (
-    <TouchableOpacity
-      className="rounded-xl p-4 mb-3"
-      style={{
-        backgroundColor: colors.card,
-        opacity: disabled ? 0.5 : 1,
-      }}
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityLabel={`${title}: ${subtitle}`}
-      accessibilityRole="button"
-    >
-      <View className="flex-row items-center">
-        <View
-          className="w-10 h-10 rounded-full items-center justify-center mr-3"
-          style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
-        >
-          {icon}
-        </View>
-        <View className="flex-1">
-          <View className="flex-row items-center">
-            <Text className="text-base font-semibold" style={{ color: colors.foreground }}>{title}</Text>
-            {badge && (
-              <View
-                className="ml-2 px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: badgeColor || withOpacity(colors.primary, 'light') }}
-              >
-                <Text
-                  className="text-xs font-medium"
-                  style={{ color: badgeColor ? colors.primaryForeground : colors.primary }}
-                >
-                  {badge}
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text className="text-sm" style={{ color: colors.mutedForeground }} numberOfLines={1}>
-            {subtitle}
-          </Text>
-        </View>
-        <ChevronRight size={20} color={colors.mutedForeground} />
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// ============================================
 // Main Screen
 // ============================================
 
@@ -418,11 +297,12 @@ export function DealCockpitScreen() {
   const nextActionData = useNextAction(deal || undefined);
 
   // Focus Mode from context (synced across all screens)
-  const { focusMode, toggleFocusMode } = useFocusMode();
+  const { focusMode } = useFocusMode();
 
   // Local UI state
   const [showAddEventSheet, setShowAddEventSheet] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [showActionsSheet, setShowActionsSheet] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'underwrite' | 'offers' | 'conversations' | 'docs'>('overview');
   const [evidenceModal, setEvidenceModal] = useState<{
     visible: boolean;
     field: 'mao' | 'profit' | 'risk' | null;
@@ -514,8 +394,7 @@ export function DealCockpitScreen() {
 
   const handleMoreOptions = useCallback(() => {
     if (!deal) return;
-    // TODO: Show action sheet with options (edit, delete, change stage)
-    Alert.alert('Options', 'More options coming soon!', [{ text: 'OK' }]);
+    setShowActionsSheet(true);
   }, [deal]);
 
   const handleNextAction = useCallback(() => {
@@ -586,10 +465,10 @@ export function DealCockpitScreen() {
     router.push(`/(tabs)/leads/${deal.lead_id}`);
   }, [deal?.lead_id, router]);
 
-  // Navigate to property detail screen
+  // Navigate to property detail screen (within deals stack - NativeTabs can't navigate to hidden tabs)
   const handlePropertyPress = useCallback(() => {
     if (!deal?.property_id) return;
-    router.push(`/(tabs)/properties/${deal.property_id}`);
+    router.push(`/(tabs)/deals/property/${deal.property_id}`);
   }, [deal?.property_id, router]);
 
   // Get offer status for badge
@@ -609,21 +488,6 @@ export function DealCockpitScreen() {
         return { label: 'Draft', color: undefined };
     }
   }, [deal?.offers, colors]);
-
-  // Get walkthrough status
-  const getWalkthroughStatus = useMemo(() => {
-    if (!deal?.walkthrough) return { label: 'Start', subtitle: 'Capture photos & notes' };
-    switch (deal.walkthrough.status) {
-      case 'in_progress':
-        return { label: 'In Progress', subtitle: `${deal.walkthrough.items?.length || 0} items captured` };
-      case 'completed':
-        return { label: 'Complete', subtitle: 'Ready to organize with AI' };
-      case 'organized':
-        return { label: 'Organized', subtitle: 'View AI summary' };
-      default:
-        return { label: 'Start', subtitle: 'Capture photos & notes' };
-    }
-  }, [deal?.walkthrough]);
 
   // Loading state
   if (isLoading) {
@@ -647,298 +511,324 @@ export function DealCockpitScreen() {
     );
   }
 
+  // Tab labels for display
+  const TAB_LABELS = {
+    overview: 'Overview',
+    underwrite: 'Underwrite',
+    offers: 'Offers',
+    conversations: 'Convos',
+    docs: 'Docs',
+  } as const;
+
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Breadcrumbs - Zone G */}
-      <View className="px-4 pt-2">
-        <Breadcrumb>
-          <BreadcrumbItem>
-            <BreadcrumbLink onPress={() => router.push('/(tabs)/deals')}>
-              Deals
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbItem>
-            <BreadcrumbPage>{getDealAddress(deal) || 'Deal'}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </Breadcrumb>
-      </View>
+      {/* Entity Header with Context Switcher */}
+      <EntityHeader
+        context="deal"
+        dealId={deal.id}
+        propertyId={deal.property_id}
+        hasLinkedProperty={!!deal.property_id}
+        phoneNumber={deal.lead?.phone}
+        onMore={handleMoreOptions}
+        onLinkProperty={() => {
+          Alert.alert('Link Property', 'Property linking coming soon!', [{ text: 'OK' }]);
+        }}
+      />
 
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-2">
-        <SmartBackButton variant="default" />
-
-        <StageBadge stage={deal.stage} onPress={handleStageChange} />
-
-        <View className="flex-row items-center">
-          {/* Focus Mode Toggle */}
-          <TouchableOpacity
-            onPress={toggleFocusMode}
-            accessibilityLabel={focusMode ? 'Show all details' : 'Enable focus mode'}
-            accessibilityRole="button"
-            className="p-2"
-          >
-            {focusMode ? (
-              <Layers size={22} color={colors.primary} />
-            ) : (
-              <Focus size={22} color={colors.mutedForeground} />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleCallSeller}
-            accessibilityLabel="Call seller"
-            accessibilityRole="button"
-            className="p-2"
-          >
-            <Phone size={22} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleMoreOptions}
-            accessibilityLabel="More options"
-            accessibilityRole="button"
-            className="p-2"
-          >
-            <MoreHorizontal size={22} color={colors.foreground} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Stage Stepper - Zone G Week 7 */}
-      <View className="px-4 pb-2">
-        <StageStepper
-          currentStage={deal.stage}
-          dealId={deal.id}
-          onStagePress={handleStageChange}
-          compact
-        />
-      </View>
-
-      {/* Tabbed Interface - Zone G */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-        <View className="px-4 pb-2">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="underwrite">Underwrite</TabsTrigger>
-            <TabsTrigger value="offers">Offers</TabsTrigger>
-            <TabsTrigger value="conversations">Convos</TabsTrigger>
-            <TabsTrigger value="docs">Docs</TabsTrigger>
-          </TabsList>
-        </View>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="flex-1">
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{
-              padding: 16,
-              paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,
-            }}
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoading}
-                onRefresh={refetch}
-                tintColor={colors.primary}
-              />
-            }
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Lead & Property Info - Clickable for navigation */}
-            <View className="mb-4">
-              <TouchableOpacity
-                onPress={handleLeadPress}
-                className="flex-row items-center mb-1"
-                disabled={!deal.lead_id}
-                accessibilityLabel={`View ${getDealLeadName(deal)} profile`}
-                accessibilityRole="link"
-              >
-                <User size={14} color={colors.mutedForeground} />
-                <Text className="text-lg font-bold ml-2" style={{ color: deal.lead_id ? colors.primary : colors.foreground }}>
-                  {getDealLeadName(deal)}
-                </Text>
-                {deal.lead_id && <ChevronRight size={16} color={colors.primary} style={{ marginLeft: 4 }} />}
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handlePropertyPress}
-                className="flex-row items-center"
-                disabled={!deal.property_id}
-                accessibilityLabel={`View property at ${getDealAddress(deal)}`}
-                accessibilityRole="link"
-              >
-                <MapPin size={14} color={colors.mutedForeground} />
-                <Text className="text-sm ml-2" style={{ color: deal.property_id ? colors.primary : colors.mutedForeground }}>
-                  {getDealAddress(deal)}
-                </Text>
-                {deal.property_id && <ChevronRight size={14} color={colors.primary} style={{ marginLeft: 4 }} />}
-              </TouchableOpacity>
-              {deal.strategy && (
-                <View className="flex-row items-center mt-2">
-                  <View
-                    className="px-2 py-1 rounded-full"
-                    style={{ backgroundColor: withOpacity(colors.secondary, 'medium') }}
+      {/* Main ScrollView with sticky tabs */}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refetch}
+            tintColor={colors.primary}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}
+      >
+        {/* Sticky Header Group: Tabs + StageStepper */}
+        <View style={{ backgroundColor: colors.background, paddingBottom: 8 }}>
+          {/* Tab Bar - Pressable-based matching PropertyDetailScreen */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className="flex-row rounded-xl p-1" style={{ backgroundColor: colors.muted }}>
+                {(['overview', 'underwrite', 'offers', 'conversations', 'docs'] as const).map((tab) => (
+                  <Pressable
+                    key={tab}
+                    onPress={() => {
+                      if (activeTab !== tab) {
+                        haptic.selection();
+                        setActiveTab(tab);
+                      }
+                    }}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: activeTab === tab }}
+                    accessibilityLabel={`${TAB_LABELS[tab]} tab`}
+                    style={[
+                      { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12 },
+                      activeTab === tab && {
+                        backgroundColor: colors.background,
+                        ...getShadowStyle(colors, { size: 'sm' }),
+                      },
+                    ]}
                   >
-                    <Text className="text-xs font-medium" style={{ color: colors.secondaryForeground }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '500',
+                        color: activeTab === tab ? colors.foreground : colors.mutedForeground,
+                      }}
+                    >
+                      {TAB_LABELS[tab]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Stage Stepper - compact progress pill with stage selector */}
+          <StageStepper
+            currentStage={deal.stage}
+            dealId={deal.id}
+            onStagePress={handleStageChange}
+          />
+        </View>
+
+        {/* Tab Content */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+          {/* Overview Tab Content */}
+          {activeTab === 'overview' && (
+            <>
+              {/* Breadcrumb: Lead > Property + Strategy badge */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                {/* Lead Name - clickable */}
+                <TouchableOpacity
+                  onPress={handleLeadPress}
+                  disabled={!deal.lead_id}
+                  style={{ flexShrink: 0 }}
+                  accessibilityLabel={`View ${getDealLeadName(deal)} profile`}
+                  accessibilityRole="link"
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: deal.lead_id ? colors.primary : colors.foreground,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {getDealLeadName(deal)}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Separator */}
+                <ChevronRight size={12} color={colors.mutedForeground} style={{ marginHorizontal: 4, flexShrink: 0 }} />
+
+                {/* Property Address - clickable, truncates */}
+                <TouchableOpacity
+                  onPress={handlePropertyPress}
+                  disabled={!deal.property_id}
+                  style={{ flex: 1, minWidth: 0 }}
+                  accessibilityLabel={`View property at ${getDealAddress(deal)}`}
+                  accessibilityRole="link"
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: deal.property_id ? colors.primary : colors.mutedForeground,
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {getDealAddress(deal)}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Strategy badge */}
+                {deal.strategy && (
+                  <View
+                    style={{
+                      marginLeft: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 10,
+                      backgroundColor: withOpacity(colors.secondary, 'medium'),
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '500', color: colors.secondaryForeground }}>
                       {DEAL_STRATEGY_CONFIG[deal.strategy].label}
                     </Text>
                   </View>
+                )}
+              </View>
+
+              {/* Next Action Button */}
+              <NextActionButton deal={deal} onPress={handleNextAction} />
+
+              {/* AI Suggestions - Zone G Week 9 */}
+              {suggestions.length > 0 && !focusMode && (
+                <View className="mb-4">
+                  <SuggestionList
+                    suggestions={suggestions}
+                    onAction={handleSuggestionAction}
+                    onDismiss={handleSuggestionDismiss}
+                    title="AI Suggestions"
+                    maxVisible={3}
+                  />
                 </View>
               )}
-            </View>
 
-            {/* Next Action Button */}
-            <NextActionButton deal={deal} onPress={handleNextAction} />
+              {/* Key Metrics - Zone G Progressive Disclosure */}
+              <DealMetrics deal={deal} onEvidencePress={handleEvidencePress} />
 
-            {/* AI Suggestions - Zone G Week 9 */}
-            {suggestions.length > 0 && !focusMode && (
-              <View className="mb-4">
-                <SuggestionList
-                  suggestions={suggestions}
-                  onAction={handleSuggestionAction}
-                  onDismiss={handleSuggestionDismiss}
-                  title="AI Suggestions"
-                  maxVisible={3}
+              {/* Deal Timeline */}
+              <View className="mt-4">
+                <DealTimeline
+                  dealId={deal.id}
+                  keyEventsOnly={focusMode}
+                  maxEvents={focusMode ? 3 : undefined}
+                  onAddActivity={handleAddActivity}
                 />
               </View>
-            )}
+            </>
+          )}
 
-            {/* Key Metrics - Zone G Progressive Disclosure */}
-            <DealMetrics deal={deal} onEvidencePress={handleEvidencePress} />
-
-            {/* Action Cards - Collapsed in Focus Mode */}
-            {!focusMode && (
-              <>
-                <Text className="text-sm font-medium mb-2 mt-2" style={{ color: colors.mutedForeground }}>
-                  QUICK ACTIONS
-                </Text>
-
-                <ActionCard
-                  title="Quick Underwrite"
-                  subtitle="MAO, profit, and financing scenarios"
-                  icon={<Calculator size={20} color={colors.primary} />}
-                  onPress={handleUnderwrite}
-                />
-
-                <ActionCard
-                  title="Walkthrough"
-                  subtitle={getWalkthroughStatus.subtitle}
-                  icon={<Camera size={20} color={colors.primary} />}
-                  onPress={handleWalkthrough}
-                  badge={deal.walkthrough ? getWalkthroughStatus.label : undefined}
-                />
-
-                <ActionCard
-                  title="Seller Report"
-                  subtitle="Generate transparent options for seller"
-                  icon={<Share2 size={20} color={colors.primary} />}
-                  onPress={handleSellerReport}
-                  badge={deal.seller_report ? 'Generated' : undefined}
-                  badgeColor={deal.seller_report ? colors.success : undefined}
-                />
-              </>
-            )}
-
-            {/* Deal Timeline */}
-            <View className="mt-4">
-              <DealTimeline
-                dealId={deal.id}
-                keyEventsOnly={focusMode}
-                maxEvents={focusMode ? 3 : undefined}
-                onAddActivity={handleAddActivity}
-              />
+          {/* Underwrite Tab Content */}
+          {activeTab === 'underwrite' && (
+            <View className="flex-1 items-center justify-center p-4 pt-12">
+              <Calculator size={48} color={colors.mutedForeground} />
+              <Text className="text-lg font-semibold mt-4" style={{ color: colors.foreground }}>
+                Quick Underwrite
+              </Text>
+              <Text className="text-sm text-center mt-2" style={{ color: colors.mutedForeground }}>
+                Detailed analysis with MAO, profit projections, and financing scenarios
+              </Text>
+              <Button className="mt-4" onPress={handleUnderwrite}>
+                Open Full Analysis
+              </Button>
             </View>
-          </ScrollView>
-        </TabsContent>
+          )}
 
-        {/* Underwrite Tab */}
-        <TabsContent value="underwrite" className="flex-1">
-          <View className="flex-1 items-center justify-center p-4">
-            <Calculator size={48} color={colors.mutedForeground} />
-            <Text className="text-lg font-semibold mt-4" style={{ color: colors.foreground }}>
-              Quick Underwrite
-            </Text>
-            <Text className="text-sm text-center mt-2" style={{ color: colors.mutedForeground }}>
-              Detailed analysis with MAO, profit projections, and financing scenarios
-            </Text>
-            <Button className="mt-4" onPress={handleUnderwrite}>
-              Open Full Analysis
-            </Button>
-          </View>
-        </TabsContent>
-
-        {/* Offers Tab */}
-        <TabsContent value="offers" className="flex-1">
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ padding: 16 }}
-            showsVerticalScrollIndicator={false}
-          >
-            <ActionCard
-              title="Offer Package"
-              subtitle={
-                deal.offers?.length
-                  ? `${deal.offers.length} offer(s) created`
-                  : 'Create and send offers'
-              }
-              icon={<FileText size={20} color={colors.primary} />}
-              onPress={handleOffer}
-              badge={getOfferStatus.label}
-              badgeColor={getOfferStatus.color}
-            />
-            {deal.offers && deal.offers.length > 0 && (
-              <View className="mt-4">
-                <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
-                  OFFER HISTORY
-                </Text>
-                {deal.offers.map((offer, index) => (
+          {/* Offers Tab Content */}
+          {activeTab === 'offers' && (
+            <>
+              {/* Offer Package Card */}
+              <TouchableOpacity
+                onPress={handleOffer}
+                className="rounded-xl p-4 mb-3"
+                style={{ backgroundColor: colors.card }}
+              >
+                <View className="flex-row items-center">
                   <View
-                    key={offer.id || index}
-                    className="p-3 rounded-lg mb-2"
-                    style={{ backgroundColor: colors.card }}
+                    className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                    style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
                   >
-                    <Text style={{ color: colors.foreground }}>
-                      Offer #{index + 1}: ${offer.amount?.toLocaleString() || 'N/A'}
-                    </Text>
-                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                      Status: {offer.status || 'Draft'}
+                    <FileText size={20} color={colors.primary} />
+                  </View>
+                  <View className="flex-1">
+                    <View className="flex-row items-center">
+                      <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
+                        Offer Package
+                      </Text>
+                      {getOfferStatus.label && (
+                        <View
+                          className="ml-2 px-2 py-0.5 rounded-full"
+                          style={{ backgroundColor: getOfferStatus.color || withOpacity(colors.primary, 'light') }}
+                        >
+                          <Text
+                            className="text-xs font-medium"
+                            style={{ color: getOfferStatus.color ? colors.primaryForeground : colors.primary }}
+                          >
+                            {getOfferStatus.label}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+                      {deal.offers?.length
+                        ? `${deal.offers.length} offer(s) created`
+                        : 'Create and send offers'}
                     </Text>
                   </View>
-                ))}
-              </View>
-            )}
-          </ScrollView>
-        </TabsContent>
+                  <ChevronRight size={20} color={colors.mutedForeground} />
+                </View>
+              </TouchableOpacity>
 
-        {/* Conversations Tab - Zone G Week 8 */}
-        <TabsContent value="conversations" className="flex-1">
-          <ConversationsView
-            items={conversations}
-            isLoading={loadingConversations}
-            onRefresh={refetchConversations}
-            onAddConversation={(type) => {
-              // TODO: Open appropriate modal based on type
-              Alert.alert('Add Conversation', `Would add ${type}`, [{ text: 'OK' }]);
-            }}
-            onItemPress={(item) => {
-              // TODO: Navigate to conversation detail
-              Alert.alert('Conversation', item.content || item.transcript || 'No content', [{ text: 'OK' }]);
-            }}
-          />
-        </TabsContent>
+              {/* Offer History */}
+              {deal.offers && deal.offers.length > 0 && (
+                <View className="mt-4">
+                  <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
+                    OFFER HISTORY
+                  </Text>
+                  {deal.offers.map((offer, index) => (
+                    <View
+                      key={offer.id || index}
+                      className="p-3 rounded-lg mb-2"
+                      style={{ backgroundColor: colors.card }}
+                    >
+                      <Text style={{ color: colors.foreground }}>
+                        Offer #{index + 1}: ${offer.offer_amount?.toLocaleString() || 'N/A'}
+                      </Text>
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                        Status: {offer.status || 'Draft'}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
 
-        {/* Docs Tab */}
-        <TabsContent value="docs" className="flex-1">
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ padding: 16 }}
-            showsVerticalScrollIndicator={false}
-          >
-            <ActionCard
-              title="Documents"
-              subtitle="Contracts, disclosures, and files"
-              icon={<Folder size={20} color={colors.primary} />}
-              onPress={handleDocs}
+          {/* Conversations Tab Content */}
+          {activeTab === 'conversations' && (
+            <ConversationsView
+              items={conversations}
+              isLoading={loadingConversations}
+              onRefresh={refetchConversations}
+              onAddConversation={(type) => {
+                Alert.alert('Add Conversation', `Would add ${type}`, [{ text: 'OK' }]);
+              }}
+              onItemPress={(item) => {
+                Alert.alert('Conversation', item.content || item.transcript || 'No content', [{ text: 'OK' }]);
+              }}
             />
-          </ScrollView>
-        </TabsContent>
-      </Tabs>
+          )}
+
+          {/* Docs Tab Content */}
+          {activeTab === 'docs' && (
+            <TouchableOpacity
+              onPress={handleDocs}
+              className="rounded-xl p-4 mb-3"
+              style={{ backgroundColor: colors.card }}
+            >
+              <View className="flex-row items-center">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}
+                >
+                  <Folder size={20} color={colors.primary} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
+                    Documents
+                  </Text>
+                  <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+                    Contracts, disclosures, and files
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={colors.mutedForeground} />
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
 
       {/* Deal Closed Banner - Fixed at bottom */}
       {isDealClosed(deal) && (
@@ -983,6 +873,32 @@ export function DealCockpitScreen() {
         dealAddress={getDealAddress(deal)}
         onClose={handleCloseAddEventSheet}
         onSaved={refetch}
+      />
+
+      {/* Deal Actions Sheet */}
+      <DealActionsSheet
+        deal={deal}
+        isOpen={showActionsSheet}
+        onClose={() => setShowActionsSheet(false)}
+        onEdit={() => {
+          Alert.alert('Edit Deal', 'Edit deal functionality coming soon!', [{ text: 'OK' }]);
+        }}
+        onDelete={() => {
+          Alert.alert(
+            'Delete Deal',
+            'Are you sure you want to delete this deal? This action cannot be undone.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: () => {
+                  Alert.alert('Delete', 'Delete functionality coming soon!');
+                },
+              },
+            ]
+          );
+        }}
       />
 
       {/* Evidence Trail Modal - Zone G */}

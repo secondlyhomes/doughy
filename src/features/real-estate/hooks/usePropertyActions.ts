@@ -16,6 +16,8 @@ interface UsePropertyActionsReturn {
   exportPropertySummary: (property: Property) => Promise<string | null>;
   copyPropertyLink: (property: Property) => Promise<boolean>;
   updatePropertyStatus: (propertyId: string, status: PropertyStatus) => Promise<boolean>;
+  addPropertyImage: (propertyId: string, url: string, label?: string) => Promise<boolean>;
+  removePropertyImage: (imageId: string) => Promise<boolean>;
   isLoading: boolean;
   error: Error | null;
 }
@@ -308,11 +310,74 @@ export function usePropertyActions(): UsePropertyActionsReturn {
     }
   }, []);
 
+  /**
+   * Add an image to a property via URL
+   */
+  const addPropertyImage = useCallback(async (
+    propertyId: string,
+    url: string,
+    label?: string
+  ): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const { error: insertError } = await supabase
+        .from('re_property_images')
+        .insert({
+          property_id: propertyId,
+          url,
+          label: label || 'Photo',
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error adding property image:', err);
+      setError(err instanceof Error ? err : new Error('Failed to add image'));
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /**
+   * Remove an image from a property
+   */
+  const removePropertyImage = useCallback(async (imageId: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const { error: deleteError } = await supabase
+        .from('re_property_images')
+        .delete()
+        .eq('id', imageId);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error removing property image:', err);
+      setError(err instanceof Error ? err : new Error('Failed to remove image'));
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     shareProperty,
     exportPropertySummary,
     copyPropertyLink,
     updatePropertyStatus,
+    addPropertyImage,
+    removePropertyImage,
     isLoading,
     error,
   };

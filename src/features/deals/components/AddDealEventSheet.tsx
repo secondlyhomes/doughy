@@ -6,23 +6,18 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Modal,
   TouchableOpacity,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
 } from 'react-native';
 import {
-  X,
   FileText,
   Phone,
   Mail,
   Calendar,
   Check,
 } from 'lucide-react-native';
-import { ThemedSafeAreaView } from '@/components';
-import { Button } from '@/components/ui';
+import { BottomSheet, BottomSheetSection, Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { logDealEvent } from '../hooks/useDealEvents';
@@ -39,7 +34,6 @@ interface EventTypeConfig {
   label: string;
   IconComponent: typeof FileText;
   colorKey: 'mutedForeground' | 'info' | 'success' | 'warning';
-  bgClass: string;
 }
 
 const EVENT_TYPE_OPTIONS: EventTypeConfig[] = [
@@ -48,30 +42,36 @@ const EVENT_TYPE_OPTIONS: EventTypeConfig[] = [
     label: 'Note',
     IconComponent: FileText,
     colorKey: 'mutedForeground',
-    bgClass: 'bg-muted',
   },
   {
     type: 'call',
     label: 'Call',
     IconComponent: Phone,
     colorKey: 'info',
-    bgClass: 'bg-info/20',
   },
   {
     type: 'email',
     label: 'Email',
     IconComponent: Mail,
     colorKey: 'success',
-    bgClass: 'bg-success/20',
   },
   {
     type: 'meeting',
     label: 'Meeting',
     IconComponent: Calendar,
     colorKey: 'warning',
-    bgClass: 'bg-warning/20',
   },
 ];
+
+function getIconBgColor(colorKey: string, colors: ReturnType<typeof useThemeColors>) {
+  switch (colorKey) {
+    case 'info': return withOpacity(colors.info, 'medium');
+    case 'success': return withOpacity(colors.success, 'medium');
+    case 'warning': return withOpacity(colors.warning, 'medium');
+    case 'mutedForeground': return colors.muted;
+    default: return colors.muted;
+  }
+}
 
 // ============================================
 // Component
@@ -167,113 +167,75 @@ export function AddDealEventSheet({
   };
 
   return (
-    <Modal
+    <BottomSheet
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={handleClose}
+      onClose={handleClose}
+      title="Add Note"
+      subtitle={dealAddress}
+      snapPoints={['85%']}
     >
-      <ThemedSafeAreaView className="flex-1" edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
-        >
-          {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <TouchableOpacity onPress={handleClose} className="p-1">
-              <X size={24} color={colors.mutedForeground} />
-            </TouchableOpacity>
-            <View className="flex-1 items-center">
-              <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Add Note</Text>
-              {dealAddress && (
-                <Text className="text-sm" style={{ color: colors.mutedForeground }} numberOfLines={1}>
-                  {dealAddress}
+      {/* Event Type Selection */}
+      <BottomSheetSection title="Type">
+        <View className="flex-row flex-wrap gap-2">
+          {EVENT_TYPE_OPTIONS.map((option) => {
+            const { IconComponent } = option;
+            const iconColor = colors[option.colorKey];
+            const isSelected = selectedType === option.type;
+
+            return (
+              <TouchableOpacity
+                key={option.type}
+                className="flex-row items-center px-4 py-3 rounded-lg"
+                style={{
+                  backgroundColor: isSelected ? withOpacity(colors.primary, 'muted') : colors.muted,
+                  borderWidth: isSelected ? 1 : 0,
+                  borderColor: isSelected ? colors.primary : 'transparent',
+                }}
+                onPress={() => setSelectedType(option.type)}
+              >
+                <View className="p-1.5 rounded-full mr-2" style={{ backgroundColor: getIconBgColor(option.colorKey, colors) }}>
+                  <IconComponent size={18} color={iconColor} />
+                </View>
+                <Text
+                  className="text-sm"
+                  style={{ color: isSelected ? colors.primary : colors.foreground, fontWeight: isSelected ? '500' : '400' }}
+                >
+                  {option.label}
                 </Text>
-              )}
-            </View>
-            <Button
-              onPress={handleSave}
-              disabled={!description.trim() || isSaving}
-              size="sm"
-            >
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-          </View>
+                {isSelected && (
+                  <Check size={16} color={colors.primary} style={{ marginLeft: 8 }} />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </BottomSheetSection>
 
-          <View className="flex-1 px-4 pt-4">
-            {/* Event Type Selection */}
-            <View className="mb-6">
-              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
-                Type
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {EVENT_TYPE_OPTIONS.map((option) => {
-                  const { IconComponent } = option;
-                  const iconColor = colors[option.colorKey];
-                  const isSelected = selectedType === option.type;
+      {/* Description Input */}
+      <BottomSheetSection title="Details">
+        <TextInput
+          className="rounded-lg px-4 py-3 min-h-[120px]"
+          placeholder={getPlaceholder()}
+          placeholderTextColor={colors.mutedForeground}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          textAlignVertical="top"
+          style={{ backgroundColor: colors.muted, color: colors.foreground }}
+        />
+      </BottomSheetSection>
 
-                  // Get icon background color based on colorKey
-                  const getIconBgColor = () => {
-                    switch (option.colorKey) {
-                      case 'info': return withOpacity(colors.info, 'medium');
-                      case 'success': return withOpacity(colors.success, 'medium');
-                      case 'warning': return withOpacity(colors.warning, 'medium');
-                      default: return colors.muted;
-                    }
-                  };
-
-                  return (
-                    <TouchableOpacity
-                      key={option.type}
-                      className="flex-row items-center px-4 py-3 rounded-lg"
-                      style={{
-                        backgroundColor: isSelected ? withOpacity(colors.primary, 'muted') : colors.muted,
-                        borderWidth: isSelected ? 1 : 0,
-                        borderColor: isSelected ? colors.primary : 'transparent',
-                      }}
-                      onPress={() => setSelectedType(option.type)}
-                    >
-                      <View className="p-1.5 rounded-full mr-2" style={{ backgroundColor: getIconBgColor() }}>
-                        <IconComponent size={18} color={iconColor} />
-                      </View>
-                      <Text
-                        className="text-sm"
-                        style={{ color: isSelected ? colors.primary : colors.foreground, fontWeight: isSelected ? '500' : '400' }}
-                      >
-                        {option.label}
-                      </Text>
-                      {isSelected && (
-                        <Check size={16} color={colors.primary} style={{ marginLeft: 8 }} />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Description Input */}
-            <View className="flex-1">
-              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
-                Details
-              </Text>
-              <TextInput
-                className="rounded-lg px-4 py-3 flex-1"
-                placeholder={getPlaceholder()}
-                placeholderTextColor={colors.mutedForeground}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                textAlignVertical="top"
-                style={{ minHeight: 120, backgroundColor: colors.muted, color: colors.foreground }}
-              />
-            </View>
-
-            {/* Bottom padding */}
-            <View className="h-8" />
-          </View>
-        </KeyboardAvoidingView>
-      </ThemedSafeAreaView>
-    </Modal>
+      {/* Save Button */}
+      <View className="pt-4">
+        <Button
+          onPress={handleSave}
+          disabled={!description.trim() || isSaving}
+          className="w-full"
+        >
+          {isSaving ? 'Saving...' : 'Save Note'}
+        </Button>
+      </View>
+    </BottomSheet>
   );
 }
 

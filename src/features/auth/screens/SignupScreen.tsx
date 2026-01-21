@@ -1,28 +1,35 @@
 // src/features/auth/screens/SignupScreen.tsx
 // Signup screen converted from web SignUpForm
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import type { TextInput as TextInputType } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Check } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 export function SignupScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { signUp, isLoading } = useAuth();
+
+  // Input refs for form navigation
+  const emailInputRef = useRef<TextInputType>(null);
+  const passwordInputRef = useRef<TextInputType>(null);
+  const confirmPasswordInputRef = useRef<TextInputType>(null);
 
   // Form state
   const [fullName, setFullName] = useState('');
@@ -118,7 +125,8 @@ export function SignupScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         <ScrollView
@@ -161,6 +169,9 @@ export function SignupScreen() {
                 autoComplete="name"
                 editable={!loading}
                 style={{ color: colors.foreground }}
+                returnKeyType="next"
+                onSubmitEditing={() => emailInputRef.current?.focus()}
+                blurOnSubmit={false}
               />
             </View>
           </View>
@@ -173,6 +184,7 @@ export function SignupScreen() {
                 <Mail size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
+                ref={emailInputRef}
                 className="flex-1 px-4 py-3"
                 placeholder="name@example.com"
                 placeholderTextColor={colors.mutedForeground}
@@ -184,6 +196,9 @@ export function SignupScreen() {
                 autoComplete="email"
                 editable={!loading}
                 style={{ color: colors.foreground }}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                blurOnSubmit={false}
               />
             </View>
           </View>
@@ -196,6 +211,7 @@ export function SignupScreen() {
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
+                ref={passwordInputRef}
                 className="flex-1 px-4 py-3"
                 placeholder="Create a password"
                 placeholderTextColor={colors.mutedForeground}
@@ -206,6 +222,9 @@ export function SignupScreen() {
                 autoComplete="new-password"
                 editable={!loading}
                 style={{ color: colors.foreground }}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
+                blurOnSubmit={false}
               />
               <TouchableOpacity
                 className="pr-4"
@@ -251,6 +270,7 @@ export function SignupScreen() {
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
+                ref={confirmPasswordInputRef}
                 className="flex-1 px-4 py-3"
                 placeholder="Confirm your password"
                 placeholderTextColor={colors.mutedForeground}
@@ -261,6 +281,8 @@ export function SignupScreen() {
                 autoComplete="new-password"
                 editable={!loading}
                 style={{ color: colors.foreground }}
+                returnKeyType="done"
+                onSubmitEditing={handleSignup}
               />
               <TouchableOpacity
                 className="pr-4"

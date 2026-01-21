@@ -3,10 +3,11 @@
 // Post-call sheet for logging call details and notes
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Phone, Clock, ArrowUpRight, ArrowDownLeft, X, Check, User, StickyNote } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { Button, Badge } from '@/components/ui';
@@ -187,6 +188,7 @@ export function CallLogger({
   initialDirection = 'outbound',
 }: CallLoggerProps) {
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
 
   const [direction, setDirection] = useState<'inbound' | 'outbound'>(initialDirection);
   const [duration, setDuration] = useState(300); // 5 min default
@@ -226,7 +228,8 @@ export function CallLogger({
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={keyboardProps.behavior}
+      keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
       style={{ flex: 1 }}
     >
       <ScrollView

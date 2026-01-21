@@ -2,7 +2,7 @@
 // Deals List Screen - Shows all deals with stage filters
 // Uses useThemeColors() for reliable dark mode support
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, LoadingSpinner, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState, TAB_BAR_SAFE_PADDING, Input, Select } from '@/components/ui';
+import { SearchBar, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState, TAB_BAR_SAFE_PADDING, Input, Select } from '@/components/ui';
+import { DealCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SlidersHorizontal, MapPin, Calendar, DollarSign, ChevronRight, Briefcase, Search } from 'lucide-react-native';
@@ -19,6 +20,7 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SPACING } from '@/constants/design-tokens';
+import { useDebounce } from '@/hooks';
 
 import {
   Deal,
@@ -72,7 +74,8 @@ interface DealCardProps {
   onPress: () => void;
 }
 
-function DealCard({ deal, onPress }: DealCardProps) {
+// Memoized DealCard for better list performance
+const DealCard = memo(function DealCard({ deal, onPress }: DealCardProps) {
   const colors = useThemeColors();
   const nextAction = useNextAction(deal);
   // Handle unknown stages from database
@@ -144,7 +147,7 @@ function DealCard({ deal, onPress }: DealCardProps) {
               {stageConfig.label}
             </Text>
           </View>
-          <Text className="text-base font-semibold" style={{ color: colors.foreground }} numberOfLines={1}>
+          <Text className="text-base font-semibold flex-1 flex-shrink" style={{ color: colors.foreground }} numberOfLines={1}>
             {getDealLeadName(deal)}
           </Text>
         </View>
@@ -219,7 +222,17 @@ function DealCard({ deal, onPress }: DealCardProps) {
       </View>
     </TouchableOpacity>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison for better memoization
+  // Note: onPress is included to prevent stale closure bugs when parent recreates callback
+  return (
+    prevProps.deal.id === nextProps.deal.id &&
+    prevProps.deal.stage === nextProps.deal.stage &&
+    prevProps.deal.updated_at === nextProps.deal.updated_at &&
+    prevProps.deal.next_action === nextProps.deal.next_action &&
+    prevProps.onPress === nextProps.onPress
+  );
+});
 
 // ============================================
 // Main Screen
@@ -230,6 +243,7 @@ export function DealsListScreen() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeStage, setActiveStage] = useState<DealStage | 'all'>('all');
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
   const [showCreateDealSheet, setShowCreateDealSheet] = useState(false);
@@ -245,14 +259,17 @@ export function DealsListScreen() {
   const { properties } = useProperties();
   const createDeal = useCreateDeal();
 
-  // Build filters
+  // Build filters - use debounced search query
   const filters: DealsFilters = useMemo(() => ({
     stage: activeStage,
-    search: searchQuery || undefined,
+    search: debouncedSearchQuery || undefined,
     activeOnly: true,
     sortBy: 'updated_at',
     sortDirection: 'desc',
-  }), [activeStage, searchQuery]);
+  }), [activeStage, debouncedSearchQuery]);
+
+  // Stable item separator reference for FlatList optimization
+  const ItemSeparator = useCallback(() => <View className="h-3" />, []);
 
   const { deals, isLoading, refetch } = useDeals(filters);
 
@@ -324,8 +341,10 @@ export function DealsListScreen() {
 
 
         {/* Deals List */}
-        {isLoading ? (
-          <LoadingSpinner fullScreen />
+        {isLoading && !deals?.length ? (
+          <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP, paddingHorizontal: 16 }}>
+            <SkeletonList count={5} component={DealCardSkeleton} />
+          </View>
         ) : (
           <FlatList
             data={deals}
@@ -336,7 +355,12 @@ export function DealsListScreen() {
               paddingHorizontal: 16,
               paddingBottom: TAB_BAR_SAFE_PADDING,
             }}
-            ItemSeparatorComponent={() => <View className="h-3" />}
+            ItemSeparatorComponent={ItemSeparator}
+            // Performance optimization props
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}

@@ -2,13 +2,14 @@
 // Standardized form field component with label, input, error, and helper text
 // Consolidates form input patterns across AddCompSheet, AddRepairSheet, AddFinancingSheet, etc.
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 import {
   View,
   Text,
   TextInput,
   TextInputProps,
   StyleSheet,
+  LayoutChangeEvent,
 } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -45,30 +46,36 @@ export interface FormFieldProps extends Omit<TextInputProps, 'style'> {
   numberOfLines?: number;
   /** Disable the field */
   editable?: boolean;
+  /** Handler for layout events (used for scroll-to-error) */
+  onLayoutContainer?: (event: LayoutChangeEvent) => void;
 }
 
-export function FormField({
-  label,
-  value,
-  onChangeText,
-  error,
-  helperText,
-  required = false,
-  icon: Icon,
-  prefix,
-  suffix,
-  placeholder,
-  keyboardType = 'default',
-  autoCapitalize = 'sentences',
-  multiline = false,
-  numberOfLines = 1,
-  editable = true,
-  ...textInputProps
-}: FormFieldProps) {
+export const FormField = forwardRef<TextInput, FormFieldProps>(function FormField(
+  {
+    label,
+    value,
+    onChangeText,
+    error,
+    helperText,
+    required = false,
+    icon: Icon,
+    prefix,
+    suffix,
+    placeholder,
+    keyboardType = 'default',
+    autoCapitalize = 'sentences',
+    multiline = false,
+    numberOfLines = 1,
+    editable = true,
+    onLayoutContainer,
+    ...textInputProps
+  },
+  ref
+) {
   const colors = useThemeColors();
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={onLayoutContainer}>
       {/* Label */}
       <View style={styles.labelRow}>
         <Text style={[styles.label, { color: colors.foreground }]}>
@@ -104,6 +111,7 @@ export function FormField({
 
         {/* Input */}
         <TextInput
+          ref={ref}
           style={[
             styles.input,
             { color: colors.foreground },
@@ -131,7 +139,7 @@ export function FormField({
 
       {/* Error Message */}
       {error && (
-        <Text style={[styles.errorText, { color: colors.destructive }]}>
+        <Text style={[styles.errorText, { color: colors.destructive }]} accessibilityRole="alert">
           {error}
         </Text>
       )}
@@ -144,7 +152,7 @@ export function FormField({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

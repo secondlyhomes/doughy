@@ -228,7 +228,7 @@ export function RelatedDealsCard({
                 )}
                 {deal.status && (
                   <Badge variant={getStatusVariant(deal.status)} size="sm">
-                    {deal.status}
+                    {deal.status.charAt(0).toUpperCase() + deal.status.slice(1)}
                   </Badge>
                 )}
               </View>

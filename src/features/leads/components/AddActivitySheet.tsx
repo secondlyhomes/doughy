@@ -5,15 +5,11 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Modal,
   TouchableOpacity,
   TextInput,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import {
-  X,
   Phone,
   Mail,
   MessageSquare,
@@ -22,8 +18,7 @@ import {
   Home,
   Check,
 } from 'lucide-react-native';
-import { ThemedSafeAreaView } from '@/components';
-import { Button } from '@/components/ui';
+import { BottomSheet, BottomSheetSection, Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
@@ -125,167 +120,143 @@ export function AddActivitySheet({
   const showOutcomePicker = ['call', 'meeting'].includes(selectedType);
 
   return (
-    <Modal
+    <BottomSheet
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={handleClose}
+      onClose={handleClose}
+      title="Log Activity"
+      snapPoints={['85%']}
     >
-      <ThemedSafeAreaView className="flex-1" edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
-        >
-          {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-            <TouchableOpacity onPress={handleClose} className="p-1">
-              <X size={24} color={colors.mutedForeground} />
-            </TouchableOpacity>
-            <View className="flex-1 items-center">
-              <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Log Activity</Text>
-              <Text className="text-sm" style={{ color: colors.mutedForeground }}>{leadName}</Text>
-            </View>
-            <Button
-              onPress={handleSave}
-              disabled={!description.trim()}
-              size="sm"
-            >
-              Save
-            </Button>
-          </View>
+      {/* Lead Name Subtitle */}
+      <View className="px-0 -mt-2 mb-2">
+        <Text className="text-sm text-center" style={{ color: colors.mutedForeground }}>
+          {leadName}
+        </Text>
+      </View>
 
-          <ScrollView className="flex-1 px-4 pt-4">
-            {/* Activity Type Selection */}
-            <View className="mb-6">
-              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
-                Activity Type
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {ACTIVITY_TYPE_CONFIG.map((activity) => {
-                  const IconComponent = activity.iconComponent;
-                  const iconColor = colors[activity.colorKey];
-                  const isSelected = selectedType === activity.type;
-                  return (
-                    <TouchableOpacity
-                      key={activity.type}
-                      className="flex-row items-center px-4 py-3 rounded-lg"
-                      style={{
-                        backgroundColor: isSelected ? withOpacity(colors.primary, 'muted') : colors.muted,
-                        borderWidth: isSelected ? 1 : 0,
-                        borderColor: isSelected ? colors.primary : 'transparent',
-                      }}
-                      onPress={() => setSelectedType(activity.type)}
-                    >
-                      <View className="p-1.5 rounded-full mr-2" style={{ backgroundColor: getActivityBgColor(activity.colorKey, colors) }}>
-                        <IconComponent size={20} color={iconColor} />
-                      </View>
-                      <Text
-                        className="text-sm"
-                        style={{
-                          color: isSelected ? colors.primary : colors.foreground,
-                          fontWeight: isSelected ? '500' : 'normal',
-                        }}
-                      >
-                        {activity.label}
-                      </Text>
-                      {isSelected && (
-                        <Check size={16} color={colors.primary} className="ml-2" />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Description */}
-            <View className="mb-6">
-              <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
-                Description
-              </Text>
-              <TextInput
-                className="rounded-lg px-4 py-3 min-h-[100px]"
-                style={{ backgroundColor: colors.muted, color: colors.foreground }}
-                placeholder="What happened? Add details about the interaction..."
-                placeholderTextColor={colors.mutedForeground}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                textAlignVertical="top"
-              />
-            </View>
-
-            {/* Duration Picker */}
-            {showDurationPicker && (
-              <View className="mb-6">
-                <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
-                  Duration
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View className="flex-row gap-2">
-                    {DURATION_OPTIONS.map((opt) => {
-                      const isSelected = duration === opt;
-                      return (
-                        <TouchableOpacity
-                          key={opt}
-                          className="px-4 py-2 rounded-lg"
-                          style={{ backgroundColor: isSelected ? colors.primary : colors.muted }}
-                          onPress={() => setDuration(isSelected ? null : opt)}
-                        >
-                          <Text
-                            className="text-sm"
-                            style={{
-                              color: isSelected ? colors.primaryForeground : colors.foreground,
-                              fontWeight: isSelected ? '500' : 'normal',
-                            }}
-                          >
-                            {opt}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Outcome Picker */}
-            {showOutcomePicker && (
-              <View className="mb-6">
-                <Text className="text-sm font-medium mb-3 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>
-                  Outcome
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {OUTCOME_OPTIONS.map((opt) => {
-                    const isSelected = outcome === opt.value;
-                    return (
-                      <TouchableOpacity
-                        key={opt.value}
-                        className="px-4 py-2 rounded-lg"
-                        style={{ backgroundColor: isSelected ? colors.primary : colors.muted }}
-                        onPress={() => setOutcome(isSelected ? null : opt.value)}
-                      >
-                        <Text
-                          className="text-sm"
-                          style={{
-                            color: isSelected ? colors.primaryForeground : colors.foreground,
-                            fontWeight: isSelected ? '500' : 'normal',
-                          }}
-                        >
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+      {/* Activity Type Selection */}
+      <BottomSheetSection title="Activity Type">
+        <View className="flex-row flex-wrap gap-2">
+          {ACTIVITY_TYPE_CONFIG.map((activity) => {
+            const IconComponent = activity.iconComponent;
+            const iconColor = colors[activity.colorKey];
+            const isSelected = selectedType === activity.type;
+            return (
+              <TouchableOpacity
+                key={activity.type}
+                className="flex-row items-center px-4 py-3 rounded-lg"
+                style={{
+                  backgroundColor: isSelected ? withOpacity(colors.primary, 'muted') : colors.muted,
+                  borderWidth: isSelected ? 1 : 0,
+                  borderColor: isSelected ? colors.primary : 'transparent',
+                }}
+                onPress={() => setSelectedType(activity.type)}
+              >
+                <View className="p-1.5 rounded-full mr-2" style={{ backgroundColor: getActivityBgColor(activity.colorKey, colors) }}>
+                  <IconComponent size={20} color={iconColor} />
                 </View>
-              </View>
-            )}
+                <Text
+                  className="text-sm"
+                  style={{
+                    color: isSelected ? colors.primary : colors.foreground,
+                    fontWeight: isSelected ? '500' : 'normal',
+                  }}
+                >
+                  {activity.label}
+                </Text>
+                {isSelected && (
+                  <Check size={16} color={colors.primary} className="ml-2" />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </BottomSheetSection>
 
-            {/* Bottom padding */}
-            <View className="h-8" />
+      {/* Description */}
+      <BottomSheetSection title="Description">
+        <TextInput
+          className="rounded-lg px-4 py-3 min-h-[100px]"
+          style={{ backgroundColor: colors.muted, color: colors.foreground }}
+          placeholder="What happened? Add details about the interaction..."
+          placeholderTextColor={colors.mutedForeground}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          textAlignVertical="top"
+        />
+      </BottomSheetSection>
+
+      {/* Duration Picker */}
+      {showDurationPicker && (
+        <BottomSheetSection title="Duration">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View className="flex-row gap-2">
+              {DURATION_OPTIONS.map((opt) => {
+                const isSelected = duration === opt;
+                return (
+                  <TouchableOpacity
+                    key={opt}
+                    className="px-4 py-2 rounded-lg"
+                    style={{ backgroundColor: isSelected ? colors.primary : colors.muted }}
+                    onPress={() => setDuration(isSelected ? null : opt)}
+                  >
+                    <Text
+                      className="text-sm"
+                      style={{
+                        color: isSelected ? colors.primaryForeground : colors.foreground,
+                        fontWeight: isSelected ? '500' : 'normal',
+                      }}
+                    >
+                      {opt}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </ScrollView>
-        </KeyboardAvoidingView>
-      </ThemedSafeAreaView>
-    </Modal>
+        </BottomSheetSection>
+      )}
+
+      {/* Outcome Picker */}
+      {showOutcomePicker && (
+        <BottomSheetSection title="Outcome">
+          <View className="flex-row flex-wrap gap-2">
+            {OUTCOME_OPTIONS.map((opt) => {
+              const isSelected = outcome === opt.value;
+              return (
+                <TouchableOpacity
+                  key={opt.value}
+                  className="px-4 py-2 rounded-lg"
+                  style={{ backgroundColor: isSelected ? colors.primary : colors.muted }}
+                  onPress={() => setOutcome(isSelected ? null : opt.value)}
+                >
+                  <Text
+                    className="text-sm"
+                    style={{
+                      color: isSelected ? colors.primaryForeground : colors.foreground,
+                      fontWeight: isSelected ? '500' : 'normal',
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </BottomSheetSection>
+      )}
+
+      {/* Save Button */}
+      <View className="pt-4">
+        <Button
+          onPress={handleSave}
+          disabled={!description.trim()}
+          className="w-full"
+        >
+          Save Activity
+        </Button>
+      </View>
+    </BottomSheet>
   );
 }
 

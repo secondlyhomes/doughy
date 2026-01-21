@@ -1,7 +1,7 @@
 // src/features/portfolio/components/PortfolioPropertyCard.tsx
 // Card displaying a single portfolio property
 
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { MapPin, TrendingUp, TrendingDown, ChevronRight, Home } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -13,7 +13,7 @@ interface PortfolioPropertyCardProps {
   onPress: (propertyId: string) => void;
 }
 
-export function PortfolioPropertyCard({ property, onPress }: PortfolioPropertyCardProps) {
+function PortfolioPropertyCardComponent({ property, onPress }: PortfolioPropertyCardProps) {
   const colors = useThemeColors();
 
   const formatCurrency = (value?: number) => {
@@ -48,9 +48,9 @@ export function PortfolioPropertyCard({ property, onPress }: PortfolioPropertyCa
     >
       {/* Property Image or Placeholder */}
       <View className="h-32 relative">
-        {property.image_url ? (
+        {property.images && property.images.length > 0 ? (
           <Image
-            source={{ uri: property.image_url }}
+            source={{ uri: property.images.find((i) => i.is_primary)?.url || property.images[0].url }}
             className="w-full h-full"
             resizeMode="cover"
           />
@@ -147,3 +147,14 @@ export function PortfolioPropertyCard({ property, onPress }: PortfolioPropertyCa
     </TouchableOpacity>
   );
 }
+
+// Memoize the component with custom comparison for better list performance
+export const PortfolioPropertyCard = memo(PortfolioPropertyCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.property.id === nextProps.property.id &&
+    prevProps.property.current_value === nextProps.property.current_value &&
+    prevProps.property.equity === nextProps.property.equity &&
+    prevProps.property.monthly_cash_flow === nextProps.property.monthly_cash_flow &&
+    prevProps.property.address === nextProps.property.address
+  );
+});

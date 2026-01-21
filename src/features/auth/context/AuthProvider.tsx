@@ -116,7 +116,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message);
       }
 
-      // Session will be updated via onAuthStateChange
+      // Set loading false here as well - onAuthStateChange will also set it,
+      // but this ensures we don't get stuck if the event doesn't fire
+      setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
       throw error;
@@ -142,7 +144,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message);
       }
 
-      // Session will be updated via onAuthStateChange
+      // Set loading false here as well - onAuthStateChange will also set it,
+      // but this ensures we don't get stuck if the event doesn't fire
+      setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
       throw error;
@@ -244,6 +248,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Don't set state here - let onAuthStateChange handle it
       // This prevents double fetchProfile calls and race conditions
       console.log('[auth] Dev sign-in successful, waiting for auth state change...');
+      // Set loading false here as well - onAuthStateChange will also set it,
+      // but this ensures we don't get stuck if the event doesn't fire on cold start
+      setIsLoading(false);
     } catch (error) {
       console.error('[auth] Exception during dev sign-in:', error);
       setIsLoading(false);

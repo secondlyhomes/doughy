@@ -100,3 +100,34 @@ export interface LeadFormData {
   tags?: string[];
   notes?: string;
 }
+
+// Property image for LeadProperty
+export interface LeadPropertyImage {
+  id: string;
+  url: string;
+  is_primary?: boolean;
+  label?: string;
+}
+
+// Extended lead type with associated properties (for hierarchical view)
+export interface LeadProperty {
+  id: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  square_feet?: number;
+  arv?: number;
+  purchase_price?: number;
+  status?: string;
+  property_type?: string;
+  images?: LeadPropertyImage[];
+}
+
+export interface LeadWithProperties extends Lead {
+  properties: LeadProperty[];
+  propertyCount: number;
+}

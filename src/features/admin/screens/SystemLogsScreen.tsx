@@ -26,7 +26,7 @@ import { SPACING } from '@/constants/design-tokens';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
 
 // Spacing constants for floating search bar
-const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 48 + SPACING.xs; // ~60px (pt-2 + searchbar + pb-1)
+const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs; // ~52px (pt-2 + searchbar + pb-1)
 const FILTER_PILLS_HEIGHT = 60; // Slightly taller due to "Filter by Level" label
 const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
 
@@ -87,7 +87,7 @@ export function SystemLogsScreen() {
     }
   }, [logs.length, total, loadLogs]);
 
-  const getLevelIcon = (level: LogLevel) => {
+  const getLevelIcon = useCallback((level: LogLevel) => {
     switch (level) {
       case 'error':
         return <AlertCircle size={16} color={colors.destructive} />;
@@ -98,9 +98,9 @@ export function SystemLogsScreen() {
       case 'debug':
         return <Bug size={16} color={colors.mutedForeground} />;
     }
-  };
+  }, [colors]);
 
-  const getLevelStyles = (level: LogLevel) => {
+  const getLevelStyles = useCallback((level: LogLevel) => {
     switch (level) {
       case 'error':
         return { backgroundColor: withOpacity(colors.destructive, 'muted'), borderColor: withOpacity(colors.destructive, 'strong') };
@@ -111,7 +111,7 @@ export function SystemLogsScreen() {
       case 'debug':
         return { backgroundColor: colors.muted, borderColor: colors.border };
     }
-  };
+  }, [colors]);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -130,7 +130,7 @@ export function SystemLogsScreen() {
     });
   };
 
-  const renderLog = ({ item }: { item: LogEntry }) => {
+  const renderLog = useCallback(({ item }: { item: LogEntry }) => {
     const isExpanded = expandedLog === item.id;
     const levelStyles = getLevelStyles(item.level);
 
@@ -172,7 +172,7 @@ export function SystemLogsScreen() {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [colors, expandedLog, getLevelIcon, getLevelStyles]);
 
   // Filter logs by search term
   const filteredLogs = logs.filter((log) =>
@@ -218,7 +218,7 @@ export function SystemLogsScreen() {
             value={search}
             onChangeText={setSearch}
             placeholder="Search logs..."
-            size="lg"
+            size="md"
             glass={true}
             onFilter={() => setShowFilters(!showFilters)}
             hasActiveFilters={filters.level !== 'all'}
@@ -276,6 +276,7 @@ export function SystemLogsScreen() {
         data={filteredLogs}
         keyExtractor={(item) => item.id}
         renderItem={renderLog}
+        extraData={expandedLog}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
@@ -285,6 +286,11 @@ export function SystemLogsScreen() {
           paddingTop: listPaddingTop,
           paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
         }}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={15}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center py-24">
             <Info size={48} color={colors.mutedForeground} />
@@ -304,7 +310,7 @@ interface FilterPillProps {
   colors: ReturnType<typeof useThemeColors>;
 }
 
-function FilterPill({ label, active, onPress, color, colors }: FilterPillProps) {
+const FilterPill = React.memo(function FilterPill({ label, active, onPress, color, colors }: FilterPillProps) {
   return (
     <TouchableOpacity
       className="px-3 py-1.5 rounded-full"
@@ -319,4 +325,4 @@ function FilterPill({ label, active, onPress, color, colors }: FilterPillProps) 
       </Text>
     </TouchableOpacity>
   );
-}
+});

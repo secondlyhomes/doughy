@@ -9,8 +9,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   TextInput,
 } from 'react-native';
 import { X, Wrench, DollarSign, FileText, AlertCircle } from 'lucide-react-native';
@@ -125,11 +123,7 @@ export function AddRepairSheet({
       onClose={handleClose}
       snapPoints={['85%']}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        {/* Header */}
+      {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           <View>
             <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
@@ -251,27 +245,26 @@ export function AddRepairSheet({
           <View className="h-4" />
         </ScrollView>
 
-        {/* Submit Button */}
-        <View className="p-4 border-t" style={{ borderColor: colors.border }}>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={isLoading}
-            className="py-3.5 rounded-xl flex-row items-center justify-center"
-            style={{ backgroundColor: colors.primary }}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={colors.primaryForeground} />
-            ) : (
-              <>
-                <Wrench size={18} color={colors.primaryForeground} />
-                <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>
-                  {editRepair ? 'Save Changes' : 'Add Repair'}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+      {/* Submit Button */}
+      <View className="p-4 border-t" style={{ borderColor: colors.border }}>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={isLoading}
+          className="py-3.5 rounded-xl flex-row items-center justify-center"
+          style={{ backgroundColor: colors.primary }}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={colors.primaryForeground} />
+          ) : (
+            <>
+              <Wrench size={18} color={colors.primaryForeground} />
+              <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>
+                {editRepair ? 'Save Changes' : 'Add Repair'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
     </BottomSheet>
   );
 }

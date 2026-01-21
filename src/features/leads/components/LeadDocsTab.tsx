@@ -230,7 +230,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
         <View className="flex-row justify-between items-center">
           <View className="flex-row items-center">
             <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
-              {leadName ? `${leadName}'s Documents` : 'Seller Documents'}
+              Documents
             </Text>
             {documents.length > 0 && (
               <View className="px-2 py-1 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>

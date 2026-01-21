@@ -48,7 +48,7 @@ export function PropertyOverviewTab({ property }: PropertyOverviewTabProps) {
         </View>
 
         <View className="gap-3">
-          {property.lot_size && (
+          {property.lot_size != null && property.lot_size > 0 && (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>Lot Size</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>
@@ -56,31 +56,31 @@ export function PropertyOverviewTab({ property }: PropertyOverviewTabProps) {
               </Text>
             </View>
           )}
-          {property.county && (
+          {property.county ? (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>County</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>
                 {property.county}
               </Text>
             </View>
-          )}
-          {property.status && (
+          ) : null}
+          {property.status ? (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>Status</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>
-                {property.status}
+                {property.status.charAt(0).toUpperCase() + property.status.slice(1).toLowerCase()}
               </Text>
             </View>
-          )}
-          {property.mls_id && (
+          ) : null}
+          {property.mls_id ? (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>MLS ID</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>
                 {property.mls_id}
               </Text>
             </View>
-          )}
-          {property.year_built && (
+          ) : null}
+          {property.year_built != null && property.year_built > 0 && (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>Year Built</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>
@@ -88,7 +88,7 @@ export function PropertyOverviewTab({ property }: PropertyOverviewTabProps) {
               </Text>
             </View>
           )}
-          {property.bedrooms && (
+          {property.bedrooms != null && property.bedrooms > 0 && (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>Bedrooms</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>
@@ -96,7 +96,7 @@ export function PropertyOverviewTab({ property }: PropertyOverviewTabProps) {
               </Text>
             </View>
           )}
-          {property.bathrooms && (
+          {property.bathrooms != null && property.bathrooms > 0 && (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>Bathrooms</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>
@@ -104,7 +104,7 @@ export function PropertyOverviewTab({ property }: PropertyOverviewTabProps) {
               </Text>
             </View>
           )}
-          {property.square_feet && (
+          {property.square_feet != null && property.square_feet > 0 && (
             <View className="flex-row justify-between">
               <Text style={{ color: colors.mutedForeground }}>Square Feet</Text>
               <Text className="font-medium" style={{ color: colors.foreground }}>

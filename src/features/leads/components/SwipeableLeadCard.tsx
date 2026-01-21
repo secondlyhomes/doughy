@@ -1,11 +1,12 @@
 // Swipeable Lead Card Component - React Native
 // Zone D: Lead card with swipe actions for quick interactions
 
-import React, { useRef } from 'react';
+import React, { useRef, useCallback, memo } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert, Animated } from 'react-native';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { Phone, MessageSquare, Archive, Star } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { haptic } from '@/lib/haptics';
 
 import { Lead } from '../types';
 import { LeadCard } from './LeadCard';
@@ -21,7 +22,7 @@ interface SwipeableLeadCardProps {
   glassIntensity?: number;
 }
 
-export function SwipeableLeadCard({
+function SwipeableLeadCardComponent({
   lead,
   onPress,
   variant = 'default',
@@ -32,42 +33,48 @@ export function SwipeableLeadCard({
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
 
-  const closeSwipeable = () => {
+  const closeSwipeable = useCallback(() => {
     swipeableRef.current?.close();
-  };
+  }, []);
 
-  const handleCall = () => {
+  const handleCall = useCallback(() => {
     closeSwipeable();
+    haptic.light();
     if (lead.phone) {
       Linking.openURL(`tel:${sanitizePhone(lead.phone)}`);
     } else {
       Alert.alert('No Phone', 'This lead does not have a phone number.');
     }
-  };
+  }, [lead.phone, closeSwipeable]);
 
-  const handleText = () => {
+  const handleText = useCallback(() => {
     closeSwipeable();
+    haptic.light();
     if (lead.phone) {
       Linking.openURL(`sms:${sanitizePhone(lead.phone)}`);
     } else {
       Alert.alert('No Phone', 'This lead does not have a phone number.');
     }
-  };
+  }, [lead.phone, closeSwipeable]);
 
-  const handleToggleStar = async () => {
+  const handleToggleStar = useCallback(async () => {
     closeSwipeable();
+    haptic.selection();
     try {
       await updateLead.mutateAsync({
         id: lead.id,
         data: { starred: !lead.starred },
       });
+      haptic.success();
     } catch (error) {
+      haptic.error();
       Alert.alert('Error', 'Failed to update lead');
     }
-  };
+  }, [lead.id, lead.starred, updateLead, closeSwipeable]);
 
-  const handleArchive = () => {
+  const handleArchive = useCallback(() => {
     closeSwipeable();
+    haptic.warning();
     Alert.alert(
       'Archive Lead',
       `Are you sure you want to archive ${lead.name}?`,
@@ -79,16 +86,18 @@ export function SwipeableLeadCard({
           onPress: async () => {
             try {
               await deleteLead.mutateAsync(lead.id);
+              haptic.success();
             } catch (error) {
+              haptic.error();
               Alert.alert('Error', 'Failed to archive lead');
             }
           },
         },
       ]
     );
-  };
+  }, [lead.name, lead.id, deleteLead, closeSwipeable]);
 
-  const renderLeftActions = (
+  const renderLeftActions = useCallback((
     progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>
   ) => {
@@ -125,9 +134,9 @@ export function SwipeableLeadCard({
         </RectButton>
       </View>
     );
-  };
+  }, [colors.warning, colors.mutedForeground, lead.starred, handleToggleStar]);
 
-  const renderRightActions = (
+  const renderRightActions = useCallback((
     progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>
   ) => {
@@ -194,7 +203,7 @@ export function SwipeableLeadCard({
         </RectButton>
       </View>
     );
-  };
+  }, [colors.info, colors.success, colors.destructive, lead.name, handleCall, handleText, handleArchive]);
 
   return (
     <View accessibilityHint="Swipe left for call, text, archive actions. Swipe right to star.">
@@ -219,5 +228,20 @@ export function SwipeableLeadCard({
     </View>
   );
 }
+
+// Memoize the component with custom comparison for better list performance
+// Note: onPress is included to prevent stale closure bugs when parent recreates callback
+export const SwipeableLeadCard = memo(SwipeableLeadCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.lead.id === nextProps.lead.id &&
+    prevProps.lead.name === nextProps.lead.name &&
+    prevProps.lead.phone === nextProps.lead.phone &&
+    prevProps.lead.starred === nextProps.lead.starred &&
+    prevProps.lead.status === nextProps.lead.status &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.glassIntensity === nextProps.glassIntensity &&
+    prevProps.onPress === nextProps.onPress
+  );
+});
 
 export default SwipeableLeadCard;

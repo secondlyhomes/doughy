@@ -8,6 +8,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  TextInput,
+  Image,
+  ScrollView,
 } from 'react-native';
 import {
   Share2,
@@ -18,7 +21,12 @@ import {
   Edit2,
   Trash2,
   ChevronRight,
+  ImagePlus,
+  Link,
+  X,
+  Camera,
 } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -33,9 +41,10 @@ interface PropertyActionsSheetProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onStatusChange?: () => void;
+  onPhotosUpdate?: () => void;
 }
 
-type ActionView = 'main' | 'share' | 'status';
+type ActionView = 'main' | 'share' | 'status' | 'photos';
 
 export function PropertyActionsSheet({
   property,
@@ -44,13 +53,23 @@ export function PropertyActionsSheet({
   onEdit,
   onDelete,
   onStatusChange,
+  onPhotosUpdate,
 }: PropertyActionsSheetProps) {
   const colors = useThemeColors();
-  const { shareProperty, exportPropertySummary, copyPropertyLink, updatePropertyStatus, isLoading } =
-    usePropertyActions();
+  const {
+    shareProperty,
+    exportPropertySummary,
+    copyPropertyLink,
+    updatePropertyStatus,
+    addPropertyImage,
+    removePropertyImage,
+    isLoading,
+  } = usePropertyActions();
 
   const [currentView, setCurrentView] = useState<ActionView>('main');
   const [processingAction, setProcessingAction] = useState<string | null>(null);
+  const [urlInput, setUrlInput] = useState('');
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   // Status colors using theme
   const getStatusColors = (status: string) => {
@@ -75,8 +94,125 @@ export function PropertyActionsSheet({
   const handleClose = useCallback(() => {
     setCurrentView('main');
     setProcessingAction(null);
+    setUrlInput('');
+    setUrlError(null);
     onClose();
   }, [onClose]);
+
+  // Validate URL is a valid image URL
+  const isValidImageUrl = useCallback((url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      // Check for common image hosting domains or image extensions
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+      const imageHostDomains = ['unsplash.com', 'images.unsplash.com', 'imgur.com', 'i.imgur.com', 'cloudinary.com'];
+
+      const hasImageExtension = imageExtensions.some(ext => urlObj.pathname.toLowerCase().includes(ext));
+      const isImageHost = imageHostDomains.some(domain => urlObj.hostname.includes(domain));
+
+      // Accept if it has an image extension, is from known image hosts, or is HTTPS
+      return hasImageExtension || isImageHost || urlObj.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Add image from URL
+  const handleAddImageFromUrl = useCallback(async () => {
+    const trimmedUrl = urlInput.trim();
+
+    if (!trimmedUrl) {
+      setUrlError('Please enter a URL');
+      return;
+    }
+
+    if (!isValidImageUrl(trimmedUrl)) {
+      setUrlError('Please enter a valid image URL');
+      return;
+    }
+
+    setProcessingAction('add-url');
+    setUrlError(null);
+
+    const success = await addPropertyImage(property.id, trimmedUrl);
+    setProcessingAction(null);
+
+    if (success) {
+      setUrlInput('');
+      onPhotosUpdate?.();
+      Alert.alert('Success', 'Image added successfully');
+    } else {
+      Alert.alert('Error', 'Failed to add image. Please try again.');
+    }
+  }, [urlInput, isValidImageUrl, addPropertyImage, property.id, onPhotosUpdate]);
+
+  // Add image from device
+  const handleAddImageFromDevice = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Please grant photo library permission to add images from your device.'
+      );
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsEditing: true,
+        aspect: [4, 3],
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        const imageUri = result.assets[0].uri;
+        setProcessingAction('add-device');
+
+        // For now, we save the local URI directly
+        // In production, this would upload to Supabase Storage first
+        const success = await addPropertyImage(property.id, imageUri, 'Device Photo');
+        setProcessingAction(null);
+
+        if (success) {
+          onPhotosUpdate?.();
+          Alert.alert('Success', 'Image added successfully');
+        } else {
+          Alert.alert('Error', 'Failed to add image. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  }, [addPropertyImage, property.id, onPhotosUpdate]);
+
+  // Remove image
+  const handleRemoveImage = useCallback(async (imageId: string) => {
+    Alert.alert(
+      'Remove Image',
+      'Are you sure you want to remove this image?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            setProcessingAction(`remove-${imageId}`);
+            const success = await removePropertyImage(imageId);
+            setProcessingAction(null);
+
+            if (success) {
+              onPhotosUpdate?.();
+            } else {
+              Alert.alert('Error', 'Failed to remove image. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  }, [removePropertyImage, onPhotosUpdate]);
 
   const handleShare = useCallback(
     async (type: 'link' | 'text' | 'full') => {
@@ -216,6 +352,14 @@ export function PropertyActionsSheet({
         { showArrow: true }
       )}
 
+      {/* Update Photos */}
+      {renderActionButton(
+        <ImagePlus size={20} color={colors.primary} />,
+        'Update Photos',
+        () => setCurrentView('photos'),
+        { showArrow: true }
+      )}
+
       {/* Divider */}
       <View className="h-2" />
 
@@ -330,12 +474,154 @@ export function PropertyActionsSheet({
     );
   };
 
+  // Photos management view
+  const renderPhotosView = () => {
+    const images = property.images || [];
+
+    return (
+      <View>
+        {/* Back button */}
+        <TouchableOpacity
+          onPress={() => setCurrentView('main')}
+          className="flex-row items-center py-2 mb-2"
+        >
+          <ChevronRight size={20} color={colors.mutedForeground} style={{ transform: [{ rotate: '180deg' }] }} />
+          <Text className="ml-1" style={{ color: colors.mutedForeground }}>Back</Text>
+        </TouchableOpacity>
+
+        <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>Update Photos</Text>
+        <Text className="text-sm mb-4" style={{ color: colors.mutedForeground }}>
+          {images.length} photo{images.length !== 1 ? 's' : ''} • Add from URL or device
+        </Text>
+
+        {/* Add from URL */}
+        <View className="mb-4">
+          <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>Add from URL</Text>
+          <View className="flex-row gap-2">
+            <TextInput
+              value={urlInput}
+              onChangeText={(text) => {
+                setUrlInput(text);
+                setUrlError(null);
+              }}
+              placeholder="Paste image URL here..."
+              placeholderTextColor={colors.mutedForeground}
+              className="flex-1 px-3 py-2.5 rounded-xl border"
+              style={{
+                backgroundColor: colors.card,
+                borderColor: urlError ? colors.destructive : colors.border,
+                color: colors.foreground,
+              }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+            <TouchableOpacity
+              onPress={handleAddImageFromUrl}
+              disabled={isLoading || !urlInput.trim()}
+              className="px-4 py-2.5 rounded-xl items-center justify-center"
+              style={{
+                backgroundColor: urlInput.trim() ? colors.primary : colors.muted,
+              }}
+            >
+              {processingAction === 'add-url' ? (
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              ) : (
+                <Link size={20} color={urlInput.trim() ? colors.primaryForeground : colors.mutedForeground} />
+              )}
+            </TouchableOpacity>
+          </View>
+          {urlError && (
+            <Text className="text-xs mt-1" style={{ color: colors.destructive }}>{urlError}</Text>
+          )}
+          <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
+            Supports Unsplash, Imgur, or any image URL
+          </Text>
+        </View>
+
+        {/* Add from Device */}
+        <TouchableOpacity
+          onPress={handleAddImageFromDevice}
+          disabled={isLoading}
+          className="flex-row items-center justify-center gap-2 py-3 rounded-xl border mb-4"
+          style={{
+            borderColor: colors.border,
+            backgroundColor: colors.card,
+          }}
+        >
+          {processingAction === 'add-device' ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Camera size={20} color={colors.primary} />
+          )}
+          <Text className="font-medium" style={{ color: colors.primary }}>
+            Add from Device
+          </Text>
+        </TouchableOpacity>
+
+        {/* Current Images */}
+        {images.length > 0 && (
+          <View>
+            <Text className="text-sm font-medium mb-2" style={{ color: colors.foreground }}>
+              Current Photos
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingVertical: 4 }}
+            >
+              <View className="flex-row gap-3">
+                {images.map((image, index) => {
+                  const isRemoving = processingAction === `remove-${image.id}`;
+
+                  return (
+                    <View key={image.id || index} className="relative">
+                      <Image
+                        source={{ uri: image.url }}
+                        className="w-20 h-20 rounded-xl"
+                        resizeMode="cover"
+                      />
+                      <TouchableOpacity
+                        onPress={() => handleRemoveImage(image.id)}
+                        disabled={isLoading}
+                        style={{ backgroundColor: colors.destructive }}
+                        className="absolute -top-2 -right-2 rounded-full w-6 h-6 items-center justify-center shadow-sm"
+                      >
+                        {isRemoving ? (
+                          <ActivityIndicator size="small" color={colors.destructiveForeground} />
+                        ) : (
+                          <X size={14} color={colors.destructiveForeground} />
+                        )}
+                      </TouchableOpacity>
+                      {index === 0 && (
+                        <View
+                          style={{ backgroundColor: withOpacity(colors.primary, 'opaque') }}
+                          className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded"
+                        >
+                          <Text style={{ color: colors.primaryForeground }} className="text-xs font-medium">
+                            Primary
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const getTitle = () => {
     switch (currentView) {
       case 'share':
         return 'Share Options';
       case 'status':
         return 'Property Status';
+      case 'photos':
+        return 'Update Photos';
       default:
         return 'Property Actions';
     }
@@ -347,6 +633,7 @@ export function PropertyActionsSheet({
         {currentView === 'main' && renderMainView()}
         {currentView === 'share' && renderShareView()}
         {currentView === 'status' && renderStatusView()}
+        {currentView === 'photos' && renderPhotosView()}
       </View>
     </BottomSheet>
   );

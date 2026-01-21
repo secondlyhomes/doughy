@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
-  Platform,
   ViewProps,
   TextProps,
   StyleSheet,
@@ -16,6 +15,7 @@ import {
 import { X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop } from './GlassView';
 
 // Modal Root
@@ -37,6 +37,11 @@ export function Modal({
   animationType = 'fade',
   useGlassBackdrop = true,
 }: ModalProps) {
+  const keyboardProps = useKeyboardAvoidance({
+    hasTabBar: false,
+    hasNavigationHeader: false,
+  });
+
   const renderBackdrop = () => {
     if (useGlassBackdrop) {
       return (
@@ -79,7 +84,8 @@ export function Modal({
       animationType={animationType}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         style={styles.container}
       >
         {renderBackdrop()}

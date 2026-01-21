@@ -16,8 +16,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Sparkles,
   X,
-  ChevronDown,
-  ChevronUp,
   Zap,
   MessageCircle,
   Clock,
@@ -40,8 +38,6 @@ import { useAssistantContext } from '../hooks/useAssistantContext';
 import { PatchSet } from '../types/patchset';
 import { ActionDefinition } from '../actions/catalog';
 import { AIJob } from '../types/jobs'; // Used in handleJobPress callback type
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // UI Constants
 const TAB_BAR_HEIGHT = 80; // Approximate tab bar height
@@ -92,6 +88,8 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
   const { pendingCount } = useAIJobs(dealId);
 
   // Pulse animation for bubble
+  // Note: useNativeDriver must be false because scaleAnim shares a transform
+  // with bubblePosition, which requires JS driver for PanResponder
   useEffect(() => {
     if (!isOpen && pendingCount > 0) {
       const pulse = Animated.loop(
@@ -99,12 +97,12 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
           Animated.timing(scaleAnim, {
             toValue: 1.15,
             duration: 600,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.timing(scaleAnim, {
             toValue: 1,
             duration: 600,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ])
       );
@@ -117,12 +115,12 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
           Animated.timing(scaleAnim, {
             toValue: 1.1,
             duration: 300,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.timing(scaleAnim, {
             toValue: 1,
             duration: 300,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ]).start();
       }, 2000);
@@ -196,9 +194,6 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
     // Could show success toast
   }, []);
 
-  // Panel dimensions
-  const panelHeight = SCREEN_HEIGHT * 0.65;
-
   return (
     <>
       {/* Floating Bubble - Glass effect */}
@@ -239,7 +234,7 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
       <BottomSheet
         visible={isOpen}
         onClose={handleClose}
-        snapPoints={['65%']}
+        snapPoints={['80%']}
         useGlass
       >
         {/* Header */}

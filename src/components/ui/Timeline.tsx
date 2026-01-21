@@ -17,9 +17,11 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { LucideIcon, Calendar, Clock, Plus } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { BlurView } from 'expo-blur';
+import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
+import { useTheme, useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ICON_SIZES } from '@/constants/design-tokens';
 
@@ -224,7 +226,7 @@ export function Timeline<T extends TimelineEvent>({
   renderEventMetadata,
   onViewMore,
 }: TimelineProps<T>) {
-  const colors = useThemeColors();
+  const { isDark, colors } = useTheme();
   const limitedEvents = maxEvents && events ? events.slice(0, maxEvents) : events;
   const hasMore = maxEvents && events && events.length > maxEvents;
 
@@ -338,11 +340,27 @@ export function Timeline<T extends TimelineEvent>({
           </Text>
           {onAddActivity && (
             <TouchableOpacity
-              className="mt-3 px-4 py-2 rounded-lg"
-              style={{ backgroundColor: colors.primary }}
+              className="mt-3 px-4 py-2 rounded-xl overflow-hidden"
               onPress={onAddActivity}
+              style={{ minWidth: 120 }}
             >
-              <Text className="font-medium" style={{ color: colors.primaryForeground }}>
+              {Platform.OS === 'ios' && isLiquidGlassSupported ? (
+                <LiquidGlassView
+                  style={StyleSheet.absoluteFill}
+                  colorScheme={isDark ? 'dark' : 'light'}
+                />
+              ) : Platform.OS !== 'web' ? (
+                <BlurView
+                  intensity={50}
+                  tint={isDark ? 'dark' : 'light'}
+                  style={StyleSheet.absoluteFill}
+                />
+              ) : (
+                <View
+                  style={[StyleSheet.absoluteFill, { backgroundColor: withOpacity(colors.primary, 'light') }]}
+                />
+              )}
+              <Text className="font-medium text-center" style={{ color: colors.foreground }}>
                 {emptyCTAText}
               </Text>
             </TouchableOpacity>

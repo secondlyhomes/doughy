@@ -6,7 +6,8 @@
 // TROUBLESHOOTING: See docs/TROUBLESHOOTING.md#bottom-padding-with-floating-tab-bar
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui';
+// Import directly to avoid require cycle with @/components/ui
+import { TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui/FloatingGlassTabBar';
 
 /**
  * Hook that provides consistent bottom padding values for screens with NativeTabs.
@@ -29,12 +30,27 @@ import { TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui';
  * - tabBarHeight: Native tab bar height (49px)
  * - safeAreaBottom: Device-specific safe area inset (0px on older devices, ~34px on iPhone X+)
  *
- * @example For ScrollView/FlatList content
+ * @example For ScrollView/FlatList content (no buttons at bottom)
  * ```tsx
  * const { contentPadding } = useTabBarPadding();
  *
  * <ScrollView contentContainerStyle={{ paddingBottom: contentPadding }}>
  *   {content}
+ * </ScrollView>
+ * ```
+ *
+ * @example For ScrollView content ending with buttons (buttons scroll with content)
+ * Use buttonBottom for paddingBottom when your ScrollView content ends with action buttons.
+ * This ensures buttons are fully visible with proper clearance above the tab bar when scrolled.
+ * ```tsx
+ * const { buttonBottom } = useTabBarPadding();
+ *
+ * <ScrollView contentContainerStyle={{ paddingBottom: buttonBottom }}>
+ *   {formContent}
+ *   <View className="flex-row gap-3 px-4">
+ *     <Button>Cancel</Button>
+ *     <Button>Submit</Button>
+ *   </View>
  * </ScrollView>
  * ```
  *

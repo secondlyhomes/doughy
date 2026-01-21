@@ -26,6 +26,7 @@ import {
   BarChart3,
   Settings,
   Focus,
+  Clock,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
@@ -232,6 +233,23 @@ export function SettingsScreen() {
                 thumbColor={colors.card}
               />
             </View>
+          </View>
+        </View>
+
+        {/* Nudge Settings */}
+        <View className="p-4">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
+            NUDGE SETTINGS
+          </Text>
+
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+            <SettingsItem
+              icon={<Clock size={20} color={colors.mutedForeground} />}
+              title="Smart Nudges"
+              subtitle="Configure follow-up reminders"
+              onPress={() => router.push('/(tabs)/settings/nudges')}
+              hideBorder
+            />
           </View>
         </View>
 

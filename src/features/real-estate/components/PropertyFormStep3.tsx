@@ -3,7 +3,7 @@
 // Uses useThemeColors() for reliable dark mode support
 
 import React from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { DollarSign, TrendingUp, Wrench, Target } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -45,12 +45,10 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
     return cleanValue;
   };
 
+  // Note: This component is rendered inside PropertyFormWizard's ScrollView
+  // so we use View instead of ScrollView to avoid nested scrolling issues
   return (
-    <ScrollView
-      className="flex-1"
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View className="flex-1">
       <View className="gap-4">
         {/* ARV */}
         <View
@@ -272,6 +270,6 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
           </Text>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }

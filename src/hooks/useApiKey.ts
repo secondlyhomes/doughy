@@ -3,6 +3,7 @@
 // Ported from legacy web app and adapted for React Native
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { InteractionManager } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { encrypt, decrypt } from '@/lib/cryptoNative';
 import type { ApiKeySaveResult } from '@/features/admin/types/integrations';
@@ -122,8 +123,9 @@ export function useApiKey(service: string) {
     try {
       setIsSaving(true);
 
-      // Allow React to render the loading state before the blocking PBKDF2 operation
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Wait for animations to complete before the blocking PBKDF2 operation
+      // This prevents UI jank on slower devices where encryption can take 1-2 seconds
+      await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
 
       // Encrypt the key (note: PBKDF2 blocks the main thread)
       const ciphertext = await encrypt(plaintext);
@@ -137,38 +139,21 @@ export function useApiKey(service: string) {
       // Normalize service name
       const normalizedService = normalizeServiceName(service);
 
-      // Check if key already exists
-      const { data: existingKey } = await supabase
+      // Use upsert to avoid race condition between check and write
+      // The unique constraint on (user_id, service) ensures atomicity
+      const result = await supabase
         .from('security_api_keys')
-        .select('*')
-        .eq('service', normalizedService)
-        .maybeSingle();
-
-      let result;
-
-      if (existingKey) {
-        // Update existing key
-        result = await supabase
-          .from('security_api_keys')
-          .update({
-            key_ciphertext: ciphertext,
-            encrypted: true,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('service', normalizedService);
-      } else {
-        // Insert new key
-        result = await supabase
-          .from('security_api_keys')
-          .insert({
+        .upsert(
+          {
             service: normalizedService,
             key_ciphertext: ciphertext,
             encrypted: true,
             user_id: user.id,
             group_name: getGroupForService(normalizedService),
             updated_at: new Date().toISOString(),
-          });
-      }
+          },
+          { onConflict: 'user_id,service' }
+        );
 
       if (result.error) {
         console.error('Error saving API key:', result.error);
@@ -180,6 +165,7 @@ export function useApiKey(service: string) {
 
       // Update local state
       setKey(plaintext);
+      setKeyExistsInDB(true);
       return { success: true };
     } catch (err) {
       console.error('Error in save API key:', err);

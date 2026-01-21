@@ -50,6 +50,8 @@ async function applyOperation(op: PatchOperation): Promise<{
   try {
     switch (op.op) {
       case 'create': {
+        // Dynamic table access requires any cast - entity/table mapping is validated above
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
           .from(tableName)
           .insert(op.after)
@@ -63,6 +65,8 @@ async function applyOperation(op: PatchOperation): Promise<{
         if (!op.id) {
           return { success: false, error: 'Update operation requires entity ID' };
         }
+        // Dynamic table access requires any cast - entity/table mapping is validated above
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
           .from(tableName)
           .update(op.after)
@@ -77,6 +81,8 @@ async function applyOperation(op: PatchOperation): Promise<{
         if (!op.id) {
           return { success: false, error: 'Delete operation requires entity ID' };
         }
+        // Dynamic table access requires any cast - entity/table mapping is validated above
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
           .from(tableName)
           .delete()

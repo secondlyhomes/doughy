@@ -3,7 +3,7 @@
 // Shows where each metric value came from with sources, confidence, and override capability
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { X, Check, Edit3, Clock, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -171,10 +171,7 @@ export function EvidenceTrailModal({
   return (
     <Modal visible={visible} onClose={onClose}>
       <ModalContent>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-        >
+        <View style={{ flex: 1 }}>
           {/* Header */}
           <ModalHeader>
             <View style={{ flex: 1 }}>
@@ -395,7 +392,7 @@ export function EvidenceTrailModal({
               </>
             )}
           </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
       </ModalContent>
     </Modal>
   );

@@ -22,9 +22,13 @@ import { Lead } from '../types';
 interface LeadCardProps {
   lead: Lead;
   onPress: () => void;
+  /** Card variant: 'default' for solid, 'glass' for glass effect */
+  variant?: 'default' | 'glass';
+  /** Blur intensity for glass variant (0-100). Default: 55 */
+  glassIntensity?: number;
 }
 
-export function LeadCard({ lead, onPress }: LeadCardProps) {
+export function LeadCard({ lead, onPress, variant = 'default', glassIntensity = 55 }: LeadCardProps) {
   const colors = useThemeColors();
 
   const formatStatus = (status: string | undefined) => {
@@ -76,6 +80,8 @@ export function LeadCard({ lead, onPress }: LeadCardProps) {
   return (
     <DataCard
       onPress={onPress}
+      variant={variant}
+      glassIntensity={glassIntensity}
       title={lead.name || 'Unnamed Lead'}
       subtitle={lead.company}
       headerIcon={lead.starred ? Star : undefined}

@@ -3,7 +3,7 @@
 // Uses useThemeColors() for reliable dark mode support
 
 import React, { useCallback, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView as RNScrollView } from 'react-native';
 import { ChevronDown, MapPin } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -49,12 +49,10 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
     return option?.label || type;
   };
 
+  // Note: This component is rendered inside PropertyFormWizard's ScrollView
+  // so we use View instead of ScrollView to avoid nested scrolling issues
   return (
-    <ScrollView
-      className="flex-1"
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View className="flex-1">
       <View className="gap-4">
         {/* Address Section */}
         <View
@@ -241,7 +239,7 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
               className="rounded-lg mt-2 max-h-60"
               style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }}
             >
-              <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+              <RNScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
                 {PropertyConstants.TYPE_OPTIONS.map((option) => (
                   <TouchableOpacity
                     key={option.value}
@@ -266,11 +264,11 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
                     </Text>
                   </TouchableOpacity>
                 ))}
-              </ScrollView>
+              </RNScrollView>
             </View>
           )}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }

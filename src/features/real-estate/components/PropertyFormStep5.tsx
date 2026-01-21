@@ -3,7 +3,7 @@
 // Uses useThemeColors() for reliable dark mode support
 
 import React from 'react';
-import { View, Text, TextInput, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, ScrollView as RNScrollView, Image } from 'react-native';
 import {
   FileText,
   MapPin,
@@ -58,12 +58,10 @@ export function PropertyFormStep5({
 
   const completedCount = sections.filter(s => s.complete).length;
 
+  // Note: This component is rendered inside PropertyFormWizard's ScrollView
+  // so we use View instead of ScrollView to avoid nested scrolling issues
   return (
-    <ScrollView
-      className="flex-1"
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View className="flex-1">
       <View className="gap-4">
         {/* Notes Section */}
         <View
@@ -234,7 +232,7 @@ Examples:
               </Text>
             </View>
             {step4Data.images.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row gap-2">
                   {step4Data.images.slice(0, 5).map((uri, index) => (
                     <Image
@@ -253,7 +251,7 @@ Examples:
                     </View>
                   )}
                 </View>
-              </ScrollView>
+              </RNScrollView>
             ) : (
               <Text className="italic" style={{ color: colors.mutedForeground }}>No photos added</Text>
             )}
@@ -274,6 +272,6 @@ Examples:
           </Text>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }

@@ -8,15 +8,16 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { ScreenHeader, Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { changePassword } from '../services/profileService';
 import {
@@ -28,6 +29,8 @@ import { PasswordStrengthIndicator } from '@/features/auth/components/PasswordSt
 export function ChangePasswordScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
+  const { buttonBottom } = useTabBarPadding();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -109,13 +112,14 @@ export function ChangePasswordScreen() {
       <ScreenHeader title="Change Password" backButton bordered />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         <ScrollView
           className="flex-1 px-4"
-          contentContainerStyle={{ paddingVertical: 24, paddingBottom: TAB_BAR_SAFE_PADDING }}
-          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingTop: 24, paddingBottom: buttonBottom }}
+          keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}
         >
           {/* Current Password */}
           <View className="mb-6">

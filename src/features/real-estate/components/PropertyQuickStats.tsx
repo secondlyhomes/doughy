@@ -10,13 +10,94 @@ import { formatNumber } from '../utils/formatters';
 
 interface PropertyQuickStatsProps {
   property: Property;
-  compact?: boolean;
+  /** 'inline' (default): "3 bd · 2 ba · 1,500 sqft · yr 1985" */
+  /** 'icons': Small icons with values in a row */
+  /** 'full': Large icons with labels in columns */
+  /** 'overlay': White text for use on dark image gradients */
+  variant?: 'inline' | 'icons' | 'full' | 'overlay';
 }
 
-export function PropertyQuickStats({ property, compact = false }: PropertyQuickStatsProps) {
+export function PropertyQuickStats({ property, variant = 'inline' }: PropertyQuickStatsProps) {
   const colors = useThemeColors();
 
-  if (compact) {
+  // Build stats array for inline format
+  const stats: string[] = [];
+  if (property.bedrooms != null) stats.push(`${property.bedrooms} bd`);
+  if (property.bathrooms != null) stats.push(`${property.bathrooms} ba`);
+  if (property.square_feet != null) stats.push(`${formatNumber(property.square_feet)} sqft`);
+  if (property.year_built != null) stats.push(`yr ${property.year_built}`);
+
+  // Overlay variant - white text for dark image gradients
+  if (variant === 'overlay') {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Bed size={14} color="white" />
+          <Text style={{ fontSize: 14, marginLeft: 4, color: 'white', fontWeight: '500' }}>
+            {property.bedrooms ?? '-'}
+          </Text>
+        </View>
+        <Text style={{ color: 'rgba(255,255,255,0.7)' }}>·</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Bath size={14} color="white" />
+          <Text style={{ fontSize: 14, marginLeft: 4, color: 'white', fontWeight: '500' }}>
+            {property.bathrooms ?? '-'}
+          </Text>
+        </View>
+        <Text style={{ color: 'rgba(255,255,255,0.7)' }}>·</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Square size={14} color="white" />
+          <Text style={{ fontSize: 14, marginLeft: 4, color: 'white', fontWeight: '500' }}>
+            {property.square_feet ? formatNumber(property.square_feet) : '-'} sqft
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (variant === 'inline') {
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 12,
+          paddingVertical: 8,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Bed size={14} color={colors.mutedForeground} />
+          <Text style={{ fontSize: 14, marginLeft: 4, color: colors.mutedForeground }}>
+            {property.bedrooms ?? '-'}
+          </Text>
+        </View>
+        <Text style={{ color: colors.mutedForeground }}>·</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Bath size={14} color={colors.mutedForeground} />
+          <Text style={{ fontSize: 14, marginLeft: 4, color: colors.mutedForeground }}>
+            {property.bathrooms ?? '-'}
+          </Text>
+        </View>
+        <Text style={{ color: colors.mutedForeground }}>·</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Square size={14} color={colors.mutedForeground} />
+          <Text style={{ fontSize: 14, marginLeft: 4, color: colors.mutedForeground }}>
+            {property.square_feet ? formatNumber(property.square_feet) : '-'} sqft
+          </Text>
+        </View>
+        <Text style={{ color: colors.mutedForeground }}>·</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Calendar size={14} color={colors.mutedForeground} />
+          <Text style={{ fontSize: 14, marginLeft: 4, color: colors.mutedForeground }}>
+            {property.year_built ?? '-'}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (variant === 'icons') {
     return (
       <View className="flex-row items-center gap-3 rounded-lg px-3 py-2" style={{ backgroundColor: colors.muted }}>
         <View className="flex-row items-center">
@@ -41,6 +122,7 @@ export function PropertyQuickStats({ property, compact = false }: PropertyQuickS
     );
   }
 
+  // variant === 'full'
   return (
     <View className="flex-row justify-around rounded-xl p-4" style={{ backgroundColor: colors.muted }}>
       <View className="items-center">

@@ -122,16 +122,39 @@ export function Badge({
       ]}
       {...props}
     >
-      {typeof children === 'string' ? (
-        <Text
-          className={cn('font-semibold', textClassName)}
-          style={[getTextSize(), { color: getTextColor() }]}
-        >
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
+      {(() => {
+        // If children is a single string or number, wrap in Text
+        if (typeof children === 'string' || typeof children === 'number') {
+          return (
+            <Text
+              className={cn('font-semibold', textClassName)}
+              style={[getTextSize(), { color: getTextColor() }]}
+            >
+              {children}
+            </Text>
+          );
+        }
+
+        // If children is an array, check if all elements are text-like
+        if (Array.isArray(children)) {
+          const allText = children.every(
+            (child) => typeof child === 'string' || typeof child === 'number'
+          );
+          if (allText) {
+            return (
+              <Text
+                className={cn('font-semibold', textClassName)}
+                style={[getTextSize(), { color: getTextColor() }]}
+              >
+                {children}
+              </Text>
+            );
+          }
+        }
+
+        // Otherwise render children as-is (assumes caller handles Text wrapping)
+        return children;
+      })()}
     </View>
   );
 }

@@ -43,7 +43,9 @@ async function fetchJobs(dealId?: string): Promise<AIJob[]> {
     return MOCK_JOBS.filter(j => j.deal_id === dealId || !dealId);
   }
 
-  // Note: ai_jobs table type will be available after running migrations
+  // assistant_jobs table type not in generated schema - using explicit any cast
+  // TODO: Regenerate types after assistant_jobs migration is applied
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('assistant_jobs')
     .select('*')
@@ -72,6 +74,9 @@ async function createJobRequest(input: CreateJobInput): Promise<AIJob> {
     };
   }
 
+  // assistant_jobs table type not in generated schema - using explicit any cast
+  // TODO: Regenerate types after assistant_jobs migration is applied
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('assistant_jobs')
     .insert({
@@ -104,6 +109,9 @@ async function cancelJobRequest(jobId: string): Promise<AIJob> {
     };
   }
 
+  // assistant_jobs table type not in generated schema - using explicit any cast
+  // TODO: Regenerate types after assistant_jobs migration is applied
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('assistant_jobs')
     .update({ status: 'cancelled' })
@@ -260,6 +268,9 @@ export function useJobStatus(jobId?: string): {
         return;
       }
 
+      // assistant_jobs table type not in generated schema - using explicit any cast
+      // TODO: Regenerate types after assistant_jobs migration is applied
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('assistant_jobs')
         .select('*')

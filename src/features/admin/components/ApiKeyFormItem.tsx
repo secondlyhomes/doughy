@@ -2,7 +2,7 @@
 // API key form component for React Native
 // Adapted from legacy web app
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import { useThemeColors, type ThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { RefreshCw } from 'lucide-react-native';
 import { validateApiKeyFormat } from '../utils/serviceHelpers';
-import { clearHealthCache, checkIntegrationHealth } from '../services/apiKeyHealthService';
+import { clearHealthCache, checkIntegrationHealth, testApiKeyWithoutSaving } from '../services/apiKeyHealthService';
 import type { IntegrationStatus, IntegrationFieldType, IntegrationHealth } from '../types/integrations';
 
 interface ApiKeyFormItemProps {
@@ -181,8 +181,8 @@ export function ApiKeyFormItem({
     }
   }, [healthStatus]);
 
-  // Handle save
-  const handleSave = async () => {
+  // Handle save - memoized to prevent unnecessary re-renders
+  const handleSave = useCallback(async () => {
     if (!inputValue) {
       toast({ type: 'error', title: 'Missing Value', description: 'Please enter a value' });
       return;
@@ -225,10 +225,10 @@ export function ApiKeyFormItem({
       console.error('Error saving API key:', error);
       toast({ type: 'error', title: 'Error', description: 'An unexpected error occurred', duration: 6000 });
     }
-  };
+  }, [inputValue, service, label, save, toast, onSaved]);
 
-  // Handle delete
-  const handleDelete = async () => {
+  // Handle delete - memoized to prevent unnecessary re-renders
+  const handleDelete = useCallback(() => {
     Alert.alert(
       'Delete API Key',
       `Are you sure you want to delete ${label}?`,
@@ -267,10 +267,10 @@ export function ApiKeyFormItem({
         },
       ]
     );
-  };
+  }, [label, service, deleteKey, setKey, toast, onSaved]);
 
-  // Handle test connection
-  const handleTest = async () => {
+  // Handle test connection - memoized to prevent unnecessary re-renders
+  const handleTest = useCallback(async () => {
     try {
       setIsTesting(true);
       setTestResult(null);
@@ -310,10 +310,10 @@ export function ApiKeyFormItem({
     } finally {
       setIsTesting(false);
     }
-  };
+  }, [service, toast, onSaved]);
 
-  // Handle replace - test new key before saving
-  const handleReplace = async () => {
+  // Handle replace - test new key BEFORE saving to prevent data loss
+  const handleReplace = useCallback(async () => {
     if (!inputValue) {
       toast({ type: 'error', title: 'Missing Value', description: 'Please enter a new key' });
       return;
@@ -330,52 +330,43 @@ export function ApiKeyFormItem({
       setIsTesting(true);
       toast({ type: 'info', title: 'Testing...', description: 'Verifying new key before replacing' });
 
-      // Save the new key first (temporarily)
+      // Test the new key WITHOUT saving first
+      const testResultData = await testApiKeyWithoutSaving(service, inputValue);
+
+      if (testResultData.status === 'error') {
+        // Test failed - DO NOT save, keep the old key
+        triggerHaptic('error');
+        toast({
+          type: 'error',
+          title: 'Test Failed',
+          description: testResultData.message || 'The new key could not be verified. Your existing key has been preserved.',
+          duration: 8000,
+        });
+        setTestResult(testResultData);
+        return;
+      }
+
+      // Test passed - now save the new key
       const saveResult = await save(inputValue);
       if (!saveResult.success) {
         toast({ type: 'error', title: 'Save Failed', description: saveResult.error || 'Could not save the new key', duration: 6000 });
         return;
       }
 
-      // Clear cache and test the new key
+      // Clear cache so status refreshes
       clearHealthCache(service);
-      const testResultData = await checkIntegrationHealth(service, true);
 
-      if (testResultData.status === 'operational') {
-        triggerHaptic('success');
-        toast({
-          type: 'success',
-          title: 'Key Replaced',
-          description: `${label} updated successfully`,
-        });
-        setInputValue('');
-        setShowValue(false);
-        setIsReplacing(false);
-        setTestResult(testResultData);
-        onSaved?.();
-      } else if (testResultData.status === 'error') {
-        // New key failed - notify user but key is already saved
-        triggerHaptic('light');
-        toast({
-          type: 'warning',
-          title: 'Key Saved with Issues',
-          description: 'The key was saved but the connection test failed. You may need to check the key.',
-          duration: 8000,
-        });
-        setInputValue('');
-        setShowValue(false);
-        setIsReplacing(false);
-        setTestResult(testResultData);
-        onSaved?.();
-      } else {
-        // Configured but not tested
-        triggerHaptic('success');
-        toast({ type: 'success', title: 'Key Replaced', description: `${label} updated` });
-        setInputValue('');
-        setShowValue(false);
-        setIsReplacing(false);
-        onSaved?.();
-      }
+      triggerHaptic('success');
+      toast({
+        type: 'success',
+        title: 'Key Replaced',
+        description: `${label} updated successfully`,
+      });
+      setInputValue('');
+      setShowValue(false);
+      setIsReplacing(false);
+      setTestResult(testResultData);
+      onSaved?.();
     } catch (error) {
       triggerHaptic('error');
       console.error('Error replacing key:', error);
@@ -388,14 +379,14 @@ export function ApiKeyFormItem({
     } finally {
       setIsTesting(false);
     }
-  };
+  }, [inputValue, service, label, save, toast, onSaved]);
 
-  // Cancel replace mode
-  const handleCancelReplace = () => {
+  // Cancel replace mode - memoized to prevent unnecessary re-renders
+  const handleCancelReplace = useCallback(() => {
     setIsReplacing(false);
     setInputValue('');
     setShowValue(false);
-  };
+  }, []);
 
   // Get effective status (test result takes precedence)
   const effectiveStatus = isTesting ? 'checking' : (testResult?.status || healthStatus);
@@ -649,8 +640,8 @@ export function ApiKeyFormItem({
   );
 }
 
-// Status badge component
-function StatusBadge({
+// Status badge component - memoized for performance
+const StatusBadge = React.memo(function StatusBadge({
   hasKey,
   hasWarning,
   healthStatus,
@@ -724,7 +715,7 @@ function StatusBadge({
       <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>Not Configured</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -741,7 +732,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   required: {
-    color: '#ef4444',
+    color: '#ef4444', // Note: StyleSheet requires static values; theme color applied inline where needed
   },
   description: {
     fontSize: 12,

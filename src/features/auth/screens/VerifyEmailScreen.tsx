@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -16,6 +15,7 @@ import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import {
@@ -28,6 +28,7 @@ const RESEND_COOLDOWN = 60; // seconds
 export function VerifyEmailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { user, signOut, refetchProfile } = useAuth();
   const { canViewAdminPanel } = usePermissions();
 
@@ -112,7 +113,8 @@ export function VerifyEmailScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         <ScrollView

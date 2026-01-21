@@ -327,36 +327,51 @@ function inferCategoryFromText(text: string): ActionCategory {
 /**
  * Fetch conversation context for a deal
  */
+/**
+ * Conversation row from database
+ * NOTE: Defined here until Supabase types are regenerated after migration
+ */
+interface ConversationRow {
+  sentiment: string | null;
+  key_phrases: string[] | null;
+  action_items: string[] | null;
+  occurred_at: string | null;
+}
+
 export async function fetchConversationContext(
   dealId?: string,
   leadId?: string
 ): Promise<ConversationContext> {
   try {
+    // Build filter conditions
+    const filters: string[] = [];
+    if (dealId) filters.push(`deal_id.eq.${dealId}`);
+    if (leadId) filters.push(`lead_id.eq.${leadId}`);
+
     // Query recent conversations
-    const query = supabase
-      .from('conversation_items')
+    // Type assertion needed until Supabase types are regenerated after migration
+    const queryBuilder = supabase
+      .from('conversation_items' as 'profiles')
       .select('sentiment, key_phrases, action_items, occurred_at')
-      .order('occurred_at', { ascending: false })
+      .order('occurred_at' as 'id', { ascending: false })
       .limit(10);
 
-    // Filter by deal or lead (build filter conditions safely)
-    if (dealId && leadId) {
-      // Both provided - use OR to get conversations for either
-      query.or(`pipeline_id.eq.${dealId},lead_id.eq.${leadId}`);
-    } else if (dealId) {
-      query.eq('pipeline_id', dealId);
-    } else if (leadId) {
-      query.eq('lead_id', leadId);
+    if (filters.length > 0) {
+      queryBuilder.or(filters.join(','));
     }
 
-    const { data: conversations, error } = await query;
+    const { data, error } = await (queryBuilder as unknown as Promise<{
+      data: ConversationRow[] | null;
+      error: Error | null;
+    }>);
 
     if (error) {
       console.error('[AISuggestions] Error fetching conversations:', error);
       return { keyPhrases: [], actionItems: [], totalConversations: 0 };
     }
 
-    if (!conversations || conversations.length === 0) {
+    const conversations = data || [];
+    if (conversations.length === 0) {
       return { keyPhrases: [], actionItems: [], totalConversations: 0 };
     }
 
@@ -365,7 +380,7 @@ export async function fetchConversationContext(
     const allActionItems: string[] = [];
     let recentSentiment: 'positive' | 'neutral' | 'negative' | undefined;
 
-    conversations.forEach((conv, index) => {
+    conversations.forEach((conv: ConversationRow, index: number) => {
       if (index === 0 && conv.sentiment) {
         recentSentiment = conv.sentiment as 'positive' | 'neutral' | 'negative';
       }
@@ -385,7 +400,7 @@ export async function fetchConversationContext(
       recentSentiment,
       keyPhrases: uniqueKeyPhrases,
       actionItems: uniqueActionItems,
-      lastContactDate: conversations[0]?.occurred_at,
+      lastContactDate: conversations[0]?.occurred_at ?? undefined,
       totalConversations: conversations.length,
     };
   } catch (error) {

@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -16,12 +15,14 @@ import { useRouter } from 'expo-router';
 import { Mail, AlertCircle, Check, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 export function ForgotPasswordScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { resetPassword, isLoading } = useAuth();
 
   // Form state
@@ -93,7 +94,8 @@ export function ForgotPasswordScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         <ScrollView

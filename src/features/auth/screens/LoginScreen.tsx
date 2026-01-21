@@ -2,28 +2,33 @@
 // Login screen converted from web SignInForm
 // Uses useThemeColors() for reliable dark mode support
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import type { TextInput as TextInputType } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 export function LoginScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { signIn, isLoading, devBypassAuth } = useAuth();
+
+  // Input refs for form navigation
+  const passwordInputRef = useRef<TextInputType>(null);
 
   // Form state
   const [email, setEmail] = useState('');
@@ -68,7 +73,8 @@ export function LoginScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         <ScrollView
@@ -116,6 +122,9 @@ export function LoginScreen() {
                 autoComplete="email"
                 editable={!loading}
                 style={{ color: colors.foreground }}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                blurOnSubmit={false}
               />
             </View>
           </View>
@@ -131,6 +140,7 @@ export function LoginScreen() {
                 <Lock size={20} color={colors.mutedForeground} />
               </View>
               <TextInput
+                ref={passwordInputRef}
                 className="flex-1 px-4 py-3"
                 placeholder="Enter your password"
                 placeholderTextColor={colors.mutedForeground}
@@ -141,6 +151,8 @@ export function LoginScreen() {
                 autoComplete="password"
                 editable={!loading}
                 style={{ color: colors.foreground }}
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
               />
               <TouchableOpacity
                 className="pr-4"

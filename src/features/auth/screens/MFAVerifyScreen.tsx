@@ -7,13 +7,13 @@ import {
   Text,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Shield, ArrowLeft } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { MFACodeInput } from '../components/MFACodeInput';
 import { useAuth } from '../hooks/useAuth';
@@ -27,6 +27,7 @@ import {
 export function MFAVerifyScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const params = useLocalSearchParams<{ factorId?: string }>();
   const { canViewAdminPanel } = usePermissions();
 
@@ -117,7 +118,8 @@ export function MFAVerifyScreen() {
   return (
     <ThemedSafeAreaView className="flex-1">
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         {/* Header */}

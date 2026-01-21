@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   Alert,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown } from 'lucide-react-native';
@@ -20,6 +19,7 @@ import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, Button, FormField } from '@/components/ui';
 import { useForm } from '@/hooks/useForm';
+import { useKeyboardAvoidance } from '@/hooks';
 
 import { useLead, useUpdateLead } from '../hooks/useLeads';
 import { Lead, LeadStatus } from '../types';
@@ -52,6 +52,7 @@ function isValidStatus(status: unknown): status is LeadStatus {
 export function EditLeadScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
   const params = useLocalSearchParams();
 
   // Validate route param
@@ -166,9 +167,10 @@ export function EditLeadScreen() {
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
       >
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}>
         {/* Name */}
         <FormField
           label="Name"

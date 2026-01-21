@@ -33,69 +33,70 @@ export interface SystemHealthResult {
 
 /**
  * Fetch admin dashboard stats
+ * Uses Promise.all for parallel queries to improve performance
  */
 export async function getAdminStats(): Promise<AdminStatsResult> {
   try {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    // Get total users (excluding deleted)
-    const { count: totalUsers, error: usersError } = await supabase
-      .from('user_profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_deleted', false);
+    // Execute all count queries in parallel for better performance
+    // Note: totalUsers and activeUsers are currently identical since we don't have last_sign_in_at tracking
+    // When activity tracking is added, activeUsers should filter by recent sign-in (e.g., last 30 days)
+    const [
+      totalUsersResult,
+      totalLeadsResult,
+      totalPropertiesResult,
+      newUsersThisWeekResult,
+      newLeadsThisWeekResult,
+    ] = await Promise.all([
+      // Get total users (excluding deleted)
+      supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_deleted', false),
 
-    if (usersError) throw usersError;
+      // Get total leads
+      supabase
+        .from('crm_leads')
+        .select('*', { count: 'exact', head: true }),
 
-    // Get active users (not deleted)
-    // Note: We count non-deleted users as "active" since we don't have last_sign_in_at
-    const { count: activeUsers, error: activeError } = await supabase
-      .from('user_profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_deleted', false);
+      // Get total properties
+      supabase
+        .from('re_properties')
+        .select('*', { count: 'exact', head: true }),
 
-    if (activeError) throw activeError;
+      // Get new users this week
+      supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', weekAgo.toISOString())
+        .eq('is_deleted', false),
 
-    // Get total leads
-    const { count: totalLeads, error: leadsError } = await supabase
-      .from('crm_leads')
-      .select('*', { count: 'exact', head: true });
+      // Get new leads this week
+      supabase
+        .from('crm_leads')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', weekAgo.toISOString()),
+    ]);
 
-    if (leadsError) throw leadsError;
-
-    // Get total properties
-    const { count: totalProperties, error: propertiesError } = await supabase
-      .from('re_properties')
-      .select('*', { count: 'exact', head: true });
-
-    if (propertiesError) throw propertiesError;
-
-    // Get new users this week
-    const { count: newUsersThisWeek, error: newUsersError } = await supabase
-      .from('user_profiles')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', weekAgo.toISOString())
-      .eq('is_deleted', false);
-
-    if (newUsersError) throw newUsersError;
-
-    // Get new leads this week
-    const { count: newLeadsThisWeek, error: newLeadsError } = await supabase
-      .from('crm_leads')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', weekAgo.toISOString());
-
-    if (newLeadsError) throw newLeadsError;
+    // Check for errors
+    if (totalUsersResult.error) throw totalUsersResult.error;
+    if (totalLeadsResult.error) throw totalLeadsResult.error;
+    if (totalPropertiesResult.error) throw totalPropertiesResult.error;
+    if (newUsersThisWeekResult.error) throw newUsersThisWeekResult.error;
+    if (newLeadsThisWeekResult.error) throw newLeadsThisWeekResult.error;
 
     return {
       success: true,
       stats: {
-        totalUsers: totalUsers || 0,
-        activeUsers: activeUsers || 0,
-        totalLeads: totalLeads || 0,
-        totalProperties: totalProperties || 0,
-        newUsersThisWeek: newUsersThisWeek || 0,
-        newLeadsThisWeek: newLeadsThisWeek || 0,
+        totalUsers: totalUsersResult.count || 0,
+        // activeUsers currently equals totalUsers until we add last_sign_in_at tracking
+        activeUsers: totalUsersResult.count || 0,
+        totalLeads: totalLeadsResult.count || 0,
+        totalProperties: totalPropertiesResult.count || 0,
+        newUsersThisWeek: newUsersThisWeekResult.count || 0,
+        newLeadsThisWeek: newLeadsThisWeekResult.count || 0,
       },
     };
   } catch (error) {

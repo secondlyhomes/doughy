@@ -129,7 +129,7 @@ export function AdminDashboardScreen() {
     // Confirm before seeding
     Alert.alert(
       'Seed Database',
-      'This will create 50 leads, 20 properties, and 15 deals with test data. Any existing data will be cleared first.\n\nContinue?',
+      'This will create 60 leads, 100 properties, 50 deals, and 60 capture items with test data. Any existing data will be cleared first.\n\nContinue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -145,7 +145,8 @@ export function AdminDashboardScreen() {
                   `Database seeded successfully!\n\n` +
                   `Leads: ${result.counts.leads}\n` +
                   `Properties: ${result.counts.properties}\n` +
-                  `Deals: ${result.counts.deals}`,
+                  `Deals: ${result.counts.deals}\n` +
+                  `Capture Items: ${result.counts.captureItems}`,
                   [{ text: 'OK', onPress: handleRefresh }]
                 );
               } else {
@@ -155,7 +156,8 @@ export function AdminDashboardScreen() {
                   `Created:\n` +
                   `Leads: ${result.counts.leads}\n` +
                   `Properties: ${result.counts.properties}\n` +
-                  `Deals: ${result.counts.deals}`
+                  `Deals: ${result.counts.deals}\n` +
+                  `Capture Items: ${result.counts.captureItems}`
                 );
               }
             } catch (error) {
@@ -221,7 +223,8 @@ export function AdminDashboardScreen() {
                           `Deleted:\n` +
                           `Leads: ${result.counts.leads}\n` +
                           `Properties: ${result.counts.properties}\n` +
-                          `Deals: ${result.counts.deals}`,
+                          `Deals: ${result.counts.deals}\n` +
+                          `Capture Items: ${result.counts.captureItems}`,
                           [{ text: 'OK', onPress: handleRefresh }]
                         );
                       } else {
@@ -231,7 +234,8 @@ export function AdminDashboardScreen() {
                           `Deleted:\n` +
                           `Leads: ${result.counts.leads}\n` +
                           `Properties: ${result.counts.properties}\n` +
-                          `Deals: ${result.counts.deals}`
+                          `Deals: ${result.counts.deals}\n` +
+                          `Capture Items: ${result.counts.captureItems}`
                         );
                       }
                     } catch (error) {
@@ -419,7 +423,7 @@ export function AdminDashboardScreen() {
                   </Text>
                 </Button>
                 <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
-                  Creates 50 leads, 20 properties, 15 deals with test data
+                  Creates 60 leads, 100 properties, 50 deals, 60 capture items
                 </Text>
               </View>
 
@@ -490,7 +494,7 @@ interface StatCardProps {
   cardColor?: string;
 }
 
-function StatCard({ icon, title, value, subtitle, onPress, cardColor }: StatCardProps) {
+const StatCard = React.memo(function StatCard({ icon, title, value, subtitle, onPress, cardColor }: StatCardProps) {
   const colors = useThemeColors();
   const content = (
     <View className="rounded-lg p-4" style={{ backgroundColor: cardColor }}>
@@ -503,12 +507,27 @@ function StatCard({ icon, title, value, subtitle, onPress, cardColor }: StatCard
 
   if (onPress) {
     return (
-      <TouchableOpacity className="w-1/2 p-2" onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity
+        className="w-1/2 p-2"
+        onPress={onPress}
+        activeOpacity={0.7}
+        accessibilityLabel={`${title}: ${value}. ${subtitle}`}
+        accessibilityRole="button"
+        accessibilityHint={`Tap to view ${title.toLowerCase()} details`}
+      >
         {content}
       </TouchableOpacity>
     );
   }
 
-  return <View className="w-1/2 p-2">{content}</View>;
-}
+  return (
+    <View
+      className="w-1/2 p-2"
+      accessibilityLabel={`${title}: ${value}. ${subtitle}`}
+      accessibilityRole="text"
+    >
+      {content}
+    </View>
+  );
+});
 

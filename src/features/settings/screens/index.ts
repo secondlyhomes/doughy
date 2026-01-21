@@ -8,3 +8,4 @@ export { AppearanceScreen } from './AppearanceScreen';
 export { NotificationsSettingsScreen } from './NotificationsSettingsScreen';
 export { SecurityScreen } from './SecurityScreen';
 export { AboutScreen } from './AboutScreen';
+export { NudgeSettingsScreen } from './NudgeSettingsScreen';

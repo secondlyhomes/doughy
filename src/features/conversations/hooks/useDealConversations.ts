@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { isValidUuid } from '@/lib/validation';
 import { ConversationItem } from '../components/ConversationsView';
 
 /**
@@ -49,7 +50,11 @@ export function useDealConversations({
   const [error, setError] = useState<Error | null>(null);
 
   const fetchConversations = useCallback(async () => {
-    if (!dealId && !leadId) {
+    // Skip fetch if neither ID is a valid UUID (prevents "new" or invalid strings from hitting DB)
+    const hasValidDealId = isValidUuid(dealId);
+    const hasValidLeadId = isValidUuid(leadId);
+
+    if (!hasValidDealId && !hasValidLeadId) {
       setConversations([]);
       setIsLoading(false);
       return;
@@ -59,12 +64,12 @@ export function useDealConversations({
       setIsLoading(true);
       setError(null);
 
-      // Build filter based on provided IDs
+      // Build filter based on validated IDs
       const filters: string[] = [];
-      if (dealId) {
-        filters.push(`pipeline_id.eq.${dealId}`);
+      if (hasValidDealId) {
+        filters.push(`deal_id.eq.${dealId}`);
       }
-      if (leadId) {
+      if (hasValidLeadId) {
         filters.push(`lead_id.eq.${leadId}`);
       }
 
@@ -90,22 +95,24 @@ export function useDealConversations({
         throw queryError;
       }
 
-      // Transform to ConversationItem format
-      const items: ConversationItem[] = (data || []).map((row: ConversationItemRow) => ({
-        id: row.id,
-        type: row.type,
-        direction: row.direction,
-        content: row.content,
-        transcript: row.transcript,
-        subject: row.subject,
-        duration_seconds: row.duration_seconds,
-        sentiment: row.sentiment,
-        key_phrases: row.key_phrases,
-        action_items: row.action_items,
-        ai_summary: row.ai_summary,
-        occurred_at: row.occurred_at,
-        created_at: row.created_at,
-      }));
+      // Transform to ConversationItem format, handling nullable fields
+      const items: ConversationItem[] = (data || [])
+        .filter((row: ConversationItemRow) => row.type && row.occurred_at && row.created_at)
+        .map((row: ConversationItemRow) => ({
+          id: row.id,
+          type: row.type as ConversationItem['type'],
+          direction: (row.direction || 'internal') as ConversationItem['direction'],
+          content: row.content ?? undefined,
+          transcript: row.transcript ?? undefined,
+          subject: row.subject ?? undefined,
+          duration_seconds: row.duration_seconds ?? undefined,
+          sentiment: (row.sentiment ?? undefined) as ConversationItem['sentiment'],
+          key_phrases: row.key_phrases ?? undefined,
+          action_items: row.action_items ?? undefined,
+          ai_summary: row.ai_summary ?? undefined,
+          occurred_at: row.occurred_at!,
+          created_at: row.created_at!,
+        }));
 
       setConversations(items);
     } catch (err) {

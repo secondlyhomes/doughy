@@ -22,7 +22,6 @@ import {
   Modal,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ViewStyle,
 } from 'react-native';
@@ -37,6 +36,7 @@ import Animated, {
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, OPACITY_VALUES } from '@/constants/design-tokens';
+import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { Card } from './Card';
 import { Input } from './Input';
 import { Button } from './Button';
@@ -123,6 +123,10 @@ export function OverrideCalculationSheet({
   style,
 }: OverrideCalculationSheetProps) {
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({
+    hasTabBar: false,
+    hasNavigationHeader: false,
+  });
   const [newValue, setNewValue] = useState('');
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
@@ -217,7 +221,8 @@ export function OverrideCalculationSheet({
       statusBarTranslucent
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         style={{ flex: 1 }}
       >
         {/* Backdrop */}

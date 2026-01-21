@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS re_portfolio_valuations (
   property_id UUID NOT NULL REFERENCES re_properties(id) ON DELETE CASCADE,
   valuation_date DATE NOT NULL,
   estimated_value NUMERIC(12,2) NOT NULL,
-  source TEXT NOT NULL CHECK(source IN ('zillow', 'manual', 'appraisal', 'redfin', 'rentcast', 'other')),
+  source TEXT CHECK(source IN ('zillow', 'manual', 'appraisal', 'redfin', 'rentcast', 'cma', 'tax_assessment', 'other')),
+  notes TEXT,
   metadata JSONB DEFAULT '{}', -- Store additional API response data
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -79,7 +80,7 @@ CREATE POLICY "Admins can view all valuations"
   ON re_portfolio_valuations FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM user_profiles
       WHERE id = auth.uid() AND role IN ('admin', 'support')
     )
   );
@@ -89,7 +90,8 @@ CREATE POLICY "Admins can view all valuations"
 -- ============================================================================
 
 COMMENT ON TABLE re_portfolio_valuations IS 'Track property valuations over time from multiple sources (Zillow, manual appraisals, etc.)';
-COMMENT ON COLUMN re_portfolio_valuations.source IS 'Source of valuation: zillow, manual, appraisal, redfin, rentcast, other';
+COMMENT ON COLUMN re_portfolio_valuations.source IS 'Source of valuation: zillow, manual, appraisal, redfin, rentcast, cma, tax_assessment, other';
+COMMENT ON COLUMN re_portfolio_valuations.notes IS 'Optional notes about this valuation';
 COMMENT ON COLUMN re_portfolio_valuations.metadata IS 'JSONB field for storing additional data from API responses';
 COMMENT ON COLUMN re_portfolio_valuations.estimated_value IS 'Estimated property value in dollars';
 
@@ -98,12 +100,16 @@ COMMENT ON COLUMN re_portfolio_valuations.estimated_value IS 'Estimated property
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION update_portfolio_valuations_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TRIGGER set_portfolio_valuations_updated_at
   BEFORE UPDATE ON re_portfolio_valuations

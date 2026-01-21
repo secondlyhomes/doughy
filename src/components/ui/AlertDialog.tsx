@@ -8,13 +8,13 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
-  Platform,
   ViewProps,
   TextProps,
   StyleSheet,
 } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop } from './GlassView';
 
 // AlertDialog Root
@@ -27,6 +27,11 @@ export interface AlertDialogProps {
 }
 
 export function AlertDialog({ open, onOpenChange, children, useGlassBackdrop = true }: AlertDialogProps) {
+  const keyboardProps = useKeyboardAvoidance({
+    hasTabBar: false,
+    hasNavigationHeader: false,
+  });
+
   const renderBackdrop = () => {
     if (useGlassBackdrop) {
       return (
@@ -62,7 +67,8 @@ export function AlertDialog({ open, onOpenChange, children, useGlassBackdrop = t
       animationType="fade"
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         style={alertDialogStyles.container}
       >
         {renderBackdrop()}

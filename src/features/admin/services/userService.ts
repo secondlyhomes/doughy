@@ -2,6 +2,7 @@
 // User management service for admin
 
 import { supabase } from '@/lib/supabase';
+import { isValidUuid } from '@/lib/validation';
 
 // Use actual DB role types - no mapping needed
 export type UserRole = 'admin' | 'standard' | 'user' | 'support';
@@ -149,6 +150,14 @@ export async function getUsers(filters: UserFilters = {}): Promise<UserListResul
  * Fetch single user by ID
  */
 export async function getUserById(userId: string): Promise<UserResult> {
+  // Validate UUID format to prevent invalid IDs from hitting DB
+  if (!isValidUuid(userId)) {
+    return {
+      success: false,
+      error: 'Invalid user ID format',
+    };
+  }
+
   try {
     const { data, error } = await supabase
       .from('user_profiles')

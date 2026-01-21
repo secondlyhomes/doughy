@@ -8,10 +8,8 @@ import { ChevronDown, ChevronUp, Info } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
   withSpring,
   interpolate,
-  Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -163,7 +161,7 @@ export function MetricCard({
   const isExpandable = Boolean(breakdown || actions);
   const hasActions = Boolean(actions && actions.length > 0);
 
-  // Handle card tap
+  // Handle card tap - cycles through states
   const handlePress = useCallback(() => {
     if (disabled || !isExpandable) return;
 
@@ -175,17 +173,32 @@ export function MetricCard({
     if (state === 'collapsed') {
       newState = 'expanded';
       expandProgress.value = withSpring(1, { damping: 15, stiffness: 150 });
-      chevronRotation.value = withTiming(180, { duration: 200, easing: Easing.out(Easing.ease) });
+      // Instant flip on open (no animation)
+      chevronRotation.value = 180;
     } else if (state === 'expanded' && hasActions) {
       newState = 'actionable';
       expandProgress.value = withSpring(2, { damping: 15, stiffness: 150 });
     } else {
       newState = 'collapsed';
-      expandProgress.value = withSpring(0, { damping: 15, stiffness: 150 });
-      chevronRotation.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.ease) });
+      // Smooth animation on close
+      expandProgress.value = withSpring(0, { damping: 20, stiffness: 200 });
+      chevronRotation.value = withSpring(0, { damping: 20, stiffness: 200 });
     }
     setState(newState);
   }, [state, disabled, isExpandable, hasActions, expandProgress, chevronRotation]);
+
+  // Handle chevron tap - always collapses with smooth animation
+  const handleChevronPress = useCallback(() => {
+    if (state === 'collapsed') return; // Nothing to collapse
+
+    // Haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Smooth close animation
+    expandProgress.value = withSpring(0, { damping: 20, stiffness: 200 });
+    chevronRotation.value = withSpring(0, { damping: 20, stiffness: 200 });
+    setState('collapsed');
+  }, [state, expandProgress, chevronRotation]);
 
   // Animated styles
   const chevronStyle = useAnimatedStyle(() => ({
@@ -275,11 +288,17 @@ export function MetricCard({
             )}
           </View>
 
-          {/* Expand indicator */}
+          {/* Expand indicator - tapping chevron always closes */}
           {isExpandable && (
-            <Animated.View style={chevronStyle}>
-              <ChevronDown size={ICON_SIZES.sm} color={colors.mutedForeground} />
-            </Animated.View>
+            <TouchableOpacity
+              onPress={handleChevronPress}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              disabled={state === 'collapsed'}
+            >
+              <Animated.View style={chevronStyle}>
+                <ChevronDown size={ICON_SIZES.sm} color={colors.mutedForeground} />
+              </Animated.View>
+            </TouchableOpacity>
           )}
         </View>
 

@@ -1,21 +1,16 @@
 // src/features/deals/components/StageStepper.tsx
-// Visual Pipeline Progress Indicator - Zone G Week 7
-// Shows deal stages as a stepper with completed/current/future states
+// Compact Progress Pill - Deal Stage Indicator
+// Shows progress dots + stage name + step count with expandable stage selector
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { Check, Circle, Clock } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Check, ChevronDown } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { withOpacity, getShadowStyle } from '@/lib/design-utils';
+import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
-import { Modal, ModalContent, ModalHeader, ModalTitle } from '@/components/ui';
+import { BottomSheet } from '@/components/ui';
 import { DealStage, DEAL_STAGE_CONFIG } from '../types';
+import { haptic } from '@/lib/haptics';
 
 // ============================================
 // Types
@@ -23,11 +18,16 @@ import { DealStage, DEAL_STAGE_CONFIG } from '../types';
 
 export interface StageStepperProps {
   currentStage: DealStage;
+  /** Deal ID for context (used for stage updates) */
+  dealId?: string;
   onStagePress?: (stage: DealStage) => void;
+  /** @deprecated No longer used - compact pill is always shown */
   compact?: boolean;
+  /** @deprecated No longer used - stage label is always displayed in pill */
+  showCurrentStageLabel?: boolean;
 }
 
-// Define the ordered stages for the stepper
+// Define the ordered stages for the stepper (excludes closed_lost which is a terminal state)
 const ORDERED_STAGES: DealStage[] = [
   'new',
   'contacted',
@@ -39,7 +39,7 @@ const ORDERED_STAGES: DealStage[] = [
   'closed_won',
 ];
 
-// Average days at each stage (example data)
+// Average days at each stage (for stage info)
 const STAGE_AVG_DAYS: Record<DealStage, number> = {
   initial_contact: 2,
   new: 1,
@@ -53,278 +53,316 @@ const STAGE_AVG_DAYS: Record<DealStage, number> = {
   closed_lost: 0,
 };
 
-// ============================================
-// Stage Info Modal
-// ============================================
-
-interface StageInfoModalProps {
-  visible: boolean;
-  stage: DealStage | null;
-  onClose: () => void;
-}
-
-function StageInfoModal({ visible, stage, onClose }: StageInfoModalProps) {
-  const colors = useThemeColors();
-
-  if (!stage) return null;
-
-  const config = DEAL_STAGE_CONFIG[stage];
-  const avgDays = STAGE_AVG_DAYS[stage];
-
-  return (
-    <Modal visible={visible} onClose={onClose}>
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>{config?.label || stage}</ModalTitle>
-        </ModalHeader>
-
-        <View style={{ padding: SPACING.lg, gap: SPACING.md }}>
-          <View
-            style={{
-              padding: SPACING.md,
-              borderRadius: BORDER_RADIUS.md,
-              backgroundColor: withOpacity(colors.primary, 'subtle'),
-            }}
-          >
-            <Text style={{ fontSize: 14, color: colors.foreground, lineHeight: 20 }}>
-              {getStageDescription(stage)}
-            </Text>
-          </View>
-
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: SPACING.sm,
-            }}
-          >
-            <Clock size={ICON_SIZES.sm} color={colors.mutedForeground} />
-            <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
-              Average time: {avgDays > 0 ? `${avgDays} days` : 'Final stage'}
-            </Text>
-          </View>
-        </View>
-      </ModalContent>
-    </Modal>
-  );
-}
-
+// Stage descriptions for the selection sheet
 function getStageDescription(stage: DealStage): string {
   switch (stage) {
     case 'new':
-      return 'A new lead has been added to the pipeline. Review the lead details and prepare for initial contact.';
+      return 'New lead added to pipeline';
     case 'contacted':
-      return 'Initial contact has been made with the seller. Follow up to schedule an appointment to view the property.';
+      return 'Initial contact made with seller';
     case 'appointment_set':
-      return 'An appointment is scheduled to view the property. Prepare your walkthrough checklist and camera.';
+      return 'Property viewing scheduled';
     case 'analyzing':
-      return 'Property data has been collected. Run comps, estimate repairs, and determine your MAO and exit strategy.';
+      return 'Running comps and estimating repairs';
     case 'offer_sent':
-      return 'An offer has been submitted to the seller. Follow up within 48-72 hours if no response.';
+      return 'Offer submitted to seller';
     case 'negotiating':
-      return 'The seller has responded to your offer. Work through counter-offers to reach an agreement.';
+      return 'Working through counter-offers';
     case 'under_contract':
-      return 'A contract has been signed. Coordinate inspections, financing, and closing with the title company.';
+      return 'Contract signed, coordinating close';
     case 'closed_won':
-      return 'Congratulations! The deal has been successfully closed. Time to execute your exit strategy.';
+      return 'Deal successfully closed';
     case 'closed_lost':
-      return 'This deal did not close. Consider following up in 3-6 months or if circumstances change.';
+      return 'Deal did not close';
     default:
-      return 'Review the deal details and determine the next action.';
+      return 'Review deal details';
   }
 }
 
 // ============================================
-// Stage Step Component
+// Progress Dot Component
 // ============================================
 
-interface StageStepProps {
-  stage: DealStage;
+interface ProgressDotProps {
   status: 'completed' | 'current' | 'future';
-  isLast: boolean;
-  compact: boolean;
-  onPress: () => void;
 }
 
-function StageStep({ stage, status, isLast, compact, onPress }: StageStepProps) {
+const DOT_SIZE = 6;
+const DOT_GAP = 4;
+
+function ProgressDot({ status }: ProgressDotProps) {
   const colors = useThemeColors();
-  const config = DEAL_STAGE_CONFIG[stage];
 
-  const scale = useSharedValue(1);
-
-  const handlePress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    scale.value = withSpring(1.1, { damping: 10 }, () => {
-      scale.value = withSpring(1);
-    });
-    onPress();
-  }, [onPress, scale]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  // Colors based on status
-  const bgColor =
+  const dotColor =
     status === 'completed'
       ? colors.success
       : status === 'current'
         ? colors.primary
         : colors.muted;
 
-  const iconColor =
-    status === 'completed' || status === 'current'
-      ? colors.primaryForeground
-      : colors.mutedForeground;
-
-  const labelColor =
-    status === 'current'
-      ? colors.foreground
-      : colors.mutedForeground;
-
-  const lineColor =
-    status === 'completed'
-      ? colors.success
-      : colors.border;
-
   return (
     <View
       style={{
-        alignItems: 'center',
-        gap: compact ? SPACING.xs : SPACING.sm,
+        width: DOT_SIZE,
+        height: DOT_SIZE,
+        borderRadius: DOT_SIZE / 2,
+        backgroundColor: dotColor,
+        marginHorizontal: DOT_GAP / 2,
       }}
-    >
-      {/* Step Circle */}
-      <TouchableOpacity onPress={handlePress} activeOpacity={0.7}>
-        <Animated.View
-          style={[
-            {
-              width: compact ? 24 : 32,
-              height: compact ? 24 : 32,
-              borderRadius: compact ? 12 : 16,
-              backgroundColor: bgColor,
-              alignItems: 'center',
-              justifyContent: 'center',
-              ...getShadowStyle(colors, { size: 'sm' }),
-            },
-            animatedStyle,
-          ]}
-        >
-          {status === 'completed' ? (
-            <Check size={compact ? 12 : 16} color={iconColor} strokeWidth={3} />
-          ) : status === 'current' ? (
-            <View
-              style={{
-                width: compact ? 8 : 10,
-                height: compact ? 8 : 10,
-                borderRadius: compact ? 4 : 5,
-                backgroundColor: iconColor,
-              }}
-            />
-          ) : (
-            <Circle size={compact ? 8 : 10} color={iconColor} />
-          )}
-        </Animated.View>
-      </TouchableOpacity>
-
-      {/* Label */}
-      {!compact && (
-        <Text
-          style={{
-            fontSize: 10,
-            fontWeight: status === 'current' ? '600' : '400',
-            color: labelColor,
-            textAlign: 'center',
-            width: 56,
-          }}
-          numberOfLines={2}
-        >
-          {config?.label || stage}
-        </Text>
-      )}
-
-      {/* Connector Line (not for last) */}
-      {!isLast && (
-        <View
-          style={{
-            position: 'absolute',
-            top: compact ? 12 : 16,
-            left: compact ? 24 : 32,
-            width: compact ? 28 : 40,
-            height: 2,
-            backgroundColor: lineColor,
-          }}
-        />
-      )}
-    </View>
+    />
   );
 }
 
 // ============================================
-// Main StageStepper Component
+// Stage Selection Sheet
 // ============================================
 
-export function StageStepper({ currentStage, onStagePress, compact = false }: StageStepperProps) {
+interface StageSelectionSheetProps {
+  visible: boolean;
+  currentStage: DealStage;
+  onClose: () => void;
+  onSelectStage: (stage: DealStage) => void;
+}
+
+function StageSelectionSheet({
+  visible,
+  currentStage,
+  onClose,
+  onSelectStage,
+}: StageSelectionSheetProps) {
   const colors = useThemeColors();
-  const [selectedStage, setSelectedStage] = useState<DealStage | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const currentIndex = ORDERED_STAGES.indexOf(currentStage);
+
+  const handleStagePress = useCallback(
+    (stage: DealStage) => {
+      haptic.selection();
+      onSelectStage(stage);
+      onClose();
+    },
+    [onSelectStage, onClose]
+  );
+
+  return (
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      title="Change Stage"
+      snapPoints={['60%']}
+    >
+      <View style={{ paddingTop: SPACING.md, gap: SPACING.xs }}>
+        {ORDERED_STAGES.map((stage, index) => {
+          const config = DEAL_STAGE_CONFIG[stage];
+          const isCompleted = index < currentIndex;
+          const isCurrent = index === currentIndex;
+          const avgDays = STAGE_AVG_DAYS[stage];
+
+          return (
+            <TouchableOpacity
+              key={stage}
+              onPress={() => handleStagePress(stage)}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: SPACING.md,
+                borderRadius: BORDER_RADIUS.lg,
+                backgroundColor: isCurrent
+                  ? withOpacity(colors.primary, 'light')
+                  : 'transparent',
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={`${config?.label || stage} stage`}
+              accessibilityState={{ selected: isCurrent }}
+            >
+              {/* Status indicator */}
+              <View
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: isCompleted
+                    ? colors.success
+                    : isCurrent
+                      ? colors.primary
+                      : colors.muted,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: SPACING.md,
+                }}
+              >
+                {isCompleted ? (
+                  <Check size={14} color={colors.primaryForeground} strokeWidth={3} />
+                ) : (
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: isCurrent ? colors.primaryForeground : colors.mutedForeground,
+                    }}
+                  >
+                    {index + 1}
+                  </Text>
+                )}
+              </View>
+
+              {/* Stage info */}
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: isCurrent ? '600' : '500',
+                    color: isCurrent ? colors.primary : colors.foreground,
+                  }}
+                >
+                  {config?.label || stage}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: colors.mutedForeground,
+                    marginTop: 2,
+                  }}
+                  numberOfLines={1}
+                >
+                  {getStageDescription(stage)}
+                </Text>
+              </View>
+
+              {/* Average days badge */}
+              {avgDays > 0 && (
+                <View
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: BORDER_RADIUS.sm,
+                    backgroundColor: withOpacity(colors.mutedForeground, 'muted'),
+                  }}
+                >
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                    ~{avgDays}d
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </BottomSheet>
+  );
+}
+
+// ============================================
+// Main StageStepper Component - Compact Progress Pill
+// ============================================
+
+export function StageStepper({
+  currentStage,
+  onStagePress,
+}: StageStepperProps) {
+  const colors = useThemeColors();
+  const [showSheet, setShowSheet] = useState(false);
 
   // Get the index of the current stage
   const currentIndex = ORDERED_STAGES.indexOf(currentStage);
+  const totalStages = ORDERED_STAGES.length;
 
-  // Handle stage press - show info modal or call handler
-  const handleStagePress = useCallback((stage: DealStage) => {
-    if (onStagePress) {
-      onStagePress(stage);
-    } else {
-      setSelectedStage(stage);
-      setShowModal(true);
-    }
-  }, [onStagePress]);
+  // Handle pill press - open selection sheet
+  const handlePillPress = useCallback(() => {
+    haptic.selection();
+    setShowSheet(true);
+  }, []);
 
-  const handleCloseModal = useCallback(() => {
-    setShowModal(false);
-    setSelectedStage(null);
+  // Handle stage selection from sheet
+  const handleSelectStage = useCallback(
+    (stage: DealStage) => {
+      if (onStagePress) {
+        onStagePress(stage);
+      }
+    },
+    [onStagePress]
+  );
+
+  const handleCloseSheet = useCallback(() => {
+    setShowSheet(false);
   }, []);
 
   // Determine status for each stage
-  const getStageStatus = (stage: DealStage): 'completed' | 'current' | 'future' => {
-    const stageIndex = ORDERED_STAGES.indexOf(stage);
-    if (stageIndex < currentIndex) return 'completed';
-    if (stageIndex === currentIndex) return 'current';
+  const getStageStatus = (index: number): 'completed' | 'current' | 'future' => {
+    if (index < currentIndex) return 'completed';
+    if (index === currentIndex) return 'current';
     return 'future';
   };
 
+  const currentConfig = DEAL_STAGE_CONFIG[currentStage];
+  const stepDisplay = `${currentIndex + 1} of ${totalStages}`;
+
   return (
     <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: SPACING.md,
-          paddingVertical: SPACING.sm,
-          gap: compact ? SPACING.lg : SPACING.xl,
+      <TouchableOpacity
+        onPress={handlePillPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`Current stage: ${currentConfig?.label || currentStage}. ${stepDisplay}. Tap to change stage.`}
+        style={{
           flexDirection: 'row',
-          alignItems: 'flex-start',
+          alignItems: 'center',
+          paddingHorizontal: SPACING.lg,
+          paddingVertical: SPACING.sm,
+          marginHorizontal: SPACING.lg,
+          marginTop: SPACING.sm,
+          borderRadius: BORDER_RADIUS.xl,
+          backgroundColor: colors.card,
+          borderWidth: 1,
+          borderColor: colors.border,
         }}
       >
-        {ORDERED_STAGES.map((stage, index) => (
-          <StageStep
-            key={stage}
-            stage={stage}
-            status={getStageStatus(stage)}
-            isLast={index === ORDERED_STAGES.length - 1}
-            compact={compact}
-            onPress={() => handleStagePress(stage)}
-          />
-        ))}
-      </ScrollView>
+        {/* Progress dots */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginRight: SPACING.md,
+          }}
+        >
+          {ORDERED_STAGES.map((_, index) => (
+            <ProgressDot key={index} status={getStageStatus(index)} />
+          ))}
+        </View>
 
-      {/* Stage Info Modal */}
-      <StageInfoModal
-        visible={showModal}
-        stage={selectedStage}
-        onClose={handleCloseModal}
+        {/* Stage name */}
+        <Text
+          style={{
+            fontSize: 14,
+            fontWeight: '600',
+            color: colors.foreground,
+            flex: 1,
+          }}
+          numberOfLines={1}
+        >
+          {currentConfig?.label || currentStage}
+        </Text>
+
+        {/* Step count */}
+        <Text
+          style={{
+            fontSize: 12,
+            color: colors.mutedForeground,
+            marginRight: SPACING.sm,
+          }}
+        >
+          {stepDisplay}
+        </Text>
+
+        {/* Chevron */}
+        <ChevronDown size={ICON_SIZES.md} color={colors.mutedForeground} />
+      </TouchableOpacity>
+
+      {/* Stage Selection Sheet */}
+      <StageSelectionSheet
+        visible={showSheet}
+        currentStage={currentStage}
+        onClose={handleCloseSheet}
+        onSelectStage={handleSelectStage}
       />
     </>
   );

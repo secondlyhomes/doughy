@@ -7,7 +7,10 @@ import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
 
 // Suppress warnings from dependencies we can't control
-const SUPPRESSED_WARNINGS = ['SafeAreaView has been deprecated'];
+const SUPPRESSED_WARNINGS = [
+  'SafeAreaView has been deprecated',
+  "Cannot find native module 'ExponentAV'",
+];
 
 LogBox.ignoreLogs(SUPPRESSED_WARNINGS);
 
@@ -20,6 +23,16 @@ console.warn = (...args: unknown[]) => {
   }
   originalWarn.apply(console, args);
 };
+
+// Suppress native module errors that occur before JS try/catch can catch them
+const originalError = console.error;
+console.error = (...args: unknown[]) => {
+  const message = typeof args[0] === 'string' ? args[0] : String(args[0]);
+  if (message.includes("Cannot find native module 'ExponentAV'")) {
+    return;
+  }
+  originalError.apply(console, args);
+};
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
@@ -30,6 +43,7 @@ import { UnreadCountsProvider, ErrorBoundary } from '@/features/layout';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { FocusModeProvider } from '@/context/FocusModeContext';
 import { ToastProvider } from '@/components/ui/Toast';
+import { ErrorProvider } from '@/context/ErrorContext';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -73,12 +87,14 @@ export default function RootLayout() {
               <FocusModeProvider>
                 <ThemeSync>
                   <ToastProvider>
-                    <UnreadCountsProvider>
-                      <SafeAreaProvider>
-                        <ThemedStatusBar />
-                        <Slot />
-                      </SafeAreaProvider>
-                    </UnreadCountsProvider>
+                    <ErrorProvider>
+                      <UnreadCountsProvider>
+                        <SafeAreaProvider>
+                          <ThemedStatusBar />
+                          <Slot />
+                        </SafeAreaProvider>
+                      </UnreadCountsProvider>
+                    </ErrorProvider>
                   </ToastProvider>
                 </ThemeSync>
               </FocusModeProvider>

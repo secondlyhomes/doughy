@@ -4,11 +4,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useToast } from '@/components/ui/Toast';
 import { ArrowLeft, Mail, Shield, Calendar, Clock, MoreVertical, Trash2, RotateCcw } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner } from '@/components/ui';
+import { ScreenHeader, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { getUserById, updateUserRole, restoreUser, deleteUser, getRoleLabel, type AdminUser, type UserRole } from '../services/userService';
 import { UserProfileHeader } from '../components/UserProfileHeader';
@@ -18,6 +19,7 @@ import { UserRoleButton } from '../components/UserRoleButton';
 export function UserDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const { toast } = useToast();
   const params = useLocalSearchParams();
   const userId = params.userId as string;
   const { user: currentUser } = useAuth();
@@ -42,7 +44,7 @@ export function UserDetailScreen() {
 
   const handleChangeRole = useCallback(async (newRole: UserRole) => {
     if (!user || isSelf) {
-      if (isSelf) Alert.alert('Not Allowed', 'You cannot change your own role.');
+      if (isSelf) toast({ type: 'error', title: 'Not Allowed', description: 'You cannot change your own role.' });
       return;
     }
 
@@ -55,15 +57,15 @@ export function UserDetailScreen() {
           const result = await updateUserRole(userId, newRole);
           if (result.success) {
             setUser((prev) => prev ? { ...prev, role: newRole } : null);
-            Alert.alert('Success', 'User role updated');
+            toast({ type: 'success', title: 'Role Updated', description: `User is now ${getRoleLabel(newRole)}` });
           } else {
-            Alert.alert('Error', result.error || 'Failed to update role');
+            toast({ type: 'error', title: 'Update Failed', description: result.error || 'Failed to update role', duration: 6000 });
           }
           setIsUpdating(false);
         },
       },
     ]);
-  }, [user, userId, isSelf]);
+  }, [user, userId, isSelf, toast]);
 
   const handleRestoreUser = useCallback(async () => {
     if (!user) return;
@@ -76,19 +78,19 @@ export function UserDetailScreen() {
           const result = await restoreUser(userId);
           if (result.success) {
             setUser((prev) => prev ? { ...prev, isDeleted: false } : null);
-            Alert.alert('Success', 'User restored');
+            toast({ type: 'success', title: 'User Restored', description: 'The user account has been restored' });
           } else {
-            Alert.alert('Error', result.error || 'Failed to restore user');
+            toast({ type: 'error', title: 'Restore Failed', description: result.error || 'Failed to restore user', duration: 6000 });
           }
           setIsUpdating(false);
         },
       },
     ]);
-  }, [user, userId]);
+  }, [user, userId, toast]);
 
   const handleDeleteUser = useCallback(() => {
     if (isSelf) {
-      Alert.alert('Not Allowed', 'You cannot delete your own account from here.');
+      toast({ type: 'error', title: 'Not Allowed', description: 'You cannot delete your own account from here.' });
       return;
     }
 
@@ -101,16 +103,16 @@ export function UserDetailScreen() {
           setIsUpdating(true);
           const result = await deleteUser(userId);
           if (result.success) {
-            Alert.alert('Success', 'User deleted');
+            toast({ type: 'success', title: 'User Deleted', description: 'The user account has been deleted' });
             router.back();
           } else {
-            Alert.alert('Error', result.error || 'Failed to delete user');
+            toast({ type: 'error', title: 'Delete Failed', description: result.error || 'Failed to delete user', duration: 6000 });
             setIsUpdating(false);
           }
         },
       },
     ]);
-  }, [userId, router, isSelf]);
+  }, [userId, router, isSelf, toast]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never';
@@ -163,7 +165,7 @@ export function UserDetailScreen() {
         </View>
       )}
 
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {isSelf && (
           <View className="mx-4 mt-4 p-3 rounded-lg" style={{ backgroundColor: withOpacity(colors.info, 'muted') }}>
             <Text className="text-sm" style={{ color: colors.info }}>This is your account. Some actions are restricted.</Text>

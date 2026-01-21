@@ -3,3 +3,6 @@
 
 export { SmartBackButton } from './SmartBackButton';
 export type { SmartBackButtonProps } from './SmartBackButton';
+
+export { EntityHeader } from './EntityHeader';
+export type { EntityHeaderProps, EntityContext } from './EntityHeader';

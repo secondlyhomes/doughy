@@ -11,7 +11,6 @@ import {
   ScrollView,
   Alert,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, User, Mail, Save, Camera } from 'lucide-react-native';
@@ -21,10 +20,12 @@ import { supabase } from '@/lib/supabase';
 import { GlassButton } from '@/components/ui';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useKeyboardAvoidance } from '@/hooks';
 
 export function ProfileScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
   const { user, profile, refetchProfile, isLoading: authLoading } = useAuth();
 
   // Form state
@@ -102,10 +103,11 @@ export function ProfileScreen() {
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }} keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}>
         {/* Header */}
         <View
           className="flex-row items-center p-4"

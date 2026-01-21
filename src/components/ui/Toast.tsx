@@ -9,12 +9,21 @@ import { useThemeColors } from '@/context/ThemeContext';
 // Toast types
 export type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info';
 
+export interface ToastAction {
+  /** Button label */
+  label: string;
+  /** Action callback */
+  onPress: () => void;
+}
+
 export interface ToastMessage {
   id: string;
   title?: string;
   description?: string;
   type?: ToastType;
   duration?: number;
+  /** Optional action button */
+  action?: ToastAction;
 }
 
 interface ToastContextType {
@@ -37,7 +46,7 @@ interface ToastItemProps extends ToastMessage {
   onDismiss: () => void;
 }
 
-function ToastItem({ id, title, description, type = 'default', duration = 4000, onDismiss }: ToastItemProps) {
+function ToastItem({ id, title, description, type = 'default', duration = 4000, action, onDismiss }: ToastItemProps) {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const colors = useThemeColors();
@@ -119,6 +128,13 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
     }
   };
 
+  const handleActionPress = useCallback(() => {
+    if (action?.onPress) {
+      action.onPress();
+      animateOut();
+    }
+  }, [action, animateOut]);
+
   return (
     <Animated.View
       style={{
@@ -137,6 +153,19 @@ function ToastItem({ id, title, description, type = 'default', duration = 4000, 
         )}
         {description && (
           <Text className="text-sm" style={{ color: colors.mutedForeground }}>{description}</Text>
+        )}
+        {action && (
+          <TouchableOpacity
+            onPress={handleActionPress}
+            className="mt-2 self-start rounded-md px-3 py-1.5"
+            style={{ backgroundColor: colors.primary }}
+            accessibilityRole="button"
+            accessibilityLabel={action.label}
+          >
+            <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>
+              {action.label}
+            </Text>
+          </TouchableOpacity>
         )}
       </View>
       <TouchableOpacity onPress={animateOut} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityRole="button" accessibilityLabel="Dismiss">

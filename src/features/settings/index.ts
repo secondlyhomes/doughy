@@ -10,6 +10,7 @@ export {
   NotificationsSettingsScreen,
   SecurityScreen,
   AboutScreen,
+  NudgeSettingsScreen,
 } from './screens';
 
 // Services

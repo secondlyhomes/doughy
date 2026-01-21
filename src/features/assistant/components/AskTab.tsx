@@ -10,14 +10,14 @@ import {
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
-  Platform,
   Animated,
 } from 'react-native';
 import { Send, Sparkles, User, Loader2 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { BORDER_RADIUS, SPACING, FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useKeyboardAvoidance } from '@/hooks';
 
 import { useChat, Message } from '../hooks/useChat';
 import { useAssistantContext } from '../hooks/useAssistantContext';
@@ -51,6 +51,7 @@ const CONTEXTUAL_SUGGESTIONS = {
 
 export function AskTab({ dealId }: AskTabProps) {
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasTabBar: true });
   const context = useAssistantContext();
   const { messages, sendMessage, isLoading, clearMessages } = useChat();
 
@@ -87,8 +88,8 @@ export function AskTab({ dealId }: AskTabProps) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={100}
+      behavior={keyboardProps.behavior}
+      keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
     >
       {/* Messages */}
       <ScrollView
@@ -96,6 +97,7 @@ export function AskTab({ dealId }: AskTabProps) {
         style={styles.messagesContainer}
         contentContainerStyle={styles.messagesContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}
       >
         {messages.length === 0 ? (
           <View style={styles.emptyState}>
@@ -209,7 +211,7 @@ function MessageBubble({ message }: { message: Message }) {
             <View
               style={[styles.avatar, { backgroundColor: withOpacity(colors.destructive, 'medium') }]}
             >
-              <Text style={{ fontSize: 12 }}>!</Text>
+              <Text style={{ fontSize: FONT_SIZES.xs, fontWeight: FONT_WEIGHTS.bold }}>!</Text>
             </View>
           ) : (
             <View style={[styles.avatar, { backgroundColor: withOpacity(colors.primary, 'light') }]}>
@@ -332,13 +334,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.xl,
+    fontWeight: FONT_WEIGHTS.semibold,
+    marginBottom: SPACING.sm,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.sm,
     textAlign: 'center',
+    lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.normal,
     marginBottom: SPACING['2xl'],
   },
   suggestionsContainer: {
@@ -354,11 +357,11 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: SPACING.xs,
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: SPACING.xs,
   },
   avatarContainer: {
     marginHorizontal: SPACING.xs,
@@ -375,8 +378,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm,
   },
   messageText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: FONT_SIZES.sm,
+    lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.normal,
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -384,19 +387,20 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.xl,
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: SPACING.xs,
     gap: SPACING.sm,
   },
   loadingText: {
-    fontSize: 13,
+    fontSize: FONT_SIZES.sm,
+    lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.normal,
   },
   thinkingDots: {
     flexDirection: 'row',
     gap: SPACING.xs,
   },
   dot: {
-    width: 6,
-    height: 6,
+    width: BORDER_RADIUS.sm,
+    height: BORDER_RADIUS.sm,
     borderRadius: 3,
   },
   inputContainer: {
@@ -407,15 +411,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     borderRadius: BORDER_RADIUS['24'],
-    paddingLeft: 16,
-    paddingRight: 4,
+    paddingLeft: SPACING.lg,
+    paddingRight: SPACING.xs,
     paddingVertical: SPACING.xs,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: FONT_SIZES.sm,
     maxHeight: 100,
-    paddingVertical: 10,
+    paddingVertical: SPACING.sm,
   },
   sendButton: {
     width: 36,

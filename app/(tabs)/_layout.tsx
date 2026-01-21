@@ -38,22 +38,23 @@ export default function TabLayout() {
       })}
       shadowColor="transparent"
     >
-      {/* Tab Order: Inbox → Deals → Properties → Portfolio → Settings */}
+      {/* Tab Order: Focus → Leads → Deals → Portfolio → Settings */}
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
-        <Label>Inbox</Label>
-        {counts.leads > 0 && <Badge value={String(counts.leads)} />}
+        <Icon sf={{ default: 'scope', selected: 'scope' }} />
+        <Label>Focus</Label>
+        {counts.captureItems > 0 && <Badge>{String(counts.captureItems)}</Badge>}
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="leads">
+        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
+        <Label>Leads</Label>
+        {counts.leads > 0 && <Badge>{String(counts.leads)}</Badge>}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="deals">
         <Icon sf={{ default: 'doc.text', selected: 'doc.text.fill' }} />
         <Label>Deals</Label>
-        {counts.overdueDeals > 0 && <Badge value={String(counts.overdueDeals)} />}
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="properties">
-        <Icon sf={{ default: 'building.2', selected: 'building.2.fill' }} />
-        <Label>Properties</Label>
+        {counts.overdueDeals > 0 && <Badge>{String(counts.overdueDeals)}</Badge>}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="portfolio">
@@ -67,7 +68,7 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
 
       {/* Hidden tabs - still accessible via navigation but not in tab bar */}
-      <NativeTabs.Trigger name="leads" hidden />
+      <NativeTabs.Trigger name="properties" hidden />
       <NativeTabs.Trigger name="conversations" hidden />
     </NativeTabs>
   );

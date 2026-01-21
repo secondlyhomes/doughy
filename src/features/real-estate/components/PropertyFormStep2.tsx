@@ -3,7 +3,7 @@
 // Uses useThemeColors() for reliable dark mode support
 
 import React from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Bed, Bath, Square, Ruler, Calendar } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 
@@ -24,12 +24,10 @@ interface PropertyFormStep2Props {
 export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2Props) {
   const colors = useThemeColors();
 
+  // Note: This component is rendered inside PropertyFormWizard's ScrollView
+  // so we use View instead of ScrollView to avoid nested scrolling issues
   return (
-    <ScrollView
-      className="flex-1"
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View className="flex-1">
       <View className="gap-4">
         {/* Bedrooms & Bathrooms */}
         <View
@@ -243,6 +241,6 @@ export function PropertyFormStep2({ data, onChange, errors }: PropertyFormStep2P
           </Text>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }

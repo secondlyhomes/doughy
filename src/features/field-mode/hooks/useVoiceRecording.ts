@@ -4,21 +4,28 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { VoiceRecordingState } from '../types';
 
-// Dynamically import expo-av to handle cases where native module isn't available (Expo Go)
-let Audio: typeof import('expo-av').Audio | null = null;
-let isAudioAvailable = false;
+// Lazy-load expo-av to prevent crash when native module isn't available (Expo Go)
+// Using a lazy getter defers the require() call until runtime, avoiding errors at module evaluation
+let _Audio: typeof import('expo-av').Audio | null = null;
+let _audioChecked = false;
 
-try {
-  // This will throw if native module isn't linked
-  const expoAv = require('expo-av');
-  Audio = expoAv.Audio;
-  isAudioAvailable = true;
-} catch {
-  console.warn('[useVoiceRecording] expo-av not available - voice recording disabled. Requires dev build.');
+function getAudioModule(): typeof import('expo-av').Audio | null {
+  if (!_audioChecked) {
+    _audioChecked = true;
+    try {
+      _Audio = require('expo-av').Audio;
+    } catch {
+      console.warn('[useVoiceRecording] expo-av not available - voice recording disabled. Requires dev build.');
+      _Audio = null;
+    }
+  }
+  return _Audio;
 }
 
-// Re-export availability check for UI components
-export { isAudioAvailable };
+// Check if audio is available (for UI components)
+export function isAudioAvailable(): boolean {
+  return getAudioModule() !== null;
+}
 
 interface UseVoiceRecordingReturn {
   state: VoiceRecordingState;
@@ -46,9 +53,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [playbackDuration, setPlaybackDuration] = useState(0);
-  const [error, setError] = useState<string | null>(
-    isAudioAvailable ? null : 'Voice recording requires a development build'
-  );
+  const [error, setError] = useState<string | null>(null);
 
   // Use 'any' for refs since Audio types aren't available when module isn't linked
   const recordingRef = useRef<any>(null);
@@ -72,7 +77,8 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
 
   // Start recording
   const startRecording = useCallback(async () => {
-    if (!Audio || !isAudioAvailable) {
+    const Audio = getAudioModule();
+    if (!Audio) {
       setError('Voice recording requires a development build');
       return;
     }
@@ -136,6 +142,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
       recordingRef.current = null;
 
       // Reset audio mode
+      const Audio = getAudioModule();
       if (Audio) {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
@@ -220,6 +227,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
       }
 
       // Reset audio mode
+      const Audio = getAudioModule();
       if (Audio) {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
@@ -239,7 +247,8 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
 
   // Play back a recorded audio file
   const playbackUri = useCallback(async (uri: string) => {
-    if (!Audio || !isAudioAvailable) {
+    const Audio = getAudioModule();
+    if (!Audio) {
       setError('Audio playback requires a development build');
       return;
     }
@@ -299,7 +308,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
     playbackPosition,
     playbackDuration,
     error,
-    isAvailable: isAudioAvailable,
+    isAvailable: isAudioAvailable(),
   };
 }
 

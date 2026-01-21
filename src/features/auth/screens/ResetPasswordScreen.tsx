@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -16,6 +15,7 @@ import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react-native
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import {
   updatePassword,
@@ -27,6 +27,7 @@ import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicat
 export function ResetPasswordScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const params = useLocalSearchParams();
 
   const [password, setPassword] = useState('');
@@ -97,7 +98,8 @@ export function ResetPasswordScreen() {
   return (
     <ThemedSafeAreaView className="flex-1">
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         <ScrollView

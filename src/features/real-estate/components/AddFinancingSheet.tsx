@@ -2,7 +2,7 @@
 // Bottom sheet for adding/editing financing scenarios
 
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { X, CreditCard } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { BottomSheet, Button } from '@/components/ui';
@@ -69,8 +69,7 @@ export function AddFinancingSheet({
 
   return (
     <BottomSheet visible={visible} onClose={handleClose} snapPoints={['90%']}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
-        {/* Header */}
+      {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           <View>
             <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
@@ -98,20 +97,19 @@ export function AddFinancingSheet({
           <View className="h-4" />
         </ScrollView>
 
-        {/* Submit Button */}
-        <View className="p-4 border-t" style={{ borderColor: colors.border }}>
-          <Button
-            onPress={handleSubmit}
-            disabled={isLoading}
-            loading={isLoading}
-            size="lg"
-            className="w-full"
-          >
-            {!isLoading && <CreditCard size={18} color={colors.primaryForeground} />}
-            {editScenario ? 'Save Changes' : 'Create Scenario'}
-          </Button>
-        </View>
-      </KeyboardAvoidingView>
+      {/* Submit Button */}
+      <View className="p-4 border-t" style={{ borderColor: colors.border }}>
+        <Button
+          onPress={handleSubmit}
+          disabled={isLoading}
+          loading={isLoading}
+          size="lg"
+          className="w-full"
+        >
+          {!isLoading && <CreditCard size={18} color={colors.primaryForeground} />}
+          {editScenario ? 'Save Changes' : 'Create Scenario'}
+        </Button>
+      </View>
     </BottomSheet>
   );
 }

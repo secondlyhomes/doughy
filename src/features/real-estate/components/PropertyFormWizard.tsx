@@ -5,16 +5,15 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
+import { haptic } from '@/lib/haptics';
 import { ArrowLeft, ArrowRight, Check, X, Mic, Camera } from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
-import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { withOpacity } from '@/lib/design-utils';
 import { Button } from '@/components/ui';
 import { FormStepProgress, PROPERTY_FORM_STEPS } from './FormStepProgress';
@@ -26,6 +25,12 @@ import { PropertyFormStep5, Step5Data } from './PropertyFormStep5';
 import { Property } from '../types';
 import { useVoiceCapture } from '../hooks/useVoiceCapture';
 import { usePhotoExtract } from '../hooks/usePhotoExtract';
+import { validateForm, isFormValid } from '@/lib/validation';
+import {
+  propertyStep1Schema,
+  propertyStep2Schema,
+  propertyStep3Schema,
+} from '@/lib/validation/schemas/propertySchema';
 
 interface PropertyFormWizardProps {
   initialData?: Partial<Property>;
@@ -76,7 +81,7 @@ export function PropertyFormWizard({
   submitLabel = 'Create Property',
 }: PropertyFormWizardProps) {
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
+  const { contentPadding } = useTabBarPadding();
   const [currentStep, setCurrentStep] = useState(0);
 
   // AI extraction hooks
@@ -115,56 +120,39 @@ export function PropertyFormWizard({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Validation for each step
+  // Validation for each step using validation schemas
   const validateStep = useCallback((step: number): boolean => {
-    const newErrors: Record<string, string> = {};
+    let newErrors: Record<string, string> = {};
 
     if (step === 0) {
-      // Step 1: Address validation
-      if (!step1Data.address.trim()) {
-        newErrors.address = 'Address is required';
-      }
-      if (!step1Data.city.trim()) {
-        newErrors.city = 'City is required';
-      }
-      if (!step1Data.state.trim()) {
-        newErrors.state = 'State is required';
-      }
-      if (!step1Data.zip.trim()) {
-        newErrors.zip = 'ZIP code is required';
-      }
+      // Step 1: Address validation using schema
+      newErrors = validateForm(step1Data, propertyStep1Schema) as Record<string, string>;
     } else if (step === 1) {
-      // Step 2: Details validation (optional fields, but validate format)
-      if (step2Data.bedrooms && isNaN(Number(step2Data.bedrooms))) {
-        newErrors.bedrooms = 'Must be a number';
-      }
-      if (step2Data.bathrooms && isNaN(Number(step2Data.bathrooms))) {
-        newErrors.bathrooms = 'Must be a number';
-      }
-      if (step2Data.year_built) {
-        const year = Number(step2Data.year_built);
-        if (isNaN(year) || year < 1800 || year > new Date().getFullYear() + 5) {
-          newErrors.year_built = 'Invalid year';
-        }
-      }
+      // Step 2: Details validation using schema
+      newErrors = validateForm(step2Data, propertyStep2Schema) as Record<string, string>;
+    } else if (step === 2) {
+      // Step 3: Financial validation using schema
+      newErrors = validateForm(step3Data, propertyStep3Schema) as Record<string, string>;
     }
-    // Steps 3, 4, 5 have optional fields
+    // Steps 4, 5 have optional fields - no validation needed
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [step1Data, step2Data]);
+    return isFormValid(newErrors);
+  }, [step1Data, step2Data, step3Data]);
 
   const handleNext = useCallback(() => {
     if (!validateStep(currentStep)) {
       return;
     }
     if (currentStep < PROPERTY_FORM_STEPS.length - 1) {
+      haptic.light();
       setCurrentStep(prev => prev + 1);
     }
   }, [currentStep, validateStep]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 0) {
+      haptic.light();
       setCurrentStep(prev => prev - 1);
     }
   }, [currentStep]);
@@ -211,6 +199,36 @@ export function PropertyFormWizard({
       ]
     );
   }, [onCancel]);
+
+  // Handle step indicator press for direct navigation
+  const handleStepPress = useCallback((index: number) => {
+    if (index === currentStep) return;
+
+    // If navigating away from current step, validate but allow anyway (warn for required fields)
+    if (currentStep === 0 && index > 0) {
+      // Only warn if step 1 has missing required fields
+      const missingFields: string[] = [];
+      if (!step1Data.address.trim()) missingFields.push('Address');
+      if (!step1Data.city.trim()) missingFields.push('City');
+      if (!step1Data.state.trim()) missingFields.push('State');
+      if (!step1Data.zip.trim()) missingFields.push('ZIP');
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          'Missing Required Fields',
+          `You'll need to complete these before submitting: ${missingFields.join(', ')}`,
+          [
+            { text: 'Stay Here', style: 'cancel' },
+            { text: 'Continue Anyway', onPress: () => { haptic.light(); setCurrentStep(index); } },
+          ]
+        );
+        return;
+      }
+    }
+
+    haptic.light();
+    setCurrentStep(index);
+  }, [currentStep, step1Data]);
 
   // Voice capture handler
   const handleVoiceCapture = useCallback(async () => {
@@ -318,15 +336,12 @@ export function PropertyFormWizard({
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-    >
+    <View className="flex-1">
       {/* Progress Indicator */}
       <FormStepProgress
         steps={PROPERTY_FORM_STEPS}
         currentStepIndex={currentStep}
+        onStepPress={handleStepPress}
       />
 
       {/* AI Quick Capture - Only show on first step */}
@@ -385,64 +400,65 @@ export function PropertyFormWizard({
         </View>
       )}
 
-      {/* Step Content */}
-      <View className="flex-1 px-4 pb-4">
-        {renderStepContent()}
-      </View>
-
-      {/* Navigation Buttons */}
-      <View
-        className="flex-row gap-3 p-4"
-        style={{
-          backgroundColor: colors.background,
-          borderTopWidth: 1,
-          borderColor: colors.border,
-          paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
-        }}
+      {/* Scrollable Step Content with Navigation Buttons */}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: contentPadding }}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
+        showsVerticalScrollIndicator={false}
       >
-        {currentStep === 0 ? (
-          <Button
-            variant="secondary"
-            onPress={handleCancel}
-            disabled={isLoading}
-            className="flex-1"
-          >
-            <X size={20} color={colors.foreground} />
-            Cancel
-          </Button>
-        ) : (
-          <Button
-            variant="secondary"
-            onPress={handleBack}
-            disabled={isLoading}
-            className="flex-1"
-          >
-            <ArrowLeft size={20} color={colors.foreground} />
-            Back
-          </Button>
-        )}
+        {/* Step Content */}
+        <View className="px-4 pb-4">
+          {renderStepContent()}
+        </View>
 
-        {isLastStep ? (
-          <Button
-            onPress={handleSubmit}
-            disabled={isLoading}
-            loading={isLoading}
-            className="flex-1"
-          >
-            {!isLoading && <Check size={20} color={colors.primaryForeground} />}
-            {submitLabel}
-          </Button>
-        ) : (
-          <Button
-            onPress={handleNext}
-            disabled={isLoading}
-            className="flex-1"
-          >
-            Next
-            <ArrowRight size={20} color={colors.primaryForeground} />
-          </Button>
-        )}
-      </View>
-    </KeyboardAvoidingView>
+        {/* Navigation Buttons - scroll with content */}
+        <View className="flex-row gap-3 px-4 pt-2 pb-4">
+          {currentStep === 0 ? (
+            <Button
+              variant="secondary"
+              onPress={handleCancel}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              <X size={20} color={colors.foreground} />
+              Cancel
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              onPress={handleBack}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              <ArrowLeft size={20} color={colors.foreground} />
+              Back
+            </Button>
+          )}
+
+          {isLastStep ? (
+            <Button
+              onPress={handleSubmit}
+              disabled={isLoading}
+              loading={isLoading}
+              className="flex-1"
+            >
+              {!isLoading && <Check size={20} color={colors.primaryForeground} />}
+              {submitLabel}
+            </Button>
+          ) : (
+            <Button
+              onPress={handleNext}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              Next
+              <ArrowRight size={20} color={colors.primaryForeground} />
+            </Button>
+          )}
+        </View>
+      </ScrollView>
+    </View>
   );
 }

@@ -3,7 +3,7 @@
 // Uses useThemeColors() for reliable dark mode support
 
 import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text } from 'react-native';
 import { Camera, Image as ImageIcon, Info } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -21,12 +21,10 @@ interface PropertyFormStep4Props {
 export function PropertyFormStep4({ data, onChange }: PropertyFormStep4Props) {
   const colors = useThemeColors();
 
+  // Note: This component is rendered inside PropertyFormWizard's ScrollView
+  // so we use View instead of ScrollView to avoid nested scrolling issues
   return (
-    <ScrollView
-      className="flex-1"
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View className="flex-1">
       <View className="gap-4">
         {/* Main Photo Section */}
         <View
@@ -106,6 +104,6 @@ export function PropertyFormStep4({ data, onChange }: PropertyFormStep4Props) {
           </Text>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }

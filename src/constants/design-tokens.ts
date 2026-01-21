@@ -111,14 +111,72 @@ export const ICON_SIZES = {
  * for components that need inline fontSize values
  */
 export const FONT_SIZES = {
+  '2xs': 10,  // Captions, badges
   xs: 12,
   sm: 14,
   base: 16,
-  lg: 18,
+  lg: 18,     // Section headers
   xl: 20,
   '2xl': 24,
   '3xl': 30,
 } as const;
+
+/**
+ * Font weights for consistent typography
+ * Maps to React Native fontWeight values
+ */
+export const FONT_WEIGHTS = {
+  regular: '400',
+  medium: '500',
+  semibold: '600',
+  bold: '700',
+} as const;
+
+/**
+ * Line heights for readable typography
+ * WCAG 1.4.12 recommends 1.5x for body text
+ *
+ * @example
+ * <Text style={{ lineHeight: fontSize * LINE_HEIGHTS.normal }}>
+ */
+export const LINE_HEIGHTS = {
+  tight: 1.2,    // Headings, single-line labels
+  normal: 1.5,   // Body text (WCAG compliant)
+  relaxed: 1.8,  // Large body text, accessibility
+} as const;
+
+/**
+ * Minimum touch target sizes per platform guidelines
+ * Apple HIG: 44pt minimum
+ * Material Design: 48dp minimum
+ *
+ * Use COMFORTABLE for primary actions, MINIMUM for dense UIs
+ */
+export const TOUCH_TARGETS = {
+  MINIMUM: 48,      // Minimum accessible touch target
+  COMFORTABLE: 56,  // Comfortable touch target for primary actions
+} as const;
+
+/**
+ * Default hit slop to expand touch targets without changing visual size
+ * Apply to elements that are visually smaller than TOUCH_TARGETS.MINIMUM
+ *
+ * @example
+ * <TouchableOpacity hitSlop={DEFAULT_HIT_SLOP}>
+ */
+export const DEFAULT_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
+
+/**
+ * Press opacity values for TouchableOpacity activeOpacity
+ * Use DEFAULT for most interactive elements
+ *
+ * @example
+ * <TouchableOpacity activeOpacity={PRESS_OPACITY.DEFAULT}>
+ */
+export const PRESS_OPACITY = {
+  DEFAULT: 0.7,   // Standard press feedback
+  STRONG: 0.6,    // More prominent feedback for emphasis
+};
 
 /**
  * Numeric opacity values for style properties
@@ -182,4 +240,109 @@ export const UI_TIMING = {
 
   /** Delay before triggering long-press actions */
   LONG_PRESS_DELAY: 500,
+} as const;
+
+/**
+ * Animation duration constants in milliseconds
+ * Use for timing-based animations (not spring-based)
+ *
+ * @example
+ * Animated.timing(value, {
+ *   toValue: 1,
+ *   duration: ANIMATION_DURATION.normal,
+ *   useNativeDriver: true,
+ * });
+ */
+export const ANIMATION_DURATION = {
+  /** Very fast animations (subtle feedback) */
+  fast: 150,
+  /** Standard animation speed */
+  normal: 250,
+  /** Slower animations (entrances, emphasis) */
+  slow: 350,
+  /** Page transitions */
+  pageTransition: 300,
+} as const;
+
+/**
+ * Spring animation configurations for react-native-reanimated
+ * Use with withSpring() for natural, physics-based animations
+ *
+ * damping: Higher = less bouncy, lower = more bouncy
+ * stiffness: Higher = faster snap, lower = slower
+ * mass: Higher = heavier feel, lower = lighter
+ *
+ * @example
+ * import { withSpring } from 'react-native-reanimated';
+ * import { SPRING_CONFIGS } from '@/constants/design-tokens';
+ *
+ * // For a button press
+ * scale.value = withSpring(0.95, SPRING_CONFIGS.snappy);
+ *
+ * // For a modal entrance
+ * translateY.value = withSpring(0, SPRING_CONFIGS.gentle);
+ */
+export const SPRING_CONFIGS = {
+  /** Quick, responsive animations for interactive elements (buttons, toggles) */
+  snappy: {
+    damping: 20,
+    stiffness: 400,
+    mass: 0.8,
+  },
+  /** Standard animations for most UI transitions */
+  default: {
+    damping: 15,
+    stiffness: 300,
+    mass: 1,
+  },
+  /** Smooth, gentle animations for larger elements (modals, sheets) */
+  gentle: {
+    damping: 20,
+    stiffness: 200,
+    mass: 1,
+  },
+  /** Bouncy animations for playful interactions (success states, celebrations) */
+  bouncy: {
+    damping: 10,
+    stiffness: 250,
+    mass: 0.8,
+  },
+  /** Stiff, minimal bounce for subtle movements */
+  stiff: {
+    damping: 25,
+    stiffness: 500,
+    mass: 1,
+  },
+} as const;
+
+/**
+ * Entrance/exit animation configurations
+ * Common patterns for list items and view transitions
+ *
+ * @example
+ * // Using with Reanimated FadeIn/FadeOut
+ * import { FadeIn, FadeOut } from 'react-native-reanimated';
+ * import { ENTRANCE_ANIMATIONS } from '@/constants/design-tokens';
+ *
+ * <Animated.View entering={FadeIn.duration(ENTRANCE_ANIMATIONS.fadeIn.duration)}>
+ */
+export const ENTRANCE_ANIMATIONS = {
+  fadeIn: {
+    duration: 200,
+    delay: 0,
+  },
+  slideUp: {
+    duration: 250,
+    translateY: 20,
+  },
+  scaleIn: {
+    duration: 200,
+    initialScale: 0.9,
+  },
+  /** Staggered list item animation */
+  listItem: {
+    duration: 200,
+    delayPerItem: 50,
+    maxDelay: 300,
+  },
 } as const;

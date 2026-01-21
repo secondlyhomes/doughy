@@ -8,17 +8,16 @@
 // - 80% Happy Path: Normal, expected scenarios
 // - 20% Edge Cases: Boundary conditions, special characters, extreme values
 
-import type {
-  LeadInsert,
-  PropertyInsert,
-  DealInsert,
-  ContactInsert,
-  DocumentInsert,
-  MessageInsert,
-} from '@/integrations/supabase/types';
+import type { TablesInsert } from '@/integrations/supabase/types';
+import type { CaptureItemType, CaptureItemStatus } from '@/features/capture/types';
+
+// Type aliases for cleaner function signatures
+type LeadInsert = TablesInsert<'crm_leads'>;
+type PropertyInsert = TablesInsert<'re_properties'>;
+type DealInsert = TablesInsert<'deals'>;
 
 // ============================================================================
-// LEADS DATA (50 total: 45 happy path + 5 edge cases)
+// LEADS DATA (60 total: 48 happy path + 12 edge cases)
 // ============================================================================
 
 const EDGE_CASE_LEADS = [
@@ -35,49 +34,103 @@ const EDGE_CASE_LEADS = [
     name: 'José O\'Brien-García',
     email: 'jose.garcia@example.com',
     phone: '512-555-9002',
-    
     status: 'new' as const,
     score: 85,
     tags: ['seller', 'motivated'],
-    
-    
-    // notes: 'Special characters test: accents, apostrophes, hyphens',
+    // Edge: Special characters test - accents, apostrophes, hyphens
   },
   {
     name: 'X',
     email: 'x@example.com',
     phone: '512-555-9003',
-
     status: 'active' as const,
     score: 95,
     tags: ['wholesaler'],
-
-
-    // notes: 'Minimum name length test (single character)',
+    // Edge: Minimum name length test (single character)
   },
   {
     name: '김철수',
     email: 'kim@example.com',
     phone: '512-555-9004',
-    
     status: 'active' as const,
     score: 65,
     tags: ['investor', 'buyer'],
-    
-    
-    // notes: 'Korean characters test - tests unicode handling',
+    // Edge: Korean characters test - tests unicode handling
   },
   {
     name: '',
     email: 'noemailtest@example.com',
     phone: '',
-
     status: 'inactive' as const,
     score: 5,
     tags: [],
-
-
-    // notes: 'Empty contact info test - tests validation and required fields',
+    // Edge: Empty contact info test - tests validation and required fields
+  },
+  {
+    name: 'Zero Score Lead',
+    email: 'zeroscore@example.com',
+    phone: '512-555-9005',
+    status: 'new' as const,
+    score: 0,
+    tags: ['seller'],
+    // Edge: Zero score - tests minimum score boundary
+  },
+  {
+    name: 'Perfect Score Lead',
+    email: 'perfect@example.com',
+    phone: '512-555-9006',
+    status: 'active' as const,
+    score: 100,
+    tags: ['buyer', 'investor', 'motivated'],
+    // Edge: Maximum score of 100 - tests maximum score boundary
+  },
+  {
+    name: 'DNC Status Lead',
+    email: 'dnc-status@example.com',
+    phone: '512-555-9007',
+    status: 'do_not_contact' as const,
+    score: 0,
+    tags: [],
+    opt_status: 'opted_out' as const,
+    // Edge: do_not_contact status - tests filtering and display
+  },
+  {
+    name: 'Very Long Email Address Person',
+    email: 'this.is.a.very.extremely.long.email.address.for.testing.purposes.and.ui.overflow@example-domain-that-is-also-quite-long.com',
+    phone: '512-555-9008',
+    status: 'active' as const,
+    score: 50,
+    tags: ['buyer'],
+    // Edge: Very long email - tests UI overflow and text truncation
+  },
+  {
+    name: 'International Phone Format',
+    email: 'intl@example.com',
+    phone: '+44 20 7946 0958',
+    status: 'active' as const,
+    score: 70,
+    tags: ['investor'],
+    // Edge: International phone format - tests phone parsing
+  },
+  {
+    name: '<script>alert("test")</script>',
+    email: 'xss-test@example.com',
+    phone: '512-555-9010',
+    status: 'inactive' as const,
+    score: 1,
+    tags: ['test'],
+    // SECURITY TEST: XSS injection attempt in user-facing field
+    // Verifies that UI components properly escape HTML when rendering lead names.
+    // If this causes a script to execute in the browser, XSS protection is broken.
+  },
+  {
+    name: '🏠 Emoji Seller 🔥',
+    email: 'emoji@example.com',
+    phone: '512-555-9011',
+    status: 'active' as const,
+    score: 88,
+    tags: ['seller', 'motivated'],
+    // Edge: Emoji in name - tests unicode emoji handling
   },
 ];
 
@@ -614,13 +667,33 @@ const HAPPY_PATH_LEADS = [
     name: 'Gerald Reed',
     email: 'greed@example.com',
     phone: '512-555-0045',
-
     status: 'do_not_contact' as const,
     score: 0,
     tags: ['buyer'],
-
-
-    // notes: 'Successfully purchased property',
+  },
+  {
+    name: 'Victoria Hughes',
+    email: 'vhughes@example.com',
+    phone: '512-555-0046',
+    status: 'active' as const,
+    score: 78,
+    tags: ['seller', 'investor'],
+  },
+  {
+    name: 'Walter Price',
+    email: 'wprice@example.com',
+    phone: '512-555-0047',
+    status: 'new' as const,
+    score: 55,
+    tags: ['buyer'],
+  },
+  {
+    name: 'Helen Richardson',
+    email: 'hrichardson@example.com',
+    phone: '512-555-0048',
+    status: 'active' as const,
+    score: 82,
+    tags: ['wholesaler', 'investor'],
   },
 ];
 
@@ -628,7 +701,7 @@ const HAPPY_PATH_LEADS = [
  * Create a deterministic test lead by index.
  * Returns the same lead data for the same index every time.
  *
- * @param index - Index (0-49) of the lead to create
+ * @param index - Index (0-59) of the lead to create
  * @param userId - User ID to associate the lead with
  * @param workspaceId - Workspace ID to associate the lead with
  * @returns LeadInsert object ready for database insertion
@@ -646,69 +719,316 @@ export function createTestLead(index: number, userId: string, workspaceId: strin
 }
 
 // ============================================================================
-// PROPERTIES DATA (20 total: 16 happy path + 4 edge cases)
+// PROPERTIES DATA (100 total: 80 happy path + 20 edge cases)
 // ============================================================================
 
-const EDGE_CASE_PROPERTIES = [
+/**
+ * Template interface for property test data.
+ * year_built is nullable to support testing null/missing values.
+ */
+interface PropertyTemplate {
+  address_line_1: string;
+  city: string;
+  state: string;
+  zip: string;
+  property_type: string;
+  bedrooms: number;
+  bathrooms: number;
+  square_feet: number;
+  year_built: number | null;
+  purchase_price: number;
+  arv: number;
+  notes?: string;
+}
+
+const EDGE_CASE_PROPERTIES: PropertyTemplate[] = [
   {
     address_line_1: '123 Main St',
     city: 'Austin',
     state: 'TX',
     zip: '78701',
-    property_type: "single_family",
+    property_type: 'single_family',
     bedrooms: 1,
     bathrooms: 1,
     square_feet: 500,
     year_built: 1850,
     purchase_price: 1, // $1 house
     arv: 1,
-    // notes: 'Edge case: $1 house - tests minimum value handling and formatting',
+    // Edge: $1 house - tests minimum value handling
   },
   {
     address_line_1: '9999 Luxury Ln',
     city: 'Austin',
     state: 'TX',
     zip: '78746',
-    property_type: "single_family",
+    property_type: 'single_family',
     bedrooms: 10,
     bathrooms: 12,
     square_feet: 15000,
     year_built: 2020,
     purchase_price: 50000000, // $50M mansion
     arv: 55000000,
-    // notes: 'Edge case: $50M mansion - tests large number handling and formatting',
+    // Edge: $50M mansion - tests large numbers
   },
   {
     address_line_1: '456 Tiny House Rd',
     city: 'Austin',
     state: 'TX',
     zip: '78704',
-    property_type: "single_family",
+    property_type: 'single_family',
     bedrooms: 0,
     bathrooms: 1,
     square_feet: 200,
     year_built: 2015,
     purchase_price: 50000,
     arv: 60000,
-    // notes: 'Edge case: Tiny house - tests minimum bedroom/sqft values',
+    // Edge: 0 bedrooms tiny house
   },
   {
     address_line_1: '123456789012345678901234567890123456789012345678901234567890 Very Long Street Name Boulevard',
     city: 'Austin',
     state: 'TX',
     zip: '78701',
-    property_type: "single_family",
+    property_type: 'single_family',
     bedrooms: 2,
     bathrooms: 2,
     square_feet: 1200,
     year_built: 2000,
     purchase_price: 200000,
     arv: 220000,
-    // notes: 'Edge case: Very long address - tests UI overflow and text truncation',
+    // Edge: Very long address - UI overflow test
+  },
+  {
+    address_line_1: '0 Null Street',
+    city: 'Austin',
+    state: 'TX',
+    zip: '78701',
+    property_type: 'single_family',
+    bedrooms: 0,
+    bathrooms: 0,
+    square_feet: 0,
+    year_built: null,  // Edge case: null year_built tests missing data handling
+    purchase_price: 0,
+    arv: 0,
+    // Edge: All zeros, null year_built
+  },
+  {
+    address_line_1: '999 Future St',
+    city: 'Dallas',
+    state: 'TX',
+    zip: '75201',
+    property_type: 'single_family',
+    bedrooms: 3,
+    bathrooms: 2,
+    square_feet: 1800,
+    year_built: 2030,
+    purchase_price: 350000,
+    arv: 400000,
+    // Edge: Future year_built - tests date validation
+  },
+  {
+    address_line_1: '1 Ancient Rd',
+    city: 'Houston',
+    state: 'TX',
+    zip: '77001',
+    property_type: 'single_family',
+    bedrooms: 2,
+    bathrooms: 1,
+    square_feet: 900,
+    year_built: 1800,
+    purchase_price: 75000,
+    arv: 100000,
+    // Edge: Very old property (1800)
+  },
+  {
+    address_line_1: '500 Half Bath Ln',
+    city: 'San Antonio',
+    state: 'TX',
+    zip: '78201',
+    property_type: 'single_family',
+    bedrooms: 3,
+    bathrooms: 0.5,
+    square_feet: 1000,
+    year_built: 1950,
+    purchase_price: 95000,
+    arv: 120000,
+    // Edge: Only half bath (0.5 bathrooms)
+  },
+  {
+    address_line_1: '100 Bathroom Ave',
+    city: 'Fort Worth',
+    state: 'TX',
+    zip: '76101',
+    property_type: 'single_family',
+    bedrooms: 8,
+    bathrooms: 10,
+    square_feet: 8000,
+    year_built: 2010,
+    purchase_price: 2000000,
+    arv: 2500000,
+    // Edge: Many bathrooms (10)
+  },
+  {
+    address_line_1: 'Unit #123-A, Building 5',
+    city: 'Austin',
+    state: 'TX',
+    zip: '78702',
+    property_type: 'single_family',
+    bedrooms: 2,
+    bathrooms: 2,
+    square_feet: 1100,
+    year_built: 2015,
+    purchase_price: 275000,
+    arv: 300000,
+    // Edge: Complex address with unit number
+  },
+  {
+    address_line_1: '🏠 Emoji House 🏡',
+    city: 'Dallas',
+    state: 'TX',
+    zip: '75202',
+    property_type: 'single_family',
+    bedrooms: 3,
+    bathrooms: 2,
+    square_feet: 1500,
+    year_built: 2000,
+    purchase_price: 250000,
+    arv: 280000,
+    // Edge: Emoji in address - unicode handling
+  },
+  {
+    address_line_1: '42 Negative Rd',
+    city: 'Houston',
+    state: 'TX',
+    zip: '77002',
+    property_type: 'single_family',
+    bedrooms: 3,
+    bathrooms: 2,
+    square_feet: 1600,
+    year_built: 1990,
+    purchase_price: 150000,
+    arv: 100000, // ARV less than purchase price
+    // Edge: Negative equity (ARV < purchase price)
+  },
+  {
+    address_line_1: '1 Decimal Test',
+    city: 'San Antonio',
+    state: 'TX',
+    zip: '78202',
+    property_type: 'single_family',
+    bedrooms: 4,
+    bathrooms: 3.75,
+    square_feet: 2500,
+    year_built: 2005,
+    purchase_price: 399999.99,
+    arv: 449999.99,
+    // Edge: Decimal prices and 3/4 bath
+  },
+  {
+    address_line_1: '10000 Big Sqft Dr',
+    city: 'Fort Worth',
+    state: 'TX',
+    zip: '76102',
+    property_type: 'single_family',
+    bedrooms: 12,
+    bathrooms: 8,
+    square_feet: 25000,
+    year_built: 2015,
+    purchase_price: 5000000,
+    arv: 6000000,
+    // Edge: Very large sqft (25,000)
+  },
+  {
+    address_line_1: "O'Brien's Property",
+    city: 'Austin',
+    state: 'TX',
+    zip: '78703',
+    property_type: 'single_family',
+    bedrooms: 3,
+    bathrooms: 2,
+    square_feet: 1700,
+    year_built: 1985,
+    purchase_price: 310000,
+    arv: 350000,
+    // SECURITY TEST: Apostrophe in address - tests SQL parameterization
+    // Single quotes can break SQL if not properly escaped/parameterized.
+    // Supabase uses parameterized queries, but this verifies correct handling.
+  },
+  {
+    address_line_1: '"; DROP TABLE properties; --',
+    city: 'Dallas',
+    state: 'TX',
+    zip: '75203',
+    property_type: 'single_family',
+    bedrooms: 2,
+    bathrooms: 1,
+    square_feet: 1000,
+    year_built: 1995,
+    purchase_price: 150000,
+    arv: 175000,
+    // SECURITY TEST: SQL injection attempt in address field
+    // Classic Bobby Tables attack vector. If database queries are vulnerable,
+    // this could execute malicious SQL. Supabase RLS + parameterized queries protect against this.
+  },
+  {
+    address_line_1: '777 Lucky St',
+    city: 'Houston',
+    state: 'TX',
+    zip: '77003',
+    property_type: 'single_family',
+    bedrooms: 7,
+    bathrooms: 7,
+    square_feet: 7777,
+    year_built: 1977,
+    purchase_price: 777777,
+    arv: 877777,
+    // Edge: All 7s - pattern testing
+  },
+  {
+    address_line_1: '1234567890 Numbers Only St',
+    city: 'San Antonio',
+    state: 'TX',
+    zip: '78203',
+    property_type: 'single_family',
+    bedrooms: 5,
+    bathrooms: 4,
+    square_feet: 3000,
+    year_built: 2012,
+    purchase_price: 425000,
+    arv: 500000,
+    // Edge: Long numeric street number
+  },
+  {
+    address_line_1: 'PO Box 123',
+    city: 'Fort Worth',
+    state: 'TX',
+    zip: '76103',
+    property_type: 'single_family',
+    bedrooms: 0,
+    bathrooms: 0,
+    square_feet: 0,
+    year_built: 2020,
+    purchase_price: 100000,
+    arv: 150000,
+    // Edge: PO Box as address (unusual)
+  },
+  {
+    address_line_1: '1 Whitespace   Test   Street',
+    city: 'Austin',
+    state: 'TX',
+    zip: '78704',
+    property_type: 'single_family',
+    bedrooms: 3,
+    bathrooms: 2,
+    square_feet: 1400,
+    year_built: 1999,
+    purchase_price: 225000,
+    arv: 260000,
+    // Edge: Multiple whitespaces in address
   },
 ];
 
-const HAPPY_PATH_PROPERTIES = [
+const HAPPY_PATH_PROPERTIES: PropertyTemplate[] = [
   {
     address_line_1: '123 Oak Street',
     city: 'Austin',
@@ -924,46 +1244,118 @@ const HAPPY_PATH_PROPERTIES = [
     city: 'Fort Worth',
     state: 'TX',
     zip: '76103',
-    property_type: "single_family",
+    property_type: 'single_family',
     bedrooms: 4,
     bathrooms: 2.5,
     square_feet: 2300,
     year_built: 1998,
     purchase_price: 310000,
     arv: 360000,
-    // notes: 'Corner lot with large yard',
   },
+  // Additional properties 17-80 (64 more)
+  { address_line_1: '100 Pecan Way', city: 'Austin', state: 'TX', zip: '78705', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1650, year_built: 1992, purchase_price: 285000, arv: 335000 },
+  { address_line_1: '101 Mesquite Dr', city: 'Dallas', state: 'TX', zip: '75204', property_type: 'single_family', bedrooms: 4, bathrooms: 3, square_feet: 2400, year_built: 2005, purchase_price: 375000, arv: 425000 },
+  { address_line_1: '102 Bluebonnet Ln', city: 'Houston', state: 'TX', zip: '77004', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1800, year_built: 1988, purchase_price: 245000, arv: 290000 },
+  { address_line_1: '103 Hackberry St', city: 'San Antonio', state: 'TX', zip: '78204', property_type: 'single_family', bedrooms: 2, bathrooms: 1, square_feet: 1100, year_built: 1965, purchase_price: 135000, arv: 170000 },
+  { address_line_1: '104 Cypress Ct', city: 'Fort Worth', state: 'TX', zip: '76104', property_type: 'single_family', bedrooms: 5, bathrooms: 3, square_feet: 2800, year_built: 2012, purchase_price: 445000, arv: 510000 },
+  { address_line_1: '105 Live Oak Blvd', city: 'Plano', state: 'TX', zip: '75023', property_type: 'single_family', bedrooms: 4, bathrooms: 2.5, square_feet: 2200, year_built: 2000, purchase_price: 385000, arv: 440000 },
+  { address_line_1: '106 Cottonwood Ave', city: 'Arlington', state: 'TX', zip: '76010', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1500, year_built: 1985, purchase_price: 225000, arv: 270000 },
+  { address_line_1: '107 Magnolia Pl', city: 'Irving', state: 'TX', zip: '75060', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1700, year_built: 1990, purchase_price: 265000, arv: 310000 },
+  { address_line_1: '108 Peachtree Rd', city: 'Garland', state: 'TX', zip: '75040', property_type: 'single_family', bedrooms: 4, bathrooms: 2, square_feet: 1900, year_built: 1982, purchase_price: 245000, arv: 295000 },
+  { address_line_1: '109 Juniper Way', city: 'Frisco', state: 'TX', zip: '75034', property_type: 'single_family', bedrooms: 5, bathrooms: 4, square_feet: 3200, year_built: 2015, purchase_price: 525000, arv: 595000 },
+  { address_line_1: '110 Mulberry Dr', city: 'Austin', state: 'TX', zip: '78721', property_type: 'single_family', bedrooms: 2, bathrooms: 1, square_feet: 950, year_built: 1958, purchase_price: 175000, arv: 225000 },
+  { address_line_1: '111 Aspen Rd', city: 'Dallas', state: 'TX', zip: '75205', property_type: 'single_family', bedrooms: 4, bathrooms: 3.5, square_feet: 2900, year_built: 2008, purchase_price: 485000, arv: 550000 },
+  { address_line_1: '112 Chestnut St', city: 'Houston', state: 'TX', zip: '77005', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1600, year_built: 1975, purchase_price: 295000, arv: 350000 },
+  { address_line_1: '113 Laurel Ln', city: 'San Antonio', state: 'TX', zip: '78205', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1450, year_built: 1995, purchase_price: 195000, arv: 240000 },
+  { address_line_1: '114 Acacia Ave', city: 'Fort Worth', state: 'TX', zip: '76105', property_type: 'single_family', bedrooms: 4, bathrooms: 2, square_feet: 2000, year_built: 1988, purchase_price: 275000, arv: 325000 },
+  { address_line_1: '115 Mimosa Ct', city: 'McKinney', state: 'TX', zip: '75069', property_type: 'single_family', bedrooms: 4, bathrooms: 3, square_feet: 2600, year_built: 2010, purchase_price: 395000, arv: 455000 },
+  { address_line_1: '116 Dogwood Ln', city: 'Round Rock', state: 'TX', zip: '78664', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1750, year_built: 2003, purchase_price: 315000, arv: 365000 },
+  { address_line_1: '117 Hawthorn St', city: 'Denton', state: 'TX', zip: '76201', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1550, year_built: 1998, purchase_price: 245000, arv: 290000 },
+  { address_line_1: '118 Sweetgum Dr', city: 'Waco', state: 'TX', zip: '76701', property_type: 'single_family', bedrooms: 3, bathrooms: 1.5, square_feet: 1400, year_built: 1972, purchase_price: 165000, arv: 205000 },
+  { address_line_1: '119 Redbud Way', city: 'Austin', state: 'TX', zip: '78722', property_type: 'single_family', bedrooms: 2, bathrooms: 2, square_feet: 1200, year_built: 2018, purchase_price: 325000, arv: 375000 },
+  { address_line_1: '120 Catalpa Rd', city: 'Dallas', state: 'TX', zip: '75206', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1850, year_built: 1960, purchase_price: 315000, arv: 385000 },
+  { address_line_1: '121 Locust Ave', city: 'Houston', state: 'TX', zip: '77006', property_type: 'single_family', bedrooms: 4, bathrooms: 2.5, square_feet: 2100, year_built: 2002, purchase_price: 365000, arv: 420000 },
+  { address_line_1: '122 Persimmon Pl', city: 'San Antonio', state: 'TX', zip: '78206', property_type: 'single_family', bedrooms: 2, bathrooms: 1, square_feet: 900, year_built: 1955, purchase_price: 115000, arv: 155000 },
+  { address_line_1: '123 Sassafras Ct', city: 'Fort Worth', state: 'TX', zip: '76106', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1650, year_built: 1993, purchase_price: 235000, arv: 280000 },
+  { address_line_1: '124 Sumac St', city: 'Lewisville', state: 'TX', zip: '75067', property_type: 'single_family', bedrooms: 4, bathrooms: 2.5, square_feet: 2300, year_built: 2007, purchase_price: 335000, arv: 390000 },
+  { address_line_1: '125 Tupelo Dr', city: 'Cedar Park', state: 'TX', zip: '78613', property_type: 'single_family', bedrooms: 4, bathrooms: 3, square_feet: 2500, year_built: 2011, purchase_price: 405000, arv: 465000 },
+  { address_line_1: '126 Boxwood Ln', city: 'Carrollton', state: 'TX', zip: '75006', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1600, year_built: 1986, purchase_price: 275000, arv: 320000 },
+  { address_line_1: '127 Alder Way', city: 'Killeen', state: 'TX', zip: '76541', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1350, year_built: 2000, purchase_price: 175000, arv: 215000 },
+  { address_line_1: '128 Buckeye Rd', city: 'Austin', state: 'TX', zip: '78723', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1500, year_built: 1978, purchase_price: 295000, arv: 355000 },
+  { address_line_1: '129 Beech Ave', city: 'Dallas', state: 'TX', zip: '75207', property_type: 'single_family', bedrooms: 5, bathrooms: 3, square_feet: 2700, year_built: 2014, purchase_price: 475000, arv: 540000 },
+  { address_line_1: '130 Fir St', city: 'Houston', state: 'TX', zip: '77007', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1700, year_built: 1990, purchase_price: 285000, arv: 340000 },
+  { address_line_1: '131 Ginkgo Ct', city: 'San Antonio', state: 'TX', zip: '78207', property_type: 'single_family', bedrooms: 4, bathrooms: 2, square_feet: 1800, year_built: 1983, purchase_price: 205000, arv: 255000 },
+  { address_line_1: '132 Hemlock Pl', city: 'Fort Worth', state: 'TX', zip: '76107', property_type: 'single_family', bedrooms: 3, bathrooms: 2.5, square_feet: 1950, year_built: 2001, purchase_price: 295000, arv: 345000 },
+  { address_line_1: '133 Ironwood Dr', city: 'Allen', state: 'TX', zip: '75002', property_type: 'single_family', bedrooms: 4, bathrooms: 3, square_feet: 2800, year_built: 2013, purchase_price: 445000, arv: 505000 },
+  { address_line_1: '134 Larch Ln', city: 'Georgetown', state: 'TX', zip: '78626', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1600, year_built: 2005, purchase_price: 305000, arv: 355000 },
+  { address_line_1: '135 Mahogany St', city: 'Sugar Land', state: 'TX', zip: '77478', property_type: 'single_family', bedrooms: 4, bathrooms: 3.5, square_feet: 3100, year_built: 2016, purchase_price: 495000, arv: 560000 },
+  { address_line_1: '136 Nutmeg Way', city: 'Pearland', state: 'TX', zip: '77581', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1750, year_built: 2008, purchase_price: 285000, arv: 335000 },
+  { address_line_1: '137 Olive Rd', city: 'Austin', state: 'TX', zip: '78724', property_type: 'single_family', bedrooms: 2, bathrooms: 1, square_feet: 1050, year_built: 1962, purchase_price: 215000, arv: 275000 },
+  { address_line_1: '138 Palm Ave', city: 'Dallas', state: 'TX', zip: '75208', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1550, year_built: 1976, purchase_price: 265000, arv: 320000 },
+  { address_line_1: '139 Quince Ct', city: 'Houston', state: 'TX', zip: '77008', property_type: 'single_family', bedrooms: 4, bathrooms: 2, square_feet: 1900, year_built: 1985, purchase_price: 325000, arv: 385000 },
+  { address_line_1: '140 Rosewood Pl', city: 'San Antonio', state: 'TX', zip: '78208', property_type: 'single_family', bedrooms: 3, bathrooms: 1.5, square_feet: 1300, year_built: 1970, purchase_price: 145000, arv: 190000 },
+  { address_line_1: '141 Sandalwood Dr', city: 'Fort Worth', state: 'TX', zip: '76108', property_type: 'single_family', bedrooms: 5, bathrooms: 3, square_feet: 2600, year_built: 2009, purchase_price: 375000, arv: 435000 },
+  { address_line_1: '142 Tamarind Ln', city: 'Flower Mound', state: 'TX', zip: '75028', property_type: 'single_family', bedrooms: 4, bathrooms: 3, square_feet: 2700, year_built: 2012, purchase_price: 425000, arv: 485000 },
+  { address_line_1: '143 Umbrella Way', city: 'Pflugerville', state: 'TX', zip: '78660', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1650, year_built: 2006, purchase_price: 305000, arv: 355000 },
+  { address_line_1: '144 Vine St', city: 'Richardson', state: 'TX', zip: '75080', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1700, year_built: 1992, purchase_price: 315000, arv: 365000 },
+  { address_line_1: '145 Walnut Rd', city: 'Temple', state: 'TX', zip: '76501', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1500, year_built: 1997, purchase_price: 185000, arv: 225000 },
+  { address_line_1: '146 Yew Ave', city: 'Austin', state: 'TX', zip: '78725', property_type: 'single_family', bedrooms: 4, bathrooms: 2.5, square_feet: 2100, year_built: 2004, purchase_price: 365000, arv: 420000 },
+  { address_line_1: '147 Zelkova Ct', city: 'Dallas', state: 'TX', zip: '75209', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1600, year_built: 1968, purchase_price: 295000, arv: 355000 },
+  { address_line_1: '148 Bayberry Pl', city: 'Houston', state: 'TX', zip: '77009', property_type: 'single_family', bedrooms: 2, bathrooms: 2, square_feet: 1400, year_built: 2015, purchase_price: 335000, arv: 385000 },
+  { address_line_1: '149 Cranberry Dr', city: 'San Antonio', state: 'TX', zip: '78209', property_type: 'single_family', bedrooms: 4, bathrooms: 2.5, square_feet: 2200, year_built: 2001, purchase_price: 275000, arv: 330000 },
+  { address_line_1: '150 Dewberry Ln', city: 'Fort Worth', state: 'TX', zip: '76109', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1550, year_built: 1995, purchase_price: 255000, arv: 305000 },
+  { address_line_1: '151 Elderberry St', city: 'Keller', state: 'TX', zip: '76248', property_type: 'single_family', bedrooms: 4, bathrooms: 3, square_feet: 2500, year_built: 2010, purchase_price: 395000, arv: 455000 },
+  { address_line_1: '152 Fern Way', city: 'Hutto', state: 'TX', zip: '78634', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1700, year_built: 2014, purchase_price: 295000, arv: 345000 },
+  { address_line_1: '153 Goldenrod Rd', city: 'The Woodlands', state: 'TX', zip: '77380', property_type: 'single_family', bedrooms: 5, bathrooms: 4, square_feet: 3500, year_built: 2008, purchase_price: 585000, arv: 660000 },
+  { address_line_1: '154 Holly Ave', city: 'League City', state: 'TX', zip: '77573', property_type: 'single_family', bedrooms: 4, bathrooms: 2.5, square_feet: 2300, year_built: 2011, purchase_price: 345000, arv: 400000 },
+  { address_line_1: '155 Ivy Ct', city: 'Austin', state: 'TX', zip: '78726', property_type: 'single_family', bedrooms: 4, bathrooms: 3, square_feet: 2800, year_built: 2017, purchase_price: 495000, arv: 560000 },
+  { address_line_1: '156 Jasmine Pl', city: 'Dallas', state: 'TX', zip: '75210', property_type: 'single_family', bedrooms: 2, bathrooms: 1, square_feet: 1000, year_built: 1952, purchase_price: 165000, arv: 220000 },
+  { address_line_1: '157 Kiwi Dr', city: 'Houston', state: 'TX', zip: '77010', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1600, year_built: 1988, purchase_price: 275000, arv: 330000 },
+  { address_line_1: '158 Lilac Ln', city: 'San Antonio', state: 'TX', zip: '78210', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1450, year_built: 1979, purchase_price: 185000, arv: 235000 },
+  { address_line_1: '159 Marigold St', city: 'Fort Worth', state: 'TX', zip: '76110', property_type: 'single_family', bedrooms: 4, bathrooms: 2, square_feet: 1800, year_built: 1996, purchase_price: 265000, arv: 315000 },
+  { address_line_1: '160 Nasturtium Way', city: 'Southlake', state: 'TX', zip: '76092', property_type: 'single_family', bedrooms: 5, bathrooms: 4.5, square_feet: 4200, year_built: 2005, purchase_price: 725000, arv: 820000 },
+  { address_line_1: '161 Orchid Rd', city: 'Buda', state: 'TX', zip: '78610', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1600, year_built: 2013, purchase_price: 305000, arv: 355000 },
+  { address_line_1: '162 Pansy Ave', city: 'Mesquite', state: 'TX', zip: '75149', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1550, year_built: 1984, purchase_price: 225000, arv: 275000 },
+  { address_line_1: '163 Quince Ct', city: 'Conroe', state: 'TX', zip: '77301', property_type: 'single_family', bedrooms: 4, bathrooms: 2.5, square_feet: 2100, year_built: 2007, purchase_price: 295000, arv: 350000 },
+  { address_line_1: '164 Rose Pl', city: 'Austin', state: 'TX', zip: '78727', property_type: 'single_family', bedrooms: 3, bathrooms: 2, square_feet: 1700, year_built: 2000, purchase_price: 345000, arv: 400000 },
 ];
 
 /**
  * Create a deterministic test property by index.
  * Returns the same property data for the same index every time.
  *
- * @param index - Index (0-19) of the property to create
+ * @param index - Index (0-99) of the property to create
  * @param userId - User ID to associate the property with
  * @param workspaceId - Not used (properties don't have workspace_id)
+ * @param leadId - Optional lead ID to link the property to a seller
  * @returns PropertyInsert object ready for database insertion
  */
-export function createTestProperty(index: number, userId: string, workspaceId: string): Omit<PropertyInsert, 'id' | 'created_at' | 'updated_at'> {
+export function createTestProperty(
+  index: number,
+  userId: string,
+  workspaceId: string,
+  leadId?: string
+): Omit<PropertyInsert, 'id' | 'created_at' | 'updated_at'> {
   const allProperties = [...HAPPY_PATH_PROPERTIES, ...EDGE_CASE_PROPERTIES];
   const template = allProperties[index] || allProperties[0];
 
   return {
     ...template,
     user_id: userId,
+    lead_id: leadId,
     // Note: re_properties table does not have workspace_id column
     status: 'active' as const,
   };
 }
 
 // ============================================================================
-// DEALS DATA (15 total: 12 happy path + 3 edge cases)
+// DEALS DATA (50 total: 40 happy path + 10 edge cases)
 // ============================================================================
 
 /**
  * Create a deterministic test deal linking a lead to a property.
  *
- * @param index - Index (0-14) of the deal to create
+ * @param index - Index (0-49) of the deal to create
  * @param userId - User ID to associate the deal with
  * @param leadId - Lead ID to link
  * @param propertyId - Property ID to link
@@ -988,135 +1380,141 @@ export function createTestDeal(
     return date.toISOString().split('T')[0];
   };
 
-  // Edge cases (last 3 deals)
-  if (index === 12) {
+  // Edge cases (last 10 deals: index 40-49)
+  if (index === 40) {
     return {
-      user_id: userId,
-      lead_id: leadId,
-      property_id: propertyId,
-      title: 'Low Probability Deal',
-      stage: 'initial_contact',
-      status: 'active' as const,
-      probability: 0, // 0% probability
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Zero Probability Deal',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 0,
       expected_close_date: futureDate(90),
-      // notes: 'Edge case: 0% probability - tests low confidence scenarios',
     };
   }
-
-  if (index === 13) {
+  if (index === 41) {
     return {
-      user_id: userId,
-      lead_id: leadId,
-      property_id: propertyId,
-      title: 'Sure Thing Deal - Under Contract',
-      stage: 'initial_contact',
-      status: 'active' as const,
-      probability: 100, // 100% probability
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Sure Thing - 100% Probability',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 100,
       expected_close_date: futureDate(15),
-      // notes: 'Edge case: 100% probability - tests sure-thing scenarios',
     };
   }
-
-  if (index === 14) {
+  if (index === 42) {
     return {
-      user_id: userId,
-      lead_id: leadId,
-      property_id: propertyId,
-      title: 'Past Due Deal - Negotiating',
-      stage: 'initial_contact',
-      status: 'active' as const,
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Past Due Deal',
+      stage: 'initial_contact', status: 'active' as const,
       probability: 50,
-      expected_close_date: pastDate(30), // Past due
-      // notes: 'Edge case: Past due deal - tests overdue handling',
+      expected_close_date: pastDate(30),
+    };
+  }
+  if (index === 43) {
+    return {
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Very Past Due - 90 Days',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 25,
+      expected_close_date: pastDate(90),
+    };
+  }
+  if (index === 44) {
+    return {
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Closing Today',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 99,
+      expected_close_date: futureDate(0),
+    };
+  }
+  if (index === 45) {
+    return {
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Long Term Deal - 1 Year Out',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 10,
+      expected_close_date: futureDate(365),
+    };
+  }
+  if (index === 46) {
+    return {
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: '1% Probability - Nearly Dead',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 1,
+      expected_close_date: futureDate(120),
+    };
+  }
+  if (index === 47) {
+    return {
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Closing Tomorrow',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 95,
+      expected_close_date: futureDate(1),
+    };
+  }
+  if (index === 48) {
+    return {
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: 'Very Long Title That Goes On And On For Testing UI Truncation And Overflow Behavior In Cards And Lists',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 50,
+      expected_close_date: futureDate(45),
+    };
+  }
+  if (index === 49) {
+    return {
+      user_id: userId, lead_id: leadId, property_id: propertyId,
+      title: '🔥 Emoji Deal 🏠',
+      stage: 'initial_contact', status: 'active' as const,
+      probability: 75,
+      expected_close_date: futureDate(30),
     };
   }
 
-  // Happy path deals
+  // Happy path deals (40 total)
   const happyPathDeals = [
-    {
-      title: 'New Lead - Initial Contact',
-      stage: 'initial_contact',
-      probability: 25,
-      days_to_close: 60,
-      // notes: 'New lead, initial contact made',
-    },
-    {
-      title: 'Follow-up Scheduled',
-      stage: 'initial_contact',
-      probability: 50,
-      days_to_close: 45,
-      // notes: 'Follow-up scheduled, buyer interested',
-    },
-    {
-      title: 'Property Tour Scheduled',
-      stage: 'initial_contact',
-      probability: 75,
-      days_to_close: 30,
-      // notes: 'Property tour scheduled for next week',
-    },
-    {
-      title: 'Running Numbers Analysis',
-      stage: 'initial_contact',
-      probability: 50,
-      days_to_close: 60,
-      // notes: 'Running numbers on this deal',
-    },
-    {
-      title: 'Offer Submitted',
-      stage: 'initial_contact',
-      probability: 75,
-      days_to_close: 30,
-      // notes: 'Offer submitted, awaiting response',
-    },
-    {
-      title: 'Negotiating Final Terms',
-      stage: 'initial_contact',
-      probability: 95,
-      days_to_close: 20,
-      // notes: 'Negotiating final terms',
-    },
-    {
-      title: 'Under Contract - Pending Inspection',
-      stage: 'initial_contact',
-      probability: 95,
-      days_to_close: 15,
-      // notes: 'Contract signed, pending inspection',
-    },
-    {
-      title: 'Seller Financing Discussion',
-      stage: 'initial_contact',
-      probability: 50,
-      days_to_close: 90,
-      // notes: 'Seller financing terms being discussed',
-    },
-    {
-      title: 'Initial Conversation - Went Well',
-      stage: 'initial_contact',
-      probability: 25,
-      days_to_close: 75,
-      // notes: 'Initial conversation went well',
-    },
-    {
-      title: 'Subject-To Opportunity',
-      stage: 'initial_contact',
-      probability: 50,
-      days_to_close: 60,
-      // notes: 'Evaluating subject-to opportunity',
-    },
-    {
-      title: 'Competitive Offer',
-      stage: 'initial_contact',
-      probability: 75,
-      days_to_close: 25,
-      // notes: 'Competitive offer submitted',
-    },
-    {
-      title: 'Cold Lead - Low Interest',
-      stage: 'initial_contact',
-      probability: 5,
-      days_to_close: 90,
-      // notes: 'Cold lead, low initial interest',
-    },
+    { title: 'New Lead - Initial Contact', stage: 'initial_contact', probability: 25, days_to_close: 60 },
+    { title: 'Follow-up Scheduled', stage: 'initial_contact', probability: 50, days_to_close: 45 },
+    { title: 'Property Tour Scheduled', stage: 'initial_contact', probability: 75, days_to_close: 30 },
+    { title: 'Running Numbers Analysis', stage: 'initial_contact', probability: 50, days_to_close: 60 },
+    { title: 'Offer Submitted', stage: 'initial_contact', probability: 75, days_to_close: 30 },
+    { title: 'Negotiating Final Terms', stage: 'initial_contact', probability: 95, days_to_close: 20 },
+    { title: 'Under Contract - Pending Inspection', stage: 'initial_contact', probability: 95, days_to_close: 15 },
+    { title: 'Seller Financing Discussion', stage: 'initial_contact', probability: 50, days_to_close: 90 },
+    { title: 'Initial Conversation - Went Well', stage: 'initial_contact', probability: 25, days_to_close: 75 },
+    { title: 'Subject-To Opportunity', stage: 'initial_contact', probability: 50, days_to_close: 60 },
+    { title: 'Competitive Offer', stage: 'initial_contact', probability: 75, days_to_close: 25 },
+    { title: 'Cold Lead - Low Interest', stage: 'initial_contact', probability: 5, days_to_close: 90 },
+    // Additional 28 happy path deals
+    { title: 'Motivated Seller - Quick Close', stage: 'initial_contact', probability: 85, days_to_close: 14 },
+    { title: 'Probate Property Analysis', stage: 'initial_contact', probability: 40, days_to_close: 75 },
+    { title: 'Foreclosure Opportunity', stage: 'initial_contact', probability: 60, days_to_close: 45 },
+    { title: 'REO Bank Property', stage: 'initial_contact', probability: 55, days_to_close: 60 },
+    { title: 'Wholesale Deal Pipeline', stage: 'initial_contact', probability: 70, days_to_close: 21 },
+    { title: 'Fix and Flip Candidate', stage: 'initial_contact', probability: 65, days_to_close: 35 },
+    { title: 'Buy and Hold Rental', stage: 'initial_contact', probability: 55, days_to_close: 50 },
+    { title: 'Multi-Family Acquisition', stage: 'initial_contact', probability: 45, days_to_close: 90 },
+    { title: 'Commercial Conversion', stage: 'initial_contact', probability: 35, days_to_close: 120 },
+    { title: 'Lease Option Negotiation', stage: 'initial_contact', probability: 50, days_to_close: 60 },
+    { title: 'Short Sale in Progress', stage: 'initial_contact', probability: 30, days_to_close: 90 },
+    { title: 'Estate Sale Processing', stage: 'initial_contact', probability: 55, days_to_close: 45 },
+    { title: 'Divorce Settlement Deal', stage: 'initial_contact', probability: 65, days_to_close: 30 },
+    { title: 'Relocation Seller', stage: 'initial_contact', probability: 80, days_to_close: 21 },
+    { title: 'Tired Landlord Exit', stage: 'initial_contact', probability: 70, days_to_close: 40 },
+    { title: 'Portfolio Purchase', stage: 'initial_contact', probability: 45, days_to_close: 75 },
+    { title: '1031 Exchange Buyer', stage: 'initial_contact', probability: 60, days_to_close: 45 },
+    { title: 'Vacant Property Opportunity', stage: 'initial_contact', probability: 55, days_to_close: 50 },
+    { title: 'Code Violation Property', stage: 'initial_contact', probability: 40, days_to_close: 60 },
+    { title: 'Tax Lien Property', stage: 'initial_contact', probability: 35, days_to_close: 90 },
+    { title: 'Absentee Owner Outreach', stage: 'initial_contact', probability: 20, days_to_close: 120 },
+    { title: 'High Equity Homeowner', stage: 'initial_contact', probability: 30, days_to_close: 90 },
+    { title: 'Pre-Foreclosure Save', stage: 'initial_contact', probability: 50, days_to_close: 45 },
+    { title: 'Off-Market Pocket Listing', stage: 'initial_contact', probability: 75, days_to_close: 28 },
+    { title: 'FSBO Conversion', stage: 'initial_contact', probability: 45, days_to_close: 55 },
+    { title: 'Inherited Property Deal', stage: 'initial_contact', probability: 60, days_to_close: 40 },
+    { title: 'Land Acquisition', stage: 'initial_contact', probability: 40, days_to_close: 75 },
+    { title: 'New Construction Purchase', stage: 'initial_contact', probability: 50, days_to_close: 90 },
   ];
 
   const template = happyPathDeals[index] || happyPathDeals[0];
@@ -1130,8 +1528,182 @@ export function createTestDeal(
     status: 'active' as const,
     probability: template.probability,
     expected_close_date: futureDate(template.days_to_close),
-    // notes: template.notes,
   };
+}
+
+// ============================================================================
+// CAPTURE ITEMS DATA (60 total: 48 happy path + 12 edge cases)
+// ============================================================================
+
+// Type: recording (12), call (12), note (12), photo (9), document (6), transcript (4), email (3), text (2)
+// Status: pending (18), processing (9), ready (15), assigned (12), dismissed (6)
+
+/**
+ * Database insert type for capture items during seeding.
+ * Includes all fields that can be set during initial creation.
+ */
+export interface CaptureItemSeedInsert {
+  user_id: string;
+  type: CaptureItemType;
+  status: CaptureItemStatus;
+  title?: string;
+  content?: string;
+  transcript?: string;
+  duration_seconds?: number;
+  ai_summary?: string;
+  ai_confidence?: number;
+  source?: string;
+  suggested_lead_id?: string;
+  suggested_property_id?: string;
+  assigned_lead_id?: string;
+  assigned_property_id?: string;
+  assigned_deal_id?: string;
+}
+
+interface CaptureItemTemplate {
+  type: CaptureItemType;
+  status: CaptureItemStatus;
+  title: string;
+  content?: string;
+  transcript?: string;
+  duration_seconds?: number;
+  ai_summary?: string;
+  ai_confidence?: number;
+  source?: string;
+}
+
+const HAPPY_PATH_CAPTURE_ITEMS: CaptureItemTemplate[] = [
+  // Recordings (10)
+  { type: 'recording', status: 'pending', title: 'Initial call with seller', duration_seconds: 180, source: 'app_recording' },
+  { type: 'recording', status: 'processing', title: 'Property walkthrough audio', duration_seconds: 420, source: 'app_recording' },
+  { type: 'recording', status: 'ready', title: 'Negotiation call recording', duration_seconds: 900, ai_summary: 'Seller wants $250k, buyer offering $220k', ai_confidence: 0.85, source: 'app_recording' },
+  { type: 'recording', status: 'assigned', title: 'Closing call with title company', duration_seconds: 600, ai_summary: 'Closing scheduled for next Friday', ai_confidence: 0.92, source: 'upload' },
+  { type: 'recording', status: 'ready', title: 'Follow-up call - motivated seller', duration_seconds: 300, ai_summary: 'Seller motivated due to job relocation', ai_confidence: 0.88, source: 'app_recording' },
+  { type: 'recording', status: 'pending', title: 'Voicemail from potential buyer', duration_seconds: 45, source: 'upload' },
+  { type: 'recording', status: 'ready', title: 'Property condition discussion', duration_seconds: 720, ai_summary: 'Needs new roof and HVAC', ai_confidence: 0.78, source: 'app_recording' },
+  { type: 'recording', status: 'assigned', title: 'Contractor estimate call', duration_seconds: 540, ai_summary: 'Repairs estimated at $35k', ai_confidence: 0.90, source: 'upload' },
+  { type: 'recording', status: 'processing', title: 'Investor pitch recording', duration_seconds: 1200, source: 'app_recording' },
+  { type: 'recording', status: 'pending', title: 'Market analysis discussion', duration_seconds: 480, source: 'app_recording' },
+  // Calls (10)
+  { type: 'call', status: 'pending', title: 'Inbound lead call', duration_seconds: 240, source: 'manual' },
+  { type: 'call', status: 'ready', title: 'Cold call to absentee owner', duration_seconds: 120, ai_summary: 'Owner interested, requested callback', ai_confidence: 0.75, source: 'manual' },
+  { type: 'call', status: 'assigned', title: 'Attorney consultation', duration_seconds: 900, ai_summary: 'Legal review complete, clear to proceed', ai_confidence: 0.95, source: 'manual' },
+  { type: 'call', status: 'dismissed', title: 'Wrong number call', duration_seconds: 30, source: 'manual' },
+  { type: 'call', status: 'ready', title: 'Lender pre-approval call', duration_seconds: 600, ai_summary: 'Pre-approved for $350k loan', ai_confidence: 0.92, source: 'manual' },
+  { type: 'call', status: 'pending', title: 'Property manager inquiry', duration_seconds: 360, source: 'manual' },
+  { type: 'call', status: 'processing', title: 'Insurance quote call', duration_seconds: 300, source: 'manual' },
+  { type: 'call', status: 'ready', title: 'Home inspector scheduling', duration_seconds: 180, ai_summary: 'Inspection scheduled for Thursday 2pm', ai_confidence: 0.98, source: 'manual' },
+  { type: 'call', status: 'assigned', title: 'Seller counteroffer discussion', duration_seconds: 420, ai_summary: 'Counter at $235k, seller firm', ai_confidence: 0.87, source: 'manual' },
+  { type: 'call', status: 'pending', title: 'Utility company verification', duration_seconds: 150, source: 'manual' },
+  // Notes (10)
+  { type: 'note', status: 'pending', title: 'Meeting notes - property viewing', content: 'Property in good condition overall. Minor repairs needed in bathroom.', source: 'manual' },
+  { type: 'note', status: 'ready', title: 'Seller motivation notes', content: 'Seller is motivated - job transfer in 30 days. Willing to negotiate on price.', ai_summary: 'Motivated seller due to job transfer', ai_confidence: 0.90, source: 'manual' },
+  { type: 'note', status: 'assigned', title: 'Repair estimate breakdown', content: 'Roof: $12k, HVAC: $8k, Plumbing: $5k, Electrical: $3k, Cosmetic: $7k', ai_summary: 'Total repairs ~$35k', ai_confidence: 0.85, source: 'manual' },
+  { type: 'note', status: 'pending', title: 'Comparable sales research', content: '123 Main sold for $245k, 456 Oak sold for $260k, 789 Elm sold for $238k', source: 'manual' },
+  { type: 'note', status: 'ready', title: 'Neighborhood analysis', content: 'Growing area, new shopping center planned. Schools rated 8/10.', ai_summary: 'Strong neighborhood with growth potential', ai_confidence: 0.82, source: 'manual' },
+  { type: 'note', status: 'dismissed', title: 'Outdated property info', content: 'Property already sold - remove from list', source: 'manual' },
+  { type: 'note', status: 'processing', title: 'Title search notes', content: 'Checking for liens and encumbrances...', source: 'manual' },
+  { type: 'note', status: 'ready', title: 'Exit strategy options', content: 'Options: 1) Wholesale at $15k assignment, 2) Fix/flip for $45k profit, 3) Hold as rental at $1,500/mo', ai_summary: 'Three viable exit strategies identified', ai_confidence: 0.88, source: 'manual' },
+  { type: 'note', status: 'assigned', title: 'Buyer requirements list', content: 'Cash buyer, wants 3+ bed, max $300k, prefers south side', ai_summary: 'Cash buyer seeking 3BR under $300k south side', ai_confidence: 0.95, source: 'manual' },
+  { type: 'note', status: 'pending', title: 'Follow-up action items', content: '1) Call seller Tuesday, 2) Order inspection, 3) Send contracts', source: 'manual' },
+  // Photos (8)
+  { type: 'photo', status: 'pending', title: 'Front exterior photo', source: 'upload' },
+  { type: 'photo', status: 'ready', title: 'Kitchen condition photo', ai_summary: 'Kitchen needs updating, cabinets worn', ai_confidence: 0.80, source: 'upload' },
+  { type: 'photo', status: 'assigned', title: 'Roof damage documentation', ai_summary: 'Visible damage on south side of roof', ai_confidence: 0.88, source: 'upload' },
+  { type: 'photo', status: 'pending', title: 'Bathroom renovation needed', source: 'upload' },
+  { type: 'photo', status: 'ready', title: 'Backyard and fence', ai_summary: 'Large backyard, fence needs repair', ai_confidence: 0.75, source: 'upload' },
+  { type: 'photo', status: 'processing', title: 'HVAC unit condition', source: 'upload' },
+  { type: 'photo', status: 'dismissed', title: 'Blurry photo - retake needed', source: 'upload' },
+  { type: 'photo', status: 'ready', title: 'Street view and curb appeal', ai_summary: 'Good curb appeal, well-maintained landscaping', ai_confidence: 0.85, source: 'upload' },
+  // Documents (5)
+  { type: 'document', status: 'pending', title: 'Purchase agreement draft', source: 'upload' },
+  { type: 'document', status: 'ready', title: 'Property deed copy', ai_summary: 'Clear title, no liens found', ai_confidence: 0.95, source: 'upload' },
+  { type: 'document', status: 'assigned', title: 'Inspection report PDF', ai_summary: 'Major issues: roof, minor: plumbing', ai_confidence: 0.92, source: 'upload' },
+  { type: 'document', status: 'processing', title: 'Tax assessment records', source: 'upload' },
+  { type: 'document', status: 'ready', title: 'HOA documents', ai_summary: 'Monthly HOA $150, no special assessments', ai_confidence: 0.90, source: 'upload' },
+  // Transcripts (3)
+  { type: 'transcript', status: 'ready', title: 'Negotiation call transcript', transcript: 'Seller: I need at least $250k. Buyer: Our max is $235k...', ai_summary: 'Price gap of $15k', ai_confidence: 0.93, source: 'app_recording' },
+  { type: 'transcript', status: 'assigned', title: 'Walkthrough transcript', transcript: 'Agent: Notice the water damage here on the ceiling...', ai_summary: 'Water damage identified in master bedroom', ai_confidence: 0.88, source: 'app_recording' },
+  { type: 'transcript', status: 'pending', title: 'Initial consultation transcript', transcript: 'Seller: We inherited this property last year...', source: 'app_recording' },
+  // Emails (2)
+  { type: 'email', status: 'ready', title: 'Offer acceptance email', content: 'We are pleased to accept your offer of $240,000...', ai_summary: 'Offer accepted at $240k', ai_confidence: 0.98, source: 'email_import' },
+  { type: 'email', status: 'pending', title: 'Inspection scheduling email', content: 'Please confirm if Thursday at 2pm works for the inspection...', source: 'email_import' },
+];
+
+const EDGE_CASE_CAPTURE_ITEMS: CaptureItemTemplate[] = [
+  // Edge: Zero duration recording
+  { type: 'recording', status: 'pending', title: 'Failed recording - 0 duration', duration_seconds: 0, source: 'app_recording' },
+  // Edge: Very long recording
+  { type: 'recording', status: 'ready', title: 'Marathon negotiation session', duration_seconds: 7200, ai_summary: 'Extended negotiation over 2 hours', ai_confidence: 0.70, source: 'app_recording' },
+  // Edge: Very long content
+  { type: 'note', status: 'ready', title: 'Comprehensive property analysis', content: 'A'.repeat(10000) + '...detailed analysis...', ai_summary: 'Comprehensive analysis document', ai_confidence: 0.65, source: 'manual' },
+  // Edge: Very long title
+  { type: 'note', status: 'pending', title: 'This is an extremely long title that should test UI truncation behavior across various screen sizes and card layouts in the capture items list view and detail views', content: 'Content here', source: 'manual' },
+  // Edge: AI confidence extremes
+  { type: 'document', status: 'ready', title: 'High confidence extraction', ai_summary: 'Perfect extraction', ai_confidence: 1.00, source: 'upload' },
+  { type: 'document', status: 'ready', title: 'Low confidence extraction', ai_summary: 'Uncertain extraction - manual review needed', ai_confidence: 0.01, source: 'upload' },
+  // Edge: Unicode/emoji content
+  { type: 'note', status: 'pending', title: '🏠 Property notes with emojis 🔑💰', content: 'Great deal! 🎉 Seller is motivated! 🔥', source: 'manual' },
+  // Edge: Empty content
+  { type: 'note', status: 'dismissed', title: 'Empty note', content: '', source: 'manual' },
+  // SECURITY TEST: Special characters that could break HTML/SQL if not properly escaped
+  // Tests: apostrophes, ampersands, angle brackets, and quotes in user input
+  { type: 'call', status: 'pending', title: "O'Brien's & Associates < > \" ' call", duration_seconds: 300, source: 'manual' },
+  // SECURITY TEST: SQL injection attempt in title field
+  // Tests that database queries are properly parameterized and won't execute injected SQL
+  { type: 'note', status: 'dismissed', title: "'; DROP TABLE capture_items; --", content: 'Injection test', source: 'manual' },
+  // Edge: Text message type (rare)
+  { type: 'text', status: 'ready', title: 'SMS from seller', content: 'Can we meet tomorrow at 3pm?', ai_summary: 'Meeting request for tomorrow 3pm', ai_confidence: 0.95, source: 'manual' },
+  // Edge: All assignment fields null
+  { type: 'photo', status: 'pending', title: 'Orphan capture - no associations', source: 'upload' },
+];
+
+/**
+ * Create a deterministic test capture item by index.
+ *
+ * @param index - Index (0-59) of the capture item to create
+ * @param userId - User ID to associate the item with
+ * @param context - Optional context for assignments { leadId, propertyId, dealId }
+ * @returns CaptureItemSeedInsert object ready for database insertion
+ */
+export function createTestCaptureItem(
+  index: number,
+  userId: string,
+  context?: { leadId?: string; propertyId?: string; dealId?: string }
+): CaptureItemSeedInsert {
+  const allItems = [...HAPPY_PATH_CAPTURE_ITEMS, ...EDGE_CASE_CAPTURE_ITEMS];
+  const template = allItems[index] || allItems[0];
+
+  // Base item with required fields
+  const item: CaptureItemSeedInsert = {
+    user_id: userId,
+    type: template.type,
+    status: template.status,
+    title: template.title,
+    source: template.source || 'manual',
+  };
+
+  // Optional fields
+  if (template.content) item.content = template.content;
+  if (template.transcript) item.transcript = template.transcript;
+  if (template.duration_seconds !== undefined) item.duration_seconds = template.duration_seconds;
+  if (template.ai_summary) item.ai_summary = template.ai_summary;
+  if (template.ai_confidence !== undefined) item.ai_confidence = template.ai_confidence;
+
+  // Assignments for 'assigned' status items
+  if (template.status === 'assigned' && context) {
+    if (context.leadId) item.assigned_lead_id = context.leadId;
+    if (context.propertyId) item.assigned_property_id = context.propertyId;
+    if (context.dealId) item.assigned_deal_id = context.dealId;
+  }
+
+  // AI suggestions for 'ready' status items
+  if (template.status === 'ready' && context) {
+    if (context.leadId) item.suggested_lead_id = context.leadId;
+    if (context.propertyId) item.suggested_property_id = context.propertyId;
+  }
+
+  return item;
 }
 
 // ============================================================================
@@ -1156,5 +1728,12 @@ export function getTestPropertyCount(): number {
  * Get the recommended number of test deals to create
  */
 export function getTestDealCount(): number {
-  return 15;
+  return 50;
+}
+
+/**
+ * Get the total number of test capture items available
+ */
+export function getTestCaptureItemCount(): number {
+  return HAPPY_PATH_CAPTURE_ITEMS.length + EDGE_CASE_CAPTURE_ITEMS.length;
 }

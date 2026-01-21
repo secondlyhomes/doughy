@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
   Animated,
   useWindowDimensions,
   StyleSheet,
@@ -17,6 +16,7 @@ import { MessageSquare, X, Send, ChevronDown, ChevronUp, Loader2 } from 'lucide-
 import { useThemeColors } from '@/context/ThemeContext';
 import { callPublicAssistant } from '@/lib/openai';
 import { getShadowStyle } from '@/lib/design-utils';
+import { useKeyboardAvoidance } from '@/hooks';
 
 interface Message {
   id: string;
@@ -91,6 +91,7 @@ const bubbleStyles = StyleSheet.create({
 
 export function SimpleAssistant() {
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({});
   const { width } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -210,7 +211,8 @@ export function SimpleAssistant() {
       {/* Chat Panel */}
       {isOpen && !isMinimized && (
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={keyboardProps.behavior}
+          keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
           style={{ marginBottom: 8 }}
         >
           <View
@@ -269,6 +271,7 @@ export function SimpleAssistant() {
               style={{ flex: 1, maxHeight: 350 }}
               contentContainerStyle={{ padding: 16, gap: 12 }}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}
             >
               {messages.map((message) => (
                 <MessageBubble key={message.id} message={message} colors={colors} />

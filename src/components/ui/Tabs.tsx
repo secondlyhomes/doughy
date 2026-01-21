@@ -1,9 +1,11 @@
 // src/components/ui/Tabs.tsx
 // React Native Tabs component with inline styles for dark mode support
 import React, { createContext, useContext, useState } from 'react';
-import { View, Text, Pressable, ViewProps, TextProps } from 'react-native';
+import { View, Text, Pressable, ScrollView, ViewProps, TextProps } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { getShadowStyle } from '@/lib/design-utils';
+import { FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS, PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Tabs context
 interface TabsContextType {
@@ -64,13 +66,19 @@ export interface TabsListProps extends ViewProps {
 export function TabsList({ className, children, style, ...props }: TabsListProps) {
   const colors = useThemeColors();
   return (
-    <View
-      className={cn('flex-row h-10 items-center justify-start rounded-md p-1', className)}
-      style={[{ backgroundColor: colors.muted }, style]}
-      {...props}
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ flexGrow: 1 }}
     >
-      {children}
-    </View>
+      <View
+        className={cn('flex-row h-10 items-center justify-start rounded-full p-1', className)}
+        style={[{ backgroundColor: colors.muted }, style]}
+        {...props}
+      >
+        {children}
+      </View>
+    </ScrollView>
   );
 }
 
@@ -97,18 +105,27 @@ export function TabsTrigger({
   return (
     <Pressable
       className={cn(
-        'flex-1 items-center justify-center rounded-sm px-3 py-1.5',
+        'items-center justify-center rounded-full px-4 py-2',
         disabled && 'opacity-50',
         className
       )}
-      style={isActive ? { backgroundColor: colors.background, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 } : undefined}
+      style={isActive ? [
+        { backgroundColor: colors.background },
+        getShadowStyle(colors, { size: 'sm' }),
+      ] : undefined}
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive, disabled }}
     >
       {typeof children === 'string' ? (
         <Text
-          className={cn('text-sm font-medium', textClassName)}
-          style={{ color: isActive ? colors.foreground : colors.mutedForeground }}
+          className={cn('font-medium', textClassName)}
+          style={{
+            color: isActive ? colors.foreground : colors.mutedForeground,
+            fontSize: FONT_SIZES.sm,
+            lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.tight,
+          }}
         >
           {children}
         </Text>

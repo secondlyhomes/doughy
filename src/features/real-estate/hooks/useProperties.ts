@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Property, DBProperty, dbToFeatureProperty, PropertyStatus, PropertyType } from '../types';
+import { Property, DBProperty, DBPropertyWithImages, dbToFeatureProperty, PropertyStatus, PropertyType } from '../types';
+import { isValidUuid } from '@/lib/validation';
 
 export type PropertySortOption = 'created_desc' | 'created_asc' | 'updated_desc' | 'price_desc' | 'price_asc';
 
@@ -33,10 +34,13 @@ export function useProperties(options: UsePropertiesOptions = {}): UseProperties
       setIsLoading(true);
       setError(null);
 
-      // Build query with filters
+      // Build query with filters - join images for display
       let query = supabase
         .from('re_properties')
-        .select('*', { count: 'exact', head: false });
+        .select(`
+          *,
+          images:re_property_images(id, url, is_primary, label, filename)
+        `, { count: 'exact', head: false });
 
       // Apply filters
       if (options.status) {
@@ -82,7 +86,7 @@ export function useProperties(options: UsePropertiesOptions = {}): UseProperties
       }
 
       // Convert DB properties to frontend format
-      const convertedProperties = (data as DBProperty[]).map(dbToFeatureProperty);
+      const convertedProperties = (data as DBPropertyWithImages[]).map(dbToFeatureProperty);
 
       setProperties(convertedProperties);
       if (totalCount !== null) {
@@ -119,7 +123,8 @@ export function useProperty(propertyId: string | null) {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchProperty = useCallback(async () => {
-    if (!propertyId) {
+    // Skip fetch if propertyId is missing or not a valid UUID (prevents "new" or other strings from hitting DB)
+    if (!propertyId || !isValidUuid(propertyId)) {
       setProperty(null);
       return;
     }
@@ -130,7 +135,10 @@ export function useProperty(propertyId: string | null) {
 
       const { data, error: queryError } = await supabase
         .from('re_properties')
-        .select('*')
+        .select(`
+          *,
+          images:re_property_images(id, url, is_primary, label, filename)
+        `)
         .eq('id', propertyId)
         .single();
 
@@ -139,7 +147,7 @@ export function useProperty(propertyId: string | null) {
       }
 
       if (data) {
-        setProperty(dbToFeatureProperty(data as DBProperty));
+        setProperty(dbToFeatureProperty(data as DBPropertyWithImages));
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';

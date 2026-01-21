@@ -208,7 +208,7 @@ export async function decryptServer(ciphertext: string): Promise<string> {
 
       // Verify HMAC
       const dataToAuth = `${saltB64}:${ivB64}:${ctB64}`;
-      const expectedHmac = await sha256Hex(`${keyHex}:${dataToAuth}`);
+      const expectedHmac = await hmacSha256Hex(dataToAuth, keyHex);
 
       // Use constant-time comparison to prevent timing attacks
       if (!timingSafeEqual(receivedHmac, expectedHmac)) {
@@ -250,7 +250,7 @@ export async function decryptServer(ciphertext: string): Promise<string> {
 
       // Verify HMAC - must match client's approach
       const dataToAuth = `${ivB64}:${ctB64}`;
-      const expectedHmac = await sha256Hex(`${keyHex}:${dataToAuth}`);
+      const expectedHmac = await hmacSha256Hex(dataToAuth, keyHex);
 
       // Use constant-time comparison to prevent timing attacks
       if (!timingSafeEqual(receivedHmac, expectedHmac)) {

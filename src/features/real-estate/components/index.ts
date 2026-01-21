@@ -26,6 +26,12 @@ export { PropertyDocsTab } from './PropertyDocsTab';
 export { PropertyFormWizard } from './PropertyFormWizard';
 export { FormStepProgress, PROPERTY_FORM_STEPS } from './FormStepProgress';
 export type { FormStep } from './FormStepProgress';
+export { PropertyFormStep1 } from './PropertyFormStep1';
+export type { Step1Data } from './PropertyFormStep1';
+export { PropertyFormStep2 } from './PropertyFormStep2';
+export type { Step2Data } from './PropertyFormStep2';
+export { PropertyFormStep3 } from './PropertyFormStep3';
+export type { Step3Data } from './PropertyFormStep3';
 
 // Comps Components
 export { CompCard } from './CompCard';

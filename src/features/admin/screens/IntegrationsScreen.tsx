@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Linking,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -18,6 +19,7 @@ import {
   ExternalLink,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import {
@@ -36,7 +38,7 @@ import {
 import { INTEGRATIONS } from '../data/integrationData';
 import { ApiKeyFormItem } from '../components/ApiKeyFormItem';
 import { IntegrationHealthCard } from '../components/IntegrationHealthCard';
-import { checkAllIntegrations, clearHealthCache } from '../services/apiKeyHealthService';
+import { batchHealthCheck, clearHealthCache } from '../services/apiKeyHealthService';
 import type { Integration, IntegrationHealth, IntegrationStatus } from '../types/integrations';
 
 // Filter type for status filtering
@@ -45,9 +47,9 @@ type StatusFilter = 'all' | 'operational' | 'error' | 'not-configured' | 'config
 // Spacing constants for floating search bar
 const SEARCH_BAR_CONTAINER_HEIGHT =
   SPACING.sm +  // pt-2 (8px top padding)
-  48 +          // SearchBar size="lg" height
+  40 +          // SearchBar size="md" estimated height
   SPACING.xs;   // pb-1 (4px bottom padding)
-  // Total: ~60px
+  // Total: ~52px
 
 const FILTER_PILLS_HEIGHT = 40; // Approximate height of filter pills row
 const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
@@ -60,21 +62,27 @@ interface IntegrationWithHealth extends Integration {
 
 export function IntegrationsScreen() {
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
   const insets = useSafeAreaInsets();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [healthStatuses, setHealthStatuses] = useState<Map<string, IntegrationHealth>>(new Map());
+  const [healthProgress, setHealthProgress] = useState<{ completed: number; total: number } | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [expandedIntegration, setExpandedIntegration] = useState<string>('');
 
-  // Load all health statuses
+  // Load all health statuses with progress feedback
   const loadAllHealth = useCallback(async () => {
     try {
       const allServices = INTEGRATIONS.flatMap((i) => i.fields.map((f) => f.key));
-      const results = await checkAllIntegrations(allServices);
+      setHealthProgress({ completed: 0, total: allServices.length });
+
+      const results = await batchHealthCheck(allServices, (completed, total) => {
+        setHealthProgress({ completed, total });
+      });
 
       const healthMap = new Map<string, IntegrationHealth>();
       results.forEach((health) => {
@@ -83,6 +91,8 @@ export function IntegrationsScreen() {
       setHealthStatuses(healthMap);
     } catch (error) {
       console.error('Error loading health:', error);
+    } finally {
+      setHealthProgress(null);
     }
   }, []);
 
@@ -164,8 +174,8 @@ export function IntegrationsScreen() {
     };
   }, [integrationsWithHealth]);
 
-  // Render integration accordion item
-  const renderIntegration = ({ item }: { item: IntegrationWithHealth }) => {
+  // Render integration accordion item - memoized with useCallback for FlatList optimization
+  const renderIntegration = useCallback(({ item }: { item: IntegrationWithHealth }) => {
     const isExpanded = expandedIntegration === item.id;
 
     return (
@@ -181,7 +191,7 @@ export function IntegrationsScreen() {
           type="single"
           collapsible
           value={isExpanded ? item.id : ''}
-          onValueChange={(value) => setExpandedIntegration(value)}
+          onValueChange={setExpandedIntegration}
         >
           <AccordionItem value={item.id} className="border-b-0">
             <AccordionTrigger className="px-4">
@@ -246,22 +256,45 @@ export function IntegrationsScreen() {
         </Accordion>
       </View>
     );
-  };
+  }, [colors, healthStatuses, handleRefresh, expandedIntegration]);
 
   // Loading state with skeletons - matches floating search bar layout
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={[]}>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
         {/* Floating search bar skeleton */}
         <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
           <View className="px-4 pt-2 pb-1">
-            <Skeleton className="h-12 rounded-full" />
+            <Skeleton className="h-10 rounded-full" />
           </View>
         </View>
 
         {/* Content skeletons with matching paddingTop */}
-        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP }}>
+        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP }}>
           <View className="px-4">
+            {/* Progress indicator */}
+            {healthProgress && (
+              <View className="mb-4">
+                <Text
+                  className="text-sm text-center mb-2"
+                  style={{ color: colors.mutedForeground }}
+                >
+                  Checking integrations... {healthProgress.completed} of {healthProgress.total}
+                </Text>
+                <View
+                  className="h-1.5 rounded-full overflow-hidden"
+                  style={{ backgroundColor: colors.muted }}
+                >
+                  <View
+                    className="h-full rounded-full"
+                    style={{
+                      backgroundColor: colors.primary,
+                      width: `${(healthProgress.completed / healthProgress.total) * 100}%`,
+                    }}
+                  />
+                </View>
+              </View>
+            )}
             {/* IntegrationHealthCard skeleton */}
             <Skeleton className="h-24 rounded-xl mb-3" />
             {/* Integration cards skeleton */}
@@ -276,11 +309,16 @@ export function IntegrationsScreen() {
     );
   }
 
-  // Calculate dynamic padding based on filter visibility (includes insets.top since we handle safe area manually)
-  const listPaddingTop = SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP + (showFilters ? FILTER_PILLS_HEIGHT : 0);
+  // Calculate dynamic padding based on filter visibility
+  const listPaddingTop = SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP + (showFilters ? FILTER_PILLS_HEIGHT : 0);
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={[]}>
+    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
+        className="flex-1"
+      >
       {/* Floating Glass Search Bar - positioned absolutely at top */}
       <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
         <View className="px-4 pt-2 pb-1">
@@ -288,7 +326,7 @@ export function IntegrationsScreen() {
             value={search}
             onChangeText={setSearch}
             placeholder="Search integrations..."
-            size="lg"
+            size="md"
             glass={true}
             onFilter={() => setShowFilters(!showFilters)}
             hasActiveFilters={statusFilter !== 'all'}
@@ -339,11 +377,35 @@ export function IntegrationsScreen() {
         data={filteredIntegrations}
         keyExtractor={(item) => item.id}
         renderItem={renderIntegration}
+        extraData={expandedIntegration}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
         ListHeaderComponent={
           <View className="px-4 mb-3">
+            {/* Progress indicator during refresh */}
+            {isRefreshing && healthProgress && (
+              <View className="mb-3">
+                <Text
+                  className="text-sm text-center mb-2"
+                  style={{ color: colors.mutedForeground }}
+                >
+                  Checking integrations... {healthProgress.completed} of {healthProgress.total}
+                </Text>
+                <View
+                  className="h-1.5 rounded-full overflow-hidden"
+                  style={{ backgroundColor: colors.muted }}
+                >
+                  <View
+                    className="h-full rounded-full"
+                    style={{
+                      backgroundColor: colors.primary,
+                      width: `${(healthProgress.completed / healthProgress.total) * 100}%`,
+                    }}
+                  />
+                </View>
+              </View>
+            )}
             <IntegrationHealthCard />
             {/* Subtle count text */}
             {filteredIntegrations.length !== integrationsWithHealth.length && (
@@ -371,7 +433,13 @@ export function IntegrationsScreen() {
           paddingTop: listPaddingTop,
           paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
         }}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
       />
+      </KeyboardAvoidingView>
     </ThemedSafeAreaView>
   );
 }
@@ -382,7 +450,7 @@ interface StatusBadgeProps {
   colors: ReturnType<typeof useThemeColors>;
 }
 
-function StatusBadge({ status, colors }: StatusBadgeProps) {
+const StatusBadge = React.memo(function StatusBadge({ status, colors }: StatusBadgeProps) {
   const config = {
     operational: {
       icon: CheckCircle,
@@ -424,7 +492,7 @@ function StatusBadge({ status, colors }: StatusBadgeProps) {
       </Text>
     </View>
   );
-}
+});
 
 // Filter pill component - matches Users/Logs screens
 interface FilterPillProps {
@@ -436,7 +504,7 @@ interface FilterPillProps {
   colors: ReturnType<typeof useThemeColors>;
 }
 
-function FilterPill({ label, count, active, onPress, color, colors }: FilterPillProps) {
+const FilterPill = React.memo(function FilterPill({ label, count, active, onPress, color, colors }: FilterPillProps) {
   return (
     <TouchableOpacity
       className="flex-row items-center px-3 py-1.5 rounded-full"
@@ -469,4 +537,4 @@ function FilterPill({ label, count, active, onPress, color, colors }: FilterPill
       )}
     </TouchableOpacity>
   );
-}
+});

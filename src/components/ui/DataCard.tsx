@@ -266,14 +266,14 @@ function DataCardFieldItem({ field }: { field: DataCardField }) {
   const Icon = field.icon;
 
   return (
-    <View className="flex-row items-center min-w-[30%]">
+    <View className="flex-row items-center flex-1 min-w-[30%] max-w-full">
       {Icon && (
         <Icon
           size={field.iconSize || ICON_SIZES.sm}
           color={field.iconColor || colors.mutedForeground}
         />
       )}
-      <View className={Icon ? 'ml-1.5' : undefined}>
+      <View className={`flex-1 flex-shrink ${Icon ? 'ml-1.5' : ''}`}>
         {field.label && (
           <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             {field.label}

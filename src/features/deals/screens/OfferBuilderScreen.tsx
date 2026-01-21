@@ -7,16 +7,14 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
+import { FloatingActionButton, FABAction } from '@/features/layout/components/FloatingActionButton';
 import { useThemeColors } from '@/context/ThemeContext';
-import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { DealStrategy, OfferTerms, DEAL_STRATEGY_CONFIG } from '../types';
 import { getEmptyOfferTerms } from '../data/mockOffers';
 import { StrategySelector } from '../components/StrategySelector';
 import { OfferTermsForm } from '../components/OfferTermsForm';
 import { OfferPreview } from '../components/OfferPreview';
-
-// Height of the fixed bottom action bar (padding + button + border)
-const BOTTOM_BAR_HEIGHT = 72;
 
 type ViewMode = 'edit' | 'preview';
 
@@ -28,7 +26,6 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
   const router = useRouter();
   const params = useLocalSearchParams<{ dealId: string }>();
   const colors = useThemeColors();
-  const { buttonBottom } = useTabBarPadding();
   const effectiveDealId = dealId || params.dealId || 'demo';
 
   // State
@@ -119,7 +116,7 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
         className="flex-1"
         contentContainerStyle={{
           padding: 16,
-          paddingBottom: BOTTOM_BAR_HEIGHT + 16,  // Pattern 2: Clear the fixed bottom bar
+          paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 32,  // Clear the FAB
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -166,28 +163,23 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
         )}
       </ScrollView>
 
-      {/* Bottom action bar */}
-      <View
-        className="absolute left-0 right-0 p-4"
-        style={{
-          bottom: buttonBottom, // Positioned above tab bar + safe area
-          backgroundColor: colors.background,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-        }}
-      >
-        <TouchableOpacity
-          onPress={toggleViewMode}
-          className="py-3 rounded-lg items-center"
-          style={{ backgroundColor: colors.primary }}
-          accessibilityLabel={viewMode === 'edit' ? 'Preview scripts' : 'Back to editing'}
-          accessibilityRole="button"
-        >
-          <Text className="text-base font-semibold" style={{ color: colors.primaryForeground }}>
-            {viewMode === 'edit' ? 'Preview Scripts & Email' : 'Back to Edit'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Floating Action Button with expandable options */}
+      <FloatingActionButton
+        actions={[
+          {
+            icon: viewMode === 'edit' ? <Eye size={20} color="white" /> : <Edit3 size={20} color="white" />,
+            label: viewMode === 'edit' ? 'Preview Scripts & Email' : 'Back to Edit',
+            onPress: toggleViewMode,
+            color: colors.primary,
+          },
+          {
+            icon: <Save size={20} color="white" />,
+            label: 'Save Draft',
+            onPress: handleSave,
+            color: colors.success,
+          },
+        ]}
+      />
     </ThemedSafeAreaView>
   );
 }

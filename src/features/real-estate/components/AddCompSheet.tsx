@@ -9,8 +9,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { X, MapPin, Home, DollarSign, Info } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -134,11 +132,7 @@ export function AddCompSheet({
       onClose={handleClose}
       snapPoints={['90%']}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        {/* Header */}
+      {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
           <View>
             <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
@@ -164,85 +158,83 @@ export function AddCompSheet({
           keyboardShouldPersistTaps="handled"
         >
           {/* Address Section */}
-          <View className="rounded-xl p-4 border mb-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-            <View className="flex-row items-center mb-4">
-              <MapPin size={18} color={colors.primary} />
-              <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Address</Text>
+          <View className="flex-row items-center mb-3 mt-2">
+            <MapPin size={18} color={colors.primary} />
+            <Text className="text-sm font-medium ml-2 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>Address</Text>
+          </View>
+
+          <FormField
+            label="Street Address"
+            value={values.address}
+            onChangeText={(text) => updateField('address', text)}
+            error={errors.address}
+            placeholder="123 Main St"
+            required
+            icon={MapPin}
+          />
+
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <FormField
+                label="City"
+                value={values.city}
+                onChangeText={(text) => updateField('city', text)}
+                error={errors.city}
+                placeholder="City"
+                required
+              />
             </View>
-
-            <FormField
-              label="Street Address"
-              value={values.address}
-              onChangeText={(text) => updateField('address', text)}
-              error={errors.address}
-              placeholder="123 Main St"
-              required
-              icon={MapPin}
-            />
-
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <FormField
-                  label="City"
-                  value={values.city}
-                  onChangeText={(text) => updateField('city', text)}
-                  error={errors.city}
-                  placeholder="City"
-                  required
-                />
-              </View>
-              <View className="w-20">
-                <FormField
-                  label="State"
-                  value={values.state}
-                  onChangeText={(text) => updateField('state', text)}
-                  error={errors.state}
-                  placeholder="CA"
-                  required
-                />
-              </View>
+            <View className="w-20">
+              <FormField
+                label="State"
+                value={values.state}
+                onChangeText={(text) => updateField('state', text)}
+                error={errors.state}
+                placeholder="CA"
+                required
+              />
             </View>
+          </View>
 
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <FormField
-                  label="ZIP"
-                  value={values.zip}
-                  onChangeText={(text) => updateField('zip', text)}
-                  placeholder="90210"
-                />
-              </View>
-              <View className="flex-1">
-                <FormField
-                  label="Distance (mi)"
-                  value={values.distance}
-                  onChangeText={(text) => updateField('distance', text)}
-                  placeholder="0.5"
-                  keyboardType="decimal-pad"
-                />
-              </View>
+          <View className="flex-row gap-3 mb-4">
+            <View className="flex-1">
+              <FormField
+                label="ZIP"
+                value={values.zip}
+                onChangeText={(text) => updateField('zip', text)}
+                placeholder="90210"
+              />
+            </View>
+            <View className="flex-1">
+              <FormField
+                label="Distance (mi)"
+                value={values.distance}
+                onChangeText={(text) => updateField('distance', text)}
+                placeholder="0.5"
+                keyboardType="decimal-pad"
+              />
             </View>
           </View>
 
           {/* Sale Info Section */}
-          <View className="rounded-xl p-4 border mb-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-            <View className="flex-row items-center mb-4">
-              <DollarSign size={18} color={colors.primary} />
-              <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Sale Information</Text>
-            </View>
+          <View className="flex-row items-center mb-3">
+            <DollarSign size={18} color={colors.primary} />
+            <Text className="text-sm font-medium ml-2 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>Sale Information</Text>
+          </View>
 
-            <FormField
-              label="Sale Price"
-              value={values.sold_price}
-              onChangeText={(text) => updateField('sold_price', text)}
-              error={errors.sold_price}
-              placeholder="350000"
-              keyboardType="numeric"
-              prefix="$"
-              icon={DollarSign}
-              required
-            />
+          <FormField
+            label="Sale Price"
+            value={values.sold_price}
+            onChangeText={(text) => updateField('sold_price', text)}
+            error={errors.sold_price}
+            placeholder="350000"
+            keyboardType="numeric"
+            prefix="$"
+            icon={DollarSign}
+            required
+          />
 
+          <View className="mb-4">
             <FormField
               label="Sale Date"
               value={values.sold_date}
@@ -252,53 +244,51 @@ export function AddCompSheet({
           </View>
 
           {/* Property Details Section */}
-          <View className="rounded-xl p-4 border mb-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
-            <View className="flex-row items-center mb-4">
-              <Home size={18} color={colors.primary} />
-              <Text className="text-base font-semibold ml-2" style={{ color: colors.foreground }}>Property Details</Text>
-            </View>
+          <View className="flex-row items-center mb-3">
+            <Home size={18} color={colors.primary} />
+            <Text className="text-sm font-medium ml-2 uppercase tracking-wide" style={{ color: colors.mutedForeground }}>Property Details</Text>
+          </View>
 
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <FormField
-                  label="Bedrooms"
-                  value={values.bedrooms}
-                  onChangeText={(text) => updateField('bedrooms', text)}
-                  placeholder="3"
-                  keyboardType="numeric"
-                  icon={Home}
-                />
-              </View>
-              <View className="flex-1">
-                <FormField
-                  label="Bathrooms"
-                  value={values.bathrooms}
-                  onChangeText={(text) => updateField('bathrooms', text)}
-                  placeholder="2"
-                  keyboardType="decimal-pad"
-                />
-              </View>
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <FormField
+                label="Bedrooms"
+                value={values.bedrooms}
+                onChangeText={(text) => updateField('bedrooms', text)}
+                placeholder="3"
+                keyboardType="numeric"
+                icon={Home}
+              />
             </View>
+            <View className="flex-1">
+              <FormField
+                label="Bathrooms"
+                value={values.bathrooms}
+                onChangeText={(text) => updateField('bathrooms', text)}
+                placeholder="2"
+                keyboardType="decimal-pad"
+              />
+            </View>
+          </View>
 
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <FormField
-                  label="Square Feet"
-                  value={values.square_feet}
-                  onChangeText={(text) => updateField('square_feet', text)}
-                  placeholder="1500"
-                  keyboardType="numeric"
-                />
-              </View>
-              <View className="flex-1">
-                <FormField
-                  label="Year Built"
-                  value={values.year_built}
-                  onChangeText={(text) => updateField('year_built', text)}
-                  placeholder="1990"
-                  keyboardType="numeric"
-                />
-              </View>
+          <View className="flex-row gap-3 mb-4">
+            <View className="flex-1">
+              <FormField
+                label="Square Feet"
+                value={values.square_feet}
+                onChangeText={(text) => updateField('square_feet', text)}
+                placeholder="1500"
+                keyboardType="numeric"
+              />
+            </View>
+            <View className="flex-1">
+              <FormField
+                label="Year Built"
+                value={values.year_built}
+                onChangeText={(text) => updateField('year_built', text)}
+                placeholder="1990"
+                keyboardType="numeric"
+              />
             </View>
           </View>
 
@@ -314,24 +304,23 @@ export function AddCompSheet({
           <View className="h-4" />
         </ScrollView>
 
-        {/* Submit Button */}
-        <View className="p-4 border-t" style={{ borderColor: colors.border }}>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={isLoading}
-            className="py-3.5 rounded-xl flex-row items-center justify-center"
-            style={{ backgroundColor: colors.primary }}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={colors.primaryForeground} />
-            ) : (
-              <Text className="font-semibold" style={{ color: colors.primaryForeground }}>
-                {editComp ? 'Save Changes' : 'Add Comparable'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+      {/* Submit Button */}
+      <View className="p-4 border-t" style={{ borderColor: colors.border }}>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={isLoading}
+          className="py-3.5 rounded-xl flex-row items-center justify-center"
+          style={{ backgroundColor: colors.primary }}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={colors.primaryForeground} />
+          ) : (
+            <Text className="font-semibold" style={{ color: colors.primaryForeground }}>
+              {editComp ? 'Save Changes' : 'Add Comparable'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </BottomSheet>
   );
 }

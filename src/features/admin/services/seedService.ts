@@ -10,9 +10,11 @@ import {
   createTestLead,
   createTestProperty,
   createTestDeal,
+  createTestCaptureItem,
   getTestLeadCount,
   getTestPropertyCount,
   getTestDealCount,
+  getTestCaptureItemCount,
 } from '../factories/testDataFactories';
 
 // ============================================================================
@@ -25,6 +27,7 @@ export interface SeedResult {
     leads: number;
     properties: number;
     deals: number;
+    captureItems: number;
   };
   errors?: string[];
   warnings?: string[];
@@ -33,6 +36,7 @@ export interface SeedResult {
 export interface ClearResult {
   success: boolean;
   counts: {
+    captureItems: number;
     deals: number;
     documents: number;
     properties: number;
@@ -101,10 +105,11 @@ export function canSeedDatabase(): SafetyCheckResult {
  * This prevents foreign key constraint violations.
  *
  * Order of deletion (dependencies listed):
- * 1. deals (depends on: leads, properties)
- * 2. re_documents (depends on: properties, deals)
- * 3. properties
- * 4. leads
+ * 1. capture_items (depends on: leads, properties, deals)
+ * 2. deals (depends on: leads, properties)
+ * 3. re_documents (depends on: properties, deals)
+ * 4. re_properties (now has FK to leads via lead_id)
+ * 5. crm_leads
  *
  * Note: Only clears tables that exist in the current database schema.
  * Future tables (messages, contacts, etc.) will be added when implemented.
@@ -119,6 +124,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     return {
       success: false,
       counts: {
+        captureItems: 0,
         deals: 0,
         documents: 0,
         properties: 0,
@@ -131,6 +137,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
   const result: ClearResult = {
     success: true,
     counts: {
+      captureItems: 0,
       deals: 0,
       documents: 0,
       properties: 0,
@@ -164,7 +171,22 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     // Delete in reverse foreign key order (children first, then parents)
     // Only delete from tables that actually exist in the database schema
 
-    // 1. Delete deals (has foreign keys to leads and properties)
+    // 1. Delete capture_items (has foreign keys to leads, properties, deals)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: deletedCaptureItems, error: captureItemsError } = await (supabase.from('capture_items' as any) as any)
+      .delete()
+      .eq('user_id', userId)
+      .select('id');
+
+    if (captureItemsError) {
+      result.errors!.push(`Capture Items: ${captureItemsError.message}`);
+      console.error('[seedService] Error deleting capture items:', captureItemsError);
+    } else {
+      result.counts.captureItems = deletedCaptureItems?.length || 0;
+      console.log('[seedService] Deleted capture items:', deletedCaptureItems?.length || 0);
+    }
+
+    // 2. Delete deals (has foreign keys to leads and properties)
     // Deals table has user_id based RLS, not workspace_id based
     const { data: deletedDeals, error: dealsError } = await supabase
       .from('deals')
@@ -180,7 +202,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
       console.log('[seedService] Deleted deals:', deletedDeals?.length || 0);
     }
 
-    // 2. Delete re_documents (has foreign keys to properties and deals)
+    // 3. Delete re_documents (has foreign keys to properties and deals)
     // Documents table has user_id based RLS
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: deletedDocuments, error: documentsError } = await (supabase.from('re_documents' as any) as any)
@@ -196,7 +218,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
       console.log('[seedService] Deleted documents:', deletedDocuments?.length || 0);
     }
 
-    // 3. Delete properties
+    // 4. Delete properties (now has FK to leads via lead_id)
     // Properties table has permissive RLS (just needs auth), so user_id filter is fine
     const { data: deletedProperties, error: propertiesError } = await supabase
       .from('re_properties')
@@ -212,7 +234,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
       console.log('[seedService] Deleted properties:', deletedProperties?.length || 0);
     }
 
-    // 4. Delete leads (last, no dependencies)
+    // 5. Delete leads (last, no dependencies)
     // Leads table has workspace-based RLS for DELETE
     // RLS: workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
     if (workspaceIds.length > 0) {
@@ -270,8 +292,14 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
  *
  * Order of creation (dependencies listed):
  * 1. leads (no dependencies)
- * 2. properties (no dependencies)
+ * 2. properties (depends on leads via lead_id for linking)
  * 3. deals (depends on: leads, properties)
+ * 4. capture_items (depends on: leads, properties, deals)
+ *
+ * Property-Lead Distribution:
+ * - Properties 0-39: Linked to leads 0-19 (2 properties each)
+ * - Properties 40-59: Linked to leads 20-39 (1 property each)
+ * - Properties 60-99: Orphan properties (no lead_id)
  *
  * @param userId - User ID to associate all data with
  * @returns SeedResult with counts of created records
@@ -286,6 +314,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
         leads: 0,
         properties: 0,
         deals: 0,
+        captureItems: 0,
       },
       errors: [safetyCheck.reason || 'Safety check failed'],
     };
@@ -297,6 +326,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       leads: 0,
       properties: 0,
       deals: 0,
+      captureItems: 0,
     },
     errors: [],
     warnings: [],
@@ -362,13 +392,34 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       result.warnings!.push(`Only created ${result.counts.leads}/${leadCount} leads`);
     }
 
-    // Step 4: Create properties
+    // Step 4: Create properties with lead_id relationships
+    // Distribution:
+    // - Properties 0-39: Linked to leads 0-19 (each lead gets 2 properties)
+    // - Properties 40-59: Linked to leads 20-39 (each lead gets 1 property)
+    // - Properties 60-99: Orphan properties (no lead_id - skip trace needed)
     console.log('[seedService] Creating properties...');
     const propertyCount = getTestPropertyCount();
     const createdProperties: Array<{ id: string }> = [];
 
+    const getLeadIdForProperty = (propertyIndex: number): string | undefined => {
+      if (propertyIndex < 40) {
+        // Properties 0-39: Each of leads 0-19 gets 2 properties
+        const leadIndex = Math.floor(propertyIndex / 2);
+        // Only link if the lead exists (handles partial lead creation due to errors)
+        return leadIndex < createdLeads.length ? createdLeads[leadIndex].id : undefined;
+      } else if (propertyIndex < 60) {
+        // Properties 40-59: Each of leads 20-39 gets 1 property
+        const leadIndex = 20 + (propertyIndex - 40);
+        // Only link if the lead exists
+        return leadIndex < createdLeads.length ? createdLeads[leadIndex].id : undefined;
+      }
+      // Properties 60-99: Orphan properties (no lead_id - skip trace needed)
+      return undefined;
+    };
+
     for (let i = 0; i < propertyCount; i++) {
-      const propertyData = createTestProperty(i, userId, workspaceId);
+      const leadId = getLeadIdForProperty(i);
+      const propertyData = createTestProperty(i, userId, workspaceId, leadId);
       const { data, error } = await supabase
         .from('re_properties')
         .insert(propertyData)
@@ -396,6 +447,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
     // Step 5: Create deals (linking leads to properties)
     console.log('[seedService] Creating deals...');
     const dealCount = Math.min(getTestDealCount(), createdLeads.length, createdProperties.length);
+    const createdDeals: Array<{ id: string }> = [];
 
     for (let i = 0; i < dealCount; i++) {
       const leadId = createdLeads[i].id;
@@ -415,6 +467,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       }
 
       if (data) {
+        createdDeals.push(data);
         result.counts.deals++;
       }
     }
@@ -423,6 +476,40 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
 
     if (result.counts.deals < dealCount) {
       result.warnings!.push(`Only created ${result.counts.deals}/${dealCount} deals`);
+    }
+
+    // Step 6: Create capture items
+    console.log('[seedService] Creating capture items...');
+    const captureItemCount = getTestCaptureItemCount();
+
+    for (let i = 0; i < captureItemCount; i++) {
+      // Create context for assignments - cycle through available entities
+      // If no entities exist, the respective ID will be undefined (acceptable for capture items)
+      const context = {
+        leadId: createdLeads.length > 0 ? createdLeads[i % createdLeads.length].id : undefined,
+        propertyId: createdProperties.length > 0 ? createdProperties[i % createdProperties.length].id : undefined,
+        dealId: createdDeals.length > 0 ? createdDeals[i % createdDeals.length].id : undefined,
+      };
+
+      const captureItemData = createTestCaptureItem(i, userId, context);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from('capture_items' as any) as any)
+        .insert(captureItemData);
+
+      if (error) {
+        result.errors!.push(`Capture Item ${i}: ${error.message}`);
+        console.error(`[seedService] Capture Item ${i} error:`, error);
+        continue;
+      }
+
+      result.counts.captureItems++;
+    }
+
+    console.log('[seedService] Created capture items:', result.counts.captureItems);
+
+    if (result.counts.captureItems < captureItemCount) {
+      result.warnings!.push(`Only created ${result.counts.captureItems}/${captureItemCount} capture items`);
     }
 
     // Check if any errors occurred

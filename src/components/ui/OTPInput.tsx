@@ -114,7 +114,6 @@ export function OTPInput({
         disabled={disabled}
         activeOpacity={1}
         className="flex-row justify-center gap-2"
-        accessibilityRole="none"
         accessibilityLabel={`${length}-digit verification code input. ${value.length} of ${length} digits entered.`}
         accessibilityHint="Tap to enter code"
       >

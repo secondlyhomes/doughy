@@ -1,18 +1,16 @@
 // Add Lead Screen - React Native
 // Zone D: Create new lead form
-// Refactored to use FormField + useForm (Phase 2 Migration)
+// Uses useFormValidation for real-time validation + scroll-to-error
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { useRouter } from 'expo-router';
@@ -20,9 +18,11 @@ import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown, Mic, Camer
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { FormField, VoiceRecordButton, PhotoCaptureButton } from '@/components/ui';
-import { useForm } from '@/hooks/useForm';
+import { useFormValidation, useFieldRef, useKeyboardAvoidance } from '@/hooks';
 import { useVoiceCapture } from '@/features/real-estate/hooks/useVoiceCapture';
 import { usePhotoExtract } from '@/features/real-estate/hooks/usePhotoExtract';
+import { useErrorHandler } from '@/context/ErrorContext';
+import { leadFormSchema, leadFormFieldOrder } from '@/lib/validation';
 
 import { useCreateLead } from '../hooks/useLeads';
 import { LeadFormData, LeadStatus } from '../types';
@@ -36,17 +36,24 @@ const STATUS_OPTIONS: { label: string; value: LeadStatus }[] = [
   { label: 'Inactive', value: 'inactive' },
 ];
 
+type LeadFieldName = 'name' | 'email' | 'phone' | 'company' | 'notes';
+
 export function AddLeadScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
   const createLead = useCreateLead();
+  const { showError, showSuccess } = useErrorHandler();
 
   // AI extraction hooks
   const voiceCapture = useVoiceCapture();
   const photoExtract = usePhotoExtract();
 
-  // Use the new useForm hook for state management and validation
-  const { values, errors, updateField, handleSubmit, reset } = useForm<LeadFormData>({
+  // Field refs for scroll-to-error
+  const fieldRefs = useFieldRef<LeadFieldName>();
+
+  // Use the new useFormValidation hook for state management and validation
+  const form = useFormValidation<LeadFormData>({
     initialValues: {
       name: '',
       email: '',
@@ -56,26 +63,24 @@ export function AddLeadScreen() {
       tags: [],
       notes: '',
     },
-    validate: (vals) => {
-      const errs: Partial<Record<keyof LeadFormData, string>> = {};
-
-      if (!vals.name.trim()) {
-        errs.name = 'Name is required';
-      }
-      if (vals.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vals.email)) {
-        errs.email = 'Please enter a valid email address';
-      }
-
-      return errs;
+    schema: leadFormSchema,
+    validationMode: 'onChange',
+    debounceMs: 300,
+    fieldOrder: leadFormFieldOrder,
+    onScrollToError: (fieldName) => {
+      fieldRefs.scrollToField(fieldName as LeadFieldName);
     },
     onSubmit: async (vals) => {
       try {
         await createLead.mutateAsync(vals);
         router.back();
       } catch (error) {
-        Alert.alert('Error', 'Failed to create lead. Please try again.');
+        showError('Failed to create lead. Please try again.', { retryable: true });
         throw error; // Re-throw to prevent form reset
       }
+    },
+    onSuccess: () => {
+      // Could show success toast, but we're navigating back
     },
   });
 
@@ -83,18 +88,18 @@ export function AddLeadScreen() {
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   const handleAddTag = () => {
-    if (tagInput.trim() && !values.tags?.includes(tagInput.trim())) {
-      updateField('tags', [...(values.tags || []), tagInput.trim()]);
+    if (tagInput.trim() && !form.values.tags?.includes(tagInput.trim())) {
+      form.updateField('tags', [...(form.values.tags || []), tagInput.trim()]);
       setTagInput('');
     }
   };
 
   const handleRemoveTag = (tag: string) => {
-    updateField('tags', values.tags?.filter(t => t !== tag) || []);
+    form.updateField('tags', form.values.tags?.filter(t => t !== tag) || []);
   };
 
   const handleStatusSelect = (status: LeadStatus) => {
-    updateField('status', status);
+    form.updateField('status', status);
     setShowStatusPicker(false);
   };
 
@@ -110,15 +115,15 @@ export function AddLeadScreen() {
       if (result?.extractedData) {
         // Extract lead info from voice data
         const data = result.extractedData;
-        if (data.sellerName) updateField('name', data.sellerName);
-        if (data.sellerPhone) updateField('phone', data.sellerPhone);
-        if (data.address) updateField('notes', (values.notes || '') + `\nProperty: ${data.address}`);
-        Alert.alert('Success', 'Voice data extracted and form filled!');
+        if (data.sellerName) form.updateField('name', data.sellerName);
+        if (data.sellerPhone) form.updateField('phone', data.sellerPhone);
+        if (data.address) form.updateField('notes', (form.values.notes || '') + `\nProperty: ${data.address}`);
+        showSuccess('Voice data extracted and form filled!');
       }
     } else {
       await voiceCapture.startCapture();
     }
-  }, [voiceCapture, updateField, values.notes]);
+  }, [voiceCapture, form, showSuccess]);
 
   // Photo capture handlers
   const handlePhotoCapture = useCallback(async () => {
@@ -126,23 +131,29 @@ export function AddLeadScreen() {
     if (result?.type === 'business_card' && result.extractedData) {
       // Extract contact info from business card
       const data = result.extractedData as Record<string, unknown>;
-      if (data.name && typeof data.name === 'string') updateField('name', data.name);
-      if (data.email && typeof data.email === 'string') updateField('email', data.email);
-      if (data.phone && typeof data.phone === 'string') updateField('phone', data.phone);
-      if (data.company && typeof data.company === 'string') updateField('company', data.company);
-      Alert.alert('Success', 'Business card scanned and form filled!');
+      if (data.name && typeof data.name === 'string') form.updateField('name', data.name);
+      if (data.email && typeof data.email === 'string') form.updateField('email', data.email);
+      if (data.phone && typeof data.phone === 'string') form.updateField('phone', data.phone);
+      if (data.company && typeof data.company === 'string') form.updateField('company', data.company);
+      showSuccess('Business card scanned and form filled!');
     } else if (result) {
-      Alert.alert('Info', 'Photo captured but no business card detected. Try scanning a business card.');
+      showError('Photo captured but no business card detected. Try scanning a business card.');
     }
-  }, [photoExtract, updateField]);
+  }, [photoExtract, form, showSuccess, showError]);
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
       >
-        <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+        <ScrollView
+          ref={fieldRefs.scrollViewRef}
+          className="flex-1"
+          contentContainerStyle={{ padding: 16 }}
+          keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}
+        >
         {/* AI Quick Capture Section */}
         <View className="mb-6 p-4 rounded-xl" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
           <Text className="text-base font-semibold mb-3" style={{ color: colors.foreground }}>
@@ -199,10 +210,13 @@ export function AddLeadScreen() {
 
         {/* Name */}
         <FormField
+          ref={(ref) => fieldRefs.registerInputRef('name', ref)}
+          onLayoutContainer={fieldRefs.createLayoutHandler('name')}
           label="Name"
-          value={values.name}
-          onChangeText={(text) => updateField('name', text)}
-          error={errors.name}
+          value={form.values.name}
+          onChangeText={(text) => form.updateField('name', text)}
+          onBlur={() => form.setFieldTouched('name')}
+          error={form.getFieldError('name')}
           placeholder="Enter lead name"
           required
           icon={User}
@@ -211,10 +225,13 @@ export function AddLeadScreen() {
 
         {/* Email */}
         <FormField
+          ref={(ref) => fieldRefs.registerInputRef('email', ref)}
+          onLayoutContainer={fieldRefs.createLayoutHandler('email')}
           label="Email"
-          value={values.email}
-          onChangeText={(text) => updateField('email', text)}
-          error={errors.email}
+          value={form.values.email || ''}
+          onChangeText={(text) => form.updateField('email', text)}
+          onBlur={() => form.setFieldTouched('email')}
+          error={form.getFieldError('email')}
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
@@ -224,9 +241,13 @@ export function AddLeadScreen() {
 
         {/* Phone */}
         <FormField
+          ref={(ref) => fieldRefs.registerInputRef('phone', ref)}
+          onLayoutContainer={fieldRefs.createLayoutHandler('phone')}
           label="Phone"
-          value={values.phone}
-          onChangeText={(text) => updateField('phone', text)}
+          value={form.values.phone || ''}
+          onChangeText={(text) => form.updateField('phone', text)}
+          onBlur={() => form.setFieldTouched('phone')}
+          error={form.getFieldError('phone')}
           placeholder="(555) 123-4567"
           keyboardType="phone-pad"
           icon={Phone}
@@ -234,9 +255,13 @@ export function AddLeadScreen() {
 
         {/* Company */}
         <FormField
+          ref={(ref) => fieldRefs.registerInputRef('company', ref)}
+          onLayoutContainer={fieldRefs.createLayoutHandler('company')}
           label="Company"
-          value={values.company}
-          onChangeText={(text) => updateField('company', text)}
+          value={form.values.company || ''}
+          onChangeText={(text) => form.updateField('company', text)}
+          onBlur={() => form.setFieldTouched('company')}
+          error={form.getFieldError('company')}
           placeholder="Company name"
           autoCapitalize="words"
           icon={Building2}
@@ -251,7 +276,7 @@ export function AddLeadScreen() {
             onPress={() => setShowStatusPicker(!showStatusPicker)}
           >
             <Text className="text-base" style={{ color: colors.foreground }}>
-              {getStatusLabel(values.status)}
+              {getStatusLabel(form.values.status)}
             </Text>
             <ChevronDown size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
@@ -265,15 +290,15 @@ export function AddLeadScreen() {
                   style={{
                     borderBottomWidth: 1,
                     borderBottomColor: colors.border,
-                    backgroundColor: values.status === option.value ? withOpacity(colors.primary, 'muted') : 'transparent'
+                    backgroundColor: form.values.status === option.value ? withOpacity(colors.primary, 'muted') : 'transparent'
                   }}
                   onPress={() => handleStatusSelect(option.value)}
                 >
                   <Text
                     className="text-base"
                     style={{
-                      color: values.status === option.value ? colors.primary : colors.foreground,
-                      fontWeight: values.status === option.value ? '500' : 'normal'
+                      color: form.values.status === option.value ? colors.primary : colors.foreground,
+                      fontWeight: form.values.status === option.value ? '500' : 'normal'
                     }}
                   >
                     {option.label}
@@ -308,9 +333,9 @@ export function AddLeadScreen() {
             </TouchableOpacity>
           </View>
 
-          {values.tags && values.tags.length > 0 && (
+          {form.values.tags && form.values.tags.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mt-2">
-              {values.tags.map((tag, index) => (
+              {form.values.tags.map((tag, index) => (
                 <View
                   key={index}
                   className="flex-row items-center px-3 py-1.5 rounded-full"
@@ -331,9 +356,13 @@ export function AddLeadScreen() {
 
         {/* Notes */}
         <FormField
+          ref={(ref) => fieldRefs.registerInputRef('notes', ref)}
+          onLayoutContainer={fieldRefs.createLayoutHandler('notes')}
           label="Notes"
-          value={values.notes}
-          onChangeText={(text) => updateField('notes', text)}
+          value={form.values.notes || ''}
+          onChangeText={(text) => form.updateField('notes', text)}
+          onBlur={() => form.setFieldTouched('notes')}
+          error={form.getFieldError('notes')}
           placeholder="Add notes about this lead..."
           multiline
           numberOfLines={4}
@@ -344,7 +373,7 @@ export function AddLeadScreen() {
         <TouchableOpacity
           className="rounded-lg py-4 items-center"
           style={{ backgroundColor: createLead.isPending ? withOpacity(colors.primary, 'opaque') : colors.primary }}
-          onPress={handleSubmit}
+          onPress={form.handleSubmit}
           disabled={createLead.isPending}
         >
           {createLead.isPending ? (

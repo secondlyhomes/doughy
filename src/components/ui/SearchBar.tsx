@@ -2,7 +2,7 @@
 // Reusable search bar component with consistent styling
 import React from 'react';
 import { View, TextInput, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
-import { Search, X, SlidersHorizontal } from 'lucide-react-native';
+import { Search, X, SlidersHorizontal, List, LayoutGrid } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
 import { GlassView } from './GlassView';
@@ -20,6 +20,10 @@ export interface SearchBarProps {
   onFilter?: () => void;
   hasActiveFilters?: boolean;
   glass?: boolean;
+  /** Handler for view toggle button */
+  onViewToggle?: () => void;
+  /** Current view mode for toggle icon display */
+  viewMode?: 'list' | 'card';
 }
 
 const sizeConfig = {
@@ -53,6 +57,8 @@ export function SearchBar({
   onFilter,
   hasActiveFilters = false,
   glass = false,
+  onViewToggle,
+  viewMode,
 }: SearchBarProps) {
   const colors = useThemeColors();
   const config = sizeConfig[size];
@@ -99,6 +105,20 @@ export function SearchBar({
             <X size={18} color={colors.mutedForeground} />
           </TouchableOpacity>
         )
+      )}
+      {onViewToggle && (
+        <TouchableOpacity
+          onPress={onViewToggle}
+          className="ml-2 w-9 h-9 rounded-full items-center justify-center"
+          style={{ backgroundColor: colors.muted }}
+          accessibilityLabel={`Switch to ${viewMode === 'card' ? 'list' : 'card'} view`}
+        >
+          {viewMode === 'card' ? (
+            <List size={16} color={colors.foreground} />
+          ) : (
+            <LayoutGrid size={16} color={colors.foreground} />
+          )}
+        </TouchableOpacity>
       )}
       {onFilter && (
         <TouchableOpacity

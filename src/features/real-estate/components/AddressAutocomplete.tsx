@@ -11,7 +11,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
+  ScrollView,
   ActivityIndicator,
   Keyboard,
   Modal,
@@ -323,16 +323,19 @@ export function AddressAutocomplete({
         ) : null}
       </View>
 
-      {/* Results Dropdown */}
+      {/* Results Dropdown - Using ScrollView instead of FlatList to avoid VirtualizedList nesting warning */}
       {isOpen && results.length > 0 && (
         <View className="absolute top-14 left-0 right-0 z-50 rounded-lg shadow-lg max-h-64" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
-          <FlatList
-            data={results}
-            renderItem={renderItem}
-            keyExtractor={(item, index) => `${item.lat}-${item.lon}-${index}`}
+          <ScrollView
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
-          />
+          >
+            {results.map((item, index) => (
+              <View key={`${item.lat}-${item.lon}-${index}`}>
+                {renderItem({ item })}
+              </View>
+            ))}
+          </ScrollView>
         </View>
       )}
     </View>

@@ -154,8 +154,13 @@ export interface EnhancedPropertyInfo {
   };
 }
 
+// Type for DB property with joined images
+export interface DBPropertyWithImages extends DBProperty {
+  images?: PropertyImage[];
+}
+
 // Helper functions for property conversion
-export const dbToFeatureProperty = (dbProperty: DBProperty): Property => {
+export const dbToFeatureProperty = (dbProperty: DBPropertyWithImages): Property => {
   // Determine address from either field for maximum compatibility
   const address = dbProperty.address_line_1 || dbProperty.address || '';
 
@@ -215,6 +220,11 @@ export const dbToFeatureProperty = (dbProperty: DBProperty): Property => {
   if (dbProperty.owner_occupied !== undefined) result.owner_occupied = dbProperty.owner_occupied;
   if (dbProperty.vacant !== undefined) result.vacant = dbProperty.vacant;
   if (dbProperty.hoa !== undefined) result.hoa = dbProperty.hoa;
+
+  // Handle joined images
+  if (dbProperty.images && Array.isArray(dbProperty.images)) {
+    result.images = dbProperty.images;
+  }
 
   return result as Property;
 };

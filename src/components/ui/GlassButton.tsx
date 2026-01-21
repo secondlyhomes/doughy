@@ -1,13 +1,14 @@
 // src/components/ui/GlassButton.tsx
 // Reusable circular glass button for overlay actions (back buttons, floating actions, toolbar buttons)
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { GLASS_BLUR } from '@/constants/design-tokens';
+import { GLASS_BLUR, PRESS_OPACITY } from '@/constants/design-tokens';
+import { haptic } from '@/lib/haptics';
 
 export interface GlassButtonProps {
   /** Icon component to display */
@@ -24,6 +25,8 @@ export interface GlassButtonProps {
   accessibilityLabel: string;
   /** Active opacity when pressed. Default: 0.7 */
   activeOpacity?: number;
+  /** Enable haptic feedback on press (default: true) */
+  enableHaptics?: boolean;
 }
 
 export function GlassButton({
@@ -33,10 +36,18 @@ export function GlassButton({
   effect = 'clear',
   containerStyle,
   accessibilityLabel,
-  activeOpacity = 0.7,
+  activeOpacity = PRESS_OPACITY.DEFAULT,
+  enableHaptics = true,
 }: GlassButtonProps) {
   const { isDark } = useTheme();
   const borderRadius = size / 2;
+
+  const handlePress = useCallback(() => {
+    if (enableHaptics) {
+      haptic.light();
+    }
+    onPress();
+  }, [enableHaptics, onPress]);
 
   const buttonStyle: ViewStyle = {
     width: size,
@@ -51,7 +62,7 @@ export function GlassButton({
     return (
       <LiquidGlassContainerView spacing={8} style={containerStyle}>
         <TouchableOpacity
-          onPress={onPress}
+          onPress={handlePress}
           activeOpacity={activeOpacity}
           accessibilityLabel={accessibilityLabel}
           accessibilityRole="button"
@@ -73,7 +84,7 @@ export function GlassButton({
   if (Platform.OS !== 'web') {
     return (
       <TouchableOpacity
-        onPress={onPress}
+        onPress={handlePress}
         activeOpacity={activeOpacity}
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
@@ -89,10 +100,10 @@ export function GlassButton({
     );
   }
 
-  // Web fallback - CSS backdrop-filter
+  // Web fallback - CSS backdrop-filter with improved visibility
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       activeOpacity={activeOpacity}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
@@ -101,9 +112,10 @@ export function GlassButton({
         containerStyle,
         styles.webGlass,
         {
+          // Use 'medium' (20%) for better visibility on all backgrounds
           backgroundColor: isDark
-            ? withOpacity('#FFFFFF', 'muted')  // 10% white
-            : withOpacity('#000000', 'muted'), // 10% black
+            ? withOpacity('#FFFFFF', 'medium')  // 20% white on dark
+            : withOpacity('#000000', 'light'),  // 12.5% black on light
         },
       ]}
     >

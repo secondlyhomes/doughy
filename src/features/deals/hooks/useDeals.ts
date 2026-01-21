@@ -3,8 +3,10 @@
 // Uses supabase.from() which auto-switches between mock/real based on EXPO_PUBLIC_USE_MOCK_DATA
 
 import { useState, useEffect, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { isValidUuid } from '@/lib/validation';
+import type { Database } from '@/integrations/supabase/types';
 import {
   Deal,
   DealStage,
@@ -12,6 +14,43 @@ import {
   DEAL_STAGE_CONFIG,
 } from '../types';
 import { logDealEvent } from './useDealEvents';
+
+// Type alias for the deals table row with joined relations
+// Note: strategy and risk_score are not in DB schema yet but used in the app
+type DealRow = Database['public']['Tables']['deals']['Row'] & {
+  strategy?: DealStrategy;
+  risk_score?: number;
+};
+type DealWithRelations = DealRow & {
+  lead?: {
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    status: string;
+    score: number | null;
+    tags?: string[] | null;
+  } | null;
+  property?: {
+    id: string;
+    address_line_1: string | null;
+    address_line_2?: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+    county?: string | null;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    square_feet: number | null;
+    lot_size?: number | null;
+    year_built?: number | null;
+    property_type?: string | null;
+    arv: number | null;
+    purchase_price: number | null;
+    notes?: string | null;
+    status?: string | null;
+  } | null;
+};
 
 // ============================================
 // Types
@@ -34,6 +73,16 @@ export interface CreateDealInput {
   next_action?: string;
   next_action_due?: string;
   title?: string;
+}
+
+// Pagination constants
+const PAGE_SIZE = 20;
+
+// Paginated result interface
+interface PaginatedDealsResult {
+  deals: Deal[];
+  nextCursor: number | null;
+  hasMore: boolean;
 }
 
 // ============================================
@@ -76,7 +125,7 @@ async function fetchDeals(filters?: DealsFilters): Promise<Deal[]> {
   }
 
   // Map database response to Deal type
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row: DealWithRelations) => ({
     id: row.id,
     user_id: row.user_id,
     lead_id: row.lead_id,
@@ -114,6 +163,98 @@ async function fetchDeals(filters?: DealsFilters): Promise<Deal[]> {
   })) as Deal[];
 }
 
+// Paginated fetch function for useInfiniteQuery
+async function fetchDealsPaginated(
+  pageParam: number = 0,
+  filters?: DealsFilters
+): Promise<PaginatedDealsResult> {
+  const from = pageParam * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  // Build query with related data
+  let query = supabase
+    .from('deals')
+    .select(`
+      *,
+      lead:crm_leads(id, name, phone, email, status, score),
+      property:re_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
+    `, { count: 'exact' });
+
+  // Apply filters
+  if (filters?.stage && filters.stage !== 'all') {
+    query = query.eq('stage', filters.stage);
+  }
+
+  if (filters?.strategy) {
+    query = query.eq('strategy', filters.strategy);
+  }
+
+  if (filters?.activeOnly) {
+    query = query.not('stage', 'in', '(closed_won,closed_lost)');
+  }
+
+  // Apply sorting
+  const sortBy = filters?.sortBy || 'created_at';
+  const ascending = filters?.sortDirection === 'asc';
+  query = query.order(sortBy, { ascending, nullsFirst: false });
+
+  // Apply pagination
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error('Error fetching paginated deals:', error);
+    throw error;
+  }
+
+  // Map database response to Deal type
+  const deals = (data || []).map((row: DealWithRelations) => ({
+    id: row.id,
+    user_id: row.user_id,
+    lead_id: row.lead_id,
+    property_id: row.property_id,
+    stage: row.stage || 'new',
+    strategy: row.strategy,
+    next_action: row.next_action,
+    next_action_due: row.next_action_due,
+    risk_score: row.risk_score,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    lead: row.lead ? {
+      id: row.lead.id,
+      name: row.lead.name,
+      phone: row.lead.phone,
+      email: row.lead.email,
+      status: row.lead.status,
+      score: row.lead.score,
+    } : undefined,
+    property: row.property ? {
+      id: row.property.id,
+      address: row.property.address_line_1,
+      address_line_1: row.property.address_line_1,
+      city: row.property.city,
+      state: row.property.state,
+      zip: row.property.zip,
+      bedrooms: row.property.bedrooms,
+      bathrooms: row.property.bathrooms,
+      sqft: row.property.square_feet,
+      square_feet: row.property.square_feet,
+      arv: row.property.arv,
+      purchase_price: row.property.purchase_price,
+    } : undefined,
+  })) as Deal[];
+
+  const totalCount = count || 0;
+  const hasMore = (pageParam + 1) * PAGE_SIZE < totalCount;
+
+  return {
+    deals,
+    nextCursor: hasMore ? pageParam + 1 : null,
+    hasMore,
+  };
+}
+
 async function fetchDealById(id: string): Promise<Deal | null> {
   const { data, error } = await supabase
     .from('deals')
@@ -136,50 +277,52 @@ async function fetchDealById(id: string): Promise<Deal | null> {
 
   if (!data) return null;
 
+  // Cast to allow access to optional fields that may not be in DB schema yet
+  const dealData = data as DealWithRelations;
   return {
-    id: data.id,
-    user_id: data.user_id,
-    lead_id: data.lead_id,
-    property_id: data.property_id,
-    stage: data.stage || 'new',
-    strategy: data.strategy,
-    next_action: data.next_action,
-    next_action_due: data.next_action_due,
-    risk_score: data.risk_score,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
-    lead: data.lead ? {
-      id: data.lead.id,
-      name: data.lead.name,
-      phone: data.lead.phone,
-      email: data.lead.email,
-      status: data.lead.status,
-      score: data.lead.score,
-      tags: data.lead.tags,
+    id: dealData.id,
+    user_id: dealData.user_id,
+    lead_id: dealData.lead_id,
+    property_id: dealData.property_id,
+    stage: dealData.stage || 'new',
+    strategy: dealData.strategy,
+    next_action: dealData.next_action,
+    next_action_due: dealData.next_action_due,
+    risk_score: dealData.risk_score,
+    created_at: dealData.created_at,
+    updated_at: dealData.updated_at,
+    lead: dealData.lead ? {
+      id: dealData.lead.id,
+      name: dealData.lead.name,
+      phone: dealData.lead.phone,
+      email: dealData.lead.email,
+      status: dealData.lead.status,
+      score: dealData.lead.score,
+      tags: dealData.lead.tags,
     } : undefined,
-    property: data.property ? {
-      id: data.property.id,
-      address: data.property.address_line_1,
-      address_line_1: data.property.address_line_1,
-      address_line_2: data.property.address_line_2,
-      city: data.property.city,
-      state: data.property.state,
-      zip: data.property.zip,
-      county: data.property.county,
-      bedrooms: data.property.bedrooms,
-      bathrooms: data.property.bathrooms,
-      sqft: data.property.square_feet,
-      square_feet: data.property.square_feet,
-      lot_size: data.property.lot_size,
-      lotSize: data.property.lot_size,
-      year_built: data.property.year_built,
-      yearBuilt: data.property.year_built,
-      propertyType: data.property.property_type,
-      property_type: data.property.property_type,
-      arv: data.property.arv,
-      purchase_price: data.property.purchase_price,
-      notes: data.property.notes,
-      status: data.property.status,
+    property: dealData.property ? {
+      id: dealData.property.id,
+      address: dealData.property.address_line_1,
+      address_line_1: dealData.property.address_line_1,
+      address_line_2: dealData.property.address_line_2,
+      city: dealData.property.city,
+      state: dealData.property.state,
+      zip: dealData.property.zip,
+      county: dealData.property.county,
+      bedrooms: dealData.property.bedrooms,
+      bathrooms: dealData.property.bathrooms,
+      sqft: dealData.property.square_feet,
+      square_feet: dealData.property.square_feet,
+      lot_size: dealData.property.lot_size,
+      lotSize: dealData.property.lot_size,
+      year_built: dealData.property.year_built,
+      yearBuilt: dealData.property.year_built,
+      propertyType: dealData.property.property_type,
+      property_type: dealData.property.property_type,
+      arv: dealData.property.arv,
+      purchase_price: dealData.property.purchase_price,
+      notes: dealData.property.notes,
+      status: dealData.property.status,
     } : undefined,
   } as Deal;
 }
@@ -215,17 +358,19 @@ async function createDeal(dealData: CreateDealInput): Promise<Deal> {
     throw error;
   }
 
+  // Cast to allow access to optional fields that may not be in DB schema yet
+  const createdDeal = data as DealRow;
   return {
-    id: data.id,
-    user_id: data.user_id,
-    lead_id: data.lead_id,
-    property_id: data.property_id,
-    stage: data.stage,
-    strategy: data.strategy,
-    next_action: data.next_action,
-    next_action_due: data.next_action_due,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
+    id: createdDeal.id,
+    user_id: createdDeal.user_id,
+    lead_id: createdDeal.lead_id,
+    property_id: createdDeal.property_id,
+    stage: createdDeal.stage,
+    strategy: createdDeal.strategy,
+    next_action: createdDeal.next_action,
+    next_action_due: createdDeal.next_action_due,
+    created_at: createdDeal.created_at,
+    updated_at: createdDeal.updated_at,
   } as Deal;
 }
 
@@ -254,18 +399,20 @@ async function updateDeal(id: string, updates: Partial<Deal>): Promise<Deal> {
     throw error;
   }
 
+  // Cast to allow access to optional fields that may not be in DB schema yet
+  const updatedDeal = data as DealRow;
   return {
-    id: data.id,
-    user_id: data.user_id,
-    lead_id: data.lead_id,
-    property_id: data.property_id,
-    stage: data.stage,
-    strategy: data.strategy,
-    next_action: data.next_action,
-    next_action_due: data.next_action_due,
-    risk_score: data.risk_score,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
+    id: updatedDeal.id,
+    user_id: updatedDeal.user_id,
+    lead_id: updatedDeal.lead_id,
+    property_id: updatedDeal.property_id,
+    stage: updatedDeal.stage,
+    strategy: updatedDeal.strategy,
+    next_action: updatedDeal.next_action,
+    next_action_due: updatedDeal.next_action_due,
+    risk_score: updatedDeal.risk_score,
+    created_at: updatedDeal.created_at,
+    updated_at: updatedDeal.updated_at,
   } as Deal;
 }
 
@@ -308,6 +455,40 @@ export function useDeals(filters?: DealsFilters) {
 }
 
 /**
+ * Paginated deals hook using useInfiniteQuery
+ * Use this for large datasets where infinite scroll is needed
+ */
+export function useDealsPaginated(filters?: DealsFilters) {
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['deals', 'paginated', filters],
+    queryFn: ({ pageParam = 0 }) => fetchDealsPaginated(pageParam, filters),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: 0,
+  });
+
+  // Flatten all pages into a single array
+  const deals = data?.pages.flatMap((page) => page.deals) ?? [];
+
+  return {
+    deals,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage: hasNextPage ?? false,
+    isFetchingNextPage,
+  };
+}
+
+/**
  * Fetch a single deal by ID
  */
 export function useDeal(id: string) {
@@ -319,7 +500,8 @@ export function useDeal(id: string) {
   } = useQuery({
     queryKey: ['deal', id],
     queryFn: () => fetchDealById(id),
-    enabled: !!id && id !== '',
+    // Only fetch if id is a valid UUID (prevents "new" or other strings from hitting DB)
+    enabled: isValidUuid(id),
   });
 
   return {

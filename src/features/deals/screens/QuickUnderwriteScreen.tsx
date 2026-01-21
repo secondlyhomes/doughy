@@ -279,9 +279,10 @@ interface StickyMetricsHeaderProps {
   metrics: DealMetrics;
   riskScore: number | undefined;
   visible: boolean;
+  topOffset?: number;
 }
 
-function StickyMetricsHeader({ metrics, riskScore, visible }: StickyMetricsHeaderProps) {
+function StickyMetricsHeader({ metrics, riskScore, visible, topOffset = 0 }: StickyMetricsHeaderProps) {
   const colors = useThemeColors();
 
   const formatCurrency = (value: number) => {
@@ -304,7 +305,7 @@ function StickyMetricsHeader({ metrics, riskScore, visible }: StickyMetricsHeade
       style={[
         {
           position: 'absolute',
-          top: 0,
+          top: topOffset,
           left: 0,
           right: 0,
           backgroundColor: colors.background,
@@ -440,11 +441,13 @@ export function QuickUnderwriteScreen() {
         metrics={metrics}
         riskScore={riskScore}
         visible={showStickyHeader}
+        topOffset={insets.top}
       />
 
       <AnimatedScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
+        contentInsetAdjustmentBehavior="automatic"
         refreshControl={
           <RefreshControl
             refreshing={isLoading}

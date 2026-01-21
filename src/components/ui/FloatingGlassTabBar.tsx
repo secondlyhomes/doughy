@@ -30,7 +30,7 @@ export const TAB_BAR_BOTTOM_OFFSET = 0;
 export const TAB_BAR_SAFE_PADDING = 16;
 
 /** Standard FAB positioning (above tab bar + safe area) */
-export const FAB_BOTTOM_OFFSET = 100;
+export const FAB_BOTTOM_OFFSET = 24;
 export const FAB_RIGHT_MARGIN = 24;
 export const FAB_LEFT_MARGIN = 24;
 

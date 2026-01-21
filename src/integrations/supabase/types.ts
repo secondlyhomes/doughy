@@ -436,6 +436,129 @@ export type Database = {
           },
         ]
       }
+      capture_items: {
+        Row: {
+          ai_confidence: number | null
+          ai_extracted_data: Json | null
+          ai_summary: string | null
+          assigned_deal_id: string | null
+          assigned_lead_id: string | null
+          assigned_property_id: string | null
+          content: string | null
+          created_at: string
+          duration_seconds: number | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          mime_type: string | null
+          source: string | null
+          status: string
+          suggested_lead_id: string | null
+          suggested_property_id: string | null
+          title: string | null
+          transcript: string | null
+          triaged_at: string | null
+          triaged_by: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_extracted_data?: Json | null
+          ai_summary?: string | null
+          assigned_deal_id?: string | null
+          assigned_lead_id?: string | null
+          assigned_property_id?: string | null
+          content?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          source?: string | null
+          status?: string
+          suggested_lead_id?: string | null
+          suggested_property_id?: string | null
+          title?: string | null
+          transcript?: string | null
+          triaged_at?: string | null
+          triaged_by?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_extracted_data?: Json | null
+          ai_summary?: string | null
+          assigned_deal_id?: string | null
+          assigned_lead_id?: string | null
+          assigned_property_id?: string | null
+          content?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          source?: string | null
+          status?: string
+          suggested_lead_id?: string | null
+          suggested_property_id?: string | null
+          title?: string | null
+          transcript?: string | null
+          triaged_at?: string | null
+          triaged_by?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capture_items_assigned_deal_id_fkey"
+            columns: ["assigned_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capture_items_assigned_lead_id_fkey"
+            columns: ["assigned_lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capture_items_assigned_property_id_fkey"
+            columns: ["assigned_property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capture_items_suggested_lead_id_fkey"
+            columns: ["suggested_lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capture_items_suggested_property_id_fkey"
+            columns: ["suggested_property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comms_email_logs: {
         Row: {
           clicked_at: string | null
@@ -602,6 +725,103 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      conversation_items: {
+        Row: {
+          action_items: string[] | null
+          ai_summary: string | null
+          content: string | null
+          created_at: string | null
+          deal_id: string | null
+          direction: string | null
+          duration_seconds: number | null
+          email_address: string | null
+          id: string
+          is_archived: boolean | null
+          key_phrases: string[] | null
+          lead_id: string | null
+          occurred_at: string | null
+          phone_number: string | null
+          sentiment: string | null
+          subject: string | null
+          transcript: string | null
+          twilio_message_sid: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          action_items?: string[] | null
+          ai_summary?: string | null
+          content?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          direction?: string | null
+          duration_seconds?: number | null
+          email_address?: string | null
+          id?: string
+          is_archived?: boolean | null
+          key_phrases?: string[] | null
+          lead_id?: string | null
+          occurred_at?: string | null
+          phone_number?: string | null
+          sentiment?: string | null
+          subject?: string | null
+          transcript?: string | null
+          twilio_message_sid?: string | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          action_items?: string[] | null
+          ai_summary?: string | null
+          content?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          direction?: string | null
+          duration_seconds?: number | null
+          email_address?: string | null
+          id?: string
+          is_archived?: boolean | null
+          key_phrases?: string[] | null
+          lead_id?: string | null
+          occurred_at?: string | null
+          phone_number?: string | null
+          sentiment?: string | null
+          subject?: string | null
+          transcript?: string | null
+          twilio_message_sid?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_items_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_items_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_items_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_contacts: {
         Row: {
@@ -1372,6 +1592,277 @@ export type Database = {
           },
         ]
       }
+      re_portfolio_entries: {
+        Row: {
+          acquisition_date: string
+          acquisition_price: number
+          acquisition_source: string
+          created_at: string | null
+          deal_id: string | null
+          group_id: string | null
+          id: string
+          is_active: boolean | null
+          monthly_expenses: number | null
+          monthly_rent: number | null
+          notes: string | null
+          ownership_percent: number | null
+          projected_monthly_expenses: number | null
+          projected_monthly_rent: number | null
+          property_id: string
+          property_manager_name: string | null
+          property_manager_phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          acquisition_date: string
+          acquisition_price: number
+          acquisition_source?: string
+          created_at?: string | null
+          deal_id?: string | null
+          group_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          monthly_expenses?: number | null
+          monthly_rent?: number | null
+          notes?: string | null
+          ownership_percent?: number | null
+          projected_monthly_expenses?: number | null
+          projected_monthly_rent?: number | null
+          property_id: string
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          acquisition_date?: string
+          acquisition_price?: number
+          acquisition_source?: string
+          created_at?: string | null
+          deal_id?: string | null
+          group_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          monthly_expenses?: number | null
+          monthly_rent?: number | null
+          notes?: string | null
+          ownership_percent?: number | null
+          projected_monthly_expenses?: number | null
+          projected_monthly_rent?: number | null
+          property_id?: string
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "re_portfolio_entries_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_portfolio_entries_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "re_portfolio_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_portfolio_entries_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      re_portfolio_groups: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      re_portfolio_monthly_records: {
+        Row: {
+          created_at: string | null
+          expenses: Json | null
+          id: string
+          month: string
+          notes: string | null
+          occupancy_status: string | null
+          portfolio_entry_id: string
+          rent_collected: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expenses?: Json | null
+          id?: string
+          month: string
+          notes?: string | null
+          occupancy_status?: string | null
+          portfolio_entry_id: string
+          rent_collected?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expenses?: Json | null
+          id?: string
+          month?: string
+          notes?: string | null
+          occupancy_status?: string | null
+          portfolio_entry_id?: string
+          rent_collected?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "re_portfolio_monthly_records_portfolio_entry_id_fkey"
+            columns: ["portfolio_entry_id"]
+            isOneToOne: false
+            referencedRelation: "re_portfolio_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      re_portfolio_mortgages: {
+        Row: {
+          created_at: string | null
+          current_balance: number
+          escrow_amount: number | null
+          id: string
+          interest_rate: number
+          is_primary: boolean | null
+          lender_name: string | null
+          loan_type: string | null
+          maturity_date: string | null
+          monthly_payment: number
+          notes: string | null
+          original_balance: number
+          portfolio_entry_id: string
+          start_date: string
+          term_months: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_balance: number
+          escrow_amount?: number | null
+          id?: string
+          interest_rate: number
+          is_primary?: boolean | null
+          lender_name?: string | null
+          loan_type?: string | null
+          maturity_date?: string | null
+          monthly_payment: number
+          notes?: string | null
+          original_balance: number
+          portfolio_entry_id: string
+          start_date: string
+          term_months?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_balance?: number
+          escrow_amount?: number | null
+          id?: string
+          interest_rate?: number
+          is_primary?: boolean | null
+          lender_name?: string | null
+          loan_type?: string | null
+          maturity_date?: string | null
+          monthly_payment?: number
+          notes?: string | null
+          original_balance?: number
+          portfolio_entry_id?: string
+          start_date?: string
+          term_months?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "re_portfolio_mortgages_portfolio_entry_id_fkey"
+            columns: ["portfolio_entry_id"]
+            isOneToOne: false
+            referencedRelation: "re_portfolio_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      re_portfolio_valuations: {
+        Row: {
+          created_at: string | null
+          estimated_value: number
+          id: string
+          metadata: Json | null
+          notes: string | null
+          property_id: string
+          source: string | null
+          updated_at: string | null
+          valuation_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          estimated_value: number
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          property_id: string
+          source?: string | null
+          updated_at?: string | null
+          valuation_date: string
+        }
+        Update: {
+          created_at?: string | null
+          estimated_value?: number
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          property_id?: string
+          source?: string | null
+          updated_at?: string | null
+          valuation_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "re_portfolio_valuations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       re_properties: {
         Row: {
           address_line_1: string
@@ -1387,10 +1878,12 @@ export type Database = {
           hoa: boolean | null
           id: string
           import_id: string | null
+          lead_id: string | null
           lot_size: number | null
           mls_id: string | null
           notes: string | null
           owner_occupied: boolean | null
+          profile_id: string | null
           property_type: string | null
           purchase_price: number | null
           square_feet: number | null
@@ -1418,10 +1911,12 @@ export type Database = {
           hoa?: boolean | null
           id?: string
           import_id?: string | null
+          lead_id?: string | null
           lot_size?: number | null
           mls_id?: string | null
           notes?: string | null
           owner_occupied?: boolean | null
+          profile_id?: string | null
           property_type?: string | null
           purchase_price?: number | null
           square_feet?: number | null
@@ -1449,10 +1944,12 @@ export type Database = {
           hoa?: boolean | null
           id?: string
           import_id?: string | null
+          lead_id?: string | null
           lot_size?: number | null
           mls_id?: string | null
           notes?: string | null
           owner_occupied?: boolean | null
+          profile_id?: string | null
           property_type?: string | null
           purchase_price?: number | null
           square_feet?: number | null
@@ -1467,6 +1964,20 @@ export type Database = {
           zip?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "re_properties_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "re_properties_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "re_properties_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -4805,3 +5316,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -68,53 +68,141 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
         {/* Text Content - Glass or solid background */}
         {variant === 'glass' ? (
           <GlassView intensity={glassIntensity} effect="regular" style={{ padding: 12 }}>
-            <Text
-              className="text-sm font-semibold"
-              style={{ color: colors.foreground }}
-              numberOfLines={1}
-            >
-              {property.address || 'Address not specified'}
-            </Text>
-            <Text
-              className="text-xs mt-0.5"
-              style={{ color: colors.mutedForeground }}
-              numberOfLines={1}
-            >
-              {property.city}, {property.state}
-            </Text>
-            {property.arv && (
-              <Text
-                className="text-sm font-bold mt-1"
-                style={{ color: colors.primary }}
-              >
-                ${property.arv.toLocaleString()}
-              </Text>
-            )}
+            <View className="flex-row justify-between">
+              {/* Left column: Address, City/State, Price */}
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text
+                  className="text-sm font-semibold"
+                  style={{ color: colors.foreground }}
+                  numberOfLines={1}
+                >
+                  {property.address || 'Address not specified'}
+                </Text>
+                <Text
+                  className="text-xs mt-0.5"
+                  style={{ color: colors.mutedForeground }}
+                  numberOfLines={1}
+                >
+                  {property.city}, {property.state}
+                </Text>
+                {property.arv && (
+                  <Text
+                    className="text-sm font-bold mt-1"
+                    style={{ color: colors.primary }}
+                  >
+                    ${property.arv.toLocaleString()}
+                  </Text>
+                )}
+              </View>
+              {/* Right column: Status, Type, Stats */}
+              <View style={{ alignItems: 'flex-end' }}>
+                {property.status && (
+                  <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
+                    {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+                  </Text>
+                )}
+                {property.propertyType && (
+                  <Text className="text-xs mt-0.5" style={{ color: colors.mutedForeground }}>
+                    {formatPropertyType(property.propertyType)}
+                  </Text>
+                )}
+                <View className="flex-row items-center gap-2 mt-1">
+                  {property.bedrooms != null && (
+                    <View className="flex-row items-center gap-0.5">
+                      <Bed size={12} color={colors.mutedForeground} />
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                        {property.bedrooms}
+                      </Text>
+                    </View>
+                  )}
+                  {property.bathrooms != null && (
+                    <View className="flex-row items-center gap-0.5">
+                      <Bath size={12} color={colors.mutedForeground} />
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                        {property.bathrooms}
+                      </Text>
+                    </View>
+                  )}
+                  {property.square_feet != null && (
+                    <View className="flex-row items-center gap-0.5">
+                      <Square size={12} color={colors.mutedForeground} />
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                        {property.square_feet.toLocaleString()}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
           </GlassView>
         ) : (
           <View className="p-3">
-            <Text
-              className="text-sm font-semibold"
-              style={{ color: colors.foreground }}
-              numberOfLines={1}
-            >
-              {property.address || 'Address not specified'}
-            </Text>
-            <Text
-              className="text-xs mt-0.5"
-              style={{ color: colors.mutedForeground }}
-              numberOfLines={1}
-            >
-              {property.city}, {property.state}
-            </Text>
-            {property.arv && (
-              <Text
-                className="text-sm font-bold mt-1"
-                style={{ color: colors.primary }}
-              >
-                ${property.arv.toLocaleString()}
-              </Text>
-            )}
+            <View className="flex-row justify-between">
+              {/* Left column: Address, City/State, Price */}
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text
+                  className="text-sm font-semibold"
+                  style={{ color: colors.foreground }}
+                  numberOfLines={1}
+                >
+                  {property.address || 'Address not specified'}
+                </Text>
+                <Text
+                  className="text-xs mt-0.5"
+                  style={{ color: colors.mutedForeground }}
+                  numberOfLines={1}
+                >
+                  {property.city}, {property.state}
+                </Text>
+                {property.arv && (
+                  <Text
+                    className="text-sm font-bold mt-1"
+                    style={{ color: colors.primary }}
+                  >
+                    ${property.arv.toLocaleString()}
+                  </Text>
+                )}
+              </View>
+              {/* Right column: Status, Type, Stats */}
+              <View style={{ alignItems: 'flex-end' }}>
+                {property.status && (
+                  <Text className="text-sm font-semibold" style={{ color: colors.foreground }}>
+                    {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+                  </Text>
+                )}
+                {property.propertyType && (
+                  <Text className="text-xs mt-0.5" style={{ color: colors.mutedForeground }}>
+                    {formatPropertyType(property.propertyType)}
+                  </Text>
+                )}
+                <View className="flex-row items-center gap-2 mt-1">
+                  {property.bedrooms != null && (
+                    <View className="flex-row items-center gap-0.5">
+                      <Bed size={12} color={colors.mutedForeground} />
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                        {property.bedrooms}
+                      </Text>
+                    </View>
+                  )}
+                  {property.bathrooms != null && (
+                    <View className="flex-row items-center gap-0.5">
+                      <Bath size={12} color={colors.mutedForeground} />
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                        {property.bathrooms}
+                      </Text>
+                    </View>
+                  )}
+                  {property.square_feet != null && (
+                    <View className="flex-row items-center gap-0.5">
+                      <Square size={12} color={colors.mutedForeground} />
+                      <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+                        {property.square_feet.toLocaleString()}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
           </View>
         )}
       </>
@@ -130,6 +218,9 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
           borderColor: isSelected ? colors.primary : colors.border,
         }}
         activeOpacity={0.7}
+        accessibilityLabel={`Property at ${property.address || 'unknown address'}, ${property.city || ''}, ${property.state || ''}`}
+        accessibilityRole="button"
+        accessibilityHint="Tap to view property details"
       >
         {compactContent}
       </TouchableOpacity>
@@ -373,18 +464,33 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
         borderColor: isSelected ? colors.primary : colors.border,
       }}
       activeOpacity={0.7}
+      accessibilityLabel={`Property at ${property.address || 'unknown address'}, ${property.city || ''}, ${property.state || ''}. ${property.bedrooms || 0} beds, ${property.bathrooms || 0} baths`}
+      accessibilityRole="button"
+      accessibilityHint="Tap to view property details"
     >
       {fullContent}
     </TouchableOpacity>
   );
 }, (prevProps, nextProps) => {
   // Custom comparison for React.memo
+  // Must include onPress to handle callback updates, and images to handle async image loading
+  const imagesEqual =
+    prevProps.property.images?.length === nextProps.property.images?.length &&
+    prevProps.property.images?.[0]?.url === nextProps.property.images?.[0]?.url;
+
   return (
     prevProps.property.id === nextProps.property.id &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.compact === nextProps.compact &&
     prevProps.property.arv === nextProps.property.arv &&
-    prevProps.property.address === nextProps.property.address
+    prevProps.property.address === nextProps.property.address &&
+    prevProps.property.status === nextProps.property.status &&
+    prevProps.property.propertyType === nextProps.property.propertyType &&
+    prevProps.property.bedrooms === nextProps.property.bedrooms &&
+    prevProps.property.bathrooms === nextProps.property.bathrooms &&
+    prevProps.property.square_feet === nextProps.property.square_feet &&
+    prevProps.onPress === nextProps.onPress &&
+    imagesEqual
   );
 });
 

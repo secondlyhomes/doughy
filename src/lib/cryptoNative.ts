@@ -113,19 +113,21 @@ export async function encrypt(plaintext: string): Promise<string> {
     const ivB64 = iv.toString(CryptoJS.enc.Base64);
     const ctB64 = encrypted.ciphertext.toString(CryptoJS.enc.Base64);
 
-    // Generate HMAC for authentication
+    // Validate key is valid hex before parsing
+    if (!/^[0-9a-fA-F]+$/.test(key)) {
+      throw new Error('Invalid key format: must be hexadecimal');
+    }
+
+    // Generate HMAC for authentication using proper HMAC-SHA256 primitive
     const dataToAuth = `${saltB64}:${ivB64}:${ctB64}`;
-    const hmac = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      `${key}:${dataToAuth}`,
-      { encoding: Crypto.CryptoEncoding.HEX }
-    );
+    const hmac = CryptoJS.HmacSHA256(dataToAuth, CryptoJS.enc.Hex.parse(key)).toString(CryptoJS.enc.Hex);
 
     // Return v2 format: v2:salt:iv:ciphertext:hmac
     return `v2:${saltB64}:${ivB64}:${ctB64}:${hmac}`;
   } catch (error) {
     // Only log detailed errors in development to prevent information leakage
-    if (__DEV__) {
+    // Safe check for __DEV__ existence in all contexts
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
       console.error('Encryption error:', error);
     } else {
       console.error('Encryption failed');
@@ -171,6 +173,11 @@ export async function decrypt(ciphertext: string): Promise<string> {
   try {
     // Handle legacy DEV. prefix format (INSECURE - base64 only)
     if (ciphertext.startsWith('DEV.')) {
+      // CRITICAL: Block insecure DEV format in production builds
+      // Safe check for __DEV__ existence in all contexts
+      if (typeof __DEV__ === 'undefined' || !__DEV__) {
+        throw new Error('Insecure encryption format not allowed in production');
+      }
       console.warn('Decrypting legacy DEV. format (INSECURE). Re-encrypt immediately.');
       const base64Data = ciphertext.slice(4);
       const wordArray = CryptoJS.enc.Base64.parse(base64Data);
@@ -193,13 +200,9 @@ export async function decrypt(ciphertext: string): Promise<string> {
       const salt = CryptoJS.enc.Base64.parse(saltB64);
       const key = await deriveKeyPBKDF2(secret, salt);
 
-      // Verify HMAC
+      // Verify HMAC using proper HMAC-SHA256 primitive
       const dataToAuth = `${saltB64}:${ivB64}:${ctB64}`;
-      const expectedHmac = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        `${key}:${dataToAuth}`,
-        { encoding: Crypto.CryptoEncoding.HEX }
-      );
+      const expectedHmac = CryptoJS.HmacSHA256(dataToAuth, CryptoJS.enc.Hex.parse(key)).toString(CryptoJS.enc.Hex);
 
       // Use constant-time comparison to prevent timing attacks
       if (!timingSafeEqual(receivedHmac, expectedHmac)) {
@@ -235,13 +238,9 @@ export async function decrypt(ciphertext: string): Promise<string> {
     // Use legacy SHA-256 key derivation for v1 format
     const key = await deriveKeyLegacy(secret);
 
-    // Verify HMAC
+    // Verify HMAC using proper HMAC-SHA256 primitive
     const dataToAuth = `${ivB64}:${ctB64}`;
-    const expectedHmac = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      `${key}:${dataToAuth}`,
-      { encoding: Crypto.CryptoEncoding.HEX }
-    );
+    const expectedHmac = CryptoJS.HmacSHA256(dataToAuth, CryptoJS.enc.Hex.parse(key)).toString(CryptoJS.enc.Hex);
 
     // Use constant-time comparison to prevent timing attacks
     if (!timingSafeEqual(receivedHmac, expectedHmac)) {
@@ -265,7 +264,7 @@ export async function decrypt(ciphertext: string): Promise<string> {
     return decrypted.toString(CryptoJS.enc.Utf8);
   } catch (error) {
     // Only log detailed errors in development to prevent information leakage
-    if (__DEV__) {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
       console.error('Decryption error:', error);
     } else {
       console.error('Decryption failed');

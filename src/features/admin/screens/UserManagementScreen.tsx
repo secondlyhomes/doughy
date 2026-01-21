@@ -16,13 +16,68 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
 import { SPACING } from '@/constants/design-tokens';
+import { useDebounce } from '@/hooks/useDebounce';
 import { getUsers, getRoleLabel, isAdminRole, type AdminUser, type UserFilters, type UserRole } from '../services/userService';
 
 // Spacing constants for floating search bar
-const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 48 + SPACING.xs; // ~60px (pt-2 + searchbar + pb-1)
+const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs; // ~52px (pt-2 + searchbar + pb-1)
 const FILTER_PILLS_HEIGHT = 40; // Approximate height of filter pills row
 const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
 const COUNT_TEXT_HEIGHT = 20; // Height for count text line
+
+interface UserRowItemProps {
+  user: AdminUser;
+  onPress: (user: AdminUser) => void;
+}
+
+const UserRowItem = React.memo(function UserRowItem({ user, onPress }: UserRowItemProps) {
+  const colors = useThemeColors();
+
+  const getStatusColor = (isDeleted: boolean) => {
+    return isDeleted ? colors.destructive : colors.success;
+  };
+
+  const handlePress = useCallback(() => {
+    onPress(user);
+  }, [onPress, user]);
+
+  return (
+    <TouchableOpacity
+      className="flex-row items-center p-4"
+      style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderColor: colors.border }}
+      onPress={handlePress}
+    >
+      <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary + '1A' }}>
+        <User size={24} color={colors.info} />
+      </View>
+      <View className="flex-1 ml-3">
+        <View className="flex-row items-center">
+          <Text className="font-medium" style={{ color: colors.foreground }}>
+            {user.name || 'No Name'}
+          </Text>
+          {isAdminRole(user.role) && (
+            <Shield size={14} color={colors.primary} style={{ marginLeft: 4 }} />
+          )}
+        </View>
+        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{user.email}</Text>
+        <View className="flex-row items-center mt-1">
+          <View
+            className="w-2 h-2 rounded-full mr-1"
+            style={{ backgroundColor: getStatusColor(user.isDeleted) }}
+          />
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+            {user.isDeleted ? 'Deleted' : 'Active'}
+          </Text>
+          <Text className="text-xs mx-2" style={{ color: colors.mutedForeground }}>•</Text>
+          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+            {getRoleLabel(user.role)}
+          </Text>
+        </View>
+      </View>
+      <ChevronRight size={20} color={colors.mutedForeground} />
+    </TouchableOpacity>
+  );
+});
 
 export function UserManagementScreen() {
   const router = useRouter();
@@ -34,6 +89,7 @@ export function UserManagementScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [filters, setFilters] = useState<UserFilters>({
     role: 'all',
     includeDeleted: false,
@@ -49,7 +105,7 @@ export function UserManagementScreen() {
 
     const result = await getUsers({
       ...currentFilters,
-      search: search || undefined,
+      search: debouncedSearch || undefined,
     });
 
     if (result.success && result.users) {
@@ -60,12 +116,21 @@ export function UserManagementScreen() {
       }
       setTotal(result.total || 0);
     }
-  }, [filters, search]);
+  }, [filters, debouncedSearch]);
 
+  // Initial load and filter changes
   useEffect(() => {
     setIsLoading(true);
     loadUsers(true).finally(() => setIsLoading(false));
   }, [loadUsers]);
+
+  // Reset pagination when debounced search changes
+  useEffect(() => {
+    // Only reset if not initial render (filters.page > 1 or has been loaded)
+    if (!isLoading) {
+      setFilters((prev) => ({ ...prev, page: 1 }));
+    }
+  }, [debouncedSearch]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -74,11 +139,12 @@ export function UserManagementScreen() {
     setIsRefreshing(false);
   }, [loadUsers]);
 
+  // Immediate search on explicit submit (Enter key)
+  // Note: Typing already triggers search via debounce after 300ms
   const handleSearch = useCallback(() => {
+    // Reset pagination and trigger immediate search
     setFilters((prev) => ({ ...prev, page: 1 }));
-    setIsLoading(true);
-    loadUsers(true).finally(() => setIsLoading(false));
-  }, [loadUsers]);
+  }, []);
 
   const handleLoadMore = useCallback(() => {
     if (users.length < total) {
@@ -91,46 +157,11 @@ export function UserManagementScreen() {
     router.push(`/(admin)/users/${user.id}`);
   }, [router]);
 
-  const getStatusColor = (isDeleted: boolean) => {
-    return isDeleted ? colors.destructive : colors.success;
-  };
+  const renderUser = useCallback(({ item }: { item: AdminUser }) => (
+    <UserRowItem user={item} onPress={handleUserPress} />
+  ), [handleUserPress]);
 
-  const renderUser = ({ item }: { item: AdminUser }) => (
-    <TouchableOpacity
-      className="flex-row items-center p-4"
-      style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderColor: colors.border }}
-      onPress={() => handleUserPress(item)}
-    >
-      <View className="w-12 h-12 rounded-full items-center justify-center" style={{ backgroundColor: colors.primary + '1A' }}>
-        <User size={24} color={colors.info} />
-      </View>
-      <View className="flex-1 ml-3">
-        <View className="flex-row items-center">
-          <Text className="font-medium" style={{ color: colors.foreground }}>
-            {item.name || 'No Name'}
-          </Text>
-          {isAdminRole(item.role) && (
-            <Shield size={14} color={colors.primary} style={{ marginLeft: 4 }} />
-          )}
-        </View>
-        <Text className="text-sm" style={{ color: colors.mutedForeground }}>{item.email}</Text>
-        <View className="flex-row items-center mt-1">
-          <View
-            className="w-2 h-2 rounded-full mr-1"
-            style={{ backgroundColor: getStatusColor(item.isDeleted) }}
-          />
-          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-            {item.isDeleted ? 'Deleted' : 'Active'}
-          </Text>
-          <Text className="text-xs mx-2" style={{ color: colors.mutedForeground }}>•</Text>
-          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-            {getRoleLabel(item.role)}
-          </Text>
-        </View>
-      </View>
-      <ChevronRight size={20} color={colors.mutedForeground} />
-    </TouchableOpacity>
-  );
+  const keyExtractor = useCallback((item: AdminUser) => item.id, []);
 
   // Calculate dynamic padding based on filter visibility and count text
   const listPaddingTop =
@@ -187,7 +218,7 @@ export function UserManagementScreen() {
             value={search}
             onChangeText={setSearch}
             placeholder="Search users..."
-            size="lg"
+            size="md"
             onSubmit={handleSearch}
             glass={true}
             onFilter={() => setShowFilters(!showFilters)}
@@ -246,7 +277,7 @@ export function UserManagementScreen() {
       {/* User List - content scrolls beneath search bar */}
       <FlatList
         data={users}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         renderItem={renderUser}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
@@ -257,6 +288,11 @@ export function UserManagementScreen() {
           paddingTop: listPaddingTop,
           paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
         }}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={10}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center py-24">
             <User size={48} color={colors.mutedForeground} />
@@ -274,7 +310,7 @@ interface FilterPillProps {
   onPress: () => void;
 }
 
-function FilterPill({ label, active, onPress }: FilterPillProps) {
+const FilterPill = React.memo(function FilterPill({ label, active, onPress }: FilterPillProps) {
   const colors = useThemeColors();
   return (
     <TouchableOpacity
@@ -290,4 +326,4 @@ function FilterPill({ label, active, onPress }: FilterPillProps) {
       </Text>
     </TouchableOpacity>
   );
-}
+});

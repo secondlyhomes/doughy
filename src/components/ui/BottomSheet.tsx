@@ -1,6 +1,6 @@
 // src/components/ui/BottomSheet.tsx
 // React Native Bottom Sheet component with NativeWind styling and glass effects
-import React from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import {
   Modal as RNModal,
   View,
@@ -19,8 +19,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
 import { SPACING } from '@/constants/design-tokens';
+import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop, GlassView } from './GlassView';
 import { getBackdropColor } from '@/lib/design-utils';
+import { haptic } from '@/lib/haptics';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -30,6 +32,8 @@ export interface BottomSheetProps {
   children?: React.ReactNode;
   closeOnBackdropPress?: boolean;
   title?: string;
+  /** Subtitle text displayed below the title in the header */
+  subtitle?: string;
   maxHeight?: number | 'auto';
   /** Snap points as percentage strings (e.g., ['50%', '85%']). First value is used for maxHeight. */
   snapPoints?: string[];
@@ -45,6 +49,7 @@ export function BottomSheet({
   children,
   closeOnBackdropPress = true,
   title,
+  subtitle,
   maxHeight = SCREEN_HEIGHT * 0.7,
   snapPoints,
   useGlass = true,
@@ -53,6 +58,26 @@ export function BottomSheet({
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const keyboardProps = useKeyboardAvoidance({
+    hasTabBar: false,
+    hasNavigationHeader: false,
+  });
+
+  // Trigger haptic feedback when sheet opens
+  useEffect(() => {
+    if (visible) {
+      haptic.light();
+    }
+  }, [visible]);
+
+
+  // Handle close with haptic feedback
+  const handleClose = useCallback(() => {
+    haptic.light();
+    onClose();
+  }, [onClose]);
+
   // Calculate maxHeight from snapPoints if provided
   const calculatedMaxHeight = React.useMemo(() => {
     if (snapPoints && snapPoints.length > 0) {
@@ -73,15 +98,24 @@ export function BottomSheet({
       </View>
 
       {/* Header */}
-      {title && (
+      {(title || subtitle) && (
         <View
           style={[bottomSheetStyles.header, { borderBottomColor: colors.border }]}
         >
-          <Text style={{ fontSize: 18, fontWeight: '600', color: colors.foreground }}>
-            {title}
-          </Text>
+          <View style={bottomSheetStyles.headerTitles}>
+            {title && (
+              <Text style={{ fontSize: 18, fontWeight: '600', color: colors.foreground, textAlign: 'center' }}>
+                {title}
+              </Text>
+            )}
+            {subtitle && (
+              <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginTop: 2 }}>
+                {subtitle}
+              </Text>
+            )}
+          </View>
           <TouchableOpacity
-            onPress={onClose}
+            onPress={handleClose}
             style={bottomSheetStyles.closeButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             accessibilityRole="button"
@@ -94,8 +128,11 @@ export function BottomSheet({
 
       {/* Content */}
       <ScrollView
+        ref={scrollViewRef}
         style={bottomSheetStyles.scrollView}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
         contentContainerStyle={{ paddingBottom: insets.bottom + SPACING.lg }}
       >
         {children}
@@ -146,9 +183,9 @@ export function BottomSheet({
   const renderBackdrop = () => {
     const content = (
       <TouchableWithoutFeedback
-        onPress={closeOnBackdropPress ? onClose : undefined}
+        onPress={closeOnBackdropPress ? handleClose : undefined}
       >
-        <View style={bottomSheetStyles.backdropContent}>
+        <View style={bottomSheetStyles.backdropContent} accessibilityViewIsModal={true}>
           {renderSheet()}
         </View>
       </TouchableWithoutFeedback>
@@ -172,12 +209,13 @@ export function BottomSheet({
   return (
     <RNModal
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       transparent
       animationType="slide"
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         style={bottomSheetStyles.container}
       >
         {renderBackdrop()}
@@ -216,11 +254,16 @@ const bottomSheetStyles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
+  },
+  headerTitles: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 32,
   },
   closeButton: {
     padding: 8,

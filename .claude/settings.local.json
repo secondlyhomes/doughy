@@ -159,7 +159,27 @@
       "Bash(./scripts/verify-zone-f.sh:*)",
       "Bash(__NEW_LINE_f43cb12def792f8c__ echo \"=== ANALYSIS OF TABLE NAME ISSUES ===\")",
       "Bash(shellcheck:*)",
-      "mcp__plugin_supabase_supabase__deploy_edge_function"
+      "mcp__plugin_supabase_supabase__deploy_edge_function",
+      "Bash(for f in \"src/features/conversations/components/ConversationsView.tsx\" \"src/features/conversations/hooks/useDealConversations.ts\" \"src/features/deals/services/aiSuggestions.ts\")",
+      "Bash(do echo \"=== $f ===\" node -c \"$f\")",
+      "Bash(git rm:*)",
+      "mcp__plugin_supabase_supabase__generate_typescript_types",
+      "mcp__plugin_supabase_supabase__get_advisors",
+      "Bash(npx expo lint:*)",
+      "Bash(SUPABASE_SERVICE_ROLE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxbWJ5b2J3ZWVhaWdyd212aXpvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU4NDEwOSwiZXhwIjoyMDYwMTYwMTA5fQ.5EpP2pcTw9lHvmaCQeS_9B55CA3TdHWsMoCfEnHmsFU\" npx tsx:*)",
+      "Bash(for file in /Users/dinosaur/Developer/doughy-ai/supabase/migrations/*.sql)",
+      "Bash(do if grep -q \"CREATE TABLE.*re_property_images\\\\|CREATE TABLE.*property_images\" \"$file\")",
+      "Bash(npm outdated)",
+      "Bash(npm audit:*)",
+      "Bash(yarn audit)",
+      "mcp__plugin_supabase_supabase__get_edge_function",
+      "Bash(echo:*)",
+      "Bash(source:*)",
+      "Bash(yarn add:*)",
+      "Bash(git grep:*)",
+      "Bash(for f in /Users/dinosaur/Developer/doughy-ai/supabase/migrations/*.sql)",
+      "Bash(do if grep -q \"property_images\\\\|property_id.*url\" \"$f\")",
+      "Bash(then echo \"File: $f\")"
     ]
   }
 }

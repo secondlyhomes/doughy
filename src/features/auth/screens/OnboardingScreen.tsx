@@ -7,7 +7,6 @@ import {
   Text,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -15,6 +14,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
@@ -33,6 +33,7 @@ const STEPS: SurveyStep[] = ['referralSource', 'primaryUseCase', 'experienceLeve
 export function OnboardingScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { refetchProfile } = useAuth();
   const { canViewAdminPanel } = usePermissions();
 
@@ -105,7 +106,8 @@ export function OnboardingScreen() {
   return (
     <ThemedSafeAreaView className="flex-1">
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
       >
         {/* Header */}

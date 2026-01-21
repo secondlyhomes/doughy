@@ -1,9 +1,11 @@
 // src/components/ui/Button.tsx
 // React Native Button component with inline styles for dark mode support
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
+import { haptic } from '@/lib/haptics';
+import { PRESS_OPACITY, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
 
 type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';
@@ -18,6 +20,10 @@ export interface ButtonProps {
   className?: string;
   textClassName?: string;
   style?: ViewStyle;
+  /** Enable haptic feedback on press (default: true) */
+  enableHaptics?: boolean;
+  /** Accessibility label for screen readers */
+  accessibilityLabel?: string;
 }
 
 export function Button({
@@ -30,9 +36,26 @@ export function Button({
   className,
   textClassName,
   style,
+  enableHaptics = true,
+  accessibilityLabel,
 }: ButtonProps) {
   const colors = useThemeColors();
   const isDisabled = disabled || loading;
+
+  const handlePress = useCallback(() => {
+    if (isDisabled || !onPress) return;
+
+    if (enableHaptics) {
+      // Use medium haptic for destructive actions, light for others
+      if (variant === 'destructive') {
+        haptic.medium();
+      } else {
+        haptic.light();
+      }
+    }
+
+    onPress();
+  }, [isDisabled, onPress, enableHaptics, variant]);
 
   const getBackgroundColor = () => {
     switch (variant) {
@@ -111,17 +134,24 @@ export function Button({
         },
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (
         <ActivityIndicator color={getSpinnerColor()} size="small" />
       ) : typeof children === 'string' ? (
         <Text
-          className={cn('text-sm font-medium', textClassName)}
+          className={cn('font-medium', textClassName)}
           style={[
-            { color: getTextColor() },
+            {
+              color: getTextColor(),
+              fontSize: FONT_SIZES.sm,
+              lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.tight,
+            },
             variant === 'link' && styles.linkText,
           ]}
         >
@@ -131,9 +161,13 @@ export function Button({
         React.Children.map(children, (child) =>
           typeof child === 'string' ? (
             <Text
-              className={cn('text-sm font-medium', textClassName)}
+              className={cn('font-medium', textClassName)}
               style={[
-                { color: getTextColor() },
+                {
+                  color: getTextColor(),
+                  fontSize: FONT_SIZES.sm,
+                  lineHeight: FONT_SIZES.sm * LINE_HEIGHTS.tight,
+                },
                 variant === 'link' && styles.linkText,
               ]}
             >
