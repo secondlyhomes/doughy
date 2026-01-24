@@ -5,7 +5,7 @@ import React, { useCallback, useState, useMemo } from 'react';
 import { View, Text, SectionList, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Briefcase, Plus, Search, FolderPlus, ChevronDown, ChevronRight } from 'lucide-react-native';
+import { Briefcase, Search, FolderPlus, ChevronDown, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { SimpleFAB, SearchBar, TAB_BAR_SAFE_PADDING, ListEmptyState, BottomSheet, BottomSheetSection, Button } from '@/components/ui';
@@ -376,7 +376,6 @@ export function PortfolioScreen() {
 
       {/* Add Property FAB */}
       <SimpleFAB
-        icon={<Plus size={24} color="white" />}
         onPress={handleAddProperty}
         accessibilityLabel="Add property to portfolio"
       />
