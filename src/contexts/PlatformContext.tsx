@@ -97,9 +97,11 @@ export function PlatformProvider({
         .single();
 
       if (dbError) {
-        // If no settings exist yet, that's okay - we'll create them when needed
+        // PGRST116 = no rows found - that's okay, we'll create settings when needed
         if (dbError.code !== 'PGRST116') {
-          console.warn('Error fetching platform settings:', dbError);
+          // For real errors (connection, permission, etc.), surface to user
+          console.error('Error fetching platform settings:', dbError);
+          setError('Failed to sync platform settings. Some settings may not persist across devices.');
         }
         return;
       }
@@ -116,6 +118,7 @@ export function PlatformProvider({
       }
     } catch (err) {
       console.error('Error syncing platform settings from database:', err);
+      setError(err instanceof Error ? err.message : 'Failed to sync platform settings');
     }
   };
 

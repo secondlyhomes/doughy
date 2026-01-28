@@ -61,17 +61,27 @@ export function NotificationsSettingsScreen() {
   // Load saved settings
   useEffect(() => {
     const loadSettings = async () => {
-      const saved = await AsyncStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
-      if (saved) {
-        setSettings({ ...defaultSettings, ...JSON.parse(saved) });
+      try {
+        const saved = await AsyncStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
+        if (saved) {
+          setSettings({ ...defaultSettings, ...JSON.parse(saved) });
+        }
+      } catch (error) {
+        console.error('Failed to load notification settings:', error);
+        // Settings will use defaults, which is acceptable
       }
     };
     loadSettings();
   }, []);
 
   const saveSettings = useCallback(async (newSettings: NotificationSettings) => {
-    setSettings(newSettings);
-    await AsyncStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(newSettings));
+    setSettings(newSettings); // Optimistic update
+    try {
+      await AsyncStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(newSettings));
+    } catch (error) {
+      console.error('Failed to save notification settings:', error);
+      Alert.alert('Error', 'Failed to save your notification preferences. Please try again.');
+    }
   }, []);
 
   const handleToggle = useCallback(

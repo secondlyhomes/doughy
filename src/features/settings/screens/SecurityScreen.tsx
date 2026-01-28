@@ -44,14 +44,26 @@ export function SecurityScreen() {
   useEffect(() => {
     const loadMFAStatus = async () => {
       setIsLoading(true);
-      const enabled = await isMFAEnabled();
-      setMfaEnabled(enabled);
+      try {
+        const enabled = await isMFAEnabled();
+        setMfaEnabled(enabled);
 
-      const factorsResult = await listMFAFactors();
-      if (factorsResult.success && factorsResult.factors) {
-        setMfaFactors(factorsResult.factors);
+        const factorsResult = await listMFAFactors();
+        if (factorsResult.success && factorsResult.factors) {
+          setMfaFactors(factorsResult.factors);
+        } else if (!factorsResult.success) {
+          console.error('Failed to load MFA factors:', factorsResult.error);
+          Alert.alert(
+            'Warning',
+            'Could not load your security settings. Some information may be incomplete.'
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load MFA status:', error);
+        Alert.alert('Error', 'Failed to load security settings. Please try again.');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     loadMFAStatus();

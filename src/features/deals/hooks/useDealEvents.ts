@@ -16,33 +16,27 @@ async function fetchDealEvents(dealId: string): Promise<DealEvent[]> {
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
-  try {
-    // Query deal_events - works for both mock and real Supabase
-    const { data, error } = await (supabase as any)
-      .from('deal_events')
-      .select('*')
-      .eq('deal_id', dealId)
-      .order('created_at', { ascending: false });
+  // Query deal_events - works for both mock and real Supabase
+  const { data, error } = await (supabase as any)
+    .from('deal_events')
+    .select('*')
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false });
 
-    if (error) {
-      // Log the actual error for debugging
-      console.warn('[DealEvents] Query error:', error.message || error);
-
-      // If table doesn't exist in real mode, return empty array gracefully
-      if (error.message?.includes('does not exist') || error.code === '42P01') {
-        console.warn('[DealEvents] Table may not exist yet - returning empty array');
-        return [];
-      }
-
-      throw error;
+  if (error) {
+    // If table doesn't exist in real mode, return empty array gracefully
+    // This is a justified fallback for schema migration scenarios
+    if (error.message?.includes('does not exist') || error.code === '42P01') {
+      console.warn('[DealEvents] Table may not exist yet - returning empty array');
+      return [];
     }
 
-    return (data as DealEvent[]) || [];
-  } catch (err) {
-    console.error('[DealEvents] Fetch error:', err);
-    // Return empty array instead of crashing to allow the UI to render
-    return [];
+    // For all other errors, throw to let React Query handle with proper error state
+    console.error('[DealEvents] Query error:', error.message || error);
+    throw error;
   }
+
+  return (data as DealEvent[]) || [];
 }
 
 async function createDealEvent(event: Omit<DealEvent, 'id' | 'created_at'>): Promise<DealEvent> {

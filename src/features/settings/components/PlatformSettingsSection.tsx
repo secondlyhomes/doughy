@@ -91,7 +91,9 @@ export function PlatformSettingsSection({ className }: PlatformSettingsSectionPr
           await disablePlatform(platform);
         }
       } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to update platform setting';
         console.error('Error toggling platform:', err);
+        Alert.alert('Error', message);
       } finally {
         setIsToggling(null);
       }

@@ -543,12 +543,15 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               reviewed_at: reviewedAt,
             });
           } catch (outcomeError) {
-            // Log as error for visibility - adaptive learning data loss should be tracked
-            console.error('[AdaptiveLearning] Failed to log approval outcome:', {
+            // CRITICAL: Adaptive learning data loss should be tracked
+            // TODO: Replace with Sentry/logError when error tracking is set up
+            console.error('[AdaptiveLearning] CRITICAL - Failed to log approval outcome:', {
               error: outcomeError instanceof Error ? outcomeError.message : String(outcomeError),
+              stack: outcomeError instanceof Error ? outcomeError.stack : undefined,
               userId: response.user_id,
               conversationId: response.conversation_id,
               outcome: status,
+              context: 'This data loss affects AI learning quality and should be investigated',
             });
           }
 
@@ -616,12 +619,15 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                 reviewed_at: reviewedAt,
               });
             } catch (outcomeError) {
-              // Log as error for visibility - adaptive learning data loss should be tracked
-              console.error('[AdaptiveLearning] Failed to log rejection outcome:', {
+              // CRITICAL: Adaptive learning data loss should be tracked
+              // TODO: Replace with Sentry/logError when error tracking is set up
+              console.error('[AdaptiveLearning] CRITICAL - Failed to log rejection outcome:', {
                 error: outcomeError instanceof Error ? outcomeError.message : String(outcomeError),
+                stack: outcomeError instanceof Error ? outcomeError.stack : undefined,
                 userId: response.user_id,
                 conversationId: response.conversation_id,
                 outcome: 'rejected',
+                context: 'This data loss affects AI learning quality and should be investigated',
               });
             }
           }
