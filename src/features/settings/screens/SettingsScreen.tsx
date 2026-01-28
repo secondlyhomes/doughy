@@ -27,6 +27,7 @@ import {
   Settings,
   Focus,
   Clock,
+  Bot,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
@@ -36,6 +37,7 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
 import { PlatformSettingsSection } from '../components/PlatformSettingsSection';
 import { DevSeederSection } from '../components/DevSeederSection';
+import { useLandlordSettingsStore, selectIsLandlordEnabled } from '@/stores/landlord-settings-store';
 
 export function SettingsScreen() {
   const router = useRouter();
@@ -48,6 +50,9 @@ export function SettingsScreen() {
 
   // Focus Mode from context (synced across all screens)
   const { focusMode, setFocusMode } = useFocusMode();
+
+  // Check if landlord platform is enabled
+  const isLandlordEnabled = useLandlordSettingsStore(selectIsLandlordEnabled);
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -150,6 +155,25 @@ export function SettingsScreen() {
         <View className="p-4">
           <PlatformSettingsSection />
         </View>
+
+        {/* Landlord AI Settings - Only visible when landlord platform is enabled */}
+        {isLandlordEnabled && (
+          <View className="p-4">
+            <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
+              LANDLORD AI
+            </Text>
+
+            <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+              <SettingsItem
+                icon={<Bot size={20} color={colors.primary} />}
+                title="AI Communication"
+                subtitle="Configure how AI handles guest messages"
+                onPress={() => router.push('/(tabs)/settings/ai-communication')}
+                hideBorder
+              />
+            </View>
+          </View>
+        )}
 
         {/* Account Settings */}
         <View className="p-4">

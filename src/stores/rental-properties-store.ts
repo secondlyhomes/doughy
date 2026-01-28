@@ -8,9 +8,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 
 // Types based on Contract A from architecture doc
+// These must match the database enum values exactly
 export type PropertyType = 'single_family' | 'multi_family' | 'condo' | 'apartment' | 'townhouse' | 'room';
 export type RentalType = 'str' | 'mtr' | 'ltr';
-export type RateType = 'nightly' | 'weekly' | 'monthly' | 'yearly';
+// Database only has: nightly, weekly, monthly (no 'yearly')
+export type RateType = 'nightly' | 'weekly' | 'monthly';
 export type PropertyStatus = 'active' | 'inactive' | 'maintenance';
 
 export interface RentalProperty {
@@ -20,12 +22,13 @@ export interface RentalProperty {
   address: string;
   city: string;
   state: string;
-  zip: string | null;
+  zip: string;
   property_type: PropertyType;
   rental_type: RentalType;
   bedrooms: number;
   bathrooms: number;
-  sqft: number | null;
+  // Database column is 'square_feet' not 'sqft'
+  square_feet: number | null;
   base_rate: number;
   rate_type: RateType;
   cleaning_fee: number | null;
@@ -33,14 +36,12 @@ export interface RentalProperty {
   room_by_room_enabled: boolean;
   amenities: string[];
   house_rules: Record<string, unknown>;
-  check_in_instructions: Record<string, unknown>;
   listing_urls: {
     furnishedfinder?: string;
     airbnb?: string;
     turbotenant?: string;
   };
   status: PropertyStatus;
-  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

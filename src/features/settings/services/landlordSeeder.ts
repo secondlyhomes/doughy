@@ -25,7 +25,13 @@ async function getUserId(): Promise<string> {
 // Clear All Landlord Data
 // ============================================
 
-export async function clearAllLandlordData(): Promise<void> {
+export interface ClearDataResult {
+  success: boolean;
+  errors: { table: string; message: string }[];
+}
+
+export async function clearAllLandlordData(): Promise<ClearDataResult> {
+  const errors: { table: string; message: string }[] = [];
   const userId = await getUserId();
 
   // Get conversation IDs first for deleting messages
@@ -43,16 +49,40 @@ export async function clearAllLandlordData(): Promise<void> {
   const propertyIds = properties?.map(p => p.id) || [];
 
   // Delete in order to respect foreign keys
+  // Collect all errors but continue to delete as much as possible
   if (conversationIds.length > 0) {
-    await supabase.from('rental_messages').delete().in('conversation_id', conversationIds);
+    const { error: messagesError } = await supabase.from('rental_messages').delete().in('conversation_id', conversationIds);
+    if (messagesError) {
+      errors.push({ table: 'rental_messages', message: messagesError.message });
+    }
   }
-  await supabase.from('rental_ai_queue').delete().eq('user_id', userId);
-  await supabase.from('rental_conversations').delete().eq('user_id', userId);
-  await supabase.from('rental_bookings').delete().eq('user_id', userId);
+
+  const { error: aiQueueError } = await supabase.from('rental_ai_queue').delete().eq('user_id', userId);
+  if (aiQueueError) {
+    errors.push({ table: 'rental_ai_queue', message: aiQueueError.message });
+  }
+
+  const { error: conversationsError } = await supabase.from('rental_conversations').delete().eq('user_id', userId);
+  if (conversationsError) {
+    errors.push({ table: 'rental_conversations', message: conversationsError.message });
+  }
+
+  const { error: bookingsError } = await supabase.from('rental_bookings').delete().eq('user_id', userId);
+  if (bookingsError) {
+    errors.push({ table: 'rental_bookings', message: bookingsError.message });
+  }
+
   if (propertyIds.length > 0) {
-    await supabase.from('rental_rooms').delete().in('property_id', propertyIds);
+    const { error: roomsError } = await supabase.from('rental_rooms').delete().in('property_id', propertyIds);
+    if (roomsError) {
+      errors.push({ table: 'rental_rooms', message: roomsError.message });
+    }
   }
-  await supabase.from('rental_properties').delete().eq('user_id', userId);
+
+  const { error: propertiesError } = await supabase.from('rental_properties').delete().eq('user_id', userId);
+  if (propertiesError) {
+    errors.push({ table: 'rental_properties', message: propertiesError.message });
+  }
 
   // Clear contacts - need to bypass soft delete trigger
   // The crm_contacts table has a soft_delete trigger that converts DELETE to UPDATE is_deleted=true
@@ -64,39 +94,49 @@ export async function clearAllLandlordData(): Promise<void> {
       .eq('user_id', userId);
 
     if (fetchError) {
-      console.warn('Could not fetch contacts:', fetchError.message);
-      return; // Don't fail, other data was cleared
-    }
+      errors.push({ table: 'crm_contacts', message: `Failed to fetch: ${fetchError.message}` });
+    } else {
+      // Filter to landlord-specific contacts (guest, tenant, or lead)
+      const landlordContactIds = (contacts || [])
+        .filter(c => {
+          const types = c.contact_types || [];
+          return types.includes('guest') || types.includes('tenant') || types.includes('lead');
+        })
+        .map(c => c.id);
 
-    // Filter to landlord-specific contacts (guest, tenant, or lead)
-    const landlordContactIds = (contacts || [])
-      .filter(c => {
-        const types = c.contact_types || [];
-        return types.includes('guest') || types.includes('tenant') || types.includes('lead');
-      })
-      .map(c => c.id);
+      if (landlordContactIds.length > 0) {
+        // Step 1: Mark as soft-deleted first (this bypasses the trigger on actual DELETE)
+        const { error: softDeleteError } = await supabase
+          .from('crm_contacts')
+          .update({ is_deleted: true })
+          .in('id', landlordContactIds);
 
-    if (landlordContactIds.length > 0) {
-      // Step 1: Mark as soft-deleted first (this bypasses the trigger on actual DELETE)
-      await supabase
-        .from('crm_contacts')
-        .update({ is_deleted: true })
-        .in('id', landlordContactIds);
+        if (softDeleteError) {
+          errors.push({ table: 'crm_contacts', message: `Soft delete failed: ${softDeleteError.message}` });
+        } else {
+          // Step 2: Now DELETE will actually remove the rows (trigger won't fire when is_deleted=true)
+          const { error: deleteError } = await supabase
+            .from('crm_contacts')
+            .delete()
+            .in('id', landlordContactIds);
 
-      // Step 2: Now DELETE will actually remove the rows (trigger won't fire when is_deleted=true)
-      const { error: deleteError } = await supabase
-        .from('crm_contacts')
-        .delete()
-        .in('id', landlordContactIds);
-
-      if (deleteError) {
-        console.warn('Could not hard delete contacts:', deleteError.message);
-        // Don't throw - contacts are at least soft-deleted
+          if (deleteError) {
+            errors.push({ table: 'crm_contacts', message: `Hard delete failed: ${deleteError.message}` });
+          }
+        }
       }
     }
   } catch (err) {
-    console.warn('Contact deletion skipped due to database issue:', err);
+    errors.push({ table: 'crm_contacts', message: err instanceof Error ? err.message : 'Unknown error' });
   }
+
+  // Return detailed result
+  if (errors.length > 0) {
+    console.error('Errors during data clearing:', errors);
+    throw new Error(`Failed to clear some data: ${errors.map(e => `${e.table}: ${e.message}`).join('; ')}`);
+  }
+
+  return { success: true, errors: [] };
 }
 
 // ============================================

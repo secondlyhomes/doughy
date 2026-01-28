@@ -7,8 +7,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 
-// Room status types
-export type RoomStatus = 'available' | 'occupied' | 'hold' | 'maintenance' | 'unavailable';
+// Room status types - must match database enum (no 'hold' status)
+export type RoomStatus = 'available' | 'occupied' | 'maintenance' | 'unavailable';
 
 // Room interface based on Contract A from architecture doc
 export interface Room {

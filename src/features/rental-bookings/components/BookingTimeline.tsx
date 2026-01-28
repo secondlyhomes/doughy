@@ -10,7 +10,6 @@ import {
   Home,
   LogOut,
   XCircle,
-  Pause,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -37,7 +36,6 @@ const STATUS_STEPS: StatusStep[] = [
 const STATUS_ORDER: Record<BookingStatus, number> = {
   inquiry: 0,
   pending: 1,
-  hold: 1.5, // Same level as pending
   confirmed: 2,
   active: 3,
   completed: 4,
@@ -103,70 +101,6 @@ export function BookingTimeline({
             {booking.cancelled_at && (
               <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                 {formatDateTime(booking.cancelled_at)}
-              </Text>
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  // Handle hold status specially
-  if (booking.status === 'hold') {
-
-    return (
-      <View className="p-4 rounded-xl" style={{ backgroundColor: colors.card }}>
-        <Text className="text-lg font-semibold mb-4" style={{ color: colors.foreground }}>
-          Booking Status
-        </Text>
-
-        {/* Show inquiry as complete */}
-        <View className="flex-row items-start mb-4">
-          <View className="items-center">
-            <View
-              className="w-10 h-10 rounded-full items-center justify-center"
-              style={{ backgroundColor: withOpacity(colors.success, 'medium') }}
-            >
-              <CheckCircle size={ICON_SIZES.lg} color={colors.success} />
-            </View>
-            <View
-              className="w-0.5 h-8 my-1"
-              style={{ backgroundColor: colors.border }}
-            />
-          </View>
-          <View className="ml-3 flex-1 pt-2">
-            <Text className="text-sm font-medium" style={{ color: colors.success }}>
-              Inquiry Received
-            </Text>
-            {showTimestamps && booking.created_at && (
-              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                {formatDateTime(booking.created_at)}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {/* Show hold as current */}
-        <View className="flex-row items-start">
-          <View className="items-center">
-            <View
-              className="w-10 h-10 rounded-full items-center justify-center"
-              style={{
-                backgroundColor: withOpacity(colors.warning, 'medium'),
-                borderWidth: 2,
-                borderColor: colors.warning,
-              }}
-            >
-              <Pause size={ICON_SIZES.lg} color={colors.warning} />
-            </View>
-          </View>
-          <View className="ml-3 flex-1 pt-2">
-            <Text className="text-sm font-semibold" style={{ color: colors.warning }}>
-              On Hold
-            </Text>
-            {booking.hold_expires_at && (
-              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                Expires: {formatDate(booking.hold_expires_at)}
               </Text>
             )}
           </View>

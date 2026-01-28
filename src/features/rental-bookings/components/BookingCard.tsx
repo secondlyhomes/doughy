@@ -75,8 +75,6 @@ function getStatusVariant(status: BookingStatus) {
       return 'info' as const;
     case 'pending':
       return 'warning' as const;
-    case 'hold':
-      return 'secondary' as const;
     case 'confirmed':
       return 'success' as const;
     case 'active':

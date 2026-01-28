@@ -108,8 +108,6 @@ function getStatusBadgeVariant(status: BookingStatus): 'default' | 'secondary' |
       return 'info';
     case 'pending':
       return 'warning';
-    case 'hold':
-      return 'secondary';
     case 'confirmed':
       return 'success';
     case 'active':

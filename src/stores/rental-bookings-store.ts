@@ -8,14 +8,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 
 // Booking types based on Contract A from architecture doc
+// These must match the database enum values exactly
 export type BookingType = 'reservation' | 'lease';
-export type BookingStatus = 'inquiry' | 'pending' | 'hold' | 'confirmed' | 'active' | 'completed' | 'cancelled';
-export type RateType = 'nightly' | 'weekly' | 'monthly' | 'yearly';
+// Database does NOT have 'hold' status - remove it
+export type BookingStatus = 'inquiry' | 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
+// Database only has: nightly, weekly, monthly (no 'yearly')
+export type RateType = 'nightly' | 'weekly' | 'monthly';
 
 export interface Booking {
   id: string;
   user_id: string;
-  contact_id: string | null;
+  // contact_id is NOT NULL in database, so it must be required
+  contact_id: string;
   property_id: string;
   room_id: string | null;
   booking_type: BookingType;
@@ -27,9 +31,7 @@ export interface Booking {
   total_amount: number | null;
   status: BookingStatus;
   source: string | null;
-  hold_expires_at: string | null;
   notes: string | null;
-  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   confirmed_at: string | null;
@@ -205,7 +207,7 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
               room:rental_rooms!rental_bookings_room_id_fkey(id, name)
             `)
             .gte('start_date', today)
-            .in('status', ['confirmed', 'pending', 'hold'])
+            .in('status', ['confirmed', 'pending'])
             .order('start_date', { ascending: true });
 
           if (error) throw error;
@@ -385,8 +387,9 @@ export const selectBookingById = (id: string) => (state: RentalBookingsState) =>
   state.bookingsWithRelations.find((b) => b.id === id);
 export const selectUpcomingBookings = (state: RentalBookingsState) => {
   const today = new Date().toISOString().split('T')[0];
+  // 'hold' is not a valid database status - only filter by valid statuses
   return state.bookingsWithRelations.filter(
-    (b) => b.start_date >= today && ['confirmed', 'pending', 'hold'].includes(b.status)
+    (b) => b.start_date >= today && ['confirmed', 'pending'].includes(b.status)
   );
 };
 export const selectActiveBookings = (state: RentalBookingsState) =>

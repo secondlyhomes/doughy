@@ -8,13 +8,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 
 // Channel and status types based on Contract A from architecture doc
+// These must match the database enum values exactly
 // Channel types matching rental_channel database enum
 export type Channel = 'whatsapp' | 'telegram' | 'email' | 'sms' | 'imessage' | 'discord' | 'webchat' | 'phone';
 export type ConversationStatus = 'active' | 'resolved' | 'escalated' | 'archived';
 export type MessageDirection = 'inbound' | 'outbound';
-export type ContentType = 'text' | 'image' | 'file' | 'voice' | 'location';
+// Database has 'video' not 'location' for ContentType
+export type ContentType = 'text' | 'image' | 'file' | 'voice' | 'video';
 export type SentBy = 'contact' | 'ai' | 'user';
-export type AIQueueStatus = 'pending' | 'approved' | 'edited' | 'rejected' | 'expired' | 'auto_sent';
+// Database has 'sent' not 'auto_sent' for AIQueueStatus
+export type AIQueueStatus = 'pending' | 'approved' | 'edited' | 'rejected' | 'expired' | 'sent';
 
 // Conversation interface
 export interface Conversation {
@@ -71,6 +74,46 @@ export interface AIResponseQueueItem {
   reviewed_by: string | null;
   expires_at: string;
   created_at: string;
+  // Additional fields for learning context (populated from score_breakdown)
+  message_type?: string;
+  topic?: string;
+  contact_type?: string;
+}
+
+// Edit severity for adaptive learning
+export type EditSeverity = 'none' | 'minor' | 'major';
+
+// AI Outcome types matching database enum
+export type AIOutcome = 'pending' | 'auto_sent' | 'approved' | 'edited' | 'rejected';
+
+// AI Response Outcome for adaptive learning (matches ai_response_outcomes table)
+export interface AIResponseOutcomeInsert {
+  user_id: string;
+  conversation_id: string | null;
+  message_id: string | null;
+  property_id: string | null;
+  contact_id: string | null;
+  message_type: string;
+  topic: string;
+  contact_type: string;
+  channel?: string | null;
+  platform?: string | null;
+  initial_confidence: number;
+  suggested_response: string;
+  final_response?: string | null;
+  outcome: AIOutcome;
+  edit_severity?: EditSeverity;
+  response_time_seconds?: number | null;
+  sensitive_topics_detected?: string[];
+  actions_suggested?: string[];
+  reviewed_at?: string | null;
+}
+
+// Metadata passed with approval for learning
+export interface ApprovalMetadata {
+  editedResponse?: string;
+  editSeverity: EditSeverity;
+  responseTimeSeconds: number;
 }
 
 // Conversation with related data for display
@@ -126,8 +169,8 @@ export interface RentalConversationsState {
 
   // Actions - AI Queue
   fetchPendingResponses: () => Promise<void>;
-  approveResponse: (id: string, editedResponse?: string) => Promise<boolean>;
-  rejectResponse: (id: string) => Promise<boolean>;
+  approveResponse: (id: string, metadata: ApprovalMetadata) => Promise<boolean>;
+  rejectResponse: (id: string, responseTimeSeconds: number) => Promise<boolean>;
 
   // Filter actions
   setStatusFilter: (status: ConversationStatus | 'all') => void;
@@ -393,24 +436,99 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         }
       },
 
-      approveResponse: async (id: string, editedResponse?: string) => {
+      approveResponse: async (id: string, metadata: ApprovalMetadata) => {
         try {
+          // Check if the response has expired before approving
+          const { pendingResponses } = get();
+          const response = pendingResponses.find((p) => p.id === id);
+
+          if (!response) {
+            set({ error: 'Response not found' });
+            return false;
+          }
+
+          const expiresAt = new Date(response.expires_at);
+          const now = new Date();
+          if (expiresAt < now) {
+            set({ error: 'Cannot approve: response has expired' });
+            // Remove expired response from local state
+            set((state) => ({
+              pendingResponses: state.pendingResponses.filter((p) => p.id !== id),
+            }));
+            return false;
+          }
+
+          const { editedResponse, editSeverity, responseTimeSeconds } = metadata;
           const status = editedResponse ? 'edited' : 'approved';
+          const reviewedAt = new Date().toISOString();
+
           const updateData: Partial<AIResponseQueueItem> = {
             status,
-            reviewed_at: new Date().toISOString(),
+            reviewed_at: reviewedAt,
           };
 
           if (editedResponse) {
             updateData.final_response = editedResponse;
           }
 
-          const { error } = await supabase
+          // Also check expiration at database level for safety
+          const { error, count } = await supabase
             .from('rental_ai_queue')
             .update(updateData)
-            .eq('id', id);
+            .eq('id', id)
+            .gt('expires_at', new Date().toISOString()) // Only update if not expired
+            .select('id');
 
           if (error) throw error;
+
+          // If no rows were updated, the response may have expired
+          if (!count || count === 0) {
+            set({ error: 'Cannot approve: response has expired or not found' });
+            set((state) => ({
+              pendingResponses: state.pendingResponses.filter((p) => p.id !== id),
+            }));
+            return false;
+          }
+
+          // Log outcome for adaptive learning
+          // Extract context from score_breakdown if available
+          const scoreBreakdown = response.score_breakdown as Record<string, unknown> | null;
+          const messageType = (scoreBreakdown?.message_type as string) || 'unknown';
+          const topic = (scoreBreakdown?.topic as string) || 'general';
+          const contactType = (scoreBreakdown?.contact_type as string) || 'lead';
+
+          // Get conversation details for additional context
+          const { conversationsWithRelations } = get();
+          const conversation = conversationsWithRelations.find(
+            (c) => c.id === response.conversation_id
+          );
+
+          // Log outcome to ai_response_outcomes table for adaptive learning
+          // Type assertion needed since table isn't in generated Supabase types yet
+          // Don't fail the main operation if logging fails
+          try {
+            await (supabase as any).from('ai_response_outcomes').insert({
+              user_id: response.user_id,
+              conversation_id: response.conversation_id,
+              message_id: response.trigger_message_id,
+              property_id: conversation?.property_id,
+              contact_id: conversation?.contact_id,
+              message_type: messageType,
+              topic,
+              contact_type: contactType,
+              channel: conversation?.channel,
+              platform: conversation?.platform,
+              initial_confidence: response.confidence,
+              suggested_response: response.suggested_response,
+              final_response: editedResponse || response.suggested_response,
+              outcome: status as 'approved' | 'edited',
+              edit_severity: editSeverity,
+              response_time_seconds: responseTimeSeconds,
+              reviewed_at: reviewedAt,
+            });
+          } catch (logError) {
+            console.warn('Failed to log approval outcome for adaptive learning:', logError);
+          }
 
           set((state) => ({
             pendingResponses: state.pendingResponses.filter((p) => p.id !== id),
@@ -424,17 +542,61 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         }
       },
 
-      rejectResponse: async (id: string) => {
+      rejectResponse: async (id: string, responseTimeSeconds: number) => {
         try {
+          const { pendingResponses, conversationsWithRelations } = get();
+          const response = pendingResponses.find((p) => p.id === id);
+
+          const reviewedAt = new Date().toISOString();
+
           const { error } = await supabase
             .from('rental_ai_queue')
             .update({
               status: 'rejected',
-              reviewed_at: new Date().toISOString(),
+              reviewed_at: reviewedAt,
             })
             .eq('id', id);
 
           if (error) throw error;
+
+          // Log outcome for adaptive learning
+          if (response) {
+            const scoreBreakdown = response.score_breakdown as Record<string, unknown> | null;
+            const messageType = (scoreBreakdown?.message_type as string) || 'unknown';
+            const topic = (scoreBreakdown?.topic as string) || 'general';
+            const contactType = (scoreBreakdown?.contact_type as string) || 'lead';
+
+            const conversation = conversationsWithRelations.find(
+              (c) => c.id === response.conversation_id
+            );
+
+            // Log outcome to ai_response_outcomes table for adaptive learning
+            // Type assertion needed since table isn't in generated Supabase types yet
+            // Don't fail the main operation if logging fails
+            try {
+              await (supabase as any).from('ai_response_outcomes').insert({
+                user_id: response.user_id,
+                conversation_id: response.conversation_id,
+                message_id: response.trigger_message_id,
+                property_id: conversation?.property_id,
+                contact_id: conversation?.contact_id,
+                message_type: messageType,
+                topic,
+                contact_type: contactType,
+                channel: conversation?.channel,
+                platform: conversation?.platform,
+                initial_confidence: response.confidence,
+                suggested_response: response.suggested_response,
+                final_response: null,
+                outcome: 'rejected',
+                edit_severity: 'none',
+                response_time_seconds: responseTimeSeconds,
+                reviewed_at: reviewedAt,
+              });
+            } catch (logError) {
+              console.warn('Failed to log rejection outcome for adaptive learning:', logError);
+            }
+          }
 
           set((state) => ({
             pendingResponses: state.pendingResponses.filter((p) => p.id !== id),

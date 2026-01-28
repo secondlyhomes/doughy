@@ -1,10 +1,10 @@
 // src/features/rental-properties/hooks/useRentalPropertyDetail.ts
 // Hook for fetching property details with linked rooms and upcoming bookings
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { RentalProperty, useRentalPropertiesStore } from '../types';
+import { RentalProperty } from '../types';
 import { Room, useRentalRoomsStore } from '@/stores/rental-rooms-store';
 import { BookingWithRelations } from '@/stores/rental-bookings-store';
 import { rentalPropertyKeys } from './useRentalProperties';
@@ -208,11 +208,12 @@ export function useRentalPropertyDetail(
 // ============================================
 
 export interface UseRentalPropertyMutationsReturn {
-  updateProperty: (data: Partial<RentalProperty>) => Promise<RentalProperty | null>;
-  updateStatus: (
-    status: 'active' | 'inactive' | 'maintenance'
-  ) => Promise<boolean>;
-  deleteProperty: () => Promise<boolean>;
+  /** Updates property. Throws on error - caller should handle with try/catch. */
+  updateProperty: (data: Partial<RentalProperty>) => Promise<RentalProperty>;
+  /** Updates property status. Throws on error - caller should handle with try/catch. */
+  updateStatus: (status: 'active' | 'inactive' | 'maintenance') => Promise<void>;
+  /** Deletes property. Throws on error - caller should handle with try/catch. */
+  deleteProperty: () => Promise<void>;
   isSaving: boolean;
 }
 
@@ -220,7 +221,6 @@ export function useRentalPropertyMutations(
   propertyId: string
 ): UseRentalPropertyMutationsReturn {
   const queryClient = useQueryClient();
-  const store = useRentalPropertiesStore();
 
   // Update property mutation
   const updateMutation = useMutation({
@@ -240,7 +240,7 @@ export function useRentalPropertyMutations(
       if (data.rental_type !== undefined) updateData.rental_type = data.rental_type;
       if (data.bedrooms !== undefined) updateData.bedrooms = data.bedrooms;
       if (data.bathrooms !== undefined) updateData.bathrooms = data.bathrooms;
-      if (data.sqft !== undefined) updateData.sqft = data.sqft;
+      if (data.square_feet !== undefined) updateData.square_feet = data.square_feet;
       if (data.base_rate !== undefined) updateData.base_rate = data.base_rate;
       if (data.rate_type !== undefined) updateData.rate_type = data.rate_type;
       if (data.cleaning_fee !== undefined) updateData.cleaning_fee = data.cleaning_fee;
@@ -250,7 +250,6 @@ export function useRentalPropertyMutations(
       if (data.house_rules !== undefined) updateData.house_rules = data.house_rules;
       if (data.listing_urls !== undefined) updateData.listing_urls = data.listing_urls;
       if (data.status !== undefined) updateData.status = data.status;
-      if (data.metadata !== undefined) updateData.metadata = data.metadata;
 
       const { data: updated, error } = await supabase
         .from('rental_properties')
@@ -268,6 +267,10 @@ export function useRentalPropertyMutations(
       });
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.lists() });
     },
+    onError: (error) => {
+      // Log error for debugging and re-throw to propagate to caller
+      console.error('Failed to update property:', error);
+    },
   });
 
   // Delete property mutation
@@ -284,41 +287,31 @@ export function useRentalPropertyMutations(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.lists() });
     },
+    onError: (error) => {
+      // Log error for debugging and re-throw to propagate to caller
+      console.error('Failed to delete property:', error);
+    },
   });
 
   const updateProperty = useCallback(
-    async (data: Partial<RentalProperty>) => {
-      try {
-        return await updateMutation.mutateAsync(data);
-      } catch (error) {
-        console.error('Error updating property:', error);
-        return null;
-      }
+    async (data: Partial<RentalProperty>): Promise<RentalProperty> => {
+      // Let errors propagate to caller for proper handling
+      return await updateMutation.mutateAsync(data);
     },
     [updateMutation]
   );
 
   const updateStatus = useCallback(
-    async (status: 'active' | 'inactive' | 'maintenance') => {
-      try {
-        await updateMutation.mutateAsync({ status });
-        return true;
-      } catch (error) {
-        console.error('Error updating property status:', error);
-        return false;
-      }
+    async (status: 'active' | 'inactive' | 'maintenance'): Promise<void> => {
+      // Let errors propagate to caller for proper handling
+      await updateMutation.mutateAsync({ status });
     },
     [updateMutation]
   );
 
-  const deleteProperty = useCallback(async () => {
-    try {
-      await deleteMutation.mutateAsync();
-      return true;
-    } catch (error) {
-      console.error('Error deleting property:', error);
-      return false;
-    }
+  const deleteProperty = useCallback(async (): Promise<void> => {
+    // Let errors propagate to caller for proper handling
+    await deleteMutation.mutateAsync();
   }, [deleteMutation]);
 
   return {

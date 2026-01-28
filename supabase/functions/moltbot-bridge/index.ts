@@ -103,9 +103,14 @@ async function handleGetProperty(
   if (payload.property_id) {
     query = query.eq('id', payload.property_id);
   } else if (payload.address_hint) {
+    // Sanitize input to prevent SQL injection - escape special LIKE characters
+    const sanitizedHint = payload.address_hint
+      .replace(/\\/g, '\\\\')  // Escape backslashes first
+      .replace(/%/g, '\\%')    // Escape percent signs
+      .replace(/_/g, '\\_');   // Escape underscores
     // Fuzzy match on name, address, or city
     query = query.or(
-      `name.ilike.%${payload.address_hint}%,address.ilike.%${payload.address_hint}%,city.ilike.%${payload.address_hint}%`
+      `name.ilike.%${sanitizedHint}%,address.ilike.%${sanitizedHint}%,city.ilike.%${sanitizedHint}%`
     );
   }
 
@@ -130,7 +135,17 @@ async function handleGetRooms(
   userId: string,
   payload: { property_id: string; status?: string }
 ): Promise<MoltbotBridgeResponse> {
-  // TODO: Verify property belongs to user first
+  // Verify property belongs to user first
+  const { data: property, error: propError } = await supabase
+    .from('rental_properties')
+    .select('id')
+    .eq('id', payload.property_id)
+    .eq('user_id', userId)
+    .single();
+
+  if (propError || !property) {
+    return { success: false, error: 'Property not found or access denied' };
+  }
 
   let query = supabase
     .from('rental_rooms')
@@ -158,7 +173,19 @@ async function handleGetAvailability(
   userId: string,
   payload: { property_id: string; room_id?: string; start_date: string; end_date: string }
 ): Promise<MoltbotBridgeResponse> {
-  // TODO: Query rental_bookings for conflicts
+  // Verify property belongs to user first
+  const { data: property, error: propError } = await supabase
+    .from('rental_properties')
+    .select('id')
+    .eq('id', payload.property_id)
+    .eq('user_id', userId)
+    .single();
+
+  if (propError || !property) {
+    return { success: false, error: 'Property not found or access denied' };
+  }
+
+  // Query rental_bookings for conflicts
   // TODO: Consider room status (maintenance, unavailable, etc.)
 
   let query = supabase
@@ -585,6 +612,44 @@ serve(async (req: Request) => {
         new Response(
           JSON.stringify({ success: false, error: 'Missing action or user_id' }),
           { status: 400, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    // SECURITY: Authentication is MANDATORY
+    // Verify user_id matches the authenticated user from JWT
+    // This prevents users from accessing other users' data
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ success: false, error: 'Authentication required' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !authUser) {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ success: false, error: 'Invalid authentication token' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    // Verify the requested user_id matches the authenticated user
+    if (authUser.id !== user_id) {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ success: false, error: 'User ID mismatch - unauthorized access' }),
+          { status: 403, headers: { 'Content-Type': 'application/json' } }
         ),
         req
       );

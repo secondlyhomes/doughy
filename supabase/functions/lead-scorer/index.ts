@@ -209,6 +209,33 @@ serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Verify authentication - MANDATORY
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ error: 'Authentication required' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ error: 'Invalid or expired token' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    const authenticatedUserId = user.id;
+
     // Parse request
     const body: LeadScorerRequest = await req.json();
     const { contact_id, conversation_id, message } = body;
@@ -224,18 +251,19 @@ serve(async (req: Request) => {
       );
     }
 
-    // Fetch contact details
+    // Fetch contact details (verify ownership)
     const { data: contact, error: contactError } = await supabase
       .from('crm_contacts')
       .select('id, first_name, last_name, email, source, contact_types, score, metadata')
       .eq('id', contact_id)
+      .eq('user_id', authenticatedUserId)
       .single();
 
-    if (contactError) {
+    if (contactError || !contact) {
       console.error('Error fetching contact:', contactError);
       return addCorsHeaders(
         new Response(
-          JSON.stringify({ error: 'Contact not found' }),
+          JSON.stringify({ error: 'Contact not found or access denied' }),
           { status: 404, headers: { 'Content-Type': 'application/json' } }
         ),
         req

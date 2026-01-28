@@ -76,7 +76,8 @@ BEGIN
     v_count AS conflict_count,
     v_conflicts AS conflicts;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public;
 
 -- ============================================================================
 -- FUNCTION: Get next available date
@@ -125,7 +126,8 @@ BEGIN
 
   RETURN COALESCE(v_next_date, v_current_date);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public;
 
 -- ============================================================================
 -- FUNCTION: Calculate booking revenue
@@ -263,7 +265,8 @@ BEGIN
     (SELECT COUNT(*) FROM rental_ai_queue WHERE user_id = p_user_id AND status = 'pending') AS pending_ai_responses,
     (SELECT COALESCE(SUM(unread_count), 0) FROM rental_conversations WHERE user_id = p_user_id) AS unread_messages;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public;
 
 -- ============================================================================
 -- FUNCTION: Get property occupancy stats
@@ -309,7 +312,8 @@ BEGIN
     COUNT(*) AS booking_count
   FROM period_bookings;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public;
 
 -- ============================================================================
 -- FUNCTION: Score a contact/lead
@@ -360,7 +364,8 @@ BEGIN
   -- Cap at 100
   RETURN LEAST(v_score, 100);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public;
 
 -- ============================================================================
 -- TRIGGER: Auto-expire AI queue items
@@ -380,6 +385,7 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RETURN v_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public;
 
 -- Migration complete: rental functions and triggers

@@ -135,33 +135,32 @@ export function PlatformProvider({
   };
 
   // Save settings to database
+  // Returns true on success, throws on error
   const saveToDatabase = async (
     platforms: Platform[],
     active: Platform
-  ) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        return; // Not authenticated, skip database sync
-      }
-
-      const { error: dbError } = await supabase
-        .from('user_platform_settings')
-        .upsert({
-          user_id: session.user.id,
-          enabled_platforms: platforms,
-          active_platform: active,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-        });
-
-      if (dbError) {
-        console.error('Error saving platform settings to database:', dbError);
-      }
-    } catch (err) {
-      console.error('Error saving platform settings to database:', err);
+  ): Promise<boolean> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
+      return false; // Not authenticated, skip database sync
     }
+
+    const { error: dbError } = await supabase
+      .from('user_platform_settings')
+      .upsert({
+        user_id: session.user.id,
+        enabled_platforms: platforms,
+        active_platform: active,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id',
+      });
+
+    if (dbError) {
+      throw new Error(`Failed to save platform settings: ${dbError.message}`);
+    }
+
+    return true;
   };
 
   // Switch active platform
@@ -171,23 +170,45 @@ export function PlatformProvider({
       return;
     }
 
+    const previousPlatform = activePlatform;
+
+    // Optimistic update
     setActivePlatform(platform);
 
-    // Persist to local storage and database
-    await saveToLocalStorage(enabledPlatforms, platform);
-    await saveToDatabase(enabledPlatforms, platform);
-  }, [enabledPlatforms]);
+    try {
+      // Save to database first to ensure persistence
+      await saveToDatabase(enabledPlatforms, platform);
+      // Only update local storage after database succeeds
+      await saveToLocalStorage(enabledPlatforms, platform);
+    } catch (err) {
+      // Revert optimistic update on failure
+      setActivePlatform(previousPlatform);
+      setError(err instanceof Error ? err.message : 'Failed to save platform settings');
+    }
+  }, [enabledPlatforms, activePlatform]);
 
   // Enable a platform
   const enablePlatform = useCallback(async (platform: Platform) => {
-    const newPlatforms = enabledPlatforms.includes(platform)
-      ? enabledPlatforms
-      : [...enabledPlatforms, platform];
+    if (enabledPlatforms.includes(platform)) {
+      return; // Already enabled
+    }
 
+    const previousPlatforms = enabledPlatforms;
+    const newPlatforms = [...enabledPlatforms, platform];
+
+    // Optimistic update
     setEnabledPlatforms(newPlatforms);
 
-    await saveToLocalStorage(newPlatforms, activePlatform);
-    await saveToDatabase(newPlatforms, activePlatform);
+    try {
+      // Save to database first to ensure persistence
+      await saveToDatabase(newPlatforms, activePlatform);
+      // Only update local storage after database succeeds
+      await saveToLocalStorage(newPlatforms, activePlatform);
+    } catch (err) {
+      // Revert optimistic update on failure
+      setEnabledPlatforms(previousPlatforms);
+      setError(err instanceof Error ? err.message : 'Failed to save platform settings');
+    }
   }, [enabledPlatforms, activePlatform]);
 
   // Disable a platform
@@ -198,17 +219,29 @@ export function PlatformProvider({
       return;
     }
 
-    const newPlatforms = enabledPlatforms.filter(p => p !== platform);
-    setEnabledPlatforms(newPlatforms);
+    const previousPlatforms = enabledPlatforms;
+    const previousActive = activePlatform;
 
-    // If we disabled the active platform, switch to another one
+    const newPlatforms = enabledPlatforms.filter(p => p !== platform);
     const newActive = platform === activePlatform ? newPlatforms[0] : activePlatform;
+
+    // Optimistic update
+    setEnabledPlatforms(newPlatforms);
     if (platform === activePlatform) {
       setActivePlatform(newActive);
     }
 
-    await saveToLocalStorage(newPlatforms, newActive);
-    await saveToDatabase(newPlatforms, newActive);
+    try {
+      // Save to database first to ensure persistence
+      await saveToDatabase(newPlatforms, newActive);
+      // Only update local storage after database succeeds
+      await saveToLocalStorage(newPlatforms, newActive);
+    } catch (err) {
+      // Revert optimistic updates on failure
+      setEnabledPlatforms(previousPlatforms);
+      setActivePlatform(previousActive);
+      setError(err instanceof Error ? err.message : 'Failed to save platform settings');
+    }
   }, [enabledPlatforms, activePlatform]);
 
   // Refresh settings from database

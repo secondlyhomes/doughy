@@ -1,7 +1,8 @@
 // src/features/rental-inbox/components/AIReviewCard.tsx
 // Card component for reviewing pending AI-generated responses
+// Enhanced with review time tracking and edit severity detection for adaptive learning
 
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { Bot, Check, X, Pencil, Sparkles } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -13,12 +14,68 @@ import {
   LINE_HEIGHTS,
 } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
-import type { AIResponseQueueItem } from '@/stores/rental-conversations-store';
+import type {
+  AIResponseQueueItem,
+  EditSeverity,
+  ApprovalMetadata
+} from '@/stores/rental-conversations-store';
+
+// Re-export types for convenience
+export type { EditSeverity, ApprovalMetadata };
+
+/**
+ * Calculate edit severity by comparing original and edited responses
+ * Uses Levenshtein-inspired metric and semantic checks
+ */
+export function calculateEditSeverity(original: string, edited: string): EditSeverity {
+  if (!edited || edited === original) return 'none';
+
+  const originalNormalized = original.toLowerCase().trim();
+  const editedNormalized = edited.toLowerCase().trim();
+
+  // If they're the same after normalization, it's just formatting
+  if (originalNormalized === editedNormalized) return 'none';
+
+  // Calculate length difference percentage
+  const lenDiff = Math.abs(edited.length - original.length);
+  const lenDiffPercent = lenDiff / Math.max(original.length, 1);
+
+  // Count word changes
+  const originalWords = originalNormalized.split(/\s+/);
+  const editedWords = editedNormalized.split(/\s+/);
+  const originalWordSet = new Set(originalWords);
+  const editedWordSet = new Set(editedWords);
+
+  // Words added or removed
+  let changedWords = 0;
+  for (const word of editedWords) {
+    if (!originalWordSet.has(word)) changedWords++;
+  }
+  for (const word of originalWords) {
+    if (!editedWordSet.has(word)) changedWords++;
+  }
+  const wordChangePercent = changedWords / Math.max(originalWords.length + editedWords.length, 1);
+
+  // Major if:
+  // - More than 40% of content length changed
+  // - More than 30% of words changed
+  // - Response was completely rewritten (very different length)
+  if (lenDiffPercent > 0.4 || wordChangePercent > 0.3 || lenDiffPercent > 0.6) {
+    return 'major';
+  }
+
+  // Minor if any meaningful change occurred
+  if (lenDiffPercent > 0.05 || wordChangePercent > 0.1 || changedWords > 0) {
+    return 'minor';
+  }
+
+  return 'none';
+}
 
 interface AIReviewCardProps {
   pendingResponse: AIResponseQueueItem;
-  onApprove: (editedResponse?: string) => void;
-  onReject: () => void;
+  onApprove: (metadata: ApprovalMetadata) => void;
+  onReject: (responseTimeSeconds: number) => void;
   isProcessing?: boolean;
 }
 
@@ -44,15 +101,41 @@ export const AIReviewCard = memo(function AIReviewCard({
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(pendingResponse.suggested_response);
 
+  // Track when the card was first displayed for review time calculation
+  const displayTimeRef = useRef<number>(Date.now());
+
+  // Reset display time when pending response changes
+  useEffect(() => {
+    displayTimeRef.current = Date.now();
+    setEditedText(pendingResponse.suggested_response);
+    setIsEditing(false);
+  }, [pendingResponse.id]);
+
   const confidenceInfo = getConfidenceLabel(pendingResponse.confidence);
   const confidencePercentage = Math.round(pendingResponse.confidence * 100);
 
+  // Calculate response time in seconds
+  const getResponseTimeSeconds = () => {
+    return Math.round((Date.now() - displayTimeRef.current) / 1000);
+  };
+
   const handleApprove = () => {
-    if (isEditing && editedText !== pendingResponse.suggested_response) {
-      onApprove(editedText);
-    } else {
-      onApprove();
-    }
+    const responseTimeSeconds = getResponseTimeSeconds();
+    const wasEdited = isEditing && editedText !== pendingResponse.suggested_response;
+    const editSeverity = wasEdited
+      ? calculateEditSeverity(pendingResponse.suggested_response, editedText)
+      : 'none';
+
+    onApprove({
+      editedResponse: wasEdited ? editedText : undefined,
+      editSeverity,
+      responseTimeSeconds,
+    });
+  };
+
+  const handleReject = () => {
+    const responseTimeSeconds = getResponseTimeSeconds();
+    onReject(responseTimeSeconds);
   };
 
   const handleEdit = () => {
@@ -183,7 +266,7 @@ export const AIReviewCard = memo(function AIReviewCard({
             <Button
               variant="ghost"
               size="sm"
-              onPress={onReject}
+              onPress={handleReject}
               disabled={isProcessing}
             >
               <X size={14} color={colors.destructive} />

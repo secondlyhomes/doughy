@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import {
   useRentalConversationsStore,
   ConversationWithRelations,
+  ApprovalMetadata,
 } from '@/stores/rental-conversations-store';
 import type { InboxFilter, InboxSort } from '../types';
 
@@ -20,13 +21,30 @@ export function useInbox() {
     error,
     fetchConversations,
     fetchPendingResponses,
+    approveResponse,
     clearError,
   } = useRentalConversationsStore();
 
-  // Initial fetch
+  // Initial fetch with cleanup to prevent state updates on unmounted component
   useEffect(() => {
-    fetchConversations();
-    fetchPendingResponses();
+    let isMounted = true;
+
+    const fetchData = async () => {
+      // Only proceed if component is still mounted
+      if (isMounted) {
+        await fetchConversations();
+      }
+      if (isMounted) {
+        await fetchPendingResponses();
+      }
+    };
+
+    fetchData();
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      isMounted = false;
+    };
   }, [fetchConversations, fetchPendingResponses]);
 
   // Refresh both conversations and pending responses
@@ -47,14 +65,30 @@ export function useInbox() {
     );
   }, [conversationsWithRelations, pendingResponses]);
 
+  // Quick approve function for inbox list
+  const quickApprove = useCallback(
+    async (queueItemId: string) => {
+      // For quick approve from inbox list, use default metadata
+      // (no edits, minimal review time since it's quick action)
+      return approveResponse(queueItemId, {
+        editedResponse: undefined,
+        editSeverity: 'none',
+        responseTimeSeconds: 0, // Quick approve = instant decision
+      });
+    },
+    [approveResponse]
+  );
+
   return {
     conversations: conversationsWithRelations,
     conversationsNeedingReview,
     pendingCount,
+    pendingResponses,
     isLoading,
     isRefreshing,
     error,
     refresh,
+    quickApprove,
     clearError,
   };
 }
@@ -196,18 +230,18 @@ export function useConversation(conversationId: string) {
   );
 
   const approve = useCallback(
-    async (editedResponse?: string) => {
+    async (metadata: ApprovalMetadata) => {
       if (pendingResponse) {
-        return approveResponse(pendingResponse.id, editedResponse);
+        return approveResponse(pendingResponse.id, metadata);
       }
       return false;
     },
     [pendingResponse, approveResponse]
   );
 
-  const reject = useCallback(async () => {
+  const reject = useCallback(async (responseTimeSeconds: number) => {
     if (pendingResponse) {
-      return rejectResponse(pendingResponse.id);
+      return rejectResponse(pendingResponse.id, responseTimeSeconds);
     }
     return false;
   }, [pendingResponse, rejectResponse]);

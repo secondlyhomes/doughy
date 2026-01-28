@@ -2,14 +2,10 @@
 // Hooks for fetching and managing rental properties
 // Follows the pattern from src/features/leads/hooks/useLeads.ts
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import {
-  RentalProperty,
-  RentalType,
-  useRentalPropertiesStore,
-} from '../types';
+import { RentalProperty, RentalType } from '../types';
 
 // ============================================
 // Query Keys
@@ -104,7 +100,6 @@ async function createRentalProperty(
   }
 
   // Map from interface fields to database columns
-  // Note: Some fields may have different names in the database
   const insertData: Record<string, unknown> = {
     user_id: userData.user.id,
     name: propertyData.name,
@@ -116,18 +111,16 @@ async function createRentalProperty(
     rental_type: propertyData.rental_type || 'ltr',
     bedrooms: propertyData.bedrooms || 0,
     bathrooms: propertyData.bathrooms || 0,
-    square_feet: propertyData.sqft || null,
+    square_feet: propertyData.square_feet || null,
     base_rate: propertyData.base_rate || 0,
     rate_type: propertyData.rate_type || 'monthly',
     cleaning_fee: propertyData.cleaning_fee || null,
     security_deposit: propertyData.security_deposit || null,
-    room_by_room: propertyData.room_by_room_enabled || false,
+    room_by_room_enabled: propertyData.room_by_room_enabled || false,
     amenities: propertyData.amenities || [],
     house_rules: propertyData.house_rules || {},
-    check_in_instructions: propertyData.check_in_instructions || {},
     listing_urls: propertyData.listing_urls || {},
     status: propertyData.status || 'active',
-    metadata: propertyData.metadata || {},
   };
 
   const { data, error } = await supabase
@@ -162,7 +155,7 @@ async function updateRentalProperty(
   if (updates.rental_type !== undefined) updateData.rental_type = updates.rental_type;
   if (updates.bedrooms !== undefined) updateData.bedrooms = updates.bedrooms;
   if (updates.bathrooms !== undefined) updateData.bathrooms = updates.bathrooms;
-  if (updates.sqft !== undefined) updateData.sqft = updates.sqft;
+  if (updates.square_feet !== undefined) updateData.square_feet = updates.square_feet;
   if (updates.base_rate !== undefined) updateData.base_rate = updates.base_rate;
   if (updates.rate_type !== undefined) updateData.rate_type = updates.rate_type;
   if (updates.cleaning_fee !== undefined) updateData.cleaning_fee = updates.cleaning_fee;
@@ -170,10 +163,8 @@ async function updateRentalProperty(
   if (updates.room_by_room_enabled !== undefined) updateData.room_by_room_enabled = updates.room_by_room_enabled;
   if (updates.amenities !== undefined) updateData.amenities = updates.amenities;
   if (updates.house_rules !== undefined) updateData.house_rules = updates.house_rules;
-  if (updates.check_in_instructions !== undefined) updateData.check_in_instructions = updates.check_in_instructions;
   if (updates.listing_urls !== undefined) updateData.listing_urls = updates.listing_urls;
   if (updates.status !== undefined) updateData.status = updates.status;
-  if (updates.metadata !== undefined) updateData.metadata = updates.metadata;
 
   const { data, error } = await supabase
     .from('rental_properties')
@@ -210,8 +201,6 @@ async function deleteRentalProperty(id: string): Promise<void> {
  * Hook to fetch all rental properties
  */
 export function useRentalProperties() {
-  const store = useRentalPropertiesStore();
-
   const {
     data: properties = [],
     isLoading,
@@ -221,14 +210,6 @@ export function useRentalProperties() {
     queryKey: rentalPropertyKeys.lists(),
     queryFn: fetchRentalProperties,
   });
-
-  // Sync to store for offline access
-  useEffect(() => {
-    if (properties.length > 0) {
-      // The store manages its own state, but we can trigger a fetch
-      // to ensure sync if needed
-    }
-  }, [properties]);
 
   return {
     properties,
@@ -288,14 +269,17 @@ export function useRentalProperty(id: string) {
  */
 export function useCreateRentalProperty() {
   const queryClient = useQueryClient();
-  const store = useRentalPropertiesStore();
 
   return useMutation({
     mutationFn: createRentalProperty,
-    onSuccess: (newProperty) => {
+    onSuccess: () => {
       // Invalidate and refetch queries
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.lists() });
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.withRooms() });
+    },
+    onError: (error) => {
+      // Log error for debugging - errors propagate to caller via mutateAsync
+      console.error('Failed to create property:', error);
     },
   });
 }
@@ -314,6 +298,10 @@ export function useUpdateRentalProperty() {
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.withRooms() });
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.detail(variables.id) });
     },
+    onError: (error) => {
+      // Log error for debugging - errors propagate to caller via mutateAsync
+      console.error('Failed to update property:', error);
+    },
   });
 }
 
@@ -328,6 +316,10 @@ export function useDeleteRentalProperty() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.lists() });
       queryClient.invalidateQueries({ queryKey: rentalPropertyKeys.withRooms() });
+    },
+    onError: (error) => {
+      // Log error for debugging - errors propagate to caller via mutateAsync
+      console.error('Failed to delete property:', error);
     },
   });
 }

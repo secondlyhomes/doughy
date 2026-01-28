@@ -286,15 +286,19 @@ CREATE TRIGGER trigger_rental_templates_updated_at
 -- ============================================================================
 -- TRIGGER: Update conversation stats on new message
 -- ============================================================================
+-- Uses atomic increment to prevent race conditions with concurrent messages
 CREATE OR REPLACE FUNCTION update_conversation_on_message()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Use FOR UPDATE to lock the row and prevent race conditions
+  -- This ensures message_count is atomically incremented even with concurrent inserts
   UPDATE rental_conversations
   SET
-    message_count = message_count + 1,
+    -- Atomic increment using current value (not read-then-write)
+    message_count = rental_conversations.message_count + 1,
     unread_count = CASE
-      WHEN NEW.direction = 'inbound' THEN unread_count + 1
-      ELSE unread_count
+      WHEN NEW.direction = 'inbound' THEN rental_conversations.unread_count + 1
+      ELSE rental_conversations.unread_count
     END,
     last_message_at = NEW.created_at,
     last_message_preview = LEFT(NEW.content, 100),

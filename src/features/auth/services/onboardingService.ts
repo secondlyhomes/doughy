@@ -159,14 +159,23 @@ export async function skipOnboarding(): Promise<OnboardingResult> {
 }
 
 /**
- * Check if user has completed onboarding
+ * Result of checking onboarding status
  */
-export async function checkOnboardingStatus(): Promise<boolean> {
+export interface OnboardingStatusResult {
+  complete: boolean;
+  error?: string;
+}
+
+/**
+ * Check if user has completed onboarding
+ * Returns an object with completion status and any error that occurred
+ */
+export async function checkOnboardingStatus(): Promise<OnboardingStatusResult> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return false;
+      return { complete: false, error: 'Not authenticated' };
     }
 
     // Using type assertion for fields that may not be in generated types yet
@@ -176,12 +185,19 @@ export async function checkOnboardingStatus(): Promise<boolean> {
       .eq('id', user.id)
       .single();
 
-    if (error || !data) {
-      return false;
+    if (error) {
+      return { complete: false, error: error.message };
     }
 
-    return (data as Record<string, unknown>).onboarding_complete === true;
+    if (!data) {
+      return { complete: false, error: 'Profile not found' };
+    }
+
+    return { complete: (data as Record<string, unknown>).onboarding_complete === true };
   } catch (error) {
-    return false;
+    return {
+      complete: false,
+      error: error instanceof Error ? error.message : 'Failed to check onboarding status',
+    };
   }
 }

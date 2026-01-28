@@ -198,6 +198,33 @@ serve(async (req: Request) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Verify authentication - MANDATORY
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ error: 'Authentication required' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ error: 'Invalid or expired token' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    const authenticatedUserId = user.id;
+
     // Parse request (support both GET and POST)
     let requestData: AvailabilityRequest;
 
@@ -208,13 +235,12 @@ serve(async (req: Request) => {
         room_id: url.searchParams.get('room_id') || undefined,
         start_date: url.searchParams.get('start_date') || '',
         end_date: url.searchParams.get('end_date') || '',
-        user_id: url.searchParams.get('user_id') || undefined
       };
     } else {
       requestData = await req.json();
     }
 
-    const { property_id, room_id, start_date, end_date, user_id } = requestData;
+    const { property_id, room_id, start_date, end_date } = requestData;
 
     // Validate required fields
     if (!property_id || !start_date || !end_date) {
@@ -253,17 +279,18 @@ serve(async (req: Request) => {
       );
     }
 
-    // Fetch property details
+    // Fetch property details (verify ownership)
     const { data: property, error: propError } = await supabase
       .from('rental_properties')
       .select('id, name, room_by_room_enabled')
       .eq('id', property_id)
+      .eq('user_id', authenticatedUserId)
       .single();
 
     if (propError || !property) {
       return addCorsHeaders(
         new Response(
-          JSON.stringify({ error: 'Property not found' }),
+          JSON.stringify({ error: 'Property not found or access denied' }),
           { status: 404, headers: { 'Content-Type': 'application/json' } }
         ),
         req

@@ -54,7 +54,6 @@ const STATUS_OPTIONS: { label: string; value: BookingStatus | 'all' }[] = [
   { label: 'All Statuses', value: 'all' },
   { label: 'Inquiry', value: 'inquiry' },
   { label: 'Pending', value: 'pending' },
-  { label: 'Hold', value: 'hold' },
   { label: 'Confirmed', value: 'confirmed' },
   { label: 'Active', value: 'active' },
   { label: 'Completed', value: 'completed' },

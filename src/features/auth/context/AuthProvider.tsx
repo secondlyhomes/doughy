@@ -39,6 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Fetch user profile from Supabase
+   * On error, sets profile to null and logs the error - callers should handle the null case
    */
   const fetchProfile = useCallback(async (userId: string, authUser?: User) => {
     try {
@@ -52,15 +53,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const emailVerified = !!authUser?.email_confirmed_at;
 
       if (error) {
-        console.warn('[auth] Error fetching profile:', error.message);
-        // Set default profile on error
-        setProfile({
-          id: userId,
-          email: authUser?.email || '',
-          role: 'user',
-          email_verified: emailVerified,
-          onboarding_complete: false,
-        });
+        // PGRST116 = not found - create minimal profile from auth user
+        if (error.code === 'PGRST116') {
+          console.warn('[auth] Profile not found for user, using minimal profile');
+          setProfile({
+            id: userId,
+            email: authUser?.email || '',
+            role: 'user',
+            email_verified: emailVerified,
+            onboarding_complete: false,
+          });
+          return;
+        }
+        // For other errors, log and set profile to null so UI can show error state
+        console.error('[auth] Error fetching profile:', error.message);
+        setProfile(null);
         return;
       }
 
@@ -82,13 +89,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
     } catch (error) {
       console.error('[auth] Exception fetching profile:', error);
-      setProfile({
-        id: userId,
-        email: authUser?.email || '',
-        role: 'user',
-        email_verified: !!authUser?.email_confirmed_at,
-        onboarding_complete: false,
-      });
+      // Set profile to null on exception - don't create fake profiles
+      setProfile(null);
     }
   }, []);
 
