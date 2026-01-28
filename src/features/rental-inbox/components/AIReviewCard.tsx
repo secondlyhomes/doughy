@@ -203,7 +203,7 @@ export const AIReviewCard = memo(function AIReviewCard({
       {/* Confidence label */}
       <Text style={[styles.confidenceLabel, { color: colors.mutedForeground }]}>
         {confidenceInfo.label}
-        {pendingResponse.reason && ` - ${pendingResponse.reason}`}
+        {pendingResponse.reasoning && ` - ${pendingResponse.reasoning}`}
       </Text>
 
       {/* Suggested response text */}

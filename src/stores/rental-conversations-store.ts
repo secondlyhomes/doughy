@@ -19,26 +19,31 @@ export type SentBy = 'contact' | 'ai' | 'user';
 // Database has 'sent' not 'auto_sent' for AIQueueStatus
 export type AIQueueStatus = 'pending' | 'approved' | 'edited' | 'rejected' | 'expired' | 'sent';
 
-// Conversation interface
+// Conversation interface - matches rental_conversations table schema
 export interface Conversation {
   id: string;
   user_id: string;
   contact_id: string;
   property_id: string | null;
+  booking_id: string | null;
   channel: Channel;
   platform: string | null;
   external_thread_id: string | null;
   status: ConversationStatus;
   ai_enabled: boolean;
-  last_message_at: string;
-  last_ai_response_at: string | null;
+  ai_auto_respond: boolean;
+  ai_confidence_threshold: number;
+  ai_personality: string | null;
+  subject: string | null;
   message_count: number;
-  metadata: Record<string, unknown>;
+  unread_count: number;
+  last_message_at: string | null;
+  last_message_preview: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// Message interface
+// Message interface - matches rental_messages table schema
 export interface Message {
   id: string;
   conversation_id: string;
@@ -48,33 +53,41 @@ export interface Message {
   sent_by: SentBy;
   ai_confidence: number | null;
   ai_model: string | null;
+  ai_prompt_tokens: number | null;
+  ai_completion_tokens: number | null;
+  requires_approval: boolean;
   approved_by: string | null;
   approved_at: string | null;
-  original_content: string | null;
+  edited_content: string | null;
   delivered_at: string | null;
   read_at: string | null;
-  external_message_id: string | null;
+  failed_at: string | null;
+  failure_reason: string | null;
+  attachments: unknown[];
   metadata: Record<string, unknown>;
   created_at: string;
 }
 
-// AI Response Queue item interface
+// AI Response Queue item interface - matches rental_ai_queue table schema
 export interface AIResponseQueueItem {
   id: string;
   user_id: string;
   conversation_id: string;
   trigger_message_id: string | null;
+  sent_message_id: string | null;
   suggested_response: string;
   confidence: number;
-  reason: string | null;
-  score_breakdown: Record<string, unknown> | null;
+  reasoning: string | null;
+  intent: string | null;
+  detected_topics: string[] | null;
+  alternatives: unknown[];
   status: AIQueueStatus;
   final_response: string | null;
   reviewed_at: string | null;
   reviewed_by: string | null;
   expires_at: string;
   created_at: string;
-  // Additional fields for learning context (populated from score_breakdown)
+  // Additional fields for learning context (populated from metadata)
   message_type?: string;
   topic?: string;
   contact_type?: string;
@@ -507,11 +520,10 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           }
 
           // Log outcome for adaptive learning
-          // Extract context from score_breakdown if available
-          const scoreBreakdown = response.score_breakdown as Record<string, unknown> | null;
-          const messageType = (scoreBreakdown?.message_type as string) || 'unknown';
-          const topic = (scoreBreakdown?.topic as string) || 'general';
-          const contactType = (scoreBreakdown?.contact_type as string) || 'lead';
+          // Extract context from intent and detected_topics fields
+          const messageType = response.intent || response.message_type || 'unknown';
+          const topic = response.detected_topics?.[0] || response.topic || 'general';
+          const contactType = response.contact_type || 'lead';
 
           // Get conversation details for additional context
           const { conversationsWithRelations } = get();
@@ -586,10 +598,10 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
 
           // Log outcome for adaptive learning
           if (response) {
-            const scoreBreakdown = response.score_breakdown as Record<string, unknown> | null;
-            const messageType = (scoreBreakdown?.message_type as string) || 'unknown';
-            const topic = (scoreBreakdown?.topic as string) || 'general';
-            const contactType = (scoreBreakdown?.contact_type as string) || 'lead';
+            // Extract context from intent and detected_topics fields
+            const messageType = response.intent || response.message_type || 'unknown';
+            const topic = response.detected_topics?.[0] || response.topic || 'general';
+            const contactType = response.contact_type || 'lead';
 
             const conversation = conversationsWithRelations.find(
               (c) => c.id === response.conversation_id

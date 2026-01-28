@@ -245,7 +245,7 @@ export function useRentalPropertyMutations(
       if (data.rate_type !== undefined) updateData.rate_type = data.rate_type;
       if (data.cleaning_fee !== undefined) updateData.cleaning_fee = data.cleaning_fee;
       if (data.security_deposit !== undefined) updateData.security_deposit = data.security_deposit;
-      if (data.room_by_room_enabled !== undefined) updateData.room_by_room = data.room_by_room_enabled;
+      if (data.room_by_room_enabled !== undefined) updateData.room_by_room_enabled = data.room_by_room_enabled;
       if (data.amenities !== undefined) updateData.amenities = data.amenities;
       if (data.house_rules !== undefined) updateData.house_rules = data.house_rules;
       if (data.listing_urls !== undefined) updateData.listing_urls = data.listing_urls;
