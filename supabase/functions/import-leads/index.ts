@@ -4,17 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Environment variables
-const supabaseUrl = Deno.env.get("SUPABASE_URL");
-const supabasePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
-
-// Validate environment variables at startup
-if (!supabaseUrl || !supabasePublishableKey) {
-  console.error("[import-leads] Missing required environment variables:", {
-    SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
-    SUPABASE_PUBLISHABLE_KEY: supabasePublishableKey ? "set" : "MISSING",
-  });
-}
+// Environment variables are validated inside the handler for proper type narrowing
 
 // Types for import functionality
 interface CanonicalRow {
@@ -142,12 +132,34 @@ serve(async (req) => {
   }
 
   try {
-    // 1. Initialize Supabase client with both anon key and Authorization header
+    // 1. Validate environment variables
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabasePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+
+    if (!supabaseUrl || !supabasePublishableKey) {
+      console.error("[import-leads] Missing required environment variables:", {
+        SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
+        SUPABASE_PUBLISHABLE_KEY: supabasePublishableKey ? "set" : "MISSING",
+      });
+      const responseHeaders = createCorsHeaders(req, { "Content-Type": "application/json" });
+      return new Response(
+        JSON.stringify({
+          error: "Server configuration error",
+          message: "Missing Supabase credentials",
+        }),
+        {
+          status: 500,
+          headers: responseHeaders,
+        }
+      );
+    }
+
+    // 2. Initialize Supabase client with auth header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       // Use our helper to create CORS headers
       const responseHeaders = createCorsHeaders(req, { "Content-Type": "application/json" });
-      
+
       return new Response(
         JSON.stringify({
           error: "Authentication required",

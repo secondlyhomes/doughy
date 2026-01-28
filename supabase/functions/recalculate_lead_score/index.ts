@@ -43,7 +43,16 @@ serve(async (req) => {
 
     const { leadId } = await req.json()
 
-    // Complex lead scoring logic 
+    if (!leadId) {
+      return new Response(JSON.stringify({
+        error: "Missing required parameter: leadId"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Complex lead scoring logic
     const { data: lead, error: leadError } = await supabase
       .from('crm_leads')
       .select('*')
@@ -91,7 +100,11 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[recalculate_lead_score] Error:", error);
+    return new Response(JSON.stringify({
+      error: "Failed to recalculate lead score",
+      details: error instanceof Error ? error.message : String(error)
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
