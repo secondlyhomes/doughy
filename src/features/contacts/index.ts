@@ -4,6 +4,7 @@
 
 // Screens
 export { ContactsListScreen } from './screens/ContactsListScreen';
+export { ContactDetailScreen } from './screens/ContactDetailScreen';
 
 // Components
 export { ContactCard } from './components/ContactCard';

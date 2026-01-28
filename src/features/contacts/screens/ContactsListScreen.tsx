@@ -112,8 +112,7 @@ const SORT_OPTIONS: { label: string; value: 'name' | 'created_at' | 'score' }[] 
 // ============================================
 
 export function ContactsListScreen() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const router = useRouter(); // For future navigation to contact detail screen
+  const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
@@ -201,11 +200,9 @@ export function ContactsListScreen() {
 
   const handleContactPress = useCallback(
     (contact: Contact) => {
-      // TODO: Navigate to contact detail screen when implemented
-      // router.push(`/(tabs)/contacts/${contact.id}`);
-      console.log('Contact pressed:', contact.id);
+      router.push(`/(tabs)/contacts/${contact.id}`);
     },
-    []
+    [router]
   );
 
   const handleClearAllFilters = useCallback(() => {
