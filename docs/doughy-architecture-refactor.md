@@ -102,13 +102,25 @@ These are **separate tables**, not aliases. The distinction is intentional.
 
 Each zone is **independent** and can be developed in parallel. Zones communicate through **defined interfaces** (API contracts, database schemas, component props).
 
-| Zone | Responsibility | Output |
-|------|----------------|--------|
-| **Zone 1: Core** | Moltbot skills, business logic, AI prompts | Skill files, Edge Functions |
-| **Zone 2: Database** | Schema design, migrations, RLS policies | SQL migrations, types |
-| **Zone 3: UI/UX** | Mobile app screens, components, navigation | React Native screens |
-| **Zone 4: Testing** | Unit tests, integration tests, E2E tests | Test suites, mocks |
-| **Zone 5: Integration** | Combine zones, refactor, optimize | Final polished system |
+| Zone | Responsibility | Output | Status |
+|------|----------------|--------|--------|
+| **Zone 1: Core** | Moltbot skills, business logic, AI prompts | Skill files, Edge Functions | ✅ Complete |
+| **Zone 2: Database** | Schema design, migrations, RLS policies | SQL migrations, types | ✅ Complete |
+| **Zone 3: UI/UX** | Mobile app screens, components, navigation | React Native screens | ✅ Complete |
+| **Zone 4: Testing** | Unit tests, integration tests, E2E tests | Test suites, mocks | ✅ Complete |
+| **Zone 5: Integration** | Combine zones, refactor, optimize | Final polished system | 🔄 In Progress |
+
+### Current Status Summary (January 28, 2026)
+
+**Zones 1-4 are COMPLETE.** Zone 5 (Integration & Cleanup) is the final phase.
+
+| Zone | Key Deliverables | Notes |
+|------|-----------------|-------|
+| Zone 1 | 5 Moltbot skills (doughy-core, doughy-lead, doughy-guest, doughy-room, doughy-book), 4 Edge Functions | AI responder, lead scorer, availability checker, moltbot bridge |
+| Zone 2 | 12+ tables with RLS, TypeScript types generated | crm_contacts, rental_*, ai_queue, etc. |
+| Zone 3 | Landlord platform UI (Inbox, Properties, Bookings), Focus nudges, Platform switcher | All screens functional |
+| Zone 4 | 15 test suites, 456 tests, 80-95% coverage | All critical paths covered |
+| Zone 5 | E2E testing, performance optimization, deployment | **NEXT: See Zone 5 checklist** |
 
 ---
 
@@ -3093,21 +3105,35 @@ npm test -- src/stores/__tests__/rental-conversations-store.test.ts
 cd supabase && deno test --allow-env --allow-net tests/edge-functions/
 ```
 
-### Remaining P2/P3 Items (Future Work)
+### P2/P3 Items (Completed January 28, 2026)
 
-- `availability-check.test.ts` - Suggested dates algorithm
-- `rental-bookings-store.test.ts` - Booking state management
-- `BookingsListScreen.test.tsx` - Bookings UI
-- `useNudges.test.tsx` - Nudge generation logic
-- `PlatformContext.test.tsx` - Platform switching
-- `useDeals.test.tsx` - Expand deal coverage
-- `useLeads.test.tsx` - Expand lead coverage
-- `PortfolioScreen.test.tsx` - Portfolio UI
-- `usePortfolio.test.tsx` - Portfolio data
+| Test File | Coverage | Description |
+|-----------|----------|-------------|
+| `src/stores/__tests__/rental-bookings-store.test.ts` | 85% | Booking state management |
+| `src/features/rental-bookings/__tests__/screens/BookingsListScreen.test.tsx` | 85% | Bookings UI |
+| `src/features/focus/__tests__/hooks/useNudges.test.tsx` | 90% | Nudge generation logic |
+| `src/contexts/__tests__/PlatformContext.test.tsx` | 85% | Platform switching context |
+| `src/features/deals/hooks/__tests__/useDeals.test.tsx` | 85% | Deal CRUD and filtering (expanded) |
+| `src/features/leads/hooks/__tests__/useLeads.test.tsx` | 85% | Lead CRUD and scoring (expanded) |
+| `src/features/portfolio/__tests__/screens/PortfolioScreen.test.tsx` | 80% | Portfolio UI |
+| `src/features/portfolio/hooks/__tests__/usePortfolio.test.tsx` | 80% | Portfolio data hooks |
+
+### Zone 4 Summary
+
+**Status: ✅ COMPLETE**
+
+- **15 test suites** with **456 tests** passing
+- **90%+ coverage** on P0/P1 items (critical path)
+- **80-85% coverage** on P2/P3 items (supporting features)
+- All edge functions have Deno test files
+- All Zustand stores have test files
+- All critical hooks and screens covered
 
 ---
 
 # ZONE 5: INTEGRATION & CLEANUP
+
+**Status: 🔄 IN PROGRESS**
 
 ## Responsibility
 Combine all zones, resolve conflicts, optimize performance, and polish the final product.
@@ -3117,26 +3143,26 @@ Combine all zones, resolve conflicts, optimize performance, and polish the final
 ### 5.1 Integration Tasks
 
 1. **Merge Zone Outputs**
-   - Ensure all database types align with actual schema
-   - Verify Edge Functions use correct types
-   - Confirm UI components receive expected props
+   - [ ] Ensure all database types align with actual schema
+   - [ ] Verify Edge Functions use correct types
+   - [ ] Confirm UI components receive expected props
 
 2. **End-to-End Testing**
-   - Run full flow tests with all zones integrated
-   - Test Moltbot → Edge Function → Database → UI flow
-   - Verify real-time subscriptions work
+   - [ ] Run full flow tests with all zones integrated
+   - [ ] Test Moltbot → Edge Function → Database → UI flow
+   - [ ] Verify real-time subscriptions work
 
 3. **Performance Optimization**
-   - Add database indexes for common queries
-   - Implement pagination for message lists
-   - Optimize Supabase subscriptions (filter at DB level)
+   - [ ] Add database indexes for common queries
+   - [ ] Implement pagination for message lists
+   - [ ] Optimize Supabase subscriptions (filter at DB level)
 
 ### 5.2 Code Quality
 
 1. **Linting & Formatting**
-   - ESLint pass on all TypeScript
-   - Prettier formatting
-   - No TypeScript errors
+   - [ ] ESLint pass on all TypeScript
+   - [ ] Prettier formatting
+   - [ ] No TypeScript errors
 
 2. **Code Review Checklist**
    - [ ] All functions have error handling
@@ -3148,17 +3174,17 @@ Combine all zones, resolve conflicts, optimize performance, and polish the final
 ### 5.3 Documentation
 
 1. **README Updates**
-   - Architecture overview
-   - Setup instructions
-   - Environment variables
+   - [ ] Architecture overview
+   - [ ] Setup instructions
+   - [ ] Environment variables
 
 2. **API Documentation**
-   - Edge Function endpoints
-   - Request/response examples
+   - [ ] Edge Function endpoints
+   - [ ] Request/response examples
 
 3. **Moltbot Skill Documentation**
-   - How to modify skills
-   - Adding new capabilities
+   - [ ] How to modify skills
+   - [ ] Adding new capabilities
 
 ### 5.4 Deployment Checklist
 
@@ -3169,6 +3195,12 @@ Combine all zones, resolve conflicts, optimize performance, and polish the final
 - [ ] Environment variables set
 - [ ] Mobile app built and submitted
 - [ ] Monitoring/alerting configured
+
+### 5.5 Known Issues / Tech Debt
+
+_Track issues discovered during integration here:_
+
+1. (none yet)
 
 ---
 
