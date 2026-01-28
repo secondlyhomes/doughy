@@ -25,10 +25,11 @@ import {
   Building2,
   Bot,
   ChevronRight,
+  AlertCircle,
 } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
-import { GlassView, LoadingSpinner, ListEmptyState } from '@/components/ui';
+import { GlassView, LoadingSpinner, ListEmptyState, Alert, AlertDescription, Button } from '@/components/ui';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
@@ -84,8 +85,9 @@ export function ConversationDetailScreen({
   const router = useRouter();
   const flatListRef = useRef<FlatList<Message>>(null);
   const inputRef = useRef<TextInput>(null);
+  // No tab bar since this screen uses fullScreenModal presentation
   const keyboardProps = useKeyboardAvoidance({
-    hasTabBar: true,
+    hasTabBar: false,
     hasNavigationHeader: false,
   });
 
@@ -104,6 +106,7 @@ export function ConversationDetailScreen({
     send,
     approve,
     reject,
+    clearError,
   } = useConversation(conversationId);
 
   // Get channel icon and color
@@ -288,6 +291,23 @@ export function ConversationDetailScreen({
           </View>
         </GlassView>
 
+        {/* Error Banner - shows transient errors without replacing the whole screen */}
+        {error && conversation && (
+          <View style={{ paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm }}>
+            <Alert variant="destructive" icon={<AlertCircle size={18} color={colors.destructive} />}>
+              <AlertDescription variant="destructive">{error}</AlertDescription>
+              <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm }}>
+                <Button size="sm" variant="outline" onPress={handleRefresh}>
+                  Try Again
+                </Button>
+                <Button size="sm" variant="ghost" onPress={clearError}>
+                  Dismiss
+                </Button>
+              </View>
+            </Alert>
+          </View>
+        )}
+
         {/* Message list */}
         <FlatList
           ref={flatListRef}
@@ -338,7 +358,8 @@ export function ConversationDetailScreen({
             {
               backgroundColor: colors.card,
               borderTopColor: colors.border,
-              paddingBottom: Math.max(insets.bottom, SPACING.md),
+              // Use safe area bottom for home indicator, with minimum padding
+              paddingBottom: insets.bottom > 0 ? insets.bottom : SPACING.sm,
             },
           ]}
         >

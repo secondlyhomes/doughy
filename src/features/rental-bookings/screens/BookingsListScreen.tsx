@@ -18,11 +18,13 @@ import {
   BottomSheetSection,
   Button,
   SimpleFAB,
+  Alert,
+  AlertDescription,
 } from '@/components/ui';
 import { LeadCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Plus, Calendar, Search, Check } from 'lucide-react-native';
+import { Plus, Calendar, Search, Check, WifiOff } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
@@ -99,7 +101,7 @@ export function BookingsListScreen() {
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
   const [filters, setFilters] = useState<BookingFilters>(defaultFilters);
 
-  const { bookings, filteredBookings, isLoading, refetch, error } = useRentalBookings({
+  const { bookings, filteredBookings, isLoading, refetch, error, clearError } = useRentalBookings({
     autoFetch: true,
     searchQuery: debouncedSearchQuery,
   });
@@ -199,6 +201,28 @@ export function BookingsListScreen() {
             />
           </View>
         </View>
+
+        {/* Error Banner */}
+        {error && (
+          <View
+            style={{
+              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SPACING.sm,
+              paddingHorizontal: SPACING.md,
+            }}
+          >
+            <Alert variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
+              <AlertDescription variant="destructive">{error}</AlertDescription>
+              <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm }}>
+                <Button size="sm" variant="outline" onPress={handleRefresh}>
+                  Try Again
+                </Button>
+                <Button size="sm" variant="ghost" onPress={clearError}>
+                  Dismiss
+                </Button>
+              </View>
+            </Alert>
+          </View>
+        )}
 
         {/* Bookings List */}
         {isLoading && !bookings?.length ? (

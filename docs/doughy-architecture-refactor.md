@@ -3150,22 +3150,22 @@ Combine all zones, resolve conflicts, optimize performance, and polish the final
 2. **End-to-End Testing**
    - [ ] Run full flow tests with all zones integrated
    - [ ] Test Moltbot → Edge Function → Database → UI flow
-   - [ ] Verify real-time subscriptions work
+   - [x] Verify real-time subscriptions work _(added to rental-conversations-store.ts)_
 
 3. **Performance Optimization**
-   - [ ] Add database indexes for common queries
+   - [x] Add database indexes for common queries _(migration 20260128140000_performance_indexes.sql)_
    - [ ] Implement pagination for message lists
-   - [ ] Optimize Supabase subscriptions (filter at DB level)
+   - [x] Optimize Supabase subscriptions (filter at DB level) _(real-time subscriptions filter by conversation_id)_
 
 ### 5.2 Code Quality
 
 1. **Linting & Formatting**
    - [ ] ESLint pass on all TypeScript
-   - [ ] Prettier formatting
+   - [x] Prettier formatting _(added .prettierrc)_
    - [ ] No TypeScript errors
 
 2. **Code Review Checklist**
-   - [ ] All functions have error handling
+   - [x] All functions have error handling _(error banners added to InboxListScreen, ConversationDetailScreen, BookingsListScreen)_
    - [ ] All user inputs are validated
    - [ ] No hardcoded secrets
    - [ ] Logging in place for debugging
@@ -3179,8 +3179,8 @@ Combine all zones, resolve conflicts, optimize performance, and polish the final
    - [ ] Environment variables
 
 2. **API Documentation**
-   - [ ] Edge Function endpoints
-   - [ ] Request/response examples
+   - [x] Edge Function endpoints _(docs/EDGE_FUNCTION_API.md)_
+   - [x] Request/response examples _(docs/EDGE_FUNCTION_API.md)_
 
 3. **Moltbot Skill Documentation**
    - [ ] How to modify skills

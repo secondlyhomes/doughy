@@ -223,6 +223,10 @@ serve(async (req) => {
         case 'bland-ai':
           healthResult = await checkBlandAI(apiKey);
           break;
+        case 'moltbot':
+        case 'moltbot-server-url':
+          healthResult = await checkMoltBot(apiKey);
+          break;
         case 'plaid-client-id':
         case 'plaid-secret':
           // For Plaid, we need both client ID and secret, but for now we'll just check that it's configured
@@ -887,7 +891,7 @@ async function checkOutlookCalendar(apiKey: string) {
 async function checkBlandAI(apiKey: string) {
   try {
     logInfo("Checking Bland.ai API health...", {});
-    
+
     const response = await fetch('https://api.bland.ai/v1/calls', {
       method: 'GET',
       headers: {
@@ -895,7 +899,7 @@ async function checkBlandAI(apiKey: string) {
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (response.ok) {
       return {
         status: 'operational',
@@ -903,9 +907,9 @@ async function checkBlandAI(apiKey: string) {
         service: 'bland-ai'
       };
     }
-    
+
     logError("Bland.ai API error: " + response.statusText, {});
-    
+
     return {
       status: 'error',
       message: `Bland.ai API error: ${response.statusText}`,
@@ -918,5 +922,132 @@ async function checkBlandAI(apiKey: string) {
       message: error.message || 'Error checking Bland.ai API health',
       service: 'bland-ai'
     };
+  }
+}
+
+/**
+ * Validate URL to prevent SSRF attacks
+ * Blocks internal/private IPs and non-HTTP(S) protocols
+ */
+function validateExternalUrl(url: string): { valid: boolean; error?: string } {
+  try {
+    const parsed = new URL(url);
+
+    // Only allow HTTP(S) protocols
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return { valid: false, error: 'Invalid protocol. Only HTTP(S) allowed.' };
+    }
+
+    // Block internal/private IPs and localhost
+    const hostname = parsed.hostname.toLowerCase();
+
+    // Check for localhost and special addresses
+    if (
+      hostname === 'localhost' ||
+      hostname.startsWith('127.') ||
+      hostname === '0.0.0.0' ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.internal')
+    ) {
+      return { valid: false, error: 'Internal/private URLs are not allowed.' };
+    }
+
+    // Check for 10.0.0.0/8 (10.x.x.x)
+    if (hostname.startsWith('10.')) {
+      return { valid: false, error: 'Internal/private URLs are not allowed.' };
+    }
+
+    // Check for 192.168.0.0/16 (192.168.x.x)
+    if (hostname.startsWith('192.168.')) {
+      return { valid: false, error: 'Internal/private URLs are not allowed.' };
+    }
+
+    // Check for 172.16.0.0/12 (172.16.x.x - 172.31.x.x)
+    const match172 = hostname.match(/^172\.(\d+)\./);
+    if (match172) {
+      const secondOctet = parseInt(match172[1], 10);
+      if (secondOctet >= 16 && secondOctet <= 31) {
+        return { valid: false, error: 'Internal/private URLs are not allowed.' };
+      }
+    }
+
+    // Check for link-local addresses (169.254.x.x)
+    if (hostname.startsWith('169.254.')) {
+      return { valid: false, error: 'Internal/private URLs are not allowed.' };
+    }
+
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'Invalid URL format.' };
+  }
+}
+
+/**
+ * Check MoltBot server health
+ * Pings the MoltBot server's /health endpoint to verify connectivity
+ * and check Supabase/Gmail integration status
+ */
+async function checkMoltBot(serverUrl: string) {
+  const TIMEOUT_MS = 5000;
+
+  try {
+    logInfo("Checking MoltBot server health...", {});
+
+    // Validate URL to prevent SSRF attacks
+    const urlValidation = validateExternalUrl(serverUrl);
+    if (!urlValidation.valid) {
+      return { status: 'error', message: urlValidation.error || 'Invalid server URL', service: 'moltbot' };
+    }
+
+    const startTime = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    const response = await fetch(`${serverUrl}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    clearTimeout(timeoutId);
+    const latency = Date.now() - startTime;
+
+    if (!response.ok) {
+      logError(`MoltBot server error: ${response.status} ${response.statusText}`, {});
+      return { status: 'error', message: `MoltBot server returned ${response.status}`, service: 'moltbot', latency };
+    }
+
+    // Parse JSON response with error handling for malformed responses
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      logError('MoltBot returned invalid JSON response:', { status: response.status });
+      return { status: 'error', message: 'MoltBot server returned an invalid response format', service: 'moltbot', latency };
+    }
+
+    // Expected response: { status: 'healthy', supabase: 'ok'|'error', gmail: 'ready'|'not_watching' }
+    const supabaseOk = data.supabase === 'ok';
+    const gmailReady = data.gmail === 'ready';
+
+    // Fully operational: both Supabase and Gmail working
+    if (supabaseOk && gmailReady) {
+      return { status: 'operational', message: 'MoltBot server is fully operational', service: 'moltbot', latency };
+    }
+
+    // Partially configured: Supabase works but Gmail not connected
+    if (supabaseOk) {
+      return { status: 'configured', message: `MoltBot server connected, Gmail: ${data.gmail || 'not connected'}`, service: 'moltbot', latency };
+    }
+
+    // Error: Supabase connection failed
+    return { status: 'error', message: `MoltBot: Supabase ${data.supabase || 'error'}, Gmail ${data.gmail || 'unknown'}`, service: 'moltbot', latency };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error
+      ? (error.name === 'AbortError' ? `MoltBot server connection timed out (${TIMEOUT_MS / 1000}s)` : error.message)
+      : 'Error connecting to MoltBot server';
+
+    logError('MoltBot health check error:', error);
+    return { status: 'error', message: errorMessage, service: 'moltbot' };
   }
 }

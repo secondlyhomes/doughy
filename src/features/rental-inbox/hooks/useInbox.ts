@@ -7,22 +7,28 @@ import {
   ConversationWithRelations,
   ApprovalMetadata,
 } from '@/stores/rental-conversations-store';
+import { useAuth } from '@/features/auth/hooks';
 import type { InboxFilter, InboxSort } from '../types';
 
 /**
  * Hook to fetch and manage inbox conversations
  */
 export function useInbox() {
+  const { user } = useAuth();
   const {
     conversationsWithRelations,
     pendingResponses,
     isLoading,
     isRefreshing,
     error,
+    isSubscribed,
+    subscriptionError,
     fetchConversations,
     fetchPendingResponses,
     approveResponse,
     clearError,
+    subscribeToConversations,
+    clearSubscriptionError,
   } = useRentalConversationsStore();
 
   // Initial fetch with cleanup to prevent state updates on unmounted component
@@ -47,10 +53,23 @@ export function useInbox() {
     };
   }, [fetchConversations, fetchPendingResponses]);
 
-  // Refresh both conversations and pending responses
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const unsubscribe = subscribeToConversations(user.id);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user?.id, subscribeToConversations]);
+
+  // Refresh both conversations and pending responses (clears error on attempt)
   const refresh = useCallback(async () => {
+    clearError();
+    clearSubscriptionError();
     await Promise.all([fetchConversations(), fetchPendingResponses()]);
-  }, [fetchConversations, fetchPendingResponses]);
+  }, [fetchConversations, fetchPendingResponses, clearError, clearSubscriptionError]);
 
   // Count of items needing review
   const pendingCount = pendingResponses.length;
@@ -87,9 +106,12 @@ export function useInbox() {
     isLoading,
     isRefreshing,
     error,
+    isSubscribed,
+    subscriptionError,
     refresh,
     quickApprove,
     clearError,
+    clearSubscriptionError,
   };
 }
 
@@ -196,6 +218,7 @@ export function useConversation(conversationId: string) {
     rejectResponse,
     toggleAI,
     clearError,
+    subscribeToMessages,
   } = useRentalConversationsStore();
 
   // Get conversation
@@ -220,6 +243,17 @@ export function useConversation(conversationId: string) {
       fetchMessages(conversationId);
     }
   }, [conversationId, fetchConversationById, fetchMessages]);
+
+  // Subscribe to real-time message updates
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const unsubscribe = subscribeToMessages(conversationId);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [conversationId, subscribeToMessages]);
 
   // Actions
   const send = useCallback(

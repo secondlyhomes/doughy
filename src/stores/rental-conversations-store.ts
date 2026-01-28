@@ -155,6 +155,11 @@ export interface RentalConversationsState {
   // Error state
   error: string | null;
 
+  // Real-time subscription state
+  isSubscribed: boolean;
+  messageSubscriptions: Set<string>; // Track active message subscription conversation IDs
+  subscriptionError: string | null; // Subscription-specific errors
+
   // Actions - Conversations
   fetchConversations: () => Promise<void>;
   fetchConversationById: (id: string) => Promise<ConversationWithRelations | null>;
@@ -176,6 +181,11 @@ export interface RentalConversationsState {
   setStatusFilter: (status: ConversationStatus | 'all') => void;
   setChannelFilter: (channel: Channel | 'all') => void;
 
+  // Real-time subscriptions
+  subscribeToConversations: (userId: string) => () => void;
+  subscribeToMessages: (conversationId: string) => () => void;
+  clearSubscriptionError: () => void;
+
   clearError: () => void;
   reset: () => void;
 }
@@ -192,6 +202,9 @@ const initialState = {
   isRefreshing: false,
   isSending: false,
   error: null,
+  isSubscribed: false,
+  messageSubscriptions: new Set<string>(),
+  subscriptionError: null,
 };
 
 export const useRentalConversationsStore = create<RentalConversationsState>()(
@@ -358,11 +371,13 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       fetchMessages: async (conversationId: string) => {
         set({ isLoading: true, error: null });
         try {
+          // Sort descending (newest first) for inverted FlatList
+          // This puts newest messages at the bottom like iOS Messenger
           const { data, error } = await supabase
             .from('rental_messages')
             .select('*')
             .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: false });
 
           if (error) throw error;
 
@@ -398,10 +413,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
 
           const message = newMessage as Message;
 
+          // Prepend new message to beginning (since array is sorted newest first)
           set((state) => ({
             messages: {
               ...state.messages,
-              [conversationId]: [...(state.messages[conversationId] || []), message],
+              [conversationId]: [message, ...(state.messages[conversationId] || [])],
             },
             isSending: false,
           }));
@@ -618,6 +634,206 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       setChannelFilter: (channel: Channel | 'all') => {
         set({ channelFilter: channel });
       },
+
+      // Real-time subscription for conversations and AI queue with retry logic
+      subscribeToConversations: (userId: string) => {
+        const { isSubscribed } = get();
+        if (isSubscribed) {
+          // Already subscribed, return no-op cleanup
+          return () => {};
+        }
+
+        let retryCount = 0;
+        const maxRetries = 5;
+        const baseDelay = 1000;
+        let currentChannel: ReturnType<typeof supabase.channel> | null = null;
+        let isCleanedUp = false;
+
+        const subscribe = () => {
+          if (isCleanedUp) return;
+
+          currentChannel = supabase
+            .channel('rental-conversations-changes')
+            .on(
+              'postgres_changes',
+              {
+                event: '*',
+                schema: 'public',
+                table: 'rental_conversations',
+                filter: `user_id=eq.${userId}`,
+              },
+              async (payload) => {
+                if (isCleanedUp) return;
+                if (__DEV__) {
+                  console.log('[Real-time] Conversation change:', payload.eventType);
+                }
+                try {
+                  await get().fetchConversations();
+                } catch (err) {
+                  console.error('[Real-time] Failed to refresh conversations:', err);
+                }
+              }
+            )
+            .on(
+              'postgres_changes',
+              {
+                event: '*',
+                schema: 'public',
+                table: 'rental_ai_queue',
+                filter: `user_id=eq.${userId}`,
+              },
+              async (payload) => {
+                if (isCleanedUp) return;
+                if (__DEV__) {
+                  console.log('[Real-time] AI queue change:', payload.eventType);
+                }
+                try {
+                  await get().fetchPendingResponses();
+                } catch (err) {
+                  console.error('[Real-time] Failed to refresh pending responses:', err);
+                }
+              }
+            )
+            .subscribe((status, error) => {
+              if (isCleanedUp) return;
+              if (__DEV__) {
+                console.log('[Real-time] Subscription status:', status, error);
+              }
+
+              if (status === 'SUBSCRIBED') {
+                retryCount = 0;
+                set({ isSubscribed: true, subscriptionError: null });
+              } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+                console.error('[Real-time] Subscription failed:', status, error);
+                set({ isSubscribed: false });
+
+                // Retry with exponential backoff
+                if (retryCount < maxRetries && !isCleanedUp) {
+                  const delay = baseDelay * Math.pow(2, retryCount);
+                  retryCount++;
+                  if (__DEV__) {
+                    console.log(`[Real-time] Retrying subscription in ${delay}ms (attempt ${retryCount})`);
+                  }
+                  setTimeout(() => {
+                    if (currentChannel && !isCleanedUp) {
+                      supabase.removeChannel(currentChannel);
+                      subscribe();
+                    }
+                  }, delay);
+                } else if (!isCleanedUp) {
+                  set({
+                    subscriptionError: 'Real-time updates unavailable. Pull to refresh for latest data.',
+                  });
+                }
+              }
+            });
+        };
+
+        subscribe();
+
+        // Return cleanup function
+        return () => {
+          isCleanedUp = true;
+          if (__DEV__) {
+            console.log('[Real-time] Unsubscribing from conversations');
+          }
+          if (currentChannel) {
+            supabase.removeChannel(currentChannel);
+          }
+          set({ isSubscribed: false, subscriptionError: null });
+        };
+      },
+
+      // Real-time subscription for messages in a specific conversation
+      subscribeToMessages: (conversationId: string) => {
+        const { messageSubscriptions } = get();
+
+        // Prevent duplicate subscriptions for the same conversation
+        if (messageSubscriptions.has(conversationId)) {
+          if (__DEV__) {
+            console.log(`[Real-time] Already subscribed to messages for ${conversationId}`);
+          }
+          return () => {};
+        }
+
+        // Track this subscription
+        set((state) => ({
+          messageSubscriptions: new Set(state.messageSubscriptions).add(conversationId),
+        }));
+
+        let isCleanedUp = false;
+
+        const channel = supabase
+          .channel(`rental-messages-${conversationId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'rental_messages',
+              filter: `conversation_id=eq.${conversationId}`,
+            },
+            (payload) => {
+              if (isCleanedUp) return;
+
+              // Validate payload before using
+              const newMessage = payload.new as Record<string, unknown>;
+              if (!newMessage?.id || !newMessage?.conversation_id || !newMessage?.content) {
+                console.error('[Real-time] Invalid message payload:', newMessage);
+                return;
+              }
+
+              if (__DEV__) {
+                console.log('[Real-time] New message received:', newMessage.id);
+              }
+
+              // Add new message to local state (prepend since array is sorted newest first)
+              set((state) => ({
+                messages: {
+                  ...state.messages,
+                  [conversationId]: [
+                    newMessage as unknown as Message,
+                    ...(state.messages[conversationId] || []).filter(
+                      (m) => m.id !== newMessage.id // Avoid duplicates
+                    ),
+                  ],
+                },
+              }));
+            }
+          )
+          .subscribe((status, error) => {
+            if (isCleanedUp) return;
+            if (__DEV__) {
+              console.log(`[Real-time] Messages subscription status for ${conversationId}:`, status);
+            }
+
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+              console.error(`[Real-time] Message subscription failed for ${conversationId}:`, status, error);
+              // Don't set global error, but remove from tracking so it can be retried
+              set((state) => {
+                const newSubs = new Set(state.messageSubscriptions);
+                newSubs.delete(conversationId);
+                return { messageSubscriptions: newSubs };
+              });
+            }
+          });
+
+        // Return cleanup function
+        return () => {
+          isCleanedUp = true;
+          if (__DEV__) {
+            console.log(`[Real-time] Unsubscribing from messages for ${conversationId}`);
+          }
+          supabase.removeChannel(channel);
+          set((state) => {
+            const newSubs = new Set(state.messageSubscriptions);
+            newSubs.delete(conversationId);
+            return { messageSubscriptions: newSubs };
+          });
+        };
+      },
+
+      clearSubscriptionError: () => set({ subscriptionError: null }),
 
       clearError: () => set({ error: null }),
 

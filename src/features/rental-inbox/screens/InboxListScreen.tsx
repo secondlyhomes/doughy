@@ -20,6 +20,7 @@ import {
   UserPlus,
   CheckCircle2,
   ChevronRight,
+  WifiOff,
 } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
@@ -30,6 +31,8 @@ import {
   BottomSheet,
   BottomSheetSection,
   Button,
+  Alert,
+  AlertDescription,
 } from '@/components/ui';
 import { ConversationCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
 import { useThemeColors, ThemeColors } from '@/context/ThemeContext';
@@ -315,7 +318,7 @@ export function InboxListScreen() {
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
 
   // Data hooks
-  const { pendingCount, pendingResponses, isLoading, isRefreshing, error, refresh, quickApprove } = useInbox();
+  const { pendingCount, pendingResponses, isLoading, isRefreshing, error, subscriptionError, refresh, quickApprove, clearError } = useInbox();
   const filteredConversations = useFilteredInbox(activeFilter, activeSort, debouncedSearch);
 
   // Create sections from conversations
@@ -476,67 +479,8 @@ export function InboxListScreen() {
     []
   );
 
-  // Stats banner
-  const StatsBanner = useMemo(() => {
-    if (pendingCount === 0) return null;
-
-    const leadsCount = sections.find((s) => s.title === 'New Leads')?.data.length || 0;
-    const reviewCount = sections.find((s) => s.title === 'Needs Your Review')?.data.length || 0;
-
-    return (
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: SPACING.sm,
-          marginBottom: SPACING.md,
-        }}
-      >
-        {leadsCount > 0 && (
-          <TouchableOpacity
-            onPress={() => setActiveFilter('needs_review')}
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: withOpacity(colors.success, 'muted'),
-              padding: SPACING.sm,
-              borderRadius: BORDER_RADIUS.lg,
-              borderWidth: 1,
-              borderColor: withOpacity(colors.success, 'medium'),
-            }}
-          >
-            <UserPlus size={18} color={colors.success} />
-            <View style={{ marginLeft: SPACING.xs }}>
-              <Text style={{ color: colors.foreground, fontWeight: '600' }}>{leadsCount}</Text>
-              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>New Leads</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {reviewCount > 0 && (
-          <TouchableOpacity
-            onPress={() => setActiveFilter('needs_review')}
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: withOpacity(colors.warning, 'muted'),
-              padding: SPACING.sm,
-              borderRadius: BORDER_RADIUS.lg,
-              borderWidth: 1,
-              borderColor: withOpacity(colors.warning, 'medium'),
-            }}
-          >
-            <Bot size={18} color={colors.warning} />
-            <View style={{ marginLeft: SPACING.xs }}>
-              <Text style={{ color: colors.foreground, fontWeight: '600' }}>{reviewCount}</Text>
-              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>Need Review</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  }, [pendingCount, sections, colors]);
+  // Stats banner removed - section headers already show counts,
+  // having both was confusing the UX flow
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -558,6 +502,30 @@ export function InboxListScreen() {
             />
           </View>
         </View>
+
+        {/* Error Banner */}
+        {(error || subscriptionError) && (
+          <View
+            style={{
+              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SPACING.sm,
+              paddingHorizontal: SPACING.md,
+            }}
+          >
+            <Alert variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
+              <AlertDescription variant="destructive">
+                {error || subscriptionError}
+              </AlertDescription>
+              <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm }}>
+                <Button size="sm" variant="outline" onPress={handleRefresh}>
+                  Try Again
+                </Button>
+                <Button size="sm" variant="ghost" onPress={clearError}>
+                  Dismiss
+                </Button>
+              </View>
+            </Alert>
+          </View>
+        )}
 
         {/* Conversation List */}
         {isLoading && !filteredConversations.length ? (
@@ -593,7 +561,6 @@ export function InboxListScreen() {
                 tintColor={colors.info}
               />
             }
-            ListHeaderComponent={StatsBanner}
             ListEmptyComponent={
               <ListEmptyState
                 state={searchQuery ? 'filtered' : 'empty'}
