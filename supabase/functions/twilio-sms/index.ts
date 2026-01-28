@@ -187,8 +187,7 @@ serve(async (req) => {
 
     // Create Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    // Try new SUPABASE_SECRET_KEY first, fall back to legacy SUPABASE_SERVICE_ROLE_KEY
-    const supabaseSecretKey = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseSecretKey = Deno.env.get('SUPABASE_SECRET_KEY');
 
     if (!supabaseUrl || !supabaseSecretKey) {
       throw new Error('Missing Supabase configuration');

@@ -811,7 +811,7 @@ serve(async (req: Request) => {
 
     // Check if this is a service role key (server-to-server authentication)
     // Support both legacy JWT-format key and new SUPABASE_SECRET_KEY format
-    const secretKey = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const secretKey = Deno.env.get('SUPABASE_SECRET_KEY');
     const moltbotSecretKey = Deno.env.get('MOLTBOT_SECRET_KEY');
     const isServiceRole = (secretKey && token === secretKey) ||
                           (moltbotSecretKey && token === moltbotSecretKey);
@@ -825,8 +825,7 @@ serve(async (req: Request) => {
     } else {
       // User JWT authentication
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      // Try new SUPABASE_PUBLISHABLE_KEY first, fall back to legacy SUPABASE_ANON_KEY
-      const supabasePublishableKey = (Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY'))!;
+      const supabasePublishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!;
       const supabase = createClient(supabaseUrl, supabasePublishableKey, {
         global: { headers: { Authorization: authHeader } },
       });

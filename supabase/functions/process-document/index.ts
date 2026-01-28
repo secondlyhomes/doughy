@@ -43,7 +43,7 @@ serve(async (req: Request) => {
     // Create a Supabase client with the auth header
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") || "",
-      Deno.env.get("SUPABASE_SECRET_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
+      Deno.env.get("SUPABASE_SECRET_KEY") || "",
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -156,7 +156,7 @@ serve(async (req: Request) => {
         if (documentId) {
           const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") || "",
-            Deno.env.get("SUPABASE_SECRET_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
+            Deno.env.get("SUPABASE_SECRET_KEY") || ""
           );
           
           await supabaseClient

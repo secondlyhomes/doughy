@@ -185,9 +185,8 @@ serve(async (req) => {
   try {
     // Initialize Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    // Try new keys first, fall back to legacy keys
-    const supabasePublishableKey = (Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')) as string;
-    const supabaseSecretKey = (Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) as string;
+    const supabasePublishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') as string;
+    const supabaseSecretKey = (Deno.env.get('SUPABASE_SECRET_KEY')) as string;
 
     if (!supabaseUrl || !supabasePublishableKey || !supabaseSecretKey) {
       return new Response(JSON.stringify({

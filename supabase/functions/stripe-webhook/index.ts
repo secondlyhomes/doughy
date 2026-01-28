@@ -720,8 +720,7 @@ serve(async (req: Request) => {
   try {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    // Try new SUPABASE_SECRET_KEY first, fall back to legacy SUPABASE_SERVICE_ROLE_KEY
-    const supabaseKey = (Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) as string;
+    const supabaseKey = (Deno.env.get('SUPABASE_SECRET_KEY')) as string;
 
     if (!supabaseUrl || !supabaseKey) {
       logger.error('Missing Supabase credentials');

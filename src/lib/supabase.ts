@@ -11,16 +11,16 @@ import { DEV_MODE_CONFIG } from '@/config/devMode';
 
 // Supabase configuration
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 // Check if we're in mock data mode
 const USE_MOCK_DATA = DEV_MODE_CONFIG.useMockData;
 
 // Validate required environment variables (skip in mock mode)
-if (!USE_MOCK_DATA && (!SUPABASE_URL || !SUPABASE_ANON_KEY)) {
+if (!USE_MOCK_DATA && (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY)) {
   throw new Error(
     '[Supabase] Missing required environment variables. ' +
-    'Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env file. ' +
+    'Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY in your .env file. ' +
     'Or set EXPO_PUBLIC_USE_MOCK_DATA=true to use mock data.'
   );
 }
@@ -96,8 +96,8 @@ const ExpoSecureStoreAdapter = {
 
 // Initialize real Supabase client for React Native with Database types
 // Only create if we have valid credentials (not in mock mode with placeholders)
-const realSupabase = (!USE_MOCK_DATA && SUPABASE_URL && SUPABASE_ANON_KEY)
-  ? createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+const realSupabase = (!USE_MOCK_DATA && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY)
+  ? createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       auth: {
         storage: ExpoSecureStoreAdapter,
         autoRefreshToken: true,

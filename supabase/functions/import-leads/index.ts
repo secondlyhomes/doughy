@@ -6,8 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 // Environment variables
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-// Try new SUPABASE_PUBLISHABLE_KEY first, fall back to legacy SUPABASE_ANON_KEY
-const supabasePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY") || "";
+const supabasePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
 
 // Types for import functionality
 interface CanonicalRow {

@@ -17,8 +17,7 @@ import { decryptServer } from "../_shared/crypto-server.ts";
 const DEFAULT_MODEL = Deno.env.get('DEFAULT_MODEL') || 'gpt-4.1-mini';
 const ENVIRONMENT = Deno.env.get('ENVIRONMENT') || 'development';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-// Try new SUPABASE_SECRET_KEY first, fall back to legacy SUPABASE_SERVICE_ROLE_KEY
-const SUPABASE_SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const SUPABASE_SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY');
 
 // Allowed domains by environment - comprehensive list
 const allowedOrigins = {
