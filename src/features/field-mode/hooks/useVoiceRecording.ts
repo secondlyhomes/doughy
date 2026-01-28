@@ -242,6 +242,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
       });
     } catch (err) {
       console.error('Failed to cancel recording:', err);
+      setError('Failed to cancel recording');
     }
   }, []);
 
@@ -292,6 +293,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
       }
     } catch (err) {
       console.error('Failed to stop playback:', err);
+      setError('Failed to stop playback');
     }
   }, []);
 

@@ -44,24 +44,36 @@ export function usePortfolioPerformance(portfolioEntryId: string | undefined) {
       }
 
       // Fetch monthly records
-      const { data: monthlyRecords } = await supabase
+      const { data: monthlyRecords, error: recordsError } = await supabase
         .from('re_portfolio_monthly_records')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId)
         .order('month', { ascending: true });
 
+      if (recordsError) {
+        console.error('Error fetching monthly records:', recordsError);
+      }
+
       // Fetch mortgages
-      const { data: mortgages } = await supabase
+      const { data: mortgages, error: mortgagesError } = await supabase
         .from('re_portfolio_mortgages')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId);
 
+      if (mortgagesError) {
+        console.error('Error fetching mortgages:', mortgagesError);
+      }
+
       // Fetch valuations
-      const { data: valuations } = await supabase
+      const { data: valuations, error: valuationsError } = await supabase
         .from('re_portfolio_valuations')
         .select('*')
         .eq('property_id', entry.property_id)
         .order('valuation_date', { ascending: true });
+
+      if (valuationsError) {
+        console.error('Error fetching valuations:', valuationsError);
+      }
 
       return calculatePerformance(
         entry,

@@ -85,6 +85,7 @@ export function PhotoBucketCard({
       }
     } catch (err) {
       console.error('Error taking photo:', err);
+      Alert.alert('Camera Error', 'Failed to take photo. Please try again.');
     }
   }, [bucket, disabled, onAddPhoto]);
 
@@ -113,6 +114,7 @@ export function PhotoBucketCard({
       }
     } catch (err) {
       console.error('Error selecting photos:', err);
+      Alert.alert('Gallery Error', 'Failed to select photos. Please try again.');
     }
   }, [bucket, disabled, onAddPhoto]);
 
