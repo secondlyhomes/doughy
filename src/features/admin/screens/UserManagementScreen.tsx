@@ -1,20 +1,21 @@
 // src/features/admin/screens/UserManagementScreen.tsx
 // User management screen for admin
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { User, Shield, ChevronRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
+import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
 import { SPACING } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getUsers, getRoleLabel, isAdminRole, type AdminUser, type UserFilters, type UserRole } from '../services/userService';
@@ -98,6 +99,7 @@ export function UserManagementScreen() {
     limit: 20,
   });
   const [showFilters, setShowFilters] = useState(false);
+  const hasLoadedRef = useRef(false);
 
   const loadUsers = useCallback(async (reset = false) => {
     const currentFilters = reset ? { ...filters, page: 1 } : filters;
@@ -114,19 +116,24 @@ export function UserManagementScreen() {
         setUsers((prev) => [...prev, ...result.users!]);
       }
       setTotal(result.total || 0);
+    } else if (!result.success) {
+      Alert.alert('Error', result.error || 'Failed to load users');
     }
   }, [filters, debouncedSearch]);
 
   // Initial load and filter changes
   useEffect(() => {
     setIsLoading(true);
-    loadUsers(true).finally(() => setIsLoading(false));
+    loadUsers(true).finally(() => {
+      setIsLoading(false);
+      hasLoadedRef.current = true;
+    });
   }, [loadUsers]);
 
   // Reset pagination when debounced search changes
   useEffect(() => {
-    // Only reset if not initial render (filters.page > 1 or has been loaded)
-    if (!isLoading) {
+    // Only reset if initial load has completed
+    if (hasLoadedRef.current) {
       setFilters((prev) => ({ ...prev, page: 1 }));
     }
   }, [debouncedSearch]);

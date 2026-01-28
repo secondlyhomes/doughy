@@ -70,6 +70,10 @@ export function AdminDashboardScreen() {
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+      Alert.alert(
+        'Failed to Load',
+        'Could not load dashboard data. Please check your connection and try again.'
+      );
     }
   }, []);
 

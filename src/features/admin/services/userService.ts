@@ -194,6 +194,10 @@ export async function updateUserRole(
   userId: string,
   role: UserRole
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isValidUuid(userId)) {
+    return { success: false, error: 'Invalid user ID format' };
+  }
+
   try {
     const { error } = await supabase
       .from('user_profiles')
@@ -217,6 +221,10 @@ export async function updateUserRole(
 export async function restoreUser(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isValidUuid(userId)) {
+    return { success: false, error: 'Invalid user ID format' };
+  }
+
   try {
     const { error } = await supabase
       .from('user_profiles')
@@ -241,6 +249,10 @@ export async function restoreUser(
 export async function deleteUser(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isValidUuid(userId)) {
+    return { success: false, error: 'Invalid user ID format' };
+  }
+
   try {
     const { error } = await supabase
       .from('user_profiles')

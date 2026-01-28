@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useToast } from '@/components/ui/Toast';
-import { ArrowLeft, Mail, Shield, Calendar, Clock, MoreVertical, Trash2, RotateCcw } from 'lucide-react-native';
+import { Mail, Shield, Calendar, Clock, MoreVertical, Trash2, RotateCcw } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
@@ -28,13 +28,19 @@ export function UserDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const isSelf = currentUser?.id === userId;
 
   const loadUser = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(null);
     const result = await getUserById(userId);
-    if (result.success && result.user) setUser(result.user);
+    if (result.success && result.user) {
+      setUser(result.user);
+    } else {
+      setLoadError(result.error || 'Failed to load user');
+    }
     setIsLoading(false);
   }, [userId]);
 
@@ -126,7 +132,13 @@ export function UserDetailScreen() {
       <ThemedSafeAreaView className="flex-1">
         <ScreenHeader title="User Details" backButton bordered />
         <View className="flex-1 items-center justify-center">
-          {isLoading ? <LoadingSpinner fullScreen /> : <Text style={{ color: colors.mutedForeground }}>User not found</Text>}
+          {isLoading ? (
+            <LoadingSpinner fullScreen />
+          ) : loadError ? (
+            <Text style={{ color: colors.destructive }}>{loadError}</Text>
+          ) : (
+            <Text style={{ color: colors.mutedForeground }}>User not found</Text>
+          )}
         </View>
       </ThemedSafeAreaView>
     );

@@ -3,13 +3,12 @@
 
 import { supabase } from '@/lib/supabase';
 import { INTEGRATIONS } from '../data/integrationData';
-import type { Integration, IntegrationHealth } from '../types/integrations';
-import { checkIntegrationHealth, getHealthStatusFromDB } from './apiKeyHealthService';
+import type { Integration, IntegrationHealth, IntegrationStatus } from '../types/integrations';
+import { checkIntegrationHealth } from './apiKeyHealthService';
 import { normalizeServiceName } from '../utils/serviceHelpers';
 
-// Re-export types from integrationData for backward compatibility
-export type { Integration };
-export type IntegrationStatus = 'operational' | 'configured' | 'error' | 'not-configured' | 'checking';
+// Re-export types for backward compatibility
+export type { Integration, IntegrationStatus };
 
 export interface IntegrationsResult {
   success: boolean;

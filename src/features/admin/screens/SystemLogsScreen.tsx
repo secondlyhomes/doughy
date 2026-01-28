@@ -8,8 +8,8 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import {
   AlertCircle,
   AlertTriangle,
@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, LoadingSpinner, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
+import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
 import { SPACING } from '@/constants/design-tokens';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
 
@@ -31,7 +31,6 @@ const FILTER_PILLS_HEIGHT = 60; // Slightly taller due to "Filter by Level" labe
 const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 export function SystemLogsScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
 
@@ -59,6 +58,8 @@ export function SystemLogsScreen() {
         setLogs((prev) => [...prev, ...result.logs!]);
       }
       setTotal(result.total || 0);
+    } else if (!result.success) {
+      Alert.alert('Error', result.error || 'Failed to load logs');
     }
   }, [filters]);
 
@@ -311,15 +312,19 @@ interface FilterPillProps {
 }
 
 const FilterPill = React.memo(function FilterPill({ label, active, onPress, color, colors }: FilterPillProps) {
+  // Use the provided color when active, otherwise use default primary
+  const activeBackgroundColor = color ? withOpacity(color, 'strong') : colors.primary;
+  const activeTextColor = color || colors.primaryForeground;
+
   return (
     <TouchableOpacity
       className="px-3 py-1.5 rounded-full"
-      style={{ backgroundColor: active ? colors.primary : colors.muted }}
+      style={{ backgroundColor: active ? activeBackgroundColor : colors.muted }}
       onPress={onPress}
     >
       <Text
         className="text-sm"
-        style={{ color: active ? colors.primaryForeground : colors.mutedForeground }}
+        style={{ color: active ? activeTextColor : colors.mutedForeground }}
       >
         {label}
       </Text>

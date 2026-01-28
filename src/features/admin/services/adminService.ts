@@ -17,6 +17,7 @@ export interface SystemHealth {
   status: 'operational' | 'degraded' | 'outage';
   latency?: number;
   lastChecked: string;
+  error?: string;
 }
 
 export interface AdminStatsResult {
@@ -112,78 +113,97 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
  * Check system health status
  */
 export async function getSystemHealth(): Promise<SystemHealthResult> {
-  const systems: SystemHealth[] = [];
-  const now = new Date().toISOString();
-
-  // Check Database connection
   try {
-    const start = Date.now();
-    const { error } = await supabase.from('user_profiles').select('id').limit(1);
-    const latency = Date.now() - start;
+    const systems: SystemHealth[] = [];
+    const now = new Date().toISOString();
 
-    systems.push({
-      name: 'Database',
-      status: error ? 'outage' : latency > 1000 ? 'degraded' : 'operational',
-      latency,
+    // Check Database connection
+    try {
+      const start = Date.now();
+      const { error } = await supabase.from('user_profiles').select('id').limit(1);
+      const latency = Date.now() - start;
+
+      systems.push({
+        name: 'Database',
+        status: error ? 'outage' : latency > 1000 ? 'degraded' : 'operational',
+        latency,
+        lastChecked: now,
+      });
+    } catch (error) {
+      console.error('[admin] Database health check failed:', error);
+      systems.push({
+        name: 'Database',
+        status: 'outage',
+        lastChecked: now,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
+    // Check Auth service
+    try {
+      const start = Date.now();
+      const { error } = await supabase.auth.getSession();
+      const latency = Date.now() - start;
+
+      systems.push({
+        name: 'Authentication',
+        status: error ? 'degraded' : 'operational',
+        latency,
+        lastChecked: now,
+      });
+    } catch (error) {
+      console.error('[admin] Auth health check failed:', error);
+      systems.push({
+        name: 'Authentication',
+        status: 'outage',
+        lastChecked: now,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
+    // Check Storage
+    try {
+      const start = Date.now();
+      const { error } = await supabase.storage.listBuckets();
+      const latency = Date.now() - start;
+
+      systems.push({
+        name: 'Storage',
+        status: error ? 'degraded' : 'operational',
+        latency,
+        lastChecked: now,
+      });
+    } catch (error) {
+      console.error('[admin] Storage health check failed:', error);
+      systems.push({
+        name: 'Storage',
+        status: 'degraded',
+        lastChecked: now,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
+    // Add API status (always operational if we got here)
+    systems.unshift({
+      name: 'API Server',
+      status: 'operational',
       lastChecked: now,
     });
-  } catch {
-    systems.push({
-      name: 'Database',
-      status: 'outage',
-      lastChecked: now,
-    });
+
+    // Check if all backend systems are in outage (excluding API Server)
+    const backendSystems = systems.filter((s) => s.name !== 'API Server');
+    const allBackendFailed = backendSystems.every((s) => s.status === 'outage');
+
+    return {
+      success: !allBackendFailed,
+      systems,
+      error: allBackendFailed ? 'All backend systems are experiencing outages' : undefined,
+    };
+  } catch (error) {
+    console.error('[admin] Unexpected error in getSystemHealth:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to check system health',
+    };
   }
-
-  // Check Auth service
-  try {
-    const start = Date.now();
-    const { error } = await supabase.auth.getSession();
-    const latency = Date.now() - start;
-
-    systems.push({
-      name: 'Authentication',
-      status: error ? 'degraded' : 'operational',
-      latency,
-      lastChecked: now,
-    });
-  } catch {
-    systems.push({
-      name: 'Authentication',
-      status: 'outage',
-      lastChecked: now,
-    });
-  }
-
-  // Check Storage
-  try {
-    const start = Date.now();
-    const { error } = await supabase.storage.listBuckets();
-    const latency = Date.now() - start;
-
-    systems.push({
-      name: 'Storage',
-      status: error ? 'degraded' : 'operational',
-      latency,
-      lastChecked: now,
-    });
-  } catch {
-    systems.push({
-      name: 'Storage',
-      status: 'degraded',
-      lastChecked: now,
-    });
-  }
-
-  // Add API status (always operational if we got here)
-  systems.unshift({
-    name: 'API Server',
-    status: 'operational',
-    lastChecked: now,
-  });
-
-  return {
-    success: true,
-    systems,
-  };
 }

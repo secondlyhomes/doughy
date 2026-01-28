@@ -298,14 +298,19 @@ export async function checkAllIntegrations(services: string[]): Promise<Integrat
   return Promise.all(promises);
 }
 
+export interface HealthStatusFromDBResult {
+  status: IntegrationStatus;
+  error?: string;
+}
+
 /**
  * Get health status for a service from the database
  * (Uses cached status from last health check)
  *
  * @param service - Service name
- * @returns Integration status from database
+ * @returns Integration status from database with optional error
  */
-export async function getHealthStatusFromDB(service: string): Promise<IntegrationStatus> {
+export async function getHealthStatusFromDB(service: string): Promise<HealthStatusFromDBResult> {
   try {
     const normalizedService = normalizeServiceName(service);
 
@@ -315,20 +320,28 @@ export async function getHealthStatusFromDB(service: string): Promise<Integratio
       .eq('service', normalizedService)
       .maybeSingle();
 
-    if (error || !data) {
-      return 'not-configured';
+    if (error) {
+      console.error('[admin] Error getting health status from DB:', error);
+      return { status: 'error', error: error.message };
+    }
+
+    if (!data) {
+      return { status: 'not-configured' };
     }
 
     // If never checked, return 'configured'
     if (!data.last_checked) {
-      return 'configured';
+      return { status: 'configured' };
     }
 
     // Return status from database
-    return (data.status as IntegrationStatus) || 'configured';
+    return { status: (data.status as IntegrationStatus) || 'configured' };
   } catch (error) {
-    console.error('Error getting health status from DB:', error);
-    return 'not-configured';
+    console.error('[admin] Error getting health status from DB:', error);
+    return {
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Database error',
+    };
   }
 }
 

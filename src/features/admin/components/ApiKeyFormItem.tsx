@@ -13,11 +13,10 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useToast } from '@/components/ui/Toast';
-import { Eye, EyeOff, Check, X, Edit, AlertTriangle, CheckCircle, XCircle } from 'lucide-react-native';
+import { Eye, EyeOff, Check, X, Edit, AlertTriangle, CheckCircle, XCircle, RefreshCw } from 'lucide-react-native';
 import { useApiKey } from '@/hooks/useApiKey';
 import { useThemeColors, type ThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { RefreshCw } from 'lucide-react-native';
 import { validateApiKeyFormat } from '../utils/serviceHelpers';
 import { clearHealthCache, checkIntegrationHealth, testApiKeyWithoutSaving } from '../services/apiKeyHealthService';
 import type { IntegrationStatus, IntegrationFieldType, IntegrationHealth } from '../types/integrations';
@@ -53,8 +52,11 @@ async function triggerHaptic(type: 'success' | 'error' | 'light' = 'light') {
     } else {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  } catch {
-    // Haptics not available
+  } catch (error) {
+    // Haptics not available or failed - not critical for app function
+    if (__DEV__) {
+      console.debug('[Haptics] Not available:', error);
+    }
   }
 }
 

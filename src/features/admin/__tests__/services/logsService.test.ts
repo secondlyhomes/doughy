@@ -232,7 +232,7 @@ describe('logsService', () => {
       expect(mockQuery.range).toHaveBeenCalledWith(50, 74);
     });
 
-    it('returns empty array when table does not exist (PGRST116)', async () => {
+    it('returns error when table does not exist (PGRST116)', async () => {
       const mockQuery = {
         select: jest.fn().mockReturnThis(),
         order: jest.fn().mockReturnThis(),
@@ -247,12 +247,13 @@ describe('logsService', () => {
 
       const result = await getLogs();
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
       expect(result.logs).toEqual([]);
       expect(result.total).toBe(0);
+      expect(result.error).toBe('System logs table not found. Database migration may be required.');
     });
 
-    it('returns empty array when table does not exist (message check)', async () => {
+    it('returns error when table does not exist (message check)', async () => {
       const mockQuery = {
         select: jest.fn().mockReturnThis(),
         order: jest.fn().mockReturnThis(),
@@ -267,11 +268,12 @@ describe('logsService', () => {
 
       const result = await getLogs();
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
       expect(result.logs).toEqual([]);
+      expect(result.error).toBe('System logs table not found. Database migration may be required.');
     });
 
-    it('throws error for other database errors', async () => {
+    it('returns error for other database errors', async () => {
       const mockQuery = {
         select: jest.fn().mockReturnThis(),
         order: jest.fn().mockReturnThis(),
@@ -286,23 +288,20 @@ describe('logsService', () => {
 
       const result = await getLogs();
 
-      // Should return mock data with isMockData flag
-      expect(result.success).toBe(true);
-      expect(result.isMockData).toBe(true);
-      expect(result.logs!.length).toBeGreaterThan(0);
+      // Should return error with message
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Some other error');
     });
 
-    it('handles exceptions and returns mock data', async () => {
+    it('handles exceptions and returns error', async () => {
       mockSupabase.from = jest.fn().mockImplementation(() => {
         throw new Error('Connection failed');
       });
 
       const result = await getLogs();
 
-      expect(result.success).toBe(true);
-      expect(result.isMockData).toBe(true);
-      expect(result.logs!.length).toBe(50);
-      expect(result.total).toBe(50);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Connection failed');
     });
 
     it('maps log data correctly', async () => {
@@ -387,19 +386,23 @@ describe('logsService', () => {
 
       const result = await getLogSources();
 
-      expect(result).toEqual(['api', 'auth', 'database']);
+      expect(result.sources).toEqual(['api', 'auth', 'database']);
+      expect(result.isDefault).toBe(false);
+      expect(result.error).toBeUndefined();
     });
 
     it('returns default sources on database error', async () => {
       const mockQuery = {
         select: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue({ data: null, error: new Error('DB Error') }),
+        limit: jest.fn().mockResolvedValue({ data: null, error: { message: 'DB Error' } }),
       };
       mockSupabase.from = jest.fn().mockReturnValue(mockQuery);
 
       const result = await getLogSources();
 
-      expect(result).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.sources).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.isDefault).toBe(true);
+      expect(result.error).toBe('DB Error');
     });
 
     it('returns default sources on exception', async () => {
@@ -409,7 +412,9 @@ describe('logsService', () => {
 
       const result = await getLogSources();
 
-      expect(result).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.sources).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.isDefault).toBe(true);
+      expect(result.error).toBe('Connection failed');
     });
 
     it('returns default sources when no data returned', async () => {
@@ -421,7 +426,9 @@ describe('logsService', () => {
 
       const result = await getLogSources();
 
-      expect(result).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.sources).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.isDefault).toBe(true);
+      expect(result.error).toBeUndefined();
     });
 
     it('returns default sources when data is null', async () => {
@@ -433,7 +440,9 @@ describe('logsService', () => {
 
       const result = await getLogSources();
 
-      expect(result).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.sources).toEqual(['api', 'auth', 'database', 'storage', 'cron']);
+      expect(result.isDefault).toBe(true);
+      expect(result.error).toBeUndefined();
     });
   });
 });
