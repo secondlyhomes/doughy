@@ -11,13 +11,26 @@
  * - Contact-type-specific behavior (leads vs tenants)
  * - Topic detection for sensitive content
  * - Outcome logging for learning
+ * - Security scanning for prompt injection and data exfiltration
+ * - Memory system integration for personalized responses
  *
  * @see /docs/doughy-architecture-refactor.md for API contracts
+ * @see /docs/moltbot-ecosystem-expansion.md for security architecture
  */
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { corsHeaders, handleCors, addCorsHeaders } from "../_shared/cors.ts";
+import {
+  scanForThreats,
+  filterOutput,
+  buildSecureSystemPrompt,
+  quickThreatCheck,
+  createSecurityLogEntry,
+  shouldLogSecurityEvent,
+  type SecurityScanResult,
+  type OutputFilterResult,
+} from "../_shared/security.ts";
 
 // =============================================================================
 // Types
@@ -95,6 +108,30 @@ interface AIResponderResponse {
   message_type: string;
   queued?: boolean;
   queue_id?: string;
+  security_blocked?: boolean;
+  security_sanitized?: boolean;
+}
+
+// Memory context structure
+interface MemoryContext {
+  user_memories?: {
+    preferences?: Record<string, unknown>;
+    writing_style?: Record<string, unknown>;
+    property_rules?: unknown[];
+    contact_rules?: unknown[];
+    personality_traits?: Record<string, unknown>;
+  };
+  contact_memories?: Array<{
+    memory_type: string;
+    summary: string;
+    key_facts?: Record<string, unknown>;
+    sentiment?: string;
+  }>;
+  global_knowledge?: Array<{
+    category: string;
+    key: string;
+    value: unknown;
+  }>;
 }
 
 // Default settings if user hasn't configured
@@ -203,6 +240,152 @@ function classifyMessageType(message: string, topics: string[]): string {
 }
 
 // =============================================================================
+// Security Functions
+// =============================================================================
+
+/**
+ * Log a security event to the database
+ */
+async function logSecurityEvent(
+  supabase: SupabaseClient,
+  userId: string | null,
+  scanResult: SecurityScanResult,
+  channel?: string,
+  rawInput?: string
+): Promise<void> {
+  if (!shouldLogSecurityEvent(scanResult)) {
+    return;
+  }
+
+  try {
+    await supabase.rpc('log_security_event', {
+      p_user_id: userId,
+      p_event_type: scanResult.threats[0] === 'prompt_injection' ? 'injection_attempt'
+        : scanResult.threats[0] === 'data_exfiltration' ? 'exfil_attempt'
+        : scanResult.threats[0] === 'jailbreak_attempt' ? 'jailbreak_attempt'
+        : 'suspicious_pattern',
+      p_severity: scanResult.severity,
+      p_action_taken: scanResult.action,
+      p_channel: channel || null,
+      p_raw_input: rawInput?.substring(0, 1000) || null,
+      p_detected_patterns: scanResult.threatDetails.map(t => t.pattern),
+      p_risk_score: scanResult.riskScore,
+      p_metadata: JSON.stringify({ threats: scanResult.threats }),
+    });
+  } catch (error) {
+    console.error('Failed to log security event:', error);
+  }
+}
+
+// =============================================================================
+// Memory Functions
+// =============================================================================
+
+/**
+ * Load user memory context for personalized responses
+ */
+async function loadMemoryContext(
+  supabase: SupabaseClient,
+  userId: string,
+  propertyId?: string,
+  channel?: string,
+  contactType?: string,
+  contactId?: string
+): Promise<MemoryContext> {
+  try {
+    // Get user memories
+    const { data: memoryContext } = await supabase.rpc('get_user_memory_context', {
+      p_user_id: userId,
+      p_property_id: propertyId || null,
+      p_channel: channel || null,
+      p_contact_type: contactType || null,
+    });
+
+    // Get contact episodic memories if contact_id provided
+    let contactMemories = [];
+    if (contactId) {
+      const { data: episodic } = await supabase.rpc('get_contact_episodic_memories', {
+        p_user_id: userId,
+        p_contact_id: contactId,
+        p_limit: 5,
+      });
+
+      if (episodic) {
+        contactMemories = episodic;
+      }
+    }
+
+    return {
+      user_memories: memoryContext || {},
+      contact_memories: contactMemories,
+    };
+  } catch (error) {
+    console.error('Failed to load memory context:', error);
+    return {};
+  }
+}
+
+/**
+ * Build memory context string for system prompt
+ */
+function buildMemoryPromptSection(memoryContext: MemoryContext): string {
+  const sections: string[] = [];
+
+  // Writing style preferences
+  if (memoryContext.user_memories?.writing_style) {
+    const style = memoryContext.user_memories.writing_style;
+    const styleLines: string[] = [];
+
+    if (style.formality_preference) {
+      styleLines.push(`- Formality: ${style.formality_preference === 'more_formal' ? 'Use formal language' : 'Use casual language'}`);
+    }
+    if (style.response_length_preference) {
+      styleLines.push(`- Length: ${style.response_length_preference === 'longer' ? 'Provide detailed responses' : 'Keep responses concise'}`);
+    }
+
+    if (styleLines.length > 0) {
+      sections.push('LEARNED WRITING STYLE:\n' + styleLines.join('\n'));
+    }
+  }
+
+  // Personality traits
+  if (memoryContext.user_memories?.personality_traits) {
+    const traits = memoryContext.user_memories.personality_traits;
+    const traitLines: string[] = [];
+
+    if (traits.emoji_usage) {
+      traitLines.push(`- Emojis: ${traits.emoji_usage === 'preferred' ? 'Include appropriate emojis' : 'Avoid using emojis'}`);
+    }
+
+    if (traitLines.length > 0) {
+      sections.push('PERSONALITY PREFERENCES:\n' + traitLines.join('\n'));
+    }
+  }
+
+  // Property rules
+  if (memoryContext.user_memories?.property_rules && Array.isArray(memoryContext.user_memories.property_rules)) {
+    const rules = memoryContext.user_memories.property_rules;
+    if (rules.length > 0) {
+      sections.push('PROPERTY-SPECIFIC RULES:\n' + rules.map(r => `- ${JSON.stringify(r)}`).join('\n'));
+    }
+  }
+
+  // Contact history
+  if (memoryContext.contact_memories && memoryContext.contact_memories.length > 0) {
+    const historyLines = memoryContext.contact_memories.map(m => {
+      let line = `- ${m.summary}`;
+      if (m.sentiment && m.sentiment !== 'neutral') {
+        line += ` (${m.sentiment} interaction)`;
+      }
+      return line;
+    });
+    sections.push('PAST INTERACTIONS WITH THIS CONTACT:\n' + historyLines.join('\n'));
+  }
+
+  return sections.length > 0 ? '\n\n' + sections.join('\n\n') : '';
+}
+
+// =============================================================================
 // AI Response Generation
 // =============================================================================
 
@@ -213,8 +396,9 @@ function buildSystemPrompt(context: {
   conversationHistory: Message[];
   settings: LandlordSettings;
   contactType: string;
+  memoryContext?: MemoryContext;
 }): string {
-  const { settings, contactType } = context;
+  const { settings, contactType, memoryContext } = context;
 
   // Style-specific instructions
   const styleInstructions: Record<string, string> = {
@@ -288,7 +472,13 @@ ${context.contact.metadata?.profession ? `- Profession: ${context.contact.metada
     });
   }
 
-  return prompt;
+  // Add memory context if available
+  if (memoryContext) {
+    prompt += buildMemoryPromptSection(memoryContext);
+  }
+
+  // Wrap with security rules
+  return buildSecureSystemPrompt(prompt);
 }
 
 /**
@@ -518,6 +708,43 @@ serve(async (req: Request) => {
     // Use authenticated user ID, ignore user_id from request body for security
     const authenticatedUserId = user.id;
 
+    // ==========================================================================
+    // SECURITY: Scan input for threats
+    // ==========================================================================
+    const securityScan = scanForThreats(message);
+
+    if (securityScan.action === 'blocked') {
+      // Log the security event
+      await logSecurityEvent(supabase, authenticatedUserId, securityScan, channel, message);
+
+      // Return a safe response without revealing threat detection
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({
+            response: "I can only help with property management questions. How can I assist you today?",
+            confidence: 1.0,
+            adjusted_confidence: 1.0,
+            suggested_actions: [],
+            detected_topics: [],
+            should_auto_send: false,
+            requires_review_reason: 'Security review required',
+            message_type: 'blocked',
+            security_blocked: true,
+          } as AIResponderResponse),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    // Log flagged content but continue processing
+    if (securityScan.action === 'flagged' || securityScan.action === 'sanitized') {
+      await logSecurityEvent(supabase, authenticatedUserId, securityScan, channel, message);
+    }
+
+    // Use sanitized message if content was modified
+    const processedMessage = securityScan.sanitized;
+
     // Fetch user's landlord settings
     let settings: LandlordSettings = DEFAULT_SETTINGS;
     const { data: platformSettings } = await supabase
@@ -571,14 +798,26 @@ serve(async (req: Request) => {
       || profile?.full_name
       || 'Your Host';
 
-    // Detect topics and classify message
-    const detectedTopics = detectTopics(message);
-    const messageType = classifyMessageType(message, detectedTopics);
+    // ==========================================================================
+    // MEMORY: Load user memories and contact history for personalization
+    // ==========================================================================
+    const memoryContext = await loadMemoryContext(
+      supabase,
+      authenticatedUserId,
+      context?.property_id,
+      channel,
+      contactType,
+      contact_id
+    );
+
+    // Detect topics and classify message (use processed message)
+    const detectedTopics = detectTopics(processedMessage);
+    const messageType = classifyMessageType(processedMessage, detectedTopics);
 
     // Build conversation history
     const conversationHistory = context?.conversation_history || [];
 
-    // Build system prompt with user settings
+    // Build system prompt with user settings and memory context
     const systemPrompt = buildSystemPrompt({
       property,
       contact,
@@ -586,19 +825,39 @@ serve(async (req: Request) => {
       conversationHistory,
       settings,
       contactType,
+      memoryContext,
     });
 
-    // Generate AI response
-    const generatedResponse = await generateAIResponse(systemPrompt, message);
+    // Generate AI response (use processed/sanitized message)
+    const generatedResponse = await generateAIResponse(systemPrompt, processedMessage);
+
+    // ==========================================================================
+    // SECURITY: Filter output for sensitive information
+    // ==========================================================================
+    const outputFilter = filterOutput(generatedResponse);
+    const finalResponse = outputFilter.filtered;
+
+    // Log if output was filtered
+    if (!outputFilter.safe) {
+      console.log('[Security] Output filtered:', outputFilter.redactions.length, 'redactions');
+    }
 
     // Calculate base confidence
     const baseConfidence = calculateBaseConfidence(
-      message,
-      generatedResponse,
+      processedMessage,
+      finalResponse,
       detectedTopics,
       messageType,
       context
     );
+
+    // Reduce confidence if content was sanitized
+    let securityConfidenceAdjustment = 0;
+    if (securityScan.action === 'sanitized') {
+      securityConfidenceAdjustment = -0.15;
+    } else if (securityScan.action === 'flagged') {
+      securityConfidenceAdjustment = -0.25;
+    }
 
     // Apply adaptive learning adjustment if enabled
     let adjustedConfidence = baseConfidence;
@@ -616,8 +875,11 @@ serve(async (req: Request) => {
       }
     }
 
+    // Apply security confidence adjustment
+    adjustedConfidence = Math.max(0.10, adjustedConfidence + securityConfidenceAdjustment);
+
     // Determine suggested actions
-    const suggestedActions = determineSuggestedActions(message, detectedTopics);
+    const suggestedActions = determineSuggestedActions(processedMessage, detectedTopics);
 
     // Determine if should auto-send based on user settings and AI mode
     let shouldAutoSend = false;
@@ -663,6 +925,12 @@ serve(async (req: Request) => {
       requiresReviewReason = 'Maintenance request requires review';
     }
 
+    // Security-flagged content should not auto-send
+    if (securityScan.action === 'flagged' || securityScan.action === 'sanitized') {
+      shouldAutoSend = false;
+      requiresReviewReason = requiresReviewReason || 'Security review recommended';
+    }
+
     // Queue response if not auto-sending
     let queueId: string | undefined;
     if (!shouldAutoSend && conversation_id) {
@@ -675,7 +943,7 @@ serve(async (req: Request) => {
           user_id: authenticatedUserId,
           conversation_id,
           trigger_message_id: message_id,
-          suggested_response: generatedResponse,
+          suggested_response: finalResponse,
           confidence: Math.round(adjustedConfidence * 100),
           reasoning: requiresReviewReason,
           intent: messageType,
@@ -708,7 +976,7 @@ serve(async (req: Request) => {
           channel,
           platform,
           initial_confidence: adjustedConfidence,
-          suggested_response: generatedResponse,
+          suggested_response: finalResponse,
           outcome: shouldAutoSend ? 'auto_sent' : 'pending',
           sensitive_topics_detected: detectedTopics.filter(t =>
             settings.always_review_topics.includes(t)
@@ -723,7 +991,7 @@ serve(async (req: Request) => {
     }
 
     const result: AIResponderResponse = {
-      response: generatedResponse,
+      response: finalResponse,
       confidence: baseConfidence,
       adjusted_confidence: adjustedConfidence,
       suggested_actions: suggestedActions,
@@ -733,6 +1001,8 @@ serve(async (req: Request) => {
       message_type: messageType,
       queued: !shouldAutoSend && !!queueId,
       queue_id: queueId,
+      security_blocked: false,
+      security_sanitized: securityScan.action === 'sanitized' || !outputFilter.safe,
     };
 
     return addCorsHeaders(
