@@ -178,6 +178,7 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone),
+              property:rental_properties(id, name, address),
               room:rental_rooms!rental_bookings_room_id_fkey(id, name)
             `)
             .eq('property_id', propertyId)
@@ -185,8 +186,12 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
 
           if (error) throw error;
 
-          set({ isLoading: false });
-          return;
+          const bookings = (data || []) as BookingWithRelations[];
+
+          set({
+            bookingsWithRelations: bookings,
+            isLoading: false,
+          });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to fetch bookings';
           set({ error: message, isLoading: false });

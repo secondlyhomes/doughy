@@ -59,13 +59,12 @@ function formatCurrency(amount: number | null): string {
 // Format rate with type
 function formatRate(rate: number, rateType: RateType): string {
   const amount = formatCurrency(rate);
-  const suffix = {
+  const suffix: Record<RateType, string> = {
     nightly: '/night',
     weekly: '/week',
     monthly: '/mo',
-    yearly: '/yr',
-  }[rateType];
-  return `${amount}${suffix}`;
+  };
+  return `${amount}${suffix[rateType]}`;
 }
 
 // Get status badge variant
@@ -163,7 +162,7 @@ export function BookingCard({
       }
     }
 
-    if (['confirmed', 'pending', 'hold'].includes(booking.status)) {
+    if (['confirmed', 'pending'].includes(booking.status)) {
       const daysUntil = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       if (daysUntil === 0) return 'Check-in today';
       if (daysUntil === 1) return 'Check-in tomorrow';

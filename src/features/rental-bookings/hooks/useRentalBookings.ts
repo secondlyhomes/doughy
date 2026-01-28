@@ -221,7 +221,7 @@ export function useUpcomingBookings() {
   const upcomingBookings = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     return bookingsWithRelations.filter(
-      (b) => b.start_date >= today && ['confirmed', 'pending', 'hold'].includes(b.status)
+      (b) => b.start_date >= today && ['confirmed', 'pending'].includes(b.status)
     );
   }, [bookingsWithRelations]);
 

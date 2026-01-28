@@ -115,14 +115,14 @@ export function BookingsListScreen() {
     switch (filters.quickFilter) {
       case 'upcoming':
         result = result.filter(
-          (b) => b.start_date >= today && ['confirmed', 'pending', 'hold'].includes(b.status)
+          (b) => b.start_date >= today && ['confirmed', 'pending'].includes(b.status)
         );
         break;
       case 'active':
         result = result.filter((b) => b.status === 'active');
         break;
       case 'pending':
-        result = result.filter((b) => ['inquiry', 'pending', 'hold'].includes(b.status));
+        result = result.filter((b) => ['inquiry', 'pending'].includes(b.status));
         break;
       case 'completed':
         result = result.filter((b) => b.status === 'completed' || b.status === 'cancelled');
@@ -159,10 +159,9 @@ export function BookingsListScreen() {
   );
 
   const handleAddBooking = useCallback(() => {
-    // Navigate to add booking screen (when implemented)
-    console.log('Add new booking');
+    // TODO: Navigate to add booking screen when implemented
     // router.push('/(tabs)/bookings/add');
-  }, [router]);
+  }, []);
 
   const handleClearAllFilters = useCallback(() => {
     setFilters(defaultFilters);

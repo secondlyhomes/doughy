@@ -71,13 +71,12 @@ function formatCurrency(amount: number | null): string {
 
 function formatRate(rate: number, rateType: RateType): string {
   const amount = formatCurrency(rate);
-  const suffix = {
+  const suffix: Record<RateType, string> = {
     nightly: '/night',
     weekly: '/week',
     monthly: '/mo',
-    yearly: '/yr',
-  }[rateType];
-  return `${amount}${suffix}`;
+  };
+  return `${amount}${suffix[rateType]}`;
 }
 
 function calculateDuration(startDate: string, endDate: string | null): string {
