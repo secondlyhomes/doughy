@@ -208,6 +208,33 @@ export const INTEGRATIONS: Integration[] = [
     ],
   },
   {
+    id: 'moltbot',
+    name: 'MoltBot',
+    service: 'moltbot',
+    description: 'AI-powered email automation for landlords',
+    icon: 'bot',
+    group: 'Communication',
+    requiresOAuth: true, // Uses Gmail OAuth through MoltBot server
+    docsUrl: '/docs/MOLTBOT_LANDLORD_INTEGRATION.md',
+    fields: [
+      {
+        key: 'moltbot-server-url',
+        label: 'Server URL',
+        type: 'text',
+        required: true,
+        placeholder: 'https://your-moltbot-server.com',
+        description: 'MoltBot server endpoint URL',
+      },
+      {
+        key: 'moltbot-webhook-secret',
+        label: 'Webhook Secret',
+        type: 'password',
+        required: true,
+        description: 'Secret for validating webhook requests from MoltBot',
+      },
+    ],
+  },
+  {
     id: 'gmail',
     name: 'Gmail',
     service: 'gmail',

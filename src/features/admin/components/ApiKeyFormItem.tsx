@@ -32,6 +32,12 @@ interface ApiKeyFormItemProps {
   healthStatus?: IntegrationStatus;
   placeholder?: string;
   description?: string;
+  /**
+   * When true, defers loading the API key until user interacts with the field.
+   * This improves performance when many fields mount at once inside an accordion.
+   * @default true
+   */
+  deferLoad?: boolean;
 }
 
 /**
@@ -142,6 +148,7 @@ export function ApiKeyFormItem({
   healthStatus,
   placeholder,
   description,
+  deferLoad = true,
 }: ApiKeyFormItemProps) {
   const colors = useThemeColors();
   const { toast } = useToast();
@@ -150,7 +157,7 @@ export function ApiKeyFormItem({
   const [isEditing, setIsEditing] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false); // Replace mode: test new key before replacing
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { key, keyExistsInDB, setKey, save, deleteKey, loading, isSaving } = useApiKey(service);
+  const { key, keyExistsInDB, setKey, save, deleteKey, loading, isSaving, loadKey, hasLoaded } = useApiKey(service, { deferLoad });
   const [hasWarning, setHasWarning] = useState(false);
 
   // Health test state
@@ -161,7 +168,8 @@ export function ApiKeyFormItem({
 
   // Initialize state when component mounts and key data is loaded
   useEffect(() => {
-    if (loading) return;
+    // Wait for loading to complete (and for deferred load to happen)
+    if (loading || (deferLoad && !hasLoaded)) return;
 
     if (!initializedRef.current) {
       initializedRef.current = true;
@@ -170,7 +178,14 @@ export function ApiKeyFormItem({
         setIsEditing(true);
       }
     }
-  }, [key, loading]);
+  }, [key, loading, deferLoad, hasLoaded]);
+
+  // Helper to ensure key is loaded before an action
+  const ensureKeyLoaded = useCallback(async () => {
+    if (deferLoad && !hasLoaded) {
+      await loadKey();
+    }
+  }, [deferLoad, hasLoaded, loadKey]);
 
   // Update warning status based on health
   useEffect(() => {
@@ -274,6 +289,8 @@ export function ApiKeyFormItem({
     try {
       setIsTesting(true);
       setTestResult(null);
+      // Ensure key is loaded first (for deferred loading)
+      await ensureKeyLoaded();
       // Clear cache to force fresh check
       clearHealthCache(service);
       const result = await checkIntegrationHealth(service, true);
@@ -310,7 +327,7 @@ export function ApiKeyFormItem({
     } finally {
       setIsTesting(false);
     }
-  }, [service, toast, onSaved]);
+  }, [service, toast, onSaved, ensureKeyLoaded]);
 
   // Handle replace - test new key BEFORE saving to prevent data loss
   const handleReplace = useCallback(async () => {
@@ -328,6 +345,8 @@ export function ApiKeyFormItem({
 
     try {
       setIsTesting(true);
+      // Ensure key is loaded first (for deferred loading)
+      await ensureKeyLoaded();
       toast({ type: 'info', title: 'Testing...', description: 'Verifying new key before replacing' });
 
       // Test the new key WITHOUT saving first
@@ -379,7 +398,7 @@ export function ApiKeyFormItem({
     } finally {
       setIsTesting(false);
     }
-  }, [inputValue, service, label, save, toast, onSaved]);
+  }, [inputValue, service, label, save, toast, onSaved, ensureKeyLoaded]);
 
   // Cancel replace mode - memoized to prevent unnecessary re-renders
   const handleCancelReplace = useCallback(() => {
@@ -392,6 +411,13 @@ export function ApiKeyFormItem({
   const effectiveStatus = isTesting ? 'checking' : (testResult?.status || healthStatus);
   const effectiveMessage = testResult?.message;
   const effectiveLatency = testResult?.latency;
+
+  // Determine if key exists: use local state if loaded, otherwise infer from health status
+  // This allows showing correct UI before actually loading/decrypting the key
+  const keyExists = hasLoaded ? keyExistsInDB : (healthStatus !== 'not-configured' && healthStatus !== undefined);
+
+  // Show loading state when deferred load is in progress
+  const showDeferredLoading = deferLoad && !hasLoaded && loading;
 
   // Select component (for model preferences, etc.)
   if (type === 'select' && options.length > 0) {
@@ -549,7 +575,7 @@ export function ApiKeyFormItem({
           ) : (
             <>
               {/* Test button - only show when key exists */}
-              {keyExistsInDB && (
+              {keyExists && (
                 <TouchableOpacity
                   style={[styles.button, styles.testButton, { borderColor: colors.border }]}
                   onPress={handleTest}
@@ -566,7 +592,7 @@ export function ApiKeyFormItem({
                 </TouchableOpacity>
               )}
               {/* Replace button - only show when key exists */}
-              {keyExistsInDB ? (
+              {keyExists ? (
                 <TouchableOpacity
                   style={[styles.button, styles.editButton, { borderColor: colors.border }]}
                   onPress={() => setIsReplacing(true)}
@@ -586,7 +612,7 @@ export function ApiKeyFormItem({
             </>
           )}
 
-          {keyExistsInDB && !isEditing && (
+          {keyExists && !isEditing && (
             <TouchableOpacity
               style={[styles.iconButton, { borderColor: colors.border }]}
               onPress={handleDelete}
@@ -603,7 +629,7 @@ export function ApiKeyFormItem({
       )}
 
       {/* Inline status info - show latency or error message with troubleshooting */}
-      {!isEditing && keyExistsInDB && (effectiveLatency || effectiveMessage) && (
+      {!isEditing && keyExists && (effectiveLatency || effectiveMessage) && (
         <View style={styles.statusInfo}>
           {effectiveStatus === 'error' && effectiveMessage ? (
             <View style={[styles.errorPanel, { backgroundColor: withOpacity(colors.destructive, 'muted'), borderColor: withOpacity(colors.destructive, 'strong') }]}>

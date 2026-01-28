@@ -28,7 +28,7 @@ import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../servi
 // Spacing constants for floating search bar
 const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs; // ~52px (pt-2 + searchbar + pb-1)
 const FILTER_PILLS_HEIGHT = 60; // Slightly taller due to "Filter by Level" label
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 export function SystemLogsScreen() {
   const router = useRouter();

@@ -9,112 +9,37 @@ import { encrypt, decrypt } from '@/lib/cryptoNative';
 import type { ApiKeySaveResult } from '@/features/admin/types/integrations';
 import { normalizeServiceName, getGroupForService } from '@/features/admin/utils/serviceHelpers';
 
+interface UseApiKeyOptions {
+  /**
+   * When true, delays fetching the key until `loadKey()` is called manually.
+   * This improves performance when many ApiKeyFormItem components mount at once.
+   * @default false
+   */
+  deferLoad?: boolean;
+}
+
 /**
  * Hook for managing API keys with encryption
  *
  * @param service - Service identifier (e.g., 'openai', 'stripe', 'google-maps')
+ * @param options - Hook options including deferLoad for delayed fetching
  * @returns API key state and CRUD operations
  */
-export function useApiKey(service: string) {
+export function useApiKey(service: string, options: UseApiKeyOptions = {}) {
+  const { deferLoad = false } = options;
+
   const [key, setKey] = useState<string>('');
   const [keyExistsInDB, setKeyExistsInDB] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!deferLoad); // Start as not loading if deferred
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   // Track which services have attempted upgrade to prevent duplicate attempts
   const upgradeAttemptedRef = useRef(new Set<string>());
-
-  // Fetch API key on mount
-  useEffect(() => {
-    let isMounted = true;
-    let upgradeTimeoutId: NodeJS.Timeout | null = null;
-
-    const fetchKey = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.warn('User not authenticated when fetching API key');
-          if (isMounted) setLoading(false);
-          return;
-        }
-
-        // Normalize service name
-        const normalizedService = normalizeServiceName(service);
-
-        // Query for API key
-        const { data, error: fetchError } = await supabase
-          .from('security_api_keys')
-          .select('key_ciphertext, service')
-          .eq('service', normalizedService)
-          .maybeSingle();
-
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          console.error('Error fetching API key:', fetchError);
-          setError(fetchError.message);
-          if (isMounted) setLoading(false);
-          return;
-        }
-
-        if (data && data.key_ciphertext && isMounted) {
-          // Key exists in DB (even if we can't decrypt it)
-          setKeyExistsInDB(true);
-
-          try {
-            // Decrypt the key
-            const decrypted = await decrypt(data.key_ciphertext);
-
-            if (decrypted) {
-              setKey(decrypted);
-
-              // Auto-upgrade legacy DEV. format keys
-              if (data.key_ciphertext.startsWith('DEV.') && !upgradeAttemptedRef.current.has(normalizedService)) {
-                console.info('Upgrading legacy key for service:', service);
-                upgradeAttemptedRef.current.add(normalizedService);
-
-                // Re-save with new format (delayed to avoid blocking initial load)
-                // Note: save() is intentionally not in useEffect deps to avoid infinite loop
-                // The upgrade is a one-time operation tracked by upgradeAttemptedRef
-                upgradeTimeoutId = setTimeout(() => {
-                  if (isMounted) {
-                    save(decrypted).catch(err => {
-                      console.error('Failed to upgrade legacy key:', err);
-                      // Remove from attempted set so it can be retried later
-                      upgradeAttemptedRef.current.delete(normalizedService);
-                    });
-                  }
-                }, 500);
-              }
-            }
-          } catch (decryptErr) {
-            console.error('Error decrypting API key:', decryptErr);
-            setError('Failed to decrypt the API key. You can delete it and re-enter.');
-          }
-        }
-      } catch (err) {
-        console.error('Error in useApiKey:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchKey();
-
-    return () => {
-      isMounted = false;
-      // Clean up upgrade timeout to prevent memory leaks
-      if (upgradeTimeoutId) {
-        clearTimeout(upgradeTimeoutId);
-      }
-    };
-  }, [service]);
+  const isMountedRef = useRef(true);
+  // Ref to hold save function for use in fetchKey (avoids circular dependency)
+  const saveRef = useRef<(plaintext: string) => Promise<ApiKeySaveResult>>();
 
   /**
    * Save an API key (encrypt and store in database)
@@ -179,6 +104,108 @@ export function useApiKey(service: string) {
     }
   }, [service]);
 
+  // Keep saveRef updated with the current save function
+  useEffect(() => {
+    saveRef.current = save;
+  }, [save]);
+
+  // Fetch key function - can be called manually or on mount
+  const fetchKey = useCallback(async () => {
+    if (hasLoaded) return; // Already loaded
+
+    let upgradeTimeoutId: NodeJS.Timeout | null = null;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.warn('User not authenticated when fetching API key');
+        if (isMountedRef.current) setLoading(false);
+        return;
+      }
+
+      // Normalize service name
+      const normalizedService = normalizeServiceName(service);
+
+      // Query for API key
+      const { data, error: fetchError } = await supabase
+        .from('security_api_keys')
+        .select('key_ciphertext, service')
+        .eq('service', normalizedService)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error fetching API key:', fetchError);
+        setError(fetchError.message);
+        if (isMountedRef.current) setLoading(false);
+        return;
+      }
+
+      if (data && data.key_ciphertext && isMountedRef.current) {
+        // Key exists in DB (even if we can't decrypt it)
+        setKeyExistsInDB(true);
+
+        try {
+          // Decrypt the key
+          const decrypted = await decrypt(data.key_ciphertext);
+
+          if (decrypted) {
+            setKey(decrypted);
+
+            // Auto-upgrade legacy DEV. format keys
+            if (data.key_ciphertext.startsWith('DEV.') && !upgradeAttemptedRef.current.has(normalizedService)) {
+              console.info('Upgrading legacy key for service:', service);
+              upgradeAttemptedRef.current.add(normalizedService);
+
+              // Re-save with new format (delayed to avoid blocking initial load)
+              upgradeTimeoutId = setTimeout(() => {
+                if (isMountedRef.current && saveRef.current) {
+                  saveRef.current(decrypted).catch(err => {
+                    console.error('Failed to upgrade legacy key:', err);
+                    upgradeAttemptedRef.current.delete(normalizedService);
+                  });
+                }
+              }, 500);
+            }
+          }
+        } catch (decryptErr) {
+          console.error('Error decrypting API key:', decryptErr);
+          setError('Failed to decrypt the API key. You can delete it and re-enter.');
+        }
+      }
+    } catch (err) {
+      console.error('Error in useApiKey:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+        setHasLoaded(true);
+      }
+    }
+
+    return () => {
+      if (upgradeTimeoutId) {
+        clearTimeout(upgradeTimeoutId);
+      }
+    };
+  }, [service, hasLoaded]);
+
+  // Fetch API key on mount (unless deferred)
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    if (!deferLoad) {
+      fetchKey();
+    }
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [deferLoad, fetchKey]);
+
   /**
    * Delete an API key from database
    */
@@ -221,5 +248,9 @@ export function useApiKey(service: string) {
     loading,
     error,
     isSaving,
+    /** Call to load the key when using deferLoad option */
+    loadKey: fetchKey,
+    /** Whether the key has been loaded at least once */
+    hasLoaded,
   };
 }

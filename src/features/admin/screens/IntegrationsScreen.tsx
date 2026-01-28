@@ -17,6 +17,8 @@ import {
   XCircle,
   Clock,
   ExternalLink,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks';
@@ -24,7 +26,6 @@ import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import {
   SearchBar,
-  LoadingSpinner,
   TAB_BAR_SAFE_PADDING,
   Skeleton,
 } from '@/components/ui';
@@ -52,7 +53,7 @@ const SEARCH_BAR_CONTAINER_HEIGHT =
   // Total: ~52px
 
 const FILTER_PILLS_HEIGHT = 40; // Approximate height of filter pills row
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 // Extended integration type with health data
 interface IntegrationWithHealth extends Integration {
@@ -69,32 +70,46 @@ export function IntegrationsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [healthStatuses, setHealthStatuses] = useState<Map<string, IntegrationHealth>>(new Map());
   const [healthProgress, setHealthProgress] = useState<{ completed: number; total: number } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [expandedIntegration, setExpandedIntegration] = useState<string>('');
 
-  // Load all health statuses with progress feedback
+  // Shared callback for progressive health status updates
+  const handleHealthResult = useCallback((service: string, health: IntegrationHealth) => {
+    setHealthStatuses((prev) => {
+      const next = new Map(prev);
+      next.set(service, health);
+      return next;
+    });
+  }, []);
+
+  // Shared progress callback
+  const handleHealthProgress = useCallback((completed: number, total: number) => {
+    setHealthProgress({ completed, total });
+  }, []);
+
+  // Load all health statuses with progress feedback and progressive updates
   const loadAllHealth = useCallback(async () => {
+    setLoadError(null); // Clear previous errors
     try {
-      const allServices = INTEGRATIONS.flatMap((i) => i.fields.map((f) => f.key));
+      // Check per integration (16 services) instead of per field (40+ services)
+      // This reduces API calls by ~60% while still getting accurate status
+      const allServices = INTEGRATIONS.map((i) => i.service);
       setHealthProgress({ completed: 0, total: allServices.length });
 
-      const results = await batchHealthCheck(allServices, (completed, total) => {
-        setHealthProgress({ completed, total });
-      });
-
-      const healthMap = new Map<string, IntegrationHealth>();
-      results.forEach((health) => {
-        healthMap.set(health.service, health);
-      });
-      setHealthStatuses(healthMap);
+      await batchHealthCheck(allServices, handleHealthProgress, handleHealthResult);
     } catch (error) {
       console.error('Error loading health:', error);
+      const message = error instanceof Error
+        ? error.message
+        : 'Failed to check integration health. Please try again.';
+      setLoadError(message);
     } finally {
       setHealthProgress(null);
     }
-  }, []);
+  }, [handleHealthProgress, handleHealthResult]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -102,35 +117,48 @@ export function IntegrationsScreen() {
   }, [loadAllHealth]);
 
   const handleRefresh = useCallback(async () => {
-    // Clear all cached health data to force fresh checks
-    clearHealthCache();
     setIsRefreshing(true);
-    await loadAllHealth();
-    setIsRefreshing(false);
-  }, [loadAllHealth]);
+    setLoadError(null);
 
-  // Get overall status for an integration (based on its fields)
+    try {
+      // Only refresh items older than 1 minute (selective refresh)
+      const STALE_THRESHOLD = 60 * 1000; // 1 minute
+      const now = Date.now();
+
+      const staleServices = INTEGRATIONS
+        .filter((i) => {
+          const health = healthStatuses.get(i.service);
+          if (!health?.lastChecked) return true; // Never checked
+          return now - health.lastChecked.getTime() > STALE_THRESHOLD;
+        })
+        .map((i) => i.service);
+
+      if (staleServices.length > 0) {
+        // Clear cache only for stale services
+        staleServices.forEach((s) => clearHealthCache(s));
+        setHealthProgress({ completed: 0, total: staleServices.length });
+
+        await batchHealthCheck(staleServices, handleHealthProgress, handleHealthResult);
+      }
+    } catch (error) {
+      console.error('Error refreshing health:', error);
+      const message = error instanceof Error
+        ? error.message
+        : 'Failed to refresh. Please try again.';
+      setLoadError(message);
+    } finally {
+      setHealthProgress(null);
+      setIsRefreshing(false); // Always reset refresh state
+    }
+  }, [healthStatuses, handleHealthProgress, handleHealthResult]);
+
+  // Get overall status for an integration (based on primary service health check)
   const getOverallStatus = useCallback(
     (integration: Integration): IntegrationStatus => {
-      const fieldStatuses = integration.fields.map(
-        (field) => healthStatuses.get(field.key)?.status || 'not-configured'
-      );
-
-      // If any field has error, overall is error
-      if (fieldStatuses.includes('error')) return 'error';
-      // If all required fields are operational, overall is operational
-      const requiredFields = integration.fields.filter((f) => f.required);
-      const requiredStatuses = requiredFields.map(
-        (f) => healthStatuses.get(f.key)?.status || 'not-configured'
-      );
-      if (requiredStatuses.length > 0 && requiredStatuses.every((s) => s === 'operational')) {
-        return 'operational';
-      }
-      // If any field is configured, overall is configured
-      if (fieldStatuses.includes('operational') || fieldStatuses.includes('configured')) {
-        return 'configured';
-      }
-      return 'not-configured';
+      // Use the integration's primary service health status
+      const health = healthStatuses.get(integration.service);
+      if (!health) return 'not-configured';
+      return health.status;
     },
     [healthStatuses]
   );
@@ -261,7 +289,7 @@ export function IntegrationsScreen() {
   // Loading state with skeletons - matches floating search bar layout
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
         {/* Floating search bar skeleton */}
         <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
           <View className="px-4 pt-2 pb-1">
@@ -270,7 +298,7 @@ export function IntegrationsScreen() {
         </View>
 
         {/* Content skeletons with matching paddingTop */}
-        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP }}>
+        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP }}>
           <View className="px-4">
             {/* Progress indicator */}
             {healthProgress && (
@@ -310,10 +338,10 @@ export function IntegrationsScreen() {
   }
 
   // Calculate dynamic padding based on filter visibility
-  const listPaddingTop = SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP + (showFilters ? FILTER_PILLS_HEIGHT : 0);
+  const listPaddingTop = SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP + (showFilters ? FILTER_PILLS_HEIGHT : 0);
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+    <ThemedSafeAreaView className="flex-1" edges={[]}>
       <KeyboardAvoidingView
         behavior={keyboardProps.behavior}
         keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
@@ -325,7 +353,7 @@ export function IntegrationsScreen() {
           <SearchBar
             value={search}
             onChangeText={setSearch}
-            placeholder="Search integrations..."
+            placeholder={`Search ${integrationsWithHealth.length} integrations...`}
             size="md"
             glass={true}
             onFilter={() => setShowFilters(!showFilters)}
@@ -407,6 +435,25 @@ export function IntegrationsScreen() {
               </View>
             )}
             <IntegrationHealthCard />
+            {/* Error message with retry */}
+            {loadError && (
+              <TouchableOpacity
+                className="flex-row items-center p-3 rounded-xl mb-3"
+                style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}
+                onPress={loadAllHealth}
+              >
+                <AlertTriangle size={18} color={colors.destructive} />
+                <View className="flex-1 ml-2">
+                  <Text className="text-sm font-medium" style={{ color: colors.destructive }}>
+                    {loadError}
+                  </Text>
+                  <Text className="text-xs mt-0.5" style={{ color: colors.destructive }}>
+                    Tap to retry
+                  </Text>
+                </View>
+                <RefreshCw size={16} color={colors.destructive} />
+              </TouchableOpacity>
+            )}
             {/* Subtle count text */}
             {filteredIntegrations.length !== integrationsWithHealth.length && (
               <Text

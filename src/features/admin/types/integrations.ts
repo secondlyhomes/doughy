@@ -29,7 +29,7 @@ export interface ApiKeyRecord {
   service: string;
   key_ciphertext: string;
   group_name: ServiceGroup;
-  status: string | null;
+  status: IntegrationStatus | null;
   last_used: string | null;
   last_checked: string | null;
   created_at: string | null;

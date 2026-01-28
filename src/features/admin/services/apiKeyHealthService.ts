@@ -102,6 +102,15 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
+ * Sleep with jitter to prevent thundering herd on retries
+ * Uses 50-100% of the base delay for randomization
+ */
+function sleepWithJitter(baseMs: number): Promise<void> {
+  const jitteredDelay = baseMs * (0.5 + Math.random() * 0.5);
+  return sleep(jitteredDelay);
+}
+
+/**
  * Test an API key without saving it to the database
  * This allows validation before committing changes
  *
@@ -194,7 +203,8 @@ export async function checkIntegrationHealth(
     try {
       if (attempt > 0) {
         if (__DEV__) console.log(`[Health Check] Retry attempt ${attempt} for ${normalizedService}...`);
-        await sleep(INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1));
+        // Use jittered delay to prevent thundering herd on retries
+        await sleepWithJitter(INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1));
       } else {
         if (__DEV__) console.log(`[Health Check] Checking ${normalizedService} via Supabase Edge Function...`);
       }
@@ -323,24 +333,59 @@ export async function getHealthStatusFromDB(service: string): Promise<Integratio
 }
 
 /**
- * Batch health check with progress callback
+ * Batch health check with parallel execution and controlled concurrency
  *
  * @param services - Array of service names
- * @param onProgress - Optional callback for progress updates
- * @returns Array of health results
+ * @param onProgress - Optional callback for progress updates (completed, total)
+ * @param onResult - Optional callback for each result as it completes (enables progressive UI updates)
+ * @param concurrency - Number of concurrent requests (default: 6 to avoid overwhelming edge function)
+ * @returns Array of health results in original order
  */
 export async function batchHealthCheck(
   services: string[],
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (completed: number, total: number) => void,
+  onResult?: (service: string, health: IntegrationHealth) => void,
+  concurrency = 6
 ): Promise<IntegrationHealth[]> {
-  const results: IntegrationHealth[] = [];
+  const results: IntegrationHealth[] = new Array(services.length);
   let completed = 0;
 
-  for (const service of services) {
-    const health = await checkIntegrationHealth(service);
-    results.push(health);
-    completed++;
-    onProgress?.(completed, services.length);
+  // Handle empty services array
+  if (services.length === 0) {
+    onProgress?.(0, 0);
+    return [];
+  }
+
+  // Process in batches of `concurrency` for controlled parallelism
+  for (let i = 0; i < services.length; i += concurrency) {
+    const batch = services.slice(i, i + concurrency);
+    const batchResults = await Promise.all(
+      batch.map(async (service, batchIndex) => {
+        const health = await checkIntegrationHealth(service);
+        completed++;
+
+        // Protect callbacks from crashing the batch - errors in callbacks
+        // should not prevent other health checks from completing
+        try {
+          onProgress?.(completed, services.length);
+        } catch (callbackError) {
+          if (__DEV__) console.warn('[Health Check] onProgress callback error:', callbackError);
+        }
+
+        try {
+          onResult?.(service, health);
+        } catch (callbackError) {
+          if (__DEV__) console.warn('[Health Check] onResult callback error:', callbackError);
+        }
+
+        return { index: i + batchIndex, health };
+      })
+    );
+
+    // Store results at their original indices to preserve order
+    batchResults.forEach(({ index, health }) => {
+      results[index] = health;
+    });
   }
 
   return results;

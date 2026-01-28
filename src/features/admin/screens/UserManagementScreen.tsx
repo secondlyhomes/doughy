@@ -22,8 +22,7 @@ import { getUsers, getRoleLabel, isAdminRole, type AdminUser, type UserFilters, 
 // Spacing constants for floating search bar
 const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs; // ~52px (pt-2 + searchbar + pb-1)
 const FILTER_PILLS_HEIGHT = 40; // Approximate height of filter pills row
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.md; // 12px gap
-const COUNT_TEXT_HEIGHT = 20; // Height for count text line
+const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 interface UserRowItemProps {
   user: AdminUser;
@@ -163,12 +162,11 @@ export function UserManagementScreen() {
 
   const keyExtractor = useCallback((item: AdminUser) => item.id, []);
 
-  // Calculate dynamic padding based on filter visibility and count text
+  // Calculate dynamic padding based on filter visibility
   const listPaddingTop =
     SEARCH_BAR_CONTAINER_HEIGHT +
     insets.top +
     SEARCH_BAR_TO_CONTENT_GAP +
-    (total > 0 ? COUNT_TEXT_HEIGHT : 0) +
     (showFilters ? FILTER_PILLS_HEIGHT : 0);
 
   // Loading state with skeletons - matches floating search bar layout
@@ -217,7 +215,7 @@ export function UserManagementScreen() {
           <SearchBar
             value={search}
             onChangeText={setSearch}
-            placeholder="Search users..."
+            placeholder={total > 0 ? `Search ${total} users...` : 'Search users...'}
             size="md"
             onSubmit={handleSearch}
             glass={true}
@@ -225,13 +223,6 @@ export function UserManagementScreen() {
             hasActiveFilters={filters.role !== 'all'}
           />
         </View>
-
-        {/* Subtle count text */}
-        {total > 0 && (
-          <Text className="text-xs text-center px-4" style={{ color: colors.mutedForeground }}>
-            {total} user{total !== 1 ? 's' : ''} found
-          </Text>
-        )}
 
         {/* Filter Pills */}
         {showFilters && (
