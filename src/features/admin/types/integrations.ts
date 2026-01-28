@@ -9,7 +9,9 @@ export type IntegrationStatus =
   | 'configured' // Key exists but not tested yet
   | 'error' // Key exists but API returned error
   | 'not-configured' // No key in database
-  | 'checking'; // Health check in progress
+  | 'checking' // Health check in progress
+  | 'active' // Enabled in database (legacy status value)
+  | 'inactive'; // Disabled in database (legacy status value)
 
 /**
  * Service categorization groups

@@ -358,7 +358,13 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
     console.log('[seedService] Clearing existing data...');
     const clearResult = await clearDatabase(userId);
     if (!clearResult.success) {
-      result.warnings!.push('Clear operation had errors but continuing with seed');
+      // CRITICAL: Do not continue seeding if clear failed - would cause data corruption
+      console.error('[seedService] Clear failed, aborting seed to prevent data corruption');
+      return {
+        success: false,
+        counts: { leads: 0, properties: 0, deals: 0, captureItems: 0 },
+        errors: [`Clear database failed: ${clearResult.errors?.join(', ') || 'Unknown error'}. Seed aborted to prevent data corruption.`],
+      };
     }
 
     // Step 3: Create leads

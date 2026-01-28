@@ -81,12 +81,26 @@ export function SystemLogsScreen() {
     loadLogs(true).finally(() => setIsLoading(false));
   }, [loadLogs]);
 
-  const handleLoadMore = useCallback(() => {
+  const handleLoadMore = useCallback(async () => {
     if (logs.length < total) {
-      setFilters((prev) => ({ ...prev, page: (prev.page || 1) + 1 }));
-      loadLogs();
+      const nextPage = (filters.page || 1) + 1;
+      // Pass new page directly to avoid race condition with state update
+      const result = await getLogs({
+        ...filters,
+        page: nextPage,
+      });
+
+      if (result.success && result.logs) {
+        setLogs((prev) => [...prev, ...result.logs!]);
+        setTotal(result.total || 0);
+        // Only update page after successful load
+        setFilters((prev) => ({ ...prev, page: nextPage }));
+      } else if (!result.success) {
+        Alert.alert('Error', result.error || 'Failed to load more logs');
+        // Page stays at current value, so retry will fetch the same page
+      }
     }
-  }, [logs.length, total, loadLogs]);
+  }, [logs.length, total, filters]);
 
   const getLevelIcon = useCallback((level: LogLevel) => {
     switch (level) {

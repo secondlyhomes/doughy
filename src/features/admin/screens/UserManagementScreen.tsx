@@ -152,12 +152,27 @@ export function UserManagementScreen() {
     setFilters((prev) => ({ ...prev, page: 1 }));
   }, []);
 
-  const handleLoadMore = useCallback(() => {
+  const handleLoadMore = useCallback(async () => {
     if (users.length < total) {
-      setFilters((prev) => ({ ...prev, page: (prev.page || 1) + 1 }));
-      loadUsers();
+      const nextPage = (filters.page || 1) + 1;
+      // Pass new page directly to avoid race condition with state update
+      const result = await getUsers({
+        ...filters,
+        page: nextPage,
+        search: debouncedSearch || undefined,
+      });
+
+      if (result.success && result.users) {
+        setUsers((prev) => [...prev, ...result.users!]);
+        setTotal(result.total || 0);
+        // Only update page after successful load
+        setFilters((prev) => ({ ...prev, page: nextPage }));
+      } else if (!result.success) {
+        Alert.alert('Error', result.error || 'Failed to load more users');
+        // Page stays at current value, so retry will fetch the same page
+      }
     }
-  }, [users.length, total, loadUsers]);
+  }, [users.length, total, filters, debouncedSearch]);
 
   const handleUserPress = useCallback((user: AdminUser) => {
     router.push(`/(admin)/users/${user.id}`);

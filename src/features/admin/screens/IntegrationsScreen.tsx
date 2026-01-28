@@ -498,7 +498,7 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge = React.memo(function StatusBadge({ status, colors }: StatusBadgeProps) {
-  const config = {
+  const config: Record<IntegrationStatus, { icon: typeof CheckCircle; color: string; label: string }> = {
     operational: {
       icon: CheckCircle,
       color: colors.success,
@@ -523,6 +523,16 @@ const StatusBadge = React.memo(function StatusBadge({ status, colors }: StatusBa
       icon: Clock,
       color: colors.info,
       label: 'Checking',
+    },
+    active: {
+      icon: CheckCircle,
+      color: colors.success,
+      label: 'Active',
+    },
+    inactive: {
+      icon: XCircle,
+      color: colors.mutedForeground,
+      label: 'Inactive',
     },
   };
 

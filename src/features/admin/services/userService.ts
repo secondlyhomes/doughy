@@ -4,8 +4,8 @@
 import { supabase } from '@/lib/supabase';
 import { isValidUuid } from '@/lib/validation';
 
-// Use actual DB role types - no mapping needed
-export type UserRole = 'admin' | 'standard' | 'user' | 'support';
+// Use actual DB role types - must match user_role enum in database
+export type UserRole = 'admin' | 'standard' | 'user' | 'support' | 'beta';
 
 export interface AdminUser {
   id: string;
@@ -51,6 +51,8 @@ export function getRoleLabel(role: UserRole): string {
       return 'Support';
     case 'standard':
       return 'Standard';
+    case 'beta':
+      return 'Beta';
     case 'user':
     default:
       return 'User';
