@@ -23,6 +23,9 @@ Complete guide to design tokens, utilities, components, and patterns. Covers spa
 **[AI_ASSISTANT.md](./AI_ASSISTANT.md)** ⭐ *NEW - Consolidated*
 Comprehensive AI Assistant system documentation. Covers architecture, core components, optimization techniques (97.5% faster responses, 87.5% token reduction), background job processors, two-tier caching, and integration guide. Production-ready with full testing coverage.
 
+**[MOLTBOT_LANDLORD_INTEGRATION.md](./MOLTBOT_LANDLORD_INTEGRATION.md)** ⭐ *NEW*
+Complete guide to MoltBot integration with the Doughy Landlord Platform. Covers email parsing from rental platforms (Airbnb, FurnishedFinder, TurboTenant), lead scoring, AI response generation, adaptive learning, and testing without real emails.
+
 **[SUPABASE_REFERENCE.md](./SUPABASE_REFERENCE.md)**
 Database schema reference covering 65+ tables across real estate, leads, users, messaging, and billing domains. Includes RLS policies, edge functions, and project configuration.
 
@@ -106,8 +109,9 @@ Historical archive of zone-based development phases (A-H) completed January 2026
 
 1. **[PHASE_2_PARALLEL_DEV_PLAN.md](./PHASE_2_PARALLEL_DEV_PLAN.md)** - Current development roadmap
 2. **[AI_ASSISTANT.md](./AI_ASSISTANT.md)** - AI system architecture and integration
-3. **[FORM_UTILITIES_GUIDE.md](./FORM_UTILITIES_GUIDE.md)** - Building forms with standardized utilities
-4. **[ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md)** - Historical zone integration archive
+3. **[MOLTBOT_LANDLORD_INTEGRATION.md](./MOLTBOT_LANDLORD_INTEGRATION.md)** - MoltBot + Landlord platform integration
+4. **[FORM_UTILITIES_GUIDE.md](./FORM_UTILITIES_GUIDE.md)** - Building forms with standardized utilities
+5. **[ZONES_ARCHIVE.md](./ZONES_ARCHIVE.md)** - Historical zone integration archive
 
 ### For Code Review
 
@@ -132,6 +136,7 @@ docs/
 ├── Architecture & Systems
 │   ├── DESIGN_SYSTEM.md ............................ Design tokens & components
 │   ├── AI_ASSISTANT.md ............................. AI system (consolidated)
+│   ├── MOLTBOT_LANDLORD_INTEGRATION.md ............. MoltBot + Landlord platform
 │   └── SUPABASE_REFERENCE.md ....................... Database schema
 │
 ├── Features & Roadmaps
@@ -177,6 +182,7 @@ When adding or updating documentation:
 ## Recent Updates
 
 ### January 2026
+- ✅ **MoltBot Landlord Integration** - Added comprehensive [MOLTBOT_LANDLORD_INTEGRATION.md](./MOLTBOT_LANDLORD_INTEGRATION.md) guide
 - ✅ **Consolidated AI documentation** - Merged 3 Zone A files into comprehensive [AI_ASSISTANT.md](./AI_ASSISTANT.md)
 - ✅ **Created master index** - Added this README for easy navigation
 - ✅ **Cleaned root directory** - Removed abandoned Expo conversion documentation
@@ -190,9 +196,9 @@ When adding or updating documentation:
 
 ## Documentation Statistics
 
-- **Total Documentation Files:** 18 (including this index)
+- **Total Documentation Files:** 19 (including this index)
 - **Categories:** 6 major categories
-- **Active Documentation:** 17 files
+- **Active Documentation:** 18 files
 - **Coverage:** Architecture, Features, Development, Migrations, Troubleshooting, Integration
 
 ---
@@ -203,7 +209,8 @@ When adding or updating documentation:
 1. [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - For UI/UX work
 2. [SUPABASE_REFERENCE.md](./SUPABASE_REFERENCE.md) - For database queries
 3. [AI_ASSISTANT.md](./AI_ASSISTANT.md) - For AI features
-4. [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - When things break
+4. [MOLTBOT_LANDLORD_INTEGRATION.md](./MOLTBOT_LANDLORD_INTEGRATION.md) - For MoltBot + Landlord platform
+5. [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - When things break
 
 ### Getting Started Checklist
 - [ ] Read [DEVELOPMENT_WORKFLOW.md](./DEVELOPMENT_WORKFLOW.md)
