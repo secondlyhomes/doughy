@@ -106,6 +106,12 @@ export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps } fro
 export { ContextSwitcher } from './ContextSwitcher';
 export type { ContextSwitcherProps, ContextOption } from './ContextSwitcher';
 
+export { PlatformSwitcher } from './PlatformSwitcher';
+export type { PlatformSwitcherProps } from './PlatformSwitcher';
+
+export { PlatformBadge } from './PlatformBadge';
+export type { PlatformBadgeProps } from './PlatformBadge';
+
 export { ScrollArea } from './ScrollArea';
 export type { ScrollAreaProps } from './ScrollArea';
 

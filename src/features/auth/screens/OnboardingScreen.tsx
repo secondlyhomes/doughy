@@ -27,8 +27,10 @@ import {
   type OnboardingResponse,
   type SurveyStep,
 } from '../services/onboardingService';
+import { usePlatform, type Platform } from '@/contexts/PlatformContext';
 
-const STEPS: SurveyStep[] = ['referralSource', 'primaryUseCase', 'experienceLevel', 'companySize'];
+// Platform selection is now first step
+const STEPS: SurveyStep[] = ['platformSelection', 'referralSource', 'primaryUseCase', 'experienceLevel', 'companySize'];
 
 export function OnboardingScreen() {
   const router = useRouter();
@@ -36,6 +38,7 @@ export function OnboardingScreen() {
   const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { refetchProfile } = useAuth();
   const { canViewAdminPanel } = usePermissions();
+  const { enablePlatform, switchPlatform } = usePlatform();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [responses, setResponses] = useState<OnboardingResponse>({});
@@ -70,6 +73,21 @@ export function OnboardingScreen() {
       const result = await saveOnboardingResponses(responses);
 
       if (result.success) {
+        // Apply platform selection from onboarding
+        const platformChoice = responses.platformSelection;
+        if (platformChoice === 'investor') {
+          // Default - investor only
+          await switchPlatform('investor');
+        } else if (platformChoice === 'landlord') {
+          // Enable landlord and switch to it
+          await enablePlatform('landlord');
+          await switchPlatform('landlord');
+        } else if (platformChoice === 'both') {
+          // Enable both platforms, default to investor
+          await enablePlatform('landlord');
+          await switchPlatform('investor');
+        }
+
         await refetchProfile();
         router.replace(canViewAdminPanel ? '/(admin)' : '/(tabs)');
       } else {

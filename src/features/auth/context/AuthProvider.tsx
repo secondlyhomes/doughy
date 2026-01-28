@@ -298,8 +298,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(initialSession.user);
           await fetchProfile(initialSession.user.id, initialSession.user);
           setIsLoading(false); // Only set after profile is loaded
-        } else if (__DEV__ && !DEV_MODE_CONFIG.useMockData) {
+        } else if (__DEV__ && !DEV_MODE_CONFIG.useMockData && process.env.EXPO_PUBLIC_DEV_EMAIL) {
           // Auto-authenticate in DEV mode for easier integration testing
+          // Only if dev credentials are explicitly configured
           console.log('[auth] DEV mode: Auto-authenticating for testing');
           await devBypassAuth();
           // devBypassAuth handles setIsLoading internally

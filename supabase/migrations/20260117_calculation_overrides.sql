@@ -84,7 +84,7 @@ CREATE POLICY "Admins can view all calculation overrides"
   ON re_calculation_overrides FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM user_profiles
       WHERE id = auth.uid() AND role IN ('admin', 'support')
     )
   );
@@ -145,26 +145,4 @@ CREATE TRIGGER set_calc_overrides_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_calc_overrides_updated_at();
 
--- ============================================================================
--- LOG MIGRATION
--- ============================================================================
-
-INSERT INTO system_logs (level, source, message, details)
-VALUES (
-  'info',
-  'migration',
-  'Created calculation overrides table for user-specific metric adjustments',
-  jsonb_build_object(
-    'migration', '20260117_calculation_overrides',
-    'table', 're_calculation_overrides',
-    'indexes', 5,
-    'rls_policies', 5,
-    'supported_metrics', ARRAY[
-      'mao_percentage', 'repair_buffer', 'closing_cost_percentage',
-      'holding_cost_per_month', 'arv_multiplier', 'profit_margin',
-      'rehab_contingency', 'acquisition_cost', 'disposition_cost',
-      'seller_finance_rate', 'down_payment_percentage', 'other'
-    ],
-    'scope_options', ARRAY['global (both NULL)', 'property-specific', 'deal-specific']
-  )
-);
+-- Migration complete: calculation overrides table

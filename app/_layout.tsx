@@ -44,6 +44,7 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { FocusModeProvider } from '@/context/FocusModeContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ErrorProvider } from '@/context/ErrorContext';
+import { PlatformProvider } from '@/contexts/PlatformContext';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -83,22 +84,24 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <ThemeProvider>
-              <FocusModeProvider>
-                <ThemeSync>
-                  <ToastProvider>
-                    <ErrorProvider>
-                      <UnreadCountsProvider>
-                        <SafeAreaProvider>
-                          <ThemedStatusBar />
-                          <Slot />
-                        </SafeAreaProvider>
-                      </UnreadCountsProvider>
-                    </ErrorProvider>
-                  </ToastProvider>
-                </ThemeSync>
-              </FocusModeProvider>
-            </ThemeProvider>
+            <PlatformProvider>
+              <ThemeProvider>
+                <FocusModeProvider>
+                  <ThemeSync>
+                    <ToastProvider>
+                      <ErrorProvider>
+                        <UnreadCountsProvider>
+                          <SafeAreaProvider>
+                            <ThemedStatusBar />
+                            <Slot />
+                          </SafeAreaProvider>
+                        </UnreadCountsProvider>
+                      </ErrorProvider>
+                    </ToastProvider>
+                  </ThemeSync>
+                </FocusModeProvider>
+              </ThemeProvider>
+            </PlatformProvider>
           </AuthProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>

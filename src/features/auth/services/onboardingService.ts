@@ -4,6 +4,7 @@
 import { supabase } from '@/lib/supabase';
 
 export interface OnboardingResponse {
+  platformSelection?: string;
   referralSource?: string;
   primaryUseCase?: string;
   experienceLevel?: string;
@@ -17,6 +18,14 @@ export interface OnboardingResult {
 
 // Survey question definitions
 export const SURVEY_QUESTIONS = {
+  platformSelection: {
+    question: 'What best describes you?',
+    options: [
+      { value: 'investor', label: 'RE Investor (Wholesaling, Flipping, Buy & Hold)' },
+      { value: 'landlord', label: 'Landlord (Managing Rentals & Guests)' },
+      { value: 'both', label: 'Both - I invest AND manage rentals' },
+    ],
+  },
   referralSource: {
     question: 'How did you hear about us?',
     options: [

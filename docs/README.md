@@ -30,6 +30,12 @@ Database schema reference covering 65+ tables across real estate, leads, users, 
 
 ### 🚀 Features & Roadmaps
 
+**[doughy-architecture-refactor.md](./doughy-architecture-refactor.md)** ⭐ *NEW*
+Master planning document for multi-platform refactor (RE Investor + Landlord). Defines 5 parallel development zones, interface contracts, database schema, TypeScript types, and Moltbot skill specifications.
+
+**[doughy-refactor-executive-summary.md](./doughy-refactor-executive-summary.md)** ⭐ *NEW*
+Executive summary of the architecture refactor. High-level overview of the 5 zones, timeline, and success criteria for stakeholders.
+
 **[DEAL_OS_MVP_WORKSTREAMS.md](./DEAL_OS_MVP_WORKSTREAMS.md)**
 MVP workstream planning and feature prioritization for the Deal OS platform. Outlines parallel development zones and core functionality.
 
@@ -129,6 +135,8 @@ docs/
 │   └── SUPABASE_REFERENCE.md ....................... Database schema
 │
 ├── Features & Roadmaps
+│   ├── doughy-architecture-refactor.md ............ Multi-platform refactor plan
+│   ├── doughy-refactor-executive-summary.md ....... Refactor executive summary
 │   ├── DEAL_OS_MVP_WORKSTREAMS.md .................. MVP planning
 │   ├── PHASE_2_PARALLEL_DEV_PLAN.md ................ Development roadmap
 │   └── VOICE_AI_FEATURES_ROADMAP.md ................ Voice AI features
@@ -182,9 +190,9 @@ When adding or updating documentation:
 
 ## Documentation Statistics
 
-- **Total Documentation Files:** 16 (including this index)
+- **Total Documentation Files:** 18 (including this index)
 - **Categories:** 6 major categories
-- **Active Documentation:** 15 files
+- **Active Documentation:** 17 files
 - **Coverage:** Architecture, Features, Development, Migrations, Troubleshooting, Integration
 
 ---
@@ -215,4 +223,4 @@ When adding or updating documentation:
 
 ---
 
-**Last Updated:** January 15, 2026
+**Last Updated:** January 28, 2026

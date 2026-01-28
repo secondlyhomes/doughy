@@ -34,6 +34,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
+import { PlatformSettingsSection } from '../components/PlatformSettingsSection';
+import { DevSeederSection } from '../components/DevSeederSection';
 
 export function SettingsScreen() {
   const router = useRouter();
@@ -142,6 +144,11 @@ export function SettingsScreen() {
 
             <ChevronRight size={20} color={colors.mutedForeground} />
           </TouchableOpacity>
+        </View>
+
+        {/* Platform Settings - Enable/Switch Landlord Platform */}
+        <View className="p-4">
+          <PlatformSettingsSection />
         </View>
 
         {/* Account Settings */}
@@ -271,6 +278,9 @@ export function SettingsScreen() {
             </View>
           </View>
         )}
+
+        {/* Dev Tools - Landlord Data Seeder (DEV only) */}
+        <DevSeederSection />
 
         {/* About */}
         <View className="p-4">

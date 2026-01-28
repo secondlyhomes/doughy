@@ -186,7 +186,9 @@
       "Bash(do supabase migration repair:*)",
       "Bash(psql:*)",
       "Bash(ipconfig getifaddr:*)",
-      "Bash(ipconfig:*)"
+      "Bash(ipconfig:*)",
+      "mcp__plugin_supabase_supabase__get_publishable_keys",
+      "mcp__plugin_supabase_supabase__get_project_url"
     ]
   }
 }

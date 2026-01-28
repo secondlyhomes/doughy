@@ -1,7 +1,7 @@
 # Database Naming Conventions
 
-**Last Updated**: 2026-01-16
-**Status**: Current naming patterns documented; no breaking changes to existing tables
+**Last Updated**: 2026-01-28
+**Status**: Current naming patterns documented; added CRM, Comms, and Rental domain prefixes
 
 ---
 
@@ -88,21 +88,36 @@ CREATE TABLE user_notifications (...);
 ---
 
 #### 2. CRM Domain
-**Pattern**: No prefix (leads, contacts, messages)
+**Pattern**: `crm_*` prefix (REQUIRED for all CRM tables)
 
 | Table | Purpose | Status |
 |-------|---------|--------|
-| `leads` | Sales leads/prospects | ✅ Existing |
-| `contacts` | Contact records | ✅ Existing |
-| `messages` | Communication history | ✅ Existing |
-| `calls` | Call records | ✅ Existing |
-| `transcripts` | Call transcripts | ✅ Existing |
+| `crm_leads` | Sales leads/prospects | ✅ Existing |
+| `crm_contacts` | Contact records (guests, tenants, vendors) | ✅ Existing |
+| `crm_lead_contacts` | Lead-contact junction | ✅ Existing |
+| `crm_lead_notes` | Notes on leads | ✅ Existing |
 
-**Future tables in this domain**: Maintain consistency (no prefix)
+**Future tables in this domain**: MUST use `crm_*` prefix
 ```sql
-CREATE TABLE scheduled_messages (...);
-CREATE TABLE lead_contacts (...);  -- Junction table
-CREATE TABLE conversation_threads (...);
+CREATE TABLE crm_lead_tags (...);
+CREATE TABLE crm_contact_history (...);
+```
+
+---
+
+#### 2b. Communications Domain
+**Pattern**: `comms_*` prefix (REQUIRED for messaging/communication tables)
+
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `comms_messages` | Communication history | ✅ Existing |
+| `comms_email_logs` | Email send logs | ✅ Existing |
+| `comms_scheduled_messages` | Scheduled outbound messages | ✅ Existing |
+
+**Future tables in this domain**: MUST use `comms_*` prefix
+```sql
+CREATE TABLE comms_templates (...);
+CREATE TABLE comms_delivery_status (...);
 ```
 
 ---
@@ -127,6 +142,37 @@ CREATE TABLE conversation_threads (...);
 CREATE TABLE re_portfolio_valuations (...);
 CREATE TABLE re_market_trends (...);
 CREATE TABLE re_inspection_reports (...);
+```
+
+---
+
+#### 3b. Rental/Landlord Domain
+**Pattern**: `rental_*` prefix (REQUIRED for all Landlord platform tables)
+
+This domain supports the Landlord platform for medium-term rental management.
+
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `rental_properties` | Rental property listings | ✅ Existing |
+| `rental_rooms` | Room-by-room management | ✅ Existing |
+| `rental_bookings` | Guest reservations | ✅ Existing |
+| `rental_conversations` | Guest communication threads | ✅ Existing |
+| `rental_messages` | Individual messages in threads | ✅ Existing |
+| `rental_ai_queue` | AI response suggestions queue | ✅ Existing |
+| `rental_integrations` | Platform integrations (Airbnb, etc.) | ✅ Existing |
+| `rental_templates` | Response templates | ✅ Existing |
+
+**Relationship to RE domain**:
+- `re_properties` = Deal research properties (RE Investor platform)
+- `rental_properties` = Rental listings (Landlord platform)
+
+These are **separate tables** serving different use cases.
+
+**Future tables in this domain**: MUST use `rental_*` prefix
+```sql
+CREATE TABLE rental_availability (...);
+CREATE TABLE rental_pricing_rules (...);
+CREATE TABLE rental_reviews (...);
 ```
 
 ---

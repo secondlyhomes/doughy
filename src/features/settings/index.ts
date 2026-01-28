@@ -24,3 +24,9 @@ export {
   type ProfileResult,
   type AvatarUploadResult,
 } from './services';
+
+// Components
+export {
+  PlatformSettingsSection,
+  type PlatformSettingsSectionProps,
+} from './components';

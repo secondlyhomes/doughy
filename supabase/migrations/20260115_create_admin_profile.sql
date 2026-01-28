@@ -12,7 +12,7 @@ BEGIN
 
   -- Only insert if the user exists and doesn't have a profile yet
   IF admin_user_id IS NOT NULL THEN
-    INSERT INTO public.profiles (id, email, role, workspace_id)
+    INSERT INTO public.user_profiles (id, email, role, workspace_id)
     VALUES (
       admin_user_id,
       'admin@doughy.app',
@@ -21,7 +21,7 @@ BEGIN
     )
     ON CONFLICT (id) DO UPDATE
     SET role = 'admin'  -- Update to admin if profile exists but has wrong role
-    WHERE profiles.id = admin_user_id;
+    WHERE user_profiles.id = admin_user_id;
 
     RAISE NOTICE 'Created/updated admin profile for user %', admin_user_id;
   ELSE

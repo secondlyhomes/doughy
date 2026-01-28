@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+  workspace_id UUID, -- Optional workspace reference
 
   -- Contact information
   name TEXT NOT NULL,
@@ -215,7 +215,7 @@ CREATE POLICY "Users can delete their own leads"
 CREATE POLICY "Admins can view all leads"
   ON leads FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+    EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
   );
 
 -- RE_PROPERTIES policies
@@ -238,7 +238,7 @@ CREATE POLICY "Users can delete their own properties"
 CREATE POLICY "Admins can view all properties"
   ON re_properties FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+    EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
   );
 
 -- DEALS policies
@@ -261,7 +261,7 @@ CREATE POLICY "Users can delete their own deals"
 CREATE POLICY "Admins can view all deals"
   ON deals FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+    EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
   );
 
 -- RE_DOCUMENTS policies
@@ -284,22 +284,7 @@ CREATE POLICY "Users can delete their own documents"
 CREATE POLICY "Admins can view all documents"
   ON re_documents FOR SELECT
   USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
+    EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role IN ('admin', 'support'))
   );
 
--- ============================================================================
--- LOG MIGRATION
--- ============================================================================
-INSERT INTO system_logs (level, source, message, details)
-VALUES (
-  'info',
-  'migration',
-  'Created core tables with RLS policies',
-  jsonb_build_object(
-    'migration', '20260116_create_core_tables',
-    'tables_created', ARRAY['leads', 're_properties', 'deals', 're_documents'],
-    'indexes_created', 17,
-    'policies_created', 20,
-    'note', 'All tables have RLS enabled and user-scoped access'
-  )
-);
+-- Migration complete: core tables with RLS policies

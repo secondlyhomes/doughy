@@ -1,0 +1,235 @@
+// src/features/rental-inbox/hooks/useInbox.ts
+// Custom hooks for inbox feature
+
+import { useCallback, useEffect, useMemo } from 'react';
+import {
+  useRentalConversationsStore,
+  ConversationWithRelations,
+} from '@/stores/rental-conversations-store';
+import type { InboxFilter, InboxSort } from '../types';
+
+/**
+ * Hook to fetch and manage inbox conversations
+ */
+export function useInbox() {
+  const {
+    conversationsWithRelations,
+    pendingResponses,
+    isLoading,
+    isRefreshing,
+    error,
+    fetchConversations,
+    fetchPendingResponses,
+    clearError,
+  } = useRentalConversationsStore();
+
+  // Initial fetch
+  useEffect(() => {
+    fetchConversations();
+    fetchPendingResponses();
+  }, [fetchConversations, fetchPendingResponses]);
+
+  // Refresh both conversations and pending responses
+  const refresh = useCallback(async () => {
+    await Promise.all([fetchConversations(), fetchPendingResponses()]);
+  }, [fetchConversations, fetchPendingResponses]);
+
+  // Count of items needing review
+  const pendingCount = pendingResponses.length;
+
+  // Conversations with pending AI responses
+  const conversationsNeedingReview = useMemo(() => {
+    const pendingConversationIds = new Set(
+      pendingResponses.map((p) => p.conversation_id)
+    );
+    return conversationsWithRelations.filter((c) =>
+      pendingConversationIds.has(c.id)
+    );
+  }, [conversationsWithRelations, pendingResponses]);
+
+  return {
+    conversations: conversationsWithRelations,
+    conversationsNeedingReview,
+    pendingCount,
+    isLoading,
+    isRefreshing,
+    error,
+    refresh,
+    clearError,
+  };
+}
+
+/**
+ * Hook to filter and sort inbox conversations
+ */
+export function useFilteredInbox(
+  filter: InboxFilter = 'all',
+  sort: InboxSort = 'recent',
+  searchQuery: string = ''
+) {
+  const { conversations, conversationsNeedingReview, pendingCount } = useInbox();
+  const { pendingResponses } = useRentalConversationsStore();
+
+  const filteredConversations = useMemo(() => {
+    const pendingConversationIds = new Set(
+      pendingResponses.map((p) => p.conversation_id)
+    );
+
+    let result = conversations.filter((c) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const contactName = `${c.contact?.first_name || ''} ${c.contact?.last_name || ''}`.trim().toLowerCase();
+        const contactEmail = c.contact?.email?.toLowerCase() || '';
+        const propertyName = c.property?.name?.toLowerCase() || '';
+        const propertyAddress = c.property?.address?.toLowerCase() || '';
+
+        const matchesSearch =
+          contactName.includes(query) ||
+          contactEmail.includes(query) ||
+          propertyName.includes(query) ||
+          propertyAddress.includes(query);
+
+        if (!matchesSearch) return false;
+      }
+
+      // Status filter
+      switch (filter) {
+        case 'needs_review':
+          return pendingConversationIds.has(c.id);
+        case 'archived':
+          return c.status === 'archived';
+        case 'unread':
+          // For now, treat conversations with recent messages as unread
+          // This could be enhanced with proper read status tracking
+          return true;
+        default:
+          return c.status !== 'archived';
+      }
+    });
+
+    // Sorting
+    result = [...result].sort((a, b) => {
+      switch (sort) {
+        case 'oldest':
+          return (
+            new Date(a.last_message_at).getTime() -
+            new Date(b.last_message_at).getTime()
+          );
+        case 'pending_first':
+          const aHasPending = pendingConversationIds.has(a.id) ? 0 : 1;
+          const bHasPending = pendingConversationIds.has(b.id) ? 0 : 1;
+          if (aHasPending !== bHasPending) return aHasPending - bHasPending;
+          // Fall through to recent
+          return (
+            new Date(b.last_message_at).getTime() -
+            new Date(a.last_message_at).getTime()
+          );
+        case 'recent':
+        default:
+          return (
+            new Date(b.last_message_at).getTime() -
+            new Date(a.last_message_at).getTime()
+          );
+      }
+    });
+
+    // Mark conversations with pending responses
+    return result.map((c) => ({
+      ...c,
+      hasPendingResponse: pendingConversationIds.has(c.id),
+    }));
+  }, [conversations, pendingResponses, filter, sort, searchQuery]);
+
+  return filteredConversations;
+}
+
+/**
+ * Hook to manage a single conversation and its messages
+ */
+export function useConversation(conversationId: string) {
+  const {
+    conversationsWithRelations,
+    messages,
+    pendingResponses,
+    isLoading,
+    isSending,
+    error,
+    fetchConversationById,
+    fetchMessages,
+    sendMessage,
+    approveResponse,
+    rejectResponse,
+    toggleAI,
+    clearError,
+  } = useRentalConversationsStore();
+
+  // Get conversation
+  const conversation = useMemo(
+    () => conversationsWithRelations.find((c) => c.id === conversationId),
+    [conversationsWithRelations, conversationId]
+  );
+
+  // Get messages for this conversation
+  const conversationMessages = messages[conversationId] || [];
+
+  // Get pending response for this conversation
+  const pendingResponse = useMemo(
+    () => pendingResponses.find((p) => p.conversation_id === conversationId),
+    [pendingResponses, conversationId]
+  );
+
+  // Fetch conversation and messages on mount
+  useEffect(() => {
+    if (conversationId) {
+      fetchConversationById(conversationId);
+      fetchMessages(conversationId);
+    }
+  }, [conversationId, fetchConversationById, fetchMessages]);
+
+  // Actions
+  const send = useCallback(
+    async (content: string) => {
+      return sendMessage(conversationId, content);
+    },
+    [conversationId, sendMessage]
+  );
+
+  const approve = useCallback(
+    async (editedResponse?: string) => {
+      if (pendingResponse) {
+        return approveResponse(pendingResponse.id, editedResponse);
+      }
+      return false;
+    },
+    [pendingResponse, approveResponse]
+  );
+
+  const reject = useCallback(async () => {
+    if (pendingResponse) {
+      return rejectResponse(pendingResponse.id);
+    }
+    return false;
+  }, [pendingResponse, rejectResponse]);
+
+  const setAIEnabled = useCallback(
+    async (enabled: boolean) => {
+      return toggleAI(conversationId, enabled);
+    },
+    [conversationId, toggleAI]
+  );
+
+  return {
+    conversation,
+    messages: conversationMessages,
+    pendingResponse,
+    isLoading,
+    isSending,
+    error,
+    send,
+    approve,
+    reject,
+    setAIEnabled,
+    clearError,
+  };
+}
