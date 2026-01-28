@@ -123,8 +123,7 @@ export function useFilteredInbox(
   sort: InboxSort = 'recent',
   searchQuery: string = ''
 ) {
-  const { conversations, conversationsNeedingReview, pendingCount } = useInbox();
-  const { pendingResponses } = useRentalConversationsStore();
+  const { conversations, pendingResponses } = useInbox();
 
   const filteredConversations = useMemo(() => {
     const pendingConversationIds = new Set(

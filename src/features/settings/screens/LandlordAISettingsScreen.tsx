@@ -18,14 +18,12 @@ import {
   Bot,
   MessageSquare,
   Bell,
-  Shield,
   Sparkles,
   ChevronLeft,
   Check,
   Brain,
   Zap,
   Eye,
-  Settings2,
   Clock,
   User,
 } from 'lucide-react-native';
@@ -179,7 +177,7 @@ export function LandlordAISettingsScreen() {
                   style={{
                     borderBottomWidth: isLast ? 0 : 1,
                     borderBottomColor: colors.border,
-                    backgroundColor: isSelected ? `${colors.primary}15` : 'transparent',
+                    backgroundColor: isSelected ? withOpacity(colors.primary, 'muted') : 'transparent',
                   }}
                   onPress={() => setAIMode(mode)}
                 >

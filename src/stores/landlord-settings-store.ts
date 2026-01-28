@@ -11,6 +11,9 @@ import { supabase } from '@/lib/supabase';
 export type AIMode = 'training' | 'assisted' | 'autonomous';
 export type ResponseStyle = 'friendly' | 'professional' | 'brief';
 
+// Platform types
+export type UserPlatform = 'investor' | 'landlord';
+
 // Notification preferences
 export interface NotificationPreferences {
   new_leads: boolean;
@@ -69,8 +72,8 @@ export interface LandlordSettings {
 export interface UserPlatformSettings {
   id: string;
   user_id: string;
-  enabled_platforms: string[];
-  active_platform: 'investor' | 'landlord';
+  enabled_platforms: UserPlatform[];
+  active_platform: UserPlatform;
   completed_investor_onboarding: boolean;
   completed_landlord_onboarding: boolean;
   landlord_settings: LandlordSettings;
@@ -195,15 +198,30 @@ export const useLandlordSettingsStore = create<LandlordSettingsState>()(
       updateSettings: async (updates: Partial<LandlordSettings>) => {
         set({ isSaving: true, error: null });
         try {
-          const { landlordSettings, platformSettings } = get();
+          let { landlordSettings, platformSettings } = get();
           if (!platformSettings) {
             await get().fetchSettings();
+            // Re-read state after fetch completes
+            const state = get();
+            landlordSettings = state.landlordSettings;
+            platformSettings = state.platformSettings;
+
+            // If still no platform settings after fetch, something went wrong
+            if (!platformSettings) {
+              throw new Error('Failed to initialize settings');
+            }
           }
 
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) throw new Error('Not authenticated');
 
-          const newSettings = { ...landlordSettings, ...updates };
+          // Validate confidence_threshold if provided
+          const validatedUpdates = { ...updates };
+          if (typeof validatedUpdates.confidence_threshold === 'number') {
+            validatedUpdates.confidence_threshold = Math.max(0, Math.min(100, validatedUpdates.confidence_threshold));
+          }
+
+          const newSettings = { ...landlordSettings, ...validatedUpdates };
 
           const { error } = await supabase
             .from('user_platform_settings')
@@ -235,10 +253,22 @@ export const useLandlordSettingsStore = create<LandlordSettingsState>()(
         const { landlordSettings } = get();
         const currentValue = landlordSettings[key];
 
+        // Validate nested threshold values
+        let validatedValue = value;
+        if (key === 'lead_settings' && typeof value === 'object' && value !== null) {
+          const leadValue = value as Partial<LeadSettings>;
+          if (typeof leadValue.lead_confidence_threshold === 'number') {
+            validatedValue = {
+              ...leadValue,
+              lead_confidence_threshold: Math.max(0, Math.min(100, leadValue.lead_confidence_threshold)),
+            } as Partial<LandlordSettings[K]>;
+          }
+        }
+
         // For object values, merge; for primitives, replace
         const newValue = typeof currentValue === 'object' && currentValue !== null
-          ? { ...currentValue, ...value }
-          : value;
+          ? { ...currentValue, ...validatedValue }
+          : validatedValue;
 
         return get().updateSettings({ [key]: newValue } as Partial<LandlordSettings>);
       },

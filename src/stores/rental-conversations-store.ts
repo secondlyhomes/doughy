@@ -542,8 +542,14 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               response_time_seconds: responseTimeSeconds,
               reviewed_at: reviewedAt,
             });
-          } catch (logError) {
-            console.warn('Failed to log approval outcome for adaptive learning:', logError);
+          } catch (outcomeError) {
+            // Log as error for visibility - adaptive learning data loss should be tracked
+            console.error('[AdaptiveLearning] Failed to log approval outcome:', {
+              error: outcomeError instanceof Error ? outcomeError.message : String(outcomeError),
+              userId: response.user_id,
+              conversationId: response.conversation_id,
+              outcome: status,
+            });
           }
 
           set((state) => ({
@@ -609,8 +615,14 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                 response_time_seconds: responseTimeSeconds,
                 reviewed_at: reviewedAt,
               });
-            } catch (logError) {
-              console.warn('Failed to log rejection outcome for adaptive learning:', logError);
+            } catch (outcomeError) {
+              // Log as error for visibility - adaptive learning data loss should be tracked
+              console.error('[AdaptiveLearning] Failed to log rejection outcome:', {
+                error: outcomeError instanceof Error ? outcomeError.message : String(outcomeError),
+                userId: response.user_id,
+                conversationId: response.conversation_id,
+                outcome: 'rejected',
+              });
             }
           }
 

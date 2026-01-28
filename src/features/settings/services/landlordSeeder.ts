@@ -301,7 +301,7 @@ const seedStarterLandlord: SeedScenario = {
     console.log('Created conversations:', convos.length);
 
     // Create messages for each conversation
-    await supabase.from('rental_messages').insert([
+    const { error: messagesError } = await supabase.from('rental_messages').insert([
       // Convo 1 - Airbnb guest
       { conversation_id: convos[0].id, direction: 'inbound', content: 'Hi! Is your beach house available next week?', content_type: 'text', sent_by: 'contact' },
       { conversation_id: convos[0].id, direction: 'outbound', content: 'Yes it is! Would you like me to send you the details?', content_type: 'text', sent_by: 'ai', ai_confidence: 95 },
@@ -314,9 +314,14 @@ const seedStarterLandlord: SeedScenario = {
       { conversation_id: convos[2].id, direction: 'outbound', content: 'Let me check with the cleaning team and get back to you.', content_type: 'text', sent_by: 'user' },
       { conversation_id: convos[2].id, direction: 'inbound', content: 'Awesome, thank you!', content_type: 'text', sent_by: 'contact' },
     ]);
+    if (messagesError) {
+      console.error('Error creating messages:', messagesError);
+      throw new Error(`Failed to create messages: ${messagesError.message}`);
+    }
+    console.log('Created messages');
 
     // Create a pending AI response
-    await supabase.from('rental_ai_queue').insert({
+    const { error: aiQueueError } = await supabase.from('rental_ai_queue').insert({
       user_id: userId,
       conversation_id: convos[0].id,
       suggested_response: 'I\'d be happy to share the details! The Beach House Retreat features 3 bedrooms, 2 bathrooms, a private pool, and is just a 5-minute walk from the beach. The nightly rate is $250 with a $150 cleaning fee. Would you like to proceed with a booking?',
@@ -325,6 +330,11 @@ const seedStarterLandlord: SeedScenario = {
       status: 'pending',
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     });
+    if (aiQueueError) {
+      console.error('Error creating AI queue entry:', aiQueueError);
+      throw new Error(`Failed to create AI queue entry: ${aiQueueError.message}`);
+    }
+    console.log('Created AI queue entry');
   },
 };
 
@@ -334,7 +344,7 @@ const seedBusyLandlord: SeedScenario = {
   description: '3 properties (STR, MTR, LTR), 8 bookings, 10 conversations, pending AI responses',
   seed: async (userId: string) => {
     // Create properties
-    const { data: properties } = await supabase.from('rental_properties').insert([
+    const { data: properties, error: propertiesError } = await supabase.from('rental_properties').insert([
       {
         user_id: userId,
         name: 'Downtown Loft',
@@ -391,7 +401,14 @@ const seedBusyLandlord: SeedScenario = {
       },
     ]).select();
 
-    if (!properties || properties.length < 3) return;
+    if (propertiesError) {
+      console.error('Error creating properties:', propertiesError);
+      throw new Error(`Failed to create properties: ${propertiesError.message}`);
+    }
+    if (!properties || properties.length < 3) {
+      throw new Error(`Expected 3 properties but only ${properties?.length || 0} were created`);
+    }
+    console.log('Created properties:', properties.length);
 
     // Create many contacts
     const contactsData = [
@@ -405,7 +422,7 @@ const seedBusyLandlord: SeedScenario = {
       { firstName: 'Drew', lastName: 'Anderson', email: 'drew.a@email.com', types: ['tenant'], source: 'turbotenant', score: 91 },
     ];
 
-    const { data: contacts } = await supabase.from('crm_contacts').insert(
+    const { data: contacts, error: contactsError } = await supabase.from('crm_contacts').insert(
       contactsData.map(c => ({
         user_id: userId,
         first_name: c.firstName,
@@ -418,11 +435,18 @@ const seedBusyLandlord: SeedScenario = {
       }))
     ).select();
 
-    if (!contacts) return;
+    if (contactsError) {
+      console.error('Error creating contacts:', contactsError);
+      throw new Error(`Failed to create contacts: ${contactsError.message}`);
+    }
+    if (!contacts || contacts.length === 0) {
+      throw new Error('Contacts were not created');
+    }
+    console.log('Created contacts:', contacts.length);
 
     // Create bookings across properties
     const today = new Date();
-    await supabase.from('rental_bookings').insert([
+    const { error: bookingsError } = await supabase.from('rental_bookings').insert([
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[0].id, booking_type: 'reservation', status: 'active', start_date: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 950, source: 'airbnb' },
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[1].id, booking_type: 'reservation', status: 'confirmed', start_date: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 600, source: 'airbnb' },
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[5].id, booking_type: 'reservation', status: 'pending', start_date: new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 600, source: 'direct' },
@@ -430,10 +454,15 @@ const seedBusyLandlord: SeedScenario = {
       { user_id: userId, property_id: properties[2].id, contact_id: contacts[3].id, booking_type: 'lease', status: 'active', start_date: new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 305 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 1100, rate_type: 'monthly', total_amount: 13200, source: 'zillow' },
       { user_id: userId, property_id: properties[2].id, contact_id: contacts[7].id, booking_type: 'lease', status: 'pending', start_date: new Date(today.getTime() + 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 410 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 1100, rate_type: 'monthly', total_amount: 13200, source: 'turbotenant' },
     ]);
+    if (bookingsError) {
+      console.error('Error creating bookings:', bookingsError);
+      throw new Error(`Failed to create bookings: ${bookingsError.message}`);
+    }
+    console.log('Created bookings');
 
     // Create conversations
     const channels = ['email', 'email', 'whatsapp', 'sms', 'telegram'];
-    const { data: convos } = await supabase.from('rental_conversations').insert(
+    const { data: convos, error: convosError } = await supabase.from('rental_conversations').insert(
       contacts.slice(0, 6).map((contact, i) => ({
         user_id: userId,
         contact_id: contact.id,
@@ -446,22 +475,39 @@ const seedBusyLandlord: SeedScenario = {
       }))
     ).select();
 
-    if (!convos) return;
+    if (convosError) {
+      console.error('Error creating conversations:', convosError);
+      throw new Error(`Failed to create conversations: ${convosError.message}`);
+    }
+    if (!convos || convos.length === 0) {
+      throw new Error('Conversations were not created');
+    }
+    console.log('Created conversations:', convos.length);
 
     // Add messages to conversations
     for (const convo of convos) {
-      await supabase.from('rental_messages').insert([
+      const { error: msgError } = await supabase.from('rental_messages').insert([
         { conversation_id: convo.id, direction: 'inbound', content: 'Hi, I have a question about the property.', content_type: 'text', sent_by: 'contact' },
         { conversation_id: convo.id, direction: 'outbound', content: 'Of course! How can I help you?', content_type: 'text', sent_by: 'ai', ai_confidence: 90 },
         { conversation_id: convo.id, direction: 'inbound', content: 'Is parking included?', content_type: 'text', sent_by: 'contact' },
       ]);
+      if (msgError) {
+        console.error(`Error creating messages for conversation ${convo.id}:`, msgError);
+        throw new Error(`Failed to create messages: ${msgError.message}`);
+      }
     }
+    console.log('Created messages for all conversations');
 
     // Add pending AI responses
-    await supabase.from('rental_ai_queue').insert([
+    const { error: aiQueueError } = await supabase.from('rental_ai_queue').insert([
       { user_id: userId, conversation_id: convos[0].id, suggested_response: 'Yes, parking is included! We have one dedicated spot in the garage.', confidence: 94, status: 'pending', expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
       { user_id: userId, conversation_id: convos[2].id, suggested_response: 'The property has street parking available. Most guests find it easy to park nearby.', confidence: 87, status: 'pending', expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
     ]);
+    if (aiQueueError) {
+      console.error('Error creating AI queue entries:', aiQueueError);
+      throw new Error(`Failed to create AI queue entries: ${aiQueueError.message}`);
+    }
+    console.log('Created AI queue entries');
   },
 };
 
@@ -471,7 +517,7 @@ const seedRoomByRoom: SeedScenario = {
   description: '1 property with 4 individual rooms, mixed occupancy',
   seed: async (userId: string) => {
     // Create a room-by-room property
-    const { data: property } = await supabase.from('rental_properties').insert({
+    const { data: property, error: propertyError } = await supabase.from('rental_properties').insert({
       user_id: userId,
       name: 'Shared House - Westside',
       address: '555 College Ave',
@@ -490,36 +536,62 @@ const seedRoomByRoom: SeedScenario = {
       amenities: ['wifi', 'parking', 'laundry', 'kitchen', 'yard'],
     }).select().single();
 
-    if (!property) return;
+    if (propertyError) {
+      console.error('Error creating property:', propertyError);
+      throw new Error(`Failed to create property: ${propertyError.message}`);
+    }
+    if (!property) {
+      throw new Error('Property was not created');
+    }
+    console.log('Created property:', property.id);
 
     // Create rooms
-    const { data: rooms } = await supabase.from('rental_rooms').insert([
+    const { data: rooms, error: roomsError } = await supabase.from('rental_rooms').insert([
       { property_id: property.id, name: 'Room A - Master', monthly_rate: 1200, status: 'occupied', has_private_bath: true, amenities: ['closet', 'ceiling_fan'] },
       { property_id: property.id, name: 'Room B - Corner', monthly_rate: 950, status: 'occupied', has_private_bath: false, amenities: ['closet', 'window_ac'] },
       { property_id: property.id, name: 'Room C - Garden View', monthly_rate: 900, status: 'available', has_private_bath: false, amenities: ['closet'] },
       { property_id: property.id, name: 'Room D - Cozy', monthly_rate: 850, status: 'available', has_private_bath: false, amenities: ['closet'] },
     ]).select();
 
-    if (!rooms) return;
+    if (roomsError) {
+      console.error('Error creating rooms:', roomsError);
+      throw new Error(`Failed to create rooms: ${roomsError.message}`);
+    }
+    if (!rooms || rooms.length === 0) {
+      throw new Error('Rooms were not created');
+    }
+    console.log('Created rooms:', rooms.length);
 
     // Create tenants for occupied rooms
-    const { data: contacts } = await supabase.from('crm_contacts').insert([
+    const { data: contacts, error: contactsError } = await supabase.from('crm_contacts').insert([
       { user_id: userId, first_name: 'Chris', last_name: 'Park', email: 'chris.p@email.com', contact_types: ['tenant'], source: 'furnishedfinder', status: 'active', score: 88 },
       { user_id: userId, first_name: 'Sam', last_name: 'Torres', email: 'sam.t@email.com', contact_types: ['tenant'], source: 'craigslist', status: 'active', score: 82 },
       { user_id: userId, first_name: 'Pat', last_name: 'Quinn', email: 'pat.q@email.com', contact_types: ['lead'], source: 'facebook', status: 'qualified', score: 75 },
     ]).select();
 
-    if (!contacts) return;
+    if (contactsError) {
+      console.error('Error creating contacts:', contactsError);
+      throw new Error(`Failed to create contacts: ${contactsError.message}`);
+    }
+    if (!contacts || contacts.length === 0) {
+      throw new Error('Contacts were not created');
+    }
+    console.log('Created contacts:', contacts.length);
 
     // Create bookings for occupied rooms
     const today = new Date();
-    await supabase.from('rental_bookings').insert([
+    const { error: bookingsError } = await supabase.from('rental_bookings').insert([
       { user_id: userId, property_id: property.id, room_id: rooms[0].id, contact_id: contacts[0].id, booking_type: 'lease', status: 'active', start_date: new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 275 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 1200, rate_type: 'monthly', total_amount: 14400, source: 'furnishedfinder' },
       { user_id: userId, property_id: property.id, room_id: rooms[1].id, contact_id: contacts[1].id, booking_type: 'lease', status: 'active', start_date: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 150 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 950, rate_type: 'monthly', total_amount: 5700, source: 'craigslist' },
     ]);
+    if (bookingsError) {
+      console.error('Error creating bookings:', bookingsError);
+      throw new Error(`Failed to create bookings: ${bookingsError.message}`);
+    }
+    console.log('Created bookings');
 
     // Create inquiry conversation for available room
-    const { data: convo } = await supabase.from('rental_conversations').insert({
+    const { data: convo, error: convoError } = await supabase.from('rental_conversations').insert({
       user_id: userId,
       contact_id: contacts[2].id,
       property_id: property.id,
@@ -530,12 +602,24 @@ const seedRoomByRoom: SeedScenario = {
       last_message_at: new Date().toISOString(),
     }).select().single();
 
-    if (convo) {
-      await supabase.from('rental_messages').insert([
-        { conversation_id: convo.id, direction: 'inbound', content: 'Hi, I saw Room C is available. Is it still open? I\'m looking for a 6-month stay.', content_type: 'text', sent_by: 'contact' },
-        { conversation_id: convo.id, direction: 'outbound', content: 'Yes, Room C is available! It\'s $900/month and has a nice garden view. When would you like to move in?', content_type: 'text', sent_by: 'ai', ai_confidence: 91 },
-      ]);
+    if (convoError) {
+      console.error('Error creating conversation:', convoError);
+      throw new Error(`Failed to create conversation: ${convoError.message}`);
     }
+    if (!convo) {
+      throw new Error('Conversation was not created');
+    }
+    console.log('Created conversation:', convo.id);
+
+    const { error: messagesError } = await supabase.from('rental_messages').insert([
+      { conversation_id: convo.id, direction: 'inbound', content: 'Hi, I saw Room C is available. Is it still open? I\'m looking for a 6-month stay.', content_type: 'text', sent_by: 'contact' },
+      { conversation_id: convo.id, direction: 'outbound', content: 'Yes, Room C is available! It\'s $900/month and has a nice garden view. When would you like to move in?', content_type: 'text', sent_by: 'ai', ai_confidence: 91 },
+    ]);
+    if (messagesError) {
+      console.error('Error creating messages:', messagesError);
+      throw new Error(`Failed to create messages: ${messagesError.message}`);
+    }
+    console.log('Created messages');
   },
 };
 
