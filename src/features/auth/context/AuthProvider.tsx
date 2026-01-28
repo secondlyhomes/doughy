@@ -157,22 +157,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Sign out current user
+   * Throws error on failure so callers can handle appropriately
    */
   const signOut = useCallback(async () => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         console.warn('[auth] Sign out error:', error.message);
+        // Still clear local state for UX, but propagate error
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        throw new Error(error.message);
       }
 
-      // Clear state
+      // Clear state on success
       setUser(null);
       setSession(null);
       setProfile(null);
     } catch (error) {
       console.error('[auth] Exception during sign out:', error);
+      // Still clear state on error for UX
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      throw error;
     } finally {
       setIsLoading(false);
     }

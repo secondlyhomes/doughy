@@ -150,10 +150,10 @@ export interface Activity {
 // ============================================
 // API Response Types
 // ============================================
-export interface ApiResponse<T> {
-  data: T | null;
-  error: ApiError | null;
-}
+// Using discriminated union to ensure data and error are mutually exclusive
+export type ApiResponse<T> =
+  | { success: true; data: T; error?: never }
+  | { success: false; data?: never; error: ApiError };
 
 export interface ApiError {
   message: string;

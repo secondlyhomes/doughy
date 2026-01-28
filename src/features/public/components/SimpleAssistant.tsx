@@ -163,20 +163,27 @@ export function SimpleAssistant() {
     ]);
 
     // Get response from assistant API
-    const assistantResponse = await callPublicAssistant(messageText);
+    // Note: callPublicAssistant returns structured response, never throws
+    const response = await callPublicAssistant(messageText);
 
-    // Replace loading message with actual response
+    // Replace loading message with response (success or error message)
     setMessages((prev) =>
       prev.map((msg) =>
         msg.id === loadingId
           ? {
               ...msg,
-              content: assistantResponse,
+              content: response.message,
               role: 'assistant' as const,
             }
           : msg
       )
     );
+
+    // Log errors for debugging but don't need separate error handling
+    // since the response already contains user-friendly error messages
+    if (!response.success) {
+      console.error('[SimpleAssistant] API error:', response.errorType);
+    }
 
     setIsLoading(false);
   }, [inputValue, isLoading]);

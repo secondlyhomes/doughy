@@ -2,7 +2,7 @@
 // Public website footer (web-only)
 //
 // NOTE: Public marketing component - hardcoded brand colors intentional
-import { View, Text, Image, Pressable, Linking } from 'react-native';
+import { View, Text, Image, Pressable, Linking, Alert, Platform } from 'react-native';
 import { Link } from 'expo-router';
 import { Twitter, Facebook, Instagram, Linkedin } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
@@ -11,8 +11,24 @@ export function Footer() {
   const { colors } = useTheme();
   const currentYear = new Date().getFullYear();
 
-  const openExternalLink = (url: string) => {
-    Linking.openURL(url);
+  const openExternalLink = async (url: string) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.warn('[Footer] Cannot open URL:', url);
+        // Only show alert on native platforms (not web)
+        if (Platform.OS !== 'web') {
+          Alert.alert('Unable to Open', 'Cannot open this link on your device.');
+        }
+      }
+    } catch (error) {
+      console.error('[Footer] Error opening external link:', error);
+      if (Platform.OS !== 'web') {
+        Alert.alert('Unable to Open', 'Something went wrong opening this link.');
+      }
+    }
   };
 
   const SocialLink = ({ href, Icon, label }: { href: string; Icon: any; label: string }) => (

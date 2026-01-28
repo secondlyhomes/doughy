@@ -13,6 +13,35 @@ interface OpenAIResponse {
   error?: string;
 }
 
+export type AssistantErrorType = 'network' | 'auth' | 'rate_limit' | 'server' | 'unknown';
+
+// Discriminated union ensures errorType only exists on failure
+export type AssistantResponse =
+  | { success: true; message: string; errorType?: never }
+  | { success: false; message: string; errorType: AssistantErrorType };
+
+function getErrorTypeFromStatus(status: number): AssistantErrorType {
+  if (status === 401 || status === 403) return 'auth';
+  if (status === 429) return 'rate_limit';
+  if (status >= 500) return 'server';
+  return 'unknown';
+}
+
+function getErrorMessage(errorType: AssistantErrorType): string {
+  switch (errorType) {
+    case 'auth':
+      return 'Authentication error. Please try signing in again.';
+    case 'rate_limit':
+      return 'Too many requests. Please wait a moment and try again.';
+    case 'server':
+      return 'Our servers are experiencing issues. Please try again later.';
+    case 'network':
+      return 'Unable to connect. Please check your internet connection.';
+    default:
+      return 'Sorry, something went wrong. Please try again.';
+  }
+}
+
 // Default system prompts for different assistants
 const SYSTEM_PROMPTS = {
   public: `You are Doughy, a helpful assistant for visitors to a real estate platform.
@@ -65,13 +94,24 @@ function getMockResponse(message: string): string {
 /**
  * Call the public marketing assistant
  * Used for general questions on marketing pages (landing, pricing, etc.)
+ * Returns a structured response with success status and error information
  */
-export async function callPublicAssistant(message: string): Promise<string> {
+export async function callPublicAssistant(message: string): Promise<AssistantResponse> {
   // In mock mode, return simulated response
   if (USE_MOCK_DATA) {
+    // Only allow mock mode in development
+    if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+      console.error('[OpenAI] CRITICAL: Mock mode enabled in production build!');
+      return {
+        success: false,
+        message: 'Service temporarily unavailable. Please try again later.',
+        errorType: 'server',
+      };
+    }
+    console.warn('[OpenAI] Using mock response - development mode');
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
-    return getMockResponse(message);
+    return { success: true, message: getMockResponse(message) };
   }
 
   try {
@@ -102,31 +142,59 @@ export async function callPublicAssistant(message: string): Promise<string> {
     });
 
     if (!response.ok) {
+      const errorType = getErrorTypeFromStatus(response.status);
       console.error('[OpenAI] Error calling assistant API:', response.status);
-      throw new Error(`Assistant API error: ${response.status}`);
+      return {
+        success: false,
+        message: getErrorMessage(errorType),
+        errorType,
+      };
     }
 
     const data: OpenAIResponse = await response.json();
-    return data.pure_text || "Sorry, I couldn't process your request at this time.";
+    if (!data.pure_text) {
+      console.warn('[OpenAI] Empty response from API');
+      return {
+        success: false,
+        message: 'The assistant returned an empty response. Please try again.',
+        errorType: 'unknown',
+      };
+    }
+    return { success: true, message: data.pure_text };
   } catch (error) {
     console.error('[OpenAI] Error in callPublicAssistant:', error);
-    return 'Sorry, I encountered an error while processing your request. Please try again later.';
+    return {
+      success: false,
+      message: getErrorMessage('network'),
+      errorType: 'network',
+    };
   }
 }
 
 /**
  * Call the documentation assistant
  * Used for questions about the platform's documentation and features
+ * Returns a structured response with success status and error information
  */
 export async function callDocsAssistant(
   message: string,
   conversationHistory: ChatMessage[] = []
-): Promise<string> {
+): Promise<AssistantResponse> {
   // In mock mode, return simulated response
   if (USE_MOCK_DATA) {
+    // Only allow mock mode in development
+    if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+      console.error('[OpenAI] CRITICAL: Mock mode enabled in production build!');
+      return {
+        success: false,
+        message: 'Service temporarily unavailable. Please try again later.',
+        errorType: 'server',
+      };
+    }
+    console.warn('[OpenAI] Using mock response - development mode');
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000));
-    return getMockResponse(message);
+    return { success: true, message: getMockResponse(message) };
   }
 
   try {
@@ -166,15 +234,32 @@ export async function callDocsAssistant(
     });
 
     if (!response.ok) {
+      const errorType = getErrorTypeFromStatus(response.status);
       console.error('[OpenAI] Error calling docs assistant API:', response.status);
-      throw new Error(`Docs assistant API error: ${response.status}`);
+      return {
+        success: false,
+        message: getErrorMessage(errorType),
+        errorType,
+      };
     }
 
     const data: OpenAIResponse = await response.json();
-    return data.pure_text || "Sorry, I couldn't process your request at this time.";
+    if (!data.pure_text) {
+      console.warn('[OpenAI] Empty response from docs API');
+      return {
+        success: false,
+        message: 'The assistant returned an empty response. Please try again.',
+        errorType: 'unknown',
+      };
+    }
+    return { success: true, message: data.pure_text };
   } catch (error) {
     console.error('[OpenAI] Error in callDocsAssistant:', error);
-    return "I'm sorry, I encountered an error processing your request. Please try again later.";
+    return {
+      success: false,
+      message: getErrorMessage('network'),
+      errorType: 'network',
+    };
   }
 }
 

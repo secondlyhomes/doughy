@@ -104,7 +104,7 @@ export function AskDoughyModal({ visible, onClose }: AskDoughyModalProps) {
           content: m.content,
         }));
 
-      const responseText = await callDocsAssistant(userMessage.content, conversationHistory);
+      const response = await callDocsAssistant(userMessage.content, conversationHistory);
 
       // Remove thinking message and add actual response
       setMessages((prev) =>
@@ -112,7 +112,7 @@ export function AskDoughyModal({ visible, onClose }: AskDoughyModalProps) {
           .filter((msg) => msg.id !== thinkingId)
           .concat({
             id: (Date.now() + 2).toString(),
-            content: responseText,
+            content: response.message,
             role: 'assistant',
             timestamp: new Date(),
           })

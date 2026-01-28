@@ -3,11 +3,32 @@
 //
 // NOTE: Public marketing page - hardcoded brand colors intentional
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, Linking, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, Linking, useWindowDimensions, Alert } from 'react-native';
 import { Mail, Phone, MapPin, Send } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function openExternalLink(url: string, fallbackMessage?: string): Promise<void> {
+  try {
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      console.warn('[Contact] Cannot open URL:', url);
+      if (fallbackMessage) {
+        Alert.alert('Unable to Open', fallbackMessage);
+      }
+    }
+  } catch (error) {
+    console.error('[Contact] Error opening link:', error);
+    if (fallbackMessage) {
+      Alert.alert('Unable to Open', fallbackMessage);
+    }
+  }
+}
 
 const contactInfo = [
   {
@@ -15,21 +36,21 @@ const contactInfo = [
     title: 'Email Us',
     description: 'For general inquiries and support',
     value: 'info@doughy.com',
-    action: () => Linking.openURL('mailto:info@doughy.com'),
+    action: () => openExternalLink('mailto:info@doughy.com', 'No email app configured. Please email us at info@doughy.com'),
   },
   {
     Icon: Phone,
     title: 'Call Us',
     description: 'Monday-Friday, 9am-5pm EST',
     value: '+1 (555) 123-4567',
-    action: () => Linking.openURL('tel:+15551234567'),
+    action: () => openExternalLink('tel:+15551234567', 'Unable to make call. Please dial +1 (555) 123-4567'),
   },
   {
     Icon: MapPin,
     title: 'Visit Us',
     description: 'Our headquarters location',
     value: '123 Dough Street\nSan Francisco, CA 94107',
-    action: () => Linking.openURL('https://maps.google.com/?q=San+Francisco+CA'),
+    action: () => openExternalLink('https://maps.google.com/?q=San+Francisco+CA', 'Unable to open maps'),
   },
 ];
 
@@ -45,14 +66,44 @@ export function ContactScreen() {
     message: '',
   });
 
-  const handleSubmit = () => {
-    // In a real app, this would send to an API
+  const [formErrors, setFormErrors] = useState<{ name?: string; email?: string; message?: string }>({});
+
+  const validateForm = (): boolean => {
+    const errors: { name?: string; email?: string; message?: string } = {};
+
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!EMAIL_REGEX.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.message.trim()) {
+      errors.message = 'Message is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     const mailtoUrl = `mailto:info@doughy.com?subject=${encodeURIComponent(
-      formData.subject
+      formData.subject || 'Contact Form Submission'
     )}&body=${encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
     )}`;
-    Linking.openURL(mailtoUrl);
+
+    await openExternalLink(
+      mailtoUrl,
+      'No email app configured. Please email us directly at info@doughy.com'
+    );
   };
 
   return (
@@ -107,24 +158,37 @@ export function ContactScreen() {
                 <Text className="mb-2 font-medium" style={{ color: colors.foreground }}>Name</Text>
                 <TextInput
                   className="rounded-lg px-4 py-3"
-                  style={{ borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }}
+                  style={{ borderWidth: 1, borderColor: formErrors.name ? colors.destructive : colors.border, color: colors.foreground, backgroundColor: colors.background }}
                   placeholder="Your name"
                   placeholderTextColor={colors.mutedForeground}
                   value={formData.name}
-                  onChangeText={(text) => setFormData({ ...formData, name: text })}
+                  onChangeText={(text) => {
+                    setFormData({ ...formData, name: text });
+                    if (formErrors.name) setFormErrors({ ...formErrors, name: undefined });
+                  }}
                 />
+                {formErrors.name && (
+                  <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>{formErrors.name}</Text>
+                )}
               </View>
               <View className="flex-1">
                 <Text className="mb-2 font-medium" style={{ color: colors.foreground }}>Email</Text>
                 <TextInput
                   className="rounded-lg px-4 py-3"
-                  style={{ borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }}
+                  style={{ borderWidth: 1, borderColor: formErrors.email ? colors.destructive : colors.border, color: colors.foreground, backgroundColor: colors.background }}
                   placeholder="your@email.com"
                   placeholderTextColor={colors.mutedForeground}
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   value={formData.email}
-                  onChangeText={(text) => setFormData({ ...formData, email: text })}
+                  onChangeText={(text) => {
+                    setFormData({ ...formData, email: text });
+                    if (formErrors.email) setFormErrors({ ...formErrors, email: undefined });
+                  }}
                 />
+                {formErrors.email && (
+                  <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>{formErrors.email}</Text>
+                )}
               </View>
             </View>
 
@@ -144,15 +208,21 @@ export function ContactScreen() {
               <Text className="mb-2 font-medium" style={{ color: colors.foreground }}>Message</Text>
               <TextInput
                 className="rounded-lg px-4 py-3 min-h-[150px]"
-                style={{ borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }}
+                style={{ borderWidth: 1, borderColor: formErrors.message ? colors.destructive : colors.border, color: colors.foreground, backgroundColor: colors.background }}
                 placeholder="Tell us more..."
                 placeholderTextColor={colors.mutedForeground}
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
                 value={formData.message}
-                onChangeText={(text) => setFormData({ ...formData, message: text })}
+                onChangeText={(text) => {
+                  setFormData({ ...formData, message: text });
+                  if (formErrors.message) setFormErrors({ ...formErrors, message: undefined });
+                }}
               />
+              {formErrors.message && (
+                <Text className="mt-1 text-sm" style={{ color: colors.destructive }}>{formErrors.message}</Text>
+              )}
             </View>
 
             <Button onPress={handleSubmit} className="mt-4">

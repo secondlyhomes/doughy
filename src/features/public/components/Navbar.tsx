@@ -3,7 +3,7 @@
 //
 // NOTE: Public marketing component - hardcoded brand colors intentional
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Pressable, Alert, Platform } from 'react-native';
 import { Link, useRouter, usePathname, Href } from 'expo-router';
 import { ChevronDown, Menu, X, LogOut, Sun, Moon, Search } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
@@ -32,8 +32,18 @@ export function Navbar() {
   const isDocsPage = pathname?.startsWith('/docs');
 
   const handleSignOut = async () => {
-    await signOut();
-    setIsMenuOpen(false);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('[Navbar] Sign out failed:', error);
+      // Inform user that sign out failed so they can try again
+      if (Platform.OS !== 'web') {
+        Alert.alert('Sign Out Failed', 'Unable to sign out. Please try again.');
+      }
+    } finally {
+      // Always close the menu
+      setIsMenuOpen(false);
+    }
   };
 
   const NavLink = ({ href, children, onPress }: { href: string; children: string; onPress?: () => void }) => (
