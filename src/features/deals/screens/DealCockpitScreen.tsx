@@ -314,7 +314,11 @@ export function DealCockpitScreen() {
 
   // Fetch AI suggestions when deal changes
   useEffect(() => {
-    if (!deal || isDealClosed(deal)) return;
+    if (!deal || isDealClosed(deal)) {
+      setLoadingSuggestions(false);
+      setSuggestions([]);
+      return;
+    }
 
     let mounted = true;
     setLoadingSuggestions(true);
@@ -346,36 +350,6 @@ export function DealCockpitScreen() {
 
   const handleCloseEvidenceModal = useCallback(() => {
     setEvidenceModal({ visible: false, field: null });
-  }, []);
-
-  // AI Suggestion handlers - Zone G Week 9
-  const handleSuggestionAction = useCallback((suggestion: AISuggestion) => {
-    // Route to appropriate action based on category
-    switch (suggestion.category) {
-      case 'contact':
-      case 'followup':
-        handleCallSeller();
-        break;
-      case 'walkthrough':
-        handleWalkthrough();
-        break;
-      case 'underwrite':
-      case 'analyze':
-        handleUnderwrite();
-        break;
-      case 'offer':
-        handleOffer();
-        break;
-      case 'document':
-        handleDocs();
-        break;
-      default:
-        Alert.alert('Action', suggestion.action, [{ text: 'OK' }]);
-    }
-  }, []);
-
-  const handleSuggestionDismiss = useCallback((suggestion: AISuggestion) => {
-    setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
   }, []);
 
   // Add event handlers
@@ -458,6 +432,36 @@ export function DealCockpitScreen() {
     // TODO: Open phone dialer
     Alert.alert('Call', `Would call: ${deal.lead.phone}`, [{ text: 'OK' }]);
   }, [deal]);
+
+  // AI Suggestion handlers - Zone G Week 9
+  const handleSuggestionAction = useCallback((suggestion: AISuggestion) => {
+    // Route to appropriate action based on category
+    switch (suggestion.category) {
+      case 'contact':
+      case 'followup':
+        handleCallSeller();
+        break;
+      case 'walkthrough':
+        handleWalkthrough();
+        break;
+      case 'underwrite':
+      case 'analyze':
+        handleUnderwrite();
+        break;
+      case 'offer':
+        handleOffer();
+        break;
+      case 'document':
+        handleDocs();
+        break;
+      default:
+        Alert.alert('Action', suggestion.action, [{ text: 'OK' }]);
+    }
+  }, [handleCallSeller, handleWalkthrough, handleUnderwrite, handleOffer, handleDocs]);
+
+  const handleSuggestionDismiss = useCallback((suggestion: AISuggestion) => {
+    setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
+  }, []);
 
   // Navigate to lead detail screen
   const handleLeadPress = useCallback(() => {

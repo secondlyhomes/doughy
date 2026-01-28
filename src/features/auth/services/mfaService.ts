@@ -215,10 +215,12 @@ export async function unenrollMFA(factorId: string): Promise<MFAVerifyResult> {
 
 /**
  * Check if MFA is enabled for current user
+ * Note: Returns false on error - callers should handle MFA check failures appropriately
  */
 export async function isMFAEnabled(): Promise<boolean> {
   const result = await listMFAFactors();
   if (!result.success || !result.factors) {
+    console.error('[mfa] Failed to check MFA status:', result.error);
     return false;
   }
   return result.factors.some((f) => f.status === 'verified');
@@ -242,7 +244,8 @@ export async function getAAL(): Promise<{
       currentLevel: data.currentLevel,
       nextLevel: data.nextLevel,
     };
-  } catch {
+  } catch (error) {
+    console.error('[mfa] Error getting AAL:', error);
     return { currentLevel: null, nextLevel: null };
   }
 }

@@ -9,6 +9,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, ListEmptyState, TAB_BAR_SAFE_PADDING, BottomSheet, BottomSheetSection, Button, SimpleFAB, FormField } from '@/components/ui';
@@ -322,15 +323,23 @@ export function LeadsListScreen() {
   const handleQuickAddLead = useCallback(async () => {
     if (!newLeadName.trim()) return;
 
-    await createLead.mutateAsync({
-      name: newLeadName.trim(),
-      phone: newLeadPhone.trim() || undefined,
-      email: newLeadEmail.trim() || undefined,
-      status: 'new',
-    });
+    try {
+      await createLead.mutateAsync({
+        name: newLeadName.trim(),
+        phone: newLeadPhone.trim() || undefined,
+        email: newLeadEmail.trim() || undefined,
+        status: 'new',
+      });
 
-    resetAddLeadForm();
-    setShowAddLeadSheet(false);
+      resetAddLeadForm();
+      setShowAddLeadSheet(false);
+    } catch (error) {
+      console.error('Failed to create lead:', error);
+      Alert.alert(
+        'Failed to Add Lead',
+        'Unable to create the lead. Please check your connection and try again.'
+      );
+    }
   }, [newLeadName, newLeadPhone, newLeadEmail, createLead, resetAddLeadForm]);
 
   const renderItem = useCallback(({ item }: { item: LeadWithProperties }) => (

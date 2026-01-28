@@ -9,6 +9,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import {
@@ -221,16 +222,24 @@ export function ContactsListScreen() {
   const handleQuickAddContact = useCallback(async () => {
     if (!newContactFirstName.trim()) return;
 
-    await createContact.mutateAsync({
-      first_name: newContactFirstName.trim(),
-      last_name: newContactLastName.trim() || undefined,
-      phone: newContactPhone.trim() || undefined,
-      email: newContactEmail.trim() || undefined,
-      contact_types: ['lead'], // Default to lead type
-    });
+    try {
+      await createContact.mutateAsync({
+        first_name: newContactFirstName.trim(),
+        last_name: newContactLastName.trim() || undefined,
+        phone: newContactPhone.trim() || undefined,
+        email: newContactEmail.trim() || undefined,
+        contact_types: ['lead'], // Default to lead type
+      });
 
-    resetAddContactForm();
-    setShowAddContactSheet(false);
+      resetAddContactForm();
+      setShowAddContactSheet(false);
+    } catch (error) {
+      console.error('Failed to create contact:', error);
+      Alert.alert(
+        'Failed to Add Contact',
+        'Unable to create the contact. Please check your connection and try again.'
+      );
+    }
   }, [newContactFirstName, newContactLastName, newContactPhone, newContactEmail, createContact, resetAddContactForm]);
 
   const renderItem = useCallback(

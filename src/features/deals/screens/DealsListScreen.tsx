@@ -9,6 +9,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, Badge, SimpleFAB, BottomSheet, BottomSheetSection, Button, ListEmptyState, TAB_BAR_SAFE_PADDING, Input, Select } from '@/components/ui';
@@ -311,6 +312,13 @@ export function DealsListScreen() {
 
         // Navigate to the new deal
         router.push(`/(tabs)/deals/${newDeal.id}`);
+      },
+      onError: (error) => {
+        console.error('Failed to create deal:', error);
+        Alert.alert(
+          'Failed to Create Deal',
+          'Unable to create the deal. Please check your connection and try again.'
+        );
       },
     });
   }, [selectedLeadId, selectedPropertyId, selectedStrategy, nextAction, createDeal, router]);

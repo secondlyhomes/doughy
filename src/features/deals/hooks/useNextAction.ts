@@ -501,8 +501,8 @@ function inferCategoryFromAction(action: string, stage: DealStage): ActionCatego
     return 'document';
   }
 
-  // Fall back to stage default
-  return STAGE_DEFAULT_ACTIONS[stage].category;
+  // Fall back to stage default (with fallback for unknown stages)
+  return STAGE_DEFAULT_ACTIONS[stage]?.category || 'followup';
 }
 
 /**
