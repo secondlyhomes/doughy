@@ -144,6 +144,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
       onClose={onClose}
       title="Select Property"
       snapPoints={['70%', '90%']}
+      scrollable={false}
     >
       <View style={{ flex: 1 }}>
         {/* Search */}

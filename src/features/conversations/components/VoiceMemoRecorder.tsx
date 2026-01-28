@@ -5,6 +5,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { transcribeAudio } from '@/lib/openai';
 
 // Lazy-load expo-av to prevent crash when native module isn't available (Expo Go)
 let _Audio: typeof import('expo-av').Audio | null = null;
@@ -343,18 +344,21 @@ export function VoiceMemoRecorder({
 
       const audioUri = recordingUriRef.current;
 
-      // TODO: Replace with actual Whisper API call
-      // For now, simulate transcription
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Call real Whisper API via edge function
+      let realTranscript: string;
+      try {
+        realTranscript = await transcribeAudio(audioUri);
+      } catch (transcribeError) {
+        console.error('Transcription failed:', transcribeError);
+        // Fall back to placeholder if transcription fails
+        realTranscript = '[Transcription failed - audio saved]';
+      }
 
-      // Simulated transcript
-      const mockTranscript = "This is a transcribed voice memo. The seller mentioned they're motivated and looking to close quickly. ARV estimate is around $350,000 and repairs needed are mostly cosmetic.";
-
-      setTranscript(mockTranscript);
+      setTranscript(realTranscript);
 
       // Save with callback, including audio retention choice
       onSave({
-        transcript: mockTranscript,
+        transcript: realTranscript,
         durationSeconds: duration,
         audioUri: keepAudio ? audioUri : undefined,
         keepAudio,
@@ -362,7 +366,6 @@ export function VoiceMemoRecorder({
 
       // Clear the ref (caller is responsible for audio file management)
       if (!keepAudio) {
-        // In a real implementation, delete the temp file here
         recordingUriRef.current = null;
       }
     } catch (err) {

@@ -6,3 +6,5 @@ export { FocusedPropertyCard } from './FocusedPropertyCard';
 export { PropertySelector } from './PropertySelector';
 export { NudgeCard } from './NudgeCard';
 export { NudgesList } from './NudgesList';
+export { TouchLogSheet } from './TouchLogSheet';
+export { SwipeableNudgeCard, isNudgeSnoozed, cleanExpiredSnoozes } from './SwipeableNudgeCard';

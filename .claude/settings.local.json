@@ -179,7 +179,14 @@
       "Bash(git grep:*)",
       "Bash(for f in /Users/dinosaur/Developer/doughy-ai/supabase/migrations/*.sql)",
       "Bash(do if grep -q \"property_images\\\\|property_id.*url\" \"$f\")",
-      "Bash(then echo \"File: $f\")"
+      "Bash(then echo \"File: $f\")",
+      "Bash(xcrun devicectl:*)",
+      "Bash(xcrun xctrace:*)",
+      "Bash(for version in 20260115 20260116 20260117 20260118 20260119 20260120 20260122)",
+      "Bash(do supabase migration repair:*)",
+      "Bash(psql:*)",
+      "Bash(ipconfig getifaddr:*)",
+      "Bash(ipconfig:*)"
     ]
   }
 }

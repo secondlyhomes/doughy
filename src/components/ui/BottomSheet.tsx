@@ -41,6 +41,8 @@ export interface BottomSheetProps {
   useGlass?: boolean;
   /** Use glass blur effect for backdrop. Default: true */
   useGlassBackdrop?: boolean;
+  /** Whether content should be wrapped in ScrollView. Set to false when using FlatList. Default: true */
+  scrollable?: boolean;
 }
 
 export function BottomSheet({
@@ -54,6 +56,7 @@ export function BottomSheet({
   snapPoints,
   useGlass = true,
   useGlassBackdrop = true,
+  scrollable = true,
 }: BottomSheetProps) {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -127,22 +130,30 @@ export function BottomSheet({
       )}
 
       {/* Content */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={bottomSheetStyles.scrollView}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-        contentContainerStyle={{ paddingBottom: insets.bottom + SPACING.lg }}
-      >
-        {children}
-      </ScrollView>
+      {scrollable ? (
+        <ScrollView
+          ref={scrollViewRef}
+          style={bottomSheetStyles.scrollView}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+          contentContainerStyle={{ paddingBottom: insets.bottom + SPACING.lg }}
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View style={[bottomSheetStyles.nonScrollContent, { paddingBottom: insets.bottom + SPACING.lg }]}>
+          {children}
+        </View>
+      )}
     </>
   );
 
   const renderSheet = () => {
     const sheetStyle = {
       maxHeight: calculatedMaxHeight === 'auto' ? undefined : calculatedMaxHeight,
+      // When scrollable is false, we need explicit height for flex children to work
+      ...(scrollable === false && calculatedMaxHeight !== 'auto' && { height: calculatedMaxHeight }),
     };
 
     if (useGlass) {
@@ -271,6 +282,10 @@ const bottomSheetStyles = StyleSheet.create({
     borderRadius: 20,
   },
   scrollView: {
+    paddingHorizontal: 16,
+  },
+  nonScrollContent: {
+    flex: 1,
     paddingHorizontal: 16,
   },
 });

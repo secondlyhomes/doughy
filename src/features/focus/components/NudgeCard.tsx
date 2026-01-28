@@ -11,8 +11,11 @@ import {
   Calendar,
   Inbox,
   ChevronRight,
+  Phone,
 } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/context/ThemeContext';
+import { useFocusMode } from '@/context/FocusModeContext';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { Nudge, NudgeType, NUDGE_TYPE_CONFIG } from '../types';
@@ -20,6 +23,7 @@ import { Nudge, NudgeType, NUDGE_TYPE_CONFIG } from '../types';
 interface NudgeCardProps {
   nudge: Nudge;
   onPress?: () => void;
+  onLogCall?: (leadId: string, leadName?: string) => void;
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
@@ -30,13 +34,24 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
   'inbox': Inbox,
 };
 
-export function NudgeCard({ nudge, onPress }: NudgeCardProps) {
+export function NudgeCard({ nudge, onPress, onLogCall }: NudgeCardProps) {
   const colors = useThemeColors();
   const router = useRouter();
+  const { setActiveMode } = useFocusMode();
 
   const config = NUDGE_TYPE_CONFIG[nudge.type];
   const iconColor = colors[config.color] || colors.primary;
   const IconComponent = ICON_MAP[config.icon] || AlertCircle;
+
+  // Show inline action for stale leads
+  const showLogCallAction = nudge.type === 'stale_lead' && onLogCall;
+
+  const handleLogCallPress = () => {
+    if (onLogCall && nudge.entityId) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onLogCall(nudge.entityId, nudge.entityName);
+    }
+  };
 
   const handlePress = () => {
     if (onPress) {
@@ -56,7 +71,8 @@ export function NudgeCard({ nudge, onPress }: NudgeCardProps) {
         router.push(`/(tabs)/properties/${nudge.entityId}`);
         break;
       case 'capture':
-        // Stay on Focus tab, switch to inbox mode
+        // Switch to focus mode to show the triage queue
+        setActiveMode('focus');
         break;
     }
   };
@@ -159,7 +175,32 @@ export function NudgeCard({ nudge, onPress }: NudgeCardProps) {
         </Text>
       </View>
 
-      <ChevronRight size={ICON_SIZES.sm} color={colors.mutedForeground} />
+      {/* Inline action or chevron */}
+      {showLogCallAction ? (
+        <TouchableOpacity
+          onPress={handleLogCallPress}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            backgroundColor: colors.info,
+            paddingHorizontal: SPACING.sm,
+            paddingVertical: 6,
+            borderRadius: BORDER_RADIUS.md,
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Log call for this lead"
+        >
+          <Phone size={14} color={colors.primaryForeground} />
+          <Text style={{ fontSize: 12, fontWeight: '600', color: colors.primaryForeground }}>
+            Log Call
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <ChevronRight size={ICON_SIZES.sm} color={colors.mutedForeground} />
+      )}
     </TouchableOpacity>
   );
 }

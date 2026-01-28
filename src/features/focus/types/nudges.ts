@@ -25,6 +25,9 @@ export interface Nudge {
   daysOverdue?: number;
   dueDate?: string;
   createdAt: string;
+  // Touch tracking metadata (for stale_lead type)
+  touchCount?: number;
+  responsiveness?: number | null;
 }
 
 export interface NudgeSummary {
@@ -32,6 +35,10 @@ export interface NudgeSummary {
   high: number;
   medium: number;
   low: number;
+  // Type-based breakdown
+  staleLeads: number;
+  overdueActions: number;
+  pendingCaptures: number;
 }
 
 // Configuration for nudge display

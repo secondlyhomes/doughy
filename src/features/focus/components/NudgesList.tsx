@@ -3,12 +3,12 @@
 
 import React from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
-import { CheckCircle2 } from 'lucide-react-native';
+import { CheckCircle2, Phone, Calendar, Inbox } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { LoadingSpinner } from '@/components/ui';
 import { Nudge, NudgeSummary } from '../types';
-import { NudgeCard } from './NudgeCard';
+import { SwipeableNudgeCard, cleanExpiredSnoozes, isNudgeSnoozed } from './SwipeableNudgeCard';
 
 interface NudgesListProps {
   nudges: Nudge[];
@@ -16,6 +16,7 @@ interface NudgesListProps {
   isLoading: boolean;
   onRefresh?: () => void;
   onNudgePress?: (nudge: Nudge) => void;
+  onLogCall?: (leadId: string, leadName?: string) => void;
 }
 
 export function NudgesList({
@@ -24,6 +25,7 @@ export function NudgesList({
   isLoading,
   onRefresh,
   onNudgePress,
+  onLogCall,
 }: NudgesListProps) {
   const colors = useThemeColors();
 
@@ -75,7 +77,11 @@ export function NudgesList({
   }
 
   const renderItem = ({ item }: { item: Nudge }) => (
-    <NudgeCard nudge={item} onPress={onNudgePress ? () => onNudgePress(item) : undefined} />
+    <SwipeableNudgeCard
+      nudge={item}
+      onPress={onNudgePress ? () => onNudgePress(item) : undefined}
+      onLogCall={onLogCall}
+    />
   );
 
   const renderHeader = () => {
@@ -83,34 +89,9 @@ export function NudgesList({
 
     return (
       <View style={{ paddingHorizontal: SPACING.md, marginBottom: SPACING.md }}>
-        {/* Summary badges */}
-        <View style={{ flexDirection: 'row', gap: SPACING.sm, flexWrap: 'wrap' }}>
-          {summary.high > 0 && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: colors.destructive + '20',
-                paddingHorizontal: SPACING.sm,
-                paddingVertical: SPACING.xs,
-                borderRadius: BORDER_RADIUS.full,
-                gap: SPACING.xs,
-              }}
-            >
-              <View
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: colors.destructive,
-                }}
-              />
-              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.destructive }}>
-                {summary.high} urgent
-              </Text>
-            </View>
-          )}
-          {summary.medium > 0 && (
+        {/* Type-based summary breakdown */}
+        <View style={{ flexDirection: 'row', gap: SPACING.sm, flexWrap: 'wrap', marginBottom: SPACING.sm }}>
+          {summary.staleLeads > 0 && (
             <View
               style={{
                 flexDirection: 'row',
@@ -122,20 +103,78 @@ export function NudgesList({
                 gap: SPACING.xs,
               }}
             >
-              <View
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: colors.warning,
-                }}
-              />
+              <Phone size={ICON_SIZES.xs} color={colors.warning} />
               <Text style={{ fontSize: 13, fontWeight: '600', color: colors.warning }}>
-                {summary.medium} needs attention
+                {summary.staleLeads} stale lead{summary.staleLeads !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          )}
+          {summary.overdueActions > 0 && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: colors.destructive + '20',
+                paddingHorizontal: SPACING.sm,
+                paddingVertical: SPACING.xs,
+                borderRadius: BORDER_RADIUS.full,
+                gap: SPACING.xs,
+              }}
+            >
+              <Calendar size={ICON_SIZES.xs} color={colors.destructive} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.destructive }}>
+                {summary.overdueActions} overdue action{summary.overdueActions !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          )}
+          {summary.pendingCaptures > 0 && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: colors.primary + '20',
+                paddingHorizontal: SPACING.sm,
+                paddingVertical: SPACING.xs,
+                borderRadius: BORDER_RADIUS.full,
+                gap: SPACING.xs,
+              }}
+            >
+              <Inbox size={ICON_SIZES.xs} color={colors.primary} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>
+                {summary.pendingCaptures} pending capture{summary.pendingCaptures !== 1 ? 's' : ''}
               </Text>
             </View>
           )}
         </View>
+
+        {/* Priority summary */}
+        {summary.high > 0 && (
+          <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: colors.destructive + '15',
+                paddingHorizontal: SPACING.sm,
+                paddingVertical: 4,
+                borderRadius: BORDER_RADIUS.full,
+                gap: SPACING.xs,
+              }}
+            >
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: colors.destructive,
+                }}
+              />
+              <Text style={{ fontSize: 12, fontWeight: '500', color: colors.destructive }}>
+                {summary.high} urgent
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
     );
   };

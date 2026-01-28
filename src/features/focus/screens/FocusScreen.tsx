@@ -2,9 +2,10 @@
 // Focus tab - dual-mode screen for property-focused work and inbox awareness
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, TextInput, Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { ThemedSafeAreaView } from '@/components';
 import { BottomSheet, BottomSheetSection, Button, SearchBar } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -13,10 +14,11 @@ import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDebounce } from '@/hooks';
+import { supabase } from '@/lib/supabase';
+import { extractFromImage } from '@/lib/openai';
 import {
   Mic,
   Phone,
-  MessageSquare,
   Upload,
   Camera,
   StickyNote,
@@ -27,8 +29,112 @@ import { useCreateCaptureItem, usePendingCaptureCount } from '@/features/capture
 import { VoiceMemoRecorder } from '@/features/conversations/components/VoiceMemoRecorder';
 import { useUnreadCounts } from '@/features/layout/hooks/useUnreadCounts';
 
-import { FocusHeader, NudgesList } from '../components';
+import { FocusHeader, NudgesList, TouchLogSheet } from '../components';
 import { useNudges, usePropertyTimeline } from '../hooks';
+
+// ============================================
+// Helper: Base64 decode for native platforms
+// ============================================
+
+function decodeBase64(base64: string): Uint8Array {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const lookup = new Uint8Array(256);
+  for (let i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i;
+  }
+
+  let bufferLength = base64.length * 0.75;
+  if (base64[base64.length - 1] === '=') {
+    bufferLength--;
+    if (base64[base64.length - 2] === '=') {
+      bufferLength--;
+    }
+  }
+
+  const bytes = new Uint8Array(bufferLength);
+  let p = 0;
+
+  for (let i = 0; i < base64.length; i += 4) {
+    const encoded1 = lookup[base64.charCodeAt(i)];
+    const encoded2 = lookup[base64.charCodeAt(i + 1)];
+    const encoded3 = lookup[base64.charCodeAt(i + 2)];
+    const encoded4 = lookup[base64.charCodeAt(i + 3)];
+
+    bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+    if (base64[i + 2] !== '=') {
+      bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+    }
+    if (base64[i + 3] !== '=') {
+      bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+    }
+  }
+
+  return bytes;
+}
+
+// ============================================
+// Helper: Upload file to Supabase Storage
+// ============================================
+
+async function uploadToSupabaseStorage(
+  localUri: string,
+  fileName: string,
+  mimeType: string
+): Promise<string | null> {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Generate unique file path
+    const fileExt = fileName.split('.').pop() || 'file';
+    const uniqueFileName = `${userData.user.id}/captures/${Date.now()}.${fileExt}`;
+
+    // Read file content
+    let fileData: string | Blob;
+
+    if (Platform.OS === 'web') {
+      const response = await fetch(localUri);
+      fileData = await response.blob();
+    } else {
+      const base64 = await FileSystem.readAsStringAsync(localUri, {
+        encoding: 'base64',
+      });
+      fileData = base64;
+    }
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = Platform.OS === 'web'
+      ? await supabase.storage
+          .from('capture-files')
+          .upload(uniqueFileName, fileData as Blob, {
+            contentType: mimeType,
+          })
+      : await supabase.storage
+          .from('capture-files')
+          .upload(uniqueFileName, decodeBase64(fileData as string), {
+            contentType: mimeType,
+          });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      // Fallback to local URI if storage upload fails
+      return localUri;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('capture-files')
+      .getPublicUrl(uniqueFileName);
+
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('Failed to upload to Supabase Storage:', error);
+    // Return local URI as fallback
+    return localUri;
+  }
+}
 
 // ============================================
 // Spacing Constants
@@ -96,6 +202,8 @@ export function FocusScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>('queue');
   const [showRecorder, setShowRecorder] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showTouchLogSheet, setShowTouchLogSheet] = useState(false);
+  const [nudgeTouchLogLead, setNudgeTouchLogLead] = useState<{ id: string; name?: string } | null>(null);
   const [noteText, setNoteText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -149,11 +257,19 @@ export function FocusScreen() {
       if (result.canceled) return;
 
       const file = result.assets[0];
+
+      // Upload to Supabase Storage for persistence
+      const persistedUrl = await uploadToSupabaseStorage(
+        file.uri,
+        file.name,
+        file.mimeType || 'application/octet-stream'
+      );
+
       await createItem({
         type: 'document',
         title: file.name,
         file_name: file.name,
-        file_url: file.uri,
+        file_url: persistedUrl || file.uri,
         file_size: file.size,
         mime_type: file.mimeType,
         source: 'upload',
@@ -167,7 +283,7 @@ export function FocusScreen() {
     }
   }, [createItem, focusedProperty]);
 
-  // Handle photo capture
+  // Handle photo capture with optional AI analysis
   const handleTakePhoto = useCallback(async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -185,18 +301,86 @@ export function FocusScreen() {
       if (result.canceled) return;
 
       const photo = result.assets[0];
-      await createItem({
-        type: 'photo',
-        title: `Photo ${new Date().toLocaleDateString()}`,
-        file_url: photo.uri,
-        file_name: photo.fileName || 'photo.jpg',
-        mime_type: photo.mimeType || 'image/jpeg',
-        source: 'app_camera',
-        ...(focusedProperty ? { assigned_property_id: focusedProperty.id } : {}),
-      } as any);
-      Alert.alert('Saved', focusedProperty
-        ? `Photo linked to ${focusedProperty.address}.`
-        : 'Photo added to triage queue.');
+      const fileName = photo.fileName || `photo_${Date.now()}.jpg`;
+      const mimeType = photo.mimeType || 'image/jpeg';
+
+      // Upload to Supabase Storage for persistence
+      const persistedUrl = await uploadToSupabaseStorage(photo.uri, fileName, mimeType);
+
+      // Ask if user wants to analyze the photo with AI
+      Alert.alert(
+        'Analyze Photo?',
+        'Would you like AI to extract data from this image? (MLS sheets, documents, business cards)',
+        [
+          {
+            text: 'Just Save',
+            style: 'cancel',
+            onPress: async () => {
+              await createItem({
+                type: 'photo',
+                title: `Photo ${new Date().toLocaleDateString()}`,
+                file_url: persistedUrl || photo.uri,
+                file_name: fileName,
+                mime_type: mimeType,
+                source: 'app_camera',
+                ...(focusedProperty ? { assigned_property_id: focusedProperty.id } : {}),
+              } as any);
+              Alert.alert('Saved', focusedProperty
+                ? `Photo linked to ${focusedProperty.address}.`
+                : 'Photo added to triage queue.');
+            },
+          },
+          {
+            text: 'Analyze with AI',
+            onPress: async () => {
+              try {
+                // Show processing indicator
+                Alert.alert('Analyzing...', 'AI is extracting data from your image. This may take a moment.');
+
+                // Call AI extraction
+                const extractionResult = await extractFromImage(photo.uri);
+
+                // Save with extracted data
+                await createItem({
+                  type: 'photo',
+                  title: `Photo ${new Date().toLocaleDateString()} (${extractionResult.type})`,
+                  file_url: persistedUrl || photo.uri,
+                  file_name: fileName,
+                  mime_type: mimeType,
+                  source: 'app_camera',
+                  ai_extracted_data: extractionResult.extractedData,
+                  ai_confidence: extractionResult.confidence,
+                  ...(focusedProperty ? { assigned_property_id: focusedProperty.id } : {}),
+                } as any);
+
+                // Show what was extracted
+                const extractedKeys = Object.keys(extractionResult.extractedData || {});
+                const extractedSummary = extractedKeys.length > 0
+                  ? `Extracted: ${extractedKeys.slice(0, 3).join(', ')}${extractedKeys.length > 3 ? '...' : ''}`
+                  : 'No data extracted';
+
+                Alert.alert(
+                  'Analysis Complete',
+                  `Document type: ${extractionResult.type}\n${extractedSummary}\n\nConfidence: ${Math.round((extractionResult.confidence || 0) * 100)}%`
+                );
+              } catch (analysisError) {
+                console.error('AI analysis failed:', analysisError);
+                // Still save the photo even if analysis fails
+                await createItem({
+                  type: 'photo',
+                  title: `Photo ${new Date().toLocaleDateString()}`,
+                  file_url: persistedUrl || photo.uri,
+                  file_name: fileName,
+                  mime_type: mimeType,
+                  source: 'app_camera',
+                  ...(focusedProperty ? { assigned_property_id: focusedProperty.id } : {}),
+                } as any);
+                Alert.alert('Photo Saved', 'AI analysis failed, but your photo was saved.');
+              }
+            },
+          },
+        ]
+      );
     } catch {
       Alert.alert('Error', 'Failed to capture photo. Please try again.');
     }
@@ -232,14 +416,18 @@ export function FocusScreen() {
     }
   }, [createItem, noteText, focusedProperty]);
 
-  // Handle log call
+  // Handle log call - opens TouchLogSheet
   const handleLogCall = useCallback(() => {
-    Alert.alert('Coming Soon', 'Call logging will be available soon.');
-  }, []);
+    if (!focusedProperty?.leadId) {
+      Alert.alert('No Lead Selected', 'Please select a property with an associated lead to log a call.');
+      return;
+    }
+    setShowTouchLogSheet(true);
+  }, [focusedProperty]);
 
-  // Handle log text
-  const handleLogText = useCallback(() => {
-    Alert.alert('Coming Soon', 'Text logging will be available soon.');
+  // Handle log call from nudge inline action
+  const handleNudgeLogCall = useCallback((leadId: string, leadName?: string) => {
+    setNudgeTouchLogLead({ id: leadId, name: leadName });
   }, []);
 
   // Check if any filters are active
@@ -312,24 +500,6 @@ export function FocusScreen() {
                       onPress={() => setShowRecorder(true)}
                     />
                     <CaptureAction
-                      icon={Phone}
-                      label="Log Call"
-                      color={colors.info}
-                      onPress={handleLogCall}
-                    />
-                    <CaptureAction
-                      icon={MessageSquare}
-                      label="Log Text"
-                      color={colors.success}
-                      onPress={handleLogText}
-                    />
-                    <CaptureAction
-                      icon={Upload}
-                      label="Upload"
-                      color={colors.primary}
-                      onPress={handleUploadDocument}
-                    />
-                    <CaptureAction
                       icon={Camera}
                       label="Photo"
                       color={colors.warning}
@@ -340,6 +510,18 @@ export function FocusScreen() {
                       label="Note"
                       color={colors.mutedForeground}
                       onPress={handleAddNote}
+                    />
+                    <CaptureAction
+                      icon={Phone}
+                      label="Log Call"
+                      color={colors.info}
+                      onPress={handleLogCall}
+                    />
+                    <CaptureAction
+                      icon={Upload}
+                      label="Upload"
+                      color={colors.primary}
+                      onPress={handleUploadDocument}
                     />
                   </ScrollView>
                 </View>
@@ -398,24 +580,6 @@ export function FocusScreen() {
                     onPress={() => setShowRecorder(true)}
                   />
                   <CaptureAction
-                    icon={Phone}
-                    label="Log Call"
-                    color={colors.info}
-                    onPress={handleLogCall}
-                  />
-                  <CaptureAction
-                    icon={MessageSquare}
-                    label="Log Text"
-                    color={colors.success}
-                    onPress={handleLogText}
-                  />
-                  <CaptureAction
-                    icon={Upload}
-                    label="Upload"
-                    color={colors.primary}
-                    onPress={handleUploadDocument}
-                  />
-                  <CaptureAction
                     icon={Camera}
                     label="Photo"
                     color={colors.warning}
@@ -427,6 +591,18 @@ export function FocusScreen() {
                     color={colors.mutedForeground}
                     onPress={handleAddNote}
                   />
+                  <CaptureAction
+                    icon={Phone}
+                    label="Log Call"
+                    color={colors.info}
+                    onPress={handleLogCall}
+                  />
+                  <CaptureAction
+                    icon={Upload}
+                    label="Upload"
+                    color={colors.primary}
+                    onPress={handleUploadDocument}
+                  />
                 </ScrollView>
               </View>
             </View>
@@ -436,6 +612,7 @@ export function FocusScreen() {
               nudges={nudges}
               summary={summary}
               isLoading={nudgesLoading}
+              onLogCall={handleNudgeLogCall}
             />
           </View>
         )}
@@ -549,6 +726,27 @@ export function FocusScreen() {
           </View>
         </View>
       </BottomSheet>
+
+      {/* Touch Log Sheet for Log Call (Focus mode) */}
+      <TouchLogSheet
+        visible={showTouchLogSheet}
+        onClose={() => setShowTouchLogSheet(false)}
+        focusedProperty={focusedProperty}
+      />
+
+      {/* Touch Log Sheet for Nudge inline action (Inbox mode) */}
+      <TouchLogSheet
+        visible={!!nudgeTouchLogLead}
+        onClose={() => setNudgeTouchLogLead(null)}
+        focusedProperty={nudgeTouchLogLead ? {
+          id: '', // No property context
+          address: '',
+          city: '',
+          state: '',
+          leadId: nudgeTouchLogLead.id,
+          leadName: nudgeTouchLogLead.name,
+        } : null}
+      />
     </ThemedSafeAreaView>
   );
 }
