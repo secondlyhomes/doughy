@@ -85,6 +85,7 @@ export function SubscriptionScreen() {
     },
   ];
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [creditsUsed, setCreditsUsed] = useState(0);
   const [creditsTotal, setCreditsTotal] = useState(100);
@@ -95,6 +96,7 @@ export function SubscriptionScreen() {
 
   const loadSubscriptionData = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       // TODO: Fetch real subscription data from API
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -111,6 +113,7 @@ export function SubscriptionScreen() {
       setCreditsTotal(100);
     } catch (error) {
       console.error('Failed to load subscription:', error);
+      setLoadError('Unable to load subscription data. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -168,6 +171,18 @@ export function SubscriptionScreen() {
     return (
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
         <LoadingSpinner fullScreen />
+      </ThemedSafeAreaView>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
+        <AlertCircle size={48} color={colors.destructive} />
+        <Text className="text-center mt-4 mb-4" style={{ color: colors.foreground }}>
+          {loadError}
+        </Text>
+        <Button onPress={loadSubscriptionData}>Retry</Button>
       </ThemedSafeAreaView>
     );
   }

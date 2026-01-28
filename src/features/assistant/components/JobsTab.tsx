@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {
   Clock,
@@ -58,6 +59,11 @@ export function JobsTab({ dealId, onJobPress }: JobsTabProps) {
       await cancelJob(jobId);
     } catch (error) {
       console.error('Failed to cancel job:', error);
+      Alert.alert(
+        'Failed to Cancel',
+        'Unable to cancel the job. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 

@@ -293,7 +293,7 @@ export function useJobStatus(jobId?: string): {
       .channel(`job-${jobId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'ai_jobs', filter: `id=eq.${jobId}` },
+        { event: 'UPDATE', schema: 'public', table: 'assistant_jobs', filter: `id=eq.${jobId}` },
         (payload) => {
           setJob(payload.new as AIJob);
         }

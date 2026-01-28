@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {
   Zap,
@@ -125,6 +126,11 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
           onJobCreated?.(job.id);
         } catch (jobError) {
           console.error('Failed to create job:', jobError);
+          Alert.alert(
+            'Failed to Start Job',
+            'Unable to start the background job. Please try again.',
+            [{ text: 'OK' }]
+          );
         }
       } else if (result.content) {
         // Content result (e.g., draft text, analysis) - notify parent
@@ -133,6 +139,11 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
       }
     } catch (error) {
       console.error('Action execution failed:', error);
+      Alert.alert(
+        'Action Failed',
+        'Unable to execute this action. Please try again.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(null);
     }
