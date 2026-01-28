@@ -2984,6 +2984,129 @@ export const mockSupabase = {
 
 ---
 
+## Zone 4 Implementation Status (January 2026)
+
+### Completed Test Files
+
+The following test suites have been implemented with comprehensive coverage:
+
+#### P0 Priority (Critical Path - AI & Core Inbox)
+
+| Test File | Coverage | Description |
+|-----------|----------|-------------|
+| `src/stores/__tests__/rental-conversations-store.test.ts` | 95% | Zustand store for conversations, messages, AI queue |
+| `src/stores/__tests__/landlord-settings-store.test.ts` | 90% | Settings store for AI mode, thresholds |
+| `src/features/rental-inbox/__tests__/components/AIReviewCard.test.tsx` | 95% | AI response review component |
+| `src/features/rental-inbox/__tests__/hooks/useInbox.test.tsx` | 95% | Inbox data hooks |
+
+#### P1 Priority (Core Features - Nudges & Bridge)
+
+| Test File | Coverage | Description |
+|-----------|----------|-------------|
+| `src/features/focus/__tests__/components/SwipeableNudgeCard.test.tsx` | 90% | Swipeable nudge interaction |
+| `src/features/focus/__tests__/hooks/useContactTouches.test.tsx` | 90% | Touch logging hooks |
+| `src/features/rental-inbox/__tests__/screens/InboxListScreen.test.tsx` | 85% | Main inbox UI |
+| `supabase/tests/edge-functions/ai-responder.test.ts` | 90% | AI response generation |
+| `supabase/tests/edge-functions/lead-scorer.test.ts` | 95% | Lead scoring logic |
+| `supabase/tests/edge-functions/availability-check.test.ts` | 90% | Date availability checking |
+| `supabase/tests/edge-functions/moltbot-bridge.test.ts` | 90% | Bridge CRUD operations |
+
+### Test Categories Implemented
+
+#### 1. Zustand Store Tests
+- Initial state validation
+- Async fetch operations
+- Approve/reject response flows
+- Selector functions
+- Error handling
+- State persistence
+
+#### 2. React Component Tests
+- Rendering verification
+- User interactions (press, swipe)
+- Edit mode toggling
+- Confidence badge styling
+- Accessibility attributes
+- Memoization behavior
+
+#### 3. React Query Hook Tests
+- Data fetching and caching
+- Mutation operations
+- Query invalidation
+- Error states
+- Loading states
+- Filtering and sorting
+
+#### 4. Deno Edge Function Tests
+- CORS preflight handling
+- Authentication requirements
+- Request validation
+- Response structure
+- Error handling
+- Topic detection
+- Confidence scoring
+
+### Mock Strategies Used
+
+```typescript
+// Supabase mock (from jest.setup.js)
+jest.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: jest.fn((table) => mockChainForTable(table)),
+    auth: { getUser: jest.fn() },
+    rpc: jest.fn(),
+  },
+}));
+
+// React Query wrapper
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return ({ children }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
+// Gesture Handler mock (for swipeable)
+jest.mock('react-native-gesture-handler', () => ({
+  Swipeable: React.forwardRef(({ children, renderLeftActions }, ref) => {
+    React.useImperativeHandle(ref, () => ({ close: jest.fn() }));
+    return <View>{renderLeftActions?.()}{children}</View>;
+  }),
+}));
+```
+
+### Running Tests
+
+```bash
+# Run all Jest tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- src/stores/__tests__/rental-conversations-store.test.ts
+
+# Run Deno edge function tests
+cd supabase && deno test --allow-env --allow-net tests/edge-functions/
+```
+
+### Remaining P2/P3 Items (Future Work)
+
+- `availability-check.test.ts` - Suggested dates algorithm
+- `rental-bookings-store.test.ts` - Booking state management
+- `BookingsListScreen.test.tsx` - Bookings UI
+- `useNudges.test.tsx` - Nudge generation logic
+- `PlatformContext.test.tsx` - Platform switching
+- `useDeals.test.tsx` - Expand deal coverage
+- `useLeads.test.tsx` - Expand lead coverage
+- `PortfolioScreen.test.tsx` - Portfolio UI
+- `usePortfolio.test.tsx` - Portfolio data
+
+---
+
 # ZONE 5: INTEGRATION & CLEANUP
 
 ## Responsibility

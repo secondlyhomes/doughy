@@ -357,6 +357,25 @@ jest.mock('papaparse', () => ({
   }),
 }));
 
+// Mock expo-haptics
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(() => Promise.resolve()),
+  notificationAsync: jest.fn(() => Promise.resolve()),
+  selectionAsync: jest.fn(() => Promise.resolve()),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+}));
+
+// Mock @/lib/haptics
+jest.mock('@/lib/haptics', () => ({
+  successHaptic: jest.fn(() => Promise.resolve()),
+  errorHaptic: jest.fn(() => Promise.resolve()),
+  warningHaptic: jest.fn(() => Promise.resolve()),
+  lightHaptic: jest.fn(() => Promise.resolve()),
+  mediumHaptic: jest.fn(() => Promise.resolve()),
+  heavyHaptic: jest.fn(() => Promise.resolve()),
+}));
+
 // Mock expo-blur for glass effect components
 jest.mock('expo-blur', () => {
   const React = require('react');
