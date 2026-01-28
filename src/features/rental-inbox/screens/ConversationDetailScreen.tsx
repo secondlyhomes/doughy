@@ -9,10 +9,10 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   RefreshControl,
   StyleSheet,
   Keyboard,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -39,10 +39,11 @@ import {
   LINE_HEIGHTS,
 } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';
+import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 
 import { useConversation } from '../hooks/useInbox';
 import { MessageBubble } from '../components/MessageBubble';
-import { AIReviewCard } from '../components/AIReviewCard';
+import { AIReviewCard, ApprovalMetadata } from '../components/AIReviewCard';
 import type { Message, Channel } from '@/stores/rental-conversations-store';
 
 // Channel icon mapping
@@ -83,6 +84,10 @@ export function ConversationDetailScreen({
   const router = useRouter();
   const flatListRef = useRef<FlatList<Message>>(null);
   const inputRef = useRef<TextInput>(null);
+  const keyboardProps = useKeyboardAvoidance({
+    hasTabBar: true,
+    hasNavigationHeader: false,
+  });
 
   // State
   const [messageText, setMessageText] = useState('');
@@ -152,19 +157,19 @@ export function ConversationDetailScreen({
     }, 500);
   }, []);
 
-  // Handle AI response approval
+  // Handle AI response approval with metadata for adaptive learning
   const handleApprove = useCallback(
-    async (editedResponse?: string) => {
+    async (metadata: ApprovalMetadata) => {
       haptic.light();
-      await approve(editedResponse);
+      await approve(metadata);
     },
     [approve]
   );
 
-  // Handle AI response rejection
-  const handleReject = useCallback(async () => {
+  // Handle AI response rejection with timing for adaptive learning
+  const handleReject = useCallback(async (responseTimeSeconds: number) => {
     haptic.light();
-    await reject();
+    await reject(responseTimeSeconds);
   }, [reject]);
 
   // Navigate to property
@@ -213,8 +218,8 @@ export function ConversationDetailScreen({
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
+        behavior={keyboardProps.behavior}
+        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
       >
         {/* Header */}
         <GlassView effect="regular" intensity={40} style={styles.header}>

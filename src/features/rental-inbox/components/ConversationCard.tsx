@@ -13,7 +13,7 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import type { ConversationWithRelations, Channel } from '@/stores/rental-conversations-store';
 
@@ -120,7 +120,7 @@ export const ConversationCard = memo(function ConversationCard({
           >
             <Text
               style={{
-                fontSize: 16,
+                fontSize: FONT_SIZES.base,
                 fontWeight: '600',
                 color: colors.foreground,
                 flex: 1,
@@ -131,7 +131,7 @@ export const ConversationCard = memo(function ConversationCard({
             </Text>
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZES.xs,
                 color: colors.mutedForeground,
                 marginLeft: SPACING.sm,
               }}
@@ -152,7 +152,7 @@ export const ConversationCard = memo(function ConversationCard({
               <Building2 size={12} color={colors.mutedForeground} />
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: FONT_SIZES.xs,
                   color: colors.mutedForeground,
                   marginLeft: 4,
                   flex: 1,
@@ -188,7 +188,7 @@ export const ConversationCard = memo(function ConversationCard({
                 <AlertCircle size={12} color={colors.warning} />
                 <Text
                   style={{
-                    fontSize: 11,
+                    fontSize: FONT_SIZES['2xs'],
                     fontWeight: '600',
                     color: colors.warning,
                     marginLeft: 4,
@@ -214,7 +214,7 @@ export const ConversationCard = memo(function ConversationCard({
                 <Bot size={12} color={colors.info} />
                 <Text
                   style={{
-                    fontSize: 11,
+                    fontSize: FONT_SIZES['2xs'],
                     fontWeight: '500',
                     color: colors.info,
                     marginLeft: 4,
@@ -230,7 +230,7 @@ export const ConversationCard = memo(function ConversationCard({
               <MessageSquare size={12} color={colors.mutedForeground} />
               <Text
                 style={{
-                  fontSize: 11,
+                  fontSize: FONT_SIZES['2xs'],
                   color: colors.mutedForeground,
                   marginLeft: 4,
                 }}

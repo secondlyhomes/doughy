@@ -346,3 +346,33 @@ export const ENTRANCE_ANIMATIONS = {
     maxDelay: 300,
   },
 } as const;
+
+/**
+ * FAB (Floating Action Button) constants
+ * For expandable action menus with stacked buttons
+ */
+export const FAB_CONSTANTS = {
+  /** Vertical spacing between action buttons when FAB is expanded */
+  ACTION_SPACING: 70,
+  /** Horizontal alignment offset for action buttons */
+  ALIGNMENT_OFFSET: -4,
+} as const;
+
+/**
+ * Swipe action button width for gesture-based list items
+ * Standard width for reveal actions (star, call, archive, etc.)
+ */
+export const SWIPE_ACTION_WIDTH = 80;
+
+/**
+ * Badge constants for notification indicators
+ * Used on tab bar and other badge-displaying components
+ */
+export const BADGE_CONSTANTS = {
+  /** Minimum width/height for badge circle */
+  MIN_SIZE: 18,
+  /** Vertical offset from parent (negative = above) */
+  OFFSET_TOP: -6,
+  /** Horizontal offset from parent (negative = left of right edge) */
+  OFFSET_RIGHT: -10,
+} as const;

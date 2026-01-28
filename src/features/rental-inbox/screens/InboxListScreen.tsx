@@ -1,9 +1,10 @@
 // src/features/rental-inbox/screens/InboxListScreen.tsx
 // Inbox list screen for Landlord platform
 // Displays conversations with AI-suggested responses for review
+// Enhanced with sectioned layout: NEW LEADS, NEEDS REVIEW, AI HANDLED
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, SectionList } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +16,10 @@ import {
   Search,
   AlertCircle,
   Check,
+  Sparkles,
+  UserPlus,
+  CheckCircle2,
+  ChevronRight,
 } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
@@ -27,15 +32,15 @@ import {
   Button,
 } from '@/components/ui';
 import { ConversationCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors, ThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';
 
 import { useInbox, useFilteredInbox } from '../hooks/useInbox';
 import { ConversationCard } from '../components/ConversationCard';
 import type { InboxFilter, InboxSort } from '../types';
-import type { ConversationWithRelations } from '@/stores/rental-conversations-store';
+import type { ConversationWithRelations, AIResponseQueueItem } from '@/stores/rental-conversations-store';
 
 // Search bar height calculation
 const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs;
@@ -55,6 +60,248 @@ const SORT_OPTIONS: { key: InboxSort; label: string }[] = [
   { key: 'oldest', label: 'Oldest First' },
 ];
 
+// Extended conversation type for inbox with pending response
+// hasPendingResponse comes from useFilteredInbox (always present)
+// pendingResponse is added when conversation has a pending AI response
+type InboxConversation = ConversationWithRelations & {
+  hasPendingResponse: boolean;
+  pendingResponse?: AIResponseQueueItem;
+};
+
+// Section type for the sectioned inbox
+interface InboxSection {
+  title: string;
+  icon: React.ComponentType<{ size: number; color: string }>;
+  iconColor: string;
+  iconBgColor: string;
+  description?: string;
+  data: InboxConversation[];
+}
+
+// Quick Action Card for AI responses
+function QuickActionCard({
+  conversation,
+  pendingResponse,
+  onPress,
+  onQuickApprove,
+  colors,
+}: {
+  conversation: ConversationWithRelations;
+  pendingResponse?: AIResponseQueueItem;
+  onPress: () => void;
+  onQuickApprove: () => void;
+  colors: ThemeColors;
+}) {
+  const contactName = conversation.contact
+    ? `${conversation.contact.first_name || ''} ${conversation.contact.last_name || ''}`.trim() || 'Unknown'
+    : 'Unknown';
+
+  const confidence = pendingResponse?.confidence || 0;
+  const isHighConfidence = confidence >= 85;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        backgroundColor: colors.card,
+        borderRadius: BORDER_RADIUS.lg,
+        padding: SPACING.md,
+        marginBottom: SPACING.sm,
+        borderWidth: 1,
+        borderColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'medium'),
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`Conversation with ${contactName}, ${confidence}% confidence`}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm }}>
+        {/* Avatar */}
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.muted,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: colors.foreground, fontWeight: '600' }}>
+            {contactName.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+
+        {/* Content */}
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+              {contactName}
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'light'),
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                borderRadius: BORDER_RADIUS.full,
+              }}
+            >
+              <Sparkles size={12} color={isHighConfidence ? colors.success : colors.warning} />
+              <Text
+                style={{
+                  color: isHighConfidence ? colors.success : colors.warning,
+                  fontSize: FONT_SIZES['2xs'],
+                  fontWeight: '600',
+                }}
+              >
+                {confidence}%
+              </Text>
+            </View>
+          </View>
+
+          {/* Platform and time */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: 2 }}>
+            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
+              {conversation.platform || conversation.channel}
+            </Text>
+            {conversation.contact?.contact_types?.includes('lead') && (
+              <View
+                style={{
+                  backgroundColor: withOpacity(colors.info, 'light'),
+                  paddingHorizontal: 6,
+                  paddingVertical: 1,
+                  borderRadius: BORDER_RADIUS.sm,
+                }}
+              >
+                <Text style={{ color: colors.info, fontSize: FONT_SIZES['2xs'], fontWeight: '600' }}>Lead</Text>
+              </View>
+            )}
+          </View>
+
+          {/* AI suggested response preview */}
+          {pendingResponse && (
+            <Text
+              numberOfLines={2}
+              style={{
+                color: colors.mutedForeground,
+                fontSize: FONT_SIZES.sm,
+                marginTop: SPACING.xs,
+                fontStyle: 'italic',
+              }}
+            >
+              "{pendingResponse.suggested_response.slice(0, 100)}..."
+            </Text>
+          )}
+        </View>
+      </View>
+
+      {/* Quick Actions */}
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm, marginTop: SPACING.sm }}>
+        <TouchableOpacity
+          onPress={onPress}
+          style={{
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            borderRadius: BORDER_RADIUS.md,
+            backgroundColor: colors.muted,
+          }}
+        >
+          <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm }}>View</Text>
+        </TouchableOpacity>
+
+        {isHighConfidence && (
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              onQuickApprove();
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              borderRadius: BORDER_RADIUS.md,
+              backgroundColor: colors.primary,
+            }}
+          >
+            <Check size={14} color={colors.primaryForeground} />
+            <Text style={{ color: colors.primaryForeground, fontSize: FONT_SIZES.sm, fontWeight: '600' }}>
+              Quick Approve
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// Section Header Component
+function SectionHeader({
+  section,
+  colors,
+  collapsed,
+  onToggle,
+}: {
+  section: InboxSection;
+  colors: ThemeColors;
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
+  const IconComponent = section.icon;
+
+  return (
+    <TouchableOpacity
+      onPress={onToggle}
+      disabled={!onToggle}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: SPACING.sm,
+        marginTop: SPACING.md,
+        marginBottom: SPACING.xs,
+      }}
+    >
+      <View
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: section.iconBgColor,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: SPACING.sm,
+        }}
+      >
+        <IconComponent size={18} color={section.iconColor} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+          {section.title}
+        </Text>
+        {section.description && (
+          <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
+            {section.description}
+          </Text>
+        )}
+      </View>
+      <View
+        style={{
+          backgroundColor: section.iconBgColor,
+          paddingHorizontal: 8,
+          paddingVertical: 2,
+          borderRadius: BORDER_RADIUS.full,
+        }}
+      >
+        <Text style={{ color: section.iconColor, fontWeight: '600', fontSize: FONT_SIZES.sm }}>
+          {section.data.length}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export function InboxListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
@@ -68,8 +315,91 @@ export function InboxListScreen() {
   const [showFiltersSheet, setShowFiltersSheet] = useState(false);
 
   // Data hooks
-  const { pendingCount, isLoading, isRefreshing, error, refresh, clearError } = useInbox();
+  const { pendingCount, pendingResponses, isLoading, isRefreshing, error, refresh, quickApprove } = useInbox();
   const filteredConversations = useFilteredInbox(activeFilter, activeSort, debouncedSearch);
+
+  // Create sections from conversations
+  const sections: InboxSection[] = useMemo(() => {
+    if (activeFilter !== 'all' || debouncedSearch) {
+      // When filtered or searching, show flat list
+      return [
+        {
+          title: activeFilter === 'needs_review' ? 'Needs Review' : 'Conversations',
+          icon: MessageSquare,
+          iconColor: colors.foreground,
+          iconBgColor: colors.muted,
+          data: filteredConversations as InboxConversation[],
+        },
+      ];
+    }
+
+    // Create pending map for quick lookup
+    const pendingMap = new Map(
+      pendingResponses.map((p) => [p.conversation_id, p])
+    );
+
+    // Categorize conversations
+    const newLeads: InboxConversation[] = [];
+    const needsReview: InboxConversation[] = [];
+    const aiHandled: InboxConversation[] = [];
+    const otherActive: InboxConversation[] = [];
+
+    filteredConversations.forEach((conv) => {
+      const pending = pendingMap.get(conv.id);
+      const isLead = conv.contact?.contact_types?.includes('lead');
+
+      if (pending) {
+        // Has pending AI response
+        if (isLead) {
+          newLeads.push({ ...conv, pendingResponse: pending, hasPendingResponse: true });
+        } else {
+          needsReview.push({ ...conv, pendingResponse: pending, hasPendingResponse: true });
+        }
+      } else if (conv.status === 'active') {
+        // Check if recently AI-handled (last message was AI)
+        // For now, just add to active
+        otherActive.push(conv as InboxConversation);
+      } else {
+        otherActive.push(conv as InboxConversation);
+      }
+    });
+
+    const result: InboxSection[] = [];
+
+    if (newLeads.length > 0) {
+      result.push({
+        title: 'New Leads',
+        icon: UserPlus,
+        iconColor: colors.success,
+        iconBgColor: withOpacity(colors.success, 'light'),
+        description: 'AI responded - follow up recommended',
+        data: newLeads,
+      });
+    }
+
+    if (needsReview.length > 0) {
+      result.push({
+        title: 'Needs Your Review',
+        icon: AlertCircle,
+        iconColor: colors.warning,
+        iconBgColor: withOpacity(colors.warning, 'light'),
+        description: 'AI responses waiting for approval',
+        data: needsReview,
+      });
+    }
+
+    if (otherActive.length > 0) {
+      result.push({
+        title: 'Active Conversations',
+        icon: MessageSquare,
+        iconColor: colors.info,
+        iconBgColor: withOpacity(colors.info, 'light'),
+        data: otherActive,
+      });
+    }
+
+    return result;
+  }, [filteredConversations, pendingResponses, activeFilter, debouncedSearch, colors]);
 
   // Event handlers
   const handleConversationPress = useCallback(
@@ -77,6 +407,16 @@ export function InboxListScreen() {
       router.push(`/(tabs)/inbox/${conversation.id}`);
     },
     [router]
+  );
+
+  const handleQuickApprove = useCallback(
+    async (conversationId: string) => {
+      const pending = pendingResponses.find((p) => p.conversation_id === conversationId);
+      if (pending) {
+        await quickApprove(pending.id);
+      }
+    },
+    [quickApprove, pendingResponses]
   );
 
   const handleRefresh = useCallback(() => {
@@ -92,15 +432,38 @@ export function InboxListScreen() {
   // Check if filters are active
   const hasActiveFilters = activeFilter !== 'all' || activeSort !== 'pending_first';
 
-  // Render item
-  const renderItem = useCallback(
-    ({ item }: { item: ConversationWithRelations & { hasPendingResponse?: boolean } }) => (
-      <ConversationCard
-        conversation={item}
-        onPress={() => handleConversationPress(item)}
-      />
+  // Render section item
+  const renderSectionItem = useCallback(
+    ({ item, section }: { item: InboxConversation; section: InboxSection }) => {
+      // For leads and needs review sections, use quick action cards
+      if (section.title === 'New Leads' || section.title === 'Needs Your Review') {
+        return (
+          <QuickActionCard
+            conversation={item}
+            pendingResponse={item.pendingResponse}
+            onPress={() => handleConversationPress(item)}
+            onQuickApprove={() => handleQuickApprove(item.id)}
+            colors={colors}
+          />
+        );
+      }
+
+      // Regular conversation card for other sections
+      return (
+        <ConversationCard
+          conversation={item}
+          onPress={() => handleConversationPress(item)}
+        />
+      );
+    },
+    [handleConversationPress, handleQuickApprove, colors]
+  );
+
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: InboxSection }) => (
+      <SectionHeader section={section} colors={colors} />
     ),
-    [handleConversationPress]
+    [colors]
   );
 
   const keyExtractor = useCallback(
@@ -109,66 +472,71 @@ export function InboxListScreen() {
   );
 
   const ItemSeparator = useCallback(
-    () => <View style={{ height: SPACING.md }} />,
+    () => <View style={{ height: SPACING.xs }} />,
     []
   );
 
-  // Pending review header
-  const ListHeaderComponent = useMemo(() => {
+  // Stats banner
+  const StatsBanner = useMemo(() => {
     if (pendingCount === 0) return null;
 
+    const leadsCount = sections.find((s) => s.title === 'New Leads')?.data.length || 0;
+    const reviewCount = sections.find((s) => s.title === 'Needs Your Review')?.data.length || 0;
+
     return (
-      <TouchableOpacity
-        onPress={() => setActiveFilter('needs_review')}
+      <View
         style={{
           flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: withOpacity(colors.warning, 'light'),
-          padding: SPACING.md,
-          borderRadius: BORDER_RADIUS.lg,
+          gap: SPACING.sm,
           marginBottom: SPACING.md,
-          borderWidth: 1,
-          borderColor: withOpacity(colors.warning, 'medium'),
         }}
-        accessibilityRole="button"
-        accessibilityLabel={`${pendingCount} AI responses need review`}
       >
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.warning,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginRight: SPACING.sm,
-          }}
-        >
-          <Bot size={22} color="#FFFFFF" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text
+        {leadsCount > 0 && (
+          <TouchableOpacity
+            onPress={() => setActiveFilter('needs_review')}
             style={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: colors.foreground,
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: withOpacity(colors.success, 'muted'),
+              padding: SPACING.sm,
+              borderRadius: BORDER_RADIUS.lg,
+              borderWidth: 1,
+              borderColor: withOpacity(colors.success, 'medium'),
             }}
           >
-            {pendingCount} AI Response{pendingCount > 1 ? 's' : ''} Ready
-          </Text>
-          <Text
+            <UserPlus size={18} color={colors.success} />
+            <View style={{ marginLeft: SPACING.xs }}>
+              <Text style={{ color: colors.foreground, fontWeight: '600' }}>{leadsCount}</Text>
+              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>New Leads</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {reviewCount > 0 && (
+          <TouchableOpacity
+            onPress={() => setActiveFilter('needs_review')}
             style={{
-              fontSize: 12,
-              color: colors.mutedForeground,
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: withOpacity(colors.warning, 'muted'),
+              padding: SPACING.sm,
+              borderRadius: BORDER_RADIUS.lg,
+              borderWidth: 1,
+              borderColor: withOpacity(colors.warning, 'medium'),
             }}
           >
-            Tap to review and approve suggested replies
-          </Text>
-        </View>
-        <AlertCircle size={20} color={colors.warning} />
-      </TouchableOpacity>
+            <Bot size={18} color={colors.warning} />
+            <View style={{ marginLeft: SPACING.xs }}>
+              <Text style={{ color: colors.foreground, fontWeight: '600' }}>{reviewCount}</Text>
+              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>Need Review</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
     );
-  }, [pendingCount, colors, setActiveFilter]);
+  }, [pendingCount, sections, colors]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -202,10 +570,12 @@ export function InboxListScreen() {
             <SkeletonList count={5} component={ConversationCardSkeleton} />
           </View>
         ) : (
-          <FlatList
-            data={filteredConversations}
-            renderItem={renderItem}
+          <SectionList
+            sections={sections}
+            renderItem={renderSectionItem}
+            renderSectionHeader={renderSectionHeader}
             keyExtractor={keyExtractor}
+            stickySectionHeadersEnabled={false}
             contentContainerStyle={{
               paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
               paddingHorizontal: 16,
@@ -223,7 +593,7 @@ export function InboxListScreen() {
                 tintColor={colors.info}
               />
             }
-            ListHeaderComponent={activeFilter === 'all' ? ListHeaderComponent : null}
+            ListHeaderComponent={StatsBanner}
             ListEmptyComponent={
               <ListEmptyState
                 state={searchQuery ? 'filtered' : 'empty'}

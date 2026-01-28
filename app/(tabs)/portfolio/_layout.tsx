@@ -6,6 +6,7 @@ export default function PortfolioLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
+        animation: 'slide_from_right',
       }}
     />
   );

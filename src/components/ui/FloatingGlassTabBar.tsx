@@ -10,6 +10,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancel
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useTheme, useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { BADGE_CONSTANTS, FONT_SIZES } from '@/constants/design-tokens';
 
 // Safe haptics - requires native rebuild to work
 const triggerHaptic = async () => {
@@ -469,17 +470,17 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: 'absolute',
-    top: -6,
-    right: -10,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    top: BADGE_CONSTANTS.OFFSET_TOP,
+    right: BADGE_CONSTANTS.OFFSET_RIGHT,
+    minWidth: BADGE_CONSTANTS.MIN_SIZE,
+    height: BADGE_CONSTANTS.MIN_SIZE,
+    borderRadius: BADGE_CONSTANTS.MIN_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: FONT_SIZES['2xs'],
     fontWeight: '600',
   },
 });

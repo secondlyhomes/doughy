@@ -24,7 +24,7 @@ import { FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_Z_INDEX, FAB_SIZE } from '@/co
 import { GlassButton } from '@/components/ui/GlassButton';
 import { getFABShadowStyle } from '@/components/ui/fab-styles';
 import { withOpacity } from '@/lib/design-utils';
-import { UI_TIMING } from '@/constants/design-tokens';
+import { UI_TIMING, FAB_CONSTANTS } from '@/constants/design-tokens';
 
 export interface FABAction {
   icon: React.ReactNode;
@@ -118,9 +118,9 @@ export function FloatingActionButton({
       <View style={{ position: 'absolute', zIndex: FAB_Z_INDEX.EXPANDABLE, bottom: buttonBottom + FAB_BOTTOM_OFFSET, right: FAB_RIGHT_MARGIN }}>
         {/* Action Buttons */}
         {actions.map((action, index) => {
-          // Simple vertical stack positioning
-          const spacing = 70; // Distance between each button
-          const leftOffset = -4; // Fine-tune alignment with main FAB
+          // Simple vertical stack positioning using design tokens
+          const spacing = FAB_CONSTANTS.ACTION_SPACING;
+          const leftOffset = FAB_CONSTANTS.ALIGNMENT_OFFSET;
 
           // Stack vertically upward
           const targetX = leftOffset;

@@ -7,6 +7,7 @@ import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { Phone, MessageSquare, Archive, Star } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { haptic } from '@/lib/haptics';
+import { SWIPE_ACTION_WIDTH } from '@/constants/design-tokens';
 
 import { Lead } from '../types';
 import { LeadCard } from './LeadCard';
@@ -102,7 +103,7 @@ function SwipeableLeadCardComponent({
     dragX: Animated.AnimatedInterpolation<number>
   ) => {
     const scale = dragX.interpolate({
-      inputRange: [0, 80],
+      inputRange: [0, SWIPE_ACTION_WIDTH],
       outputRange: [0.5, 1],
       extrapolate: 'clamp',
     });
@@ -115,7 +116,7 @@ function SwipeableLeadCardComponent({
             backgroundColor: lead.starred ? colors.mutedForeground : colors.warning,
             justifyContent: 'center',
             alignItems: 'center',
-            width: 80,
+            width: SWIPE_ACTION_WIDTH,
           }}
           onPress={handleToggleStar}
           accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`}
@@ -141,7 +142,7 @@ function SwipeableLeadCardComponent({
     dragX: Animated.AnimatedInterpolation<number>
   ) => {
     const scale = dragX.interpolate({
-      inputRange: [-240, 0],
+      inputRange: [-(SWIPE_ACTION_WIDTH * 3), 0],
       outputRange: [1, 0.5],
       extrapolate: 'clamp',
     });
@@ -154,7 +155,7 @@ function SwipeableLeadCardComponent({
             backgroundColor: colors.info,
             justifyContent: 'center',
             alignItems: 'center',
-            width: 80,
+            width: SWIPE_ACTION_WIDTH,
           }}
           onPress={handleCall}
           accessibilityLabel={`Call ${lead.name}`}
@@ -172,7 +173,7 @@ function SwipeableLeadCardComponent({
             backgroundColor: colors.success,
             justifyContent: 'center',
             alignItems: 'center',
-            width: 80,
+            width: SWIPE_ACTION_WIDTH,
           }}
           onPress={handleText}
           accessibilityLabel={`Send text message to ${lead.name}`}
@@ -190,7 +191,7 @@ function SwipeableLeadCardComponent({
             backgroundColor: colors.destructive,
             justifyContent: 'center',
             alignItems: 'center',
-            width: 80,
+            width: SWIPE_ACTION_WIDTH,
           }}
           onPress={handleArchive}
           accessibilityLabel={`Archive ${lead.name}`}

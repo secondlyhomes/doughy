@@ -42,7 +42,8 @@ import {
   Separator,
 } from '@/components/ui';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { SPACING } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { withOpacity } from '@/lib/design-utils';
 import { PropertyStatsRow } from '../components/PropertyStatsRow';
 import { RoomsList } from '../components/RoomsList';
 import {
@@ -119,7 +120,7 @@ function Section({ title, children, rightElement }: SectionProps) {
     <View className="mb-6">
       <View className="flex-row items-center justify-between mb-3">
         <Text
-          style={{ color: colors.foreground, fontSize: 18, fontWeight: '600' }}
+          style={{ color: colors.foreground, fontSize: FONT_SIZES.lg, fontWeight: '600' }}
         >
           {title}
         </Text>
@@ -141,7 +142,7 @@ function PropertyImagePlaceholder() {
     >
       <ImageIcon size={48} color={colors.mutedForeground} />
       <Text
-        style={{ color: colors.mutedForeground, fontSize: 14, marginTop: 8 }}
+        style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginTop: 8 }}
       >
         No Photos Added
       </Text>
@@ -161,13 +162,13 @@ function FinancialRow({ label, value, valueColor }: FinancialRowProps) {
 
   return (
     <View className="flex-row justify-between py-2">
-      <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>
+      <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}>
         {label}
       </Text>
       <Text
         style={{
           color: valueColor || colors.foreground,
-          fontSize: 14,
+          fontSize: FONT_SIZES.sm,
           fontWeight: '600',
         }}
       >
@@ -186,7 +187,7 @@ function AmenityChip({ amenity }: { amenity: string }) {
       className="px-3 py-1 rounded-full mr-2 mb-2"
       style={{ backgroundColor: colors.muted }}
     >
-      <Text style={{ color: colors.foreground, fontSize: 13 }}>{amenity}</Text>
+      <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm }}>{amenity}</Text>
     </View>
   );
 }
@@ -219,7 +220,7 @@ function UpcomingBookingCard({ booking, onPress }: UpcomingBookingCardProps) {
             <Text
               style={{
                 color: colors.foreground,
-                fontSize: 15,
+                fontSize: FONT_SIZES.base,
                 fontWeight: '600',
               }}
               numberOfLines={1}
@@ -230,7 +231,7 @@ function UpcomingBookingCard({ booking, onPress }: UpcomingBookingCardProps) {
 
           <View className="flex-row items-center gap-2 mt-1">
             <Calendar size={12} color={colors.mutedForeground} />
-            <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>
+            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}>
               {formatDate(booking.start_date)}
               {booking.end_date && ` - ${formatDate(booking.end_date)}`}
             </Text>
@@ -240,7 +241,7 @@ function UpcomingBookingCard({ booking, onPress }: UpcomingBookingCardProps) {
             <Text
               style={{
                 color: colors.mutedForeground,
-                fontSize: 12,
+                fontSize: FONT_SIZES.xs,
                 marginTop: 4,
               }}
             >
@@ -318,11 +319,11 @@ export function RentalPropertyDetailScreen() {
 
   const handleStatusChange = useCallback(
     async (newStatus: PropertyStatus) => {
-      const success = await updateStatus(newStatus);
-      if (success) {
+      try {
+        await updateStatus(newStatus);
         setShowStatusSheet(false);
         refetch();
-      } else {
+      } catch (error) {
         Alert.alert('Error', 'Failed to update property status');
       }
     },
@@ -330,11 +331,11 @@ export function RentalPropertyDetailScreen() {
   );
 
   const handleDelete = useCallback(async () => {
-    const success = await deleteProperty();
-    if (success) {
+    try {
+      await deleteProperty();
       setShowDeleteConfirm(false);
       router.back();
-    } else {
+    } catch (error) {
       Alert.alert('Error', 'Failed to delete property');
     }
   }, [deleteProperty, router]);
@@ -387,7 +388,7 @@ export function RentalPropertyDetailScreen() {
           <Text
             style={{
               color: colors.mutedForeground,
-              fontSize: 16,
+              fontSize: FONT_SIZES.base,
               textAlign: 'center',
               marginTop: 12,
             }}
@@ -444,7 +445,7 @@ export function RentalPropertyDetailScreen() {
         <PropertyStatsRow
           bedrooms={property.bedrooms}
           bathrooms={property.bathrooms}
-          sqft={property.sqft}
+          sqft={property.square_feet}
           rentalType={property.rental_type}
         />
 
@@ -462,7 +463,7 @@ export function RentalPropertyDetailScreen() {
                 <Text
                   style={{
                     color: colors.foreground,
-                    fontSize: 15,
+                    fontSize: FONT_SIZES.base,
                     fontWeight: '500',
                   }}
                   numberOfLines={1}
@@ -470,7 +471,7 @@ export function RentalPropertyDetailScreen() {
                   {property.address}
                 </Text>
                 <Text
-                  style={{ color: colors.mutedForeground, fontSize: 13 }}
+                  style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}
                   numberOfLines={1}
                 >
                   {property.city}, {property.state} {property.zip || ''}
@@ -542,7 +543,7 @@ export function RentalPropertyDetailScreen() {
               <Text
                 style={{
                   color: colors.primary,
-                  fontSize: 14,
+                  fontSize: FONT_SIZES.sm,
                   fontWeight: '500',
                 }}
               >
@@ -566,7 +567,7 @@ export function RentalPropertyDetailScreen() {
               <Text
                 style={{
                   color: colors.mutedForeground,
-                  fontSize: 14,
+                  fontSize: FONT_SIZES.sm,
                   marginTop: 8,
                 }}
               >
@@ -591,7 +592,7 @@ export function RentalPropertyDetailScreen() {
                   }
                   className="py-2 items-center"
                 >
-                  <Text style={{ color: colors.primary, fontSize: 14 }}>
+                  <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm }}>
                     +{upcomingBookings.length - 3} more bookings
                   </Text>
                 </TouchableOpacity>
@@ -619,7 +620,7 @@ export function RentalPropertyDetailScreen() {
                         <Text
                           style={{
                             color: colors.foreground,
-                            fontSize: 14,
+                            fontSize: FONT_SIZES.sm,
                             textTransform: 'capitalize',
                           }}
                         >
@@ -676,7 +677,7 @@ export function RentalPropertyDetailScreen() {
                     className="flex-row items-center p-4 rounded-xl"
                     style={{
                       backgroundColor: isActive
-                        ? colors.primary + '20'
+                        ? withOpacity(colors.primary, 'light')
                         : colors.muted,
                       borderWidth: isActive ? 1 : 0,
                       borderColor: colors.primary,
@@ -690,7 +691,7 @@ export function RentalPropertyDetailScreen() {
                     <Text
                       style={{
                         color: isActive ? colors.primary : colors.foreground,
-                        fontSize: 16,
+                        fontSize: FONT_SIZES.base,
                         fontWeight: '500',
                         marginLeft: 12,
                       }}
@@ -725,7 +726,7 @@ export function RentalPropertyDetailScreen() {
           <Text
             style={{
               color: colors.foreground,
-              fontSize: 15,
+              fontSize: FONT_SIZES.base,
               textAlign: 'center',
             }}
           >
@@ -735,7 +736,7 @@ export function RentalPropertyDetailScreen() {
           <Text
             style={{
               color: colors.mutedForeground,
-              fontSize: 14,
+              fontSize: FONT_SIZES.sm,
               textAlign: 'center',
               marginTop: 8,
             }}

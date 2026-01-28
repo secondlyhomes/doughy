@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Bed, Bath, Maximize2 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { FONT_SIZES } from '@/constants/design-tokens';
 import { Badge } from '@/components/ui';
 import { RentalType } from '../types';
 
@@ -66,13 +67,13 @@ function StatItem({ icon: Icon, value, label }: StatItemProps) {
       <View className="flex-row items-center gap-1">
         <Icon size={16} color={colors.mutedForeground} />
         <Text
-          style={{ color: colors.foreground, fontSize: 16, fontWeight: '600' }}
+          style={{ color: colors.foreground, fontSize: FONT_SIZES.base, fontWeight: '600' }}
         >
           {value}
         </Text>
       </View>
       <Text
-        style={{ color: colors.mutedForeground, fontSize: 11, marginTop: 2 }}
+        style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'], marginTop: 2 }}
       >
         {label}
       </Text>
@@ -128,7 +129,7 @@ export function PropertyStatsRow({
           {formatRentalType(rentalType)}
         </Badge>
         <Text
-          style={{ color: colors.mutedForeground, fontSize: 11, marginTop: 4 }}
+          style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'], marginTop: 4 }}
         >
           Type
         </Text>

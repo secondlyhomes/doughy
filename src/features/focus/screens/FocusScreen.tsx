@@ -10,7 +10,7 @@ import { ThemedSafeAreaView } from '@/components';
 import { BottomSheet, BottomSheetSection, Button, SearchBar } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { useFocusMode } from '@/context/FocusModeContext';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, TOUCH_TARGETS, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDebounce } from '@/hooks';
@@ -172,8 +172,8 @@ function CaptureAction({ icon: Icon, label, color, onPress }: CaptureActionProps
     >
       <View
         style={{
-          width: 56,
-          height: 56,
+          width: TOUCH_TARGETS.COMFORTABLE,
+          height: TOUCH_TARGETS.COMFORTABLE,
           borderRadius: BORDER_RADIUS.lg,
           backgroundColor: withOpacity(color, 'light'),
           alignItems: 'center',
@@ -182,7 +182,7 @@ function CaptureAction({ icon: Icon, label, color, onPress }: CaptureActionProps
       >
         <Icon size={ICON_SIZES.lg} color={color} />
       </View>
-      <Text style={{ fontSize: 12, fontWeight: '500', color: colors.foreground }}>
+      <Text style={{ fontSize: FONT_SIZES.xs, fontWeight: '500', color: colors.foreground }}>
         {label}
       </Text>
     </TouchableOpacity>

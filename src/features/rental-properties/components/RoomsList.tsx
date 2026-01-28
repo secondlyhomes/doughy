@@ -12,6 +12,7 @@ import {
   DoorOpen,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { FONT_SIZES } from '@/constants/design-tokens';
 import { Badge, Button } from '@/components/ui';
 import { Room, RoomStatus } from '@/stores/rental-rooms-store';
 
@@ -42,8 +43,6 @@ function getStatusBadge(status: RoomStatus): {
       return { label: 'Available', variant: 'success' };
     case 'occupied':
       return { label: 'Occupied', variant: 'destructive' };
-    case 'hold':
-      return { label: 'On Hold', variant: 'warning' };
     case 'maintenance':
       return { label: 'Maintenance', variant: 'warning' };
     case 'unavailable':
@@ -77,7 +76,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
             <Text
               style={{
                 color: colors.foreground,
-                fontSize: 16,
+                fontSize: FONT_SIZES.base,
                 fontWeight: '600',
               }}
               numberOfLines={1}
@@ -92,7 +91,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
             <Text
               style={{
                 color: colors.success,
-                fontSize: 14,
+                fontSize: FONT_SIZES.sm,
                 fontWeight: '600',
               }}
             >
@@ -104,7 +103,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
               <View className="flex-row items-center gap-1">
                 <Bath size={12} color={colors.mutedForeground} />
                 <Text
-                  style={{ color: colors.mutedForeground, fontSize: 12 }}
+                  style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}
                 >
                   Private Bath
                 </Text>
@@ -116,7 +115,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
               <View className="flex-row items-center gap-1">
                 <DoorOpen size={12} color={colors.mutedForeground} />
                 <Text
-                  style={{ color: colors.mutedForeground, fontSize: 12 }}
+                  style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}
                 >
                   Private Entry
                 </Text>
@@ -159,7 +158,7 @@ export function RoomsList({
           <Text
             style={{
               color: colors.foreground,
-              fontSize: 18,
+              fontSize: FONT_SIZES.lg,
               fontWeight: '600',
             }}
           >
@@ -169,7 +168,7 @@ export function RoomsList({
             <Text
               style={{
                 color: colors.mutedForeground,
-                fontSize: 13,
+                fontSize: FONT_SIZES.sm,
                 marginTop: 2,
               }}
             >
@@ -186,7 +185,7 @@ export function RoomsList({
             className="flex-row items-center gap-1"
           >
             <Plus size={14} color={colors.primary} />
-            <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '500' }}>
+            <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm, fontWeight: '500' }}>
               Add Room
             </Text>
           </Button>
@@ -210,7 +209,7 @@ export function RoomsList({
           <Text
             style={{
               color: colors.mutedForeground,
-              fontSize: 14,
+              fontSize: FONT_SIZES.sm,
               marginTop: 8,
             }}
           >
@@ -252,13 +251,13 @@ export function RoomsList({
             <Text
               style={{
                 color: colors.success,
-                fontSize: 18,
+                fontSize: FONT_SIZES.lg,
                 fontWeight: '700',
               }}
             >
               {availableRooms}
             </Text>
-            <Text style={{ color: colors.mutedForeground, fontSize: 11 }}>
+            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>
               Available
             </Text>
           </View>
@@ -266,13 +265,13 @@ export function RoomsList({
             <Text
               style={{
                 color: colors.destructive,
-                fontSize: 18,
+                fontSize: FONT_SIZES.lg,
                 fontWeight: '700',
               }}
             >
               {occupiedRooms}
             </Text>
-            <Text style={{ color: colors.mutedForeground, fontSize: 11 }}>
+            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>
               Occupied
             </Text>
           </View>
@@ -285,13 +284,13 @@ export function RoomsList({
                     : occupancyRate >= 50
                     ? colors.warning
                     : colors.mutedForeground,
-                fontSize: 18,
+                fontSize: FONT_SIZES.lg,
                 fontWeight: '700',
               }}
             >
               {occupancyRate}%
             </Text>
-            <Text style={{ color: colors.mutedForeground, fontSize: 11 }}>
+            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>
               Occupancy
             </Text>
           </View>

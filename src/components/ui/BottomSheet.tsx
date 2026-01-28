@@ -18,7 +18,7 @@ import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/context/ThemeContext';
-import { SPACING } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop, GlassView } from './GlassView';
 import { getBackdropColor } from '@/lib/design-utils';
@@ -107,12 +107,12 @@ export function BottomSheet({
         >
           <View style={bottomSheetStyles.headerTitles}>
             {title && (
-              <Text style={{ fontSize: 18, fontWeight: '600', color: colors.foreground, textAlign: 'center' }}>
+              <Text style={{ fontSize: FONT_SIZES.lg, fontWeight: '600', color: colors.foreground, textAlign: 'center' }}>
                 {title}
               </Text>
             )}
             {subtitle && (
-              <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginTop: 2 }}>
+              <Text style={{ fontSize: FONT_SIZES.sm, color: colors.mutedForeground, textAlign: 'center', marginTop: 2 }}>
                 {subtitle}
               </Text>
             )}
@@ -247,15 +247,15 @@ const bottomSheetStyles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: BORDER_RADIUS['24'],
+    borderTopRightRadius: BORDER_RADIUS['24'],
     borderTopWidth: 1,
     overflow: 'hidden',
   },
   handleContainer: {
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
   },
   handle: {
     width: 40,
@@ -267,26 +267,26 @@ const bottomSheetStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.lg,
     borderBottomWidth: 1,
   },
   headerTitles: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: SPACING['2xl'] + SPACING.sm,
   },
   closeButton: {
-    padding: 8,
-    marginRight: -8,
-    borderRadius: 20,
+    padding: SPACING.sm,
+    marginRight: -SPACING.sm,
+    borderRadius: BORDER_RADIUS['2xl'],
   },
   scrollView: {
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
   },
   nonScrollContent: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
   },
 });
 
