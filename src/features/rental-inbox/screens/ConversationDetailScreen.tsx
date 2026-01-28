@@ -107,6 +107,7 @@ export function ConversationDetailScreen({
     approve,
     reject,
     clearError,
+    refetch,
   } = useConversation(conversationId);
 
   // Get channel icon and color
@@ -150,15 +151,15 @@ export function ConversationDetailScreen({
     }
   }, [messageText, isSending, send]);
 
-  // Handle refresh
+  // Handle refresh - actually refetches conversation and messages
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    // The hook will refetch when conversationId changes
-    // For now, we simulate a refresh delay
-    setTimeout(() => {
+    try {
+      await refetch();
+    } finally {
       setIsRefreshing(false);
-    }, 500);
-  }, []);
+    }
+  }, [refetch]);
 
   // Handle AI response approval with metadata for adaptive learning
   const handleApprove = useCallback(

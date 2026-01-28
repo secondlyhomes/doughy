@@ -286,6 +286,15 @@ export function useConversation(conversationId: string) {
     [conversationId, toggleAI]
   );
 
+  // Refetch conversation and messages
+  const refetch = useCallback(async () => {
+    clearError();
+    await Promise.all([
+      fetchConversationById(conversationId),
+      fetchMessages(conversationId),
+    ]);
+  }, [conversationId, fetchConversationById, fetchMessages, clearError]);
+
   return {
     conversation,
     messages: conversationMessages,
@@ -298,5 +307,6 @@ export function useConversation(conversationId: string) {
     reject,
     setAIEnabled,
     clearError,
+    refetch,
   };
 }

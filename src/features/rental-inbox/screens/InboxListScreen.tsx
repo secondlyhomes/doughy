@@ -99,8 +99,10 @@ function QuickActionCard({
     ? `${conversation.contact.first_name || ''} ${conversation.contact.last_name || ''}`.trim() || 'Unknown'
     : 'Unknown';
 
+  // Confidence is 0-1 scale (not 0-100), matches AIReviewCard thresholds
   const confidence = pendingResponse?.confidence || 0;
-  const isHighConfidence = confidence >= 85;
+  const confidencePercent = Math.round(confidence * 100);
+  const isHighConfidence = confidence >= 0.85;
 
   return (
     <TouchableOpacity
@@ -114,7 +116,7 @@ function QuickActionCard({
         borderColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'medium'),
       }}
       accessibilityRole="button"
-      accessibilityLabel={`Conversation with ${contactName}, ${confidence}% confidence`}
+      accessibilityLabel={`Conversation with ${contactName}, ${confidencePercent}% confidence`}
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm }}>
         {/* Avatar */}
@@ -158,7 +160,7 @@ function QuickActionCard({
                   fontWeight: '600',
                 }}
               >
-                {confidence}%
+                {confidencePercent}%
               </Text>
             </View>
           </View>

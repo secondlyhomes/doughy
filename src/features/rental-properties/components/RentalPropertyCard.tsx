@@ -84,11 +84,11 @@ function formatRate(baseRate: number, rateType: string): string {
     maximumFractionDigits: 0,
   }).format(baseRate);
 
+  // Database only has: nightly, weekly, monthly (no 'yearly')
   const suffix = {
     nightly: '/night',
     weekly: '/week',
     monthly: '/mo',
-    yearly: '/year',
   }[rateType] || '/mo';
 
   return `${formatted}${suffix}`;

@@ -68,11 +68,11 @@ function formatCurrency(amount: number | null): string {
 }
 
 function formatRateType(rateType: string): string {
+  // Database only has: nightly, weekly, monthly (no 'yearly')
   const suffixes: Record<string, string> = {
     nightly: '/night',
     weekly: '/week',
     monthly: '/mo',
-    yearly: '/year',
   };
   return suffixes[rateType] || '/mo';
 }
