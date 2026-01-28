@@ -35,13 +35,10 @@ export interface LogFilters {
   limit?: number;
 }
 
-export interface LogsResult {
-  success: boolean;
-  logs?: LogEntry[];
-  total?: number;
-  error?: string;
-  isMockData?: boolean;
-}
+// Discriminated union ensures proper type narrowing
+export type LogsResult =
+  | { success: true; logs: LogEntry[]; total: number; error?: never }
+  | { success: false; logs?: never; total?: never; error: string };
 
 /**
  * Fetch system logs with filtering
@@ -103,9 +100,12 @@ export async function getLogs(filters: LogFilters = {}): Promise<LogsResult> {
     const { data, count, error } = await query;
 
     if (error) {
-      // If table doesn't exist, return empty array
+      // If table doesn't exist, return error - this is a configuration issue
       if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
-        return { success: true, logs: [], total: 0 };
+        return {
+          success: false,
+          error: 'System logs table not found. Database migration may be required.',
+        };
       }
       throw error;
     }
@@ -115,9 +115,9 @@ export async function getLogs(filters: LogFilters = {}): Promise<LogsResult> {
       level: log.level as LogLevel,
       message: log.message,
       source: log.source || 'system',
-      userId: log.user_id ?? undefined,
+      userId: (log as Record<string, unknown>).user_id as string | undefined,
       metadata: log.details ? (log.details as Record<string, unknown>) : undefined,
-      timestamp: log.created_at,
+      timestamp: log.created_at || new Date().toISOString(),
     }));
 
     return {
@@ -127,20 +127,30 @@ export async function getLogs(filters: LogFilters = {}): Promise<LogsResult> {
     };
   } catch (error) {
     console.error('[admin] Error fetching logs:', error);
-    // Return mock data with flag indicating it's not real data
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : 'Failed to fetch logs';
     return {
-      success: true,
-      logs: generateMockLogs(),
-      total: 50,
-      isMockData: true,
+      success: false,
+      error: errorMessage,
     };
   }
 }
 
+const DEFAULT_LOG_SOURCES = ['api', 'auth', 'database', 'storage', 'cron'];
+
+// Discriminated union for log sources - always returns sources (from DB or defaults)
+export type LogSourcesResult =
+  | { sources: string[]; isDefault: false; error?: never }
+  | { sources: string[]; isDefault: true; error?: string };
+
 /**
  * Get available log sources
  */
-export async function getLogSources(): Promise<string[]> {
+export async function getLogSources(): Promise<LogSourcesResult> {
   try {
     const { data, error } = await supabase
       .from('system_logs')
@@ -148,69 +158,21 @@ export async function getLogSources(): Promise<string[]> {
       .limit(100);
 
     if (error) {
-      return ['api', 'auth', 'database', 'storage', 'cron'];
+      console.error('[admin] Error fetching log sources:', error);
+      return { sources: DEFAULT_LOG_SOURCES, isDefault: true, error: error.message };
     }
 
     const sources = [...new Set(data?.map((d) => d.source) || [])];
-    return sources.length > 0 ? sources : ['api', 'auth', 'database', 'storage', 'cron'];
-  } catch {
-    return ['api', 'auth', 'database', 'storage', 'cron'];
+    return {
+      sources: sources.length > 0 ? sources : DEFAULT_LOG_SOURCES,
+      isDefault: sources.length === 0,
+    };
+  } catch (error) {
+    console.error('[admin] Error fetching log sources:', error);
+    return {
+      sources: DEFAULT_LOG_SOURCES,
+      isDefault: true,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
-}
-
-/**
- * Generate mock logs for demo/development
- */
-function generateMockLogs(): LogEntry[] {
-  const levels: LogLevel[] = ['info', 'warning', 'error', 'debug'];
-  const sources = ['api', 'auth', 'database', 'storage', 'cron'];
-  const messages = {
-    info: [
-      'User logged in successfully',
-      'API request completed',
-      'Background job started',
-      'Cache refreshed',
-      'Email sent successfully',
-    ],
-    warning: [
-      'Rate limit approaching for user',
-      'Slow query detected (>1s)',
-      'Retry attempt for failed request',
-      'Session about to expire',
-    ],
-    error: [
-      'Failed to connect to external service',
-      'Invalid authentication token',
-      'Database query timeout',
-      'Payment processing failed',
-    ],
-    debug: [
-      'Processing webhook payload',
-      'Cache miss for key',
-      'Executing scheduled task',
-      'Validating request parameters',
-    ],
-  };
-
-  const logs: LogEntry[] = [];
-  const now = new Date();
-
-  for (let i = 0; i < 50; i++) {
-    const level = levels[Math.floor(Math.random() * (i < 10 ? 4 : 2))]; // More info/warning than error
-    const source = sources[Math.floor(Math.random() * sources.length)];
-    const messageList = messages[level];
-    const message = messageList[Math.floor(Math.random() * messageList.length)];
-
-    const timestamp = new Date(now.getTime() - i * 60000 * Math.random() * 10);
-
-    logs.push({
-      id: `log-${i}`,
-      level,
-      message,
-      source,
-      timestamp: timestamp.toISOString(),
-    });
-  }
-
-  return logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }

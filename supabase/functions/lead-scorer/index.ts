@@ -270,6 +270,25 @@ serve(async (req: Request) => {
       );
     }
 
+    // Verify conversation belongs to user (security check)
+    const { data: conversation, error: convError } = await supabase
+      .from('rental_conversations')
+      .select('id')
+      .eq('id', conversation_id)
+      .eq('user_id', authenticatedUserId)
+      .single();
+
+    if (convError || !conversation) {
+      console.error('Conversation not found or access denied:', convError?.message);
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ error: 'Conversation not found or access denied' }),
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
     // Fetch conversation messages
     const { data: messages, error: messagesError } = await supabase
       .from('rental_messages')
@@ -278,8 +297,11 @@ serve(async (req: Request) => {
       .order('created_at', { ascending: true })
       .limit(20);
 
+    // Track if we have incomplete data for scoring
+    let dataCompleteness: 'full' | 'partial' | 'minimal' = 'full';
     if (messagesError) {
       console.error('Error fetching messages:', messagesError);
+      dataCompleteness = 'partial';
     }
 
     // Collect all message content for scoring
@@ -344,7 +366,7 @@ serve(async (req: Request) => {
     const { recommendation, suggested_response_type } = getRecommendation(totalScore);
 
     // Update contact score in database
-    await supabase
+    const { error: updateError } = await supabase
       .from('crm_contacts')
       .update({
         score: totalScore,
@@ -352,17 +374,39 @@ serve(async (req: Request) => {
       })
       .eq('id', contact_id);
 
-    const result: LeadScorerResponse = {
+    // Track warnings for partial success scenarios
+    const warnings: string[] = [];
+
+    if (updateError) {
+      console.error('[lead-scorer] Failed to persist lead score:', updateError.message);
+      warnings.push(`Score not saved to database: ${updateError.message}`);
+    }
+
+    if (dataCompleteness !== 'full') {
+      warnings.push(`Scoring based on ${dataCompleteness} data - some messages may not have been included`);
+    }
+
+    const result: LeadScorerResponse & {
+      score_persisted: boolean;
+      data_completeness: string;
+      warnings?: string[];
+    } = {
       score: totalScore,
       factors: allFactors,
       recommendation,
-      suggested_response_type
+      suggested_response_type,
+      score_persisted: !updateError,
+      data_completeness: dataCompleteness,
+      ...(warnings.length > 0 && { warnings }),
     };
+
+    // Return 207 Multi-Status if there were any issues (score calculated but not fully persisted)
+    const status = warnings.length > 0 ? 207 : 200;
 
     return addCorsHeaders(
       new Response(
         JSON.stringify(result),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        { status, headers: { 'Content-Type': 'application/json' } }
       ),
       req
     );

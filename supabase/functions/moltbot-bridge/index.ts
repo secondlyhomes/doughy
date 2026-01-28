@@ -38,6 +38,7 @@ interface MoltbotBridgeResponse {
   success: boolean;
   data?: any;
   error?: string;
+  warnings?: string[];
 }
 
 // =============================================================================
@@ -70,19 +71,31 @@ async function handleGetProperties(
     return { success: false, error: error.message };
   }
 
-  // TODO: Fetch rooms if include_rooms is true
+  // Fetch rooms if include_rooms is true
+  const warnings: string[] = [];
   if (payload.include_rooms) {
-    // Placeholder: fetch rooms for each property
     for (const property of properties || []) {
-      const { data: rooms } = await supabase
+      const { data: rooms, error: roomsError } = await supabase
         .from('rental_rooms')
         .select('*')
         .eq('property_id', property.id);
-      property.rooms = rooms || [];
+
+      if (roomsError) {
+        console.error(`[moltbot-bridge] Failed to fetch rooms for property ${property.id}:`, roomsError.message);
+        property.rooms = [];
+        property.rooms_fetch_error = roomsError.message;
+        warnings.push(`Failed to fetch rooms for property ${property.id}: ${roomsError.message}`);
+      } else {
+        property.rooms = rooms || [];
+      }
     }
   }
 
-  return { success: true, data: { properties } };
+  return {
+    success: true,
+    data: { properties },
+    ...(warnings.length > 0 && { warnings }),
+  };
 }
 
 /**
@@ -418,12 +431,22 @@ async function handleLogMessage(
   }
 
   // Update conversation last_message_at
-  await supabase
+  const { error: updateError } = await supabase
     .from('rental_conversations')
     .update({ last_message_at: new Date().toISOString() })
     .eq('id', conversationId);
 
-  return { success: true, data: { message, conversation_id: conversationId } };
+  const warnings: string[] = [];
+  if (updateError) {
+    console.error('[moltbot-bridge] Failed to update conversation timestamp:', updateError.message);
+    warnings.push('Failed to update conversation timestamp');
+  }
+
+  return {
+    success: true,
+    data: { message, conversation_id: conversationId },
+    ...(warnings.length > 0 && { warnings }),
+  };
 }
 
 /**

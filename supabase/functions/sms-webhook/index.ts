@@ -10,6 +10,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/cors-standardized.ts';
 import { decryptServer } from '../_shared/crypto-server.ts';
+import { scanForThreats, buildSecureSystemPrompt, sanitizeForLogging } from '../_shared/security.ts';
 
 /**
  * Extracted property data from SMS text
@@ -164,12 +165,35 @@ async function getOpenAIKey(supabase: ReturnType<typeof createClient>): Promise<
 /**
  * Extract property data AND analyze conversation in a single API call
  * Combined to reduce API costs and latency (was previously 2 separate calls)
+ * Security: Input is scanned for threats before processing
  */
 async function extractAndAnalyzeSMS(
   smsBody: string,
   apiKey: string
 ): Promise<CombinedExtractionResult> {
-  const systemPrompt = `You are a real estate AI assistant. Analyze this SMS message and return a JSON object with two sections:
+  // Security: Scan SMS content for injection attempts
+  const securityScan = scanForThreats(smsBody);
+  if (securityScan.action === 'blocked') {
+    console.warn('[SMS-Webhook] Blocked SMS due to security threat:', sanitizeForLogging(smsBody));
+    // Return neutral analysis for blocked content
+    return {
+      property: {},
+      conversation: {
+        sentiment: 'neutral',
+        keyPhrases: [],
+        actionItems: [],
+        summary: 'Message flagged for security review.',
+      },
+    };
+  }
+
+  // Use sanitized content if threats were detected but not blocked
+  const processedBody = securityScan.action === 'sanitized' ? securityScan.sanitized : smsBody;
+  if (securityScan.action === 'sanitized') {
+    console.log('[SMS-Webhook] Sanitized SMS content, threat level:', securityScan.severity);
+  }
+
+  const baseSystemPrompt = `You are a real estate AI assistant. Analyze this SMS message and return a JSON object with two sections:
 
 1. "property" - Extract property details (omit fields if not mentioned):
    - address: string
@@ -203,6 +227,9 @@ Return JSON format:
   "conversation": { sentiment, keyPhrases, actionItems, summary }
 }`;
 
+  // Wrap with security rules to prevent prompt injection from SMS content
+  const systemPrompt = buildSecureSystemPrompt(baseSystemPrompt);
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -213,7 +240,7 @@ Return JSON format:
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: smsBody },
+        { role: 'user', content: processedBody },
       ],
       temperature: 0.2,
       max_tokens: 800,

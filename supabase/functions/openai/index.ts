@@ -12,6 +12,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { decryptServer } from "../_shared/crypto-server.ts";
+import { scanForThreats, sanitizeForLogging } from "../_shared/security.ts";
 
 // Environment configuration
 const DEFAULT_MODEL = Deno.env.get('DEFAULT_MODEL') || 'gpt-4.1-mini';
@@ -242,28 +243,46 @@ function handlePreflightRequest(req) {
 
 /**
  * Call the OpenAI API with proper error handling
+ * Defense-in-depth: Scans user messages for injection attempts
  */
 async function callOpenAI(requestBody) {
   // Get API key from Supabase
   const apiKey = await getApiKey();
-  
+
   if (!apiKey) {
     throw new Error("OpenAI API key not found in database");
   }
-  
+
   try {
     // Extract JIT context from messages if present
     let contextAwareMessages = requestBody.messages || [];
     let jitContext = null;
-    
+
     // Look for JIT context in system message
-    if (contextAwareMessages.length > 0 && 
-        contextAwareMessages[0].role === 'system' && 
+    if (contextAwareMessages.length > 0 &&
+        contextAwareMessages[0].role === 'system' &&
         contextAwareMessages[0].content.includes('CURRENT CONTEXT:')) {
       // We have JIT context in the system message - extract and process it
       jitContext = "JIT context included";
     }
-    
+
+    // Defense-in-depth: Scan user messages for security threats
+    // Individual consumers may also scan, but this provides a safety net
+    for (const msg of contextAwareMessages) {
+      if (msg.role === 'user' && typeof msg.content === 'string') {
+        const scan = scanForThreats(msg.content);
+        if (scan.action === 'blocked') {
+          console.warn('[OpenAI] Blocked message due to security threat:', sanitizeForLogging(msg.content));
+          throw new Error('Message contains prohibited content');
+        }
+        // Use sanitized content if threats were detected but not blocked
+        if (scan.action === 'sanitized' || scan.action === 'flagged') {
+          console.log('[OpenAI] Sanitized user message, severity:', scan.severity);
+          msg.content = scan.sanitized;
+        }
+      }
+    }
+
     // Prepare request to OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

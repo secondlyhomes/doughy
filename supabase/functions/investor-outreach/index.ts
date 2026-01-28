@@ -11,6 +11,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { corsHeaders, handleCors, addCorsHeaders } from "../_shared/cors.ts";
+import { scanForThreats, buildSecureSystemPrompt, sanitizeForLogging } from "../_shared/security.ts";
 
 // =============================================================================
 // Types
@@ -145,6 +146,19 @@ async function getTemplate(
 // AI Generation (for custom/complex messages)
 // =============================================================================
 
+/**
+ * Sanitize user-provided context fields to prevent prompt injection
+ */
+function sanitizeContextField(text: string | undefined): string | undefined {
+  if (!text) return text;
+  const scan = scanForThreats(text);
+  if (scan.action === 'blocked') {
+    console.warn('[investor-outreach] Blocked context field:', sanitizeForLogging(text));
+    return undefined; // Remove blocked content entirely
+  }
+  return scan.sanitized;
+}
+
 async function generateAIMessage(
   context: {
     contactType: ContactType;
@@ -164,7 +178,13 @@ async function generateAIMessage(
     throw new Error('OpenAI API key not configured');
   }
 
-  const systemPrompt = context.contactType === 'seller'
+  // Sanitize user-provided context fields to prevent prompt injection
+  const sanitizedPainPoints = context.painPoints
+    ?.map(p => sanitizeContextField(p))
+    .filter((p): p is string => p !== undefined);
+  const sanitizedLastTopic = sanitizeContextField(context.lastTopic);
+
+  const baseSystemPrompt = context.contactType === 'seller'
     ? `You are a real estate investor writing personalized outreach to motivated sellers.
 Your tone should be:
 - Empathetic and understanding of their situation
@@ -183,13 +203,16 @@ Your tone should be:
 
 Keep messages concise and end with a clear call to action.`;
 
+  // Wrap with security rules to prevent prompt injection
+  const systemPrompt = buildSecureSystemPrompt(baseSystemPrompt);
+
   const userPrompt = `Write a ${context.outreachType} ${context.channel} message.
 
 Contact: ${context.contactName}
 ${context.propertyAddress ? `Property: ${context.propertyAddress}` : ''}
 Sender: ${context.ownerName}${context.companyName ? `, ${context.companyName}` : ''}
-${context.painPoints?.length ? `Known pain points: ${context.painPoints.join(', ')}` : ''}
-${context.lastTopic ? `Last conversation was about: ${context.lastTopic}` : ''}
+${sanitizedPainPoints?.length ? `Known pain points: ${sanitizedPainPoints.join(', ')}` : ''}
+${sanitizedLastTopic ? `Last conversation was about: ${sanitizedLastTopic}` : ''}
 
 Generate just the message body (no subject line needed).`;
 
