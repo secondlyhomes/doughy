@@ -6,7 +6,8 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 // Environment variables
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+// Try new SUPABASE_PUBLISHABLE_KEY first, fall back to legacy SUPABASE_ANON_KEY
+const supabasePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY") || "";
 
 // Types for import functionality
 interface CanonicalRow {
@@ -152,7 +153,7 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    const supabase = createClient(supabaseUrl, supabasePublishableKey, {
       global: {
         headers: {
           Authorization: authHeader,

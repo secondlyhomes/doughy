@@ -720,8 +720,9 @@ serve(async (req: Request) => {
   try {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
-    
+    // Try new SUPABASE_SECRET_KEY first, fall back to legacy SUPABASE_SERVICE_ROLE_KEY
+    const supabaseKey = (Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) as string;
+
     if (!supabaseUrl || !supabaseKey) {
       logger.error('Missing Supabase credentials');
       return new Response(JSON.stringify({
@@ -732,7 +733,7 @@ serve(async (req: Request) => {
         headers
       });
     }
-    
+
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Get Stripe API key and webhook secret

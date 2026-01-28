@@ -185,10 +185,11 @@ serve(async (req) => {
   try {
     // Initialize Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
+    // Try new keys first, fall back to legacy keys
+    const supabasePublishableKey = (Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')) as string;
+    const supabaseSecretKey = (Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) as string;
 
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabasePublishableKey || !supabaseSecretKey) {
       return new Response(JSON.stringify({
         status: 'error',
         message: 'Server configuration error',
@@ -230,7 +231,7 @@ serve(async (req) => {
       }
 
       // Validate JWT using Supabase client with anon key
-      const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+      const supabaseAuth = createClient(supabaseUrl, supabasePublishableKey);
       const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(
         authHeader.replace('Bearer ', '')
       );
@@ -251,7 +252,7 @@ serve(async (req) => {
     }
 
     // Initialize Stripe with API key from database (use service role key)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseSecretKey);
     const stripe = await initializeStripe(supabase);
 
     // Process different Stripe actions

@@ -806,26 +806,46 @@ serve(async (req: Request) => {
       );
     }
 
-    // Create Supabase client to verify the JWT
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Extract the token from the Authorization header
+    const token = authHeader.replace('Bearer ', '');
 
-    // Verify the user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return addCorsHeaders(
-        new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Invalid or expired token',
-          }),
-          { status: 401, headers: { 'Content-Type': 'application/json' } }
-        ),
-        req
-      );
+    // Check if this is a service role key (server-to-server authentication)
+    // Support both legacy JWT-format key and new SUPABASE_SECRET_KEY format
+    const secretKey = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const moltbotSecretKey = Deno.env.get('MOLTBOT_SECRET_KEY');
+    const isServiceRole = (secretKey && token === secretKey) ||
+                          (moltbotSecretKey && token === moltbotSecretKey);
+
+    let userId: string | undefined;
+
+    if (isServiceRole) {
+      // Service role authentication - trusted server-to-server call
+      // User ID should be provided in the request body for service role calls
+      console.log('[platform-email-parser] Service role authentication');
+    } else {
+      // User JWT authentication
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      // Try new SUPABASE_PUBLISHABLE_KEY first, fall back to legacy SUPABASE_ANON_KEY
+      const supabasePublishableKey = (Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY'))!;
+      const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+      // Verify the user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return addCorsHeaders(
+          new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Invalid or expired token',
+            }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } }
+          ),
+          req
+        );
+      }
+      userId = user.id;
     }
 
     // Parse request body
