@@ -5,8 +5,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
 // Environment variables
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabasePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+const supabaseUrl = Deno.env.get("SUPABASE_URL");
+const supabasePublishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+
+// Validate environment variables at startup
+if (!supabaseUrl || !supabasePublishableKey) {
+  console.error("[import-leads] Missing required environment variables:", {
+    SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
+    SUPABASE_PUBLISHABLE_KEY: supabasePublishableKey ? "set" : "MISSING",
+  });
+}
 
 // Types for import functionality
 interface CanonicalRow {

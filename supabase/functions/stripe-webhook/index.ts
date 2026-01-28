@@ -719,11 +719,14 @@ serve(async (req: Request) => {
   
   try {
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseKey = (Deno.env.get('SUPABASE_SECRET_KEY')) as string;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
-      logger.error('Missing Supabase credentials');
+      logger.error('Missing required environment variables:', {
+        SUPABASE_URL: supabaseUrl ? 'set' : 'MISSING',
+        SUPABASE_SECRET_KEY: supabaseKey ? 'set' : 'MISSING',
+      });
       return new Response(JSON.stringify({
         status: 'error',
         message: 'Missing Supabase credentials'

@@ -25,10 +25,21 @@ serve(async (req) => {
 
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SECRET_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseSecretKey = Deno.env.get('SUPABASE_SECRET_KEY');
+
+    if (!supabaseUrl || !supabaseSecretKey) {
+      console.error("[recalculate_lead_score] Missing required environment variables:", {
+        SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
+        SUPABASE_SECRET_KEY: supabaseSecretKey ? "set" : "MISSING",
+      });
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseSecretKey)
 
     const { leadId } = await req.json()
 

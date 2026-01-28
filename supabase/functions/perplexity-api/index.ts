@@ -84,10 +84,29 @@ serve(async (req) => {
     // Parse request body
     const requestData = await req.json();
     const action = requestData.action || "query";
-    
+
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") as string;
-    const supabaseKey = Deno.env.get("SUPABASE_SECRET_KEY") as string;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SECRET_KEY");
+
+    if (!supabaseUrl || !supabaseKey) {
+      logError("Missing required environment variables", {
+        SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
+        SUPABASE_SECRET_KEY: supabaseKey ? "set" : "MISSING",
+      });
+      const errorResponse = new Response(
+        JSON.stringify({
+          status: "error",
+          message: "Server configuration error: Missing Supabase credentials",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      return addCorsHeaders(errorResponse, req);
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get API key from database

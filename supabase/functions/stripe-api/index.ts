@@ -184,11 +184,16 @@ serve(async (req) => {
 
   try {
     // Initialize Supabase clients
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabasePublishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') as string;
-    const supabaseSecretKey = (Deno.env.get('SUPABASE_SECRET_KEY')) as string;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabasePublishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY');
+    const supabaseSecretKey = Deno.env.get('SUPABASE_SECRET_KEY');
 
     if (!supabaseUrl || !supabasePublishableKey || !supabaseSecretKey) {
+      logger.error('Missing required environment variables:', {
+        SUPABASE_URL: supabaseUrl ? 'set' : 'MISSING',
+        SUPABASE_PUBLISHABLE_KEY: supabasePublishableKey ? 'set' : 'MISSING',
+        SUPABASE_SECRET_KEY: supabaseSecretKey ? 'set' : 'MISSING',
+      });
       return new Response(JSON.stringify({
         status: 'error',
         message: 'Server configuration error',

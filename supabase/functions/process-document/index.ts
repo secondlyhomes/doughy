@@ -40,10 +40,25 @@ serve(async (req: Request) => {
       );
     }
 
+    // Validate environment variables
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseSecretKey = Deno.env.get("SUPABASE_SECRET_KEY");
+
+    if (!supabaseUrl || !supabaseSecretKey) {
+      console.error("[process-document] Missing required environment variables:", {
+        SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
+        SUPABASE_SECRET_KEY: supabaseSecretKey ? "set" : "MISSING",
+      });
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: Missing Supabase credentials" }),
+        { status: 500, headers: { ...customCorsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Create a Supabase client with the auth header
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") || "",
-      Deno.env.get("SUPABASE_SECRET_KEY") || "",
+      supabaseUrl,
+      supabaseSecretKey,
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -154,22 +169,31 @@ serve(async (req: Request) => {
       if (req.body) {
         const { documentId } = await req.json();
         if (documentId) {
-          const supabaseClient = createClient(
-            Deno.env.get("SUPABASE_URL") || "",
-            Deno.env.get("SUPABASE_SECRET_KEY") || ""
-          );
-          
-          await supabaseClient
-            .from("re_document_processing_queue")
-            .update({
-              status: "failed",
-              error_message: error instanceof Error ? error.message : "Unknown error",
-              processed_at: new Date().toISOString()
-            })
-            .eq("document_id", documentId);
+          const supabaseUrl = Deno.env.get("SUPABASE_URL");
+          const supabaseSecretKey = Deno.env.get("SUPABASE_SECRET_KEY");
+
+          if (supabaseUrl && supabaseSecretKey) {
+            const supabaseClient = createClient(supabaseUrl, supabaseSecretKey);
+
+            await supabaseClient
+              .from("re_document_processing_queue")
+              .update({
+                status: "failed",
+                error_message: error instanceof Error ? error.message : "Unknown error",
+                processed_at: new Date().toISOString()
+              })
+              .eq("document_id", documentId);
+          } else {
+            console.error("[process-document] Cannot update document status: Missing Supabase credentials");
+          }
         }
       }
-    } catch {}
+    } catch (updateError) {
+      console.error("[process-document] Failed to update document status after error:", {
+        updateError: updateError instanceof Error ? updateError.message : updateError,
+        originalError: error instanceof Error ? error.message : error,
+      });
+    }
     
     return new Response(
       JSON.stringify({ error: "Failed to process document", details: error instanceof Error ? error.message : "Unknown error" }),
