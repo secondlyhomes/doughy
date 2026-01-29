@@ -11,6 +11,9 @@ This document outlines the conventions and patterns used across UI components in
 5. [Touch Interaction Patterns](#touch-interaction-patterns)
 6. [Accessibility Patterns](#accessibility-patterns)
 7. [Animation Patterns](#animation-patterns)
+8. [Loading States](#loading-states)
+9. [Error Handling](#error-handling)
+10. [Native Header Patterns](#native-header-patterns-detail-screens)
 
 ---
 
@@ -408,3 +411,160 @@ Use for field-level validation:
   accessibilityHint="Price must be a positive number"
 />
 ```
+
+---
+
+## Native Header Patterns (Detail Screens)
+
+Detail screens should use native iOS headers via `Stack.Screen` options instead of custom header components. This ensures consistent iOS styling, animations, and native press feedback.
+
+### Basic Pattern
+
+```tsx
+import React, { useMemo, useCallback } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter, Stack } from 'expo-router';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
+import { ArrowLeft } from 'lucide-react-native';
+
+import { ThemedSafeAreaView } from '@/components';
+import { useThemeColors } from '@/context/ThemeContext';
+import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+
+export function DetailScreen() {
+  const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
+  // Safe back navigation with fallback for deep-linking scenarios
+  const handleBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/list-screen'); // Fallback to parent list
+    }
+  }, [router]);
+
+  // Memoize header options to prevent infinite re-render loops
+  const headerOptions = useMemo((): NativeStackNavigationOptions => ({
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.background },
+    headerShadowVisible: false,
+    headerStatusBarHeight: insets.top,
+    headerTitle: () => (
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+          Screen Title
+        </Text>
+      </View>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
+        <ArrowLeft size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+  }), [colors, insets.top, handleBack]);
+
+  return (
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {/* Screen content - edges={[]} since header handles top safe area */}
+      </ThemedSafeAreaView>
+    </>
+  );
+}
+```
+
+### Key Requirements
+
+1. **Type the return value**: Always use `NativeStackNavigationOptions` return type on the `useMemo`
+2. **Memoize with useMemo**: Header options object must be memoized to prevent infinite re-renders
+3. **Safe back navigation**: Use `router.canGoBack()` check with fallback route for deep-linking
+4. **Header status bar height**: Set `headerStatusBarHeight: insets.top` for proper safe area handling
+5. **Empty edges**: Use `edges={[]}` on `ThemedSafeAreaView` since the native header handles top safe area
+
+### With Subtitle and Right Action
+
+```tsx
+const headerOptions = useMemo((): NativeStackNavigationOptions => ({
+  headerShown: true,
+  headerStyle: { backgroundColor: colors.background },
+  headerShadowVisible: false,
+  headerStatusBarHeight: insets.top,
+  headerTitle: () => (
+    <View style={{ alignItems: 'center' }}>
+      <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+        {title}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <ChannelIcon size={12} color={colors.mutedForeground} />
+        <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
+          {subtitle}
+        </Text>
+      </View>
+    </View>
+  ),
+  headerLeft: () => (
+    <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
+      <ArrowLeft size={24} color={colors.foreground} />
+    </TouchableOpacity>
+  ),
+  headerRight: () => (
+    <TouchableOpacity onPress={() => setShowSheet(true)} style={{ padding: SPACING.sm }}>
+      <MoreVertical size={24} color={colors.foreground} />
+    </TouchableOpacity>
+  ),
+}), [colors, insets.top, title, subtitle, handleBack]);
+```
+
+### Layout Configuration
+
+#### Simple Layout (no nested `_layout.tsx`)
+
+For routes like `contacts/[id].tsx` or `landlord-inbox/[id].tsx`:
+
+```tsx
+// app/(tabs)/contacts/_layout.tsx
+<Stack.Screen
+  name="[id]"
+  options={{
+    headerShown: true, // Required - enables native header from screen
+    presentation: 'fullScreenModal',
+  }}
+/>
+```
+
+#### Nested Layout (has `[id]/_layout.tsx`)
+
+For routes like `bookings/[id]/index.tsx` or `rental-properties/[id]/index.tsx`:
+
+```tsx
+// app/(tabs)/bookings/_layout.tsx (parent)
+<Stack.Screen
+  name="[id]"
+  options={{
+    headerShown: false, // Disable parent header
+    presentation: 'fullScreenModal',
+  }}
+/>
+
+// app/(tabs)/bookings/[id]/_layout.tsx (nested)
+<Stack.Screen
+  name="index"
+  options={{
+    headerShown: true, // Child handles its own header
+  }}
+/>
+```
+
+### Common Pitfalls
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Infinite re-render loop | Header options recreated every render | Wrap in `useMemo` with dependencies |
+| "GO_BACK was not handled" | No navigation history on deep link | Use `router.canGoBack()` with fallback |
+| White banner with "[id]" | Parent layout showing route as title | Set parent `headerShown: false`, child `headerShown: true` |
+| Missing header | Layout has `headerShown: false` | Add `headerShown: true` to layout screen config |
+| Stale data in header | Derived values outside useMemo | Move all derivations inside useMemo callback |
