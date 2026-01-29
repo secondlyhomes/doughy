@@ -1,19 +1,9 @@
 // src/features/focus/index.ts
-// Focus Feature - dual-mode capture & awareness tab
+// Focus Feature - property-centric utilities and nudge system
+// NOTE: FocusScreen has been archived - the Focus tab is now the Inbox tab
+// which uses LeadInboxListScreen from the lead-inbox feature
 
-// Screen
-export { FocusScreen } from './screens/FocusScreen';
-
-// Components
-export {
-  FocusHeader,
-  FocusedPropertyCard,
-  PropertySelector,
-  NudgeCard,
-  NudgesList,
-} from './components';
-
-// Hooks
+// Hooks (still useful for property-centric features in Leads tab)
 export {
   useNudges,
   useRecentProperties,

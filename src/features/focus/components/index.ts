@@ -1,10 +1,8 @@
 // src/features/focus/components/index.ts
 // Focus feature components
+// NOTE: Most Focus tab components have been archived since FocusScreen is no longer used
+// The Focus tab is now the Inbox tab which uses LeadInboxListScreen
 
-export { FocusHeader } from './FocusHeader';
 export { FocusedPropertyCard } from './FocusedPropertyCard';
 export { PropertySelector } from './PropertySelector';
-export { NudgeCard } from './NudgeCard';
-export { NudgesList } from './NudgesList';
 export { TouchLogSheet } from './TouchLogSheet';
-export { SwipeableNudgeCard, isNudgeSnoozed, cleanExpiredSnoozes } from './SwipeableNudgeCard';

@@ -1,7 +1,7 @@
 // src/context/FocusModeContext.tsx
 // Focus Mode context for Deal OS - syncs preference across all screens
 // Zone B: Fix for state desync issue
-// Focus Tab: Added focusedProperty and activeMode for dual-mode Focus tab
+// Provides focused property state and nudge settings
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,11 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Storage keys
 const FOCUS_MODE_KEY = 'doughy_deal_focus_mode';
 const FOCUSED_PROPERTY_KEY = 'doughy_focused_property';
-const FOCUS_TAB_MODE_KEY = 'doughy_focus_tab_mode';
 const NUDGE_SETTINGS_KEY = 'doughy_nudge_settings';
-
-// Focus tab mode type
-export type FocusTabMode = 'focus' | 'inbox';
 
 // Focused property type
 export interface FocusedProperty {
@@ -53,17 +49,13 @@ export interface FocusModeContextType {
   /** Whether the preference has been loaded */
   isLoaded: boolean;
 
-  // Focus Tab state
+  // Focus Property state (still used for property-centric features in Leads tab)
   /** Currently focused property (null = no property selected) */
   focusedProperty: FocusedProperty | null;
   /** Set the focused property */
   setFocusedProperty: (property: FocusedProperty | null) => void;
-  /** Current Focus tab mode */
-  activeMode: FocusTabMode;
-  /** Set the active mode */
-  setActiveMode: (mode: FocusTabMode) => void;
 
-  // Nudge settings
+  // Nudge settings (still used for lead reminders)
   /** User's nudge preferences */
   nudgeSettings: NudgeSettings;
   /** Update nudge settings */
@@ -90,9 +82,8 @@ export function FocusModeProvider({
   const [focusMode, setFocusModeState] = useState(defaultValue);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Focus Tab state
+  // Focus Property state (still used for property-centric features)
   const [focusedProperty, setFocusedPropertyState] = useState<FocusedProperty | null>(null);
-  const [activeMode, setActiveModeState] = useState<FocusTabMode>('inbox');
   const [nudgeSettings, setNudgeSettingsState] = useState<NudgeSettings>(DEFAULT_NUDGE_SETTINGS);
 
   // Load saved preferences on mount
@@ -102,12 +93,10 @@ export function FocusModeProvider({
         const [
           savedFocusMode,
           savedFocusedProperty,
-          savedActiveMode,
           savedNudgeSettings,
         ] = await Promise.all([
           AsyncStorage.getItem(FOCUS_MODE_KEY),
           AsyncStorage.getItem(FOCUSED_PROPERTY_KEY),
-          AsyncStorage.getItem(FOCUS_TAB_MODE_KEY),
           AsyncStorage.getItem(NUDGE_SETTINGS_KEY),
         ]);
 
@@ -122,14 +111,16 @@ export function FocusModeProvider({
         if (savedFocusedProperty) {
           try {
             setFocusedPropertyState(JSON.parse(savedFocusedProperty));
-          } catch {
-            // Invalid JSON, ignore
+          } catch (parseError) {
+            console.error('[FocusMode] Failed to parse saved focused property - clearing corrupted data', {
+              error: parseError instanceof Error ? parseError.message : String(parseError),
+              rawValue: savedFocusedProperty.substring(0, 100), // Log first 100 chars for debugging
+            });
+            // Clean up corrupted data to prevent repeated failures
+            AsyncStorage.removeItem(FOCUSED_PROPERTY_KEY).catch((removeErr) => {
+              console.warn('[FocusMode] Failed to remove corrupted focused property key:', removeErr);
+            });
           }
-        }
-
-        // Active mode
-        if (savedActiveMode === 'focus' || savedActiveMode === 'inbox') {
-          setActiveModeState(savedActiveMode);
         }
 
         // Nudge settings
@@ -137,8 +128,15 @@ export function FocusModeProvider({
           try {
             const parsed = JSON.parse(savedNudgeSettings);
             setNudgeSettingsState({ ...DEFAULT_NUDGE_SETTINGS, ...parsed });
-          } catch {
-            // Invalid JSON, use defaults
+          } catch (parseError) {
+            console.error('[FocusMode] Failed to parse saved nudge settings - using defaults', {
+              error: parseError instanceof Error ? parseError.message : String(parseError),
+              rawValue: savedNudgeSettings.substring(0, 100), // Log first 100 chars for debugging
+            });
+            // Clean up corrupted data
+            AsyncStorage.removeItem(NUDGE_SETTINGS_KEY).catch((removeErr) => {
+              console.warn('[FocusMode] Failed to remove corrupted nudge settings key:', removeErr);
+            });
           }
         }
       } catch (err) {
@@ -150,24 +148,31 @@ export function FocusModeProvider({
     loadPreferences();
   }, []);
 
-  // Save focus mode preference and update state
+  // Save focus mode preference and update state (with rollback on failure)
   const setFocusMode = useCallback(async (value: boolean) => {
-    setFocusModeState(value);
+    const previousValue = focusMode;
+    setFocusModeState(value); // Optimistic update
     try {
       await AsyncStorage.setItem(FOCUS_MODE_KEY, String(value));
     } catch (err) {
-      console.warn('[FocusMode] Failed to save preference:', err);
+      console.error('[FocusMode] Failed to save focus mode preference - rolling back', {
+        error: err instanceof Error ? err.message : String(err),
+        attemptedValue: value,
+      });
+      // Rollback the UI state since persistence failed
+      setFocusModeState(previousValue);
     }
-  }, []);
+  }, [focusMode]);
 
   // Toggle helper
   const toggleFocusMode = useCallback(() => {
     setFocusMode(!focusMode);
   }, [focusMode, setFocusMode]);
 
-  // Set focused property with persistence
+  // Set focused property with persistence (with rollback on failure)
   const setFocusedProperty = useCallback(async (property: FocusedProperty | null) => {
-    setFocusedPropertyState(property);
+    const previousProperty = focusedProperty;
+    setFocusedPropertyState(property); // Optimistic update
     try {
       if (property) {
         await AsyncStorage.setItem(FOCUSED_PROPERTY_KEY, JSON.stringify(property));
@@ -175,29 +180,29 @@ export function FocusModeProvider({
         await AsyncStorage.removeItem(FOCUSED_PROPERTY_KEY);
       }
     } catch (err) {
-      console.warn('[FocusMode] Failed to save focused property:', err);
+      console.error('[FocusMode] Failed to save focused property - rolling back', {
+        error: err instanceof Error ? err.message : String(err),
+        attemptedProperty: property?.id,
+      });
+      // Rollback the UI state since persistence failed
+      setFocusedPropertyState(previousProperty);
     }
-  }, []);
+  }, [focusedProperty]);
 
-  // Set active mode with persistence
-  const setActiveMode = useCallback(async (mode: FocusTabMode) => {
-    setActiveModeState(mode);
-    try {
-      await AsyncStorage.setItem(FOCUS_TAB_MODE_KEY, mode);
-    } catch (err) {
-      console.warn('[FocusMode] Failed to save active mode:', err);
-    }
-  }, []);
-
-  // Set nudge settings with persistence
+  // Set nudge settings with persistence (with rollback on failure)
   const setNudgeSettings = useCallback(async (settings: NudgeSettings) => {
-    setNudgeSettingsState(settings);
+    const previousSettings = nudgeSettings;
+    setNudgeSettingsState(settings); // Optimistic update
     try {
       await AsyncStorage.setItem(NUDGE_SETTINGS_KEY, JSON.stringify(settings));
     } catch (err) {
-      console.warn('[FocusMode] Failed to save nudge settings:', err);
+      console.error('[FocusMode] Failed to save nudge settings - rolling back', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // Rollback the UI state since persistence failed
+      setNudgeSettingsState(previousSettings);
     }
-  }, []);
+  }, [nudgeSettings]);
 
   return (
     <FocusModeContext.Provider
@@ -208,8 +213,6 @@ export function FocusModeProvider({
         isLoaded,
         focusedProperty,
         setFocusedProperty,
-        activeMode,
-        setActiveMode,
         nudgeSettings,
         setNudgeSettings,
       }}

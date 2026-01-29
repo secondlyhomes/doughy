@@ -1962,6 +1962,226 @@ export type Database = {
           },
         ]
       }
+      investor_ai_confidence: {
+        Row: {
+          auto_send_enabled: boolean | null
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          lead_situation: string
+          total_approvals: number | null
+          total_edits: number | null
+          total_rejections: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_send_enabled?: boolean | null
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          lead_situation: string
+          total_approvals?: number | null
+          total_edits?: number | null
+          total_rejections?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_send_enabled?: boolean | null
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          lead_situation?: string
+          total_approvals?: number | null
+          total_edits?: number | null
+          total_rejections?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investor_ai_patterns: {
+        Row: {
+          confidence_impact: number | null
+          created_at: string | null
+          id: string
+          lead_situation: string
+          pattern_type: string
+          pattern_value: string
+          times_reinforced: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_impact?: number | null
+          created_at?: string | null
+          id?: string
+          lead_situation: string
+          pattern_type: string
+          pattern_value: string
+          times_reinforced?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_impact?: number | null
+          created_at?: string | null
+          id?: string
+          lead_situation?: string
+          pattern_type?: string
+          pattern_value?: string
+          times_reinforced?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investor_ai_queue: {
+        Row: {
+          confidence: number
+          conversation_id: string
+          created_at: string | null
+          detected_topics: string[] | null
+          expires_at: string
+          final_response: string | null
+          id: string
+          intent: string | null
+          reasoning: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["ai_queue_status"]
+          suggested_response: string
+          trigger_message_id: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence: number
+          conversation_id: string
+          created_at?: string | null
+          detected_topics?: string[] | null
+          expires_at?: string
+          final_response?: string | null
+          id?: string
+          intent?: string | null
+          reasoning?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ai_queue_status"]
+          suggested_response: string
+          trigger_message_id?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          conversation_id?: string
+          created_at?: string | null
+          detected_topics?: string[] | null
+          expires_at?: string
+          final_response?: string | null
+          id?: string
+          intent?: string | null
+          reasoning?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ai_queue_status"]
+          suggested_response?: string
+          trigger_message_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_ai_queue_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "investor_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_ai_queue_trigger_message_id_fkey"
+            columns: ["trigger_message_id"]
+            isOneToOne: false
+            referencedRelation: "investor_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_ai_response_outcomes: {
+        Row: {
+          channel: Database["public"]["Enums"]["investor_channel"] | null
+          conversation_id: string
+          created_at: string | null
+          edit_severity: string | null
+          feedback_notes: string | null
+          final_response: string | null
+          id: string
+          lead_situation: string | null
+          message_id: string | null
+          original_confidence: number | null
+          original_response: string | null
+          outcome: string
+          queue_item_id: string | null
+          response_time_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["investor_channel"] | null
+          conversation_id: string
+          created_at?: string | null
+          edit_severity?: string | null
+          feedback_notes?: string | null
+          final_response?: string | null
+          id?: string
+          lead_situation?: string | null
+          message_id?: string | null
+          original_confidence?: number | null
+          original_response?: string | null
+          outcome: string
+          queue_item_id?: string | null
+          response_time_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["investor_channel"] | null
+          conversation_id?: string
+          created_at?: string | null
+          edit_severity?: string | null
+          feedback_notes?: string | null
+          final_response?: string | null
+          id?: string
+          lead_situation?: string | null
+          message_id?: string | null
+          original_confidence?: number | null
+          original_response?: string | null
+          outcome?: string
+          queue_item_id?: string | null
+          response_time_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_ai_response_outcomes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "investor_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_ai_response_outcomes_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "investor_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_ai_response_outcomes_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "investor_ai_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_campaigns: {
         Row: {
           auto_convert_on_response: boolean | null
@@ -2087,6 +2307,85 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      investor_conversations: {
+        Row: {
+          ai_auto_respond: boolean | null
+          ai_confidence_threshold: number | null
+          ai_enabled: boolean | null
+          channel: Database["public"]["Enums"]["investor_channel"]
+          created_at: string | null
+          deal_id: string | null
+          external_thread_id: string | null
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          lead_id: string
+          property_id: string | null
+          status: Database["public"]["Enums"]["investor_conversation_status"]
+          unread_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_auto_respond?: boolean | null
+          ai_confidence_threshold?: number | null
+          ai_enabled?: boolean | null
+          channel: Database["public"]["Enums"]["investor_channel"]
+          created_at?: string | null
+          deal_id?: string | null
+          external_thread_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          lead_id: string
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["investor_conversation_status"]
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_auto_respond?: boolean | null
+          ai_confidence_threshold?: number | null
+          ai_enabled?: boolean | null
+          channel?: Database["public"]["Enums"]["investor_channel"]
+          created_at?: string | null
+          deal_id?: string | null
+          external_thread_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          lead_id?: string
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["investor_conversation_status"]
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_conversations_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_conversations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "re_properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       investor_deals: {
         Row: {
@@ -2307,6 +2606,65 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "investor_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_messages: {
+        Row: {
+          ai_confidence: number | null
+          ai_model: string | null
+          content: string
+          content_type: Database["public"]["Enums"]["content_type"]
+          conversation_id: string
+          created_at: string | null
+          delivered_at: string | null
+          direction: Database["public"]["Enums"]["message_direction"]
+          failed_at: string | null
+          failure_reason: string | null
+          id: string
+          metadata: Json | null
+          read_at: string | null
+          sent_by: Database["public"]["Enums"]["investor_sender"]
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_model?: string | null
+          content: string
+          content_type?: Database["public"]["Enums"]["content_type"]
+          conversation_id: string
+          created_at?: string | null
+          delivered_at?: string | null
+          direction: Database["public"]["Enums"]["message_direction"]
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          sent_by: Database["public"]["Enums"]["investor_sender"]
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_model?: string | null
+          content?: string
+          content_type?: Database["public"]["Enums"]["content_type"]
+          conversation_id?: string
+          created_at?: string | null
+          delivered_at?: string | null
+          direction?: Database["public"]["Enums"]["message_direction"]
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          sent_by?: Database["public"]["Enums"]["investor_sender"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "investor_conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -6816,6 +7174,14 @@ export type Database = {
         Returns: unknown
       }
       _st_within: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      add_mail_credits: {
+        Args: { p_amount: number; p_description?: string; p_user_id: string }
+        Returns: boolean
+      }
+      add_mail_credits_refund: {
+        Args: { p_amount: number; p_reason?: string; p_user_id: string }
+        Returns: boolean
+      }
       addauth: { Args: { "": string }; Returns: boolean }
       addgeometrycolumn:
         | {
@@ -7429,6 +7795,17 @@ export type Database = {
         Args: { p_min_days?: number; p_property_id: string; p_room_id?: string }
         Returns: string
       }
+      get_or_create_investor_conversation: {
+        Args: {
+          p_channel: Database["public"]["Enums"]["investor_channel"]
+          p_deal_id?: string
+          p_external_thread_id?: string
+          p_lead_id: string
+          p_property_id?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_or_create_platform_settings: {
         Args: { p_user_id: string }
         Returns: {
@@ -7530,6 +7907,14 @@ export type Database = {
       }
       hello_world_fdw_validator: {
         Args: { catalog: unknown; options: string[] }
+        Returns: undefined
+      }
+      increment_campaign_enrolled_count: {
+        Args: { p_campaign_id: string; p_count?: number }
+        Returns: undefined
+      }
+      increment_contact_touches: {
+        Args: { p_contact_id: string; p_touch_time?: string }
         Returns: undefined
       }
       insert_oauth_token: {
@@ -8669,8 +9054,16 @@ export type Database = {
       ai_edit_severity: "none" | "minor" | "major"
       ai_mode: "training" | "assisted" | "autonomous"
       ai_outcome: "auto_sent" | "approved" | "edited" | "rejected"
+      ai_queue_status:
+        | "pending"
+        | "approved"
+        | "edited"
+        | "rejected"
+        | "expired"
+        | "sent"
       ai_response_style: "friendly" | "professional" | "brief"
       channel_type_extended: "sms" | "email" | "call"
+      content_type: "text" | "image" | "file" | "voice" | "video"
       crm_contact_source:
         | "furnishedfinder"
         | "airbnb"
@@ -8725,6 +9118,12 @@ export type Database = {
         | "failed"
         | "skipped"
         | "bounced"
+      investor_channel: "sms" | "email" | "whatsapp" | "phone"
+      investor_conversation_status:
+        | "active"
+        | "resolved"
+        | "escalated"
+        | "archived"
       investor_deal_stage:
         | "lead"
         | "prospect"
@@ -8756,6 +9155,7 @@ export type Database = {
         | "facebook_ads"
         | "bandit_signs"
         | "other"
+      investor_sender: "lead" | "ai" | "user"
       lead_status:
         | "active"
         | "inactive"
@@ -9037,8 +9437,17 @@ export const Constants = {
       ai_edit_severity: ["none", "minor", "major"],
       ai_mode: ["training", "assisted", "autonomous"],
       ai_outcome: ["auto_sent", "approved", "edited", "rejected"],
+      ai_queue_status: [
+        "pending",
+        "approved",
+        "edited",
+        "rejected",
+        "expired",
+        "sent",
+      ],
       ai_response_style: ["friendly", "professional", "brief"],
       channel_type_extended: ["sms", "email", "call"],
+      content_type: ["text", "image", "file", "voice", "video"],
       crm_contact_source: [
         "furnishedfinder",
         "airbnb",
@@ -9099,6 +9508,13 @@ export const Constants = {
         "skipped",
         "bounced",
       ],
+      investor_channel: ["sms", "email", "whatsapp", "phone"],
+      investor_conversation_status: [
+        "active",
+        "resolved",
+        "escalated",
+        "archived",
+      ],
       investor_deal_stage: [
         "lead",
         "prospect",
@@ -9133,6 +9549,7 @@ export const Constants = {
         "bandit_signs",
         "other",
       ],
+      investor_sender: ["lead", "ai", "user"],
       lead_status: ["active", "inactive", "do_not_contact", "new", "follow-up"],
       mail_piece_type: [
         "postcard_4x6",

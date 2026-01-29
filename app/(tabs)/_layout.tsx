@@ -44,11 +44,13 @@ export default function TabLayout() {
       shadowColor="transparent"
     >
       {/* ========== RE INVESTOR TABS ========== */}
-      {/* Tab Order: Focus → Leads → Deals → Portfolio → Settings */}
+      {/* Tab Order: Inbox → Leads → Deals → Portfolio → Settings */}
       <NativeTabs.Trigger name="index" hidden={isLandlord}>
-        <Icon sf={{ default: 'scope', selected: 'scope' }} />
-        <Label>Focus</Label>
-        {counts.captureItems > 0 && <Badge>{String(counts.captureItems)}</Badge>}
+        <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
+        <Label>Inbox</Label>
+        {counts.investorInbox > 0 && (
+          <Badge>{String(counts.investorInbox)}</Badge>
+        )}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="leads" hidden={isLandlord}>

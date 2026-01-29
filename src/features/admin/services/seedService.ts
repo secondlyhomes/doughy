@@ -11,10 +11,15 @@ import {
   createTestProperty,
   createTestDeal,
   createTestCaptureItem,
+  createTestInvestorConversation,
+  createTestInvestorMessages,
+  createTestInvestorAIQueueItem,
   getTestLeadCount,
   getTestPropertyCount,
   getTestDealCount,
   getTestCaptureItemCount,
+  getTestInvestorConversationCount,
+  getTestInvestorAIQueueCount,
 } from '../factories/testDataFactories';
 
 // ============================================================================
@@ -28,6 +33,9 @@ export interface SeedResult {
     properties: number;
     deals: number;
     captureItems: number;
+    investorConversations: number;
+    investorMessages: number;
+    investorAIQueue: number;
   };
   errors?: string[];
   warnings?: string[];
@@ -36,6 +44,9 @@ export interface SeedResult {
 export interface ClearResult {
   success: boolean;
   counts: {
+    investorAIQueue: number;
+    investorMessages: number;
+    investorConversations: number;
     captureItems: number;
     deals: number;
     documents: number;
@@ -49,6 +60,19 @@ export interface ClearResult {
 export interface SafetyCheckResult {
   allowed: boolean;
   reason?: string;
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Check if a Supabase error indicates the table does not exist.
+ * PostgreSQL error code 42P01 = "undefined_table"
+ */
+function isTableNotFoundError(error: { code?: string; message?: string }): boolean {
+  return error.code === '42P01' ||
+    (!!error.message?.includes('relation') && !!error.message?.includes('does not exist'));
 }
 
 // ============================================================================
@@ -124,6 +148,9 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     return {
       success: false,
       counts: {
+        investorAIQueue: 0,
+        investorMessages: 0,
+        investorConversations: 0,
         captureItems: 0,
         deals: 0,
         documents: 0,
@@ -137,6 +164,9 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
   const result: ClearResult = {
     success: true,
     counts: {
+      investorAIQueue: 0,
+      investorMessages: 0,
+      investorConversations: 0,
       captureItems: 0,
       deals: 0,
       documents: 0,
@@ -170,6 +200,87 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete in reverse foreign key order (children first, then parents)
     // Only delete from tables that actually exist in the database schema
+
+    // 0a. Delete investor_ai_queue (depends on investor_conversations, investor_messages)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: deletedAIQueue, error: aiQueueError } = await (supabase.from('investor_ai_queue' as any) as any)
+      .delete()
+      .eq('user_id', userId)
+      .select('id');
+
+    if (aiQueueError) {
+      if (isTableNotFoundError(aiQueueError)) {
+        // Table not yet created - this is expected before migration runs
+        result.warnings!.push('investor_ai_queue table not yet created (run migration first)');
+        console.info('[seedService] investor_ai_queue table not found, skipping');
+      } else {
+        // Real error - treat as error, not warning
+        result.errors!.push(`Investor AI Queue: ${aiQueueError.message}`);
+        console.error('[seedService] Error deleting investor AI queue:', aiQueueError);
+      }
+    } else {
+      result.counts.investorAIQueue = deletedAIQueue?.length || 0;
+      console.log('[seedService] Deleted investor AI queue items:', deletedAIQueue?.length || 0);
+    }
+
+    // 0b. Delete investor_messages (depends on investor_conversations)
+    // First get conversation IDs, then delete messages
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: userConversations, error: convQueryError } = await (supabase.from('investor_conversations' as any) as any)
+      .select('id')
+      .eq('user_id', userId);
+
+    if (convQueryError) {
+      if (isTableNotFoundError(convQueryError)) {
+        // Table not yet created - skip messages deletion too
+        result.warnings!.push('investor_conversations table not yet created (run migration first)');
+        console.info('[seedService] investor_conversations table not found, skipping messages deletion');
+      } else {
+        // Real error - this is critical because we can't safely delete messages
+        result.errors!.push(`Failed to query investor conversations: ${convQueryError.message}`);
+        console.error('[seedService] Error querying investor conversations:', convQueryError);
+      }
+    } else if (userConversations && userConversations.length > 0) {
+      const conversationIds = userConversations.map((c: { id: string }) => c.id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: deletedMessages, error: messagesError } = await (supabase.from('investor_messages' as any) as any)
+        .delete()
+        .in('conversation_id', conversationIds)
+        .select('id');
+
+      if (messagesError) {
+        if (isTableNotFoundError(messagesError)) {
+          result.warnings!.push('investor_messages table not yet created (run migration first)');
+          console.info('[seedService] investor_messages table not found, skipping');
+        } else {
+          result.errors!.push(`Investor Messages: ${messagesError.message}`);
+          console.error('[seedService] Error deleting investor messages:', messagesError);
+        }
+      } else {
+        result.counts.investorMessages = deletedMessages?.length || 0;
+        console.log('[seedService] Deleted investor messages:', deletedMessages?.length || 0);
+      }
+    }
+
+    // 0c. Delete investor_conversations (depends on leads)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: deletedConversations, error: conversationsError } = await (supabase.from('investor_conversations' as any) as any)
+      .delete()
+      .eq('user_id', userId)
+      .select('id');
+
+    if (conversationsError) {
+      if (isTableNotFoundError(conversationsError)) {
+        result.warnings!.push('investor_conversations table not yet created (run migration first)');
+        console.info('[seedService] investor_conversations table not found, skipping');
+      } else {
+        result.errors!.push(`Investor Conversations: ${conversationsError.message}`);
+        console.error('[seedService] Error deleting investor conversations:', conversationsError);
+      }
+    } else {
+      result.counts.investorConversations = deletedConversations?.length || 0;
+      console.log('[seedService] Deleted investor conversations:', deletedConversations?.length || 0);
+    }
 
     // 1. Delete capture_items (has foreign keys to leads, properties, deals)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -315,6 +426,9 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
         properties: 0,
         deals: 0,
         captureItems: 0,
+        investorConversations: 0,
+        investorMessages: 0,
+        investorAIQueue: 0,
       },
       errors: [safetyCheck.reason || 'Safety check failed'],
     };
@@ -327,6 +441,9 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       properties: 0,
       deals: 0,
       captureItems: 0,
+      investorConversations: 0,
+      investorMessages: 0,
+      investorAIQueue: 0,
     },
     errors: [],
     warnings: [],
@@ -362,7 +479,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       console.error('[seedService] Clear failed, aborting seed to prevent data corruption');
       return {
         success: false,
-        counts: { leads: 0, properties: 0, deals: 0, captureItems: 0 },
+        counts: { leads: 0, properties: 0, deals: 0, captureItems: 0, investorConversations: 0, investorMessages: 0, investorAIQueue: 0 },
         errors: [`Clear database failed: ${clearResult.errors?.join(', ') || 'Unknown error'}. Seed aborted to prevent data corruption.`],
       };
     }
@@ -517,6 +634,115 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
     if (result.counts.captureItems < captureItemCount) {
       result.warnings!.push(`Only created ${result.counts.captureItems}/${captureItemCount} capture items`);
     }
+
+    // Step 7: Create investor conversations and messages
+    // Links to first 6 leads and optionally their properties
+    console.log('[seedService] Creating investor conversations...');
+    const conversationCount = Math.min(getTestInvestorConversationCount(), createdLeads.length);
+    const createdConversations: Array<{ id: string; lead_index: number }> = [];
+
+    for (let i = 0; i < conversationCount; i++) {
+      const leadId = createdLeads[i].id;
+      // Link to property if lead has one (properties 0-39 are linked to leads 0-19)
+      const propertyId = i < 20 && createdProperties.length > i * 2 ? createdProperties[i * 2].id : undefined;
+      // Link to deal if exists
+      const dealId = i < createdDeals.length ? createdDeals[i].id : undefined;
+
+      const conversationData = createTestInvestorConversation(i, userId, leadId, propertyId, dealId);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.from('investor_conversations' as any) as any)
+        .insert(conversationData)
+        .select('id')
+        .single();
+
+      if (error) {
+        if (isTableNotFoundError(error)) {
+          // Table not yet created - warn but don't fail
+          if (i === 0) { // Only log once
+            result.warnings!.push('investor_conversations table not yet created (run migration first)');
+            console.info('[seedService] investor_conversations table not found, skipping seed');
+          }
+          break; // No point trying more conversations
+        } else {
+          // Real error
+          result.errors!.push(`Investor Conversation ${i}: ${error.message}`);
+          console.error(`[seedService] Investor Conversation ${i} error:`, error);
+        }
+        continue;
+      }
+
+      if (data) {
+        createdConversations.push({ id: data.id, lead_index: i });
+        result.counts.investorConversations++;
+      }
+    }
+
+    console.log('[seedService] Created investor conversations:', result.counts.investorConversations);
+
+    // Step 8: Create messages for each conversation
+    console.log('[seedService] Creating investor messages...');
+    for (const conv of createdConversations) {
+      const messagesData = createTestInvestorMessages(conv.lead_index, conv.id);
+
+      for (const msgData of messagesData) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from('investor_messages' as any) as any)
+          .insert(msgData);
+
+        if (error) {
+          if (isTableNotFoundError(error)) {
+            // Table not yet created - warn but don't fail
+            result.warnings!.push('investor_messages table not yet created (run migration first)');
+            console.info('[seedService] investor_messages table not found, skipping seed');
+            break; // No point trying more messages
+          } else {
+            // Real error
+            result.errors!.push(`Investor Message for conv ${conv.id}: ${error.message}`);
+            console.error(`[seedService] Investor Message error:`, error);
+          }
+          continue;
+        }
+
+        result.counts.investorMessages++;
+      }
+    }
+
+    console.log('[seedService] Created investor messages:', result.counts.investorMessages);
+
+    // Step 9: Create AI queue items for conversations with unread messages
+    // Only create pending items for active conversations with AI enabled
+    console.log('[seedService] Creating investor AI queue items...');
+    const aiQueueCount = Math.min(getTestInvestorAIQueueCount(), createdConversations.length);
+
+    for (let i = 0; i < aiQueueCount; i++) {
+      const conv = createdConversations[i];
+      const queueData = createTestInvestorAIQueueItem(i, userId, conv.id);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from('investor_ai_queue' as any) as any)
+        .insert(queueData);
+
+      if (error) {
+        if (isTableNotFoundError(error)) {
+          // Table not yet created - warn but don't fail
+          if (i === 0) { // Only log once
+            result.warnings!.push('investor_ai_queue table not yet created (run migration first)');
+            console.info('[seedService] investor_ai_queue table not found, skipping seed');
+          }
+          break; // No point trying more queue items
+        } else {
+          // Real error
+          result.errors!.push(`Investor AI Queue ${i}: ${error.message}`);
+          console.error(`[seedService] Investor AI Queue ${i} error:`, error);
+        }
+        continue;
+      }
+
+      result.counts.investorAIQueue++;
+    }
+
+    console.log('[seedService] Created investor AI queue items:', result.counts.investorAIQueue);
 
     // Check if any errors occurred
     if (result.errors && result.errors.length > 0) {

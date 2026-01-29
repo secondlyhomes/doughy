@@ -10,6 +10,13 @@
 
 import type { TablesInsert } from '@/integrations/supabase/types';
 import type { CaptureItemType, CaptureItemStatus } from '@/features/capture/types';
+import type {
+  InvestorChannel,
+  InvestorConversationStatus,
+  InvestorSender,
+  MessageDirection,
+  AIQueueStatus,
+} from '@/features/lead-inbox/types/investor-conversations.types';
 
 // Type aliases for cleaner function signatures
 type LeadInsert = TablesInsert<'crm_leads'>;
@@ -1704,6 +1711,333 @@ export function createTestCaptureItem(
   }
 
   return item;
+}
+
+// ============================================================================
+// INVESTOR CONVERSATIONS DATA (for Lead Communication Inbox)
+// Types imported from @/features/lead-inbox/types/investor-conversations.types
+// ============================================================================
+
+interface InvestorConversationTemplate {
+  channel: InvestorChannel;
+  status: InvestorConversationStatus;
+  ai_enabled: boolean;
+  ai_auto_respond: boolean;
+  ai_confidence_threshold: number;
+  unread_count: number;
+  last_message_preview: string;
+}
+
+interface InvestorMessageTemplate {
+  direction: MessageDirection;
+  content: string;
+  sent_by: InvestorSender;
+  ai_confidence?: number;
+}
+
+interface InvestorAIQueueTemplate {
+  suggested_response: string;
+  confidence: number;
+  reasoning: string;
+  intent: string;
+  detected_topics: string[];
+  status: AIQueueStatus;
+}
+
+const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
+  // SMS conversations (most common)
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 60,
+    unread_count: 2,
+    last_message_preview: 'Is this still available?',
+  },
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 70,
+    unread_count: 1,
+    last_message_preview: 'I might be interested in selling...',
+  },
+  // Email conversations
+  {
+    channel: 'email',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 65,
+    unread_count: 0,
+    last_message_preview: 'Thank you for reaching out about my property',
+  },
+  {
+    channel: 'email',
+    status: 'resolved',
+    ai_enabled: false,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 60,
+    unread_count: 0,
+    last_message_preview: 'Deal closed successfully!',
+  },
+  // Edge case: High confidence auto-respond enabled
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: true,
+    ai_confidence_threshold: 85,
+    unread_count: 3,
+    last_message_preview: 'What price range are you offering?',
+  },
+  // Edge case: Escalated conversation
+  {
+    channel: 'phone',
+    status: 'escalated',
+    ai_enabled: false,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 60,
+    unread_count: 1,
+    last_message_preview: 'I need to speak with a manager',
+  },
+];
+
+const INVESTOR_MESSAGE_THREADS: InvestorMessageTemplate[][] = [
+  // Thread 1: Initial outreach, lead responds
+  [
+    { direction: 'outbound', content: 'Hi John! I noticed your property at 123 Oak St. Would you consider selling? We buy houses as-is.', sent_by: 'user' },
+    { direction: 'inbound', content: 'Is this still available?', sent_by: 'lead' },
+    { direction: 'inbound', content: 'What kind of offer are you thinking?', sent_by: 'lead' },
+  ],
+  // Thread 2: Motivated seller
+  [
+    { direction: 'outbound', content: 'Hi Sarah, I received your inquiry about selling your home. I\'d love to learn more about your situation.', sent_by: 'user' },
+    { direction: 'inbound', content: 'Hi, I might be interested in selling. We\'re relocating for work in 60 days.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'That\'s a tight timeline! We specialize in fast closings. Can I ask what price range you\'re hoping for?', sent_by: 'user' },
+    { direction: 'inbound', content: 'I might be interested in selling...', sent_by: 'lead' },
+  ],
+  // Thread 3: Email thread
+  [
+    { direction: 'outbound', content: 'Dear Mr. Davis, We noticed your property at 789 Pine Road may have some deferred maintenance. We specialize in buying properties as-is...', sent_by: 'user' },
+    { direction: 'inbound', content: 'Thank you for reaching out about my property. I\'ve been thinking about selling but wasn\'t sure who to call.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'I\'d be happy to discuss your options. We can make a cash offer within 24 hours. Would you be available for a quick call this week?', sent_by: 'ai', ai_confidence: 0.88 },
+  ],
+  // Thread 4: Resolved deal
+  [
+    { direction: 'outbound', content: 'Congratulations on the closing! It was a pleasure working with you.', sent_by: 'user' },
+    { direction: 'inbound', content: 'Deal closed successfully! Thank you for making this so easy.', sent_by: 'lead' },
+  ],
+  // Thread 5: Active negotiation
+  [
+    { direction: 'outbound', content: 'Based on our analysis, we can offer $215,000 cash, closing in 14 days.', sent_by: 'user' },
+    { direction: 'inbound', content: 'That\'s lower than I expected. I was hoping for at least $240,000.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'I understand. Our offer factors in repair costs. However, we have some flexibility...', sent_by: 'ai', ai_confidence: 0.75 },
+    { direction: 'inbound', content: 'What price range are you offering?', sent_by: 'lead' },
+  ],
+  // Thread 6: Escalated conversation
+  [
+    { direction: 'inbound', content: 'I\'ve been trying to reach someone about the inspection findings.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'I apologize for the delay. Let me look into this right away.', sent_by: 'user' },
+    { direction: 'inbound', content: 'I need to speak with a manager about these concerns.', sent_by: 'lead' },
+  ],
+];
+
+const INVESTOR_AI_QUEUE_TEMPLATES: InvestorAIQueueTemplate[] = [
+  {
+    suggested_response: 'Thank you for your interest! I\'d be happy to discuss your property. Based on similar homes in your area, we typically offer between $200k-$250k for homes in your condition. Would you like to schedule a quick call to learn more about your situation?',
+    confidence: 0.85,
+    reasoning: 'Lead expressed interest in selling. Response acknowledges interest and provides general price range without commitment.',
+    intent: 'price_inquiry',
+    detected_topics: ['pricing', 'interest'],
+    status: 'pending',
+  },
+  {
+    suggested_response: 'I understand you need to relocate quickly! We specialize in fast closings and can often close within 2-3 weeks. Could you share more about your timeline and what price you have in mind?',
+    confidence: 0.92,
+    reasoning: 'Lead mentioned tight timeline due to job relocation. Response emphasizes speed of closing which matches their needs.',
+    intent: 'timeline_discussion',
+    detected_topics: ['urgency', 'relocation', 'timeline'],
+    status: 'pending',
+  },
+  {
+    suggested_response: 'Great question! Our offer would be based on the current condition and market value. We buy as-is, so you wouldn\'t need to make any repairs. When would be a good time to schedule a quick walkthrough?',
+    confidence: 0.78,
+    reasoning: 'Lead asking about offer details. Response explains as-is purchase and moves toward scheduling property viewing.',
+    intent: 'condition_inquiry',
+    detected_topics: ['condition', 'repairs', 'walkthrough'],
+    status: 'pending',
+  },
+  {
+    suggested_response: 'I apologize for any confusion. Our team is here to help. Would you prefer a phone call or video chat to discuss your concerns in detail?',
+    confidence: 0.65,
+    reasoning: 'Lead appears frustrated. Response is apologetic and offers escalation options.',
+    intent: 'complaint_resolution',
+    detected_topics: ['frustration', 'escalation'],
+    status: 'pending',
+  },
+];
+
+/**
+ * Create a deterministic test investor conversation by index.
+ *
+ * @param index - Index of the conversation to create
+ * @param userId - User ID to associate the conversation with
+ * @param leadId - Lead ID to associate the conversation with
+ * @param propertyId - Optional property ID to link
+ * @param dealId - Optional deal ID to link
+ * @returns Investor conversation data ready for database insertion
+ */
+export function createTestInvestorConversation(
+  index: number,
+  userId: string,
+  leadId: string,
+  propertyId?: string,
+  dealId?: string
+): {
+  user_id: string;
+  lead_id: string;
+  property_id: string | null;
+  deal_id: string | null;
+  channel: InvestorChannel;
+  status: InvestorConversationStatus;
+  ai_enabled: boolean;
+  ai_auto_respond: boolean;
+  ai_confidence_threshold: number;
+  unread_count: number;
+  last_message_preview: string;
+  last_message_at: string;
+} {
+  const template = INVESTOR_CONVERSATION_TEMPLATES[index % INVESTOR_CONVERSATION_TEMPLATES.length];
+
+  // Generate a realistic last_message_at timestamp (within last 7 days)
+  const daysAgo = index % 7;
+  const hoursAgo = (index * 3) % 24;
+  const lastMessageAt = new Date();
+  lastMessageAt.setDate(lastMessageAt.getDate() - daysAgo);
+  lastMessageAt.setHours(lastMessageAt.getHours() - hoursAgo);
+
+  return {
+    user_id: userId,
+    lead_id: leadId,
+    property_id: propertyId || null,
+    deal_id: dealId || null,
+    channel: template.channel,
+    status: template.status,
+    ai_enabled: template.ai_enabled,
+    ai_auto_respond: template.ai_auto_respond,
+    ai_confidence_threshold: template.ai_confidence_threshold,
+    unread_count: template.unread_count,
+    last_message_preview: template.last_message_preview,
+    last_message_at: lastMessageAt.toISOString(),
+  };
+}
+
+/**
+ * Create deterministic test investor messages for a conversation.
+ *
+ * @param conversationIndex - Index of the conversation (determines which thread to use)
+ * @param conversationId - Conversation ID to associate messages with
+ * @returns Array of investor message data ready for database insertion
+ */
+export function createTestInvestorMessages(
+  conversationIndex: number,
+  conversationId: string
+): Array<{
+  conversation_id: string;
+  direction: MessageDirection;
+  content: string;
+  content_type: 'text';
+  sent_by: InvestorSender;
+  ai_confidence: number | null;
+  delivered_at: string;
+  read_at: string | null;
+  created_at: string;
+}> {
+  const thread = INVESTOR_MESSAGE_THREADS[conversationIndex % INVESTOR_MESSAGE_THREADS.length];
+
+  // Create messages with realistic timestamps (newest first for the last message)
+  const baseTime = new Date();
+  baseTime.setHours(baseTime.getHours() - thread.length);
+
+  return thread.map((msg, msgIndex) => {
+    const createdAt = new Date(baseTime);
+    createdAt.setMinutes(createdAt.getMinutes() + msgIndex * 15);
+
+    return {
+      conversation_id: conversationId,
+      direction: msg.direction,
+      content: msg.content,
+      content_type: 'text' as const,
+      sent_by: msg.sent_by,
+      ai_confidence: msg.ai_confidence || null,
+      delivered_at: createdAt.toISOString(),
+      read_at: msg.direction === 'outbound' ? createdAt.toISOString() : null,
+      created_at: createdAt.toISOString(),
+    };
+  });
+}
+
+/**
+ * Create a deterministic test AI queue item.
+ *
+ * @param index - Index of the queue item to create
+ * @param userId - User ID to associate the item with
+ * @param conversationId - Conversation ID to associate the item with
+ * @param triggerMessageId - Optional trigger message ID
+ * @returns AI queue item data ready for database insertion
+ */
+export function createTestInvestorAIQueueItem(
+  index: number,
+  userId: string,
+  conversationId: string,
+  triggerMessageId?: string
+): {
+  user_id: string;
+  conversation_id: string;
+  trigger_message_id: string | null;
+  suggested_response: string;
+  confidence: number;
+  reasoning: string;
+  intent: string;
+  detected_topics: string[];
+  status: AIQueueStatus;
+  expires_at: string;
+} {
+  const template = INVESTOR_AI_QUEUE_TEMPLATES[index % INVESTOR_AI_QUEUE_TEMPLATES.length];
+
+  // Set expiration 4 hours from now
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 4);
+
+  return {
+    user_id: userId,
+    conversation_id: conversationId,
+    trigger_message_id: triggerMessageId || null,
+    suggested_response: template.suggested_response,
+    confidence: template.confidence,
+    reasoning: template.reasoning,
+    intent: template.intent,
+    detected_topics: template.detected_topics,
+    status: template.status,
+    expires_at: expiresAt.toISOString(),
+  };
+}
+
+/**
+ * Get the total number of investor conversation templates available
+ */
+export function getTestInvestorConversationCount(): number {
+  return INVESTOR_CONVERSATION_TEMPLATES.length;
+}
+
+/**
+ * Get the total number of AI queue templates available
+ */
+export function getTestInvestorAIQueueCount(): number {
+  return INVESTOR_AI_QUEUE_TEMPLATES.length;
 }
 
 // ============================================================================
