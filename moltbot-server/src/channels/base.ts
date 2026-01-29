@@ -44,7 +44,9 @@ export type ChannelType =
   | 'imessage'
   | 'discord'
   | 'signal'
-  | 'sms';
+  | 'sms'
+  | 'direct_mail'
+  | 'meta_dm';
 
 /**
  * Outgoing message to send via a channel

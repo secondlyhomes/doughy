@@ -28,6 +28,8 @@ import {
   Focus,
   Clock,
   Bot,
+  Megaphone,
+  Mail,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
@@ -264,6 +266,29 @@ export function SettingsScreen() {
                 thumbColor={colors.card}
               />
             </View>
+          </View>
+        </View>
+
+        {/* Campaign & Outreach Settings */}
+        <View className="p-4">
+          <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
+            CAMPAIGNS & OUTREACH
+          </Text>
+
+          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+            <SettingsItem
+              icon={<Megaphone size={20} color={colors.primary} />}
+              title="Drip Campaigns"
+              subtitle="Manage automated follow-up sequences"
+              onPress={() => router.push('/(tabs)/campaigns')}
+            />
+            <SettingsItem
+              icon={<Mail size={20} color={colors.mutedForeground} />}
+              title="Mail & Integrations"
+              subtitle="Direct mail credits, Facebook/Instagram"
+              onPress={() => router.push('/(tabs)/settings/campaign-settings')}
+              hideBorder
+            />
           </View>
         </View>
 

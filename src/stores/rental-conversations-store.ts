@@ -170,6 +170,7 @@ export interface RentalConversationsState {
 
   // Real-time subscription state
   isSubscribed: boolean;
+  isSubscribing: boolean; // Guard against duplicate subscription attempts
   messageSubscriptions: Set<string>; // Track active message subscription conversation IDs
   subscriptionError: string | null; // Subscription-specific errors
 
@@ -216,6 +217,7 @@ const initialState = {
   isSending: false,
   error: null,
   isSubscribed: false,
+  isSubscribing: false,
   messageSubscriptions: new Set<string>(),
   subscriptionError: null,
 };
@@ -667,11 +669,14 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
 
       // Real-time subscription for conversations and AI queue with retry logic
       subscribeToConversations: (userId: string) => {
-        const { isSubscribed } = get();
-        if (isSubscribed) {
-          // Already subscribed, return no-op cleanup
+        const { isSubscribed, isSubscribing } = get();
+        if (isSubscribed || isSubscribing) {
+          // Already subscribed or subscription in progress, return no-op cleanup
           return () => {};
         }
+
+        // Set guard immediately to prevent race conditions from multiple callers
+        set({ isSubscribing: true });
 
         let retryCount = 0;
         const maxRetries = 3;
@@ -805,7 +810,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               lastSubscribedAt = Date.now();
               retryCount = 0;
               rapidFailureCount = 0;
-              set({ isSubscribed: true, subscriptionError: null });
+              set({ isSubscribed: true, isSubscribing: false, subscriptionError: null });
               if (__DEV__) {
                 console.log('[Real-time] Subscription active', useFilters ? '(with filters)' : '(without filters)');
               }
@@ -842,6 +847,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                   console.log('[Real-time] Too many rapid failures, giving up');
                 }
                 set({
+                  isSubscribing: false,
                   subscriptionError: 'Real-time updates unavailable. Pull to refresh for latest data.',
                 });
                 return;
@@ -862,6 +868,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                 }, delay);
               } else if (!isCleanedUp) {
                 set({
+                  isSubscribing: false,
                   subscriptionError: 'Real-time updates unavailable. Pull to refresh for latest data.',
                 });
               }
@@ -880,7 +887,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           if (currentChannel) {
             supabase.removeChannel(currentChannel);
           }
-          set({ isSubscribed: false, subscriptionError: null });
+          set({ isSubscribed: false, isSubscribing: false, subscriptionError: null });
         };
       },
 
