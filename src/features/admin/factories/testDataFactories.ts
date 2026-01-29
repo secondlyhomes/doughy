@@ -20,8 +20,8 @@ import type {
 
 // Type aliases for cleaner function signatures
 type LeadInsert = TablesInsert<'crm_leads'>;
-type PropertyInsert = TablesInsert<'re_properties'>;
-type DealInsert = TablesInsert<'deals'>;
+type PropertyInsert = TablesInsert<'investor_properties'>;
+type DealInsert = TablesInsert<'investor_deals_pipeline'>;
 
 // ============================================================================
 // LEADS DATA (60 total: 48 happy path + 12 edge cases)
@@ -1792,8 +1792,8 @@ export function createTestCaptureItem(
 interface InvestorConversationTemplate {
   channel: InvestorChannel;
   status: InvestorConversationStatus;
-  ai_enabled: boolean;
-  ai_auto_respond: boolean;
+  is_ai_enabled: boolean;
+  is_ai_auto_respond: boolean;
   ai_confidence_threshold: number;
   unread_count: number;
   last_message_preview: string;
@@ -1820,8 +1820,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 60,
     unread_count: 2,
     last_message_preview: 'Is this still available?',
@@ -1829,8 +1829,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 70,
     unread_count: 1,
     last_message_preview: 'I might be interested in selling...',
@@ -1839,8 +1839,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'email',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 65,
     unread_count: 0,
     last_message_preview: 'Thank you for reaching out about my property',
@@ -1848,8 +1848,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'email',
     status: 'resolved',
-    ai_enabled: false,
-    ai_auto_respond: false,
+    is_ai_enabled: false,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 60,
     unread_count: 0,
     last_message_preview: 'Deal closed successfully!',
@@ -1858,8 +1858,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: true,
+    is_ai_enabled: true,
+    is_ai_auto_respond: true,
     ai_confidence_threshold: 85,
     unread_count: 3,
     last_message_preview: 'What price range are you offering?',
@@ -1868,8 +1868,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'phone',
     status: 'escalated',
-    ai_enabled: false,
-    ai_auto_respond: false,
+    is_ai_enabled: false,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 60,
     unread_count: 1,
     last_message_preview: 'I need to speak with a manager',
@@ -1878,8 +1878,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 70,
     unread_count: 4,
     last_message_preview: 'We need to sell ASAP - foreclosure notice',
@@ -1887,8 +1887,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 65,
     unread_count: 0,
     last_message_preview: 'Not interested, please remove me from your list',
@@ -1896,8 +1896,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: true,
+    is_ai_enabled: true,
+    is_ai_auto_respond: true,
     ai_confidence_threshold: 80,
     unread_count: 1,
     last_message_preview: 'Just following up on our conversation last week',
@@ -1905,8 +1905,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 75,
     unread_count: 2,
     last_message_preview: 'Your offer is too low. I need at least $280k',
@@ -1914,8 +1914,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 70,
     unread_count: 3,
     last_message_preview: 'I inherited this house and dont know what to do',
@@ -1923,8 +1923,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: false,
-    ai_auto_respond: false,
+    is_ai_enabled: false,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 60,
     unread_count: 1,
     last_message_preview: 'Going through divorce, need quick sale',
@@ -1932,8 +1932,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 75,
     unread_count: 2,
     last_message_preview: 'Moving to Florida next month for new job',
@@ -1941,8 +1941,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'sms',
     status: 'escalated',
-    ai_enabled: false,
-    ai_auto_respond: false,
+    is_ai_enabled: false,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 60,
     unread_count: 5,
     last_message_preview: 'Bank says I have 30 days before auction',
@@ -1951,8 +1951,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'email',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 70,
     unread_count: 1,
     last_message_preview: 'My realtor friend said you might be interested',
@@ -1960,8 +1960,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'email',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 65,
     unread_count: 2,
     last_message_preview: 'RE: Probate property at 456 Elm Street',
@@ -1969,8 +1969,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'email',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: true,
+    is_ai_enabled: true,
+    is_ai_auto_respond: true,
     ai_confidence_threshold: 85,
     unread_count: 0,
     last_message_preview: 'Estate sale - 3 properties available',
@@ -1978,8 +1978,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'email',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 70,
     unread_count: 1,
     last_message_preview: 'Do you buy properties wholesale?',
@@ -1988,8 +1988,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'whatsapp',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 75,
     unread_count: 3,
     last_message_preview: 'I am investor from overseas, interested in US property',
@@ -1997,8 +1997,8 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
   {
     channel: 'whatsapp',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 65,
     unread_count: 1,
     last_message_preview: 'Quick question - do you pay closing costs?',
@@ -2216,8 +2216,8 @@ export function createTestInvestorConversation(
   deal_id: string | null;
   channel: InvestorChannel;
   status: InvestorConversationStatus;
-  ai_enabled: boolean;
-  ai_auto_respond: boolean;
+  is_ai_enabled: boolean;
+  is_ai_auto_respond: boolean;
   ai_confidence_threshold: number;
   unread_count: number;
   last_message_preview: string;
@@ -2239,8 +2239,8 @@ export function createTestInvestorConversation(
     deal_id: dealId || null,
     channel: template.channel,
     status: template.status,
-    ai_enabled: template.ai_enabled,
-    ai_auto_respond: template.ai_auto_respond,
+    is_ai_enabled: template.is_ai_enabled,
+    is_ai_auto_respond: template.is_ai_auto_respond,
     ai_confidence_threshold: template.ai_confidence_threshold,
     unread_count: template.unread_count,
     last_message_preview: template.last_message_preview,

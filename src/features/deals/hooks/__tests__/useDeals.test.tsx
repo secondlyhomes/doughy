@@ -75,7 +75,7 @@ describe('useDeals', () => {
 
       await waitFor(() => {
         // Verify it queries 'deals' table (NOT 're_pipeline')
-        expect(mockSupabase.from).toHaveBeenCalledWith('deals');
+        expect(mockSupabase.from).toHaveBeenCalledWith('investor_deals_pipeline');
       });
     });
 
@@ -101,7 +101,7 @@ describe('useDeals', () => {
         expect(selectQuery).toContain('lead:crm_leads');
         expect(selectQuery).not.toContain('lead:leads');
         // Also verify property relationship
-        expect(selectQuery).toContain('property:re_properties');
+        expect(selectQuery).toContain('property:investor_properties');
       });
     });
 
@@ -243,7 +243,7 @@ describe('useDeals', () => {
         stage: 'new',
       });
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('deals');
+      expect(mockSupabase.from).toHaveBeenCalledWith('investor_deals_pipeline');
       expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
         lead_id: validLeadId,
         property_id: validPropertyId,
@@ -302,7 +302,7 @@ describe('useDeals', () => {
         data: { stage: 'active' },
       });
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('deals');
+      expect(mockSupabase.from).toHaveBeenCalledWith('investor_deals_pipeline');
       expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
         stage: 'active',
       }));
@@ -356,7 +356,7 @@ describe('useDeals', () => {
 
       await result.current.mutateAsync(validDealId);
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('deals');
+      expect(mockSupabase.from).toHaveBeenCalledWith('investor_deals_pipeline');
       expect(mockDelete).toHaveBeenCalled();
     });
 
@@ -403,7 +403,7 @@ describe('useDeals', () => {
         expect(result.current.deal).toBeDefined();
       });
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('deals');
+      expect(mockSupabase.from).toHaveBeenCalledWith('investor_deals_pipeline');
     });
 
     it('returns null for non-existent deal', async () => {

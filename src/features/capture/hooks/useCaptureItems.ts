@@ -11,7 +11,7 @@ import { CaptureItem, CaptureItemInsert, CaptureItemUpdate, CaptureItemStatus } 
 
 async function fetchCaptureItems(status?: CaptureItemStatus): Promise<CaptureItem[]> {
   let query = supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -31,7 +31,7 @@ async function fetchCaptureItems(status?: CaptureItemStatus): Promise<CaptureIte
 
 async function fetchPendingCount(): Promise<number> {
   const { count, error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .select('*', { count: 'exact', head: true })
     .in('status', ['pending', 'ready']);
 
@@ -45,7 +45,7 @@ async function fetchPendingCount(): Promise<number> {
 
 async function fetchCaptureItem(id: string): Promise<CaptureItem | null> {
   const { data, error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .select('*')
     .eq('id', id)
     .single();
@@ -71,7 +71,7 @@ async function createCaptureItem(item: CaptureItemInsert): Promise<CaptureItem> 
   const status = item.assigned_property_id ? 'assigned' : 'pending';
 
   const { data, error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .insert({
       ...item,
       user_id: userData.user.id,
@@ -95,7 +95,7 @@ async function createCaptureItem(item: CaptureItemInsert): Promise<CaptureItem> 
 
 async function updateCaptureItem(id: string, updates: CaptureItemUpdate): Promise<CaptureItem> {
   const { data, error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
@@ -126,7 +126,7 @@ async function assignCaptureItem(
   }
 
   const { data, error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .update({
       assigned_lead_id: assignment.lead_id || null,
       assigned_property_id: assignment.property_id || null,
@@ -155,7 +155,7 @@ async function dismissCaptureItem(id: string): Promise<CaptureItem> {
   }
 
   const { data, error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .update({
       status: 'dismissed',
       triaged_at: new Date().toISOString(),
@@ -176,7 +176,7 @@ async function dismissCaptureItem(id: string): Promise<CaptureItem> {
 
 async function deleteCaptureItem(id: string): Promise<void> {
   const { error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .delete()
     .eq('id', id);
 

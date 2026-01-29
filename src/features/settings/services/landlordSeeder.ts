@@ -36,21 +36,21 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
 
   // Get conversation IDs first for deleting messages
   const { data: conversations } = await supabase
-    .from('rental_conversations')
+    .from('landlord_conversations')
     .select('id')
     .eq('user_id', userId);
   const conversationIds = conversations?.map(c => c.id) || [];
 
   // Get property IDs first for deleting dependent records
   const { data: properties } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .select('id')
     .eq('user_id', userId);
   const propertyIds = properties?.map(p => p.id) || [];
 
   // Get booking IDs for deleting charges and settlements
   const { data: bookings } = await supabase
-    .from('rental_bookings')
+    .from('landlord_bookings')
     .select('id')
     .eq('user_id', userId);
   const bookingIds = bookings?.map(b => b.id) || [];
@@ -58,77 +58,77 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   // Delete in order to respect foreign keys
   // Collect all errors but continue to delete as much as possible
   if (conversationIds.length > 0) {
-    const { error: messagesError } = await supabase.from('rental_messages').delete().in('conversation_id', conversationIds);
+    const { error: messagesError } = await supabase.from('landlord_messages').delete().in('conversation_id', conversationIds);
     if (messagesError) {
       errors.push({ table: 'rental_messages', message: messagesError.message });
     }
   }
 
-  const { error: aiQueueError } = await supabase.from('rental_ai_queue').delete().eq('user_id', userId);
+  const { error: aiQueueError } = await supabase.from('landlord_ai_queue_items').delete().eq('user_id', userId);
   if (aiQueueError) {
     errors.push({ table: 'rental_ai_queue', message: aiQueueError.message });
   }
 
-  const { error: conversationsError } = await supabase.from('rental_conversations').delete().eq('user_id', userId);
+  const { error: conversationsError } = await supabase.from('landlord_conversations').delete().eq('user_id', userId);
   if (conversationsError) {
     errors.push({ table: 'rental_conversations', message: conversationsError.message });
   }
 
   // Delete booking-related data (charges, settlements)
   if (bookingIds.length > 0) {
-    const { error: chargesError } = await supabase.from('booking_charges').delete().in('booking_id', bookingIds);
+    const { error: chargesError } = await supabase.from('landlord_booking_charges').delete().in('booking_id', bookingIds);
     if (chargesError) {
       errors.push({ table: 'booking_charges', message: chargesError.message });
     }
 
-    const { error: settlementsError } = await supabase.from('deposit_settlements').delete().in('booking_id', bookingIds);
+    const { error: settlementsError } = await supabase.from('landlord_deposit_settlements').delete().in('booking_id', bookingIds);
     if (settlementsError) {
       errors.push({ table: 'deposit_settlements', message: settlementsError.message });
     }
   }
 
   // Delete turnovers (tied to properties/bookings)
-  const { error: turnoversError } = await supabase.from('property_turnovers').delete().eq('user_id', userId);
+  const { error: turnoversError } = await supabase.from('landlord_turnovers').delete().eq('user_id', userId);
   if (turnoversError) {
     errors.push({ table: 'property_turnovers', message: turnoversError.message });
   }
 
   // Delete maintenance records
-  const { error: maintenanceError } = await supabase.from('property_maintenance').delete().eq('user_id', userId);
+  const { error: maintenanceError } = await supabase.from('landlord_maintenance_records').delete().eq('user_id', userId);
   if (maintenanceError) {
     errors.push({ table: 'property_maintenance', message: maintenanceError.message });
   }
 
-  const { error: bookingsError } = await supabase.from('rental_bookings').delete().eq('user_id', userId);
+  const { error: bookingsError } = await supabase.from('landlord_bookings').delete().eq('user_id', userId);
   if (bookingsError) {
     errors.push({ table: 'rental_bookings', message: bookingsError.message });
   }
 
   // Delete property-related data
   if (propertyIds.length > 0) {
-    const { error: roomsError } = await supabase.from('rental_rooms').delete().in('property_id', propertyIds);
+    const { error: roomsError } = await supabase.from('landlord_rooms').delete().in('property_id', propertyIds);
     if (roomsError) {
       errors.push({ table: 'rental_rooms', message: roomsError.message });
     }
 
-    const { error: inventoryError } = await supabase.from('property_inventory').delete().in('property_id', propertyIds);
+    const { error: inventoryError } = await supabase.from('landlord_inventory_items').delete().in('property_id', propertyIds);
     if (inventoryError) {
       errors.push({ table: 'property_inventory', message: inventoryError.message });
     }
   }
 
-  const { error: propertiesError } = await supabase.from('rental_properties').delete().eq('user_id', userId);
+  const { error: propertiesError } = await supabase.from('landlord_properties').delete().eq('user_id', userId);
   if (propertiesError) {
     errors.push({ table: 'rental_properties', message: propertiesError.message });
   }
 
   // Delete global data (vendors, templates)
-  const { error: vendorsError } = await supabase.from('property_vendors').delete().eq('user_id', userId);
+  const { error: vendorsError } = await supabase.from('landlord_vendors').delete().eq('user_id', userId);
   if (vendorsError) {
     errors.push({ table: 'property_vendors', message: vendorsError.message });
   }
 
-  const { error: templatesError } = await supabase.from('guest_message_templates').delete().eq('user_id', userId);
+  const { error: templatesError } = await supabase.from('landlord_guest_templates').delete().eq('user_id', userId);
   if (templatesError) {
     errors.push({ table: 'guest_message_templates', message: templatesError.message });
   }
@@ -198,7 +198,7 @@ const seedStarterLandlord: SeedScenario = {
   description: '1 STR property, 2 upcoming bookings, 3 conversations',
   seed: async (userId: string) => {
     // Create a property
-    const { data: property, error: propertyError } = await supabase.from('rental_properties').insert({
+    const { data: property, error: propertyError } = await supabase.from('landlord_properties').insert({
       user_id: userId,
       name: 'Beach House Retreat',
       address: '123 Ocean Drive',
@@ -274,7 +274,7 @@ const seedStarterLandlord: SeedScenario = {
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const { error: bookingsError } = await supabase.from('rental_bookings').insert([
+    const { error: bookingsError } = await supabase.from('landlord_bookings').insert([
       {
         user_id: userId,
         property_id: property.id,
@@ -309,14 +309,14 @@ const seedStarterLandlord: SeedScenario = {
     console.log('Created bookings');
 
     // Create conversations
-    const { data: convos, error: convosError } = await supabase.from('rental_conversations').insert([
+    const { data: convos, error: convosError } = await supabase.from('landlord_conversations').insert([
       {
         user_id: userId,
         contact_id: contacts[0].id,
         property_id: property.id,
         channel: 'email',
         status: 'active',
-        ai_enabled: true,
+        is_ai_enabled: true,
         message_count: 3,
         last_message_at: new Date().toISOString(),
       },
@@ -326,7 +326,7 @@ const seedStarterLandlord: SeedScenario = {
         property_id: property.id,
         channel: 'email',
         status: 'active',
-        ai_enabled: true,
+        is_ai_enabled: true,
         message_count: 2,
         last_message_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       },
@@ -336,7 +336,7 @@ const seedStarterLandlord: SeedScenario = {
         property_id: property.id,
         channel: 'whatsapp',
         status: 'active',
-        ai_enabled: false,
+        is_ai_enabled: false,
         message_count: 5,
         last_message_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
       },
@@ -350,7 +350,7 @@ const seedStarterLandlord: SeedScenario = {
     console.log('Created conversations:', convos.length);
 
     // Create messages for each conversation
-    const { error: messagesError } = await supabase.from('rental_messages').insert([
+    const { error: messagesError } = await supabase.from('landlord_messages').insert([
       // Convo 1 - Airbnb guest
       { conversation_id: convos[0].id, direction: 'inbound', content: 'Hi! Is your beach house available next week?', content_type: 'text', sent_by: 'contact' },
       { conversation_id: convos[0].id, direction: 'outbound', content: 'Yes it is! Would you like me to send you the details?', content_type: 'text', sent_by: 'ai', ai_confidence: 95 },
@@ -370,7 +370,7 @@ const seedStarterLandlord: SeedScenario = {
     console.log('Created messages');
 
     // Create a pending AI response
-    const { error: aiQueueError } = await supabase.from('rental_ai_queue').insert({
+    const { error: aiQueueError } = await supabase.from('landlord_ai_queue_items').insert({
       user_id: userId,
       conversation_id: convos[0].id,
       suggested_response: 'I\'d be happy to share the details! The Beach House Retreat features 3 bedrooms, 2 bathrooms, a private pool, and is just a 5-minute walk from the beach. The nightly rate is $250 with a $150 cleaning fee. Would you like to proceed with a booking?',
@@ -393,7 +393,7 @@ const seedBusyLandlord: SeedScenario = {
   description: '3 properties (STR, MTR, LTR), 8 bookings, 10 conversations, pending AI responses',
   seed: async (userId: string) => {
     // Create properties
-    const { data: properties, error: propertiesError } = await supabase.from('rental_properties').insert([
+    const { data: properties, error: propertiesError } = await supabase.from('landlord_properties').insert([
       {
         user_id: userId,
         name: 'Downtown Loft',
@@ -495,7 +495,7 @@ const seedBusyLandlord: SeedScenario = {
 
     // Create bookings across properties
     const today = new Date();
-    const { error: bookingsError } = await supabase.from('rental_bookings').insert([
+    const { error: bookingsError } = await supabase.from('landlord_bookings').insert([
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[0].id, booking_type: 'reservation', status: 'active', start_date: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 950, source: 'airbnb' },
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[1].id, booking_type: 'reservation', status: 'confirmed', start_date: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 600, source: 'airbnb' },
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[5].id, booking_type: 'reservation', status: 'pending', start_date: new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 600, source: 'direct' },
@@ -511,14 +511,14 @@ const seedBusyLandlord: SeedScenario = {
 
     // Create conversations
     const channels = ['email', 'email', 'whatsapp', 'sms', 'telegram'];
-    const { data: convos, error: convosError } = await supabase.from('rental_conversations').insert(
+    const { data: convos, error: convosError } = await supabase.from('landlord_conversations').insert(
       contacts.slice(0, 6).map((contact, i) => ({
         user_id: userId,
         contact_id: contact.id,
         property_id: properties[i % 3].id,
         channel: channels[i % 5],
         status: i < 4 ? 'active' : 'resolved',
-        ai_enabled: i % 2 === 0,
+        is_ai_enabled: i % 2 === 0,
         message_count: 3 + i,
         last_message_at: new Date(Date.now() - i * 60 * 60 * 1000).toISOString(),
       }))
@@ -535,7 +535,7 @@ const seedBusyLandlord: SeedScenario = {
 
     // Add messages to conversations
     for (const convo of convos) {
-      const { error: msgError } = await supabase.from('rental_messages').insert([
+      const { error: msgError } = await supabase.from('landlord_messages').insert([
         { conversation_id: convo.id, direction: 'inbound', content: 'Hi, I have a question about the property.', content_type: 'text', sent_by: 'contact' },
         { conversation_id: convo.id, direction: 'outbound', content: 'Of course! How can I help you?', content_type: 'text', sent_by: 'ai', ai_confidence: 90 },
         { conversation_id: convo.id, direction: 'inbound', content: 'Is parking included?', content_type: 'text', sent_by: 'contact' },
@@ -548,7 +548,7 @@ const seedBusyLandlord: SeedScenario = {
     console.log('Created messages for all conversations');
 
     // Add pending AI responses
-    const { error: aiQueueError } = await supabase.from('rental_ai_queue').insert([
+    const { error: aiQueueError } = await supabase.from('landlord_ai_queue_items').insert([
       { user_id: userId, conversation_id: convos[0].id, suggested_response: 'Yes, parking is included! We have one dedicated spot in the garage.', confidence: 94, status: 'pending', expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
       { user_id: userId, conversation_id: convos[2].id, suggested_response: 'The property has street parking available. Most guests find it easy to park nearby.', confidence: 87, status: 'pending', expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
     ]);
@@ -566,7 +566,7 @@ const seedRoomByRoom: SeedScenario = {
   description: '1 property with 4 individual rooms, mixed occupancy',
   seed: async (userId: string) => {
     // Create a room-by-room property
-    const { data: property, error: propertyError } = await supabase.from('rental_properties').insert({
+    const { data: property, error: propertyError } = await supabase.from('landlord_properties').insert({
       user_id: userId,
       name: 'Shared House - Westside',
       address: '555 College Ave',
@@ -580,7 +580,7 @@ const seedRoomByRoom: SeedScenario = {
       square_feet: 2000,
       base_rate: 0, // Individual room rates
       rate_type: 'monthly',
-      room_by_room_enabled: true,
+      is_room_by_room_enabled: true,
       status: 'active',
       amenities: ['wifi', 'parking', 'laundry', 'kitchen', 'yard'],
     }).select().single();
@@ -595,7 +595,7 @@ const seedRoomByRoom: SeedScenario = {
     console.log('Created property:', property.id);
 
     // Create rooms
-    const { data: rooms, error: roomsError } = await supabase.from('rental_rooms').insert([
+    const { data: rooms, error: roomsError } = await supabase.from('landlord_rooms').insert([
       { property_id: property.id, name: 'Room A - Master', monthly_rate: 1200, status: 'occupied', has_private_bath: true, amenities: ['closet', 'ceiling_fan'] },
       { property_id: property.id, name: 'Room B - Corner', monthly_rate: 950, status: 'occupied', has_private_bath: false, amenities: ['closet', 'window_ac'] },
       { property_id: property.id, name: 'Room C - Garden View', monthly_rate: 900, status: 'available', has_private_bath: false, amenities: ['closet'] },
@@ -629,7 +629,7 @@ const seedRoomByRoom: SeedScenario = {
 
     // Create bookings for occupied rooms
     const today = new Date();
-    const { error: bookingsError } = await supabase.from('rental_bookings').insert([
+    const { error: bookingsError } = await supabase.from('landlord_bookings').insert([
       { user_id: userId, property_id: property.id, room_id: rooms[0].id, contact_id: contacts[0].id, booking_type: 'lease', status: 'active', start_date: new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 275 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 1200, rate_type: 'monthly', total_amount: 14400, source: 'furnishedfinder' },
       { user_id: userId, property_id: property.id, room_id: rooms[1].id, contact_id: contacts[1].id, booking_type: 'lease', status: 'active', start_date: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 150 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 950, rate_type: 'monthly', total_amount: 5700, source: 'craigslist' },
     ]);
@@ -640,13 +640,13 @@ const seedRoomByRoom: SeedScenario = {
     console.log('Created bookings');
 
     // Create inquiry conversation for available room
-    const { data: convo, error: convoError } = await supabase.from('rental_conversations').insert({
+    const { data: convo, error: convoError } = await supabase.from('landlord_conversations').insert({
       user_id: userId,
       contact_id: contacts[2].id,
       property_id: property.id,
       channel: 'email',
       status: 'active',
-      ai_enabled: true,
+      is_ai_enabled: true,
       message_count: 2,
       last_message_at: new Date().toISOString(),
     }).select().single();
@@ -660,7 +660,7 @@ const seedRoomByRoom: SeedScenario = {
     }
     console.log('Created conversation:', convo.id);
 
-    const { error: messagesError } = await supabase.from('rental_messages').insert([
+    const { error: messagesError } = await supabase.from('landlord_messages').insert([
       { conversation_id: convo.id, direction: 'inbound', content: 'Hi, I saw Room C is available. Is it still open? I\'m looking for a 6-month stay.', content_type: 'text', sent_by: 'contact' },
       { conversation_id: convo.id, direction: 'outbound', content: 'Yes, Room C is available! It\'s $900/month and has a nice garden view. When would you like to move in?', content_type: 'text', sent_by: 'ai', ai_confidence: 91 },
     ]);
@@ -685,7 +685,7 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     // 1. Create Properties
     // =====================
-    const { data: properties, error: propertiesError } = await supabase.from('rental_properties').insert([
+    const { data: properties, error: propertiesError } = await supabase.from('landlord_properties').insert([
       {
         user_id: userId,
         name: 'Oceanview Villa',
@@ -732,7 +732,7 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     // 2. Create Vendors (Global)
     // =====================
-    const { data: vendors, error: vendorsError } = await supabase.from('property_vendors').insert([
+    const { data: vendors, error: vendorsError } = await supabase.from('landlord_vendors').insert([
       {
         user_id: userId,
         category: 'plumber',
@@ -847,7 +847,7 @@ const seedFullPropertyManager: SeedScenario = {
       { property_id: properties[0].id, name: 'Hot Tub - Jacuzzi J-335', category: 'other', location: 'Back Patio', brand: 'Jacuzzi', model: 'J-335', serial_number: 'JAC-HT-2023-ABC', condition: 'good', purchase_price: 8500, replacement_cost: 9500, notes: 'Chemical balance: pH 7.2-7.6; "ProClear" filter system; last serviced 1/15/2026' },
     ];
 
-    const { error: inventoryError } = await supabase.from('property_inventory').insert(
+    const { error: inventoryError } = await supabase.from('landlord_inventory_items').insert(
       inventoryItems.map(item => ({
         user_id: userId,
         ...item,
@@ -882,7 +882,7 @@ const seedFullPropertyManager: SeedScenario = {
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     const inTwoWeeks = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-    const { data: bookings, error: bookingsError } = await supabase.from('rental_bookings').insert([
+    const { data: bookings, error: bookingsError } = await supabase.from('landlord_bookings').insert([
       // Completed booking (for charges/settlement testing)
       { user_id: userId, property_id: properties[0].id, contact_id: contacts![0].id, booking_type: 'reservation', status: 'completed', start_date: lastWeek.toISOString().split('T')[0], end_date: yesterday.toISOString().split('T')[0], rate: 450, rate_type: 'nightly', total_amount: 3150, source: 'airbnb', notes: 'Family vacation, 4 adults 2 kids' },
       // Active booking
@@ -899,7 +899,7 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     // 6. Create Maintenance Records
     // =====================
-    const { data: maintenance, error: maintenanceError } = await supabase.from('property_maintenance').insert([
+    const { data: maintenance, error: maintenanceError } = await supabase.from('landlord_maintenance_records').insert([
       // Completed maintenance (for charge linking)
       {
         user_id: userId,
@@ -997,7 +997,7 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     // 7. Create Booking Charges
     // =====================
-    const { data: charges, error: chargesError } = await supabase.from('booking_charges').insert([
+    const { data: charges, error: chargesError } = await supabase.from('landlord_booking_charges').insert([
       // Linked to maintenance
       {
         user_id: userId,
@@ -1057,7 +1057,7 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     // 8. Create Deposit Settlement
     // =====================
-    const { error: settlementError } = await supabase.from('deposit_settlements').insert({
+    const { error: settlementError } = await supabase.from('landlord_deposit_settlements').insert({
       user_id: userId,
       booking_id: bookings![0].id,
       deposit_held: 1000,
@@ -1075,7 +1075,7 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     const cleanerVendor = vendors?.find(v => v.category === 'cleaner');
 
-    const { error: turnoversError } = await supabase.from('property_turnovers').insert([
+    const { error: turnoversError } = await supabase.from('landlord_turnovers').insert([
       // Completed turnover (past)
       {
         user_id: userId,
@@ -1123,7 +1123,7 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     // 10. Create Guest Templates
     // =====================
-    const { error: templatesError } = await supabase.from('guest_message_templates').insert([
+    const { error: templatesError } = await supabase.from('landlord_guest_templates').insert([
       {
         user_id: userId,
         name: 'Check-in Instructions',
@@ -1159,9 +1159,9 @@ const seedFullPropertyManager: SeedScenario = {
     // =====================
     // 11. Create Conversations
     // =====================
-    const { data: convos, error: convosError } = await supabase.from('rental_conversations').insert([
-      { user_id: userId, contact_id: contacts![0].id, property_id: properties[0].id, channel: 'email', status: 'active', ai_enabled: true, message_count: 4, last_message_at: yesterday.toISOString() },
-      { user_id: userId, contact_id: contacts![1].id, property_id: properties[0].id, channel: 'sms', status: 'active', ai_enabled: true, message_count: 3, last_message_at: today.toISOString() },
+    const { data: convos, error: convosError } = await supabase.from('landlord_conversations').insert([
+      { user_id: userId, contact_id: contacts![0].id, property_id: properties[0].id, channel: 'email', status: 'active', is_ai_enabled: true, message_count: 4, last_message_at: yesterday.toISOString() },
+      { user_id: userId, contact_id: contacts![1].id, property_id: properties[0].id, channel: 'sms', status: 'active', is_ai_enabled: true, message_count: 3, last_message_at: today.toISOString() },
     ]).select();
 
     if (convosError) throw new Error(`Failed to create conversations: ${convosError.message}`);
@@ -1169,7 +1169,7 @@ const seedFullPropertyManager: SeedScenario = {
 
     // Add messages
     if (convos && convos.length > 0) {
-      const { error: messagesError } = await supabase.from('rental_messages').insert([
+      const { error: messagesError } = await supabase.from('landlord_messages').insert([
         { conversation_id: convos[0].id, direction: 'inbound', content: 'Hi, we had a great stay! Quick question about the security deposit refund.', content_type: 'text', sent_by: 'contact' },
         { conversation_id: convos[0].id, direction: 'outbound', content: 'Thank you for staying with us! I\'m reviewing the checkout inspection now and will process the deposit within 7 days.', content_type: 'text', sent_by: 'ai', ai_confidence: 92 },
         { conversation_id: convos[0].id, direction: 'inbound', content: 'About the window - that was an accident. Is there any way to work out a payment plan?', content_type: 'text', sent_by: 'contact' },
@@ -1196,7 +1196,7 @@ const seedEdgeCases: SeedScenario = {
   description: 'Special characters, SQL injection attempts, boundary values',
   seed: async (userId: string) => {
     // Create property for testing
-    const { data: property, error: propertyError } = await supabase.from('rental_properties').insert({
+    const { data: property, error: propertyError } = await supabase.from('landlord_properties').insert({
       user_id: userId,
       name: 'Test Property - Edge Cases <script>alert("xss")</script>',
       address: '999 Test Street; DROP TABLE users;--',
@@ -1217,7 +1217,7 @@ const seedEdgeCases: SeedScenario = {
     console.log('Created edge case property');
 
     // Edge case inventory items
-    const { error: inventoryError } = await supabase.from('property_inventory').insert([
+    const { error: inventoryError } = await supabase.from('landlord_inventory_items').insert([
       {
         user_id: userId,
         property_id: property.id,
@@ -1261,7 +1261,7 @@ const seedEdgeCases: SeedScenario = {
     console.log('Created edge case inventory');
 
     // Edge case vendor
-    const { error: vendorError } = await supabase.from('property_vendors').insert({
+    const { error: vendorError } = await supabase.from('landlord_vendors').insert({
       user_id: userId,
       category: 'other',
       name: "Test O'Vendor <script>",
@@ -1294,7 +1294,7 @@ const seedEdgeCases: SeedScenario = {
     // Edge case booking
     const today = new Date();
     const yesterday = new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000);
-    const { data: booking, error: bookingError } = await supabase.from('rental_bookings').insert({
+    const { data: booking, error: bookingError } = await supabase.from('landlord_bookings').insert({
       user_id: userId,
       property_id: property.id,
       contact_id: contact.id,
@@ -1313,7 +1313,7 @@ const seedEdgeCases: SeedScenario = {
     console.log('Created edge case booking');
 
     // Edge case charges
-    const { error: chargesError } = await supabase.from('booking_charges').insert([
+    const { error: chargesError } = await supabase.from('landlord_booking_charges').insert([
       {
         user_id: userId,
         booking_id: booking.id,
@@ -1337,7 +1337,7 @@ const seedEdgeCases: SeedScenario = {
     console.log('Created edge case charges');
 
     // Edge case maintenance
-    const { error: maintenanceError } = await supabase.from('property_maintenance').insert({
+    const { error: maintenanceError } = await supabase.from('landlord_maintenance_records').insert({
       user_id: userId,
       property_id: property.id,
       work_order_number: 'WO-TEST-001',

@@ -64,7 +64,7 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
 
       // Get total properties
       supabase
-        .from('re_properties')
+        .from('investor_properties')
         .select('*', { count: 'exact', head: true }),
 
       // Get new users this week

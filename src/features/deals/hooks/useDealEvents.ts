@@ -27,7 +27,7 @@ async function fetchDealEvents(dealId: string): Promise<DealEvent[]> {
 
   // Query deal_events - works for both mock and real Supabase
   const { data, error } = await (supabase as any)
-    .from('deal_events')
+    .from('investor_deal_events')
     .select('*')
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false });
@@ -56,7 +56,7 @@ async function createDealEvent(event: Omit<DealEvent, 'id' | 'created_at'>): Pro
 
   // Insert into deal_events - works for both mock and real Supabase
   const { data, error } = await (supabase as any)
-    .from('deal_events')
+    .from('investor_deal_events')
     .insert({
       deal_id: event.deal_id,
       event_type: event.event_type,

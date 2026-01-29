@@ -77,8 +77,8 @@ describe('useRentalConversationsStore', () => {
     platform: 'gmail',
     external_thread_id: 'thread-123',
     status: 'active',
-    ai_enabled: true,
-    ai_auto_respond: false,
+    is_ai_enabled: true,
+    is_ai_auto_respond: false,
     ai_confidence_threshold: 85,
     ai_personality: null,
     subject: null,
@@ -326,11 +326,11 @@ describe('useRentalConversationsStore', () => {
         await store.fetchConversations();
       });
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('rental_conversations');
+      expect(mockSupabase.from).toHaveBeenCalledWith('landlord_conversations');
       // Verify select includes relations
       const selectQuery = selectMock.mock.calls[0][0];
       expect(selectQuery).toContain('contact:crm_contacts');
-      expect(selectQuery).toContain('property:rental_properties');
+      expect(selectQuery).toContain('property:landlord_properties');
     });
   });
 
@@ -406,7 +406,7 @@ describe('useRentalConversationsStore', () => {
         await store.fetchMessages('conv-1');
       });
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('rental_messages');
+      expect(mockSupabase.from).toHaveBeenCalledWith('landlord_messages');
       expect(eqMock).toHaveBeenCalledWith('conversation_id', 'conv-1');
     });
   });
@@ -908,7 +908,7 @@ describe('useRentalConversationsStore', () => {
 
       expect(result!).toBe(true);
       const state = useRentalConversationsStore.getState();
-      expect(state.conversations[0].ai_enabled).toBe(true);
+      expect(state.conversations[0].is_ai_enabled).toBe(true);
     });
 
     it('disables AI for a conversation', async () => {
@@ -927,8 +927,8 @@ describe('useRentalConversationsStore', () => {
       });
 
       const state = useRentalConversationsStore.getState();
-      expect(state.conversations[0].ai_enabled).toBe(false);
-      expect(state.conversationsWithRelations[0].ai_enabled).toBe(false);
+      expect(state.conversations[0].is_ai_enabled).toBe(false);
+      expect(state.conversationsWithRelations[0].is_ai_enabled).toBe(false);
     });
   });
 

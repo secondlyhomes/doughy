@@ -241,10 +241,10 @@ async function fetchLeadsWithProperties(): Promise<LeadWithProperties[]> {
   // Then fetch all properties with lead_id, including their images
   // Use * with join syntax (same pattern as useProperties.ts) to ensure images are properly fetched
   const { data: propertiesData, error: propertiesError } = await supabase
-    .from('re_properties')
+    .from('investor_properties')
     .select(`
       *,
-      images:re_property_images(id, url, is_primary, label)
+      images:investor_property_images(id, url, is_primary, label)
     `)
     .not('lead_id', 'is', null);
 
@@ -299,11 +299,11 @@ async function fetchLeadsWithProperties(): Promise<LeadWithProperties[]> {
 // Fetch orphan properties (no lead assigned) - for "Unknown Seller" section
 async function fetchOrphanProperties(): Promise<LeadWithProperties['properties']> {
   const { data, error } = await supabase
-    .from('re_properties')
+    .from('investor_properties')
     .select(`
       id, address_line_1, address_line_2, city, state, zip,
       bedrooms, bathrooms, square_feet, arv, purchase_price, status, property_type,
-      images:re_property_images(id, url, is_primary, label)
+      images:investor_property_images(id, url, is_primary, label)
     `)
     .is('lead_id', null)
     .order('created_at', { ascending: false });

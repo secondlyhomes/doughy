@@ -63,7 +63,7 @@ function PostGridSettingsSection() {
       if (!user?.id) return null;
 
       const { data, error } = await supabase
-        .from('postgrid_credentials')
+        .from('integration_postgrid_credentials')
         .select('*')
         .eq('user_id', user.id)
         .single();
@@ -104,14 +104,14 @@ function PostGridSettingsSection() {
 
       if (postgridSettings?.id) {
         const { error } = await supabase
-          .from('postgrid_credentials')
+          .from('integration_postgrid_credentials')
           .update(settings as Record<string, unknown>)
           .eq('id', postgridSettings.id);
         if (error) throw error;
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
-          .from('postgrid_credentials')
+          .from('integration_postgrid_credentials')
           .insert(settings);
         if (error) throw error;
       }
@@ -282,7 +282,7 @@ function MetaOAuthSection() {
       if (!user?.id) return null;
 
       const { data, error } = await supabase
-        .from('meta_dm_credentials')
+        .from('integration_meta_credentials')
         .select('*')
         .eq('user_id', user.id)
         .single();
@@ -299,7 +299,7 @@ function MetaOAuthSection() {
       if (!metaCredentials?.id) throw new Error('No credentials to disconnect');
 
       const { error } = await supabase
-        .from('meta_dm_credentials')
+        .from('integration_meta_credentials')
         .delete()
         .eq('id', metaCredentials.id)
         .eq('user_id', user.id);

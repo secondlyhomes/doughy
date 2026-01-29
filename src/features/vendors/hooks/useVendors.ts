@@ -32,7 +32,7 @@ export const vendorKeys = {
 
 async function fetchVendors(propertyId?: string): Promise<Vendor[]> {
   let query = supabase
-    .from('property_vendors')
+    .from('landlord_vendors')
     .select('*')
     .eq('is_active', true)
     .order('is_primary', { ascending: false })
@@ -56,7 +56,7 @@ async function fetchVendors(propertyId?: string): Promise<Vendor[]> {
 
 async function fetchVendor(id: string): Promise<Vendor | null> {
   const { data, error } = await supabase
-    .from('property_vendors')
+    .from('landlord_vendors')
     .select('*')
     .eq('id', id)
     .single();
@@ -74,7 +74,7 @@ async function fetchVendor(id: string): Promise<Vendor | null> {
 
 async function fetchVendorCount(propertyId?: string): Promise<number> {
   let query = supabase
-    .from('property_vendors')
+    .from('landlord_vendors')
     .select('*', { count: 'exact', head: true })
     .eq('is_active', true);
 
@@ -138,7 +138,7 @@ export function useVendorMutations(propertyId?: string) {
   const createMutation = useMutation({
     mutationFn: async (data: CreateVendorInput) => {
       const { data: newVendor, error } = await supabase
-        .from('property_vendors')
+        .from('landlord_vendors')
         .insert({
           ...data,
           is_active: true,
@@ -160,7 +160,7 @@ export function useVendorMutations(propertyId?: string) {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateVendorInput }) => {
       const { data: updated, error } = await supabase
-        .from('property_vendors')
+        .from('landlord_vendors')
         .update({
           ...data,
           updated_at: new Date().toISOString(),
@@ -182,7 +182,7 @@ export function useVendorMutations(propertyId?: string) {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('property_vendors')
+        .from('landlord_vendors')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('id', id);
 
@@ -200,14 +200,14 @@ export function useVendorMutations(propertyId?: string) {
     mutationFn: async ({ id, category }: { id: string; category: VendorCategory }) => {
       // First, unset any existing primary for this category
       await supabase
-        .from('property_vendors')
+        .from('landlord_vendors')
         .update({ is_primary: false })
         .eq('category', category)
         .eq('is_primary', true);
 
       // Then set this vendor as primary
       const { data: updated, error } = await supabase
-        .from('property_vendors')
+        .from('landlord_vendors')
         .update({ is_primary: true, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()

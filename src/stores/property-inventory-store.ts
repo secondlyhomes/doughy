@@ -72,7 +72,7 @@ export const usePropertyInventoryStore = create<PropertyInventoryState>()(
         set({ isLoading: true, error: null, filterPropertyId: propertyId });
         try {
           const { data, error } = await supabase
-            .from('property_inventory')
+            .from('landlord_inventory_items')
             .select('*')
             .eq('property_id', propertyId)
             .order('category', { ascending: true })
@@ -93,7 +93,7 @@ export const usePropertyInventoryStore = create<PropertyInventoryState>()(
       fetchItemById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('property_inventory')
+            .from('landlord_inventory_items')
             .select('*')
             .eq('id', id)
             .single();
@@ -119,7 +119,7 @@ export const usePropertyInventoryStore = create<PropertyInventoryState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newItem, error } = await supabase
-            .from('property_inventory')
+            .from('landlord_inventory_items')
             .insert({
               ...data,
               photos: data.photos || [],
@@ -152,7 +152,7 @@ export const usePropertyInventoryStore = create<PropertyInventoryState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updated, error } = await supabase
-            .from('property_inventory')
+            .from('landlord_inventory_items')
             .update({
               ...data,
               updated_at: new Date().toISOString(),
@@ -181,7 +181,7 @@ export const usePropertyInventoryStore = create<PropertyInventoryState>()(
         set({ isSaving: true, error: null });
         try {
           const { error } = await supabase
-            .from('property_inventory')
+            .from('landlord_inventory_items')
             .delete()
             .eq('id', id);
 

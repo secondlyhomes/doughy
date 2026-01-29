@@ -83,7 +83,7 @@ export function useRepairEstimate({ propertyId }: UseRepairEstimateOptions): Use
       setError(null);
 
       const { data, error: queryError } = await supabase
-        .from('re_repair_estimates')
+        .from('investor_repair_estimates')
         .select('*')
         .eq('property_id', propertyId)
         .order('category', { ascending: true })
@@ -199,7 +199,7 @@ export function useRepairEstimateMutations() {
       };
 
       const { data, error: insertError } = await supabase
-        .from('re_repair_estimates')
+        .from('investor_repair_estimates')
         .insert(insertData)
         .select()
         .single();
@@ -245,7 +245,7 @@ export function useRepairEstimateMutations() {
       if (updates.priority !== undefined) updateData.priority = updates.priority;
 
       const { data, error: updateError } = await supabase
-        .from('re_repair_estimates')
+        .from('investor_repair_estimates')
         .update(updateData)
         .eq('id', repairId)
         .select()
@@ -278,7 +278,7 @@ export function useRepairEstimateMutations() {
       setError(null);
 
       const { error: deleteError } = await supabase
-        .from('re_repair_estimates')
+        .from('investor_repair_estimates')
         .delete()
         .eq('id', repairId);
 

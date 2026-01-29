@@ -34,7 +34,7 @@ async function fetchMaintenanceByProperty(
   propertyId: string
 ): Promise<MaintenanceWorkOrder[]> {
   const { data, error } = await supabase
-    .from('property_maintenance')
+    .from('landlord_maintenance_records')
     .select('*')
     .eq('property_id', propertyId)
     .order('reported_at', { ascending: false });
@@ -51,7 +51,7 @@ async function fetchMaintenanceWorkOrder(
   id: string
 ): Promise<MaintenanceWorkOrder | null> {
   const { data, error } = await supabase
-    .from('property_maintenance')
+    .from('landlord_maintenance_records')
     .select('*')
     .eq('id', id)
     .single();
@@ -69,7 +69,7 @@ async function fetchMaintenanceWorkOrder(
 
 async function fetchOpenMaintenanceCount(propertyId: string): Promise<number> {
   const { count, error } = await supabase
-    .from('property_maintenance')
+    .from('landlord_maintenance_records')
     .select('*', { count: 'exact', head: true })
     .eq('property_id', propertyId)
     .not('status', 'in', '("completed","cancelled")');
@@ -130,7 +130,7 @@ export function useMaintenanceMutations(propertyId: string) {
   const createMutation = useMutation({
     mutationFn: async (data: CreateMaintenanceInput) => {
       const { data: newWorkOrder, error } = await supabase
-        .from('property_maintenance')
+        .from('landlord_maintenance_records')
         .insert({
           ...data,
           photos: data.photos || [],
@@ -160,7 +160,7 @@ export function useMaintenanceMutations(propertyId: string) {
       data: UpdateMaintenanceInput;
     }) => {
       const { data: updated, error } = await supabase
-        .from('property_maintenance')
+        .from('landlord_maintenance_records')
         .update({
           ...data,
           updated_at: new Date().toISOString(),
@@ -183,7 +183,7 @@ export function useMaintenanceMutations(propertyId: string) {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('property_maintenance')
+        .from('landlord_maintenance_records')
         .delete()
         .eq('id', id);
 
@@ -215,7 +215,7 @@ export function useMaintenanceMutations(propertyId: string) {
       }
 
       const { data: updated, error } = await supabase
-        .from('property_maintenance')
+        .from('landlord_maintenance_records')
         .update({
           ...updateData,
           updated_at: new Date().toISOString(),

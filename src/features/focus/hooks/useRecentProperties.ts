@@ -18,14 +18,14 @@ export interface RecentPropertyEntry {
 // Fetch full property data for display
 async function fetchPropertyById(propertyId: string): Promise<FocusedProperty | null> {
   const { data, error } = await supabase
-    .from('re_properties')
+    .from('investor_properties')
     .select(`
       id,
       address_line_1,
       city,
       state,
       lead_id,
-      images:re_property_images(url, is_primary),
+      images:investor_property_images(url, is_primary),
       lead:crm_leads(id, name)
     `)
     .eq('id', propertyId)

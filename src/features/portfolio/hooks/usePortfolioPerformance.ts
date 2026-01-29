@@ -33,7 +33,7 @@ export function usePortfolioPerformance(portfolioEntryId: string | undefined) {
 
       // Fetch portfolio entry
       const { data: entry, error: entryError } = await supabase
-        .from('re_portfolio_entries')
+        .from('investor_portfolio_entries')
         .select('*')
         .eq('id', portfolioEntryId)
         .single();
@@ -45,7 +45,7 @@ export function usePortfolioPerformance(portfolioEntryId: string | undefined) {
 
       // Fetch monthly records
       const { data: monthlyRecords, error: recordsError } = await supabase
-        .from('re_portfolio_monthly_records')
+        .from('investor_portfolio_monthly_records')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId)
         .order('month', { ascending: true });
@@ -56,7 +56,7 @@ export function usePortfolioPerformance(portfolioEntryId: string | undefined) {
 
       // Fetch mortgages
       const { data: mortgages, error: mortgagesError } = await supabase
-        .from('re_portfolio_mortgages')
+        .from('investor_portfolio_mortgages')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId);
 
@@ -66,7 +66,7 @@ export function usePortfolioPerformance(portfolioEntryId: string | undefined) {
 
       // Fetch valuations
       const { data: valuations, error: valuationsError } = await supabase
-        .from('re_portfolio_valuations')
+        .from('investor_portfolio_valuations')
         .select('*')
         .eq('property_id', entry.property_id)
         .order('valuation_date', { ascending: true });

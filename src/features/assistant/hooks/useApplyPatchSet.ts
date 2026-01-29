@@ -17,12 +17,12 @@ import {
  * Map entity types to Supabase table names
  */
 const ENTITY_TABLE_MAP: Record<PatchEntity, string> = {
-  Deal: 'deals',
-  DealOffer: 'deal_offers',
-  DealAssumption: 'deal_assumptions', // May need to be deal-level JSON field
-  DealEvidence: 'deal_evidence',
-  DealWalkthrough: 'deal_walkthroughs',
-  Property: 're_properties',
+  Deal: 'investor_deals_pipeline',
+  DealOffer: 'investor_deal_offers',
+  DealAssumption: 'investor_deal_assumptions', // May need to be deal-level JSON field
+  DealEvidence: 'investor_deal_evidence',
+  DealWalkthrough: 'investor_deal_walkthroughs',
+  Property: 'investor_properties',
   Lead: 'crm_leads',
   Task: 'tasks',
 };

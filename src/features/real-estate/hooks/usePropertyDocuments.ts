@@ -11,7 +11,7 @@ import { Document } from '../types';
 // Type helper for re_documents table that isn't in generated types yet
 // TODO: Add re_documents to database types generation
 type SupabaseDocumentsClient = {
-  from: (table: 're_documents') => {
+  from: (table: 'investor_documents') => {
     select: (columns: string) => {
       eq: (field: string, value: string) => {
         order: (column: string, opts: { ascending: boolean }) => Promise<{ data: Document[] | null; error: Error | null }>;
@@ -71,7 +71,7 @@ export function usePropertyDocuments({ propertyId }: UsePropertyDocumentsOptions
 
       // Use type assertion for table that may not be in generated types yet
       const { data, error: queryError } = await (supabase as unknown as SupabaseDocumentsClient)
-        .from('re_documents')
+        .from('investor_documents')
         .select('*')
         .eq('property_id', propertyId)
         .order('created_at', { ascending: false });
@@ -221,7 +221,7 @@ export function useDocumentMutations() {
 
       // Use type assertion for table that may not be in generated types yet
       const { data: docData, error: insertError } = await (supabase as unknown as SupabaseDocumentsClient)
-        .from('re_documents')
+        .from('investor_documents')
         .insert(insertData)
         .select()
         .single();
@@ -270,7 +270,7 @@ export function useDocumentMutations() {
 
       // Delete database record - use type assertion for table not in generated types yet
       const { error: deleteError } = await (supabase as unknown as SupabaseDocumentsClient)
-        .from('re_documents')
+        .from('investor_documents')
         .delete()
         .eq('id', document.id);
 

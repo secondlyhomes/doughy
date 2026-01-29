@@ -114,12 +114,12 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:rental_properties(id, name, address),
-              room:rental_rooms!rental_bookings_room_id_fkey(id, name)
+              property:landlord_properties(id, name, address),
+              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
             `)
             .order('start_date', { ascending: true });
 
@@ -141,12 +141,12 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
       fetchBookingById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:rental_properties(id, name, address),
-              room:rental_rooms!rental_bookings_room_id_fkey(id, name)
+              property:landlord_properties(id, name, address),
+              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
             `)
             .eq('id', id)
             .single();
@@ -174,12 +174,12 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:rental_properties(id, name, address),
-              room:rental_rooms!rental_bookings_room_id_fkey(id, name)
+              property:landlord_properties(id, name, address),
+              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
             `)
             .eq('property_id', propertyId)
             .order('start_date', { ascending: true });
@@ -204,12 +204,12 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
           const today = new Date().toISOString().split('T')[0];
 
           const { data, error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:rental_properties(id, name, address),
-              room:rental_rooms!rental_bookings_room_id_fkey(id, name)
+              property:landlord_properties(id, name, address),
+              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
             `)
             .gte('start_date', today)
             .in('status', ['confirmed', 'pending'])
@@ -231,12 +231,12 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:rental_properties(id, name, address),
-              room:rental_rooms!rental_bookings_room_id_fkey(id, name)
+              property:landlord_properties(id, name, address),
+              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
             `)
             .eq('status', 'active')
             .order('start_date', { ascending: true });
@@ -257,7 +257,7 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newBooking, error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .insert(data)
             .select()
             .single();
@@ -283,7 +283,7 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updatedBooking, error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .update(data)
             .eq('id', id)
             .select()
@@ -328,7 +328,7 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
           }
 
           const { error } = await supabase
-            .from('rental_bookings')
+            .from('landlord_bookings')
             .update(updateData)
             .eq('id', id);
 

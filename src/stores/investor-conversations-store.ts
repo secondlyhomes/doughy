@@ -44,8 +44,8 @@ export interface InvestorConversation {
   channel: InvestorChannel;
   external_thread_id: string | null;
   status: InvestorConversationStatus;
-  ai_enabled: boolean;
-  ai_auto_respond: boolean;
+  is_ai_enabled: boolean;
+  is_ai_auto_respond: boolean;
   ai_confidence_threshold: number;
   unread_count: number;
   last_message_at: string | null;
@@ -245,8 +245,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             .select(`
               *,
               lead:crm_leads(id, name, phone, email, status, opt_status, tags),
-              property:re_properties(id, address_line_1, city, state),
-              deal:deals(id, title, status)
+              property:investor_properties(id, address_line_1, city, state),
+              deal:investor_deals_pipeline(id, title, status)
             `)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
@@ -272,8 +272,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             .select(`
               *,
               lead:crm_leads(id, name, phone, email, status, opt_status, tags),
-              property:re_properties(id, address_line_1, city, state),
-              deal:deals(id, title, status)
+              property:investor_properties(id, address_line_1, city, state),
+              deal:investor_deals_pipeline(id, title, status)
             `)
             .eq('id', id)
             .single();
@@ -302,7 +302,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         try {
           // Fetch conversations that have pending AI responses
           const { data: queueItems, error: queueError } = await supabase
-            .from('investor_ai_queue')
+            .from('investor_ai_queue_items')
             .select('conversation_id')
             .eq('status', 'pending');
 
@@ -320,8 +320,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             .select(`
               *,
               lead:crm_leads(id, name, phone, email, status, opt_status, tags),
-              property:re_properties(id, address_line_1, city, state),
-              deal:deals(id, title, status)
+              property:investor_properties(id, address_line_1, city, state),
+              deal:investor_deals_pipeline(id, title, status)
             `)
             .in('id', conversationIds)
             .order('last_message_at', { ascending: false, nullsFirst: false });
@@ -372,17 +372,17 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         try {
           const { error } = await supabase
             .from('investor_conversations')
-            .update({ ai_enabled: enabled, updated_at: new Date().toISOString() })
+            .update({ is_ai_enabled: enabled, updated_at: new Date().toISOString() })
             .eq('id', id);
 
           if (error) throw error;
 
           set((state) => ({
             conversations: state.conversations.map((c) =>
-              c.id === id ? { ...c, ai_enabled: enabled } : c
+              c.id === id ? { ...c, is_ai_enabled: enabled } : c
             ),
             conversationsWithRelations: state.conversationsWithRelations.map((c) =>
-              c.id === id ? { ...c, ai_enabled: enabled } : c
+              c.id === id ? { ...c, is_ai_enabled: enabled } : c
             ),
           }));
 
@@ -398,17 +398,17 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         try {
           const { error } = await supabase
             .from('investor_conversations')
-            .update({ ai_auto_respond: enabled, updated_at: new Date().toISOString() })
+            .update({ is_ai_auto_respond: enabled, updated_at: new Date().toISOString() })
             .eq('id', id);
 
           if (error) throw error;
 
           set((state) => ({
             conversations: state.conversations.map((c) =>
-              c.id === id ? { ...c, ai_auto_respond: enabled } : c
+              c.id === id ? { ...c, is_ai_auto_respond: enabled } : c
             ),
             conversationsWithRelations: state.conversationsWithRelations.map((c) =>
-              c.id === id ? { ...c, ai_auto_respond: enabled } : c
+              c.id === id ? { ...c, is_ai_auto_respond: enabled } : c
             ),
           }));
 
@@ -513,7 +513,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('investor_ai_queue')
+            .from('investor_ai_queue_items')
             .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
@@ -566,7 +566,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
 
           // Check expiration at database level for safety
           const { error, count } = await supabase
-            .from('investor_ai_queue')
+            .from('investor_ai_queue_items')
             .update(updateData)
             .eq('id', id)
             .gt('expires_at', new Date().toISOString())
@@ -638,7 +638,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
           const reviewedAt = new Date().toISOString();
 
           const { error } = await supabase
-            .from('investor_ai_queue')
+            .from('investor_ai_queue_items')
             .update({
               status: 'rejected',
               reviewed_at: reviewedAt,
@@ -743,7 +743,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
       fetchAIConfidence: async () => {
         try {
           const { data, error } = await supabase
-            .from('investor_ai_confidence')
+            .from('investor_ai_confidence_settings')
             .select('*');
 
           if (error) throw error;
@@ -770,7 +770,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
 
           // Upsert the confidence record
           const { error } = await supabase
-            .from('investor_ai_confidence')
+            .from('investor_ai_confidence_settings')
             .upsert({
               user_id: userData.user.id,
               lead_situation: leadSituation,
@@ -901,7 +901,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
               {
                 event: '*',
                 schema: 'public',
-                table: 'investor_ai_queue',
+                table: 'investor_ai_queue_items',
                 filter: channelConfig.queueFilter,
               },
               async (payload) => {
@@ -924,7 +924,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
               {
                 event: '*',
                 schema: 'public',
-                table: 'investor_ai_queue',
+                table: 'investor_ai_queue_items',
               },
               async (payload) => {
                 if (isCleanedUp) return;

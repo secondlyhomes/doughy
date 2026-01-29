@@ -36,7 +36,7 @@ export function useAvailableProperties() {
 
       // Get all properties for the user
       const { data: allProperties, error: propertiesError } = await supabase
-        .from('re_properties')
+        .from('investor_properties')
         .select('id, address_line_1, city, state, zip, purchase_price, property_type')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -52,7 +52,7 @@ export function useAvailableProperties() {
 
       // Get property IDs already in portfolio entries
       const { data: portfolioEntries, error: entriesError } = await supabase
-        .from('re_portfolio_entries')
+        .from('investor_portfolio_entries')
         .select('property_id')
         .eq('user_id', user.id)
         .eq('is_active', true);
@@ -64,7 +64,7 @@ export function useAvailableProperties() {
 
       // Get property IDs from closed_won deals
       const { data: closedDeals, error: dealsError } = await supabase
-        .from('deals')
+        .from('investor_deals_pipeline')
         .select('property_id')
         .eq('user_id', user.id)
         .eq('stage', 'closed_won')

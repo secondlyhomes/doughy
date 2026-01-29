@@ -284,7 +284,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // 1. Delete capture_items (has foreign keys to leads, properties, deals)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: deletedCaptureItems, error: captureItemsError } = await (supabase.from('capture_items' as any) as any)
+    const { data: deletedCaptureItems, error: captureItemsError } = await (supabase.from('ai_capture_items' as any) as any)
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -300,7 +300,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     // 2. Delete deals (has foreign keys to leads and properties)
     // Deals table has user_id based RLS, not workspace_id based
     const { data: deletedDeals, error: dealsError } = await supabase
-      .from('deals')
+      .from('investor_deals_pipeline')
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -316,7 +316,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     // 3. Delete re_documents (has foreign keys to properties and deals)
     // Documents table has user_id based RLS
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: deletedDocuments, error: documentsError } = await (supabase.from('re_documents' as any) as any)
+    const { data: deletedDocuments, error: documentsError } = await (supabase.from('investor_documents' as any) as any)
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -332,7 +332,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     // 4. Delete properties (now has FK to leads via lead_id)
     // Properties table has permissive RLS (just needs auth), so user_id filter is fine
     const { data: deletedProperties, error: propertiesError } = await supabase
-      .from('re_properties')
+      .from('investor_properties')
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -544,7 +544,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const leadId = getLeadIdForProperty(i);
       const propertyData = createTestProperty(i, userId, workspaceId, leadId);
       const { data, error } = await supabase
-        .from('re_properties')
+        .from('investor_properties')
         .insert(propertyData)
         .select('id')
         .single();
@@ -578,7 +578,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const dealData = createTestDeal(i, userId, leadId, propertyId);
 
       const { data, error } = await supabase
-        .from('deals')
+        .from('investor_deals_pipeline')
         .insert(dealData)
         .select('id')
         .single();
@@ -617,7 +617,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const captureItemData = createTestCaptureItem(i, userId, context);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from('capture_items' as any) as any)
+      const { error } = await (supabase.from('ai_capture_items' as any) as any)
         .insert(captureItemData);
 
       if (error) {

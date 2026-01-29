@@ -52,7 +52,7 @@ export interface LeadTouchStats {
 
 async function fetchTouchesForLead(leadId: string): Promise<ContactTouch[]> {
   const { data, error } = await supabase
-    .from('contact_touches')
+    .from('crm_contact_touches')
     .select('*')
     .eq('lead_id', leadId)
     .order('created_at', { ascending: false });
@@ -67,7 +67,7 @@ async function fetchTouchesForLead(leadId: string): Promise<ContactTouch[]> {
 
 async function fetchRecentTouches(limit: number = 20): Promise<ContactTouch[]> {
   const { data, error } = await supabase
-    .from('contact_touches')
+    .from('crm_contact_touches')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -82,7 +82,7 @@ async function fetchRecentTouches(limit: number = 20): Promise<ContactTouch[]> {
 
 async function fetchLeadTouchStats(leadId: string): Promise<LeadTouchStats> {
   const { data, error } = await supabase
-    .from('contact_touches')
+    .from('crm_contact_touches')
     .select('*')
     .eq('lead_id', leadId);
 
@@ -121,7 +121,7 @@ async function createTouch(touch: TouchInsert): Promise<ContactTouch> {
   }
 
   const { data, error } = await supabase
-    .from('contact_touches')
+    .from('crm_contact_touches')
     .insert({
       ...touch,
       user_id: userData.user.id,
@@ -139,7 +139,7 @@ async function createTouch(touch: TouchInsert): Promise<ContactTouch> {
 
 async function updateTouch(id: string, updates: Partial<TouchInsert>): Promise<ContactTouch> {
   const { data, error } = await supabase
-    .from('contact_touches')
+    .from('crm_contact_touches')
     .update(updates)
     .eq('id', id)
     .select()
@@ -155,7 +155,7 @@ async function updateTouch(id: string, updates: Partial<TouchInsert>): Promise<C
 
 async function deleteTouch(id: string): Promise<void> {
   const { error } = await supabase
-    .from('contact_touches')
+    .from('crm_contact_touches')
     .delete()
     .eq('id', id);
 

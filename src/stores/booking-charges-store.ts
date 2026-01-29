@@ -52,10 +52,10 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('booking_charges')
+        .from('landlord_booking_charges')
         .select(`
           *,
-          maintenance:property_maintenance(
+          maintenance:landlord_maintenance_records(
             id,
             title,
             work_order_number,
@@ -81,10 +81,10 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('booking_charges')
+        .from('landlord_booking_charges')
         .select(`
           *,
-          maintenance:property_maintenance(
+          maintenance:landlord_maintenance_records(
             id,
             title,
             work_order_number,
@@ -112,7 +112,7 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
       if (!userData.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('booking_charges')
+        .from('landlord_booking_charges')
         .insert({
           user_id: userData.user.id,
           booking_id: input.booking_id,
@@ -145,7 +145,7 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('booking_charges')
+        .from('landlord_booking_charges')
         .update({
           ...input,
           updated_at: new Date().toISOString(),
@@ -176,7 +176,7 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('booking_charges')
+        .from('landlord_booking_charges')
         .delete()
         .eq('id', chargeId);
 
@@ -202,7 +202,7 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('deposit_settlements')
+        .from('landlord_deposit_settlements')
         .select('*')
         .eq('booking_id', bookingId)
         .maybeSingle();
@@ -252,7 +252,7 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
       const amountReturned = Math.max(0, depositHeld - totalDeductions);
 
       const { data, error } = await supabase
-        .from('deposit_settlements')
+        .from('landlord_deposit_settlements')
         .insert({
           user_id: userData.user.id,
           booking_id: bookingId,
@@ -288,7 +288,7 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
       }
 
       const { data, error } = await supabase
-        .from('deposit_settlements')
+        .from('landlord_deposit_settlements')
         .update(updateData)
         .eq('id', settlementId)
         .select()
@@ -336,7 +336,7 @@ export const useBookingChargesStore = create<BookingChargesState>((set, get) => 
       }
 
       const { data, error } = await supabase
-        .from('deposit_settlements')
+        .from('landlord_deposit_settlements')
         .update(updateData)
         .eq('id', settlementId)
         .select()

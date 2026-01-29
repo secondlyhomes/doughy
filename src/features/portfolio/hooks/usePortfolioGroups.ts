@@ -30,7 +30,7 @@ export function usePortfolioGroups() {
       if (!user?.id) return [];
 
       const { data, error } = await supabase
-        .from('re_portfolio_groups')
+        .from('investor_portfolio_groups')
         .select('*')
         .eq('user_id', user.id)
         .order('sort_order', { ascending: true });
@@ -44,7 +44,7 @@ export function usePortfolioGroups() {
       const groupsWithStats: PortfolioGroupWithStats[] = await Promise.all(
         (data || []).map(async (group) => {
           const { data: entries } = await supabase
-            .from('re_portfolio_entries')
+            .from('investor_portfolio_entries')
             .select('acquisition_price, monthly_rent, monthly_expenses')
             .eq('user_id', user.id)
             .eq('group_id', group.id)
@@ -78,7 +78,7 @@ export function usePortfolioGroups() {
 
       // Get max sort_order
       const { data: existing } = await supabase
-        .from('re_portfolio_groups')
+        .from('investor_portfolio_groups')
         .select('sort_order')
         .eq('user_id', user.id)
         .order('sort_order', { ascending: false })
@@ -87,7 +87,7 @@ export function usePortfolioGroups() {
       const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
       const { data, error } = await supabase
-        .from('re_portfolio_groups')
+        .from('investor_portfolio_groups')
         .insert({
           user_id: user.id,
           name: input.name,
@@ -114,7 +114,7 @@ export function usePortfolioGroups() {
       if (input.sort_order !== undefined) updates.sort_order = input.sort_order;
 
       const { data, error } = await supabase
-        .from('re_portfolio_groups')
+        .from('investor_portfolio_groups')
         .update(updates)
         .eq('id', input.id)
         .select()
@@ -132,7 +132,7 @@ export function usePortfolioGroups() {
   const deleteGroup = useMutation({
     mutationFn: async (groupId: string): Promise<void> => {
       const { error } = await supabase
-        .from('re_portfolio_groups')
+        .from('investor_portfolio_groups')
         .delete()
         .eq('id', groupId);
 
@@ -154,7 +154,7 @@ export function usePortfolioGroups() {
       groupId: string | null;
     }): Promise<void> => {
       const { error } = await supabase
-        .from('re_portfolio_entries')
+        .from('investor_portfolio_entries')
         .update({ group_id: groupId })
         .eq('id', portfolioEntryId);
 
@@ -172,7 +172,7 @@ export function usePortfolioGroups() {
       // Update sort_order for each group
       const updates = orderedIds.map((id, index) =>
         supabase
-          .from('re_portfolio_groups')
+          .from('investor_portfolio_groups')
           .update({ sort_order: index })
           .eq('id', id)
       );

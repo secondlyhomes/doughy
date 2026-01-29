@@ -28,7 +28,7 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
       if (!portfolioEntryId) return [];
 
       const { data, error } = await supabase
-        .from('re_portfolio_mortgages')
+        .from('investor_portfolio_mortgages')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId)
         .order('is_primary', { ascending: false });
@@ -49,13 +49,13 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
       // If this is primary, unset any existing primary
       if (input.is_primary !== false) {
         await supabase
-          .from('re_portfolio_mortgages')
+          .from('investor_portfolio_mortgages')
           .update({ is_primary: false })
           .eq('portfolio_entry_id', input.portfolio_entry_id);
       }
 
       const { data, error } = await supabase
-        .from('re_portfolio_mortgages')
+        .from('investor_portfolio_mortgages')
         .insert({
           portfolio_entry_id: input.portfolio_entry_id,
           lender_name: input.lender_name,
@@ -95,14 +95,14 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
       // If setting as primary, unset any existing primary
       if (updates.is_primary === true && portfolioEntryId) {
         await supabase
-          .from('re_portfolio_mortgages')
+          .from('investor_portfolio_mortgages')
           .update({ is_primary: false })
           .eq('portfolio_entry_id', portfolioEntryId)
           .neq('id', id);
       }
 
       const { data, error } = await supabase
-        .from('re_portfolio_mortgages')
+        .from('investor_portfolio_mortgages')
         .update(updates)
         .eq('id', id)
         .select()
@@ -121,7 +121,7 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
   const deleteMortgage = useMutation({
     mutationFn: async (id: string): Promise<void> => {
       const { error } = await supabase
-        .from('re_portfolio_mortgages')
+        .from('investor_portfolio_mortgages')
         .delete()
         .eq('id', id);
 

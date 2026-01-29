@@ -50,7 +50,7 @@ export function useJobWatcher(jobId: string | null): JobWatcherState {
     const fetchJob = async () => {
       try {
         const { data, error } = await supabase
-          .from('assistant_jobs')
+          .from('ai_jobs')
           .select('*')
           .eq('id', jobId)
           .single();
@@ -73,7 +73,7 @@ export function useJobWatcher(jobId: string | null): JobWatcherState {
     const pollInterval = setInterval(async () => {
       try {
         const { data, error } = await supabase
-          .from('assistant_jobs')
+          .from('ai_jobs')
           .select('*')
           .eq('id', jobId)
           .single();

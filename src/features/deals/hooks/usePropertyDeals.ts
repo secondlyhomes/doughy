@@ -27,7 +27,7 @@ export function usePropertyDeals(propertyId: string | null) {
       // Query deals with linked lead data
       // Note: Table is 'deals', not 're_deals'
       const { data, error } = await supabase
-        .from('deals')
+        .from('investor_deals_pipeline')
         .select(`
           *,
           lead:crm_leads(id, name, phone, email)

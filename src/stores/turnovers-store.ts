@@ -40,12 +40,12 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       let query = supabase
-        .from('property_turnovers')
+        .from('landlord_turnovers')
         .select(`
           *,
-          property:rental_properties(id, name, address),
-          cleaner:property_vendors!cleaner_vendor_id(id, name, phone, email),
-          booking:rental_bookings(
+          property:landlord_properties(id, name, address),
+          cleaner:landlord_vendors!cleaner_vendor_id(id, name, phone, email),
+          booking:landlord_bookings(
             id,
             contact:contacts(first_name, last_name)
           )
@@ -73,12 +73,12 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('property_turnovers')
+        .from('landlord_turnovers')
         .select(`
           *,
-          property:rental_properties(id, name, address),
-          cleaner:property_vendors!cleaner_vendor_id(id, name, phone, email),
-          booking:rental_bookings(
+          property:landlord_properties(id, name, address),
+          cleaner:landlord_vendors!cleaner_vendor_id(id, name, phone, email),
+          booking:landlord_bookings(
             id,
             contact:contacts(first_name, last_name)
           )
@@ -101,11 +101,11 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     try {
       const now = new Date().toISOString();
       let query = supabase
-        .from('property_turnovers')
+        .from('landlord_turnovers')
         .select(`
           *,
-          property:rental_properties(id, name, address),
-          cleaner:property_vendors!cleaner_vendor_id(id, name, phone, email)
+          property:landlord_properties(id, name, address),
+          cleaner:landlord_vendors!cleaner_vendor_id(id, name, phone, email)
         `)
         .gte('checkout_at', now)
         .neq('status', 'ready')
@@ -135,7 +135,7 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
       if (!user.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('property_turnovers')
+        .from('landlord_turnovers')
         .insert({
           ...input,
           user_id: user.user.id,
@@ -162,7 +162,7 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('property_turnovers')
+        .from('landlord_turnovers')
         .update(input)
         .eq('id', id)
         .select()
@@ -192,7 +192,7 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('property_turnovers')
+        .from('landlord_turnovers')
         .delete()
         .eq('id', id);
 

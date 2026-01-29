@@ -102,7 +102,7 @@ describe('adminService', () => {
 
     it('handles properties count error', async () => {
       mockSupabase.from = jest.fn().mockImplementation((table) => {
-        if (table === 're_properties') {
+        if (table === 'investor_properties') {
           return {
             select: jest.fn().mockResolvedValue({ count: null, error: new Error('Properties error') }),
           };
@@ -126,7 +126,7 @@ describe('adminService', () => {
 
     it('handles new users count error', async () => {
       mockSupabase.from = jest.fn().mockImplementation((table) => {
-        if (table === 're_properties') {
+        if (table === 'investor_properties') {
           return {
             select: jest.fn().mockResolvedValue({ count: 25, error: null }),
           };
@@ -157,7 +157,7 @@ describe('adminService', () => {
       let leadsCalls = 0;
 
       mockSupabase.from = jest.fn().mockImplementation((table) => {
-        if (table === 're_properties') {
+        if (table === 'investor_properties') {
           return {
             select: jest.fn().mockResolvedValue({ count: 25, error: null }),
           };

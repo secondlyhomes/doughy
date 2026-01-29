@@ -33,7 +33,7 @@ export interface RentalProperty {
   rate_type: RateType;
   cleaning_fee: number | null;
   security_deposit: number | null;
-  room_by_room_enabled: boolean;
+  is_room_by_room_enabled: boolean;
   amenities: string[];
   house_rules: Record<string, unknown>;
   listing_urls: {
@@ -88,7 +88,7 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('rental_properties')
+            .from('landlord_properties')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -107,7 +107,7 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
       fetchPropertyById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('rental_properties')
+            .from('landlord_properties')
             .select('*')
             .eq('id', id)
             .single();
@@ -134,7 +134,7 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newProperty, error } = await supabase
-            .from('rental_properties')
+            .from('landlord_properties')
             .insert(data)
             .select()
             .single();
@@ -159,7 +159,7 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updatedProperty, error } = await supabase
-            .from('rental_properties')
+            .from('landlord_properties')
             .update(data)
             .eq('id', id)
             .select()
@@ -187,7 +187,7 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isSaving: true, error: null });
         try {
           const { error } = await supabase
-            .from('rental_properties')
+            .from('landlord_properties')
             .delete()
             .eq('id', id);
 

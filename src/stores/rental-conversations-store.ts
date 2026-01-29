@@ -30,8 +30,8 @@ export interface Conversation {
   platform: string | null;
   external_thread_id: string | null;
   status: ConversationStatus;
-  ai_enabled: boolean;
-  ai_auto_respond: boolean;
+  is_ai_enabled: boolean;
+  is_ai_auto_respond: boolean;
   ai_confidence_threshold: number;
   ai_personality: string | null;
   subject: string | null;
@@ -55,7 +55,7 @@ export interface Message {
   ai_model: string | null;
   ai_prompt_tokens: number | null;
   ai_completion_tokens: number | null;
-  requires_approval: boolean;
+  is_requires_approval: boolean;
   approved_by: string | null;
   approved_at: string | null;
   edited_content: string | null;
@@ -232,11 +232,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('rental_conversations')
+            .from('landlord_conversations')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone, contact_types),
-              property:rental_properties(id, name, address)
+              property:landlord_properties(id, name, address)
             `)
             .order('last_message_at', { ascending: false });
 
@@ -258,11 +258,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       fetchConversationById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('rental_conversations')
+            .from('landlord_conversations')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone, contact_types),
-              property:rental_properties(id, name, address)
+              property:landlord_properties(id, name, address)
             `)
             .eq('id', id)
             .single();
@@ -291,7 +291,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         try {
           // Fetch conversations that have pending AI responses
           const { data: queueItems, error: queueError } = await supabase
-            .from('rental_ai_queue')
+            .from('landlord_ai_queue_items')
             .select('conversation_id')
             .eq('status', 'pending');
 
@@ -305,11 +305,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           }
 
           const { data, error } = await supabase
-            .from('rental_conversations')
+            .from('landlord_conversations')
             .select(`
               *,
               contact:crm_contacts(id, first_name, last_name, email, phone, contact_types),
-              property:rental_properties(id, name, address)
+              property:landlord_properties(id, name, address)
             `)
             .in('id', conversationIds)
             .order('last_message_at', { ascending: false });
@@ -333,7 +333,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       updateConversationStatus: async (id: string, status: ConversationStatus) => {
         try {
           const { error } = await supabase
-            .from('rental_conversations')
+            .from('landlord_conversations')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id);
 
@@ -359,18 +359,18 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       toggleAI: async (id: string, enabled: boolean) => {
         try {
           const { error } = await supabase
-            .from('rental_conversations')
-            .update({ ai_enabled: enabled, updated_at: new Date().toISOString() })
+            .from('landlord_conversations')
+            .update({ is_ai_enabled: enabled, updated_at: new Date().toISOString() })
             .eq('id', id);
 
           if (error) throw error;
 
           set((state) => ({
             conversations: state.conversations.map((c) =>
-              c.id === id ? { ...c, ai_enabled: enabled } : c
+              c.id === id ? { ...c, is_ai_enabled: enabled } : c
             ),
             conversationsWithRelations: state.conversationsWithRelations.map((c) =>
-              c.id === id ? { ...c, ai_enabled: enabled } : c
+              c.id === id ? { ...c, is_ai_enabled: enabled } : c
             ),
           }));
 
@@ -389,7 +389,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           // Sort descending (newest first) for inverted FlatList
           // This puts newest messages at the bottom like iOS Messenger
           const { data, error } = await supabase
-            .from('rental_messages')
+            .from('landlord_messages')
             .select('*')
             .eq('conversation_id', conversationId)
             .order('created_at', { ascending: false });
@@ -413,7 +413,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         set({ isSending: true, error: null });
         try {
           const { data: newMessage, error } = await supabase
-            .from('rental_messages')
+            .from('landlord_messages')
             .insert({
               conversation_id: conversationId,
               direction: 'outbound',
@@ -450,7 +450,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('rental_ai_queue')
+            .from('landlord_ai_queue_items')
             .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
@@ -504,7 +504,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
 
           // Also check expiration at database level for safety
           const { error, count } = await supabase
-            .from('rental_ai_queue')
+            .from('landlord_ai_queue_items')
             .update(updateData)
             .eq('id', id)
             .gt('expires_at', new Date().toISOString()) // Only update if not expired
@@ -589,7 +589,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           const reviewedAt = new Date().toISOString();
 
           const { error } = await supabase
-            .from('rental_ai_queue')
+            .from('landlord_ai_queue_items')
             .update({
               status: 'rejected',
               reviewed_at: reviewedAt,
@@ -714,7 +714,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               {
                 event: '*',
                 schema: 'public',
-                table: 'rental_conversations',
+                table: 'landlord_conversations',
                 filter: channelConfig.conversationFilter,
               },
               async (payload) => {
@@ -738,7 +738,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               {
                 event: '*',
                 schema: 'public',
-                table: 'rental_conversations',
+                table: 'landlord_conversations',
               },
               async (payload) => {
                 if (isCleanedUp) return;
@@ -768,7 +768,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               {
                 event: '*',
                 schema: 'public',
-                table: 'rental_ai_queue',
+                table: 'landlord_ai_queue_items',
                 filter: channelConfig.queueFilter,
               },
               async (payload) => {
@@ -792,7 +792,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               {
                 event: '*',
                 schema: 'public',
-                table: 'rental_ai_queue',
+                table: 'landlord_ai_queue_items',
               },
               async (payload) => {
                 if (isCleanedUp) return;
@@ -937,7 +937,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               {
                 event: 'INSERT',
                 schema: 'public',
-                table: 'rental_messages',
+                table: 'landlord_messages',
                 filter: `conversation_id=eq.${conversationId}`,
               },
               (payload) => {
@@ -952,7 +952,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               {
                 event: 'INSERT',
                 schema: 'public',
-                table: 'rental_messages',
+                table: 'landlord_messages',
               },
               (payload) => {
                 if (isCleanedUp) return;

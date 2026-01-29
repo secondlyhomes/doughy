@@ -92,11 +92,11 @@ interface PaginatedDealsResult {
 async function fetchDeals(filters?: DealsFilters): Promise<Deal[]> {
   // Build query with related data
   let query = supabase
-    .from('deals')
+    .from('investor_deals_pipeline')
     .select(`
       *,
       lead:crm_leads(id, name, phone, email, status, score),
-      property:re_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
+      property:investor_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
     `);
 
   // Apply filters
@@ -173,11 +173,11 @@ async function fetchDealsPaginated(
 
   // Build query with related data
   let query = supabase
-    .from('deals')
+    .from('investor_deals_pipeline')
     .select(`
       *,
       lead:crm_leads(id, name, phone, email, status, score),
-      property:re_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
+      property:investor_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
     `, { count: 'exact' });
 
   // Apply filters
@@ -257,11 +257,11 @@ async function fetchDealsPaginated(
 
 async function fetchDealById(id: string): Promise<Deal | null> {
   const { data, error } = await supabase
-    .from('deals')
+    .from('investor_deals_pipeline')
     .select(`
       *,
       lead:crm_leads(id, name, phone, email, status, score, tags),
-      property:re_properties(id, address_line_1, address_line_2, city, state, zip, county, bedrooms, bathrooms, square_feet, lot_size, year_built, property_type, arv, purchase_price, notes, status)
+      property:investor_properties(id, address_line_1, address_line_2, city, state, zip, county, bedrooms, bathrooms, square_feet, lot_size, year_built, property_type, arv, purchase_price, notes, status)
     `)
     .eq('id', id)
     .single();
@@ -348,7 +348,7 @@ async function createDeal(dealData: CreateDealInput): Promise<Deal> {
   };
 
   const { data, error } = await supabase
-    .from('deals')
+    .from('investor_deals_pipeline')
     .insert(insertData)
     .select()
     .single();
@@ -388,7 +388,7 @@ async function updateDeal(id: string, updates: Partial<Deal>): Promise<Deal> {
   if (updates.property_id !== undefined) updateData.property_id = updates.property_id;
 
   const { data, error } = await supabase
-    .from('deals')
+    .from('investor_deals_pipeline')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -418,7 +418,7 @@ async function updateDeal(id: string, updates: Partial<Deal>): Promise<Deal> {
 
 async function deleteDeal(id: string): Promise<void> {
   const { error } = await supabase
-    .from('deals')
+    .from('investor_deals_pipeline')
     .delete()
     .eq('id', id);
 

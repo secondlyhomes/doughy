@@ -33,7 +33,7 @@ export function usePortfolioValuations(propertyId: string | undefined) {
       if (!propertyId) return [];
 
       const { data, error } = await supabase
-        .from('re_portfolio_valuations')
+        .from('investor_portfolio_valuations')
         .select('*')
         .eq('property_id', propertyId)
         .order('valuation_date', { ascending: false });
@@ -58,7 +58,7 @@ export function usePortfolioValuations(propertyId: string | undefined) {
       if (!user?.id) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('re_portfolio_valuations')
+        .from('investor_portfolio_valuations')
         .insert({
           property_id: input.property_id,
           estimated_value: input.estimated_value,
@@ -88,7 +88,7 @@ export function usePortfolioValuations(propertyId: string | undefined) {
       updates: Partial<ValuationInput>;
     }): Promise<PortfolioValuation> => {
       const { data, error } = await supabase
-        .from('re_portfolio_valuations')
+        .from('investor_portfolio_valuations')
         .update(updates)
         .eq('id', id)
         .select()
@@ -107,7 +107,7 @@ export function usePortfolioValuations(propertyId: string | undefined) {
   const deleteValuation = useMutation({
     mutationFn: async (id: string): Promise<void> => {
       const { error } = await supabase
-        .from('re_portfolio_valuations')
+        .from('investor_portfolio_valuations')
         .delete()
         .eq('id', id);
 

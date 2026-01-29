@@ -60,7 +60,7 @@ export function useLeadDocuments({ leadId }: UseLeadDocumentsOptions): UseLeadDo
 
       /* Original query - disabled until schema supports lead_id:
       const { data, error: queryError } = await supabase
-        .from('re_documents')
+        .from('investor_documents')
         .select('*')
         .eq('lead_id', leadId)
         .order('created_at', { ascending: false });
@@ -211,7 +211,7 @@ export function useLeadDocumentMutations() {
       };
 
       const { data: docData, error: insertError } = await supabase
-        .from('re_documents')
+        .from('investor_documents')
         .insert(insertData)
         .select()
         .single();
@@ -265,7 +265,7 @@ export function useLeadDocumentMutations() {
 
       // Delete database record
       const { error: deleteError } = await supabase
-        .from('re_documents')
+        .from('investor_documents')
         .delete()
         .eq('id', document.id);
 

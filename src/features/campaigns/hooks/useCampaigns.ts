@@ -172,7 +172,7 @@ export function useCampaignSteps(campaignId: string | undefined) {
       if (!user?.id || !campaignId) return [];
 
       const { data, error } = await supabase
-        .from('drip_campaign_steps')
+        .from('investor_drip_campaign_steps')
         .select('*')
         .eq('campaign_id', campaignId)
         .order('step_number', { ascending: true });
@@ -196,7 +196,7 @@ export function useCampaignEnrollments(campaignId: string | undefined) {
       if (!user?.id || !campaignId) return [];
 
       const { data, error } = await supabase
-        .from('drip_enrollments')
+        .from('investor_drip_enrollments')
         .select('*')
         .eq('campaign_id', campaignId)
         .eq('user_id', user.id)
@@ -335,7 +335,7 @@ export function useCreateCampaignStep() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
-        .from('drip_campaign_steps')
+        .from('investor_drip_campaign_steps')
         .insert(insertData)
         .select()
         .single();
@@ -363,7 +363,7 @@ export function useUpdateCampaignStep() {
 
       // Verify ownership by checking the campaign belongs to user
       const { data: step, error: fetchError } = await supabase
-        .from('drip_campaign_steps')
+        .from('investor_drip_campaign_steps')
         .select('campaign_id')
         .eq('id', id)
         .single();
@@ -382,7 +382,7 @@ export function useUpdateCampaignStep() {
       }
 
       const { data, error } = await supabase
-        .from('drip_campaign_steps')
+        .from('investor_drip_campaign_steps')
         .update(updates as Record<string, unknown>)
         .eq('id', id)
         .select()
@@ -422,7 +422,7 @@ export function useDeleteCampaignStep() {
       }
 
       const { error } = await supabase
-        .from('drip_campaign_steps')
+        .from('investor_drip_campaign_steps')
         .delete()
         .eq('id', id);
 
@@ -489,7 +489,7 @@ export function usePauseEnrollment() {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('drip_enrollments')
+        .from('investor_drip_enrollments')
         .update({
           status: 'paused',
           paused_at: new Date().toISOString(),
@@ -521,7 +521,7 @@ export function useResumeEnrollment() {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('drip_enrollments')
+        .from('investor_drip_enrollments')
         .update({
           status: 'active',
           resumed_at: new Date().toISOString(),
@@ -555,13 +555,13 @@ export function useRemoveFromCampaign() {
 
       // Get campaign_id before delete
       const { data: enrollment } = await supabase
-        .from('drip_enrollments')
+        .from('investor_drip_enrollments')
         .select('campaign_id')
         .eq('id', id)
         .single() as { data: { campaign_id: string } | null };
 
       const { error } = await supabase
-        .from('drip_enrollments')
+        .from('investor_drip_enrollments')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);

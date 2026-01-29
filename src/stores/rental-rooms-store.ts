@@ -23,7 +23,7 @@ export interface Room {
   amenities: string[];
   weekly_rate: number | null;
   monthly_rate: number;
-  utilities_included: boolean;
+  is_utilities_included: boolean;
   status: RoomStatus;
   available_date: string | null;
   current_booking_id: string | null;
@@ -74,7 +74,7 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('rental_rooms')
+            .from('landlord_rooms')
             .select('*')
             .eq('property_id', propertyId)
             .order('name', { ascending: true });
@@ -103,7 +103,7 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
       fetchRoomById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('rental_rooms')
+            .from('landlord_rooms')
             .select('*')
             .eq('id', id)
             .single();
@@ -142,7 +142,7 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newRoom, error } = await supabase
-            .from('rental_rooms')
+            .from('landlord_rooms')
             .insert(data)
             .select()
             .single();
@@ -175,7 +175,7 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updatedRoom, error } = await supabase
-            .from('rental_rooms')
+            .from('landlord_rooms')
             .update(data)
             .eq('id', id)
             .select()
@@ -211,7 +211,7 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
           const room = get().rooms.find((r) => r.id === id);
 
           const { error } = await supabase
-            .from('rental_rooms')
+            .from('landlord_rooms')
             .delete()
             .eq('id', id);
 
@@ -242,7 +242,7 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isSaving: true, error: null });
         try {
           const { error } = await supabase
-            .from('rental_rooms')
+            .from('landlord_rooms')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id);
 

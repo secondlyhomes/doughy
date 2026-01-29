@@ -69,7 +69,7 @@ async function fetchLeadsWithTouchData(settings: NudgeSettings): Promise<LeadWit
   // Get touch data for these leads
   const leadIds = leads.map(l => l.id);
   const { data: touches, error: touchesError } = await supabase
-    .from('contact_touches')
+    .from('crm_contact_touches')
     .select('lead_id, created_at, responded')
     .in('lead_id', leadIds);
 
@@ -121,7 +121,7 @@ async function fetchDealNudges(settings: NudgeSettings) {
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   const { data, error } = await supabase
-    .from('deals')
+    .from('investor_deals_pipeline')
     .select(`
       id,
       stage,
@@ -129,7 +129,7 @@ async function fetchDealNudges(settings: NudgeSettings) {
       next_action_due,
       updated_at,
       lead:crm_leads(id, name),
-      property:re_properties(id, address_line_1, city, state)
+      property:investor_properties(id, address_line_1, city, state)
     `)
     .not('stage', 'in', '(closed_won,closed_lost)')
     .limit(50);
@@ -145,7 +145,7 @@ async function fetchDealNudges(settings: NudgeSettings) {
 // Fetch pending capture items
 async function fetchPendingCaptures() {
   const { data, error } = await supabase
-    .from('capture_items')
+    .from('ai_capture_items')
     .select('id, type, title, created_at, assigned_property_id')
     .in('status', ['pending', 'ready'])
     .order('created_at', { ascending: false })

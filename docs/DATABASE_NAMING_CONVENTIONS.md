@@ -1,7 +1,8 @@
 # Database Naming Conventions
 
-**Last Updated**: 2026-01-28
-**Status**: Current naming patterns documented; added CRM, Comms, and Rental domain prefixes
+**Last Updated**: 2026-01-29
+**Lead DBA**: Claude (Opus 4.5)
+**Status**: Comprehensive standards including ENUM requirements, boolean prefixes, plurality rules
 
 ---
 
@@ -66,6 +67,26 @@ This pattern is common in well-designed production schemas:
 This prevents "exception creep" where developers add unprefixed tables because "my table is important too." The current list (`deals`, `workspaces`) should remain fixed unless a truly top-level object is introduced (e.g., `organizations`, `projects`).
 
 ---
+
+### Table Plurality (REQUIRED: Plural)
+
+**All table names MUST be plural.** This is a PostgreSQL/Rails convention that improves readability.
+
+| ✅ Correct | ❌ Wrong |
+|-----------|----------|
+| `deals` | `deal` |
+| `crm_leads` | `crm_lead` |
+| `rental_bookings` | `rental_booking` |
+| `user_profiles` | `user_profile` |
+
+**Why plural:**
+- Tables contain multiple rows (plural makes semantic sense)
+- Matches Rails/ActiveRecord convention
+- Distinguishes tables from types/enums (which are singular)
+- Industry standard (Stripe, GitHub, etc. all use plural)
+
+**Current violations to fix:**
+- `booking` → `bookings` (or `rental_bookings` for consistency)
 
 ### Current Patterns (Keep As-Is)
 
@@ -174,6 +195,96 @@ CREATE TABLE rental_availability (...);
 CREATE TABLE rental_pricing_rules (...);
 CREATE TABLE rental_reviews (...);
 ```
+
+---
+
+#### 3c. Investor Domain
+**Pattern**: `investor_*` prefix (REQUIRED for all investor communication/CRM tables)
+
+This domain supports the Investor platform for lead communication and follow-ups.
+
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `investor_conversations` | Lead conversation threads | ✅ Existing |
+| `investor_messages` | Individual messages in threads | ✅ Existing |
+| `investor_ai_queue` | AI response suggestions queue | ✅ Existing |
+| `investor_ai_response_outcomes` | AI response outcome tracking | ✅ Existing |
+| `investor_campaigns` | Outreach campaigns | ✅ Existing |
+| `investor_outreach_templates` | Email/SMS templates | ✅ Existing |
+| `investor_agents` | Follow-up agents | ✅ Existing |
+| `investor_follow_ups` | Scheduled follow-ups | ✅ Existing |
+
+**Future tables in this domain**: MUST use `investor_*` prefix
+
+---
+
+#### 3d. Drip Campaign Domain
+**Pattern**: `drip_*` prefix (REQUIRED for all drip campaign tables)
+
+This domain supports automated multi-channel outreach campaigns.
+
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `drip_campaigns` | Campaign definitions (via investor_campaigns) | ✅ Existing |
+| `drip_campaign_steps` | Campaign step definitions | ✅ Existing |
+| `drip_enrollments` | Contact enrollment in campaigns | ✅ Existing |
+| `drip_touch_log` | Log of sent touches | ✅ Existing |
+
+**Future tables in this domain**: MUST use `drip_*` prefix
+
+---
+
+#### 3e. MoltBot AI Domain
+**Pattern**: `moltbot_*` prefix (REQUIRED for all AI/ML tables)
+
+This domain supports the MoltBot AI assistant features.
+
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `moltbot_user_memory` | User preference memory | ✅ Existing |
+| `moltbot_episodic_memory` | Contact interaction memory | ✅ Existing |
+| `moltbot_knowledge_sources` | Knowledge base sources | ✅ Existing |
+| `moltbot_knowledge_chunks` | Vectorized knowledge chunks | ✅ Existing |
+| `moltbot_sync_history` | Sync operation history | ✅ Existing |
+| `moltbot_security_events` | Security event logging | ✅ Existing |
+| `moltbot_ip_blocks` | IP block list | ✅ Existing |
+| `moltbot_rate_limits` | Rate limiting records | ✅ Existing |
+| `moltbot_blocked_patterns` | Content filter patterns | ✅ Existing |
+| `moltbot_email_analysis` | Email analysis cache | ✅ Existing |
+| `moltbot_learning_queue` | Learning opportunity queue | ✅ Existing |
+
+**Future tables in this domain**: MUST use `moltbot_*` prefix
+
+---
+
+#### 3f. Seam Smart Lock Domain
+**Pattern**: `seam_*` prefix (REQUIRED for all smart lock integration tables)
+
+This domain supports Seam API integration for smart lock management.
+
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `seam_devices` | Connected smart lock devices | ✅ Existing |
+| `seam_access_codes` | Guest access codes | ✅ Existing |
+| `seam_lock_events` | Lock event audit log | ✅ Existing |
+
+**Future tables in this domain**: MUST use `seam_*` prefix
+
+---
+
+#### 3g. Property Operations Domain
+**Pattern**: `property_*` prefix (REQUIRED for property management operations)
+
+This domain supports rental property operations (inventory, maintenance, turnovers).
+
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `property_inventory` | Inventory items | ✅ Existing |
+| `property_maintenance` | Maintenance records | ✅ Existing |
+| `property_vendors` | Vendor contacts | ✅ Existing |
+| `property_turnovers` | Turnover checklists | ✅ Existing |
+
+**Future tables in this domain**: MUST use `property_*` prefix
 
 ---
 
@@ -382,27 +493,204 @@ CONSTRAINT unique_profiles_email UNIQUE (email)
 
 ## PostgreSQL Enum Types
 
-### Naming Pattern
+### When to Use ENUMs (REQUIRED)
+
+**ALWAYS use ENUMs for status/state columns.** TEXT columns for status values are NOT allowed for new tables.
+
+| Use Case | ENUM | TEXT |
+|----------|------|------|
+| Status columns | ✅ Required | ❌ Not allowed |
+| Channel types | ✅ Required | ❌ Not allowed |
+| Role types | ✅ Required | ❌ Not allowed |
+| Free-form user input | ❌ Wrong tool | ✅ Correct |
+| Dynamic/configurable values | ❌ Wrong tool | ✅ Correct |
+
+**Why ENUMs are mandatory:**
+1. **Type safety** - Invalid values are rejected at the database level
+2. **Self-documenting** - Schema defines all valid options
+3. **Performance** - Stored as integers, faster comparisons
+4. **TypeScript integration** - Generated types match exactly
+5. **Data integrity** - No typos, no inconsistent casing
+
+### Naming Conventions
+
+#### ENUM Type Names
 ```sql
-CREATE TYPE {table}_{column}_enum AS ENUM ('value1', 'value2');
+-- Pattern: {domain}_{concept}
+CREATE TYPE deal_status AS ENUM (...);
+CREATE TYPE lead_source AS ENUM (...);
+CREATE TYPE rental_channel AS ENUM (...);
+CREATE TYPE booking_status AS ENUM (...);
 ```
 
-### Examples
-```sql
-CREATE TYPE deal_status AS ENUM ('active', 'won', 'lost', 'archived');
-CREATE TYPE lead_status AS ENUM ('new', 'active', 'qualified', 'unqualified', 'closed');
-CREATE TYPE message_channel AS ENUM ('sms', 'email', 'voice');
-CREATE TYPE message_direction AS ENUM ('incoming', 'outgoing');
-```
+**Rules:**
+- Use snake_case
+- Use singular form (`deal_status` not `deal_statuses`)
+- Domain prefix when needed for clarity (`rental_channel` vs `investor_channel`)
+- No `_enum` suffix (redundant)
 
-**Usage**:
+#### ENUM Values
 ```sql
-CREATE TABLE deals (
-  ...
-  status deal_status NOT NULL DEFAULT 'active',
-  ...
+-- Pattern: lowercase, underscores for multi-word
+CREATE TYPE deal_status AS ENUM (
+  'new',
+  'active',
+  'under_contract',
+  'closed_won',
+  'closed_lost',
+  'archived'
 );
 ```
+
+**Rules:**
+- All lowercase
+- Use underscores for multi-word values (`under_contract`)
+- Alphabetical order when no logical sequence exists
+- Logical order when sequence matters (pipeline stages)
+
+### Standard ENUM Definitions
+
+The following ENUMs are defined for the Doughy application:
+
+#### Deal/CRM Domain
+```sql
+CREATE TYPE deal_status AS ENUM (
+  'new', 'qualifying', 'analyzing', 'negotiating',
+  'under_contract', 'closed_won', 'closed_lost', 'archived'
+);
+
+CREATE TYPE lead_status AS ENUM (
+  'new', 'contacted', 'qualified', 'unqualified',
+  'converted', 'dead'
+);
+
+CREATE TYPE lead_source AS ENUM (
+  'driving_for_dollars', 'propstream', 'zillow',
+  'referral', 'cold_call', 'direct_mail', 'other'
+);
+```
+
+#### Rental/Landlord Domain
+```sql
+CREATE TYPE rental_channel AS ENUM (
+  'email', 'sms', 'whatsapp', 'phone',
+  'airbnb', 'vrbo', 'booking_com', 'direct'
+);
+
+CREATE TYPE booking_status AS ENUM (
+  'inquiry', 'pending', 'confirmed', 'checked_in',
+  'checked_out', 'cancelled', 'no_show'
+);
+
+CREATE TYPE property_status AS ENUM (
+  'active', 'inactive', 'maintenance', 'archived'
+);
+```
+
+#### Communication Domain
+```sql
+CREATE TYPE message_direction AS ENUM ('inbound', 'outbound');
+CREATE TYPE message_status AS ENUM ('pending', 'sent', 'delivered', 'failed', 'read');
+CREATE TYPE sender_type AS ENUM ('user', 'ai', 'system', 'guest');
+```
+
+#### AI Domain
+```sql
+CREATE TYPE ai_queue_status AS ENUM (
+  'pending', 'processing', 'ready_for_review',
+  'approved', 'rejected', 'sent', 'expired'
+);
+
+CREATE TYPE ai_outcome AS ENUM (
+  'approved_as_is', 'approved_with_edits',
+  'rejected', 'ignored'
+);
+```
+
+### Adding New ENUM Values
+
+When you need to add a new value to an existing ENUM:
+
+```sql
+-- Add a new value (simple case)
+ALTER TYPE deal_status ADD VALUE 'on_hold';
+
+-- Add value in specific position
+ALTER TYPE deal_status ADD VALUE 'on_hold' BEFORE 'archived';
+ALTER TYPE deal_status ADD VALUE 'reviewing' AFTER 'analyzing';
+```
+
+**Important notes:**
+- `ADD VALUE` cannot be run inside a transaction (in Supabase migrations, this is handled automatically)
+- New values are added at the end by default
+- Position matters if you use `<` or `>` comparisons on enum columns
+
+### Converting TEXT to ENUM
+
+When migrating existing TEXT columns to ENUM:
+
+```sql
+-- Step 1: Create the enum type
+CREATE TYPE deal_status AS ENUM ('new', 'active', 'won', 'lost', 'archived');
+
+-- Step 2: Add temporary column
+ALTER TABLE deals ADD COLUMN status_new deal_status;
+
+-- Step 3: Migrate data (handle invalid values)
+UPDATE deals SET status_new = status::deal_status
+WHERE status IN ('new', 'active', 'won', 'lost', 'archived');
+
+-- Step 4: Handle any invalid data
+UPDATE deals SET status_new = 'archived'
+WHERE status_new IS NULL;
+
+-- Step 5: Swap columns
+ALTER TABLE deals DROP COLUMN status;
+ALTER TABLE deals RENAME COLUMN status_new TO status;
+ALTER TABLE deals ALTER COLUMN status SET NOT NULL;
+ALTER TABLE deals ALTER COLUMN status SET DEFAULT 'new';
+```
+
+### TypeScript Integration
+
+After adding/modifying ENUMs, regenerate types:
+
+```bash
+npm run db:types
+```
+
+The generated types will include:
+```typescript
+// In generated.ts
+export type DealStatus = 'new' | 'active' | 'won' | 'lost' | 'archived';
+
+// Usage in code
+const status: Database['public']['Enums']['deal_status'] = 'active';
+```
+
+**Best Practice**: Export enum types from a constants file:
+```typescript
+// src/integrations/supabase/types/constants.ts
+export type DealStatus = Database['public']['Enums']['deal_status'];
+export const DEAL_STATUSES: DealStatus[] = ['new', 'active', 'won', 'lost', 'archived'];
+```
+
+### Existing TEXT Columns Requiring ENUM Migration
+
+The following TEXT columns should be migrated to ENUMs (tracked in DATABASE_AUDIT):
+
+| Table | Column | Target ENUM |
+|-------|--------|-------------|
+| `deals` | `status` | `deal_status` |
+| `crm_leads` | `status` | `lead_status` |
+| `crm_leads` | `source` | `lead_source` |
+| `rental_bookings` | `status` | `booking_status` |
+| `rental_properties` | `status` | `property_status` |
+| `investor_conversations` | `status` | `conversation_status` |
+| `rental_ai_queue` | `status` | `ai_queue_status` |
+| `ai_response_outcomes` | `outcome_type` | `ai_outcome` |
+
+**Migration Status**: See `DATABASE_AUDIT_2026-01-29.md` for current progress.
 
 ---
 

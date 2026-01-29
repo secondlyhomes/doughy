@@ -115,7 +115,7 @@ const setupMockChain = (dealsData: any[], entriesData: any[], dealsError?: any, 
         upsert: jest.fn(() => Promise.resolve({ error: null })),
       };
     }
-    if (table === 're_properties') {
+    if (table === 'investor_properties') {
       return {
         insert: jest.fn(() => ({
           select: jest.fn(() => ({
@@ -534,7 +534,7 @@ describe('usePortfolio', () => {
             upsert: mockUpsert,
           };
         }
-        if (table === 're_properties') {
+        if (table === 'investor_properties') {
           return {
             insert: mockInsert,
             delete: jest.fn(() => ({

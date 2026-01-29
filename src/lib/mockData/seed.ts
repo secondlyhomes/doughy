@@ -134,7 +134,7 @@ export function seedMockData(store: MockDataStore): void {
   ];
 
   for (const property of properties) {
-    store.insert('re_properties', property);
+    store.insert('investor_properties', property);
 
     // Create comps for each property
     const comps = Array.from({ length: 3 }, () =>
@@ -145,7 +145,7 @@ export function seedMockData(store: MockDataStore): void {
       })
     );
     for (const comp of comps) {
-      store.insert('re_comps', comp);
+      store.insert('investor_comps', comp);
     }
   }
 
@@ -256,7 +256,7 @@ export function seedMockData(store: MockDataStore): void {
   ];
 
   for (const deal of deals) {
-    store.insert('deals', deal);
+    store.insert('investor_deals_pipeline', deal);
 
     // Create deal events for each deal (for timeline)
     const dealEvents = [
@@ -286,7 +286,7 @@ export function seedMockData(store: MockDataStore): void {
     ];
 
     for (const event of dealEvents) {
-      store.insert('deal_events', event);
+      store.insert('investor_deal_events', event);
     }
   }
 
@@ -294,11 +294,11 @@ export function seedMockData(store: MockDataStore): void {
     profiles: store.getAll('user_profiles').length,
     user_plans: store.getAll('user_plans').length,
     leads: store.getAll('crm_leads').length,
-    re_properties: store.getAll('re_properties').length,
-    re_comps: store.getAll('re_comps').length,
+    investor_properties: store.getAll('investor_properties').length,
+    investor_comps: store.getAll('investor_comps').length,
     contacts: store.getAll('crm_contacts').length,
     comms_messages: store.getAll('comms_messages').length,
-    deals: store.getAll('deals').length,
-    deal_events: store.getAll('deal_events').length,
+    investor_deals_pipeline: store.getAll('investor_deals_pipeline').length,
+    investor_deal_events: store.getAll('investor_deal_events').length,
   });
 }
