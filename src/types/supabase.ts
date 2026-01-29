@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       ai_confidence_adjustments: {
@@ -1595,6 +1570,116 @@ export type Database = {
           zip?: string | null
         }
         Relationships: []
+      }
+      crm_skip_trace_results: {
+        Row: {
+          addresses: Json
+          contact_id: string | null
+          created_at: string
+          credits_used: number
+          data_points: Json
+          emails: Json
+          error_message: string | null
+          id: string
+          input_address: string | null
+          input_city: string | null
+          input_first_name: string | null
+          input_last_name: string | null
+          input_state: string | null
+          input_zip: string | null
+          lead_id: string | null
+          match_confidence: number | null
+          matched_property_id: string | null
+          phones: Json
+          properties_owned: Json
+          property_id: string | null
+          raw_response: Json | null
+          status: Database["public"]["Enums"]["crm_skip_trace_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          addresses?: Json
+          contact_id?: string | null
+          created_at?: string
+          credits_used?: number
+          data_points?: Json
+          emails?: Json
+          error_message?: string | null
+          id?: string
+          input_address?: string | null
+          input_city?: string | null
+          input_first_name?: string | null
+          input_last_name?: string | null
+          input_state?: string | null
+          input_zip?: string | null
+          lead_id?: string | null
+          match_confidence?: number | null
+          matched_property_id?: string | null
+          phones?: Json
+          properties_owned?: Json
+          property_id?: string | null
+          raw_response?: Json | null
+          status?: Database["public"]["Enums"]["crm_skip_trace_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          addresses?: Json
+          contact_id?: string | null
+          created_at?: string
+          credits_used?: number
+          data_points?: Json
+          emails?: Json
+          error_message?: string | null
+          id?: string
+          input_address?: string | null
+          input_city?: string | null
+          input_first_name?: string | null
+          input_last_name?: string | null
+          input_state?: string | null
+          input_zip?: string | null
+          lead_id?: string | null
+          match_confidence?: number | null
+          matched_property_id?: string | null
+          phones?: Json
+          properties_owned?: Json
+          property_id?: string | null
+          raw_response?: Json | null
+          status?: Database["public"]["Enums"]["crm_skip_trace_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_skip_trace_results_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_skip_trace_results_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_skip_trace_results_matched_property_id_fkey"
+            columns: ["matched_property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_skip_trace_results_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_events: {
         Row: {
@@ -10157,6 +10242,12 @@ export type Database = {
         | "inactive"
         | "archived"
       crm_contact_type: "lead" | "guest" | "tenant" | "vendor" | "personal"
+      crm_skip_trace_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "no_results"
       drip_channel:
         | "sms"
         | "email"
@@ -10568,9 +10659,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       ai_edit_severity: ["none", "minor", "major"],
@@ -10626,6 +10714,13 @@ export const Constants = {
         "archived",
       ],
       crm_contact_type: ["lead", "guest", "tenant", "vendor", "personal"],
+      crm_skip_trace_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "no_results",
+      ],
       drip_channel: [
         "sms",
         "email",
@@ -10933,3 +11028,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -1003,7 +1003,7 @@ const seedFullPropertyManager: SeedScenario = {
         user_id: userId,
         booking_id: bookings![0].id,
         maintenance_id: maintenance![1].id,
-        type: 'damage',
+        charge_type: 'damage',
         description: 'Broken window in master bedroom - replacement required',
         amount: 350,
         status: 'approved',
@@ -1014,7 +1014,7 @@ const seedFullPropertyManager: SeedScenario = {
       {
         user_id: userId,
         booking_id: bookings![0].id,
-        type: 'cleaning',
+        charge_type: 'cleaning',
         description: 'Extended deep cleaning required - excessive mess in kitchen and bathrooms',
         amount: 150,
         status: 'pending',
@@ -1024,7 +1024,7 @@ const seedFullPropertyManager: SeedScenario = {
       {
         user_id: userId,
         booking_id: bookings![0].id,
-        type: 'missing_item',
+        charge_type: 'missing_item',
         description: 'Pool towels (3x) not returned',
         amount: 75,
         status: 'pending',
@@ -1033,7 +1033,7 @@ const seedFullPropertyManager: SeedScenario = {
       {
         user_id: userId,
         booking_id: bookings![0].id,
-        type: 'late_checkout',
+        charge_type: 'late_checkout',
         description: 'Checked out 2 hours late without prior approval',
         amount: 100,
         status: 'disputed',
@@ -1043,7 +1043,7 @@ const seedFullPropertyManager: SeedScenario = {
       {
         user_id: userId,
         booking_id: bookings![0].id,
-        type: 'other',
+        charge_type: 'other',
         description: 'Multiple minor issues discovered during checkout inspection including: small stain on living room carpet near fireplace, scratches on kitchen counter near stove area, missing TV remote batteries (replaced), loose cabinet handle in bathroom that required tightening, and general wear beyond normal use on outdoor furniture cushions.',
         amount: 200,
         status: 'pending',
@@ -1080,7 +1080,7 @@ const seedFullPropertyManager: SeedScenario = {
       {
         user_id: userId,
         property_id: properties[0].id,
-        booking_id: bookings![0].id,
+        checkout_booking_id: bookings![0].id,
         checkout_at: yesterday.toISOString(),
         checkin_at: today.toISOString(),
         status: 'ready',
@@ -1094,7 +1094,7 @@ const seedFullPropertyManager: SeedScenario = {
       {
         user_id: userId,
         property_id: properties[0].id,
-        booking_id: bookings![1].id,
+        checkout_booking_id: bookings![1].id,
         checkout_at: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         checkin_at: nextWeek.toISOString(),
         status: 'pending',
@@ -1126,7 +1126,8 @@ const seedFullPropertyManager: SeedScenario = {
     const { error: templatesError } = await supabase.from('guest_message_templates').insert([
       {
         user_id: userId,
-        type: 'check_in_instructions',
+        name: 'Check-in Instructions',
+        template_type: 'check_in_instructions',
         subject: 'Check-in Instructions for {{property_name}}',
         body: 'Hi {{guest_name}}!\n\nWelcome to {{property_name}}! Here are your check-in details:\n\nAddress: {{property_address}}\nCheck-in: {{check_in_date}} at {{check_in_time}}\nAccess Code: {{access_code}}\n\nWiFi: {{wifi_name}} / {{wifi_password}}\n\nPlease let me know if you have any questions!\n\nBest,\n{{host_name}}',
         channel: 'email',
@@ -1134,7 +1135,8 @@ const seedFullPropertyManager: SeedScenario = {
       },
       {
         user_id: userId,
-        type: 'checkout_reminder',
+        name: 'Checkout Reminder',
+        template_type: 'checkout_reminder',
         subject: 'Checkout Reminder - {{property_name}}',
         body: 'Hi {{guest_name}},\n\nJust a friendly reminder that checkout is tomorrow at {{check_out_time}}.\n\nBefore you leave:\n- Please start the dishwasher\n- Leave used towels in the bathroom\n- Take out any trash\n- Lock the door (it will auto-lock)\n\nThank you for staying with us! Safe travels!\n\n{{host_name}}',
         channel: 'email',
@@ -1142,7 +1144,8 @@ const seedFullPropertyManager: SeedScenario = {
       },
       {
         user_id: userId,
-        type: 'house_rules',
+        name: 'House Rules',
+        template_type: 'house_rules',
         subject: 'House Rules - {{property_name}}',
         body: 'House Rules:\n\n1. No smoking inside\n2. No parties or events\n3. Quiet hours: 10pm - 8am\n4. Max occupancy: {{max_guests}} guests\n5. Pets must be approved in advance\n\nPool/Hot Tub Hours: 8am - 10pm\n\nThank you for respecting our home!',
         channel: 'email',
