@@ -1,12 +1,12 @@
 // src/features/rental-bookings/screens/BookingDetailScreen.tsx
 // Detailed view for managing a single rental booking
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import {
-  ArrowLeft,
   Home,
   Calendar,
   DollarSign,
@@ -18,17 +18,17 @@ import {
   XCircle,
   LogIn,
   LogOut,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import {
   LoadingSpinner,
   Button,
-  GlassButton,
-  Badge,
   TAB_BAR_SAFE_PADDING,
   ICON_SIZES,
 } from '@/components/ui';
+import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -100,29 +100,6 @@ function calculateDuration(startDate: string, endDate: string | null): string {
   return remainingDays > 0
     ? `${months}mo ${remainingDays}d`
     : `${months} month${months > 1 ? 's' : ''}`;
-}
-
-function getStatusBadgeVariant(status: BookingStatus): 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'info' | 'inactive' {
-  switch (status) {
-    case 'inquiry':
-      return 'info';
-    case 'pending':
-      return 'warning';
-    case 'confirmed':
-      return 'success';
-    case 'active':
-      return 'default';
-    case 'completed':
-      return 'inactive';
-    case 'cancelled':
-      return 'destructive';
-    default:
-      return 'secondary';
-  }
-}
-
-function formatStatus(status: BookingStatus): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 // ============================================
@@ -243,22 +220,64 @@ export function BookingDetailScreen() {
   // Loading & Error States
   // ============================================
 
+  // Guest name for header (compute early for use in all states)
+  const guestName = booking?.contact
+    ? `${booking.contact.first_name || ''} ${booking.contact.last_name || ''}`.trim() || 'Guest'
+    : 'Booking';
+
+  // Safe back navigation with fallback
+  const handleBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/bookings');
+    }
+  }, [router]);
+
+  // Native header options for consistent iOS styling
+  const headerOptions = useMemo((): NativeStackNavigationOptions => ({
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.background },
+    headerShadowVisible: false,
+    headerStatusBarHeight: insets.top,
+    headerTitle: () => (
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+          {guestName}
+        </Text>
+      </View>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
+        <ArrowLeft size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+  }), [colors, insets.top, guestName, handleBack]);
+
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={[]} style={{ paddingTop: insets.top }}>
-        <LoadingSpinner fullScreen />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   if (error || !booking) {
     return (
-      <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={[]} style={{ paddingTop: insets.top }}>
-        <Text className="mb-4" style={{ color: colors.mutedForeground }}>
-          {error || 'Booking not found'}
-        </Text>
-        <Button onPress={() => router.back()}>Go Back</Button>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <View className="flex-1 items-center justify-center">
+            <Text className="mb-4" style={{ color: colors.mutedForeground }}>
+              {error || 'Booking not found'}
+            </Text>
+            <Button onPress={handleBack}>Go Back</Button>
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -352,41 +371,10 @@ export function BookingDetailScreen() {
   // ============================================
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={[]}>
-      {/* Header - manually apply safe area for fullScreenModal */}
-      <View
-        className="px-4 py-3 flex-row items-center justify-between"
-        style={{
-          paddingTop: insets.top + 12,
-          backgroundColor: colors.card,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        }}
-      >
-        <GlassButton
-          icon={<ArrowLeft size={24} color={colors.foreground} />}
-          onPress={() => router.back()}
-          size={40}
-          effect="clear"
-          accessibilityLabel="Go back"
-        />
-
-        <View className="flex-1 mx-4">
-          <Text
-            className="text-lg font-semibold text-center"
-            style={{ color: colors.foreground }}
-            numberOfLines={1}
-          >
-            {booking.contact ? `${booking.contact.first_name || ''} ${booking.contact.last_name || ''}`.trim() || 'Guest' : 'Guest'}
-          </Text>
-        </View>
-
-        <Badge variant={getStatusBadgeVariant(booking.status)} size="sm">
-          {formatStatus(booking.status)}
-        </Badge>
-      </View>
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
       >
@@ -541,8 +529,9 @@ export function BookingDetailScreen() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
-    </ThemedSafeAreaView>
+        </AlertDialog>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

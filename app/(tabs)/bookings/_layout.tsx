@@ -22,6 +22,7 @@ export default function BookingsLayout() {
         name="[id]"
         options={{
           // Use fullScreenModal to hide the tab bar for focused booking view
+          // headerShown is false - the nested [id]/_layout.tsx handles headers
           presentation: 'fullScreenModal',
           animation: 'slide_from_bottom',
           headerShown: false,

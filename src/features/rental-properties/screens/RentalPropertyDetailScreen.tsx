@@ -11,7 +11,9 @@ import {
   Linking,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import {
   Edit2,
   MapPin,
@@ -24,6 +26,8 @@ import {
   ImageIcon,
   ChevronDown,
   ChevronUp,
+  ArrowLeft,
+  MoreVertical,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -37,7 +41,6 @@ import {
   TAB_BAR_SAFE_PADDING,
   Separator,
 } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { PropertyStatsRow } from '../components/PropertyStatsRow';
@@ -215,6 +218,7 @@ function AmenityChip({ amenity }: { amenity: string }) {
 export function RentalPropertyDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const propertyId = params.id as string;
 
@@ -244,9 +248,13 @@ export function RentalPropertyDetailScreen() {
 
   const isLoadingHubCounts = isLoadingInventory || isLoadingMaintenance || isLoadingVendors || isLoadingTurnover;
 
-  // Handlers
+  // Safe back navigation with fallback
   const handleBack = useCallback(() => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/rental-properties');
+    }
   }, [router]);
 
   const handleEdit = useCallback(() => {
@@ -302,66 +310,76 @@ export function RentalPropertyDetailScreen() {
     [router, propertyId]
   );
 
-  // Status info for display
-  const statusInfo = useMemo(
-    () => (property ? getStatusInfo(property.status) : null),
-    [property]
-  );
+  // Native header options for consistent iOS styling
+  const headerOptions = useMemo((): NativeStackNavigationOptions => ({
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.background },
+    headerShadowVisible: false,
+    headerStatusBarHeight: insets.top,
+    headerTitle: () => (
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+          {property?.name || 'Property Details'}
+        </Text>
+      </View>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
+        <ArrowLeft size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+    headerRight: property
+      ? () => (
+          <TouchableOpacity onPress={() => setShowStatusSheet(true)} style={{ padding: SPACING.sm }}>
+            <MoreVertical size={24} color={colors.foreground} />
+          </TouchableOpacity>
+        )
+      : undefined,
+  }), [colors, insets.top, property, handleBack]);
 
   // Loading state
   if (isLoading && !property) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading property..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading property..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   // Error state
   if (error || !property) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <ScreenHeader title="Property Details" backButton onBack={handleBack} />
-        <View className="flex-1 items-center justify-center p-4">
-          <Home size={48} color={colors.mutedForeground} />
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              fontSize: FONT_SIZES.base,
-              textAlign: 'center',
-              marginTop: 12,
-            }}
-          >
-            {error?.message || 'Property not found'}
-          </Text>
-          <Button variant="outline" onPress={handleBack} className="mt-4">
-            Go Back
-          </Button>
-        </View>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <View className="flex-1 items-center justify-center p-4">
+            <Home size={48} color={colors.mutedForeground} />
+            <Text
+              style={{
+                color: colors.mutedForeground,
+                fontSize: FONT_SIZES.base,
+                textAlign: 'center',
+                marginTop: 12,
+              }}
+            >
+              {error?.message || 'Property not found'}
+            </Text>
+            <Button variant="outline" onPress={handleBack} className="mt-4">
+              Go Back
+            </Button>
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <ScreenHeader
-        title={property.name}
-        backButton
-        onBack={handleBack}
-        rightAction={
-          statusInfo && (
-            <TouchableOpacity
-              onPress={() => setShowStatusSheet(true)}
-              className="flex-row items-center"
-            >
-              <Badge variant={statusInfo.variant} size="sm">
-                {statusInfo.label}
-              </Badge>
-            </TouchableOpacity>
-          )
-        }
-      />
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
 
       <ScrollView
         className="flex-1"
@@ -468,7 +486,7 @@ export function RentalPropertyDetailScreen() {
         )}
 
         {/* Rooms Section (if room_by_room enabled) */}
-        {property.room_by_room_enabled && (
+        {property.is_room_by_room_enabled && (
           <Section title="">
             <RoomsList
               rooms={rooms}
@@ -644,8 +662,9 @@ export function RentalPropertyDetailScreen() {
             {isSaving ? 'Deleting...' : 'Delete'}
           </Button>
         </View>
-      </BottomSheet>
-    </ThemedSafeAreaView>
+        </BottomSheet>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

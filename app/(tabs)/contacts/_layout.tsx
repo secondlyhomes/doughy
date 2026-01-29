@@ -24,6 +24,7 @@ export default function ContactsLayout() {
           // Use fullScreenModal to hide the tab bar for focused contact view
           presentation: 'fullScreenModal',
           animation: 'slide_from_bottom',
+          headerShown: true,
         }}
       />
     </Stack>

@@ -24,6 +24,7 @@ export default function InboxLayout() {
           // Use fullScreenModal to hide the tab bar for focused conversation view
           presentation: 'fullScreenModal',
           animation: 'slide_from_bottom',
+          headerShown: true,
         }}
       />
     </Stack>

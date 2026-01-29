@@ -22,8 +22,10 @@ export default function RentalPropertiesLayout() {
         name="[id]"
         options={{
           // Use fullScreenModal to hide the tab bar for focused property view
+          // headerShown is false - the nested [id]/_layout.tsx handles headers
           presentation: 'fullScreenModal',
           animation: 'slide_from_bottom',
+          headerShown: false,
         }}
       />
       <Stack.Screen name="add" />

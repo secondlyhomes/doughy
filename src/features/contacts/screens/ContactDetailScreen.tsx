@@ -1,12 +1,12 @@
 // src/features/contacts/screens/ContactDetailScreen.tsx
 // Contact detail screen showing contact info with focused view (no tab bar)
 
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Linking } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, Linking, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import {
-  ArrowLeft,
   Phone,
   Mail,
   Building2,
@@ -14,13 +14,12 @@ import {
   Star,
   Tag,
   Clock,
-  User,
   MessageSquare,
+  ArrowLeft,
 } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
-import { GlassView, LoadingSpinner, ListEmptyState, Badge, Button } from '@/components/ui';
-import { GlassButton } from '@/components/ui/GlassButton';
+import { LoadingSpinner, ListEmptyState, Badge, Button } from '@/components/ui';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
@@ -182,31 +181,66 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
     }
   };
 
+  // Safe back navigation with fallback
+  const handleBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/contacts');
+    }
+  }, [router]);
+
+  // Native header options for consistent iOS styling
+  const headerOptions = useMemo((): NativeStackNavigationOptions => ({
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.background },
+    headerShadowVisible: false,
+    headerStatusBarHeight: insets.top,
+    headerTitle: () => (
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+          Contact Details
+        </Text>
+      </View>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
+        <ArrowLeft size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+  }), [colors, insets.top, handleBack]);
+
   // Show loading state
   if (isLoading && !contact) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading contact..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading contact..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   // Show error state
   if (!contact && !isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <View style={styles.errorContainer}>
-          <ListEmptyState
-            state="error"
-            title="Contact Not Found"
-            description={error?.message || 'Unable to load contact.'}
-            primaryAction={{
-              label: 'Go Back',
-              onPress: () => router.back(),
-            }}
-          />
-        </View>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <View style={styles.errorContainer}>
+            <ListEmptyState
+              state="error"
+              title="Contact Not Found"
+              description={error?.message || 'Unable to load contact.'}
+              primaryAction={{
+                label: 'Go Back',
+                onPress: handleBack,
+              }}
+            />
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -217,26 +251,9 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
   );
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <GlassView effect="regular" intensity={40} style={styles.header}>
-        <View style={styles.headerContent}>
-          {/* Back button */}
-          <GlassButton
-            icon={<ArrowLeft size={24} color={colors.foreground} />}
-            onPress={() => router.back()}
-            size={40}
-            effect="clear"
-            containerStyle={{ marginRight: SPACING.sm }}
-            accessibilityLabel="Go back"
-          />
-
-          {/* Title */}
-          <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-            Contact Details
-          </Text>
-        </View>
-      </GlassView>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
 
       <ScrollView
         style={styles.scrollView}
@@ -468,26 +485,13 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
             </View>
           </View>
         )}
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'transparent',
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-  },
-  headerTitle: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '600',
-  },
   scrollView: {
     flex: 1,
   },

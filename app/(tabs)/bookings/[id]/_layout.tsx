@@ -25,7 +25,7 @@ export default function BookingDetailLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerShown: false,
+          headerShown: true,
         }}
       />
       <Stack.Screen

@@ -17,7 +17,7 @@ export default function PropertyDetailLayout() {
         },
       }}
     >
-      <Stack.Screen name="index" />
+      <Stack.Screen name="index" options={{ headerShown: true }} />
       <Stack.Screen name="inventory/index" />
       <Stack.Screen name="inventory/[itemId]" />
       <Stack.Screen name="maintenance/index" />
