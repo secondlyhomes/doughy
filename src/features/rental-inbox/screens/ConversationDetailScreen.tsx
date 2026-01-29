@@ -156,6 +156,9 @@ export function ConversationDetailScreen({
     setIsRefreshing(true);
     try {
       await refetch();
+    } catch {
+      // Error is already handled by the store and displayed via error state
+      // This catch prevents unhandled rejection warnings
     } finally {
       setIsRefreshing(false);
     }
@@ -164,16 +167,24 @@ export function ConversationDetailScreen({
   // Handle AI response approval with metadata for adaptive learning
   const handleApprove = useCallback(
     async (metadata: ApprovalMetadata) => {
-      haptic.light();
-      await approve(metadata);
+      const success = await approve(metadata);
+      if (success) {
+        haptic.success();
+      } else {
+        haptic.error();
+      }
     },
     [approve]
   );
 
   // Handle AI response rejection with timing for adaptive learning
   const handleReject = useCallback(async (responseTimeSeconds: number) => {
-    haptic.light();
-    await reject(responseTimeSeconds);
+    const success = await reject(responseTimeSeconds);
+    if (success) {
+      haptic.light();
+    } else {
+      haptic.error();
+    }
   }, [reject]);
 
   // Navigate to property
@@ -193,7 +204,7 @@ export function ConversationDetailScreen({
   // Show loading state
   if (isLoading && !conversation) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <ThemedSafeAreaView className="flex-1" edges={[]} style={{ paddingTop: insets.top }}>
         <LoadingSpinner fullScreen text="Loading conversation..." />
       </ThemedSafeAreaView>
     );
@@ -202,7 +213,7 @@ export function ConversationDetailScreen({
   // Show error state
   if (!conversation && !isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <ThemedSafeAreaView className="flex-1" edges={[]} style={{ paddingTop: insets.top }}>
         <View style={styles.errorContainer}>
           <ListEmptyState
             state="error"
@@ -219,14 +230,14 @@ export function ConversationDetailScreen({
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
+    <ThemedSafeAreaView className="flex-1" edges={[]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={keyboardProps.behavior}
         keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
       >
-        {/* Header */}
-        <GlassView effect="regular" intensity={40} style={styles.header}>
+        {/* Header - manually apply safe area for fullScreenModal */}
+        <GlassView effect="regular" intensity={40} style={[styles.header, { paddingTop: insets.top }]}>
           <View style={styles.headerContent}>
             {/* Back button */}
             <GlassButton

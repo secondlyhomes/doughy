@@ -26,10 +26,12 @@ import {
   MessageSquare,
   Sparkles,
   Settings,
+  AlertCircle,
 } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
-import { Button, BottomSheet, BottomSheetSection } from '@/components/ui';
+import { Button, BottomSheet, BottomSheetSection, Alert, AlertDescription } from '@/components/ui';
+import { haptic } from '@/lib/haptics';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
@@ -79,6 +81,7 @@ export function LeadConversationScreen() {
     giveFeedback,
     setAIEnabled,
     setAutoRespond,
+    clearError,
     refetch,
   } = useLeadConversation(conversationId || '');
 
@@ -88,28 +91,45 @@ export function LeadConversationScreen() {
   const ChannelIcon = conversation ? getChannelIcon(conversation.channel) : MessageSquare;
 
   const handleSend = useCallback(async () => {
-    if (!messageText.trim() || isSending) return;
+    const trimmedMessage = messageText.trim();
+    if (!trimmedMessage || isSending) return;
 
-    await send(messageText.trim());
+    haptic.light();
     setMessageText('');
+    const result = await send(trimmedMessage);
+    if (!result) {
+      // Restore message on failure
+      setMessageText(trimmedMessage);
+    }
   }, [messageText, isSending, send]);
 
   const handleApprove = useCallback(
     async (metadata: Parameters<typeof approve>[0]) => {
-      await approve(metadata);
+      const success = await approve(metadata);
+      if (success) {
+        haptic.success();
+      } else {
+        haptic.error();
+      }
     },
     [approve]
   );
 
   const handleReject = useCallback(
     async (responseTimeSeconds: number) => {
-      await reject(responseTimeSeconds);
+      const success = await reject(responseTimeSeconds);
+      if (success) {
+        haptic.light();
+      } else {
+        haptic.error();
+      }
     },
     [reject]
   );
 
   const handleToggleAutoSend = useCallback(
     async (enabled: boolean) => {
+      haptic.light();
       await toggleAutoSendForSituation(leadSituation, enabled);
     },
     [toggleAutoSendForSituation, leadSituation]
@@ -214,6 +234,23 @@ export function LeadConversationScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={90}
         >
+          {/* Error Banner */}
+          {error && (
+            <View style={{ paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm }}>
+              <Alert variant="destructive" icon={<AlertCircle size={18} color={colors.destructive} />}>
+                <AlertDescription variant="destructive">{error}</AlertDescription>
+                <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm }}>
+                  <Button size="sm" variant="outline" onPress={refetch}>
+                    Try Again
+                  </Button>
+                  <Button size="sm" variant="ghost" onPress={clearError}>
+                    Dismiss
+                  </Button>
+                </View>
+              </Alert>
+            </View>
+          )}
+
           {/* Messages List */}
           {isLoading && messages.length === 0 ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

@@ -4,6 +4,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Home,
@@ -157,6 +158,7 @@ function Section({ title, icon: Icon, children }: SectionProps) {
 export function BookingDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const bookingId = params.id as string;
 
@@ -243,7 +245,7 @@ export function BookingDetailScreen() {
 
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+      <ThemedSafeAreaView className="flex-1" edges={[]} style={{ paddingTop: insets.top }}>
         <LoadingSpinner fullScreen />
       </ThemedSafeAreaView>
     );
@@ -251,7 +253,7 @@ export function BookingDetailScreen() {
 
   if (error || !booking) {
     return (
-      <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={['top']}>
+      <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={[]} style={{ paddingTop: insets.top }}>
         <Text className="mb-4" style={{ color: colors.mutedForeground }}>
           {error || 'Booking not found'}
         </Text>
@@ -350,11 +352,12 @@ export function BookingDetailScreen() {
   // ============================================
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
+    <ThemedSafeAreaView className="flex-1" edges={[]}>
+      {/* Header - manually apply safe area for fullScreenModal */}
       <View
         className="px-4 py-3 flex-row items-center justify-between"
         style={{
+          paddingTop: insets.top + 12,
           backgroundColor: colors.card,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,

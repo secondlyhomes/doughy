@@ -724,8 +724,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                 }
                 try {
                   await get().fetchConversations();
-                } catch {
-                  // Silently fail - user can pull to refresh
+                } catch (fetchError) {
+                  // Log for debugging - don't block UI but track the issue
+                  console.warn('[Real-time] Failed to fetch conversations after change event', {
+                    error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+                  });
                 }
               }
             );
@@ -748,8 +751,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                 }
                 try {
                   await get().fetchConversations();
-                } catch {
-                  // Silently fail - user can pull to refresh
+                } catch (fetchError) {
+                  // Log for debugging - don't block UI but track the issue
+                  console.warn('[Real-time] Failed to fetch conversations after change event', {
+                    error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+                  });
                 }
               }
             );
@@ -772,8 +778,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                 }
                 try {
                   await get().fetchPendingResponses();
-                } catch {
-                  // Silently fail - user can pull to refresh
+                } catch (fetchError) {
+                  // Log for debugging - don't block UI but track the issue
+                  console.warn('[Real-time] Failed to fetch pending responses after change event', {
+                    error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+                  });
                 }
               }
             );
@@ -796,8 +805,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
                 }
                 try {
                   await get().fetchPendingResponses();
-                } catch {
-                  // Silently fail - user can pull to refresh
+                } catch (fetchError) {
+                  // Log for debugging - don't block UI but track the issue
+                  console.warn('[Real-time] Failed to fetch pending responses after change event', {
+                    error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+                  });
                 }
               }
             );
