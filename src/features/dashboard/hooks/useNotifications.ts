@@ -101,24 +101,32 @@ export function useNotifications() {
 
   // Dismiss a single notification
   const dismiss = useCallback(async (id: string) => {
+    const previousDismissedIds = dismissedIds;
+    const newDismissedIds = [...dismissedIds, id];
+    // Optimistically update UI
+    setDismissedIds(newDismissedIds);
     try {
-      const newDismissedIds = [...dismissedIds, id];
-      setDismissedIds(newDismissedIds);
       await AsyncStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify(newDismissedIds));
     } catch (error) {
       console.error('Failed to dismiss notification:', error);
+      // Rollback on failure
+      setDismissedIds(previousDismissedIds);
     }
   }, [dismissedIds]);
 
   // Dismiss all notifications
   const dismissAll = useCallback(async () => {
+    const previousDismissedIds = dismissedIds;
+    const allIds = notifications.map((n) => n.id);
+    const newDismissedIds = [...dismissedIds, ...allIds];
+    // Optimistically update UI
+    setDismissedIds(newDismissedIds);
     try {
-      const allIds = notifications.map((n) => n.id);
-      const newDismissedIds = [...dismissedIds, ...allIds];
-      setDismissedIds(newDismissedIds);
       await AsyncStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify(newDismissedIds));
     } catch (error) {
       console.error('Failed to dismiss all notifications:', error);
+      // Rollback on failure
+      setDismissedIds(previousDismissedIds);
     }
   }, [notifications, dismissedIds]);
 
@@ -142,7 +150,7 @@ export function useNotifications() {
   // Clear old dismissed IDs on mount
   useEffect(() => {
     clearOldDismissedIds();
-  }, []);
+  }, [clearOldDismissedIds]);
 
   return {
     notifications,

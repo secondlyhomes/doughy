@@ -45,6 +45,7 @@ export function TeamSettingsScreen() {
   const colorScheme = useColorScheme();
   const { profile, user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -56,6 +57,7 @@ export function TeamSettingsScreen() {
 
   const loadTeamMembers = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       // TODO: Fetch real team members from API
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -89,6 +91,7 @@ export function TeamSettingsScreen() {
       ]);
     } catch (error) {
       console.error('Failed to load team members:', error);
+      setLoadError('Unable to load team members. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -194,6 +197,24 @@ export function TeamSettingsScreen() {
     return (
       <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={['top']}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </ThemedSafeAreaView>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
+        <Users size={48} color={colors.destructive} />
+        <Text className="text-center mt-4 mb-4" style={{ color: colors.foreground }}>
+          {loadError}
+        </Text>
+        <TouchableOpacity
+          className="rounded-lg px-6 py-3"
+          style={{ backgroundColor: colors.primary }}
+          onPress={loadTeamMembers}
+        >
+          <Text className="font-medium" style={{ color: colors.primaryForeground }}>Retry</Text>
+        </TouchableOpacity>
       </ThemedSafeAreaView>
     );
   }

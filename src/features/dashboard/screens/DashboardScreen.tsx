@@ -8,7 +8,8 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  RefreshControl
+  RefreshControl,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedSafeAreaView } from '@/components';
@@ -182,9 +183,11 @@ export function DashboardScreen() {
         setTimeout(() => setRefreshing(false), UI_TIMING.REFRESH_INDICATOR);
       }
     } catch (error) {
-      // Ignore abort errors
-      if (!abortControllerRef.current.signal.aborted) {
+      // Only handle non-abort errors
+      if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
         setRefreshing(false);
+        console.error('Failed to refresh dashboard:', error);
+        Alert.alert('Refresh Failed', 'Unable to refresh deals. Please try again.');
       }
     } finally {
       abortControllerRef.current = null;
