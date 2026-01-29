@@ -188,7 +188,19 @@
       "Bash(ipconfig getifaddr:*)",
       "Bash(ipconfig:*)",
       "mcp__plugin_supabase_supabase__get_publishable_keys",
-      "mcp__plugin_supabase_supabase__get_project_url"
+      "mcp__plugin_supabase_supabase__get_project_url",
+      "Bash(git -C /Users/dinosaur/Developer/doughy-ai log --oneline --all -20)",
+      "Bash(git -C /Users/dinosaur/Developer/doughy-ai log --all --grep=\"tab\\\\|inbox\\\\|conversation\" --oneline)",
+      "Bash(git status:*)",
+      "Bash(deno check:*)",
+      "WebFetch(domain:docs.digitalocean.com)",
+      "Bash(ssh:*)",
+      "Bash(rsync:*)",
+      "Bash(dig:*)",
+      "Bash(scp:*)",
+      "Bash(gcloud --version:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npx tailwindcss:*)"
     ]
   }
 }

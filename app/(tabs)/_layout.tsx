@@ -45,7 +45,7 @@ export default function TabLayout() {
     >
       {/* ========== RE INVESTOR TABS ========== */}
       {/* Tab Order: Inbox → Leads → Deals → Portfolio → Settings */}
-      <NativeTabs.Trigger name="index" hidden={isLandlord}>
+      <NativeTabs.Trigger name="investor-inbox" hidden={isLandlord}>
         <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
         <Label>Inbox</Label>
         {counts.investorInbox > 0 && (
@@ -72,7 +72,7 @@ export default function TabLayout() {
 
       {/* ========== LANDLORD TABS ========== */}
       {/* Tab Order: Inbox → Properties → Bookings → Contacts → Settings */}
-      <NativeTabs.Trigger name="inbox" hidden={!isLandlord}>
+      <NativeTabs.Trigger name="landlord-inbox" hidden={!isLandlord}>
         <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
         <Label>Inbox</Label>
         {/* TODO: Add unread message count badge */}

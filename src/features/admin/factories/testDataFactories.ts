@@ -746,7 +746,32 @@ interface PropertyTemplate {
   purchase_price: number;
   arv: number;
   notes?: string;
+  primary_image_url?: string;
 }
+
+// Unsplash real estate photos for property listings
+const PROPERTY_IMAGES = [
+  'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80', // Modern white house
+  'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80', // Suburban home
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80', // Luxury home exterior
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80', // Modern house pool
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80', // Contemporary home
+  'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=800&q=80', // Ranch style home
+  'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800&q=80', // Classic American home
+  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80', // Luxury villa
+  'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80', // Modern minimal
+  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80', // Craftsman home
+  'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800&q=80', // Two-story home
+  'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80', // Colonial style
+  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80', // Red door house
+  'https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=800&q=80', // Modern architecture
+  'https://images.unsplash.com/photo-1602941525421-8f8b81d3edbb?w=800&q=80', // Brick home
+  'https://images.unsplash.com/photo-1599809275671-b5942cabc7a2?w=800&q=80', // House with garage
+  'https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=800&q=80', // Night shot
+  'https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=800&q=80', // Kitchen interior
+  'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&q=80', // Living room
+  'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80', // Modern facade
+];
 
 const EDGE_CASE_PROPERTIES: PropertyTemplate[] = [
   {
@@ -1346,10 +1371,15 @@ export function createTestProperty(
   const allProperties = [...HAPPY_PATH_PROPERTIES, ...EDGE_CASE_PROPERTIES];
   const template = allProperties[index] || allProperties[0];
 
+  // Assign an Unsplash image based on index (cycle through available images)
+  const imageIndex = index % PROPERTY_IMAGES.length;
+  const primary_image_url = PROPERTY_IMAGES[imageIndex];
+
   return {
     ...template,
     user_id: userId,
     lead_id: leadId,
+    primary_image_url,
     // Note: re_properties table does not have workspace_id column
     status: 'active' as const,
   };
@@ -1479,52 +1509,93 @@ export function createTestDeal(
     };
   }
 
+  // Discriminated union types for deal templates
+  // Deal status values: 'active' | 'won' | 'lost' | 'archived' (from DB constraint)
+  interface ClosedDealTemplate {
+    readonly _type: 'closed';
+    title: string;
+    stage: 'closed_won';
+    probability: 100;
+    days_ago: number;
+  }
+
+  interface ActiveDealTemplate {
+    readonly _type: 'active';
+    title: string;
+    stage: string;
+    probability: number;
+    days_to_close: number;
+  }
+
+  type DealTemplate = ClosedDealTemplate | ActiveDealTemplate;
+
+  function isClosedDealTemplate(template: DealTemplate): template is ClosedDealTemplate {
+    return template._type === 'closed';
+  }
+
   // Happy path deals (40 total)
-  const happyPathDeals = [
-    { title: 'New Lead - Initial Contact', stage: 'initial_contact', probability: 25, days_to_close: 60 },
-    { title: 'Follow-up Scheduled', stage: 'initial_contact', probability: 50, days_to_close: 45 },
-    { title: 'Property Tour Scheduled', stage: 'initial_contact', probability: 75, days_to_close: 30 },
-    { title: 'Running Numbers Analysis', stage: 'initial_contact', probability: 50, days_to_close: 60 },
-    { title: 'Offer Submitted', stage: 'initial_contact', probability: 75, days_to_close: 30 },
-    { title: 'Negotiating Final Terms', stage: 'initial_contact', probability: 95, days_to_close: 20 },
-    { title: 'Under Contract - Pending Inspection', stage: 'initial_contact', probability: 95, days_to_close: 15 },
-    { title: 'Seller Financing Discussion', stage: 'initial_contact', probability: 50, days_to_close: 90 },
-    { title: 'Initial Conversation - Went Well', stage: 'initial_contact', probability: 25, days_to_close: 75 },
-    { title: 'Subject-To Opportunity', stage: 'initial_contact', probability: 50, days_to_close: 60 },
-    { title: 'Competitive Offer', stage: 'initial_contact', probability: 75, days_to_close: 25 },
-    { title: 'Cold Lead - Low Interest', stage: 'initial_contact', probability: 5, days_to_close: 90 },
+  // First 8 deals are closed_won for Portfolio tab display
+  const happyPathDeals: DealTemplate[] = [
+    { _type: 'closed', title: 'Closed - Oak Street Flip', stage: 'closed_won', probability: 100, days_ago: 45 },
+    { _type: 'closed', title: 'Closed - Maple Ave Rental', stage: 'closed_won', probability: 100, days_ago: 30 },
+    { _type: 'closed', title: 'Closed - Pine Road Wholesale', stage: 'closed_won', probability: 100, days_ago: 60 },
+    { _type: 'closed', title: 'Closed - Cedar Lane BRRRR', stage: 'closed_won', probability: 100, days_ago: 15 },
+    { _type: 'closed', title: 'Closed - Birch Street Rehab', stage: 'closed_won', probability: 100, days_ago: 90 },
+    { _type: 'closed', title: 'Closed - Elm Court Subject-To', stage: 'closed_won', probability: 100, days_ago: 20 },
+    { _type: 'closed', title: 'Closed - Spruce Way Duplex', stage: 'closed_won', probability: 100, days_ago: 75 },
+    { _type: 'closed', title: 'Closed - Willow Drive Portfolio', stage: 'closed_won', probability: 100, days_ago: 10 },
+    // Active deals start here (index 8+)
+    { _type: 'active', title: 'Initial Conversation - Went Well', stage: 'initial_contact', probability: 25, days_to_close: 75 },
+    { _type: 'active', title: 'Subject-To Opportunity', stage: 'initial_contact', probability: 50, days_to_close: 60 },
+    { _type: 'active', title: 'Competitive Offer', stage: 'initial_contact', probability: 75, days_to_close: 25 },
+    { _type: 'active', title: 'Cold Lead - Low Interest', stage: 'initial_contact', probability: 5, days_to_close: 90 },
     // Additional 28 happy path deals
-    { title: 'Motivated Seller - Quick Close', stage: 'initial_contact', probability: 85, days_to_close: 14 },
-    { title: 'Probate Property Analysis', stage: 'initial_contact', probability: 40, days_to_close: 75 },
-    { title: 'Foreclosure Opportunity', stage: 'initial_contact', probability: 60, days_to_close: 45 },
-    { title: 'REO Bank Property', stage: 'initial_contact', probability: 55, days_to_close: 60 },
-    { title: 'Wholesale Deal Pipeline', stage: 'initial_contact', probability: 70, days_to_close: 21 },
-    { title: 'Fix and Flip Candidate', stage: 'initial_contact', probability: 65, days_to_close: 35 },
-    { title: 'Buy and Hold Rental', stage: 'initial_contact', probability: 55, days_to_close: 50 },
-    { title: 'Multi-Family Acquisition', stage: 'initial_contact', probability: 45, days_to_close: 90 },
-    { title: 'Commercial Conversion', stage: 'initial_contact', probability: 35, days_to_close: 120 },
-    { title: 'Lease Option Negotiation', stage: 'initial_contact', probability: 50, days_to_close: 60 },
-    { title: 'Short Sale in Progress', stage: 'initial_contact', probability: 30, days_to_close: 90 },
-    { title: 'Estate Sale Processing', stage: 'initial_contact', probability: 55, days_to_close: 45 },
-    { title: 'Divorce Settlement Deal', stage: 'initial_contact', probability: 65, days_to_close: 30 },
-    { title: 'Relocation Seller', stage: 'initial_contact', probability: 80, days_to_close: 21 },
-    { title: 'Tired Landlord Exit', stage: 'initial_contact', probability: 70, days_to_close: 40 },
-    { title: 'Portfolio Purchase', stage: 'initial_contact', probability: 45, days_to_close: 75 },
-    { title: '1031 Exchange Buyer', stage: 'initial_contact', probability: 60, days_to_close: 45 },
-    { title: 'Vacant Property Opportunity', stage: 'initial_contact', probability: 55, days_to_close: 50 },
-    { title: 'Code Violation Property', stage: 'initial_contact', probability: 40, days_to_close: 60 },
-    { title: 'Tax Lien Property', stage: 'initial_contact', probability: 35, days_to_close: 90 },
-    { title: 'Absentee Owner Outreach', stage: 'initial_contact', probability: 20, days_to_close: 120 },
-    { title: 'High Equity Homeowner', stage: 'initial_contact', probability: 30, days_to_close: 90 },
-    { title: 'Pre-Foreclosure Save', stage: 'initial_contact', probability: 50, days_to_close: 45 },
-    { title: 'Off-Market Pocket Listing', stage: 'initial_contact', probability: 75, days_to_close: 28 },
-    { title: 'FSBO Conversion', stage: 'initial_contact', probability: 45, days_to_close: 55 },
-    { title: 'Inherited Property Deal', stage: 'initial_contact', probability: 60, days_to_close: 40 },
-    { title: 'Land Acquisition', stage: 'initial_contact', probability: 40, days_to_close: 75 },
-    { title: 'New Construction Purchase', stage: 'initial_contact', probability: 50, days_to_close: 90 },
+    { _type: 'active', title: 'Motivated Seller - Quick Close', stage: 'initial_contact', probability: 85, days_to_close: 14 },
+    { _type: 'active', title: 'Probate Property Analysis', stage: 'initial_contact', probability: 40, days_to_close: 75 },
+    { _type: 'active', title: 'Foreclosure Opportunity', stage: 'initial_contact', probability: 60, days_to_close: 45 },
+    { _type: 'active', title: 'REO Bank Property', stage: 'initial_contact', probability: 55, days_to_close: 60 },
+    { _type: 'active', title: 'Wholesale Deal Pipeline', stage: 'initial_contact', probability: 70, days_to_close: 21 },
+    { _type: 'active', title: 'Fix and Flip Candidate', stage: 'initial_contact', probability: 65, days_to_close: 35 },
+    { _type: 'active', title: 'Buy and Hold Rental', stage: 'initial_contact', probability: 55, days_to_close: 50 },
+    { _type: 'active', title: 'Multi-Family Acquisition', stage: 'initial_contact', probability: 45, days_to_close: 90 },
+    { _type: 'active', title: 'Commercial Conversion', stage: 'initial_contact', probability: 35, days_to_close: 120 },
+    { _type: 'active', title: 'Lease Option Negotiation', stage: 'initial_contact', probability: 50, days_to_close: 60 },
+    { _type: 'active', title: 'Short Sale in Progress', stage: 'initial_contact', probability: 30, days_to_close: 90 },
+    { _type: 'active', title: 'Estate Sale Processing', stage: 'initial_contact', probability: 55, days_to_close: 45 },
+    { _type: 'active', title: 'Divorce Settlement Deal', stage: 'initial_contact', probability: 65, days_to_close: 30 },
+    { _type: 'active', title: 'Relocation Seller', stage: 'initial_contact', probability: 80, days_to_close: 21 },
+    { _type: 'active', title: 'Tired Landlord Exit', stage: 'initial_contact', probability: 70, days_to_close: 40 },
+    { _type: 'active', title: 'Portfolio Purchase', stage: 'initial_contact', probability: 45, days_to_close: 75 },
+    { _type: 'active', title: '1031 Exchange Buyer', stage: 'initial_contact', probability: 60, days_to_close: 45 },
+    { _type: 'active', title: 'Vacant Property Opportunity', stage: 'initial_contact', probability: 55, days_to_close: 50 },
+    { _type: 'active', title: 'Code Violation Property', stage: 'initial_contact', probability: 40, days_to_close: 60 },
+    { _type: 'active', title: 'Tax Lien Property', stage: 'initial_contact', probability: 35, days_to_close: 90 },
+    { _type: 'active', title: 'Absentee Owner Outreach', stage: 'initial_contact', probability: 20, days_to_close: 120 },
+    { _type: 'active', title: 'High Equity Homeowner', stage: 'initial_contact', probability: 30, days_to_close: 90 },
+    { _type: 'active', title: 'Pre-Foreclosure Save', stage: 'initial_contact', probability: 50, days_to_close: 45 },
+    { _type: 'active', title: 'Off-Market Pocket Listing', stage: 'initial_contact', probability: 75, days_to_close: 28 },
+    { _type: 'active', title: 'FSBO Conversion', stage: 'initial_contact', probability: 45, days_to_close: 55 },
+    { _type: 'active', title: 'Inherited Property Deal', stage: 'initial_contact', probability: 60, days_to_close: 40 },
+    { _type: 'active', title: 'Land Acquisition', stage: 'initial_contact', probability: 40, days_to_close: 75 },
+    { _type: 'active', title: 'New Construction Purchase', stage: 'initial_contact', probability: 50, days_to_close: 90 },
   ];
 
-  const template = happyPathDeals[index] || happyPathDeals[0];
+  const template = happyPathDeals[index] ?? happyPathDeals[0];
+
+  // Use type guard for proper type narrowing (no unsafe type assertions needed)
+  // Note: DB constraint allows status: 'active' | 'won' | 'lost' | 'archived'
+  if (isClosedDealTemplate(template)) {
+    return {
+      user_id: userId,
+      lead_id: leadId,
+      property_id: propertyId,
+      title: template.title,
+      stage: template.stage,
+      status: 'won' as const, // 'won' = deal closed successfully
+      probability: template.probability,
+      expected_close_date: pastDate(template.days_ago),
+    };
+  }
 
   return {
     user_id: userId,
@@ -1803,6 +1874,135 @@ const INVESTOR_CONVERSATION_TEMPLATES: InvestorConversationTemplate[] = [
     unread_count: 1,
     last_message_preview: 'I need to speak with a manager',
   },
+  // Additional SMS conversations (7-14)
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 70,
+    unread_count: 4,
+    last_message_preview: 'We need to sell ASAP - foreclosure notice',
+  },
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 65,
+    unread_count: 0,
+    last_message_preview: 'Not interested, please remove me from your list',
+  },
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: true,
+    ai_confidence_threshold: 80,
+    unread_count: 1,
+    last_message_preview: 'Just following up on our conversation last week',
+  },
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 75,
+    unread_count: 2,
+    last_message_preview: 'Your offer is too low. I need at least $280k',
+  },
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 70,
+    unread_count: 3,
+    last_message_preview: 'I inherited this house and dont know what to do',
+  },
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: false,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 60,
+    unread_count: 1,
+    last_message_preview: 'Going through divorce, need quick sale',
+  },
+  {
+    channel: 'sms',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 75,
+    unread_count: 2,
+    last_message_preview: 'Moving to Florida next month for new job',
+  },
+  {
+    channel: 'sms',
+    status: 'escalated',
+    ai_enabled: false,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 60,
+    unread_count: 5,
+    last_message_preview: 'Bank says I have 30 days before auction',
+  },
+  // Additional Email conversations (15-18)
+  {
+    channel: 'email',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 70,
+    unread_count: 1,
+    last_message_preview: 'My realtor friend said you might be interested',
+  },
+  {
+    channel: 'email',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 65,
+    unread_count: 2,
+    last_message_preview: 'RE: Probate property at 456 Elm Street',
+  },
+  {
+    channel: 'email',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: true,
+    ai_confidence_threshold: 85,
+    unread_count: 0,
+    last_message_preview: 'Estate sale - 3 properties available',
+  },
+  {
+    channel: 'email',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 70,
+    unread_count: 1,
+    last_message_preview: 'Do you buy properties wholesale?',
+  },
+  // WhatsApp conversations (19-20)
+  {
+    channel: 'whatsapp',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 75,
+    unread_count: 3,
+    last_message_preview: 'I am investor from overseas, interested in US property',
+  },
+  {
+    channel: 'whatsapp',
+    status: 'active',
+    ai_enabled: true,
+    ai_auto_respond: false,
+    ai_confidence_threshold: 65,
+    unread_count: 1,
+    last_message_preview: 'Quick question - do you pay closing costs?',
+  },
 ];
 
 const INVESTOR_MESSAGE_THREADS: InvestorMessageTemplate[][] = [
@@ -1842,6 +2042,119 @@ const INVESTOR_MESSAGE_THREADS: InvestorMessageTemplate[][] = [
     { direction: 'inbound', content: 'I\'ve been trying to reach someone about the inspection findings.', sent_by: 'lead' },
     { direction: 'outbound', content: 'I apologize for the delay. Let me look into this right away.', sent_by: 'user' },
     { direction: 'inbound', content: 'I need to speak with a manager about these concerns.', sent_by: 'lead' },
+  ],
+  // Thread 7: Pre-foreclosure urgent seller
+  [
+    { direction: 'inbound', content: 'Hi, I got your letter. We\'re in a tough spot - got a foreclosure notice last week.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'I\'m sorry to hear that. We specialize in helping homeowners in your situation. How much time do you have?', sent_by: 'user' },
+    { direction: 'inbound', content: 'Bank says 30 days before they start the auction process.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'We can definitely close faster than that. Can I stop by tomorrow to see the property and discuss options?', sent_by: 'ai', ai_confidence: 0.91 },
+    { direction: 'inbound', content: 'We need to sell ASAP - foreclosure notice', sent_by: 'lead' },
+  ],
+  // Thread 8: Tire kicker / not interested
+  [
+    { direction: 'outbound', content: 'Hi! I noticed your property at 789 Oak Ave has been vacant. Would you consider selling?', sent_by: 'user' },
+    { direction: 'inbound', content: 'How did you get my number?', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Public records. We reach out to property owners who might benefit from a cash offer.', sent_by: 'ai', ai_confidence: 0.72 },
+    { direction: 'inbound', content: 'Not interested, please remove me from your list', sent_by: 'lead' },
+  ],
+  // Thread 9: Follow-up conversation
+  [
+    { direction: 'outbound', content: 'Hi Maria, just following up on our conversation from last Tuesday. Have you had a chance to think about the offer?', sent_by: 'user' },
+    { direction: 'inbound', content: 'Yes, I\'ve been thinking. My sister thinks I should list with a realtor instead.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'I understand. The main benefits we offer are speed and certainty - no showings, no repairs, close in 2 weeks.', sent_by: 'ai', ai_confidence: 0.84 },
+    { direction: 'inbound', content: 'Just following up on our conversation last week', sent_by: 'lead' },
+  ],
+  // Thread 10: Price negotiator
+  [
+    { direction: 'outbound', content: 'Based on comparable sales and condition, we can offer $245,000 cash.', sent_by: 'user' },
+    { direction: 'inbound', content: 'That\'s way too low. Zillow says my house is worth $320,000.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Zillow estimates don\'t account for as-is condition. Our offer reflects the $40k+ in repairs needed.', sent_by: 'user' },
+    { direction: 'inbound', content: 'I\'ll consider $280k but not a penny less.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Let me run the numbers again and see if we can get closer to your price point.', sent_by: 'ai', ai_confidence: 0.79 },
+    { direction: 'inbound', content: 'Your offer is too low. I need at least $280k', sent_by: 'lead' },
+  ],
+  // Thread 11: Inherited property
+  [
+    { direction: 'inbound', content: 'Hi, my mom passed away and left me her house. I live in another state and don\'t know what to do with it.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'First, I\'m sorry for your loss. We work with many families in similar situations. Is the property currently vacant?', sent_by: 'user' },
+    { direction: 'inbound', content: 'Yes, it\'s been empty for 3 months. I\'m paying the mortgage and utilities from here.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'That can add up quickly. We can make the process simple - one visit, one offer, you don\'t have to travel back.', sent_by: 'ai', ai_confidence: 0.87 },
+    { direction: 'inbound', content: 'I inherited this house and dont know what to do', sent_by: 'lead' },
+  ],
+  // Thread 12: Divorce sale
+  [
+    { direction: 'inbound', content: 'My husband and I are divorcing. We need to sell the house and split the proceeds.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'I understand this is a difficult time. A quick cash sale can help both parties move forward faster.', sent_by: 'user' },
+    { direction: 'inbound', content: 'We just want this done. Neither of us can afford it alone.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'We can work with both parties and your attorneys to make this as smooth as possible. When can I see the property?', sent_by: 'ai', ai_confidence: 0.83 },
+    { direction: 'inbound', content: 'Going through divorce, need quick sale', sent_by: 'lead' },
+  ],
+  // Thread 13: Relocation seller
+  [
+    { direction: 'outbound', content: 'Hi James, I understand you\'re relocating for work. When do you need to be at your new location?', sent_by: 'user' },
+    { direction: 'inbound', content: 'I start in Tampa on March 1st. So I have about 5 weeks to figure this out.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'That\'s tight but doable! We can close in 2 weeks if needed. Have you gotten any other offers?', sent_by: 'ai', ai_confidence: 0.89 },
+    { direction: 'inbound', content: 'A realtor said 90 days minimum. That won\'t work for me.', sent_by: 'lead' },
+    { direction: 'inbound', content: 'Moving to Florida next month for new job', sent_by: 'lead' },
+  ],
+  // Thread 14: Pre-foreclosure escalated
+  [
+    { direction: 'inbound', content: 'I\'m behind on payments and the bank is threatening to take my house.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'How many months behind are you? There may still be options to protect your credit.', sent_by: 'user' },
+    { direction: 'inbound', content: '4 months. I tried to refinance but got denied.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'We can likely pay off your mortgage and put cash in your pocket. Can we meet tomorrow?', sent_by: 'user' },
+    { direction: 'inbound', content: 'I got another letter today. Bank says I have 30 days before auction.', sent_by: 'lead' },
+    { direction: 'inbound', content: 'Bank says I have 30 days before auction', sent_by: 'lead' },
+  ],
+  // Thread 15: Agent referral email
+  [
+    { direction: 'inbound', content: 'Hi, my name is Susan and I\'m a realtor. I have a client whose property needs too much work for MLS. Thought of you.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Thanks for thinking of us, Susan! We love working with agents on off-market deals. What\'s the property address?', sent_by: 'user' },
+    { direction: 'inbound', content: 'It\'s at 567 Pine Street. 3bed/2bath, needs about $50k in work. Seller is motivated.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Perfect, that\'s right in our wheelhouse. We\'d be happy to pay you a referral fee. Can I see it this week?', sent_by: 'ai', ai_confidence: 0.86 },
+    { direction: 'inbound', content: 'My realtor friend said you might be interested', sent_by: 'lead' },
+  ],
+  // Thread 16: Probate email
+  [
+    { direction: 'outbound', content: 'Dear Mr. Thompson, We understand you may have recently inherited a property. We specialize in helping executors sell estates quickly.', sent_by: 'user' },
+    { direction: 'inbound', content: 'How did you know about the estate? The probate was just filed last month.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'We monitor public probate filings to reach out to families who might benefit from our services.', sent_by: 'ai', ai_confidence: 0.77 },
+    { direction: 'inbound', content: 'I see. Well, there is a property at 456 Elm Street that the family needs to sell.', sent_by: 'lead' },
+    { direction: 'inbound', content: 'RE: Probate property at 456 Elm Street', sent_by: 'lead' },
+  ],
+  // Thread 17: Estate sale multiple properties
+  [
+    { direction: 'inbound', content: 'I\'m the executor for my uncle\'s estate. He owned 3 rental properties that we need to liquidate.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'We\'d be interested in all three. Can you send me the addresses and any info on their current rental status?', sent_by: 'user' },
+    { direction: 'inbound', content: 'Two are rented month-to-month, one is vacant. All need updates. I\'ll send the addresses.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Perfect. We buy properties with tenants in place all the time. Looking forward to the details.', sent_by: 'ai', ai_confidence: 0.90 },
+    { direction: 'inbound', content: 'Estate sale - 3 properties available', sent_by: 'lead' },
+  ],
+  // Thread 18: Wholesale inquiry
+  [
+    { direction: 'inbound', content: 'Hi, I\'m a wholesaler. Do you buy properties at wholesale prices? I have a deal under contract.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Yes, we buy from wholesalers regularly. What\'s the property details and your assignment fee?', sent_by: 'user' },
+    { direction: 'inbound', content: '3/2 SFH, 1400 sqft, ARV $285k, asking $165k with $10k assignment. Needs $40k rehab.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Numbers look reasonable. Can you send the contract and property photos?', sent_by: 'ai', ai_confidence: 0.82 },
+    { direction: 'inbound', content: 'Do you buy properties wholesale?', sent_by: 'lead' },
+  ],
+  // Thread 19: International investor WhatsApp
+  [
+    { direction: 'inbound', content: 'Hello, I am looking to invest in US real estate market. I am based in Dubai.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Welcome! We work with international investors. Are you looking to buy properties or sell?', sent_by: 'user' },
+    { direction: 'inbound', content: 'I want to buy. Looking for cash-flowing rentals in good areas. Budget $200-500k per property.', sent_by: 'lead' },
+    { direction: 'outbound', content: 'We have several turnkey properties in that range. Would you like me to send our current inventory?', sent_by: 'ai', ai_confidence: 0.85 },
+    { direction: 'inbound', content: 'Yes please. Also, can you handle property management?', sent_by: 'lead' },
+    { direction: 'inbound', content: 'I am investor from overseas, interested in US property', sent_by: 'lead' },
+  ],
+  // Thread 20: Quick question WhatsApp
+  [
+    { direction: 'inbound', content: 'Hi, quick question - when you buy houses, who pays the closing costs?', sent_by: 'lead' },
+    { direction: 'outbound', content: 'Great question! We typically pay all closing costs. The offer price is what you walk away with.', sent_by: 'ai', ai_confidence: 0.92 },
+    { direction: 'inbound', content: 'Oh that\'s good. What about if there are liens on the property?', sent_by: 'lead' },
+    { direction: 'outbound', content: 'We handle liens and title issues as part of our process. We\'ve bought houses with tax liens, mechanic\'s liens, etc.', sent_by: 'user' },
+    { direction: 'inbound', content: 'Quick question - do you pay closing costs?', sent_by: 'lead' },
   ],
 ];
 
@@ -2063,6 +2376,19 @@ export function getTestPropertyCount(): number {
  */
 export function getTestDealCount(): number {
   return 50;
+}
+
+/**
+ * Number of closed_won deals that appear in the Portfolio tab.
+ * These are the first N deals in the happyPathDeals array.
+ */
+export const PORTFOLIO_DEALS_COUNT = 8;
+
+/**
+ * Get the number of portfolio deals (closed_won stage).
+ */
+export function getPortfolioDealsCount(): number {
+  return PORTFOLIO_DEALS_COUNT;
 }
 
 /**

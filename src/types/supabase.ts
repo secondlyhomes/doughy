@@ -316,6 +316,72 @@ export type Database = {
         }
         Relationships: []
       }
+      auto_send_rules: {
+        Row: {
+          conditions: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          name: string
+          property_id: string | null
+          template_id: string
+          times_triggered: number | null
+          trigger_event: string
+          trigger_offset_hours: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conditions?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name: string
+          property_id?: string | null
+          template_id: string
+          times_triggered?: number | null
+          trigger_event: string
+          trigger_offset_hours?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conditions?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name?: string
+          property_id?: string | null
+          template_id?: string
+          times_triggered?: number | null
+          trigger_event?: string
+          trigger_offset_hours?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_send_rules_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_send_rules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "guest_message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_stripe_customers: {
         Row: {
           created_at: string | null
@@ -453,6 +519,93 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      booking_charges: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          booking_id: string
+          charge_type: Database["public"]["Enums"]["booking_charge_type"]
+          created_at: string | null
+          description: string
+          dispute_reason: string | null
+          dispute_resolution: string | null
+          dispute_resolved_at: string | null
+          disputed_at: string | null
+          guest_notification_sent: boolean | null
+          guest_notification_sent_at: string | null
+          id: string
+          maintenance_id: string | null
+          notes: string | null
+          photos: Json | null
+          receipt_url: string | null
+          status: Database["public"]["Enums"]["booking_charge_status"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          booking_id: string
+          charge_type?: Database["public"]["Enums"]["booking_charge_type"]
+          created_at?: string | null
+          description: string
+          dispute_reason?: string | null
+          dispute_resolution?: string | null
+          dispute_resolved_at?: string | null
+          disputed_at?: string | null
+          guest_notification_sent?: boolean | null
+          guest_notification_sent_at?: string | null
+          id?: string
+          maintenance_id?: string | null
+          notes?: string | null
+          photos?: Json | null
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["booking_charge_status"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          booking_id?: string
+          charge_type?: Database["public"]["Enums"]["booking_charge_type"]
+          created_at?: string | null
+          description?: string
+          dispute_reason?: string | null
+          dispute_resolution?: string | null
+          dispute_resolved_at?: string | null
+          disputed_at?: string | null
+          guest_notification_sent?: boolean | null
+          guest_notification_sent_at?: string | null
+          id?: string
+          maintenance_id?: string | null
+          notes?: string | null
+          photos?: Json | null
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["booking_charge_status"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_charges_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "rental_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_charges_maintenance_id_fkey"
+            columns: ["maintenance_id"]
+            isOneToOne: false
+            referencedRelation: "property_maintenance"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       call_logs: {
         Row: {
@@ -1556,6 +1709,80 @@ export type Database = {
           },
         ]
       }
+      deposit_settlements: {
+        Row: {
+          amount_returned: number | null
+          booking_id: string
+          created_at: string | null
+          deductions_summary: Json | null
+          deposit_held: number
+          guest_acknowledged: boolean | null
+          guest_acknowledged_at: string | null
+          id: string
+          letter_generated: boolean | null
+          letter_generated_at: string | null
+          letter_url: string | null
+          notes: string | null
+          return_method: string | null
+          return_reference: string | null
+          returned_at: string | null
+          status: string
+          total_deductions: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_returned?: number | null
+          booking_id: string
+          created_at?: string | null
+          deductions_summary?: Json | null
+          deposit_held: number
+          guest_acknowledged?: boolean | null
+          guest_acknowledged_at?: string | null
+          id?: string
+          letter_generated?: boolean | null
+          letter_generated_at?: string | null
+          letter_url?: string | null
+          notes?: string | null
+          return_method?: string | null
+          return_reference?: string | null
+          returned_at?: string | null
+          status?: string
+          total_deductions?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_returned?: number | null
+          booking_id?: string
+          created_at?: string | null
+          deductions_summary?: Json | null
+          deposit_held?: number
+          guest_acknowledged?: boolean | null
+          guest_acknowledged_at?: string | null
+          id?: string
+          letter_generated?: boolean | null
+          letter_generated_at?: string | null
+          letter_url?: string | null
+          notes?: string | null
+          return_method?: string | null
+          return_reference?: string | null
+          returned_at?: string | null
+          status?: string
+          total_deductions?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposit_settlements_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "rental_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drip_campaign_steps: {
         Row: {
           ai_tone: string | null
@@ -1875,6 +2102,180 @@ export type Database = {
             columns: ["step_id"]
             isOneToOne: false
             referencedRelation: "drip_campaign_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_message_templates: {
+        Row: {
+          auto_send: boolean | null
+          available_variables: Json | null
+          body: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          name: string
+          notes: string | null
+          property_id: string | null
+          subject: string | null
+          template_type: Database["public"]["Enums"]["guest_template_type"]
+          times_used: number | null
+          trigger_hours_offset: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_send?: boolean | null
+          available_variables?: Json | null
+          body: string
+          channel?: Database["public"]["Enums"]["message_channel"]
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          name: string
+          notes?: string | null
+          property_id?: string | null
+          subject?: string | null
+          template_type: Database["public"]["Enums"]["guest_template_type"]
+          times_used?: number | null
+          trigger_hours_offset?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_send?: boolean | null
+          available_variables?: Json | null
+          body?: string
+          channel?: Database["public"]["Enums"]["message_channel"]
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          name?: string
+          notes?: string | null
+          property_id?: string | null
+          subject?: string | null
+          template_type?: Database["public"]["Enums"]["guest_template_type"]
+          times_used?: number | null
+          trigger_hours_offset?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_message_templates_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_messages: {
+        Row: {
+          ai_composed: boolean | null
+          ai_prompt: string | null
+          body: string
+          booking_id: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          contact_id: string | null
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          external_message_id: string | null
+          id: string
+          notes: string | null
+          read_at: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          retry_count: number | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_id: string | null
+          updated_at: string | null
+          user_id: string
+          variables_used: Json | null
+        }
+        Insert: {
+          ai_composed?: boolean | null
+          ai_prompt?: string | null
+          body: string
+          booking_id: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          contact_id?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          external_message_id?: string | null
+          id?: string
+          notes?: string | null
+          read_at?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          variables_used?: Json | null
+        }
+        Update: {
+          ai_composed?: boolean | null
+          ai_prompt?: string | null
+          body?: string
+          booking_id?: string
+          channel?: Database["public"]["Enums"]["message_channel"]
+          contact_id?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          external_message_id?: string | null
+          id?: string
+          notes?: string | null
+          read_at?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          variables_used?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "rental_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_messages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "guest_message_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -3668,6 +4069,462 @@ export type Database = {
         }
         Relationships: []
       }
+      property_inventory: {
+        Row: {
+          brand: string | null
+          category: Database["public"]["Enums"]["inventory_category"]
+          condition: Database["public"]["Enums"]["inventory_condition"]
+          created_at: string | null
+          id: string
+          inspection_notes: string | null
+          install_date: string | null
+          last_inspected_at: string | null
+          location: string | null
+          model: string | null
+          name: string
+          notes: string | null
+          photos: Json | null
+          property_id: string
+          purchase_date: string | null
+          purchase_price: number | null
+          replacement_cost: number | null
+          serial_number: string | null
+          updated_at: string | null
+          user_id: string
+          warranty_expires: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: Database["public"]["Enums"]["inventory_category"]
+          condition?: Database["public"]["Enums"]["inventory_condition"]
+          created_at?: string | null
+          id?: string
+          inspection_notes?: string | null
+          install_date?: string | null
+          last_inspected_at?: string | null
+          location?: string | null
+          model?: string | null
+          name: string
+          notes?: string | null
+          photos?: Json | null
+          property_id: string
+          purchase_date?: string | null
+          purchase_price?: number | null
+          replacement_cost?: number | null
+          serial_number?: string | null
+          updated_at?: string | null
+          user_id: string
+          warranty_expires?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: Database["public"]["Enums"]["inventory_category"]
+          condition?: Database["public"]["Enums"]["inventory_condition"]
+          created_at?: string | null
+          id?: string
+          inspection_notes?: string | null
+          install_date?: string | null
+          last_inspected_at?: string | null
+          location?: string | null
+          model?: string | null
+          name?: string
+          notes?: string | null
+          photos?: Json | null
+          property_id?: string
+          purchase_date?: string | null
+          purchase_price?: number | null
+          replacement_cost?: number | null
+          serial_number?: string | null
+          updated_at?: string | null
+          user_id?: string
+          warranty_expires?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_inventory_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_maintenance: {
+        Row: {
+          actual_cost: number | null
+          booking_id: string | null
+          category: Database["public"]["Enums"]["maintenance_category"]
+          charge_to: Database["public"]["Enums"]["maintenance_charge_to"]
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          estimated_cost: number | null
+          guest_charge_amount: number | null
+          guest_charge_approved: boolean | null
+          guest_charge_approved_at: string | null
+          id: string
+          inventory_item_id: string | null
+          is_guest_chargeable: boolean | null
+          location: string | null
+          notes: string | null
+          photos: Json | null
+          priority: Database["public"]["Enums"]["maintenance_priority"]
+          property_id: string
+          receipt_amount: number | null
+          receipt_url: string | null
+          reported_at: string | null
+          resolution_notes: string | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["maintenance_status"]
+          title: string
+          updated_at: string | null
+          user_id: string
+          vendor_id: string | null
+          vendor_name: string | null
+          vendor_phone: string | null
+          work_order_number: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          booking_id?: string | null
+          category?: Database["public"]["Enums"]["maintenance_category"]
+          charge_to?: Database["public"]["Enums"]["maintenance_charge_to"]
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          guest_charge_amount?: number | null
+          guest_charge_approved?: boolean | null
+          guest_charge_approved_at?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          is_guest_chargeable?: boolean | null
+          location?: string | null
+          notes?: string | null
+          photos?: Json | null
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          property_id: string
+          receipt_amount?: number | null
+          receipt_url?: string | null
+          reported_at?: string | null
+          resolution_notes?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+          title: string
+          updated_at?: string | null
+          user_id: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+          vendor_phone?: string | null
+          work_order_number?: string
+        }
+        Update: {
+          actual_cost?: number | null
+          booking_id?: string | null
+          category?: Database["public"]["Enums"]["maintenance_category"]
+          charge_to?: Database["public"]["Enums"]["maintenance_charge_to"]
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          guest_charge_amount?: number | null
+          guest_charge_approved?: boolean | null
+          guest_charge_approved_at?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          is_guest_chargeable?: boolean | null
+          location?: string | null
+          notes?: string | null
+          photos?: Json | null
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          property_id?: string
+          receipt_amount?: number | null
+          receipt_url?: string | null
+          reported_at?: string | null
+          resolution_notes?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+          vendor_phone?: string | null
+          work_order_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_property_maintenance_vendor"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "property_vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_maintenance_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "rental_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_maintenance_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "property_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_maintenance_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_turnovers: {
+        Row: {
+          ai_messages: Json | null
+          checkin_at: string | null
+          checkin_booking_id: string | null
+          checklist: Json | null
+          checkout_at: string
+          checkout_booking_id: string | null
+          checkout_confirmed: boolean | null
+          checkout_confirmed_at: string | null
+          checkout_notes: string | null
+          cleaner_vendor_id: string | null
+          cleaning_completed_at: string | null
+          cleaning_notes: string | null
+          cleaning_photos: Json | null
+          cleaning_scheduled_at: string | null
+          cleaning_started_at: string | null
+          created_at: string | null
+          id: string
+          inspection_completed_at: string | null
+          inspection_notes: string | null
+          inspection_passed: boolean | null
+          inspection_photos: Json | null
+          inspection_required: boolean | null
+          issues_description: string | null
+          issues_found: boolean | null
+          maintenance_created_id: string | null
+          notes: string | null
+          property_id: string
+          ready_at: string | null
+          ready_confirmed_by: string | null
+          status: Database["public"]["Enums"]["turnover_status"]
+          turnaround_hours: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_messages?: Json | null
+          checkin_at?: string | null
+          checkin_booking_id?: string | null
+          checklist?: Json | null
+          checkout_at: string
+          checkout_booking_id?: string | null
+          checkout_confirmed?: boolean | null
+          checkout_confirmed_at?: string | null
+          checkout_notes?: string | null
+          cleaner_vendor_id?: string | null
+          cleaning_completed_at?: string | null
+          cleaning_notes?: string | null
+          cleaning_photos?: Json | null
+          cleaning_scheduled_at?: string | null
+          cleaning_started_at?: string | null
+          created_at?: string | null
+          id?: string
+          inspection_completed_at?: string | null
+          inspection_notes?: string | null
+          inspection_passed?: boolean | null
+          inspection_photos?: Json | null
+          inspection_required?: boolean | null
+          issues_description?: string | null
+          issues_found?: boolean | null
+          maintenance_created_id?: string | null
+          notes?: string | null
+          property_id: string
+          ready_at?: string | null
+          ready_confirmed_by?: string | null
+          status?: Database["public"]["Enums"]["turnover_status"]
+          turnaround_hours?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_messages?: Json | null
+          checkin_at?: string | null
+          checkin_booking_id?: string | null
+          checklist?: Json | null
+          checkout_at?: string
+          checkout_booking_id?: string | null
+          checkout_confirmed?: boolean | null
+          checkout_confirmed_at?: string | null
+          checkout_notes?: string | null
+          cleaner_vendor_id?: string | null
+          cleaning_completed_at?: string | null
+          cleaning_notes?: string | null
+          cleaning_photos?: Json | null
+          cleaning_scheduled_at?: string | null
+          cleaning_started_at?: string | null
+          created_at?: string | null
+          id?: string
+          inspection_completed_at?: string | null
+          inspection_notes?: string | null
+          inspection_passed?: boolean | null
+          inspection_photos?: Json | null
+          inspection_required?: boolean | null
+          issues_description?: string | null
+          issues_found?: boolean | null
+          maintenance_created_id?: string | null
+          notes?: string | null
+          property_id?: string
+          ready_at?: string | null
+          ready_confirmed_by?: string | null
+          status?: Database["public"]["Enums"]["turnover_status"]
+          turnaround_hours?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_turnovers_checkin_booking_id_fkey"
+            columns: ["checkin_booking_id"]
+            isOneToOne: false
+            referencedRelation: "rental_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_turnovers_checkout_booking_id_fkey"
+            columns: ["checkout_booking_id"]
+            isOneToOne: false
+            referencedRelation: "rental_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_turnovers_cleaner_vendor_id_fkey"
+            columns: ["cleaner_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "property_vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_turnovers_maintenance_created_id_fkey"
+            columns: ["maintenance_created_id"]
+            isOneToOne: false
+            referencedRelation: "property_maintenance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_turnovers_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_vendors: {
+        Row: {
+          address: string | null
+          availability_notes: string | null
+          category: Database["public"]["Enums"]["vendor_category"]
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          hourly_rate: number | null
+          id: string
+          insurance_expires: string | null
+          insurance_verified: boolean | null
+          is_active: boolean | null
+          is_primary: boolean | null
+          last_used_at: string | null
+          license_expires: string | null
+          license_number: string | null
+          name: string
+          notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          property_id: string | null
+          rating: number | null
+          service_fee: number | null
+          total_jobs: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          availability_notes?: string | null
+          category?: Database["public"]["Enums"]["vendor_category"]
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          hourly_rate?: number | null
+          id?: string
+          insurance_expires?: string | null
+          insurance_verified?: boolean | null
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_used_at?: string | null
+          license_expires?: string | null
+          license_number?: string | null
+          name: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          property_id?: string | null
+          rating?: number | null
+          service_fee?: number | null
+          total_jobs?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          availability_notes?: string | null
+          category?: Database["public"]["Enums"]["vendor_category"]
+          company_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          hourly_rate?: number | null
+          id?: string
+          insurance_expires?: string | null
+          insurance_verified?: boolean | null
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_used_at?: string | null
+          license_expires?: string | null
+          license_number?: string | null
+          name?: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          property_id?: string | null
+          rating?: number | null
+          service_fee?: number | null
+          total_jobs?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_vendors_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       re_buying_criteria: {
         Row: {
           buyer_credit_pct: number
@@ -4365,6 +5222,7 @@ export type Database = {
           mls_id: string | null
           notes: string | null
           owner_occupied: boolean | null
+          primary_image_url: string | null
           profile_id: string | null
           property_type: string | null
           purchase_price: number | null
@@ -4398,6 +5256,7 @@ export type Database = {
           mls_id?: string | null
           notes?: string | null
           owner_occupied?: boolean | null
+          primary_image_url?: string | null
           profile_id?: string | null
           property_type?: string | null
           purchase_price?: number | null
@@ -4431,6 +5290,7 @@ export type Database = {
           mls_id?: string | null
           notes?: string | null
           owner_occupied?: boolean | null
+          primary_image_url?: string | null
           profile_id?: string | null
           property_type?: string | null
           purchase_price?: number | null
@@ -6264,6 +7124,53 @@ export type Database = {
         }
         Relationships: []
       }
+      turnover_templates: {
+        Row: {
+          checklist_items: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          property_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          checklist_items?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          property_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          checklist_items?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          property_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turnover_templates_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_email_preferences: {
         Row: {
           created_at: string | null
@@ -6367,6 +7274,48 @@ export type Database = {
           id?: string
           mapping?: Json
           name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_integrations: {
+        Row: {
+          api_key: string | null
+          config: Json
+          created_at: string
+          enabled: boolean
+          error_message: string | null
+          id: string
+          last_checked_at: string | null
+          provider: Database["public"]["Enums"]["integration_provider"]
+          status: Database["public"]["Enums"]["integration_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          error_message?: string | null
+          id?: string
+          last_checked_at?: string | null
+          provider: Database["public"]["Enums"]["integration_provider"]
+          status?: Database["public"]["Enums"]["integration_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          error_message?: string | null
+          id?: string
+          last_checked_at?: string | null
+          provider?: Database["public"]["Enums"]["integration_provider"]
+          status?: Database["public"]["Enums"]["integration_status"]
           updated_at?: string
           user_id?: string
         }
@@ -6929,6 +7878,107 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_messages: {
+        Row: {
+          ai_composed: boolean | null
+          ai_prompt: string | null
+          body: string
+          channel: string
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          maintenance_id: string | null
+          property_id: string | null
+          read_at: string | null
+          response_body: string | null
+          response_received: boolean | null
+          response_received_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          turnover_id: string | null
+          updated_at: string | null
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          ai_composed?: boolean | null
+          ai_prompt?: string | null
+          body: string
+          channel: string
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          maintenance_id?: string | null
+          property_id?: string | null
+          read_at?: string | null
+          response_body?: string | null
+          response_received?: boolean | null
+          response_received_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          turnover_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          ai_composed?: boolean | null
+          ai_prompt?: string | null
+          body?: string
+          channel?: string
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          maintenance_id?: string | null
+          property_id?: string | null
+          read_at?: string | null
+          response_body?: string | null
+          response_received?: boolean | null
+          response_received_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          turnover_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_vendor_messages_turnover"
+            columns: ["turnover_id"]
+            isOneToOne: false
+            referencedRelation: "property_turnovers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_messages_maintenance_id_fkey"
+            columns: ["maintenance_id"]
+            isOneToOne: false
+            referencedRelation: "property_maintenance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_messages_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "rental_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_messages_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "property_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -7336,6 +8386,10 @@ export type Database = {
           p_rate_type: Database["public"]["Enums"]["rental_rate_type"]
           p_start_date: string
         }
+        Returns: number
+      }
+      calculate_settlement_deductions: {
+        Args: { p_booking_id: string }
         Returns: number
       }
       check_api_health: { Args: { api_service: string }; Returns: Json }
@@ -8196,6 +9250,10 @@ export type Database = {
       redis_fdw_validator: {
         Args: { catalog: unknown; options: string[] }
         Returns: undefined
+      }
+      render_guest_template: {
+        Args: { p_template_body: string; p_variables: Json }
+        Returns: string
       }
       reset_password_with_token: {
         Args: { new_password: string; reset_token: string }
@@ -9062,11 +10120,27 @@ export type Database = {
         | "expired"
         | "sent"
       ai_response_style: "friendly" | "professional" | "brief"
+      booking_charge_status:
+        | "pending"
+        | "approved"
+        | "disputed"
+        | "deducted"
+        | "waived"
+        | "paid"
+      booking_charge_type:
+        | "damage"
+        | "cleaning"
+        | "missing_item"
+        | "late_checkout"
+        | "rule_violation"
+        | "utility_overage"
+        | "other"
       channel_type_extended: "sms" | "email" | "call"
       content_type: "text" | "image" | "file" | "voice" | "video"
       crm_contact_source:
         | "furnishedfinder"
         | "airbnb"
+        | "vrbo"
         | "turbotenant"
         | "zillow"
         | "facebook"
@@ -9118,6 +10192,32 @@ export type Database = {
         | "failed"
         | "skipped"
         | "bounced"
+      guest_template_type:
+        | "check_in_instructions"
+        | "checkout_reminder"
+        | "house_rules"
+        | "review_request"
+        | "welcome"
+        | "pre_arrival"
+        | "during_stay"
+        | "emergency_contact"
+        | "custom"
+      integration_provider: "seam" | "tracerfy"
+      integration_status: "connected" | "disconnected" | "error"
+      inventory_category:
+        | "appliance"
+        | "hvac"
+        | "structure"
+        | "plumbing"
+        | "furniture"
+        | "electronics"
+        | "other"
+      inventory_condition:
+        | "excellent"
+        | "good"
+        | "fair"
+        | "poor"
+        | "needs_replacement"
       investor_channel: "sms" | "email" | "whatsapp" | "phone"
       investor_conversation_status:
         | "active"
@@ -9169,6 +10269,25 @@ export type Database = {
         | "yellow_letter"
         | "letter_1_page"
         | "letter_2_page"
+      maintenance_category:
+        | "plumbing"
+        | "electrical"
+        | "hvac"
+        | "appliance"
+        | "structural"
+        | "pest_control"
+        | "landscaping"
+        | "cleaning"
+        | "general"
+        | "other"
+      maintenance_charge_to: "owner" | "guest" | "warranty" | "insurance"
+      maintenance_priority: "emergency" | "high" | "medium" | "low"
+      maintenance_status:
+        | "reported"
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
       message_channel: "email" | "sms"
       message_direction: "outbound" | "inbound"
       message_status: "sent" | "delivered" | "read" | "error"
@@ -9294,8 +10413,28 @@ export type Database = {
       rental_type: "str" | "mtr" | "ltr"
       seller_motivation: "hot" | "warm" | "cold" | "not_motivated"
       sms_opt_status: "opted_in" | "opted_out" | "pending" | "new"
+      turnover_status:
+        | "pending"
+        | "checkout_complete"
+        | "cleaning_scheduled"
+        | "cleaning_done"
+        | "inspected"
+        | "ready"
+        | "cancelled"
       user_platform: "investor" | "landlord"
       user_role: "admin" | "standard" | "user" | "support" | "beta"
+      vendor_category:
+        | "plumber"
+        | "electrician"
+        | "hvac"
+        | "cleaner"
+        | "handyman"
+        | "locksmith"
+        | "pest_control"
+        | "landscaper"
+        | "appliance_repair"
+        | "pool_service"
+        | "other"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -9446,11 +10585,29 @@ export const Constants = {
         "sent",
       ],
       ai_response_style: ["friendly", "professional", "brief"],
+      booking_charge_status: [
+        "pending",
+        "approved",
+        "disputed",
+        "deducted",
+        "waived",
+        "paid",
+      ],
+      booking_charge_type: [
+        "damage",
+        "cleaning",
+        "missing_item",
+        "late_checkout",
+        "rule_violation",
+        "utility_overage",
+        "other",
+      ],
       channel_type_extended: ["sms", "email", "call"],
       content_type: ["text", "image", "file", "voice", "video"],
       crm_contact_source: [
         "furnishedfinder",
         "airbnb",
+        "vrbo",
         "turbotenant",
         "zillow",
         "facebook",
@@ -9508,6 +10665,35 @@ export const Constants = {
         "skipped",
         "bounced",
       ],
+      guest_template_type: [
+        "check_in_instructions",
+        "checkout_reminder",
+        "house_rules",
+        "review_request",
+        "welcome",
+        "pre_arrival",
+        "during_stay",
+        "emergency_contact",
+        "custom",
+      ],
+      integration_provider: ["seam", "tracerfy"],
+      integration_status: ["connected", "disconnected", "error"],
+      inventory_category: [
+        "appliance",
+        "hvac",
+        "structure",
+        "plumbing",
+        "furniture",
+        "electronics",
+        "other",
+      ],
+      inventory_condition: [
+        "excellent",
+        "good",
+        "fair",
+        "poor",
+        "needs_replacement",
+      ],
       investor_channel: ["sms", "email", "whatsapp", "phone"],
       investor_conversation_status: [
         "active",
@@ -9558,6 +10744,27 @@ export const Constants = {
         "yellow_letter",
         "letter_1_page",
         "letter_2_page",
+      ],
+      maintenance_category: [
+        "plumbing",
+        "electrical",
+        "hvac",
+        "appliance",
+        "structural",
+        "pest_control",
+        "landscaping",
+        "cleaning",
+        "general",
+        "other",
+      ],
+      maintenance_charge_to: ["owner", "guest", "warranty", "insurance"],
+      maintenance_priority: ["emergency", "high", "medium", "low"],
+      maintenance_status: [
+        "reported",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "cancelled",
       ],
       message_channel: ["email", "sms"],
       message_direction: ["outbound", "inbound"],
@@ -9699,8 +10906,30 @@ export const Constants = {
       rental_type: ["str", "mtr", "ltr"],
       seller_motivation: ["hot", "warm", "cold", "not_motivated"],
       sms_opt_status: ["opted_in", "opted_out", "pending", "new"],
+      turnover_status: [
+        "pending",
+        "checkout_complete",
+        "cleaning_scheduled",
+        "cleaning_done",
+        "inspected",
+        "ready",
+        "cancelled",
+      ],
       user_platform: ["investor", "landlord"],
       user_role: ["admin", "standard", "user", "support", "beta"],
+      vendor_category: [
+        "plumber",
+        "electrician",
+        "hvac",
+        "cleaner",
+        "handyman",
+        "locksmith",
+        "pest_control",
+        "landscaper",
+        "appliance_repair",
+        "pool_service",
+        "other",
+      ],
     },
   },
 } as const

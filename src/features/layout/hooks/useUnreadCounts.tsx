@@ -10,6 +10,7 @@ export interface UnreadCounts {
   notifications: number;
   overdueDeals: number; // Zone G: Deals with overdue actions
   captureItems: number; // Pending items in capture triage queue
+  investorInbox: number; // Lead inbox: pending AI responses + unread messages
 }
 
 interface UnreadCountsContextValue {
@@ -22,6 +23,7 @@ interface UnreadCountsContextValue {
   incrementNotifications: (count?: number) => void;
   setOverdueDeals: (count: number) => void; // Zone G
   setCaptureItems: (count: number) => void; // Capture tab
+  setInvestorInbox: (count: number) => void; // Lead inbox
   clearAllCounts: () => void;
 }
 
@@ -33,6 +35,7 @@ const DEFAULT_COUNTS: UnreadCounts = {
   notifications: 5, // Mock: Unread notifications
   overdueDeals: 2, // Mock: Overdue deal actions
   captureItems: 0, // Mock: Pending capture items
+  investorInbox: 0, // Lead inbox counts - set from real data
 };
 
 interface UnreadCountsProviderProps {
@@ -108,8 +111,16 @@ export function UnreadCountsProvider({
     }));
   }, []);
 
+  // Lead inbox: Set investor inbox count (pending + unread)
+  const setInvestorInbox = useCallback((count: number) => {
+    setCounts(prev => ({
+      ...prev,
+      investorInbox: Math.max(0, count),
+    }));
+  }, []);
+
   const clearAllCounts = useCallback(() => {
-    setCounts({ leads: 0, conversations: 0, notifications: 0, overdueDeals: 0, captureItems: 0 });
+    setCounts({ leads: 0, conversations: 0, notifications: 0, overdueDeals: 0, captureItems: 0, investorInbox: 0 });
   }, []);
 
   const value = useMemo(() => ({
@@ -122,6 +133,7 @@ export function UnreadCountsProvider({
     incrementNotifications,
     setOverdueDeals,
     setCaptureItems,
+    setInvestorInbox,
     clearAllCounts,
   }), [
     counts,
@@ -133,6 +145,7 @@ export function UnreadCountsProvider({
     incrementNotifications,
     setOverdueDeals,
     setCaptureItems,
+    setInvestorInbox,
     clearAllCounts,
   ]);
 

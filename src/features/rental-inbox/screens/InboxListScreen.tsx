@@ -409,7 +409,7 @@ export function InboxListScreen() {
   // Event handlers
   const handleConversationPress = useCallback(
     (conversation: ConversationWithRelations) => {
-      router.push(`/(tabs)/inbox/${conversation.id}`);
+      router.push(`/(tabs)/landlord-inbox/${conversation.id}`);
     },
     [router]
   );

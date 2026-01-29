@@ -244,9 +244,9 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             .from('investor_conversations')
             .select(`
               *,
-              lead:crm_leads(id, name, phone, email, status, opt_status, tags, source),
+              lead:crm_leads(id, name, phone, email, status, opt_status, tags),
               property:re_properties(id, address_line_1, city, state),
-              deal:deals(id, name, status)
+              deal:deals(id, title, status)
             `)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
@@ -271,9 +271,9 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             .from('investor_conversations')
             .select(`
               *,
-              lead:crm_leads(id, name, phone, email, status, opt_status, tags, source),
+              lead:crm_leads(id, name, phone, email, status, opt_status, tags),
               property:re_properties(id, address_line_1, city, state),
-              deal:deals(id, name, status)
+              deal:deals(id, title, status)
             `)
             .eq('id', id)
             .single();
@@ -319,9 +319,9 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             .from('investor_conversations')
             .select(`
               *,
-              lead:crm_leads(id, name, phone, email, status, opt_status, tags, source),
+              lead:crm_leads(id, name, phone, email, status, opt_status, tags),
               property:re_properties(id, address_line_1, city, state),
-              deal:deals(id, name, status)
+              deal:deals(id, title, status)
             `)
             .in('id', conversationIds)
             .order('last_message_at', { ascending: false, nullsFirst: false });

@@ -276,6 +276,13 @@ export type { SimpleFABProps } from './SimpleFAB';
 export { GlassView, GlassBackdrop, isLiquidGlassSupported } from './GlassView';
 export type { GlassViewProps, GlassBackdropProps } from './GlassView';
 
+// Hub components (for Property Management dashboard)
+export { HubCard } from './HubCard';
+export type { HubCardProps } from './HubCard';
+
+export { PhotoGallery } from './PhotoGallery';
+export type { PhotoGalleryProps, PhotoItem } from './PhotoGallery';
+
 export { GlassButton } from './GlassButton';
 export type { GlassButtonProps } from './GlassButton';
 

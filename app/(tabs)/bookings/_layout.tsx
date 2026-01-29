@@ -24,6 +24,7 @@ export default function BookingsLayout() {
           // Use fullScreenModal to hide the tab bar for focused booking view
           presentation: 'fullScreenModal',
           animation: 'slide_from_bottom',
+          headerShown: false,
         }}
       />
     </Stack>

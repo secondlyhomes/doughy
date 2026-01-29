@@ -26,6 +26,8 @@ export default function RentalPropertiesLayout() {
           animation: 'slide_from_bottom',
         }}
       />
+      <Stack.Screen name="add" />
+      <Stack.Screen name="edit/[id]" />
     </Stack>
   );
 }

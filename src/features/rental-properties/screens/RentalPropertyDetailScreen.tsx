@@ -10,15 +10,11 @@ import {
   Alert,
   Linking,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Edit2,
   MapPin,
-  DollarSign,
-  Calendar,
-  ChevronRight,
   ExternalLink,
   Trash2,
   Home,
@@ -26,8 +22,8 @@ import {
   ToggleRight,
   Wrench,
   ImageIcon,
-  User,
-  Clock,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -42,16 +38,20 @@ import {
   Separator,
 } from '@/components/ui';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { PropertyStatsRow } from '../components/PropertyStatsRow';
+import { PropertyHubGrid } from '../components/PropertyHubGrid';
 import { RoomsList } from '../components/RoomsList';
 import {
   useRentalPropertyDetail,
   useRentalPropertyMutations,
 } from '../hooks/useRentalPropertyDetail';
-import { RentalProperty, PropertyStatus } from '../types';
-import { BookingWithRelations } from '@/stores/rental-bookings-store';
+import { PropertyStatus } from '../types';
+import { useInventoryCount } from '@/features/property-inventory';
+import { useOpenMaintenanceCount } from '@/features/property-maintenance';
+import { useVendorCount } from '@/features/vendors';
+import { useNextTurnover } from '@/features/turnovers';
 
 // ============================================
 // Helper Functions
@@ -75,15 +75,6 @@ function formatRateType(rateType: string): string {
     monthly: '/mo',
   };
   return suffixes[rateType] || '/mo';
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 }
 
 function getStatusInfo(status: PropertyStatus): {
@@ -111,22 +102,47 @@ interface SectionProps {
   title: string;
   children: React.ReactNode;
   rightElement?: React.ReactNode;
+  /** If true, section can be collapsed */
+  collapsible?: boolean;
+  /** Initial collapsed state */
+  defaultCollapsed?: boolean;
 }
 
-function Section({ title, children, rightElement }: SectionProps) {
+function Section({ title, children, rightElement, collapsible = false, defaultCollapsed = false }: SectionProps) {
   const colors = useThemeColors();
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+  const handleToggle = useCallback(() => {
+    if (collapsible) {
+      setIsCollapsed((prev) => !prev);
+    }
+  }, [collapsible]);
 
   return (
     <View className="mb-6">
-      <View className="flex-row items-center justify-between mb-3">
-        <Text
-          style={{ color: colors.foreground, fontSize: FONT_SIZES.lg, fontWeight: '600' }}
-        >
-          {title}
-        </Text>
+      <TouchableOpacity
+        onPress={handleToggle}
+        disabled={!collapsible}
+        activeOpacity={collapsible ? 0.7 : 1}
+        className="flex-row items-center justify-between mb-3"
+      >
+        <View className="flex-row items-center flex-1">
+          <Text
+            style={{ color: colors.foreground, fontSize: FONT_SIZES.lg, fontWeight: '600' }}
+          >
+            {title}
+          </Text>
+          {collapsible && (
+            isCollapsed ? (
+              <ChevronDown size={20} color={colors.mutedForeground} style={{ marginLeft: 8 }} />
+            ) : (
+              <ChevronUp size={20} color={colors.mutedForeground} style={{ marginLeft: 8 }} />
+            )
+          )}
+        </View>
         {rightElement}
-      </View>
-      {children}
+      </TouchableOpacity>
+      {!isCollapsed && children}
     </View>
   );
 }
@@ -192,84 +208,6 @@ function AmenityChip({ amenity }: { amenity: string }) {
   );
 }
 
-// Booking Card for upcoming bookings
-interface UpcomingBookingCardProps {
-  booking: BookingWithRelations;
-  onPress: () => void;
-}
-
-function UpcomingBookingCard({ booking, onPress }: UpcomingBookingCardProps) {
-  const colors = useThemeColors();
-
-  const guestName = booking.contact
-    ? `${booking.contact.first_name || ''} ${booking.contact.last_name || ''}`.trim() || 'Unknown Guest'
-    : 'Unknown Guest';
-  const roomName = booking.room?.name;
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="p-3 rounded-xl mb-2"
-      style={{ backgroundColor: colors.card }}
-      activeOpacity={0.7}
-    >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2">
-            <User size={16} color={colors.primary} />
-            <Text
-              style={{
-                color: colors.foreground,
-                fontSize: FONT_SIZES.base,
-                fontWeight: '600',
-              }}
-              numberOfLines={1}
-            >
-              {guestName}
-            </Text>
-          </View>
-
-          <View className="flex-row items-center gap-2 mt-1">
-            <Calendar size={12} color={colors.mutedForeground} />
-            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}>
-              {formatDate(booking.start_date)}
-              {booking.end_date && ` - ${formatDate(booking.end_date)}`}
-            </Text>
-          </View>
-
-          {roomName && (
-            <Text
-              style={{
-                color: colors.mutedForeground,
-                fontSize: FONT_SIZES.xs,
-                marginTop: 4,
-              }}
-            >
-              Room: {roomName}
-            </Text>
-          )}
-        </View>
-
-        <View className="flex-row items-center gap-2">
-          <Badge
-            variant={
-              booking.status === 'confirmed'
-                ? 'success'
-                : booking.status === 'active'
-                ? 'default'
-                : 'warning'
-            }
-            size="sm"
-          >
-            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-          </Badge>
-          <ChevronRight size={18} color={colors.mutedForeground} />
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 // ============================================
 // Main Screen Component
 // ============================================
@@ -297,6 +235,14 @@ export function RentalPropertyDetailScreen() {
 
   const { updateStatus, deleteProperty, isSaving } =
     useRentalPropertyMutations(propertyId);
+
+  // Hub counts for the property management grid
+  const { data: inventoryCount = 0, isLoading: isLoadingInventory } = useInventoryCount(propertyId);
+  const { data: maintenanceCount = 0, isLoading: isLoadingMaintenance } = useOpenMaintenanceCount(propertyId);
+  const { data: vendorCount = 0, isLoading: isLoadingVendors } = useVendorCount(propertyId);
+  const { data: nextTurnover, isLoading: isLoadingTurnover } = useNextTurnover(propertyId);
+
+  const isLoadingHubCounts = isLoadingInventory || isLoadingMaintenance || isLoadingVendors || isLoadingTurnover;
 
   // Handlers
   const handleBack = useCallback(() => {
@@ -354,13 +300,6 @@ export function RentalPropertyDetailScreen() {
       );
     },
     [router, propertyId]
-  );
-
-  const handleBookingPress = useCallback(
-    (booking: BookingWithRelations) => {
-      router.push(`/(tabs)/bookings/${booking.id}` as never);
-    },
-    [router]
   );
 
   // Status info for display
@@ -449,8 +388,19 @@ export function RentalPropertyDetailScreen() {
           rentalType={property.rental_type}
         />
 
-        {/* Address Section */}
-        <Section title="Address">
+        {/* Property Management Hub Grid */}
+        <PropertyHubGrid
+          propertyId={propertyId}
+          inventoryCount={inventoryCount}
+          maintenanceCount={maintenanceCount}
+          vendorCount={vendorCount}
+          nextTurnover={nextTurnover ?? undefined}
+          bookingsCount={upcomingBookings.length}
+          isLoading={isLoadingHubCounts}
+        />
+
+        {/* Address Section (Collapsible) */}
+        <Section title="Address" collapsible defaultCollapsed>
           <TouchableOpacity
             onPress={handleOpenMap}
             className="p-4 rounded-xl flex-row items-center justify-between"
@@ -482,8 +432,8 @@ export function RentalPropertyDetailScreen() {
           </TouchableOpacity>
         </Section>
 
-        {/* Financial Section */}
-        <Section title="Financials">
+        {/* Financial Section (Collapsible) */}
+        <Section title="Financials" collapsible defaultCollapsed>
           <View
             className="p-4 rounded-xl"
             style={{ backgroundColor: colors.card }}
@@ -529,77 +479,7 @@ export function RentalPropertyDetailScreen() {
           </Section>
         )}
 
-        {/* Upcoming Bookings Section */}
-        <Section
-          title="Upcoming Bookings"
-          rightElement={
-            <TouchableOpacity
-              onPress={() =>
-                router.push(
-                  `/(tabs)/bookings?propertyId=${propertyId}` as never
-                )
-              }
-            >
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: FONT_SIZES.sm,
-                  fontWeight: '500',
-                }}
-              >
-                View All
-              </Text>
-            </TouchableOpacity>
-          }
-        >
-          {isLoadingBookings ? (
-            <View className="py-4 items-center">
-              <Text style={{ color: colors.mutedForeground }}>
-                Loading bookings...
-              </Text>
-            </View>
-          ) : upcomingBookings.length === 0 ? (
-            <View
-              className="py-6 items-center rounded-xl"
-              style={{ backgroundColor: colors.muted }}
-            >
-              <Calendar size={32} color={colors.mutedForeground} />
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontSize: FONT_SIZES.sm,
-                  marginTop: 8,
-                }}
-              >
-                No upcoming bookings
-              </Text>
-            </View>
-          ) : (
-            <View>
-              {upcomingBookings.slice(0, 3).map((booking) => (
-                <UpcomingBookingCard
-                  key={booking.id}
-                  booking={booking}
-                  onPress={() => handleBookingPress(booking)}
-                />
-              ))}
-              {upcomingBookings.length > 3 && (
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push(
-                      `/(tabs)/bookings?propertyId=${propertyId}` as never
-                    )
-                  }
-                  className="py-2 items-center"
-                >
-                  <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm }}>
-                    +{upcomingBookings.length - 3} more bookings
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </Section>
+        {/* Note: Bookings are now accessible via the Hub Grid above */}
 
         {/* Listing URLs Section */}
         {property.listing_urls &&

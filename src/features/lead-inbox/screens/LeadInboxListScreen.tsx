@@ -401,7 +401,7 @@ export function LeadInboxListScreen() {
   // Event handlers
   const handleConversationPress = useCallback(
     (conversation: InvestorConversationWithRelations) => {
-      router.push(`/(tabs)/index/${conversation.id}`);
+      router.push(`/(tabs)/investor-inbox/${conversation.id}`);
     },
     [router]
   );

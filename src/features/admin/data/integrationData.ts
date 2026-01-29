@@ -311,6 +311,68 @@ export const INTEGRATIONS: Integration[] = [
     ],
   },
 
+  // ===== PROPERTY MANAGEMENT / LANDLORD =====
+  {
+    id: 'seam',
+    name: 'Seam (Smart Locks)',
+    service: 'seam',
+    description: 'Smart lock integration for Schlage, Yale, August, etc.',
+    icon: 'lock',
+    group: 'Property Management',
+    docsUrl: 'https://docs.seam.co',
+    fields: [
+      {
+        key: 'seam-api-key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+        placeholder: 'seam_...',
+        description: 'Seam API key from console.seam.co',
+      },
+      {
+        key: 'seam-workspace-id',
+        label: 'Workspace ID',
+        type: 'text',
+        required: false,
+        description: 'Optional workspace ID (for multi-workspace setups)',
+      },
+    ],
+  },
+  {
+    id: 'tracerfy',
+    name: 'Tracerfy (Skip Tracing)',
+    service: 'tracerfy',
+    description: 'Skip tracing for property owner lookup',
+    icon: 'search',
+    group: 'Property Management',
+    docsUrl: 'https://tracerfy.com/api-docs',
+    fields: [
+      {
+        key: 'tracerfy-api-key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+        description: 'Tracerfy API key from your account dashboard',
+      },
+      {
+        key: 'tracerfy-auto-trace',
+        label: 'Auto Skip Trace',
+        type: 'select',
+        required: false,
+        options: ['disabled', 'new_leads_only', 'all_leads'],
+        description: 'Automatically skip trace new leads without contact info',
+      },
+      {
+        key: 'tracerfy-auto-match',
+        label: 'Auto Match to Property',
+        type: 'select',
+        required: false,
+        options: ['disabled', 'enabled'],
+        description: 'Automatically match leads to properties by address',
+      },
+    ],
+  },
+
   // ===== PAYMENT SERVICES =====
   {
     id: 'stripe',

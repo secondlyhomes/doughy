@@ -30,6 +30,9 @@ import {
   Bot,
   Megaphone,
   Mail,
+  Plug,
+  Users,
+  MessageSquare,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
@@ -171,6 +174,37 @@ export function SettingsScreen() {
                 title="AI Communication"
                 subtitle="Configure how AI handles guest messages"
                 onPress={() => router.push('/(tabs)/settings/ai-communication')}
+              />
+              <SettingsItem
+                icon={<MessageSquare size={20} color={colors.mutedForeground} />}
+                title="Guest Templates"
+                subtitle="Check-in, checkout, and custom message templates"
+                onPress={() => router.push('/(tabs)/settings/guest-templates')}
+                hideBorder
+              />
+            </View>
+          </View>
+        )}
+
+        {/* Integrations & Vendors - Only visible when landlord platform is enabled */}
+        {isLandlordEnabled && (
+          <View className="p-4">
+            <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
+              INTEGRATIONS & VENDORS
+            </Text>
+
+            <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+              <SettingsItem
+                icon={<Plug size={20} color={colors.primary} />}
+                title="Integrations"
+                subtitle="Seam (Smart Locks), Tracerfy (Skip Tracing)"
+                onPress={() => router.push('/(tabs)/settings/integrations')}
+              />
+              <SettingsItem
+                icon={<Users size={20} color={colors.mutedForeground} />}
+                title="My Vendors"
+                subtitle="Manage your service providers across all properties"
+                onPress={() => router.push('/(tabs)/settings/vendors')}
                 hideBorder
               />
             </View>

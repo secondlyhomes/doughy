@@ -55,7 +55,7 @@ function getChannelIcon(channel: InvestorChannel) {
 }
 
 export function LeadConversationScreen() {
-  const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
+  const { id: conversationId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
