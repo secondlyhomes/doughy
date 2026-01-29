@@ -45,14 +45,17 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
     return getPropertyTypeBadgeColor(property.propertyType);
   }, [property.propertyType]);
 
+  // Get image URL with fallback to primary_image_url when first image URL is unavailable
+  const imageUrl = property.images?.[0]?.url || property.primary_image_url;
+
   // Compact view for grid layouts
   if (compact) {
     const compactContent = (
       <>
         {/* Property Image - Outside glass to keep it crisp */}
-        {property.images?.[0]?.url ? (
+        {imageUrl ? (
           <Image
-            source={{ uri: property.images[0].url }}
+            source={{ uri: imageUrl }}
             className="w-full h-32"
             resizeMode="cover"
           />
@@ -231,9 +234,9 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
   const fullContent = (
     <>
       {/* Property Image - Outside glass to keep it crisp */}
-      {property.images?.[0]?.url ? (
+      {imageUrl ? (
         <Image
-          source={{ uri: property.images[0].url }}
+          source={{ uri: imageUrl }}
           className="w-full h-48"
           resizeMode="cover"
         />
@@ -476,19 +479,26 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
   // Must include onPress to handle callback updates, and images to handle async image loading
   const imagesEqual =
     prevProps.property.images?.length === nextProps.property.images?.length &&
-    prevProps.property.images?.[0]?.url === nextProps.property.images?.[0]?.url;
+    prevProps.property.images?.[0]?.url === nextProps.property.images?.[0]?.url &&
+    prevProps.property.primary_image_url === nextProps.property.primary_image_url;
 
   return (
     prevProps.property.id === nextProps.property.id &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.compact === nextProps.compact &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.glassIntensity === nextProps.glassIntensity &&
     prevProps.property.arv === nextProps.property.arv &&
     prevProps.property.address === nextProps.property.address &&
+    prevProps.property.city === nextProps.property.city &&
+    prevProps.property.state === nextProps.property.state &&
+    prevProps.property.zip === nextProps.property.zip &&
     prevProps.property.status === nextProps.property.status &&
     prevProps.property.propertyType === nextProps.property.propertyType &&
     prevProps.property.bedrooms === nextProps.property.bedrooms &&
     prevProps.property.bathrooms === nextProps.property.bathrooms &&
     prevProps.property.square_feet === nextProps.property.square_feet &&
+    prevProps.property.notes === nextProps.property.notes &&
     prevProps.onPress === nextProps.onPress &&
     imagesEqual
   );

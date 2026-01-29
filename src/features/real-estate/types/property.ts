@@ -44,6 +44,7 @@ export interface DBProperty {
   owner_occupied?: boolean;
   vacant?: boolean;
   hoa?: boolean;
+  primary_image_url?: string;
 }
 
 export interface Property {
@@ -98,6 +99,9 @@ export interface Property {
   repairs?: RepairEstimate[];
   analyses?: PropertyAnalysis[];
   comps?: PropertyComp[];
+
+  // Direct image URL (fallback when images array is empty)
+  primary_image_url?: string;
 }
 
 export interface DBPropertyInsert {
@@ -172,11 +176,12 @@ export const dbToFeatureProperty = (dbProperty: DBPropertyWithImages): Property 
     propertyType: dbProperty.property_type || 'other',
   };
 
-  // Add optional fields only if they exist in the DB result
+  // Add location fields with defaults for required ones
   if (dbProperty.address_line_2 !== undefined) result.address_line_2 = dbProperty.address_line_2;
-  if (dbProperty.city !== undefined) result.city = dbProperty.city;
-  if (dbProperty.state !== undefined) result.state = dbProperty.state;
-  if (dbProperty.zip !== undefined) result.zip = dbProperty.zip;
+  // city, state, zip are required in Property type - provide defaults
+  result.city = dbProperty.city ?? '';
+  result.state = dbProperty.state ?? '';
+  result.zip = dbProperty.zip ?? '';
   if (dbProperty.county !== undefined) result.county = dbProperty.county;
 
   // Handle numeric fields with defaults
@@ -224,6 +229,12 @@ export const dbToFeatureProperty = (dbProperty: DBPropertyWithImages): Property 
   // Handle joined images
   if (dbProperty.images && Array.isArray(dbProperty.images)) {
     result.images = dbProperty.images;
+  }
+
+  // Handle primary_image_url (used as fallback when images array is empty)
+  // Note: Supabase returns null for missing values, so we check for both null and undefined
+  if (dbProperty.primary_image_url != null) {
+    result.primary_image_url = dbProperty.primary_image_url;
   }
 
   return result as Property;
@@ -289,6 +300,9 @@ export const featureToDbProperty = (property: Property): DBProperty => {
   if (property.owner_occupied !== undefined) result.owner_occupied = property.owner_occupied;
   if (property.vacant !== undefined) result.vacant = property.vacant;
   if (property.hoa !== undefined) result.hoa = property.hoa;
+
+  // Handle primary_image_url
+  if (property.primary_image_url !== undefined) result.primary_image_url = property.primary_image_url;
 
   return result as DBProperty;
 };

@@ -73,6 +73,11 @@ function transformToPortfolioProperty(
     created_at: property.created_at as string | undefined,
     updated_at: property.updated_at as string | undefined,
     images: overrides.images,
+    // Use primary_image_url as fallback when images array is empty
+    // Explicitly handle null from database by converting to undefined
+    primary_image_url: typeof property.primary_image_url === 'string'
+      ? property.primary_image_url
+      : undefined,
   };
 }
 
@@ -154,9 +159,16 @@ export function usePortfolio() {
           .eq('user_id', user.id)
           .eq('is_active', true);
 
-        // If table doesn't exist yet, continue without entries
-        if (entriesError && !entriesError.message.includes('does not exist')) {
-          console.error('Error fetching portfolio entries:', entriesError);
+        // Handle portfolio entries errors
+        if (entriesError) {
+          // Table not existing is expected during schema migration - continue without entries
+          if (entriesError.message.includes('does not exist') || entriesError.code === '42P01') {
+            console.debug('[usePortfolio] Portfolio entries table not yet created, skipping');
+          } else {
+            // Unexpected error - log and throw to show proper error state
+            console.error('[usePortfolio] Error fetching portfolio entries:', entriesError);
+            throw new Error(`Failed to load portfolio entries: ${entriesError.message}`);
+          }
         }
 
         // Process manual entries (these override deal-based entries for the same property)
@@ -288,10 +300,13 @@ export function usePortfolio() {
         });
 
       if (entryError) {
-        console.error('Error creating portfolio entry:', entryError);
+        console.error('[usePortfolio] Error creating portfolio entry:', entryError);
         // Cleanup: delete the orphaned property if we just created it
         if (createdNewProperty && propertyId) {
-          await supabase.from('re_properties').delete().eq('id', propertyId);
+          const { error: cleanupError } = await supabase.from('re_properties').delete().eq('id', propertyId);
+          if (cleanupError) {
+            console.error('[usePortfolio] Failed to cleanup orphaned property:', propertyId, cleanupError);
+          }
         }
         throw entryError;
       }
