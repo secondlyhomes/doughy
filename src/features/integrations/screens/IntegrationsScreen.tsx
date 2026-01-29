@@ -186,7 +186,7 @@ export function IntegrationsScreen() {
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: SPACING.md,
-          paddingBottom: TAB_BAR_SAFE_PADDING + 20,
+          paddingBottom: TAB_BAR_SAFE_PADDING,
         }}
       >
         {/* Seam - Smart Home */}

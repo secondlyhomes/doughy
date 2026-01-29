@@ -2,7 +2,7 @@
 // Bottom sheet for scheduling cleaning with a vendor
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Alert, TouchableOpacity } from 'react-native';
 import { Calendar, Clock, User, Sparkles, Send } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
@@ -124,14 +124,11 @@ export function ScheduleCleaningSheet({
       visible={visible}
       onClose={onClose}
       title="Schedule Cleaning"
-      height="85%"
+      snapPoints={['85%']}
+      useGlass={false}
+      useGlassBackdrop={false}
     >
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Context Info */}
+      {/* Context Info */}
         <View className="px-4 mb-4">
           <View
             className="p-3 rounded-lg"
@@ -269,54 +266,53 @@ export function ScheduleCleaningSheet({
           </View>
         </BottomSheetSection>
 
-        {/* Send Message Toggle */}
-        {selectedVendor && (selectedVendor.phone || selectedVendor.email) && (
-          <BottomSheetSection title="Notification">
-            <TouchableOpacity
-              onPress={() => setSendMessage(!sendMessage)}
-              className="flex-row items-center p-3 rounded-xl"
-              style={{
-                backgroundColor: sendMessage
-                  ? withOpacity(colors.primary, 'light')
-                  : colors.muted,
-              }}
-              activeOpacity={0.7}
+      {/* Send Message Toggle */}
+      {selectedVendor && (selectedVendor.phone || selectedVendor.email) && (
+        <BottomSheetSection title="Notification">
+          <TouchableOpacity
+            onPress={() => setSendMessage(!sendMessage)}
+            className="flex-row items-center p-3 rounded-xl"
+            style={{
+              backgroundColor: sendMessage
+                ? withOpacity(colors.primary, 'light')
+                : colors.muted,
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center mr-3"
+              style={{ backgroundColor: colors.card }}
             >
-              <View
-                className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: colors.card }}
+              {sendMessage ? (
+                <Sparkles size={20} color={colors.primary} />
+              ) : (
+                <Send size={20} color={colors.mutedForeground} />
+              )}
+            </View>
+            <View className="flex-1">
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontSize: FONT_SIZES.base,
+                  fontWeight: '500',
+                }}
               >
-                {sendMessage ? (
-                  <Sparkles size={20} color={colors.primary} />
-                ) : (
-                  <Send size={20} color={colors.mutedForeground} />
-                )}
-              </View>
-              <View className="flex-1">
-                <Text
-                  style={{
-                    color: colors.foreground,
-                    fontSize: FONT_SIZES.base,
-                    fontWeight: '500',
-                  }}
-                >
-                  {sendMessage ? 'AI will send message' : 'No message'}
-                </Text>
-                <Text
-                  style={{
-                    color: colors.mutedForeground,
-                    fontSize: FONT_SIZES.xs,
-                  }}
-                >
-                  {sendMessage
-                    ? `AI will compose and send via ${selectedVendor.preferred_contact_method || 'SMS'}`
-                    : 'You will need to contact the cleaner manually'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </BottomSheetSection>
-        )}
-      </ScrollView>
+                {sendMessage ? 'AI will send message' : 'No message'}
+              </Text>
+              <Text
+                style={{
+                  color: colors.mutedForeground,
+                  fontSize: FONT_SIZES.xs,
+                }}
+              >
+                {sendMessage
+                  ? `AI will compose and send via ${selectedVendor.preferred_contact_method || 'SMS'}`
+                  : 'You will need to contact the cleaner manually'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </BottomSheetSection>
+      )}
 
       {/* Footer Actions */}
       <View

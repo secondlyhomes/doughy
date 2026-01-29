@@ -2,7 +2,7 @@
 // Bottom sheet for reporting a new maintenance issue with voice input
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
   BottomSheet,
@@ -156,14 +156,9 @@ export function AddMaintenanceSheet({
       visible={visible}
       onClose={onClose}
       title="Report Issue"
-      height="90%"
+      snapPoints={['90%']}
     >
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Photos Section */}
+      {/* Photos Section */}
         <BottomSheetSection title="Photos">
           <PhotoGallery
             photos={photos.map((p, i) => ({
@@ -268,38 +263,37 @@ export function AddMaintenanceSheet({
           </FormField>
         </BottomSheetSection>
 
-        {/* Context Info */}
-        {(initialInventoryItemName || initialBookingId) && (
-          <BottomSheetSection title="Linked To">
-            {initialInventoryItemName && (
-              <View
-                className="p-3 rounded-lg mb-2"
-                style={{ backgroundColor: colors.muted }}
-              >
-                <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
-                  Inventory Item
-                </Text>
-                <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm, fontWeight: '500' }}>
-                  {initialInventoryItemName}
-                </Text>
-              </View>
-            )}
-            {initialBookingId && (
-              <View
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: colors.muted }}
-              >
-                <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
-                  Booking
-                </Text>
-                <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm, fontWeight: '500' }}>
-                  Linked to current booking
-                </Text>
-              </View>
-            )}
-          </BottomSheetSection>
-        )}
-      </ScrollView>
+      {/* Context Info */}
+      {(initialInventoryItemName || initialBookingId) && (
+        <BottomSheetSection title="Linked To">
+          {initialInventoryItemName && (
+            <View
+              className="p-3 rounded-lg mb-2"
+              style={{ backgroundColor: colors.muted }}
+            >
+              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
+                Inventory Item
+              </Text>
+              <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm, fontWeight: '500' }}>
+                {initialInventoryItemName}
+              </Text>
+            </View>
+          )}
+          {initialBookingId && (
+            <View
+              className="p-3 rounded-lg"
+              style={{ backgroundColor: colors.muted }}
+            >
+              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
+                Booking
+              </Text>
+              <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm, fontWeight: '500' }}>
+                Linked to current booking
+              </Text>
+            </View>
+          )}
+        </BottomSheetSection>
+      )}
 
       {/* Footer Actions */}
       <View

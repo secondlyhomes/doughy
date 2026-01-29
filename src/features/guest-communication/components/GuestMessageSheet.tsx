@@ -2,7 +2,7 @@
 // Bottom sheet for composing and sending messages to guests
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Alert, TouchableOpacity } from 'react-native';
 import { Send, Mail, MessageSquare, FileText, ChevronDown } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
@@ -177,14 +177,11 @@ export function GuestMessageSheet({
       visible={visible}
       onClose={onClose}
       title={`Message ${guestName}`}
-      height="90%"
+      snapPoints={['90%']}
+      useGlass={false}
+      useGlassBackdrop={false}
     >
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Template Selection */}
+      {/* Template Selection */}
         {showTemplateList ? (
           <BottomSheetSection title="Select Template">
             {isLoadingTemplates ? (
@@ -415,35 +412,34 @@ export function GuestMessageSheet({
               </FormField>
             </BottomSheetSection>
 
-            {/* Recipient Info */}
-            <BottomSheetSection title="Sending To">
-              <View
-                className="p-3 rounded-lg"
-                style={{ backgroundColor: colors.muted }}
+          {/* Recipient Info */}
+          <BottomSheetSection title="Sending To">
+            <View
+              className="p-3 rounded-lg"
+              style={{ backgroundColor: colors.muted }}
+            >
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontSize: FONT_SIZES.base,
+                  fontWeight: '500',
+                }}
               >
-                <Text
-                  style={{
-                    color: colors.foreground,
-                    fontSize: FONT_SIZES.base,
-                    fontWeight: '500',
-                  }}
-                >
-                  {guestName}
-                </Text>
-                <Text
-                  style={{
-                    color: colors.mutedForeground,
-                    fontSize: FONT_SIZES.sm,
-                    marginTop: 4,
-                  }}
-                >
-                  {channel === 'sms' ? contact.phone : contact.email}
-                </Text>
-              </View>
-            </BottomSheetSection>
-          </>
-        )}
-      </ScrollView>
+                {guestName}
+              </Text>
+              <Text
+                style={{
+                  color: colors.mutedForeground,
+                  fontSize: FONT_SIZES.sm,
+                  marginTop: 4,
+                }}
+              >
+                {channel === 'sms' ? contact.phone : contact.email}
+              </Text>
+            </View>
+          </BottomSheetSection>
+        </>
+      )}
 
       {/* Footer Actions */}
       {!showTemplateList && (

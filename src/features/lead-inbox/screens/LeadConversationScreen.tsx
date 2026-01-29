@@ -161,6 +161,12 @@ export function LeadConversationScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerShadowVisible: false,
+          // Explicitly set status bar height for fullScreenModal presentation
+          headerStatusBarHeight: insets.top,
           headerTitle: () => (
             <View style={{ alignItems: 'center' }}>
               <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>

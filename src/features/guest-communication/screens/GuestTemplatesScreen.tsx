@@ -268,7 +268,7 @@ export function GuestTemplatesScreen() {
           renderItem={renderItem}
           contentContainerStyle={{
             paddingTop: SPACING.sm,
-            paddingBottom: TAB_BAR_SAFE_PADDING + 80,
+            paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
           refreshControl={
             <RefreshControl
@@ -393,7 +393,7 @@ function TemplateEditorSheet({
       visible={visible}
       onClose={onClose}
       title={template ? 'Edit Template' : 'New Template'}
-      height="95%"
+      snapPoints={['95%']}
     >
       <View className="flex-1 px-4">
         <View className="flex-row gap-3 mb-4">

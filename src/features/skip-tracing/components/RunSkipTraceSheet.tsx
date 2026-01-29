@@ -131,7 +131,7 @@ export function RunSkipTraceSheet({
       title="Run Skip Trace"
       snapPoints={['85%']}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
         {/* Info Box */}
         <View
           style={{

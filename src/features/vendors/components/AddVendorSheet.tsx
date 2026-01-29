@@ -2,7 +2,7 @@
 // Bottom sheet for adding a new vendor
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
   BottomSheet,
@@ -120,140 +120,134 @@ export function AddVendorSheet({
       visible={visible}
       onClose={onClose}
       title="Add Vendor"
-      height="90%"
+      snapPoints={['90%']}
     >
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Basic Info */}
-        <BottomSheetSection title="Basic Information">
-          <FormField label="Name" required>
-            <Input
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g., John Smith"
-              autoCapitalize="words"
-            />
-          </FormField>
+      {/* Basic Info */}
+      <BottomSheetSection title="Basic Information">
+        <FormField label="Name" required>
+          <Input
+            value={name}
+            onChangeText={setName}
+            placeholder="e.g., John Smith"
+            autoCapitalize="words"
+          />
+        </FormField>
 
-          <FormField label="Company Name" className="mt-3">
-            <Input
-              value={companyName}
-              onChangeText={setCompanyName}
-              placeholder="e.g., ABC Plumbing Services"
-              autoCapitalize="words"
-            />
-          </FormField>
+        <FormField label="Company Name" className="mt-3">
+          <Input
+            value={companyName}
+            onChangeText={setCompanyName}
+            placeholder="e.g., ABC Plumbing Services"
+            autoCapitalize="words"
+          />
+        </FormField>
 
-          <FormField label="Category" required className="mt-3">
-            <Select
-              value={category}
-              onValueChange={(v) => setCategory(v as VendorCategory)}
-              options={categoryOptions}
-            />
-          </FormField>
+        <FormField label="Category" required className="mt-3">
+          <Select
+            value={category}
+            onValueChange={(v) => setCategory(v as VendorCategory)}
+            options={categoryOptions}
+          />
+        </FormField>
 
-          <View className="flex-row items-center justify-between mt-4 py-2">
-            <View>
-              <Text
-                style={{
-                  color: colors.foreground,
-                  fontSize: FONT_SIZES.base,
-                  fontWeight: '500',
-                }}
-              >
-                Primary Vendor
-              </Text>
-              <Text
-                style={{
-                  color: colors.mutedForeground,
-                  fontSize: FONT_SIZES.sm,
-                }}
-              >
-                Preferred vendor for this category
-              </Text>
-            </View>
-            <Switch value={isPrimary} onValueChange={setIsPrimary} />
+        <View className="flex-row items-center justify-between mt-4 py-2">
+          <View>
+            <Text
+              style={{
+                color: colors.foreground,
+                fontSize: FONT_SIZES.base,
+                fontWeight: '500',
+              }}
+            >
+              Primary Vendor
+            </Text>
+            <Text
+              style={{
+                color: colors.mutedForeground,
+                fontSize: FONT_SIZES.sm,
+              }}
+            >
+              Preferred vendor for this category
+            </Text>
           </View>
-        </BottomSheetSection>
+          <Switch value={isPrimary} onValueChange={setIsPrimary} />
+        </View>
+      </BottomSheetSection>
 
-        {/* Contact Info */}
-        <BottomSheetSection title="Contact Information">
-          <FormField label="Phone">
-            <Input
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="(555) 123-4567"
-              keyboardType="phone-pad"
-            />
-          </FormField>
+      {/* Contact Info */}
+      <BottomSheetSection title="Contact Information">
+        <FormField label="Phone">
+          <Input
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="(555) 123-4567"
+            keyboardType="phone-pad"
+          />
+        </FormField>
 
-          <FormField label="Email" className="mt-3">
-            <Input
-              value={email}
-              onChangeText={setEmail}
-              placeholder="vendor@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </FormField>
+        <FormField label="Email" className="mt-3">
+          <Input
+            value={email}
+            onChangeText={setEmail}
+            placeholder="vendor@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </FormField>
 
-          <FormField label="Address" className="mt-3">
-            <Input
-              value={address}
-              onChangeText={setAddress}
-              placeholder="123 Main St, City, State"
-            />
-          </FormField>
+        <FormField label="Address" className="mt-3">
+          <Input
+            value={address}
+            onChangeText={setAddress}
+            placeholder="123 Main St, City, State"
+          />
+        </FormField>
 
-          <FormField label="Preferred Contact" className="mt-3">
-            <Select
-              value={preferredContact}
-              onValueChange={(v) => setPreferredContact(v as 'phone' | 'email' | 'sms')}
-              options={contactOptions}
-            />
-          </FormField>
-        </BottomSheetSection>
+        <FormField label="Preferred Contact" className="mt-3">
+          <Select
+            value={preferredContact}
+            onValueChange={(v) => setPreferredContact(v as 'phone' | 'email' | 'sms')}
+            options={contactOptions}
+          />
+        </FormField>
+      </BottomSheetSection>
 
-        {/* Rates */}
-        <BottomSheetSection title="Rates">
-          <FormField label="Hourly Rate">
-            <Input
-              value={hourlyRate}
-              onChangeText={setHourlyRate}
-              placeholder="0.00"
-              keyboardType="decimal-pad"
-              leftIcon={<Text style={{ color: colors.mutedForeground }}>$</Text>}
-            />
-          </FormField>
+      {/* Rates */}
+      <BottomSheetSection title="Rates">
+        <FormField label="Hourly Rate">
+          <Input
+            value={hourlyRate}
+            onChangeText={setHourlyRate}
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+            leftIcon={<Text style={{ color: colors.mutedForeground }}>$</Text>}
+          />
+        </FormField>
 
-          <FormField label="Service/Call-out Fee" className="mt-3">
-            <Input
-              value={serviceFee}
-              onChangeText={setServiceFee}
-              placeholder="0.00"
-              keyboardType="decimal-pad"
-              leftIcon={<Text style={{ color: colors.mutedForeground }}>$</Text>}
-            />
-          </FormField>
-        </BottomSheetSection>
+        <FormField label="Service/Call-out Fee" className="mt-3">
+          <Input
+            value={serviceFee}
+            onChangeText={setServiceFee}
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+            leftIcon={<Text style={{ color: colors.mutedForeground }}>$</Text>}
+          />
+        </FormField>
+      </BottomSheetSection>
 
-        {/* Notes */}
-        <BottomSheetSection title="Notes">
-          <FormField label="">
-            <Input
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Additional notes about this vendor..."
-              multiline
-              numberOfLines={3}
-              style={{ minHeight: 80 }}
-            />
-          </FormField>
-        </BottomSheetSection>
-      </ScrollView>
+      {/* Notes */}
+      <BottomSheetSection title="Notes">
+        <FormField label="">
+          <Input
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Additional notes about this vendor..."
+            multiline
+            numberOfLines={3}
+            style={{ minHeight: 80 }}
+          />
+        </FormField>
+      </BottomSheetSection>
 
       {/* Footer Actions */}
       <View

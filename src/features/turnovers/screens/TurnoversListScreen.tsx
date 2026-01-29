@@ -200,7 +200,7 @@ export function TurnoversListScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{
-            paddingBottom: TAB_BAR_SAFE_PADDING + 80,
+            paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
           refreshControl={
             <RefreshControl

@@ -2,7 +2,7 @@
 // Bottom sheet for composing and sending messages to vendors (with AI assistance)
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Alert, TouchableOpacity } from 'react-native';
 import { Send, Sparkles, Phone, Mail, MessageSquare, RefreshCw } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
@@ -169,181 +169,175 @@ Property Manager`;
       visible={visible}
       onClose={onClose}
       title={`Message ${vendor.name}`}
-      height="90%"
+      snapPoints={['90%']}
     >
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* AI Compose Button */}
-        {context && (
-          <View className="px-4 mb-4">
-            <TouchableOpacity
-              onPress={handleGenerateMessage}
-              disabled={isGenerating}
-              style={[
-                {
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingVertical: SPACING.md,
-                  paddingHorizontal: SPACING.lg,
-                  borderRadius: BORDER_RADIUS.lg,
-                  backgroundColor: withOpacity(colors.primary, 'light'),
-                  gap: SPACING.sm,
-                },
-              ]}
-              activeOpacity={0.7}
+      {/* AI Compose Button */}
+      {context && (
+        <View className="px-4 mb-4">
+          <TouchableOpacity
+            onPress={handleGenerateMessage}
+            disabled={isGenerating}
+            style={[
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: SPACING.md,
+                paddingHorizontal: SPACING.lg,
+                borderRadius: BORDER_RADIUS.lg,
+                backgroundColor: withOpacity(colors.primary, 'light'),
+                gap: SPACING.sm,
+              },
+            ]}
+            activeOpacity={0.7}
+          >
+            {isGenerating ? (
+              <LoadingSpinner size="small" />
+            ) : (
+              <Sparkles size={20} color={colors.primary} />
+            )}
+            <Text
+              style={{
+                color: colors.primary,
+                fontSize: FONT_SIZES.base,
+                fontWeight: '600',
+              }}
             >
-              {isGenerating ? (
-                <LoadingSpinner size="small" />
-              ) : (
-                <Sparkles size={20} color={colors.primary} />
-              )}
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: FONT_SIZES.base,
-                  fontWeight: '600',
-                }}
+              {isGenerating ? 'Composing...' : 'AI Compose Message'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Channel Selection */}
+      <BottomSheetSection title="Send Via">
+        <View className="flex-row gap-2">
+          {availableChannels.map((option) => {
+            const Icon = option.icon;
+            const isSelected = channel === option.value;
+
+            return (
+              <TouchableOpacity
+                key={option.value}
+                onPress={() => setChannel(option.value as 'sms' | 'email' | 'phone')}
+                style={[
+                  {
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingVertical: SPACING.md,
+                    borderRadius: BORDER_RADIUS.md,
+                    backgroundColor: isSelected
+                      ? withOpacity(colors.primary, 'light')
+                      : colors.muted,
+                    borderWidth: isSelected ? 1 : 0,
+                    borderColor: colors.primary,
+                    gap: SPACING.xs,
+                  },
+                ]}
+                activeOpacity={0.7}
               >
-                {isGenerating ? 'Composing...' : 'AI Compose Message'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Channel Selection */}
-        <BottomSheetSection title="Send Via">
-          <View className="flex-row gap-2">
-            {availableChannels.map((option) => {
-              const Icon = option.icon;
-              const isSelected = channel === option.value;
-
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  onPress={() => setChannel(option.value as 'sms' | 'email' | 'phone')}
-                  style={[
-                    {
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingVertical: SPACING.md,
-                      borderRadius: BORDER_RADIUS.md,
-                      backgroundColor: isSelected
-                        ? withOpacity(colors.primary, 'light')
-                        : colors.muted,
-                      borderWidth: isSelected ? 1 : 0,
-                      borderColor: colors.primary,
-                      gap: SPACING.xs,
-                    },
-                  ]}
-                  activeOpacity={0.7}
+                <Icon
+                  size={18}
+                  color={isSelected ? colors.primary : colors.mutedForeground}
+                />
+                <Text
+                  style={{
+                    color: isSelected ? colors.primary : colors.mutedForeground,
+                    fontSize: FONT_SIZES.sm,
+                    fontWeight: isSelected ? '600' : '400',
+                  }}
                 >
-                  <Icon
-                    size={18}
-                    color={isSelected ? colors.primary : colors.mutedForeground}
-                  />
-                  <Text
-                    style={{
-                      color: isSelected ? colors.primary : colors.mutedForeground,
-                      fontSize: FONT_SIZES.sm,
-                      fontWeight: isSelected ? '600' : '400',
-                    }}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </BottomSheetSection>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </BottomSheetSection>
 
-        {/* Message Content */}
-        <BottomSheetSection title="Message">
-          {channel === 'email' && (
-            <FormField label="Subject" required className="mb-3">
-              <Input
-                value={subject}
-                onChangeText={(text) => {
-                  setSubject(text);
-                  setAiComposed(false);
-                }}
-                placeholder="Enter subject..."
-              />
-            </FormField>
-          )}
-
-          <FormField label={channel === 'phone' ? 'Call Script' : 'Message'} required>
+      {/* Message Content */}
+      <BottomSheetSection title="Message">
+        {channel === 'email' && (
+          <FormField label="Subject" required className="mb-3">
             <Input
-              value={body}
+              value={subject}
               onChangeText={(text) => {
-                setBody(text);
+                setSubject(text);
                 setAiComposed(false);
               }}
-              placeholder={
-                channel === 'phone'
-                  ? 'Script to read during call...'
-                  : 'Type your message...'
-              }
-              multiline
-              numberOfLines={8}
-              style={{ minHeight: 180 }}
+              placeholder="Enter subject..."
             />
           </FormField>
+        )}
 
-          {aiComposed && (
-            <View
-              className="flex-row items-center mt-2 px-2"
-              style={{ opacity: 0.7 }}
-            >
-              <Sparkles size={12} color={colors.primary} />
-              <Text
-                style={{
-                  color: colors.primary,
-                  fontSize: FONT_SIZES.xs,
-                  marginLeft: 4,
-                }}
-              >
-                AI composed - feel free to edit
-              </Text>
-            </View>
-          )}
-        </BottomSheetSection>
+        <FormField label={channel === 'phone' ? 'Call Script' : 'Message'} required>
+          <Input
+            value={body}
+            onChangeText={(text) => {
+              setBody(text);
+              setAiComposed(false);
+            }}
+            placeholder={
+              channel === 'phone'
+                ? 'Script to read during call...'
+                : 'Type your message...'
+            }
+            multiline
+            numberOfLines={8}
+            style={{ minHeight: 180 }}
+          />
+        </FormField>
 
-        {/* Vendor Contact Info */}
-        <BottomSheetSection title="Sending To">
+        {aiComposed && (
           <View
-            className="p-3 rounded-lg"
-            style={{ backgroundColor: colors.muted }}
+            className="flex-row items-center mt-2 px-2"
+            style={{ opacity: 0.7 }}
           >
+            <Sparkles size={12} color={colors.primary} />
             <Text
               style={{
-                color: colors.foreground,
-                fontSize: FONT_SIZES.base,
-                fontWeight: '500',
+                color: colors.primary,
+                fontSize: FONT_SIZES.xs,
+                marginLeft: 4,
               }}
             >
-              {vendor.name}
-              {vendor.company_name && ` (${vendor.company_name})`}
-            </Text>
-            <Text
-              style={{
-                color: colors.mutedForeground,
-                fontSize: FONT_SIZES.sm,
-                marginTop: 4,
-              }}
-            >
-              {channel === 'email'
-                ? vendor.email
-                : vendor.phone}
+              AI composed - feel free to edit
             </Text>
           </View>
-        </BottomSheetSection>
-      </ScrollView>
+        )}
+      </BottomSheetSection>
+
+      {/* Vendor Contact Info */}
+      <BottomSheetSection title="Sending To">
+        <View
+          className="p-3 rounded-lg"
+          style={{ backgroundColor: colors.muted }}
+        >
+          <Text
+            style={{
+              color: colors.foreground,
+              fontSize: FONT_SIZES.base,
+              fontWeight: '500',
+            }}
+          >
+            {vendor.name}
+            {vendor.company_name && ` (${vendor.company_name})`}
+          </Text>
+          <Text
+            style={{
+              color: colors.mutedForeground,
+              fontSize: FONT_SIZES.sm,
+              marginTop: 4,
+            }}
+          >
+            {channel === 'email'
+              ? vendor.email
+              : vendor.phone}
+          </Text>
+        </View>
+      </BottomSheetSection>
 
       {/* Footer Actions */}
       <View

@@ -2,7 +2,7 @@
 // Bottom sheet for adding a new inventory item
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import {
   BottomSheet,
@@ -150,14 +150,9 @@ export function AddInventorySheet({
       visible={visible}
       onClose={onClose}
       title="Add Inventory Item"
-      height="90%"
+      snapPoints={['90%']}
     >
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Photos Section */}
+      {/* Photos Section */}
         <BottomSheetSection title="Photos">
           <PhotoGallery
             photos={photos.map((p, i) => ({
@@ -271,26 +266,25 @@ export function AddInventorySheet({
           </FormField>
         </BottomSheetSection>
 
-        {/* Notes */}
-        <BottomSheetSection title="Notes">
-          <View className="flex-row items-end gap-2">
-            <FormField label="" className="flex-1">
-              <Input
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Additional notes..."
-                multiline
-                numberOfLines={3}
-                style={{ minHeight: 80 }}
-              />
-            </FormField>
-            <VoiceRecordButton
-              onTranscription={handleVoiceResult}
-              size="md"
+      {/* Notes */}
+      <BottomSheetSection title="Notes">
+        <View className="flex-row items-end gap-2">
+          <FormField label="" className="flex-1">
+            <Input
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Additional notes..."
+              multiline
+              numberOfLines={3}
+              style={{ minHeight: 80 }}
             />
-          </View>
-        </BottomSheetSection>
-      </ScrollView>
+          </FormField>
+          <VoiceRecordButton
+            onTranscription={handleVoiceResult}
+            size="md"
+          />
+        </View>
+      </BottomSheetSection>
 
       {/* Footer Actions */}
       <View

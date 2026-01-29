@@ -229,7 +229,7 @@ export function InventoryListScreen() {
           renderSectionHeader={renderSectionHeader}
           stickySectionHeadersEnabled
           contentContainerStyle={{
-            paddingBottom: TAB_BAR_SAFE_PADDING + 80,
+            paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
           refreshControl={
             <RefreshControl

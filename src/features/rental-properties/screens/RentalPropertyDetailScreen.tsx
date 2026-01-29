@@ -367,7 +367,7 @@ export function RentalPropertyDetailScreen() {
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: SPACING.md,
-          paddingBottom: TAB_BAR_SAFE_PADDING + 80,
+          paddingBottom: TAB_BAR_SAFE_PADDING,
         }}
         refreshControl={
           <RefreshControl

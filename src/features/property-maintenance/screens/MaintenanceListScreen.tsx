@@ -186,7 +186,7 @@ export function MaintenanceListScreen() {
           )}
           contentContainerStyle={{
             paddingTop: SPACING.sm,
-            paddingBottom: TAB_BAR_SAFE_PADDING + 80,
+            paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
           refreshControl={
             <RefreshControl

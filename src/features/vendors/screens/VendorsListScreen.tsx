@@ -231,7 +231,7 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
           renderSectionHeader={renderSectionHeader}
           stickySectionHeadersEnabled
           contentContainerStyle={{
-            paddingBottom: TAB_BAR_SAFE_PADDING + 80,
+            paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
           refreshControl={
             <RefreshControl

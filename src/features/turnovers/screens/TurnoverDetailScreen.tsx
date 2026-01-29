@@ -293,7 +293,7 @@ export function TurnoverDetailScreen() {
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: SPACING.md,
-          paddingBottom: TAB_BAR_SAFE_PADDING + 20,
+          paddingBottom: TAB_BAR_SAFE_PADDING,
         }}
         refreshControl={
           <RefreshControl

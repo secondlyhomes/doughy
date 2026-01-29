@@ -6,7 +6,7 @@ import { View, Text, FlatList, RefreshControl, TextInput, TouchableOpacity, Acti
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Search, Plus, AlertCircle } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '@/components/ui';
+import { Button, SimpleFAB, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useThemeColors } from '@/context/ThemeContext';
@@ -268,7 +268,7 @@ export function SkipTraceResultsScreen() {
         renderItem={renderResult}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -292,26 +292,11 @@ export function SkipTraceResultsScreen() {
       />
 
       {/* FAB */}
-      <View style={{ position: 'absolute', bottom: 24, right: 24 }}>
-        <TouchableOpacity
-          onPress={() => setShowAddSheet(true)}
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: colors.primary,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 4,
-            elevation: 5,
-          }}
-        >
-          <Plus size={24} color={colors.primaryForeground} />
-        </TouchableOpacity>
-      </View>
+      <SimpleFAB
+        icon={<Plus size={24} color="white" />}
+        onPress={() => setShowAddSheet(true)}
+        accessibilityLabel="Run skip trace"
+      />
 
       {/* Add Sheet */}
       <RunSkipTraceSheet
