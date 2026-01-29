@@ -4,6 +4,27 @@
 
 import { supabase } from '@/lib/supabase';
 
+// ============================================
+// Unsplash Property Images for Rentals
+// ============================================
+const RENTAL_PROPERTY_IMAGES = [
+  'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80', // Modern white house
+  'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80', // Suburban home
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80', // Luxury home exterior
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80', // Modern house pool
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80', // Contemporary home
+  'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=800&q=80', // Ranch style home
+  'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=800&q=80', // Classic American home
+  'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80', // Luxury villa
+  'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80', // Modern minimal
+  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80', // Craftsman home
+];
+
+// Get a random property image
+function getPropertyImage(index: number = 0): string {
+  return RENTAL_PROPERTY_IMAGES[index % RENTAL_PROPERTY_IMAGES.length];
+}
+
 export interface SeedScenario {
   id: string;
   name: string;
@@ -216,6 +237,7 @@ const seedStarterLandlord: SeedScenario = {
       security_deposit: 500,
       status: 'active',
       amenities: ['wifi', 'pool', 'parking', 'ac', 'kitchen'],
+      photos: [getPropertyImage(0)],
     }).select().single();
 
     if (propertyError) {
@@ -411,6 +433,7 @@ const seedBusyLandlord: SeedScenario = {
         cleaning_fee: 75,
         status: 'active',
         amenities: ['wifi', 'gym', 'parking', 'ac'],
+        photos: [getPropertyImage(1)],
       },
       {
         user_id: userId,
@@ -429,6 +452,7 @@ const seedBusyLandlord: SeedScenario = {
         security_deposit: 3200,
         status: 'active',
         amenities: ['wifi', 'garage', 'yard', 'washer_dryer'],
+        photos: [getPropertyImage(2)],
       },
       {
         user_id: userId,
@@ -447,6 +471,7 @@ const seedBusyLandlord: SeedScenario = {
         security_deposit: 1100,
         status: 'active',
         amenities: ['wifi', 'ac', 'laundry_in_building'],
+        photos: [getPropertyImage(3)],
       },
     ]).select();
 
@@ -583,6 +608,7 @@ const seedRoomByRoom: SeedScenario = {
       is_room_by_room_enabled: true,
       status: 'active',
       amenities: ['wifi', 'parking', 'laundry', 'kitchen', 'yard'],
+      photos: [getPropertyImage(4)],
     }).select().single();
 
     if (propertyError) {
@@ -704,6 +730,7 @@ const seedFullPropertyManager: SeedScenario = {
         security_deposit: 1000,
         status: 'active',
         amenities: ['wifi', 'pool', 'parking', 'ac', 'kitchen', 'hot_tub'],
+        photos: [getPropertyImage(5)],
       },
       {
         user_id: userId,
@@ -722,6 +749,7 @@ const seedFullPropertyManager: SeedScenario = {
         security_deposit: 3500,
         status: 'active',
         amenities: ['wifi', 'gym', 'parking', 'ac', 'doorman'],
+        photos: [getPropertyImage(6)],
       },
     ]).select();
 
@@ -1211,6 +1239,7 @@ const seedEdgeCases: SeedScenario = {
       rate_type: 'nightly',
       status: 'active',
       notes: "Testing <img src=x onerror=alert('xss')> and ' OR '1'='1",
+      photos: [getPropertyImage(7)],
     }).select().single();
 
     if (propertyError) throw new Error(`Failed to create test property: ${propertyError.message}`);
