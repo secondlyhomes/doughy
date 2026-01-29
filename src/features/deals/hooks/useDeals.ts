@@ -548,6 +548,10 @@ export function useCreateDeal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
     },
+    onError: (error) => {
+      console.error('[useCreateDeal] Failed to create deal:', error);
+      // Error is surfaced via mutation.error for UI to display
+    },
   });
 }
 
@@ -563,6 +567,10 @@ export function useUpdateDeal() {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       queryClient.invalidateQueries({ queryKey: ['deal', variables.id] });
     },
+    onError: (error, variables) => {
+      console.error(`[useUpdateDeal] Failed to update deal ${variables.id}:`, error);
+      // Error is surfaced via mutation.error for UI to display
+    },
   });
 }
 
@@ -576,6 +584,10 @@ export function useDeleteDeal() {
     mutationFn: deleteDeal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
+    },
+    onError: (error) => {
+      console.error('[useDeleteDeal] Failed to delete deal:', error);
+      // Error is surfaced via mutation.error for UI to display
     },
   });
 }
@@ -592,6 +604,10 @@ export function useUpdateDealStage() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       queryClient.invalidateQueries({ queryKey: ['deal', variables.id] });
+    },
+    onError: (error, variables) => {
+      console.error(`[useUpdateDealStage] Failed to update stage for deal ${variables.id}:`, error);
+      // Error is surfaced via mutation.error for UI to display
     },
   });
 }

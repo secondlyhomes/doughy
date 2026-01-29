@@ -192,6 +192,11 @@ export async function deleteAvatar(): Promise<ProfileResult> {
       .from('avatars')
       .remove([`${user.id}/avatar.jpg`, `${user.id}/avatar.png`]);
 
+    // Log if storage deletion failed (orphaned files)
+    if (storageError) {
+      console.error('Failed to delete avatar from storage (file may be orphaned):', storageError);
+    }
+
     // Update profile to remove avatar URL (even if storage delete fails)
     const { error: profileError } = await supabase
       .from('user_profiles')

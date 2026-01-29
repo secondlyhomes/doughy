@@ -148,7 +148,8 @@ export function DirectMailCreditsScreen() {
         Linking.openURL(result.checkout_url);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to start purchase. Please try again.');
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert('Purchase Failed', `Could not start purchase: ${message}`);
     }
   }, [selectedPackage, purchaseCredits]);
 

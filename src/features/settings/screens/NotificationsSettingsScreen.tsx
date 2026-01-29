@@ -75,14 +75,16 @@ export function NotificationsSettingsScreen() {
   }, []);
 
   const saveSettings = useCallback(async (newSettings: NotificationSettings) => {
+    const previousSettings = settings; // Store for rollback
     setSettings(newSettings); // Optimistic update
     try {
       await AsyncStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(newSettings));
     } catch (error) {
       console.error('Failed to save notification settings:', error);
+      setSettings(previousSettings); // Rollback on failure
       Alert.alert('Error', 'Failed to save your notification preferences. Please try again.');
     }
-  }, []);
+  }, [settings]);
 
   const handleToggle = useCallback(
     (key: keyof NotificationSettings) => {

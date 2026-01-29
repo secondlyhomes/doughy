@@ -125,8 +125,9 @@ export function CaptureScreen() {
       });
       setShowRecorder(false);
       Alert.alert('Saved', 'Voice memo added to triage queue.');
-    } catch {
-      Alert.alert('Error', 'Failed to save voice memo. Please try again.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to save voice memo: ${message}`);
     }
   }, [createItem]);
 
@@ -153,8 +154,9 @@ export function CaptureScreen() {
         source: 'upload',
       });
       Alert.alert('Uploaded', 'Document added to triage queue.');
-    } catch {
-      Alert.alert('Error', 'Failed to upload document. Please try again.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to upload document: ${message}`);
     }
   }, [createItem]);
 
@@ -185,8 +187,9 @@ export function CaptureScreen() {
         source: 'app_camera',
       });
       Alert.alert('Saved', 'Photo added to triage queue.');
-    } catch {
-      Alert.alert('Error', 'Failed to capture photo. Please try again.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to capture photo: ${message}`);
     }
   }, [createItem]);
 
@@ -212,8 +215,9 @@ export function CaptureScreen() {
       setShowNoteModal(false);
       setNoteText('');
       Alert.alert('Saved', 'Note added to triage queue.');
-    } catch {
-      Alert.alert('Error', 'Failed to save note. Please try again.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to save note: ${message}`);
     }
   }, [createItem, noteText]);
 

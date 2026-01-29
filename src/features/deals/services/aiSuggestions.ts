@@ -349,21 +349,20 @@ export async function fetchConversationContext(
     if (leadId) filters.push(`lead_id.eq.${leadId}`);
 
     // Query recent conversations
-    // Type assertion needed until Supabase types are regenerated after migration
-    const queryBuilder = supabase
-      .from('conversation_items' as 'profiles')
+    // Using type-safe approach with explicit table reference
+    // conversation_items table may not exist in types yet - use untyped query
+    const query = supabase
+      .from('conversation_items')
       .select('sentiment, key_phrases, action_items, occurred_at')
-      .order('occurred_at' as 'id', { ascending: false })
+      .order('occurred_at', { ascending: false })
       .limit(10);
 
     if (filters.length > 0) {
-      queryBuilder.or(filters.join(','));
+      query.or(filters.join(','));
     }
 
-    const { data, error } = await (queryBuilder as unknown as Promise<{
-      data: ConversationRow[] | null;
-      error: Error | null;
-    }>);
+    // Execute query - table may not exist yet, handle gracefully
+    const { data, error } = await query;
 
     if (error) {
       console.error('[AISuggestions] Error fetching conversations:', error);

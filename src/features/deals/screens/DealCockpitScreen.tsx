@@ -313,6 +313,7 @@ export function DealCockpitScreen() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   // Fetch AI suggestions when deal changes
+  // Dependencies include all deal properties that affect suggestions
   useEffect(() => {
     if (!deal || isDealClosed(deal)) {
       setLoadingSuggestions(false);
@@ -329,8 +330,8 @@ export function DealCockpitScreen() {
           setSuggestions(results);
         }
       })
-      .catch((error) => {
-        console.error('[DealCockpit] Error fetching suggestions:', error);
+      .catch((err) => {
+        console.error('[DealCockpit] Error fetching suggestions:', err);
       })
       .finally(() => {
         if (mounted) {
@@ -341,7 +342,8 @@ export function DealCockpitScreen() {
     return () => {
       mounted = false;
     };
-  }, [deal?.id, deal?.stage]);
+    // Include deal properties used by getSuggestionsForDeal for suggestion generation
+  }, [deal?.id, deal?.stage, deal?.lead_id, deal?.strategy, deal?.offers?.length, deal?.property?.repair_cost]);
 
   // Evidence modal handlers
   const handleEvidencePress = useCallback((field: 'mao' | 'profit' | 'risk') => {

@@ -63,10 +63,16 @@ export function AdminDashboardScreen() {
 
       if (statsResult.success && statsResult.stats) {
         setStats(statsResult.stats);
+      } else if (!statsResult.success) {
+        console.error('Failed to load stats:', statsResult.error);
+        Alert.alert('Stats Error', statsResult.error || 'Failed to load statistics');
       }
 
       if (healthResult.success && healthResult.systems) {
         setSystems(healthResult.systems);
+      } else if (!healthResult.success) {
+        console.error('Failed to load system health:', healthResult.error);
+        Alert.alert('Health Check Error', healthResult.error || 'Failed to load system health');
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);

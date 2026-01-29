@@ -355,9 +355,32 @@ export function useCreateCampaignStep() {
  */
 export function useUpdateCampaignStep() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<CampaignStep> & { id: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      // Verify ownership by checking the campaign belongs to user
+      const { data: step, error: fetchError } = await supabase
+        .from('drip_campaign_steps')
+        .select('campaign_id')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { data: campaign, error: campaignError } = await supabase
+        .from('investor_campaigns')
+        .select('id')
+        .eq('id', step.campaign_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (campaignError || !campaign) {
+        throw new Error('Step not found or access denied');
+      }
+
       const { data, error } = await supabase
         .from('drip_campaign_steps')
         .update(updates as Record<string, unknown>)
@@ -380,9 +403,24 @@ export function useUpdateCampaignStep() {
  */
 export function useDeleteCampaignStep() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, campaignId }: { id: string; campaignId: string }) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      // Verify ownership by checking the campaign belongs to user
+      const { data: campaign, error: campaignError } = await supabase
+        .from('investor_campaigns')
+        .select('id')
+        .eq('id', campaignId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (campaignError || !campaign) {
+        throw new Error('Campaign not found or access denied');
+      }
+
       const { error } = await supabase
         .from('drip_campaign_steps')
         .delete()

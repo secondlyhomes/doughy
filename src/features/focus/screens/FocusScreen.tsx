@@ -119,7 +119,8 @@ async function uploadToSupabaseStorage(
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      // Fallback to local URI if storage upload fails
+      // Log warning - file will only be stored locally and may not persist
+      console.warn('[FocusScreen] Storage upload failed, using local URI which may not persist across devices');
       return localUri;
     }
 
@@ -739,7 +740,7 @@ export function FocusScreen() {
         visible={!!nudgeTouchLogLead}
         onClose={() => setNudgeTouchLogLead(null)}
         focusedProperty={nudgeTouchLogLead ? {
-          id: '', // No property context
+          id: undefined as unknown as string, // No property context - use undefined to avoid storing empty string
           address: '',
           city: '',
           state: '',

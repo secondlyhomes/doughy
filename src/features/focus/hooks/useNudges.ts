@@ -61,7 +61,7 @@ async function fetchLeadsWithTouchData(settings: NudgeSettings): Promise<LeadWit
 
   if (leadsError) {
     console.error('Error fetching leads:', leadsError);
-    return [];
+    throw new Error(`Failed to load leads: ${leadsError.message}`);
   }
 
   if (!leads || leads.length === 0) return [];
@@ -75,7 +75,8 @@ async function fetchLeadsWithTouchData(settings: NudgeSettings): Promise<LeadWit
 
   if (touchesError) {
     console.error('Error fetching touch data:', touchesError);
-    // Fall back to lead data without touches
+    // Touch data is supplementary - continue with lead data without touches
+    // This is acceptable degradation since the core lead data was fetched
     return leads.map(lead => ({
       ...lead,
       last_touch_date: null,
@@ -135,7 +136,7 @@ async function fetchDealNudges(settings: NudgeSettings) {
 
   if (error) {
     console.error('Error fetching deal nudges:', error);
-    return [];
+    throw new Error(`Failed to load deal nudges: ${error.message}`);
   }
 
   return data || [];
@@ -152,7 +153,7 @@ async function fetchPendingCaptures() {
 
   if (error) {
     console.error('Error fetching pending captures:', error);
-    return [];
+    throw new Error(`Failed to load pending captures: ${error.message}`);
   }
 
   return data || [];
@@ -253,8 +254,17 @@ export function useNudges() {
       } as Nudge & { touchCount?: number; responsiveness?: number | null });
     });
 
-    // Process deals
-    dealData.forEach((deal: any) => {
+    // Process deals - type the deal data properly
+    interface DealWithRelations {
+      id: string;
+      stage: string;
+      next_action: string | null;
+      next_action_due: string | null;
+      updated_at: string | null;
+      lead: { id: string; name: string } | null;
+      property: { id: string; address_line_1: string; city: string; state: string } | null;
+    }
+    (dealData as DealWithRelations[]).forEach((deal) => {
       // Check for overdue actions
       if (deal.next_action_due) {
         const dueDate = new Date(deal.next_action_due);

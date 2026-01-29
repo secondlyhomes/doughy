@@ -249,7 +249,8 @@ export function useCreateTouch() {
       // Invalidate all touch-related queries
       queryClient.invalidateQueries({ queryKey: ['contact-touches'] });
       // Also invalidate nudges to update stale lead status
-      queryClient.invalidateQueries({ queryKey: ['nudges-stale-leads'] });
+      // Use the correct query key that matches useNudges.ts
+      queryClient.invalidateQueries({ queryKey: ['nudges-leads-with-touches'] });
       queryClient.invalidateQueries({ queryKey: ['nudges-deals'] });
     },
   });

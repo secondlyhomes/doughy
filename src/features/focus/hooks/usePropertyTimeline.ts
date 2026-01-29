@@ -19,14 +19,20 @@ export interface TimelineEvent {
 
 async function fetchPropertyTimeline(propertyId: string): Promise<TimelineEvent[]> {
   const events: TimelineEvent[] = [];
+  const errors: string[] = [];
 
   // Fetch capture items assigned to this property
-  const { data: captures } = await supabase
+  const { data: captures, error: capturesError } = await supabase
     .from('capture_items')
     .select('id, type, title, created_at, transcript, content')
     .eq('assigned_property_id', propertyId)
     .order('created_at', { ascending: false })
     .limit(20);
+
+  if (capturesError) {
+    console.error('Error fetching captures for timeline:', capturesError);
+    errors.push('captures');
+  }
 
   if (captures) {
     captures.forEach((item: any) => {
@@ -55,7 +61,7 @@ async function fetchPropertyTimeline(propertyId: string): Promise<TimelineEvent[
   }
 
   // Fetch deals for this property and their events
-  const { data: deals } = await supabase
+  const { data: deals, error: dealsError } = await supabase
     .from('deals')
     .select(`
       id,
@@ -68,6 +74,16 @@ async function fetchPropertyTimeline(propertyId: string): Promise<TimelineEvent[
     .eq('property_id', propertyId)
     .order('created_at', { ascending: false })
     .limit(5);
+
+  if (dealsError) {
+    console.error('Error fetching deals for timeline:', dealsError);
+    errors.push('deals');
+  }
+
+  // If all queries failed, throw an error
+  if (errors.length === 2) {
+    throw new Error('Failed to load timeline data');
+  }
 
   if (deals) {
     deals.forEach((deal: any) => {

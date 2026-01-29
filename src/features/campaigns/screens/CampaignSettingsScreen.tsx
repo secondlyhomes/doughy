@@ -295,12 +295,14 @@ function MetaOAuthSection() {
 
   const disconnectMeta = useMutation({
     mutationFn: async () => {
+      if (!user?.id) throw new Error('Not authenticated');
       if (!metaCredentials?.id) throw new Error('No credentials to disconnect');
 
       const { error } = await supabase
         .from('meta_dm_credentials')
         .delete()
-        .eq('id', metaCredentials.id);
+        .eq('id', metaCredentials.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
     },

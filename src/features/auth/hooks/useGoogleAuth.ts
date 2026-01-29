@@ -69,7 +69,8 @@ export function useGoogleAuth(): UseGoogleAuthResult {
       return result;
     } catch (err) {
       console.error('Google connect error:', err);
-      return false;
+      // Re-throw to allow callers to handle the error and show user feedback
+      throw err;
     }
   }, [promptGoogleAuth]);
 

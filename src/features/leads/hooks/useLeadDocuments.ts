@@ -217,6 +217,13 @@ export function useLeadDocumentMutations() {
         .single();
 
       if (insertError) {
+        // Clean up orphaned file from storage on DB insert failure
+        console.error('[LeadDocuments] DB insert failed, cleaning up uploaded file:', fileName);
+        try {
+          await supabase.storage.from('property-documents').remove([fileName]);
+        } catch (cleanupErr) {
+          console.error('[LeadDocuments] Failed to cleanup orphaned file:', cleanupErr);
+        }
         throw insertError;
       }
 

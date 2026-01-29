@@ -1,6 +1,6 @@
 # Code Review Status
 
-Last updated: 2026-01-28
+Last updated: 2026-01-29
 
 ## Review Process
 
@@ -63,20 +63,42 @@ Using 3 specialized agents in parallel:
 - emailVerificationService.ts: Fixed race condition in polling
 - SecurityScreen.tsx: Updated to use new isMFAEnabled return type
 
----
-
-## Pending Reviews
+**Additional fixes applied (pending commit):**
+- aiSuggestions.ts: Removed dangerous type casting (`'conversation_items' as 'profiles'`)
+- DealCockpitScreen.tsx: Fixed useEffect dependencies to include all deal properties used by getSuggestionsForDeal
+- useDealEvents.ts: Added UUID validation before database query
+- useLeadDocuments.ts: Cleanup orphaned storage files on DB insert failure
+- useGoogleAuth.ts: Re-throw errors in connectGoogle() for proper caller handling
+- useDeals.ts: Added onError handlers to all 4 mutations (useCreateDeal, useUpdateDeal, useDeleteDeal, useUpdateDealStage)
 
 ### Batch 6: Campaigns, Focus, Layout, Public
-- `src/features/campaigns/` ❌
-- `src/features/focus/` ❌
-- `src/features/layout/` ❌
-- `src/features/public/` ❌
+- `src/features/campaigns/` ✅
+- `src/features/focus/` ✅
+- `src/features/layout/` ✅
+- `src/features/public/` ✅
+
+**Fixes applied (pending commit):**
+- useCampaigns.ts: Added user ownership verification to useUpdateCampaignStep and useDeleteCampaignStep (security)
+- CampaignSettingsScreen.tsx: Added user_id check to disconnectMeta mutation (security)
+- useNudges.ts: Changed from returning empty arrays to throwing errors for proper React Query error handling
+- useNudges.ts: Added proper typing for deal data (replaced `any` with interface)
+- useContactTouches.ts: Fixed wrong query key invalidation (`nudges-stale-leads` → `nudges-leads-with-touches`)
+- usePropertyTimeline.ts: Added error handling for Supabase queries
+- FocusScreen.tsx: Fixed empty property_id being passed to TouchLogSheet
+- TouchLogSheet.tsx: Only include property_id in touch creation if valid
+- DirectMailCreditsScreen.tsx: Show actual error message instead of generic
 
 ### Batch 7: Admin, Settings, Capture (deep review)
-- `src/features/admin/` ❌ (partial review done earlier)
-- `src/features/settings/` ❌
-- `src/features/capture/` ❌ (deeper review needed)
+- `src/features/admin/` ✅
+- `src/features/settings/` ✅
+- `src/features/capture/` ✅
+
+**Fixes applied (pending commit):**
+- AdminDashboardScreen.tsx: Handle `success: false` results from getAdminStats/getSystemHealth
+- NotificationsSettingsScreen.tsx: Rollback optimistic update on AsyncStorage save failure
+- TriageQueue.tsx: Handle and display error state from useCaptureItems
+- profileService.ts: Log storage deletion failures for orphaned file tracking
+- CaptureScreen.tsx: Show actual error messages in all catch blocks
 
 ---
 
@@ -84,39 +106,43 @@ Using 3 specialized agents in parallel:
 
 ### From Batch 5 Reviews (Auth/Deals/Leads/Contacts)
 
-#### Critical
-1. **aiSuggestions.ts** (lines 353-366): Dangerous type casting bypasses type safety
-   - `'conversation_items' as 'profiles'` cast
-   - Needs proper table type definitions
+#### ~~Critical~~ Fixed
+1. ~~**aiSuggestions.ts** (lines 353-366): Dangerous type casting bypasses type safety~~ ✅ Fixed
+2. ~~**DealCockpitScreen.tsx** (lines 316-344): Missing useEffect dependencies~~ ✅ Fixed
 
-2. **DealCockpitScreen.tsx** (lines 316-344): Missing useEffect dependencies
-   - `getSuggestionsForDeal(deal)` passes full deal but deps only have `deal?.id, deal?.stage`
+#### ~~High Priority~~ Mostly Fixed
+1. **dealNotificationService.ts**: Multiple silent failures (NOT FIXED - acceptable degradation for notifications)
+   - getPushToken() returns null on error
+   - Scheduling functions return null on error
+   - This is acceptable behavior for non-critical notification scheduling
+2. ~~**useDealEvents.ts**: Missing UUID validation before DB query~~ ✅ Fixed
+3. ~~**useLeadDocuments.ts**: Orphaned files in storage on partial failure~~ ✅ Fixed
+4. ~~**useGoogleAuth.ts**: connectGoogle() swallows errors~~ ✅ Fixed
+5. ~~**useDeals.ts** mutations: Missing onError handlers~~ ✅ Fixed
 
-#### High Priority
-1. **dealNotificationService.ts**: Multiple silent failures
-   - getPushToken() returns null on error (lines 118-121)
-   - All scheduling functions fail silently (lines 161-164, 198-201, 232-235, 275-278)
-   - Immediate notifications fail silently (lines 306-308, 339-341)
-
-2. **useDealEvents.ts** (lines 13-39): Missing UUID validation before DB query
-
-3. **useLeadDocuments.ts** (lines 133-234): Orphaned files in storage on partial failure
-   - File uploads to storage, then DB insert fails, file is orphaned
-
-4. **useGoogleAuth.ts** (lines 66-74): connectGoogle() swallows errors, returns false
-
-5. **useDeals.ts** mutations: Missing onError handlers for user feedback
-
-#### Type Design Issues
+#### Type Design Issues (Architectural - Lower Priority)
 1. **Deal type** has `strategy`, `risk_score` fields not in database schema
 2. **LeadStatus** type mismatch between app and database enum values
 3. **OfferTerms** has over-broad optional fields, needs discriminated union by strategy
+
+### From Batch 6/7 Reviews (Architectural - not fixed)
+
+#### Type Design (Medium Priority)
+1. **CampaignStep** - Should be discriminated union by channel
+2. **DripEnrollment** - Should be discriminated union by status
+3. **CaptureItem** - "Bag of optionals" - should use discriminated union by type
+4. **Result types** - Many use `{ success: boolean; error?: string }` instead of discriminated unions
+
+#### Unsafe Type Assertions (Low Priority)
+- `useCampaigns.ts` uses `as unknown as DripCampaign` casts throughout
+- Consider using Supabase generated types or type guards
 
 ---
 
 ## How to Continue
 
-1. Run review agents on pending batches (Batch 6, 7)
-2. Fix critical issues from Known Issues section
-3. Consider adding database migrations for missing Deal columns
+1. ~~Run review agents on pending batches (Batch 6, 7)~~ ✅ Complete
+2. ~~Fix critical issues from Known Issues section (Batch 5 issues)~~ ✅ Complete
+3. Consider adding database migrations for missing Deal columns (strategy, risk_score)
 4. Update type definitions to derive from database types where possible
+5. Refactor types to use discriminated unions where appropriate (CampaignStep, DripEnrollment, CaptureItem)

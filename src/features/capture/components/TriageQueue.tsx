@@ -5,7 +5,7 @@ import React, { useCallback, useState, useMemo } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { Inbox, CheckCircle, Search } from 'lucide-react-native';
+import { Inbox, CheckCircle, Search, AlertCircle } from 'lucide-react-native';
 import { SPACING } from '@/constants/design-tokens';
 
 import { CaptureItem } from '../types';
@@ -27,7 +27,7 @@ export function TriageQueue({ onItemPress, showAssigned = false, searchQuery, pr
   const [showPushSheet, setShowPushSheet] = useState(false);
 
   // Fetch items - pending/ready items for triage, or all including assigned
-  const { items, isLoading, refetch } = useCaptureItems();
+  const { items, isLoading, error, refetch } = useCaptureItems();
 
   // Filter items based on showAssigned prop and propertyId
   const statusFilteredItems = useMemo(() => {
@@ -111,7 +111,15 @@ export function TriageQueue({ onItemPress, showAssigned = false, searchQuery, pr
           />
         }
         ListEmptyComponent={
-          searchQuery?.trim() ? (
+          error ? (
+            <ListEmptyState
+              state="error"
+              icon={AlertCircle}
+              title="Failed to Load"
+              description={error instanceof Error ? error.message : 'Could not load capture items'}
+              action={{ label: 'Retry', onPress: () => refetch() }}
+            />
+          ) : searchQuery?.trim() ? (
             <ListEmptyState
               state="filtered"
               icon={Search}

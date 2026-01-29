@@ -97,7 +97,8 @@ export function TouchLogSheet({
 
       await createTouch({
         lead_id: focusedProperty.leadId,
-        property_id: focusedProperty.id,
+        // Only include property_id if it's a valid non-empty string
+        ...(focusedProperty.id ? { property_id: focusedProperty.id } : {}),
         touch_type: touchType,
         outcome,
         responded,
