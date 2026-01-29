@@ -209,17 +209,26 @@ DROP POLICY IF EXISTS "call_logs_insert_policy" ON public.comms_call_logs;
 DROP POLICY IF EXISTS "call_logs_update_policy" ON public.comms_call_logs;
 DROP POLICY IF EXISTS "call_logs_delete_policy" ON public.comms_call_logs;
 
+-- Note: comms_call_logs has lead_id, not user_id - ownership via crm_leads
 CREATE POLICY "comms_call_logs_select_policy" ON public.comms_call_logs
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    lead_id IN (SELECT id FROM public.crm_leads WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "comms_call_logs_insert_policy" ON public.comms_call_logs
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    lead_id IN (SELECT id FROM public.crm_leads WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "comms_call_logs_update_policy" ON public.comms_call_logs
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    lead_id IN (SELECT id FROM public.crm_leads WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "comms_call_logs_delete_policy" ON public.comms_call_logs
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (
+    lead_id IN (SELECT id FROM public.crm_leads WHERE user_id = auth.uid())
+  );
 
 -- RLS for comms_call_transcripts
 DROP POLICY IF EXISTS "call_transcripts_select_policy" ON public.comms_call_transcripts;
@@ -245,17 +254,26 @@ DROP POLICY IF EXISTS "call_transcript_segments_insert_policy" ON public.comms_c
 DROP POLICY IF EXISTS "call_transcript_segments_update_policy" ON public.comms_call_transcript_segments;
 DROP POLICY IF EXISTS "call_transcript_segments_delete_policy" ON public.comms_call_transcript_segments;
 
+-- Note: comms_call_transcript_segments has transcript_id, not user_id - ownership via comms_call_transcripts
 CREATE POLICY "comms_call_transcript_segments_select_policy" ON public.comms_call_transcript_segments
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    transcript_id IN (SELECT id FROM public.comms_call_transcripts WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "comms_call_transcript_segments_insert_policy" ON public.comms_call_transcript_segments
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    transcript_id IN (SELECT id FROM public.comms_call_transcripts WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "comms_call_transcript_segments_update_policy" ON public.comms_call_transcript_segments
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    transcript_id IN (SELECT id FROM public.comms_call_transcripts WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "comms_call_transcript_segments_delete_policy" ON public.comms_call_transcript_segments
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (
+    transcript_id IN (SELECT id FROM public.comms_call_transcripts WHERE user_id = auth.uid())
+  );
 
 -- RLS for crm_contact_opt_outs
 DROP POLICY IF EXISTS "contact_opt_outs_select_policy" ON public.crm_contact_opt_outs;

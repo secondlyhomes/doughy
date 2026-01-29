@@ -7,6 +7,14 @@
 BEGIN;
 
 -- ============================================================================
+-- STEP 0: Drop triggers first (they depend on the functions we're replacing)
+-- ============================================================================
+
+DROP TRIGGER IF EXISTS set_comp_workspace_id_trigger ON public.investor_comps;
+DROP TRIGGER IF EXISTS set_lead_property_workspace_trigger ON public.investor_lead_properties;
+DROP TRIGGER IF EXISTS trigger_update_conversation_on_message ON public.landlord_messages;
+
+-- ============================================================================
 -- STEP 1: Drop old functions (will recreate with new table references)
 -- ============================================================================
 

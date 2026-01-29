@@ -164,16 +164,16 @@ DROP POLICY IF EXISTS "assistant_jobs_update_policy" ON public.ai_jobs;
 DROP POLICY IF EXISTS "assistant_jobs_delete_policy" ON public.ai_jobs;
 
 CREATE POLICY "ai_jobs_select_policy" ON public.ai_jobs
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (auth.uid() = created_by);
 
 CREATE POLICY "ai_jobs_insert_policy" ON public.ai_jobs
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = created_by);
 
 CREATE POLICY "ai_jobs_update_policy" ON public.ai_jobs
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (auth.uid() = created_by);
 
 CREATE POLICY "ai_jobs_delete_policy" ON public.ai_jobs
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (auth.uid() = created_by);
 
 -- RLS for ai_sessions
 DROP POLICY IF EXISTS "assistant_sessions_select_policy" ON public.ai_sessions;

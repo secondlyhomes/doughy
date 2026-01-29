@@ -66,22 +66,19 @@ CREATE POLICY "user_onboarding_statuses_delete_policy" ON public.user_onboarding
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS for user_retention_records
+-- Note: This is an analytics/aggregate table with cohort data (no user_id column)
+-- Authenticated users can read for dashboards; service role manages writes
 DROP POLICY IF EXISTS "user_retention_select_policy" ON public.user_retention_records;
 DROP POLICY IF EXISTS "user_retention_insert_policy" ON public.user_retention_records;
 DROP POLICY IF EXISTS "user_retention_update_policy" ON public.user_retention_records;
 DROP POLICY IF EXISTS "user_retention_delete_policy" ON public.user_retention_records;
 
 CREATE POLICY "user_retention_records_select_policy" ON public.user_retention_records
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (auth.role() = 'authenticated');
 
-CREATE POLICY "user_retention_records_insert_policy" ON public.user_retention_records
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "user_retention_records_update_policy" ON public.user_retention_records
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "user_retention_records_delete_policy" ON public.user_retention_records
-  FOR DELETE USING (auth.uid() = user_id);
+-- Service role handles INSERT/UPDATE/DELETE for analytics jobs
+CREATE POLICY "user_retention_records_service_role_policy" ON public.user_retention_records
+  FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================================================
 -- STEP 3: Rename indexes

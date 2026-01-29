@@ -340,16 +340,24 @@ DROP POLICY IF EXISTS "rental_rooms_update_policy" ON public.landlord_rooms;
 DROP POLICY IF EXISTS "rental_rooms_delete_policy" ON public.landlord_rooms;
 
 CREATE POLICY "landlord_rooms_select_policy" ON public.landlord_rooms
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    property_id IN (SELECT id FROM public.landlord_properties WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "landlord_rooms_insert_policy" ON public.landlord_rooms
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    property_id IN (SELECT id FROM public.landlord_properties WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "landlord_rooms_update_policy" ON public.landlord_rooms
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    property_id IN (SELECT id FROM public.landlord_properties WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "landlord_rooms_delete_policy" ON public.landlord_rooms
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (
+    property_id IN (SELECT id FROM public.landlord_properties WHERE user_id = auth.uid())
+  );
 
 -- RLS for landlord_bookings
 DROP POLICY IF EXISTS "rental_bookings_select_policy" ON public.landlord_bookings;
@@ -394,16 +402,24 @@ DROP POLICY IF EXISTS "rental_messages_update_policy" ON public.landlord_message
 DROP POLICY IF EXISTS "rental_messages_delete_policy" ON public.landlord_messages;
 
 CREATE POLICY "landlord_messages_select_policy" ON public.landlord_messages
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    conversation_id IN (SELECT id FROM public.landlord_conversations WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "landlord_messages_insert_policy" ON public.landlord_messages
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    conversation_id IN (SELECT id FROM public.landlord_conversations WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "landlord_messages_update_policy" ON public.landlord_messages
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    conversation_id IN (SELECT id FROM public.landlord_conversations WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "landlord_messages_delete_policy" ON public.landlord_messages
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (
+    conversation_id IN (SELECT id FROM public.landlord_conversations WHERE user_id = auth.uid())
+  );
 
 -- RLS for landlord_ai_queue_items
 DROP POLICY IF EXISTS "rental_ai_queue_select_policy" ON public.landlord_ai_queue_items;

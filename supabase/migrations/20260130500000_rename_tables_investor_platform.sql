@@ -468,16 +468,24 @@ DROP POLICY IF EXISTS "deal_events_update_policy" ON public.investor_deal_events
 DROP POLICY IF EXISTS "deal_events_delete_policy" ON public.investor_deal_events;
 
 CREATE POLICY "investor_deal_events_select_policy" ON public.investor_deal_events
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    deal_id IN (SELECT id FROM public.investor_deals_pipeline WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "investor_deal_events_insert_policy" ON public.investor_deal_events
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    deal_id IN (SELECT id FROM public.investor_deals_pipeline WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "investor_deal_events_update_policy" ON public.investor_deal_events
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    deal_id IN (SELECT id FROM public.investor_deals_pipeline WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "investor_deal_events_delete_policy" ON public.investor_deal_events
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (
+    deal_id IN (SELECT id FROM public.investor_deals_pipeline WHERE user_id = auth.uid())
+  );
 
 -- RLS policies for investor_drip_campaign_steps
 DROP POLICY IF EXISTS "drip_campaign_steps_select_policy" ON public.investor_drip_campaign_steps;
@@ -486,16 +494,24 @@ DROP POLICY IF EXISTS "drip_campaign_steps_update_policy" ON public.investor_dri
 DROP POLICY IF EXISTS "drip_campaign_steps_delete_policy" ON public.investor_drip_campaign_steps;
 
 CREATE POLICY "investor_drip_campaign_steps_select_policy" ON public.investor_drip_campaign_steps
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    campaign_id IN (SELECT id FROM public.investor_campaigns WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "investor_drip_campaign_steps_insert_policy" ON public.investor_drip_campaign_steps
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (
+    campaign_id IN (SELECT id FROM public.investor_campaigns WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "investor_drip_campaign_steps_update_policy" ON public.investor_drip_campaign_steps
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    campaign_id IN (SELECT id FROM public.investor_campaigns WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "investor_drip_campaign_steps_delete_policy" ON public.investor_drip_campaign_steps
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING (
+    campaign_id IN (SELECT id FROM public.investor_campaigns WHERE user_id = auth.uid())
+  );
 
 -- RLS policies for investor_drip_enrollments
 DROP POLICY IF EXISTS "drip_enrollments_select_policy" ON public.investor_drip_enrollments;
