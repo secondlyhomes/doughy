@@ -45,6 +45,7 @@ export function MFASetupScreen() {
         setStep('scan');
       } else {
         setError(result.error || 'Failed to start MFA setup');
+        setStep('scan'); // Exit loading state so error is visible
       }
     };
 

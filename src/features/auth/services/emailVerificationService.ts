@@ -110,7 +110,11 @@ export function pollEmailVerification(
       const isVerified = await checkEmailVerification();
 
       if (isVerified) {
-        onVerified();
+        // Check isPolling again after async operation to prevent calling
+        // onVerified on unmounted components
+        if (isPolling) {
+          onVerified();
+        }
         break;
       }
 

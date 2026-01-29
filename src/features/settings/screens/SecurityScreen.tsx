@@ -45,8 +45,16 @@ export function SecurityScreen() {
     const loadMFAStatus = async () => {
       setIsLoading(true);
       try {
-        const enabled = await isMFAEnabled();
-        setMfaEnabled(enabled);
+        const mfaResult = await isMFAEnabled();
+        setMfaEnabled(mfaResult.enabled);
+
+        if (mfaResult.error) {
+          console.error('Error checking MFA status:', mfaResult.error);
+          Alert.alert(
+            'Warning',
+            'Could not verify MFA status. Some information may be incomplete.'
+          );
+        }
 
         const factorsResult = await listMFAFactors();
         if (factorsResult.success && factorsResult.factors) {

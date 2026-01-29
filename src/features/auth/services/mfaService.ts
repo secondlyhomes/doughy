@@ -215,15 +215,15 @@ export async function unenrollMFA(factorId: string): Promise<MFAVerifyResult> {
 
 /**
  * Check if MFA is enabled for current user
- * Note: Returns false on error - callers should handle MFA check failures appropriately
+ * Returns a result object to distinguish between "not enabled" and "error checking"
  */
-export async function isMFAEnabled(): Promise<boolean> {
+export async function isMFAEnabled(): Promise<{ enabled: boolean; error?: string }> {
   const result = await listMFAFactors();
   if (!result.success || !result.factors) {
     console.error('[mfa] Failed to check MFA status:', result.error);
-    return false;
+    return { enabled: false, error: result.error || 'Failed to check MFA status' };
   }
-  return result.factors.some((f) => f.status === 'verified');
+  return { enabled: result.factors.some((f) => f.status === 'verified') };
 }
 
 /**

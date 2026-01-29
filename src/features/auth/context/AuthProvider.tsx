@@ -334,17 +334,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       async (event, newSession) => {
         console.log('[auth] Auth state changed:', event);
 
-        if (newSession) {
-          setSession(newSession);
-          setUser(newSession.user);
-          await fetchProfile(newSession.user.id, newSession.user);
-        } else {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
+        try {
+          if (newSession) {
+            setSession(newSession);
+            setUser(newSession.user);
+            await fetchProfile(newSession.user.id, newSession.user);
+          } else {
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error('[auth] Error handling auth state change:', error);
+          // Still update session/user state even if profile fetch fails
+          if (newSession) {
+            setSession(newSession);
+            setUser(newSession.user);
+          }
+        } finally {
+          setIsLoading(false);
         }
-
-        setIsLoading(false);
       }
     );
 
