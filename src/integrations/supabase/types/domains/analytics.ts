@@ -5,21 +5,21 @@ export interface AssistantSessionsTable {
     context: Json | null
     created_at: string | null
     id: string
-    tokens_used: number | null
+    token_count: number | null
     user_id: string | null
   }
   Insert: {
     context?: Json | null
     created_at?: string | null
     id?: string
-    tokens_used?: number | null
+    token_count?: number | null
     user_id?: string | null
   }
   Update: {
     context?: Json | null
     created_at?: string | null
     id?: string
-    tokens_used?: number | null
+    token_count?: number | null
     user_id?: string | null
   }
   Relationships: []

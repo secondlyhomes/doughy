@@ -129,7 +129,7 @@ export function RentalPropertyCard({
   ];
 
   // Add room count if room-by-room is enabled
-  if (property.room_by_room_enabled && roomsCount !== undefined) {
+  if (property.is_room_by_room_enabled && roomsCount !== undefined) {
     fields.push({
       icon: LayoutGrid,
       value: `${roomsCount} rooms`,
@@ -152,7 +152,7 @@ export function RentalPropertyCard({
 
   // Occupancy info for footer (if room-by-room)
   const showOccupancy =
-    property.room_by_room_enabled &&
+    property.is_room_by_room_enabled &&
     roomsCount !== undefined &&
     occupiedRooms !== undefined &&
     roomsCount > 0;

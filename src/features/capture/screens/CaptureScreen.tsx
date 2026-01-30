@@ -10,7 +10,6 @@ import { BottomSheet, BottomSheetSection, Button, SearchBar } from '@/components
 import { useThemeColors } from '@/context/ThemeContext';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDebounce } from '@/hooks';
 import {
   Mic,
@@ -25,19 +24,6 @@ import { TriageQueue } from '../components/TriageQueue';
 import { useCreateCaptureItem, usePendingCaptureCount } from '../hooks/useCaptureItems';
 import { VoiceMemoRecorder } from '@/features/conversations/components/VoiceMemoRecorder';
 import { useUnreadCounts } from '@/features/layout/hooks/useUnreadCounts';
-
-// ============================================
-// Spacing Constants
-// ============================================
-
-// Calculate search bar container height based on its padding
-const SEARCH_BAR_CONTAINER_HEIGHT =
-  SPACING.sm +  // pt-2 (8px top padding)
-  40 +          // SearchBar size="md" estimated height
-  SPACING.xs;   // pb-1 (4px bottom padding)
-  // Total: ~52px
-
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 type TabKey = 'queue' | 'history';
 
@@ -89,7 +75,6 @@ const TABS: { key: TabKey; label: string }[] = [
 
 export function CaptureScreen() {
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabKey>('queue');
   const [showRecorder, setShowRecorder] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -252,24 +237,21 @@ export function CaptureScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Glass Search Bar - positioned absolutely at top */}
-      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-        <View className="px-4 pt-2 pb-1">
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search captures..."
-            size="md"
-            glass={true}
-            onFilter={() => setShowFiltersSheet(true)}
-            hasActiveFilters={hasActiveFilters}
-          />
-        </View>
+      {/* Search Bar - in normal document flow */}
+      <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search captures..."
+          size="md"
+          glass={true}
+          onFilter={() => setShowFiltersSheet(true)}
+          hasActiveFilters={hasActiveFilters}
+        />
       </View>
 
       {/* Quick Actions - positioned below search bar */}
       <View style={{
-        paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
         paddingHorizontal: SPACING.md,
         paddingBottom: SPACING.md
       }}>

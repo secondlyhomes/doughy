@@ -157,16 +157,114 @@ function timingSafeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
+/**
+ * Encrypts a string using AES-256-CBC with HMAC-SHA256 and PBKDF2 key derivation
+ * Format v2: v2:${salt_base64}:${iv_base64}:${ciphertext_base64}:${hmac_hex}
+ *
+ * @param plaintext - The string to encrypt
+ * @returns Encrypted string in v2 format
+ */
+export async function encryptServer(plaintext: string): Promise<string> {
+  if (!plaintext) {
+    throw new Error("Empty plaintext provided");
+  }
+
+  // Get encryption key from environment
+  const keySecret = Deno.env.get("KEY_SECRET");
+  if (!keySecret) {
+    console.error("[crypto-server] CRITICAL: Missing KEY_SECRET environment variable");
+    throw new Error("Missing encryption configuration");
+  }
+
+  try {
+    // Generate random 16-byte salt for PBKDF2
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+
+    // Generate random 16-byte IV for AES-CBC
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+
+    // Derive key using PBKDF2 with salt
+    const encoder = new TextEncoder();
+    const baseKey = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(keySecret),
+      "PBKDF2",
+      false,
+      ["deriveBits", "deriveKey"]
+    );
+
+    const aesKey = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 100000,
+        hash: "SHA-256"
+      },
+      baseKey,
+      { name: "AES-CBC", length: 256 },
+      false,
+      ["encrypt"]
+    );
+
+    // Also derive bits for HMAC key
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 100000,
+        hash: "SHA-256"
+      },
+      baseKey,
+      256
+    );
+
+    // Encrypt using AES-256-CBC
+    const encrypted = await crypto.subtle.encrypt(
+      { name: "AES-CBC", iv },
+      aesKey,
+      encoder.encode(plaintext)
+    );
+
+    // Get base64 representations
+    const saltB64 = base64Encode(salt);
+    const ivB64 = base64Encode(iv);
+    const ctB64 = base64Encode(new Uint8Array(encrypted));
+
+    // Generate HMAC for authentication
+    const dataToAuth = `${saltB64}:${ivB64}:${ctB64}`;
+    const derivedArray = Array.from(new Uint8Array(derivedBits));
+    const keyHex = derivedArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const hmac = await hmacSha256Hex(dataToAuth, keyHex);
+
+    // Return v2 format: v2:salt:iv:ciphertext:hmac
+    return `v2:${saltB64}:${ivB64}:${ctB64}:${hmac}`;
+  } catch (error) {
+    console.error("[crypto-server] Encryption error:", error);
+    throw new Error(`Failed to encrypt: ${error.message}`);
+  }
+}
+
 export async function decryptServer(ciphertext: string): Promise<string> {
   if (!ciphertext) {
     throw new Error("Empty ciphertext provided");
   }
 
   // Get decryption key from environment
-  const keySecret = Deno.env.get("KEY_SECRET") || Deno.env.get("VITE_KEY_SECRET") ||
-                    Deno.env.get("ENCRYPTION_SECRET") || Deno.env.get("VITE_ENCRYPTION_SECRET");
+  const keySecret = Deno.env.get("KEY_SECRET");
+
+  // Log KEY_SECRET status without exposing full key (for debugging decryption issues)
+  console.info('[crypto-server] KEY DIAGNOSTICS:', JSON.stringify({
+    keySecretSet: !!keySecret,
+    keySecretLength: keySecret?.length || 0,
+    keySecretPrefix: keySecret ? keySecret.substring(0, 6) + '...' : 'NOT_SET',
+    keySecretSuffix: keySecret ? '...' + keySecret.substring(keySecret.length - 6) : 'NOT_SET',
+    ciphertextFormat: ciphertext.startsWith('v2:') ? 'v2' :
+                      ciphertext.startsWith('DEV.') ? 'DEV' :
+                      ciphertext.includes(':') ? 'v1' : 'GCM',
+  }));
+
   if (!keySecret) {
-    console.error("[crypto-server] CRITICAL: Missing KEY_SECRET or alternative environment variable");
+    console.error("[crypto-server] CRITICAL: Missing KEY_SECRET environment variable");
     throw new Error("Missing encryption configuration");
   }
 
@@ -200,8 +298,24 @@ export async function decryptServer(ciphertext: string): Promise<string> {
 
       const [saltB64, ivB64, ctB64, receivedHmac] = parts;
 
-      // Decode salt
+      // Decode salt and IV
       const salt = fromBase64(saltB64);
+      const ivCheck = fromBase64(ivB64);
+
+      // Log decoded sizes for debugging
+      console.info('[crypto-server] v2 decoded sizes:', JSON.stringify({
+        saltLength: salt.length,
+        ivLength: ivCheck.length,
+        expectedLength: 16,
+      }));
+
+      // Check for keys encrypted with buggy client (Array.from bug - 64 bytes instead of 16)
+      if (salt.length !== 16 || ivCheck.length !== 16) {
+        throw new Error(
+          `Invalid salt/IV size (salt: ${salt.length}, iv: ${ivCheck.length}, expected: 16). ` +
+          `This key was likely encrypted with a buggy client. Please delete and re-save the API key.`
+        );
+      }
 
       // Derive key using PBKDF2 with salt
       const keyHex = await deriveKeyHexPBKDF2(keySecret, salt);
@@ -217,7 +331,7 @@ export async function decryptServer(ciphertext: string): Promise<string> {
       }
 
       // Decrypt using AES-256-CBC with PBKDF2-derived key
-      const iv = fromBase64(ivB64);
+      const iv = ivCheck; // Already decoded and validated above
       const encrypted = fromBase64(ctB64);
       const key = await getCBCKeyPBKDF2(keySecret, salt);
 

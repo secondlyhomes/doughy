@@ -4,7 +4,7 @@
 // Standalone tab screen (renamed from Focus tab)
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, SectionList, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, SectionList, RefreshControl, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   MessageSquare,
@@ -483,8 +483,8 @@ export function LeadInboxListScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Search Bar */}
-      <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
+      {/* Header - in normal flow */}
+      <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.sm }}>
         <SearchBar
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -498,7 +498,7 @@ export function LeadInboxListScreen() {
 
       {/* Error Banner */}
       {(error || subscriptionError) && (
-        <View style={{ paddingHorizontal: SPACING.md, marginBottom: SPACING.sm }}>
+        <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
           <Alert variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
             <AlertDescription variant="destructive">
               {error || subscriptionError}
@@ -527,6 +527,7 @@ export function LeadInboxListScreen() {
           renderSectionHeader={renderSectionHeader}
           keyExtractor={keyExtractor}
           stickySectionHeadersEnabled={false}
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={{
             paddingHorizontal: SPACING.md,
             paddingBottom: TAB_BAR_SAFE_PADDING,

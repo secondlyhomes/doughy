@@ -385,7 +385,33 @@ is_deleted BOOLEAN DEFAULT FALSE
 is_primary BOOLEAN DEFAULT FALSE
 is_active BOOLEAN DEFAULT TRUE
 ```
-**Pattern**: `is_{adjective}` or `has_{noun}`
+**Pattern**: `is_{adjective}` (REQUIRED for all boolean columns)
+
+**Rules:**
+- ALL boolean columns MUST use `is_` prefix
+- Do NOT use `has_` prefix (converted to `is_` as of 2026-01-31 migration)
+- Examples:
+  - ✅ `is_private_bath` (not `has_private_bath`)
+  - ✅ `is_hoa_present` (not `has_hoa`)
+  - ✅ `is_conversation_started` (not `has_conversation`)
+  - ✅ `is_response_received` (not `has_responded`)
+
+### Count Columns
+```sql
+trigger_count INT DEFAULT 0
+token_count INT
+message_count INT
+```
+**Pattern**: `{noun}_count` (REQUIRED for all count columns)
+
+**Rules:**
+- ALL count columns MUST use `_count` suffix
+- Do NOT use variations like `times_triggered`, `usage_count`, `tokens_used`
+- Examples:
+  - ✅ `trigger_count` (not `times_triggered`)
+  - ✅ `token_count` (not `tokens_used`)
+  - ✅ `use_count` (not `usage_count`)
+  - ✅ `ai_prompt_token_count` (not `ai_prompt_tokens`)
 
 ### Status/State Fields
 ```sql

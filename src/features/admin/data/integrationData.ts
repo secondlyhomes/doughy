@@ -43,41 +43,6 @@ export const INTEGRATIONS: Integration[] = [
 
   // ===== AI SERVICES =====
   {
-    id: 'openai',
-    name: 'OpenAI',
-    service: 'openai',
-    description: 'GPT models and AI completions',
-    icon: 'cpu',
-    group: 'AI',
-    docsUrl: 'https://platform.openai.com/docs/api-reference',
-    fields: [
-      {
-        key: 'openai',
-        label: 'API Key',
-        type: 'password',
-        required: true,
-        placeholder: 'sk-...',
-        description: 'OpenAI API key from platform.openai.com',
-      },
-      {
-        key: 'openai-org-id',
-        label: 'Organization ID',
-        type: 'text',
-        required: false,
-        placeholder: 'org-...',
-        description: 'Optional organization ID',
-      },
-      {
-        key: 'openai-model',
-        label: 'Preferred Model',
-        type: 'select',
-        required: false,
-        options: ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
-        description: 'Default model for completions',
-      },
-    ],
-  },
-  {
     id: 'anthropic',
     name: 'Anthropic Claude',
     service: 'anthropic',
@@ -93,25 +58,6 @@ export const INTEGRATIONS: Integration[] = [
         required: true,
         placeholder: 'sk-ant-...',
         description: 'Anthropic API key from console.anthropic.com',
-      },
-    ],
-  },
-  {
-    id: 'perplexity',
-    name: 'Perplexity',
-    service: 'perplexity',
-    description: 'Perplexity AI search and completions',
-    icon: 'search',
-    group: 'AI',
-    docsUrl: 'https://docs.perplexity.ai',
-    fields: [
-      {
-        key: 'perplexity',
-        label: 'API Key',
-        type: 'password',
-        required: true,
-        placeholder: 'pplx-...',
-        description: 'Perplexity API key',
       },
     ],
   },

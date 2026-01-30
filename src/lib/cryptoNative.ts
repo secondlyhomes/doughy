@@ -74,6 +74,23 @@ async function randomBytesHex(length: number): Promise<string> {
 }
 
 /**
+ * Convert a Uint8Array to a CryptoJS WordArray
+ * This properly packs bytes into 32-bit words (4 bytes per word)
+ */
+function bytesToWordArray(bytes: Uint8Array): CryptoJS.lib.WordArray {
+  const words: number[] = [];
+  for (let i = 0; i < bytes.length; i += 4) {
+    const word =
+      ((bytes[i] || 0) << 24) |
+      ((bytes[i + 1] || 0) << 16) |
+      ((bytes[i + 2] || 0) << 8) |
+      (bytes[i + 3] || 0);
+    words.push(word);
+  }
+  return CryptoJS.lib.WordArray.create(words, bytes.length);
+}
+
+/**
  * Encrypts a string using AES-256-CBC with HMAC-SHA256 and PBKDF2 key derivation
  * Format v2: v2:${salt_base64}:${iv_base64}:${ciphertext_base64}:${hmac_hex}
  *
@@ -88,14 +105,16 @@ export async function encrypt(plaintext: string): Promise<string> {
 
     // Generate random 16-byte salt for PBKDF2
     const saltBytes = await Crypto.getRandomBytesAsync(16);
-    const salt = CryptoJS.lib.WordArray.create(Array.from(saltBytes));
+    // Convert bytes to WordArray properly (4 bytes per 32-bit word)
+    const salt = bytesToWordArray(saltBytes);
 
     // Derive key using PBKDF2 (secure, slow by design)
     const key = await deriveKeyPBKDF2(secret, salt);
 
     // Generate random 16-byte IV for AES-CBC
     const ivBytes = await Crypto.getRandomBytesAsync(16);
-    const iv = CryptoJS.lib.WordArray.create(Array.from(ivBytes));
+    // Convert bytes to WordArray properly (4 bytes per 32-bit word)
+    const iv = bytesToWordArray(ivBytes);
 
     // Encrypt using crypto-js AES-256-CBC
     const encrypted = CryptoJS.AES.encrypt(

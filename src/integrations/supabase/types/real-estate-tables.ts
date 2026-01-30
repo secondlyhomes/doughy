@@ -63,7 +63,7 @@ export interface DBPropertyAnalysis {
   name: string | null;
   input_json: unknown;
   result_json: unknown;
-  tokens_used: number | null;
+  token_count: number | null;
   created_by: string | null;
   created_at: string | null;
 }

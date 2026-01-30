@@ -1,6 +1,6 @@
 // src/components/ui/Accordion.tsx
 // Accordion component - multiple collapsible sections
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { View, TouchableOpacity, Text, ViewProps, LayoutChangeEvent } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import Animated, {
@@ -239,6 +239,8 @@ export function AccordionContent({
   const height = useSharedValue(0);
   const animatedHeight = useSharedValue(isOpen ? 1 : 0);
   const [measured, setMeasured] = useState(false);
+  // Track previous height on JS thread to avoid reading shared value in callback
+  const previousHeightRef = useRef(0);
 
   React.useEffect(() => {
     animatedHeight.value = withTiming(isOpen ? 1 : 0, {
@@ -250,9 +252,13 @@ export function AccordionContent({
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const measuredHeight = event.nativeEvent.layout.height;
-      if (measuredHeight > 0 && !measured) {
+      // Update height when content changes (e.g., response time appearing)
+      if (measuredHeight > 0 && previousHeightRef.current !== measuredHeight) {
+        previousHeightRef.current = measuredHeight;
         height.value = measuredHeight;
-        setMeasured(true);
+        if (!measured) {
+          setMeasured(true);
+        }
       }
     },
     [height, measured]
@@ -269,7 +275,7 @@ export function AccordionContent({
     };
   });
 
-  // Render hidden to measure
+  // Render hidden to measure initially
   if (!measured) {
     return (
       <View
@@ -286,7 +292,7 @@ export function AccordionContent({
 
   return (
     <Animated.View style={animatedStyle}>
-      <View className={cn('pb-4 pt-0', className)} {...props}>
+      <View className={cn('pb-4 pt-0', className)} onLayout={onLayout} {...props}>
         {children}
       </View>
     </Animated.View>

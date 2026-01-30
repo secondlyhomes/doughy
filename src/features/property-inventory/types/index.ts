@@ -1,6 +1,13 @@
 // src/features/property-inventory/types/index.ts
 // TypeScript types for property inventory feature
 
+/**
+ * Inventory type distinguishes between permanent assets and consumable supplies
+ * - 'asset': Permanent items like furniture, appliances, HVAC (hard inventory)
+ * - 'supply': Consumables like toilet paper, coffee, cleaning supplies (soft inventory for STR/MTR)
+ */
+export type InventoryType = 'asset' | 'supply';
+
 export type InventoryCategory =
   | 'appliance'
   | 'hvac'
@@ -31,6 +38,8 @@ export interface InventoryItem {
   // Item identification
   name: string;
   category: InventoryCategory;
+  /** Whether this is an asset (permanent) or supply (consumable) */
+  inventory_type: InventoryType;
   location: string | null;
 
   // Product details
@@ -67,6 +76,8 @@ export interface CreateInventoryItemInput {
   property_id: string;
   name: string;
   category: InventoryCategory;
+  /** Whether this is an asset (permanent) or supply (consumable). Defaults to 'asset' */
+  inventory_type?: InventoryType;
   location?: string;
   brand?: string;
   model?: string;
@@ -84,6 +95,7 @@ export interface CreateInventoryItemInput {
 export interface UpdateInventoryItemInput {
   name?: string;
   category?: InventoryCategory;
+  inventory_type?: InventoryType;
   location?: string;
   brand?: string;
   model?: string;
@@ -141,3 +153,20 @@ export const COMMON_LOCATIONS = [
   'Office',
   'Dining Room',
 ] as const;
+
+// Inventory type labels and config
+export const INVENTORY_TYPE_CONFIG: Record<
+  InventoryType,
+  { label: string; description: string; emoji: string }
+> = {
+  asset: {
+    label: 'Assets',
+    description: 'Permanent items like furniture, appliances, HVAC',
+    emoji: '🏠',
+  },
+  supply: {
+    label: 'Supplies',
+    description: 'Consumables like toilet paper, coffee, cleaning supplies',
+    emoji: '📦',
+  },
+};

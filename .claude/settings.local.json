@@ -200,7 +200,15 @@
       "Bash(scp:*)",
       "Bash(gcloud --version:*)",
       "Bash(npx ts-node:*)",
-      "Bash(npx tailwindcss:*)"
+      "Bash(npx tailwindcss:*)",
+      "Bash(while read file)",
+      "Bash(do if ! grep -q \"ThemedSafeAreaView\\\\|SafeAreaView\" \"$file\")",
+      "Bash(then echo \"$file\" fi done)",
+      "Bash(npx expo-cli typecheck:*)",
+      "WebFetch(domain:amanhimself.dev)",
+      "Bash(git -C /Users/dinosaur/Developer/doughy-ai log --oneline -20)",
+      "WebFetch(domain:molt.bot)",
+      "Bash(do wc -l \"$file\")"
     ]
   }
 }

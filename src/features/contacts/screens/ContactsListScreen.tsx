@@ -30,7 +30,6 @@ import { Users, Search, Check } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { useDebounce } from '@/hooks';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   Contact,
@@ -42,17 +41,6 @@ import {
 } from '../types';
 import { useContacts, useCreateContact } from '../hooks/useContacts';
 import { ContactCard } from '../components/ContactCard';
-
-// ============================================
-// Spacing Constants
-// ============================================
-
-const SEARCH_BAR_CONTAINER_HEIGHT =
-  SPACING.sm +  // pt-2 (8px top padding)
-  40 +          // SearchBar size="md" estimated height
-  SPACING.xs;   // pb-1 (4px bottom padding)
-
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 // ============================================
 // Filter Configuration
@@ -115,7 +103,6 @@ const SORT_OPTIONS: { label: string; value: 'name' | 'created_at' | 'score' }[] 
 export function ContactsListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeTypeFilter, setActiveTypeFilter] = useState<CrmContactType | 'all'>('all');
@@ -259,24 +246,22 @@ export function ContactsListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Glass Search Bar - positioned absolutely at top */}
-        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-          <View className="px-4 pt-2 pb-1">
-            <SearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search contacts..."
-              size="md"
-              glass={true}
-              onFilter={() => setShowFiltersSheet(true)}
-              hasActiveFilters={hasActiveFilters}
-            />
-          </View>
+        {/* Search Bar - in normal document flow */}
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search contacts..."
+            size="md"
+            glass={true}
+            onFilter={() => setShowFiltersSheet(true)}
+            hasActiveFilters={hasActiveFilters}
+          />
         </View>
 
         {/* Contacts List */}
         {isLoading && !contacts?.length ? (
-          <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP, paddingHorizontal: 16 }}>
+          <View style={{ paddingHorizontal: SPACING.md }}>
             <SkeletonList count={5} component={LeadCardSkeleton} />
           </View>
         ) : (
@@ -285,10 +270,10 @@ export function ContactsListScreen() {
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             contentContainerStyle={{
-              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
-              paddingHorizontal: 16,
+              paddingHorizontal: SPACING.md,
               paddingBottom: TAB_BAR_SAFE_PADDING,
             }}
+            contentInsetAdjustmentBehavior="automatic"
             ItemSeparatorComponent={ItemSeparator}
             initialNumToRender={10}
             maxToRenderPerBatch={10}

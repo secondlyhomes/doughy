@@ -18,6 +18,8 @@ import {
 export interface UseRentalBookingsOptions {
   /** Auto-fetch bookings on mount */
   autoFetch?: boolean;
+  /** Filter by property ID */
+  propertyId?: string;
   /** Filter by status */
   statusFilter?: BookingStatus | 'all';
   /** Filter by booking type */
@@ -46,6 +48,7 @@ export interface UseRentalBookingsReturn {
 export function useRentalBookings(options: UseRentalBookingsOptions = {}): UseRentalBookingsReturn {
   const {
     autoFetch = true,
+    propertyId,
     statusFilter = 'all',
     typeFilter = 'all',
     searchQuery = '',
@@ -70,6 +73,11 @@ export function useRentalBookings(options: UseRentalBookingsOptions = {}): UseRe
   // Filter bookings based on options
   const filteredBookings = useMemo(() => {
     let result = bookingsWithRelations;
+
+    // Filter by property ID
+    if (propertyId) {
+      result = result.filter((b) => b.property_id === propertyId);
+    }
 
     // Filter by status
     if (statusFilter !== 'all') {
@@ -107,7 +115,7 @@ export function useRentalBookings(options: UseRentalBookingsOptions = {}): UseRe
     });
 
     return result;
-  }, [bookingsWithRelations, statusFilter, typeFilter, searchQuery]);
+  }, [bookingsWithRelations, propertyId, statusFilter, typeFilter, searchQuery]);
 
   const refetch = useCallback(async () => {
     await fetchBookings();

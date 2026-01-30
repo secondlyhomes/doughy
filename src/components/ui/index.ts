@@ -264,10 +264,6 @@ export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';
 export { ScreenHeader } from './ScreenHeader';
 export type { ScreenHeaderProps } from './ScreenHeader';
 
-// @deprecated Use SearchBar with glass={true} instead. See SearchBar component.
-export { GlassScreenHeader } from './GlassScreenHeader';
-export type { GlassScreenHeaderProps } from './GlassScreenHeader';
-
 // Floating Action Button
 export { SimpleFAB } from './SimpleFAB';
 export type { SimpleFABProps } from './SimpleFAB';
@@ -285,6 +281,36 @@ export type { PhotoGalleryProps, PhotoItem } from './PhotoGallery';
 
 export { GlassButton } from './GlassButton';
 export type { GlassButtonProps } from './GlassButton';
+
+export { ConversationHeader } from './ConversationHeader';
+export type { ConversationHeaderProps } from './ConversationHeader';
+
+// Property cards
+export { PropertyImageCard } from './PropertyImageCard';
+export type {
+  PropertyImageCardProps,
+  PropertyImageCardBadgeOverlay,
+  BadgeVariant as PropertyImageCardBadgeVariant,
+} from './PropertyImageCard';
+
+export { MetricsRow } from './MetricsRow';
+export type { MetricsRowProps, Metric } from './MetricsRow';
+
+// Header components
+export { HeaderBackButton } from './HeaderBackButton';
+export type { HeaderBackButtonProps } from './HeaderBackButton';
+
+// OAuth components
+export { OAuthConnectButton } from './OAuthConnectButton';
+export type { OAuthConnectButtonProps } from './OAuthConnectButton';
+
+// Action sheets
+export { DestructiveActionSheet } from './DestructiveActionSheet';
+export type { DestructiveActionSheetProps } from './DestructiveActionSheet';
+
+// Filterable tabs
+export { FilterableTabs } from './FilterableTabs';
+export type { FilterableTabsProps, FilterableTab } from './FilterableTabs';
 
 // Navigation components
 export {

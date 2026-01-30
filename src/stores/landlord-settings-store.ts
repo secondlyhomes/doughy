@@ -56,7 +56,7 @@ export interface TemplateSettings {
 // Full landlord settings structure (matches JSONB in DB)
 export interface LandlordSettings {
   ai_mode: AIMode;
-  ai_auto_respond: boolean;
+  is_ai_auto_respond: boolean;
   confidence_threshold: number; // 0-100
   always_review_topics: string[];
   notify_for_contact_types: string[];
@@ -74,8 +74,8 @@ export interface UserPlatformSettings {
   user_id: string;
   enabled_platforms: UserPlatform[];
   active_platform: UserPlatform;
-  completed_investor_onboarding: boolean;
-  completed_landlord_onboarding: boolean;
+  has_completed_investor_onboarding: boolean;
+  has_completed_landlord_onboarding: boolean;
   landlord_settings: LandlordSettings;
   created_at: string;
   updated_at: string;
@@ -84,7 +84,7 @@ export interface UserPlatformSettings {
 // Default settings (matches get_default_landlord_settings() in DB)
 const DEFAULT_LANDLORD_SETTINGS: LandlordSettings = {
   ai_mode: 'assisted',
-  ai_auto_respond: true,
+  is_ai_auto_respond: true,
   confidence_threshold: 85,
   always_review_topics: ['refund', 'discount', 'complaint', 'cancellation', 'damage', 'security_deposit'],
   notify_for_contact_types: ['lead'],
@@ -384,7 +384,7 @@ export const useLandlordSettingsStore = create<LandlordSettingsState>()(
           const { error } = await supabase
             .from('user_platform_settings')
             .update({
-              completed_landlord_onboarding: true,
+              has_completed_landlord_onboarding: true,
               updated_at: new Date().toISOString(),
             })
             .eq('user_id', user.id);
@@ -393,7 +393,7 @@ export const useLandlordSettingsStore = create<LandlordSettingsState>()(
 
           set((state) => ({
             platformSettings: state.platformSettings
-              ? { ...state.platformSettings, completed_landlord_onboarding: true }
+              ? { ...state.platformSettings, has_completed_landlord_onboarding: true }
               : null,
             isSaving: false,
           }));
@@ -439,7 +439,7 @@ export const selectIsLandlordEnabled = (state: LandlordSettingsState) =>
 export const selectActivePlatform = (state: LandlordSettingsState) =>
   state.platformSettings?.active_platform ?? 'investor';
 export const selectHasCompletedOnboarding = (state: LandlordSettingsState) =>
-  state.platformSettings?.completed_landlord_onboarding ?? false;
+  state.platformSettings?.has_completed_landlord_onboarding ?? false;
 
 // Computed selector for effective confidence threshold based on contact type
 export const selectEffectiveThreshold = (contactType: string) => (state: LandlordSettingsState) => {

@@ -15,11 +15,12 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/context/ThemeContext';
-import { Badge } from '@/components/ui';
+import { Badge, PropertyImageCard } from '@/components/ui';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
-import { PropertyCard } from '@/features/real-estate/components/PropertyCard';
-import { Property } from '@/features/real-estate/types/property';
+import { getInvestorPropertyMetrics, getPropertyImageUrl, getPropertyLocation } from '@/lib/property-card-utils';
+import { formatPropertyType } from '@/features/real-estate/utils/formatters';
+import type { Property } from '@/features/real-estate/types/property';
 
 import { LeadWithProperties, LeadProperty, LeadStatus } from '../types';
 
@@ -152,37 +153,43 @@ const PropertyCardView = React.memo(function PropertyCardView({
   const colors = useThemeColors();
   const convertedProperty = useMemo(() => leadPropertyToProperty(property), [property]);
 
+  // Custom footer with Start Deal button if onStartDeal is provided
+  const footerContent = onStartDeal ? (
+    <TouchableOpacity
+      onPress={onStartDeal}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        paddingVertical: SPACING.xs,
+        paddingHorizontal: SPACING.sm,
+        backgroundColor: withOpacity(colors.primary, 'light'),
+        borderRadius: BORDER_RADIUS.sm,
+      }}
+      accessibilityLabel="Start deal with this property"
+    >
+      <Plus size={14} color={colors.primary} />
+      <Text style={{ fontSize: 12, fontWeight: '500', color: colors.primary }}>
+        Start Deal
+      </Text>
+    </TouchableOpacity>
+  ) : undefined;
+
   return (
-    <View style={{ position: 'relative' }}>
-      <PropertyCard
-        property={convertedProperty}
-        onPress={onPress}
-        compact
-      />
-      {onStartDeal && (
-        <TouchableOpacity
-          onPress={onStartDeal}
-          style={{
-            position: 'absolute',
-            top: SPACING.sm,
-            right: SPACING.sm,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 4,
-            paddingVertical: SPACING.xs,
-            paddingHorizontal: SPACING.sm,
-            backgroundColor: colors.primary,
-            borderRadius: BORDER_RADIUS.sm,
-          }}
-          accessibilityLabel="Start deal with this property"
-        >
-          <Plus size={14} color={colors.primaryForeground} />
-          <Text style={{ fontSize: 12, fontWeight: '500', color: colors.primaryForeground }}>
-            Deal
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    <PropertyImageCard
+      imageUrl={getPropertyImageUrl(convertedProperty)}
+      title={convertedProperty.address || 'Address not specified'}
+      subtitle={getPropertyLocation(convertedProperty)}
+      metrics={getInvestorPropertyMetrics(convertedProperty)}
+      badgeOverlay={convertedProperty.propertyType ? {
+        label: formatPropertyType(convertedProperty.propertyType),
+        variant: 'secondary',
+      } : undefined}
+      onPress={onPress}
+      footerContent={footerContent}
+      showChevron={false}
+    />
   );
 });
 

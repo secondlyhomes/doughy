@@ -108,7 +108,7 @@ export interface RentalProperty {
   rate_type: RentalRateType;
   cleaning_fee: number | null;
   security_deposit: number | null;
-  room_by_room_enabled: boolean;
+  is_room_by_room_enabled: boolean;
   amenities: string[];
   house_rules: Record<string, unknown>;
   listing_urls: {
@@ -134,12 +134,12 @@ export interface RentalRoom {
   name: string;
   description: string | null;
   size_sqft: number | null;
-  has_private_bath: boolean;
-  has_private_entrance: boolean;
+  is_private_bath: boolean;
+  is_private_entrance: boolean;
   amenities: string[];
   weekly_rate: number | null;
   monthly_rate: number;
-  utilities_included: boolean;
+  is_utilities_included: boolean;
   status: RentalRoomStatus;
   available_date: string | null;
   current_booking_id: string | null;
@@ -191,8 +191,8 @@ export interface RentalConversation {
   channel: RentalChannel;
   platform: RentalPlatform | null;
   status: RentalConversationStatus;
-  ai_enabled: boolean;
-  ai_auto_respond: boolean;
+  is_ai_enabled: boolean;
+  is_ai_auto_respond: boolean;
   ai_confidence_threshold: number;
   ai_personality: string | null;
   subject: string | null;
@@ -217,9 +217,9 @@ export interface RentalMessage {
   sent_by: RentalMessageSender;
   ai_confidence: number | null;
   ai_model: string | null;
-  ai_prompt_tokens: number | null;
-  ai_completion_tokens: number | null;
-  requires_approval: boolean;
+  ai_prompt_token_count: number | null;
+  ai_completion_token_count: number | null;
+  is_requires_approval: boolean;
   approved_by: string | null;
   approved_at: string | null;
   edited_content: string | null;
@@ -278,7 +278,7 @@ export interface RentalTemplate {
   is_active: boolean;
   use_count: number;
   last_used_at: string | null;
-  ai_use_as_example: boolean;
+  is_ai_use_as_example: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -294,7 +294,7 @@ export interface RentalIntegration {
   status: IntegrationStatus;
   credentials: Record<string, unknown> | null;
   settings: Record<string, unknown>;
-  sync_enabled: boolean;
+  is_sync_enabled: boolean;
   sync_frequency_minutes: number;
   last_sync_at: string | null;
   last_sync_status: string | null;
@@ -316,8 +316,8 @@ export interface UserPlatformSettings {
   user_id: string;
   enabled_platforms: UserPlatform[];
   active_platform: UserPlatform;
-  completed_investor_onboarding: boolean;
-  completed_landlord_onboarding: boolean;
+  has_completed_investor_onboarding: boolean;
+  has_completed_landlord_onboarding: boolean;
   landlord_settings: {
     default_ai_enabled?: boolean;
     auto_respond_threshold?: number;
@@ -454,4 +454,4 @@ export type RentalAIQueueUpdate = Partial<Pick<RentalAIQueue, 'status' | 'final_
 export type RentalTemplateInsert = Omit<RentalTemplate, 'id' | 'use_count' | 'last_used_at' | 'created_at' | 'updated_at'>;
 export type RentalTemplateUpdate = Partial<Omit<RentalTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
 
-export type UserPlatformSettingsUpdate = Partial<Pick<UserPlatformSettings, 'enabled_platforms' | 'active_platform' | 'completed_investor_onboarding' | 'completed_landlord_onboarding' | 'landlord_settings'>>;
+export type UserPlatformSettingsUpdate = Partial<Pick<UserPlatformSettings, 'enabled_platforms' | 'active_platform' | 'has_completed_investor_onboarding' | 'has_completed_landlord_onboarding' | 'landlord_settings'>>;

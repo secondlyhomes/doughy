@@ -65,7 +65,7 @@ export interface UsageLogsTable {
     created_at: string | null
     id: string
     service: string
-    tokens_used: number | null
+    token_count: number | null
     user_id: string | null
   }
   Insert: {
@@ -73,7 +73,7 @@ export interface UsageLogsTable {
     created_at?: string | null
     id?: string
     service: string
-    tokens_used?: number | null
+    token_count?: number | null
     user_id?: string | null
   }
   Update: {
@@ -81,7 +81,7 @@ export interface UsageLogsTable {
     created_at?: string | null
     id?: string
     service?: string
-    tokens_used?: number | null
+    token_count?: number | null
     user_id?: string | null
   }
   Relationships: []

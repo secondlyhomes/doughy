@@ -42,6 +42,8 @@ export interface RentalProperty {
     turbotenant?: string;
   };
   status: PropertyStatus;
+  // Primary image URL for card displays
+  primary_image_url: string | null;
   created_at: string;
   updated_at: string;
 }

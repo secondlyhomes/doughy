@@ -63,7 +63,7 @@ describe('useLandlordSettingsStore', () => {
 
   const mockLandlordSettings: LandlordSettings = {
     ai_mode: 'assisted',
-    ai_auto_respond: true,
+    is_ai_auto_respond: true,
     confidence_threshold: 85,
     always_review_topics: ['refund', 'discount', 'complaint', 'cancellation', 'damage', 'security_deposit'],
     notify_for_contact_types: ['lead'],
@@ -104,8 +104,8 @@ describe('useLandlordSettingsStore', () => {
     user_id: 'user-1',
     enabled_platforms: ['investor', 'landlord'],
     active_platform: 'landlord',
-    completed_investor_onboarding: true,
-    completed_landlord_onboarding: true,
+    has_completed_investor_onboarding: true,
+    has_completed_landlord_onboarding: true,
     landlord_settings: mockLandlordSettings,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -828,7 +828,7 @@ describe('useLandlordSettingsStore', () => {
       useLandlordSettingsStore.setState({
         platformSettings: {
           ...mockPlatformSettings,
-          completed_landlord_onboarding: false,
+          has_completed_landlord_onboarding: false,
         },
       });
     });
@@ -854,7 +854,7 @@ describe('useLandlordSettingsStore', () => {
 
       expect(result!).toBe(true);
       const state = useLandlordSettingsStore.getState();
-      expect(state.platformSettings?.completed_landlord_onboarding).toBe(true);
+      expect(state.platformSettings?.has_completed_landlord_onboarding).toBe(true);
     });
   });
 

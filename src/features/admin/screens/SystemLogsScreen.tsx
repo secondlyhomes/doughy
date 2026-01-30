@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   AlertCircle,
   AlertTriangle,
@@ -17,7 +18,6 @@ import {
   Bug,
   ChevronDown,
 } from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
@@ -25,14 +25,8 @@ import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
 import { SPACING } from '@/constants/design-tokens';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
 
-// Spacing constants for floating search bar
-const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs; // ~52px (pt-2 + searchbar + pb-1)
-const FILTER_PILLS_HEIGHT = 60; // Slightly taller due to "Filter by Level" label
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
-
 export function SystemLogsScreen() {
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -194,41 +188,11 @@ export function SystemLogsScreen() {
     !search || log.message.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Calculate dynamic padding based on filter visibility
-  const listPaddingTop =
-    SEARCH_BAR_CONTAINER_HEIGHT +
-    insets.top +
-    SEARCH_BAR_TO_CONTENT_GAP +
-    (showFilters ? FILTER_PILLS_HEIGHT : 0);
-
-  // Loading state with skeletons - matches floating search bar layout
-  if (isLoading) {
-    return (
-      <ThemedSafeAreaView className="flex-1" edges={[]}>
-        {/* Floating search bar skeleton */}
-        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-          <View className="px-4 pt-2 pb-1">
-            <Skeleton className="h-12 rounded-full" />
-          </View>
-        </View>
-
-        {/* Content skeletons with matching paddingTop */}
-        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP, paddingHorizontal: 16 }}>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <View key={i} className="mb-2">
-              <Skeleton className="h-16 rounded-lg" />
-            </View>
-          ))}
-        </View>
-      </ThemedSafeAreaView>
-    );
-  }
-
   return (
-    <ThemedSafeAreaView className="flex-1" edges={[]}>
-      {/* Floating Glass Search Bar - positioned absolutely at top */}
-      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-        <View className="px-4 pt-2 pb-1">
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        {/* Search Bar - always rendered in normal document flow */}
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
           <SearchBar
             value={search}
             onChangeText={setSearch}
@@ -242,7 +206,7 @@ export function SystemLogsScreen() {
 
         {/* Filter Pills */}
         {showFilters && (
-          <View className="px-4 pb-2">
+          <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
             <Text className="text-sm font-medium mb-2" style={{ color: colors.mutedForeground }}>
               Filter by Level
             </Text>
@@ -284,36 +248,46 @@ export function SystemLogsScreen() {
             </View>
           </View>
         )}
-      </View>
 
-      {/* Logs List - content scrolls beneath search bar */}
-      <FlatList
-        data={filteredLogs}
-        keyExtractor={(item) => item.id}
-        renderItem={renderLog}
-        extraData={expandedLog}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        contentContainerStyle={{
-          paddingTop: listPaddingTop,
-          paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
-        }}
-        // Performance optimizations
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={15}
-        ListEmptyComponent={
-          <View className="flex-1 items-center justify-center py-24">
-            <Info size={48} color={colors.mutedForeground} />
-            <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No logs found</Text>
+        {/* Content: Loading skeletons or Logs List */}
+        {isLoading && !logs?.length ? (
+          <View style={{ paddingHorizontal: SPACING.md }}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <View key={i} className="mb-2">
+                <Skeleton className="h-16 rounded-lg" />
+              </View>
+            ))}
           </View>
-        }
-      />
-    </ThemedSafeAreaView>
+        ) : (
+          <FlatList
+            data={filteredLogs}
+            keyExtractor={(item) => item.id}
+            renderItem={renderLog}
+            extraData={expandedLog}
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            contentContainerStyle={{
+              paddingBottom: TAB_BAR_SAFE_PADDING,
+            }}
+            contentInsetAdjustmentBehavior="automatic"
+            // Performance optimizations
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            initialNumToRender={15}
+            ListEmptyComponent={
+              <View className="flex-1 items-center justify-center py-24">
+                <Info size={48} color={colors.mutedForeground} />
+                <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No logs found</Text>
+              </View>
+            }
+          />
+        )}
+      </ThemedSafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 

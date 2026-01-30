@@ -12,7 +12,11 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:admin": "jest --coverage --collectCoverageFrom='src/features/admin/**/*.{ts,tsx}' --collectCoverageFrom='src/routes/AdminNavigator.tsx'",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "db:types": "npx supabase gen types typescript --project-id lqmbyobweeaigrwmvizo --schema public > src/integrations/supabase/types/generated.ts",
+    "db:lint": "npx supabase db lint",
+    "db:diff": "npx supabase db diff --schema public",
+    "db:push": "npx supabase db push"
   },
   "dependencies": {
     "@callstack/liquid-glass": "^0.7.0",

@@ -139,8 +139,8 @@ export const supabase = (USE_MOCK_DATA
 
 // Helper functions to access real_estate schema tables
 export const realEstateDB = {
-  properties: () => supabase.from('re_properties'),
-  comps: () => supabase.from('re_comps'),
+  properties: () => supabase.from('investor_properties'),
+  comps: () => supabase.from('investor_comps'),
   // TODO: Add these when table types are defined
   // leadProperties: () => supabase.from('re_lead_properties'),
   // financingScenarios: () => supabase.from('re_financing_scenarios'),

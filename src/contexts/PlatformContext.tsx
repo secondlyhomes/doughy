@@ -15,8 +15,8 @@ export interface UserPlatformSettings {
   user_id: string;
   enabled_platforms: Platform[];
   active_platform: Platform;
-  completed_investor_onboarding: boolean | null;
-  completed_landlord_onboarding: boolean | null;
+  has_completed_investor_onboarding: boolean | null;
+  has_completed_landlord_onboarding: boolean | null;
   landlord_settings: Record<string, unknown> | null;
   created_at: string | null;
   updated_at: string | null;

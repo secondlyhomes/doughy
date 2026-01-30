@@ -749,8 +749,9 @@ interface PropertyTemplate {
   primary_image_url?: string;
 }
 
-// Unsplash real estate photos for property listings
+// Unsplash real estate photos for property listings (30 images for variety)
 const PROPERTY_IMAGES = [
+  // Core residential exteriors
   'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80', // Modern white house
   'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&q=80', // Suburban home
   'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80', // Luxury home exterior
@@ -761,6 +762,7 @@ const PROPERTY_IMAGES = [
   'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80', // Luxury villa
   'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800&q=80', // Modern minimal
   'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80', // Craftsman home
+  // Traditional styles
   'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800&q=80', // Two-story home
   'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80', // Colonial style
   'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80', // Red door house
@@ -771,6 +773,17 @@ const PROPERTY_IMAGES = [
   'https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=800&q=80', // Kitchen interior
   'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&q=80', // Living room
   'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80', // Modern facade
+  // Additional variety
+  'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80', // Mediterranean villa
+  'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80', // Modern luxury
+  'https://images.unsplash.com/photo-1599423300746-b62533397364?w=800&q=80', // Beach house
+  'https://images.unsplash.com/photo-1605146769289-440113cc3d00?w=800&q=80', // Townhouse
+  'https://images.unsplash.com/photo-1494526585095-c41746248156?w=800&q=80', // Elegant home
+  'https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=800&q=80', // Modern front
+  'https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=800&q=80', // Farmhouse style
+  'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=800&q=80', // Country home
+  'https://images.unsplash.com/photo-1575517111478-7f6afd0973db?w=800&q=80', // A-frame cabin
+  'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80', // Cozy cottage
 ];
 
 const EDGE_CASE_PROPERTIES: PropertyTemplate[] = [

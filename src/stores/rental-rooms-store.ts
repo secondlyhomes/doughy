@@ -17,8 +17,8 @@ export interface Room {
   name: string;
   description: string | null;
   size_sqft: number | null;
-  has_private_bath: boolean;
-  has_private_entrance: boolean;
+  is_private_bath: boolean;
+  is_private_entrance: boolean;
   bed_type: string | null;
   amenities: string[];
   weekly_rate: number | null;

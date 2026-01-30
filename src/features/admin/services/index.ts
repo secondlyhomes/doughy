@@ -43,3 +43,15 @@ export {
   type IntegrationsResult,
   type IntegrationResult,
 } from './integrationsService';
+
+export {
+  testUserService,
+  seedTestUsers,
+  clearTestUsers,
+  canSeedTestUsers,
+  getAllTestUsers,
+  getTestUserCount,
+  type TestUserData,
+  type SeedUsersResult,
+  type ClearUsersResult,
+} from './testUserService';

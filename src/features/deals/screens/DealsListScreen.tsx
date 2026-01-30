@@ -19,7 +19,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SlidersHorizontal, MapPin, Calendar, DollarSign, ChevronRight, Briefcase, Search } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SPACING } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';
 
@@ -39,19 +38,6 @@ import { useProperties } from '../../real-estate/hooks/useProperties';
 import { useNextAction, getActionIcon } from '../hooks/useNextAction';
 import { useDealAnalysis } from '../../real-estate/hooks/useDealAnalysis';
 import type { Property } from '../../real-estate/types';
-
-// ============================================
-// Spacing Constants
-// ============================================
-
-// Calculate search bar container height based on its padding
-const SEARCH_BAR_CONTAINER_HEIGHT =
-  SPACING.sm +  // pt-2 (8px top padding)
-  40 +          // SearchBar size="md" estimated height
-  SPACING.xs;   // pb-1 (4px bottom padding)
-  // Total: ~52px
-
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
 
 // ============================================
 // Stage Filter Tabs
@@ -242,7 +228,6 @@ const DealCard = memo(function DealCard({ deal, onPress }: DealCardProps) {
 export function DealsListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeStage, setActiveStage] = useState<DealStage | 'all'>('all');
@@ -332,25 +317,22 @@ export function DealsListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Glass Search Bar - positioned absolutely at top */}
-        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-          <View className="px-4 pt-2 pb-1">
-            <SearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search by address or lead..."
-              size="md"
-              glass={true}
-              onFilter={() => setShowFiltersSheet(true)}
-              hasActiveFilters={searchQuery.trim().length > 0 || activeStage !== 'all'}
-            />
-          </View>
+        {/* Search Bar - in normal document flow */}
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search by address or lead..."
+            size="md"
+            glass={true}
+            onFilter={() => setShowFiltersSheet(true)}
+            hasActiveFilters={searchQuery.trim().length > 0 || activeStage !== 'all'}
+          />
         </View>
-
 
         {/* Deals List */}
         {isLoading && !deals?.length ? (
-          <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP, paddingHorizontal: 16 }}>
+          <View style={{ paddingHorizontal: SPACING.md }}>
             <SkeletonList count={5} component={DealCardSkeleton} />
           </View>
         ) : (
@@ -359,10 +341,10 @@ export function DealsListScreen() {
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             contentContainerStyle={{
-              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
-              paddingHorizontal: 16,
+              paddingHorizontal: SPACING.md,
               paddingBottom: TAB_BAR_SAFE_PADDING,
             }}
+            contentInsetAdjustmentBehavior="automatic"
             ItemSeparatorComponent={ItemSeparator}
             // Performance optimization props
             initialNumToRender={10}

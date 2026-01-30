@@ -19,10 +19,12 @@ import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import {
   InventoryCategory,
   InventoryCondition,
+  InventoryType,
   CreateInventoryItemInput,
   InventoryPhoto,
   INVENTORY_CATEGORY_LABELS,
   INVENTORY_CONDITION_CONFIG,
+  INVENTORY_TYPE_CONFIG,
   COMMON_LOCATIONS,
 } from '../types';
 import { useInventoryMutations } from '../hooks/usePropertyInventory';
@@ -48,6 +50,7 @@ export function AddInventorySheet({
 
   // Form state
   const [name, setName] = useState('');
+  const [inventoryType, setInventoryType] = useState<InventoryType>('asset');
   const [category, setCategory] = useState<InventoryCategory>('appliance');
   const [location, setLocation] = useState('');
   const [brand, setBrand] = useState('');
@@ -63,6 +66,7 @@ export function AddInventorySheet({
   // Reset form
   const resetForm = useCallback(() => {
     setName('');
+    setInventoryType('asset');
     setCategory('appliance');
     setLocation('');
     setBrand('');
@@ -87,6 +91,7 @@ export function AddInventorySheet({
       const input: CreateInventoryItemInput = {
         property_id: propertyId,
         name: name.trim(),
+        inventory_type: inventoryType,
         category,
         location: location.trim() || undefined,
         brand: brand.trim() || undefined,
@@ -128,6 +133,14 @@ export function AddInventorySheet({
   const handleRemovePhoto = (photoId: string) => {
     setPhotos((prev) => prev.filter((p) => p.url !== photoId));
   };
+
+  // Inventory type options for Select
+  const inventoryTypeOptions = Object.entries(INVENTORY_TYPE_CONFIG).map(
+    ([value, config]) => ({
+      value,
+      label: `${config.emoji} ${config.label}`,
+    })
+  );
 
   // Category options for Select
   const categoryOptions = Object.entries(INVENTORY_CATEGORY_LABELS).map(
@@ -177,6 +190,19 @@ export function AddInventorySheet({
               onChangeText={setName}
               placeholder="e.g., Samsung Refrigerator"
               autoCapitalize="words"
+            />
+          </FormField>
+
+          <FormField
+            label="Type"
+            required
+            className="mt-3"
+            hint={INVENTORY_TYPE_CONFIG[inventoryType].description}
+          >
+            <Select
+              value={inventoryType}
+              onValueChange={(v) => setInventoryType(v as InventoryType)}
+              options={inventoryTypeOptions}
             />
           </FormField>
 

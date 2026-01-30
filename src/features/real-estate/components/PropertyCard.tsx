@@ -6,6 +6,25 @@
  *
  * Note: Uses useThemeColors() for reliable dark mode support.
  * See docs/TROUBLESHOOTING.md for why we use inline styles instead of Tailwind color classes.
+ *
+ * @deprecated Use `PropertyImageCard` from `@/components/ui` instead.
+ * This component is maintained for backwards compatibility.
+ * PropertyImageCard provides a unified property card UI across both
+ * Investor and Landlord platforms with better maintainability.
+ *
+ * Migration example:
+ * ```tsx
+ * import { PropertyImageCard } from '@/components/ui';
+ * import { getInvestorPropertyMetrics, getPropertyImageUrl, getPropertyLocation } from '@/lib/property-card-utils';
+ *
+ * <PropertyImageCard
+ *   imageUrl={getPropertyImageUrl(property)}
+ *   title={property.address}
+ *   subtitle={getPropertyLocation(property)}
+ *   metrics={getInvestorPropertyMetrics(property)}
+ *   onPress={() => handlePress(property)}
+ * />
+ * ```
  */
 
 import React, { useCallback, useMemo } from 'react';

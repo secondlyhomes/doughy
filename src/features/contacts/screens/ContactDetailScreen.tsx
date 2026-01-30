@@ -35,6 +35,9 @@ import {
   CrmContactSource,
 } from '../types';
 
+// VoIP calling
+import { useVoipCall } from '@/features/voip';
+
 interface ContactDetailScreenProps {
   contactId: string;
 }
@@ -157,13 +160,18 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
 
   const { contact, isLoading, error } = useContact(contactId);
 
-  // Handle phone call
-  const handleCall = () => {
+  // VoIP calling - uses in-app calling for pro/premium, native dialer for free
+  // TODO: Get actual subscription tier from user context
+  const { startCall, canMakeInAppCall } = useVoipCall({ subscriptionTier: 'pro' });
+
+  // Handle phone call - uses VoIP for pro/premium users
+  const handleCall = useCallback(() => {
     if (contact?.phone) {
       haptic.light();
-      Linking.openURL(`tel:${contact.phone}`);
+      const displayName = getContactDisplayName(contact);
+      startCall(contact.phone, contact.id, displayName);
     }
-  };
+  }, [contact, startCall]);
 
   // Handle email
   const handleEmail = () => {

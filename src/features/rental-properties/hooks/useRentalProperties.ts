@@ -26,7 +26,7 @@ export const rentalPropertyKeys = {
 
 async function fetchRentalProperties(): Promise<RentalProperty[]> {
   const { data, error } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -40,7 +40,7 @@ async function fetchRentalProperties(): Promise<RentalProperty[]> {
 
 async function fetchRentalPropertyById(id: string): Promise<RentalProperty | null> {
   const { data, error } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .select('*')
     .eq('id', id)
     .single();
@@ -66,10 +66,10 @@ async function fetchRentalPropertiesWithRooms(): Promise<RentalPropertyWithRooms
   // Fetch properties with room counts
   // Note: This uses a subquery pattern - adjust based on your rooms table structure
   const { data, error } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .select(`
       *,
-      rooms:rental_rooms(count)
+      rooms:landlord_rooms(count)
     `)
     .order('created_at', { ascending: false });
 
@@ -116,7 +116,7 @@ async function createRentalProperty(
     rate_type: propertyData.rate_type || 'monthly',
     cleaning_fee: propertyData.cleaning_fee || null,
     security_deposit: propertyData.security_deposit || null,
-    room_by_room_enabled: propertyData.room_by_room_enabled || false,
+    is_room_by_room_enabled: propertyData.is_room_by_room_enabled || false,
     amenities: propertyData.amenities || [],
     house_rules: propertyData.house_rules || {},
     listing_urls: propertyData.listing_urls || {},
@@ -124,7 +124,7 @@ async function createRentalProperty(
   };
 
   const { data, error } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .insert(insertData as never)
     .select()
     .single();
@@ -160,14 +160,14 @@ async function updateRentalProperty(
   if (updates.rate_type !== undefined) updateData.rate_type = updates.rate_type;
   if (updates.cleaning_fee !== undefined) updateData.cleaning_fee = updates.cleaning_fee;
   if (updates.security_deposit !== undefined) updateData.security_deposit = updates.security_deposit;
-  if (updates.room_by_room_enabled !== undefined) updateData.room_by_room_enabled = updates.room_by_room_enabled;
+  if (updates.is_room_by_room_enabled !== undefined) updateData.is_room_by_room_enabled = updates.is_room_by_room_enabled;
   if (updates.amenities !== undefined) updateData.amenities = updates.amenities;
   if (updates.house_rules !== undefined) updateData.house_rules = updates.house_rules;
   if (updates.listing_urls !== undefined) updateData.listing_urls = updates.listing_urls;
   if (updates.status !== undefined) updateData.status = updates.status;
 
   const { data, error } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -183,7 +183,7 @@ async function updateRentalProperty(
 
 async function deleteRentalProperty(id: string): Promise<void> {
   const { error } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .delete()
     .eq('id', id);
 

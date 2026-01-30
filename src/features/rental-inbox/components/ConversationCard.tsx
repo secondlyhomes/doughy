@@ -75,7 +75,7 @@ export const ConversationCard = memo(function ConversationCard({
     : 'Unknown Contact';
   const propertyName = conversation.property?.name || conversation.property?.address;
   const hasPending = conversation.hasPendingResponse;
-  const isAIEnabled = conversation.ai_enabled;
+  const isAIEnabled = conversation.is_ai_enabled;
 
   return (
     <TouchableOpacity

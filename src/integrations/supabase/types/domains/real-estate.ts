@@ -269,7 +269,7 @@ export interface RePropertyAnalysesTable {
     name: string | null
     property_id: string
     result_json: Json
-    tokens_used: number | null
+    token_count: number | null
   }
   Insert: {
     analysis_type?: string | null
@@ -280,7 +280,7 @@ export interface RePropertyAnalysesTable {
     name?: string | null
     property_id: string
     result_json: Json
-    tokens_used?: number | null
+    token_count?: number | null
   }
   Update: {
     analysis_type?: string | null
@@ -291,7 +291,7 @@ export interface RePropertyAnalysesTable {
     name?: string | null
     property_id?: string
     result_json?: Json
-    tokens_used?: number | null
+    token_count?: number | null
   }
   Relationships: [
     {

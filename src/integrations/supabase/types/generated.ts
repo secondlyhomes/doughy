@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       ai_auto_send_rules: {
@@ -25,7 +50,7 @@ export type Database = {
           name: string
           property_id: string | null
           template_id: string
-          times_triggered: number | null
+          trigger_count: number | null
           trigger_event: string
           trigger_offset_hours: number | null
           updated_at: string | null
@@ -41,7 +66,7 @@ export type Database = {
           name: string
           property_id?: string | null
           template_id: string
-          times_triggered?: number | null
+          trigger_count?: number | null
           trigger_event: string
           trigger_offset_hours?: number | null
           updated_at?: string | null
@@ -57,7 +82,7 @@ export type Database = {
           name?: string
           property_id?: string | null
           template_id?: string
-          times_triggered?: number | null
+          trigger_count?: number | null
           trigger_event?: string
           trigger_offset_hours?: number | null
           updated_at?: string | null
@@ -2191,8 +2216,8 @@ export type Database = {
           callback_scheduled_at: string | null
           created_at: string
           deal_id: string | null
-          has_responded: boolean
           id: string
+          is_response_received: boolean
           lead_id: string | null
           metadata: Json | null
           notes: string | null
@@ -2206,8 +2231,8 @@ export type Database = {
           callback_scheduled_at?: string | null
           created_at?: string
           deal_id?: string | null
-          has_responded?: boolean
           id?: string
+          is_response_received?: boolean
           lead_id?: string | null
           metadata?: Json | null
           notes?: string | null
@@ -2221,8 +2246,8 @@ export type Database = {
           callback_scheduled_at?: string | null
           created_at?: string
           deal_id?: string | null
-          has_responded?: boolean
           id?: string
+          is_response_received?: boolean
           lead_id?: string | null
           metadata?: Json | null
           notes?: string | null
@@ -2477,10 +2502,9 @@ export type Database = {
           email_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
           email_opt_status_updated_at: string | null
           emails: Json | null
-          has_conversation: boolean | null
           id: string
           import_id: string | null
-          inserted_at: string
+          is_conversation_started: boolean | null
           is_deleted: boolean | null
           name: string
           opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
@@ -2512,10 +2536,9 @@ export type Database = {
             | null
           email_opt_status_updated_at?: string | null
           emails?: Json | null
-          has_conversation?: boolean | null
           id?: string
           import_id?: string | null
-          inserted_at?: string
+          is_conversation_started?: boolean | null
           is_deleted?: boolean | null
           name: string
           opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
@@ -2549,10 +2572,9 @@ export type Database = {
             | null
           email_opt_status_updated_at?: string | null
           emails?: Json | null
-          has_conversation?: boolean | null
           id?: string
           import_id?: string | null
-          inserted_at?: string
+          is_conversation_started?: boolean | null
           is_deleted?: boolean | null
           name?: string
           opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
@@ -3046,7 +3068,9 @@ export type Database = {
       investor_agents: {
         Row: {
           brokerage: string | null
-          commission_preference: string | null
+          commission_preference:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
           contact_id: string | null
           created_at: string | null
           deal_types_interested: string[] | null
@@ -3061,7 +3085,9 @@ export type Database = {
           next_follow_up_at: string | null
           notes: string | null
           phone: string | null
-          preferred_contact_method: string | null
+          preferred_contact_method:
+            | Database["public"]["Enums"]["contact_method"]
+            | null
           relationship_status:
             | Database["public"]["Enums"]["relationship_status"]
             | null
@@ -3073,7 +3099,9 @@ export type Database = {
         }
         Insert: {
           brokerage?: string | null
-          commission_preference?: string | null
+          commission_preference?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
           contact_id?: string | null
           created_at?: string | null
           deal_types_interested?: string[] | null
@@ -3088,7 +3116,9 @@ export type Database = {
           next_follow_up_at?: string | null
           notes?: string | null
           phone?: string | null
-          preferred_contact_method?: string | null
+          preferred_contact_method?:
+            | Database["public"]["Enums"]["contact_method"]
+            | null
           relationship_status?:
             | Database["public"]["Enums"]["relationship_status"]
             | null
@@ -3100,7 +3130,9 @@ export type Database = {
         }
         Update: {
           brokerage?: string | null
-          commission_preference?: string | null
+          commission_preference?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
           contact_id?: string | null
           created_at?: string | null
           deal_types_interested?: string[] | null
@@ -3115,7 +3147,9 @@ export type Database = {
           next_follow_up_at?: string | null
           notes?: string | null
           phone?: string | null
-          preferred_contact_method?: string | null
+          preferred_contact_method?:
+            | Database["public"]["Enums"]["contact_method"]
+            | null
           relationship_status?:
             | Database["public"]["Enums"]["relationship_status"]
             | null
@@ -3677,6 +3711,7 @@ export type Database = {
           last_message_at: string | null
           last_message_preview: string | null
           lead_id: string
+          message_count: number | null
           property_id: string | null
           status: Database["public"]["Enums"]["investor_conversation_status"]
           unread_count: number | null
@@ -3696,6 +3731,7 @@ export type Database = {
           last_message_at?: string | null
           last_message_preview?: string | null
           lead_id: string
+          message_count?: number | null
           property_id?: string | null
           status?: Database["public"]["Enums"]["investor_conversation_status"]
           unread_count?: number | null
@@ -3715,6 +3751,7 @@ export type Database = {
           last_message_at?: string | null
           last_message_preview?: string | null
           lead_id?: string
+          message_count?: number | null
           property_id?: string | null
           status?: Database["public"]["Enums"]["investor_conversation_status"]
           unread_count?: number | null
@@ -5147,9 +5184,9 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           geo_point: unknown
-          has_hoa: boolean | null
           id: string
           import_id: string | null
+          is_hoa_present: boolean | null
           is_owner_occupied: boolean | null
           is_vacant: boolean | null
           lead_id: string | null
@@ -5181,9 +5218,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           geo_point?: unknown
-          has_hoa?: boolean | null
           id?: string
           import_id?: string | null
+          is_hoa_present?: boolean | null
           is_owner_occupied?: boolean | null
           is_vacant?: boolean | null
           lead_id?: string | null
@@ -5215,9 +5252,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           geo_point?: unknown
-          has_hoa?: boolean | null
           id?: string
           import_id?: string | null
+          is_hoa_present?: boolean | null
           is_owner_occupied?: boolean | null
           is_vacant?: boolean | null
           lead_id?: string | null
@@ -5272,7 +5309,7 @@ export type Database = {
           name: string | null
           property_id: string
           result_json: Json
-          tokens_used: number | null
+          token_count: number | null
           updated_at: string | null
           workspace_id: string | null
         }
@@ -5285,7 +5322,7 @@ export type Database = {
           name?: string | null
           property_id: string
           result_json: Json
-          tokens_used?: number | null
+          token_count?: number | null
           updated_at?: string | null
           workspace_id?: string | null
         }
@@ -5298,7 +5335,7 @@ export type Database = {
           name?: string | null
           property_id?: string
           result_json?: Json
-          tokens_used?: number | null
+          token_count?: number | null
           updated_at?: string | null
           workspace_id?: string | null
         }
@@ -5953,6 +5990,7 @@ export type Database = {
           channel: Database["public"]["Enums"]["rental_channel"]
           contact_id: string
           created_at: string | null
+          external_message_id: string | null
           external_thread_id: string | null
           id: string
           is_ai_auto_respond: boolean | null
@@ -5976,6 +6014,7 @@ export type Database = {
           channel: Database["public"]["Enums"]["rental_channel"]
           contact_id: string
           created_at?: string | null
+          external_message_id?: string | null
           external_thread_id?: string | null
           id?: string
           is_ai_auto_respond?: boolean | null
@@ -5999,6 +6038,7 @@ export type Database = {
           channel?: Database["public"]["Enums"]["rental_channel"]
           contact_id?: string
           created_at?: string | null
+          external_message_id?: string | null
           external_thread_id?: string | null
           id?: string
           is_ai_auto_respond?: boolean | null
@@ -6619,10 +6659,10 @@ export type Database = {
       }
       landlord_messages: {
         Row: {
-          ai_completion_tokens: number | null
+          ai_completion_token_count: number | null
           ai_confidence: number | null
           ai_model: string | null
-          ai_prompt_tokens: number | null
+          ai_prompt_token_count: number | null
           approved_at: string | null
           approved_by: string | null
           attachments: Json | null
@@ -6633,21 +6673,24 @@ export type Database = {
           delivered_at: string | null
           direction: Database["public"]["Enums"]["rental_message_direction"]
           edited_content: string | null
+          external_message_id: string | null
           failed_at: string | null
           failure_reason: string | null
           id: string
           is_requires_approval: boolean | null
           metadata: Json | null
           read_at: string | null
+          send_error: string | null
+          send_status: string | null
           sent_by: Database["public"]["Enums"]["rental_message_sender"]
           updated_at: string | null
           workspace_id: string | null
         }
         Insert: {
-          ai_completion_tokens?: number | null
+          ai_completion_token_count?: number | null
           ai_confidence?: number | null
           ai_model?: string | null
-          ai_prompt_tokens?: number | null
+          ai_prompt_token_count?: number | null
           approved_at?: string | null
           approved_by?: string | null
           attachments?: Json | null
@@ -6658,21 +6701,24 @@ export type Database = {
           delivered_at?: string | null
           direction: Database["public"]["Enums"]["rental_message_direction"]
           edited_content?: string | null
+          external_message_id?: string | null
           failed_at?: string | null
           failure_reason?: string | null
           id?: string
           is_requires_approval?: boolean | null
           metadata?: Json | null
           read_at?: string | null
+          send_error?: string | null
+          send_status?: string | null
           sent_by: Database["public"]["Enums"]["rental_message_sender"]
           updated_at?: string | null
           workspace_id?: string | null
         }
         Update: {
-          ai_completion_tokens?: number | null
+          ai_completion_token_count?: number | null
           ai_confidence?: number | null
           ai_model?: string | null
-          ai_prompt_tokens?: number | null
+          ai_prompt_token_count?: number | null
           approved_at?: string | null
           approved_by?: string | null
           attachments?: Json | null
@@ -6683,12 +6729,15 @@ export type Database = {
           delivered_at?: string | null
           direction?: Database["public"]["Enums"]["rental_message_direction"]
           edited_content?: string | null
+          external_message_id?: string | null
           failed_at?: string | null
           failure_reason?: string | null
           id?: string
           is_requires_approval?: boolean | null
           metadata?: Json | null
           read_at?: string | null
+          send_error?: string | null
+          send_status?: string | null
           sent_by?: Database["public"]["Enums"]["rental_message_sender"]
           updated_at?: string | null
           workspace_id?: string | null
@@ -6729,6 +6778,7 @@ export type Database = {
           is_room_by_room_enabled: boolean | null
           listing_urls: Json | null
           name: string
+          primary_image_url: string | null
           property_type: Database["public"]["Enums"]["rental_property_type"]
           rate_type: Database["public"]["Enums"]["rental_rate_type"]
           rental_type: Database["public"]["Enums"]["rental_type"]
@@ -6759,6 +6809,7 @@ export type Database = {
           is_room_by_room_enabled?: boolean | null
           listing_urls?: Json | null
           name: string
+          primary_image_url?: string | null
           property_type?: Database["public"]["Enums"]["rental_property_type"]
           rate_type?: Database["public"]["Enums"]["rental_rate_type"]
           rental_type?: Database["public"]["Enums"]["rental_type"]
@@ -6789,6 +6840,7 @@ export type Database = {
           is_room_by_room_enabled?: boolean | null
           listing_urls?: Json | null
           name?: string
+          primary_image_url?: string | null
           property_type?: Database["public"]["Enums"]["rental_property_type"]
           rate_type?: Database["public"]["Enums"]["rental_rate_type"]
           rental_type?: Database["public"]["Enums"]["rental_type"]
@@ -6818,9 +6870,9 @@ export type Database = {
           created_at: string | null
           current_booking_id: string | null
           description: string | null
-          has_private_bath: boolean | null
-          has_private_entrance: boolean | null
           id: string
+          is_private_bath: boolean | null
+          is_private_entrance: boolean | null
           is_utilities_included: boolean | null
           monthly_rate: number
           name: string
@@ -6837,9 +6889,9 @@ export type Database = {
           created_at?: string | null
           current_booking_id?: string | null
           description?: string | null
-          has_private_bath?: boolean | null
-          has_private_entrance?: boolean | null
           id?: string
+          is_private_bath?: boolean | null
+          is_private_entrance?: boolean | null
           is_utilities_included?: boolean | null
           monthly_rate: number
           name: string
@@ -6856,9 +6908,9 @@ export type Database = {
           created_at?: string | null
           current_booking_id?: string | null
           description?: string | null
-          has_private_bath?: boolean | null
-          has_private_entrance?: boolean | null
           id?: string
+          is_private_bath?: boolean | null
+          is_private_entrance?: boolean | null
           is_utilities_included?: boolean | null
           monthly_rate?: number
           name?: string
@@ -7364,6 +7416,68 @@ export type Database = {
           },
           {
             foreignKeyName: "landlord_vendors_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_email_connections: {
+        Row: {
+          access_token_encrypted: string | null
+          created_at: string
+          detected_platforms: Json
+          email_address: string
+          id: string
+          is_active: boolean
+          last_message_id: string | null
+          last_sync_at: string | null
+          provider: Database["public"]["Enums"]["rental_email_provider"]
+          refresh_token_encrypted: string | null
+          sync_error: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          detected_platforms?: Json
+          email_address: string
+          id?: string
+          is_active?: boolean
+          last_message_id?: string | null
+          last_sync_at?: string | null
+          provider: Database["public"]["Enums"]["rental_email_provider"]
+          refresh_token_encrypted?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          detected_platforms?: Json
+          email_address?: string
+          id?: string
+          is_active?: boolean
+          last_message_id?: string | null
+          last_sync_at?: string | null
+          provider?: Database["public"]["Enums"]["rental_email_provider"]
+          refresh_token_encrypted?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_email_connections_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -10835,6 +10949,7 @@ export type Database = {
       workspace_member_auth: { Args: never; Returns: boolean }
     }
     Enums: {
+      agent_relationship_status: "new" | "active" | "dormant" | "preferred"
       ai_edit_severity: "none" | "minor" | "major"
       ai_mode: "training" | "assisted" | "autonomous"
       ai_outcome: "auto_sent" | "approved" | "edited" | "rejected"
@@ -10876,6 +10991,8 @@ export type Database = {
         | "assigned"
         | "dismissed"
       channel_type_extended: "sms" | "email" | "call"
+      commission_type: "flat_fee" | "percentage" | "referral_only"
+      contact_method: "email" | "phone" | "text"
       content_type: "text" | "image" | "file" | "voice" | "video"
       conversation_status: "active" | "archive" | "resolved" | "escalated"
       crm_contact_source:
@@ -11168,6 +11285,7 @@ export type Database = {
         | "resolved"
         | "escalated"
         | "archived"
+      rental_email_provider: "gmail" | "outlook" | "forwarding"
       rental_integration_status:
         | "connected"
         | "disconnected"
@@ -11382,8 +11500,12 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
+      agent_relationship_status: ["new", "active", "dormant", "preferred"],
       ai_edit_severity: ["none", "minor", "major"],
       ai_mode: ["training", "assisted", "autonomous"],
       ai_outcome: ["auto_sent", "approved", "edited", "rejected"],
@@ -11430,6 +11552,8 @@ export const Constants = {
         "dismissed",
       ],
       channel_type_extended: ["sms", "email", "call"],
+      commission_type: ["flat_fee", "percentage", "referral_only"],
+      contact_method: ["email", "phone", "text"],
       content_type: ["text", "image", "file", "voice", "video"],
       conversation_status: ["active", "archive", "resolved", "escalated"],
       crm_contact_source: [
@@ -11751,6 +11875,7 @@ export const Constants = {
         "escalated",
         "archived",
       ],
+      rental_email_provider: ["gmail", "outlook", "forwarding"],
       rental_integration_status: [
         "connected",
         "disconnected",
@@ -11844,4 +11969,3 @@ export const Constants = {
     },
   },
 } as const
-

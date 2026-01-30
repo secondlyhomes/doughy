@@ -36,7 +36,6 @@ export const createMockLead = (overrides?: Partial<MockLead>): MockLead => ({
   is_deleted: false,
   created_at: faker.date.past({ years: 1 }).toISOString(),
   updated_at: faker.date.recent({ days: 30 }).toISOString(),
-  inserted_at: faker.date.past({ years: 1 }).toISOString(),
   ...overrides,
 });
 
@@ -208,7 +207,6 @@ export interface MockLead {
   is_deleted: boolean | null;
   created_at: string | null;
   updated_at: string;
-  inserted_at: string;
 }
 
 export interface MockProfile {

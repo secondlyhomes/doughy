@@ -10,7 +10,7 @@ export default function PropertyDetailLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        headerShown: true, // Enable native headers for all child screens
         animation: 'slide_from_right',
         contentStyle: {
           backgroundColor: colors.background,
@@ -18,16 +18,16 @@ export default function PropertyDetailLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: true }} />
-      <Stack.Screen name="inventory/index" />
-      <Stack.Screen name="inventory/[itemId]" />
-      <Stack.Screen name="maintenance/index" />
-      <Stack.Screen name="maintenance/[workOrderId]" />
-      <Stack.Screen name="smart-home/index" />
-      <Stack.Screen name="smart-home/[deviceId]" />
-      <Stack.Screen name="vendors/index" />
-      <Stack.Screen name="vendors/[vendorId]" />
-      <Stack.Screen name="turnovers/index" />
-      <Stack.Screen name="turnovers/[turnoverId]" />
+      <Stack.Screen name="inventory/index" options={{ headerShown: true }} />
+      <Stack.Screen name="inventory/[itemId]" options={{ headerShown: true }} />
+      <Stack.Screen name="maintenance/index" options={{ headerShown: true }} />
+      <Stack.Screen name="maintenance/[workOrderId]" options={{ headerShown: true }} />
+      <Stack.Screen name="smart-home/index" options={{ headerShown: true }} />
+      <Stack.Screen name="smart-home/[deviceId]" options={{ headerShown: true }} />
+      <Stack.Screen name="vendors/index" options={{ headerShown: true }} />
+      <Stack.Screen name="vendors/[vendorId]" options={{ headerShown: true }} />
+      <Stack.Screen name="turnovers/index" options={{ headerShown: true }} />
+      <Stack.Screen name="turnovers/[turnoverId]" options={{ headerShown: true }} />
     </Stack>
   );
 }

@@ -126,7 +126,7 @@ export function SettingsScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }} contentInsetAdjustmentBehavior="automatic">
         {/* Profile Section */}
         <View className="px-4 py-2">
           <TouchableOpacity
@@ -195,7 +195,13 @@ export function SettingsScreen() {
 
             <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
               <SettingsItem
-                icon={<Plug size={20} color={colors.primary} />}
+                icon={<Mail size={20} color={colors.primary} />}
+                title="Email Integration"
+                subtitle="Connect Gmail to receive platform inquiries"
+                onPress={() => router.push('/(tabs)/settings/email-integration')}
+              />
+              <SettingsItem
+                icon={<Plug size={20} color={colors.mutedForeground} />}
                 title="Integrations"
                 subtitle="Seam (Smart Locks), Tracerfy (Skip Tracing)"
                 onPress={() => router.push('/(tabs)/settings/integrations')}

@@ -3,7 +3,8 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { Database, Trash2, Play, Home, TrendingUp } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Database, Trash2, Play, Home, TrendingUp, Sparkles, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { seedScenarios, runSeedScenario, clearAllLandlordData } from '../services/landlordSeeder';
 import { seedService } from '@/features/admin/services/seedService';
@@ -21,6 +22,7 @@ type LoadingState = LoadingOperation | null;
 
 export function DevSeederSection() {
   const colors = useThemeColors();
+  const router = useRouter();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState<LoadingState>(null);
 
@@ -214,6 +216,24 @@ export function DevSeederSection() {
       <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
         DEV TOOLS - TEST DATA SEEDERS
       </Text>
+
+      {/* ============================================ */}
+      {/* SIMULATE INQUIRY */}
+      {/* ============================================ */}
+      <TouchableOpacity
+        className="flex-row items-center p-4 rounded-lg mb-4"
+        style={{ backgroundColor: colors.card }}
+        onPress={() => router.push('/(tabs)/dev/simulate-inquiry')}
+      >
+        <Sparkles size={20} color={colors.primary} />
+        <View className="flex-1 ml-3">
+          <Text style={{ color: colors.foreground, fontWeight: '600' }}>Simulate Inquiry</Text>
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+            Test email flow without Gmail setup
+          </Text>
+        </View>
+        <ChevronRight size={18} color={colors.mutedForeground} />
+      </TouchableOpacity>
 
       {/* ============================================ */}
       {/* INVESTOR DATA SEEDER */}

@@ -146,11 +146,39 @@ export async function testApiKeyWithoutSaving(
 
     if (error) {
       if (__DEV__) console.error('Health check error:', error);
+
+      // Extract detailed error message from FunctionsHttpError
+      let errorMessage = error.message || 'Failed to test key';
+
+      // Try to get more details from the error context
+      if (error.context && typeof error.context === 'object') {
+        const ctx = error.context as Record<string, unknown>;
+        if (ctx.body && typeof ctx.body === 'string') {
+          try {
+            const bodyJson = JSON.parse(ctx.body);
+            if (bodyJson.error) {
+              errorMessage = typeof bodyJson.error === 'string' ? bodyJson.error : JSON.stringify(bodyJson.error);
+            } else if (bodyJson.message) {
+              errorMessage = bodyJson.message;
+            }
+          } catch {
+            if (ctx.body.length > 0 && ctx.body.length < 500) {
+              errorMessage = ctx.body;
+            }
+          }
+        }
+      }
+
+      // Make generic errors more actionable
+      if (errorMessage.includes('non-2xx status code')) {
+        errorMessage = 'Key validation failed - the server returned an error. Check Supabase logs for details.';
+      }
+
       return {
         name: service,
         service: normalizedService,
         status: 'error',
-        message: error.message || 'Failed to test key',
+        message: errorMessage,
         lastChecked: new Date(),
       };
     }
@@ -231,11 +259,42 @@ export async function checkIntegrationHealth(
         }
 
         if (__DEV__) console.error('Health check error:', error);
+
+        // Extract detailed error message from FunctionsHttpError
+        // The generic "Edge Function returned a non-2xx status code" isn't helpful
+        let errorMessage = error.message || 'Failed to check health';
+
+        // Try to get more details from the error context
+        if (error.context && typeof error.context === 'object') {
+          // Supabase FunctionsHttpError may have context with response body
+          const ctx = error.context as Record<string, unknown>;
+          if (ctx.body && typeof ctx.body === 'string') {
+            try {
+              const bodyJson = JSON.parse(ctx.body);
+              if (bodyJson.error) {
+                errorMessage = typeof bodyJson.error === 'string' ? bodyJson.error : JSON.stringify(bodyJson.error);
+              } else if (bodyJson.message) {
+                errorMessage = bodyJson.message;
+              }
+            } catch {
+              // Body isn't JSON, use it directly if it's informative
+              if (ctx.body.length > 0 && ctx.body.length < 500) {
+                errorMessage = ctx.body;
+              }
+            }
+          }
+        }
+
+        // If still generic, provide more actionable message
+        if (errorMessage.includes('non-2xx status code')) {
+          errorMessage = 'Health check failed - the server returned an error. Check Supabase logs for details.';
+        }
+
         const result: IntegrationHealth = {
           name: service,
           service: normalizedService,
           status: 'error',
-          message: error.message || 'Failed to check health',
+          message: errorMessage,
           lastChecked: new Date(),
         };
         cacheHealth(normalizedService, result);

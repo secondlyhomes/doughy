@@ -16,7 +16,7 @@ export type IntegrationStatus =
 /**
  * Service categorization groups
  */
-export type ServiceGroup = 'AI' | 'Maps' | 'Communication' | 'Payments' | 'Hosting' | 'Other';
+export type ServiceGroup = 'AI' | 'Maps' | 'Communication' | 'Payments' | 'Hosting' | 'Property Management' | 'Other';
 
 /**
  * Field types for integration configuration
@@ -37,7 +37,7 @@ export interface ApiKeyRecord {
   created_at: string | null;
   updated_at: string | null;
   user_id: string | null;
-  encrypted: boolean | null;
+  is_encrypted: boolean | null;
   description: string | null;
 }
 

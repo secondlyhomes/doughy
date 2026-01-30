@@ -15,7 +15,12 @@ interface ConnectionHealth {
   latency?: number;
 }
 
-export function IntegrationHealthCard() {
+interface IntegrationHealthCardProps {
+  /** Change this value to trigger a refresh */
+  refreshTrigger?: number;
+}
+
+export function IntegrationHealthCard({ refreshTrigger }: IntegrationHealthCardProps = {}) {
   const colors = useThemeColors();
   const [health, setHealth] = useState<ConnectionHealth | null>(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -60,7 +65,7 @@ export function IntegrationHealthCard() {
     if (!USE_MOCK_DATA) {
       checkConnection();
     }
-  }, []);
+  }, [refreshTrigger]);
 
   if (USE_MOCK_DATA) {
     return (
@@ -118,7 +123,12 @@ export function IntegrationHealthCard() {
                 <Text style={[styles.statusText, { color: colors.destructive }]}>Connection Error</Text>
               </View>
               {health.error && (
-                <Text style={[styles.error, { color: colors.destructive }]}>{health.error}</Text>
+                <Text
+                  style={[styles.error, { color: colors.destructive }]}
+                  selectable={true}
+                >
+                  {health.error}
+                </Text>
               )}
             </>
           )}
@@ -173,8 +183,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   error: {
-    fontSize: 11,
+    fontSize: 12,
     marginLeft: 22,
     marginTop: 4,
+    lineHeight: 18,
+    flexShrink: 1,
   },
 });

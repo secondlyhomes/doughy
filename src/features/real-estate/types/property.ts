@@ -41,9 +41,9 @@ export interface DBProperty {
   updated_at?: string;
   created_by?: string;
   mortgage_balance?: number;
-  owner_occupied?: boolean;
-  vacant?: boolean;
-  hoa?: boolean;
+  is_owner_occupied?: boolean;
+  is_vacant?: boolean;
+  is_hoa_present?: boolean;
   primary_image_url?: string;
 }
 
@@ -222,9 +222,9 @@ export const dbToFeatureProperty = (dbProperty: DBPropertyWithImages): Property 
 
   // Other fields
   if (dbProperty.mortgage_balance !== undefined) result.mortgage_balance = dbProperty.mortgage_balance;
-  if (dbProperty.owner_occupied !== undefined) result.owner_occupied = dbProperty.owner_occupied;
-  if (dbProperty.vacant !== undefined) result.vacant = dbProperty.vacant;
-  if (dbProperty.hoa !== undefined) result.hoa = dbProperty.hoa;
+  if (dbProperty.is_owner_occupied !== undefined) result.is_owner_occupied = dbProperty.is_owner_occupied;
+  if (dbProperty.is_vacant !== undefined) result.is_vacant = dbProperty.is_vacant;
+  if (dbProperty.is_hoa_present !== undefined) result.is_hoa_present = dbProperty.is_hoa_present;
 
   // Handle joined images
   if (dbProperty.images && Array.isArray(dbProperty.images)) {
@@ -297,9 +297,9 @@ export const featureToDbProperty = (property: Property): DBProperty => {
 
   // Other fields
   if (property.mortgage_balance !== undefined) result.mortgage_balance = property.mortgage_balance;
-  if (property.owner_occupied !== undefined) result.owner_occupied = property.owner_occupied;
-  if (property.vacant !== undefined) result.vacant = property.vacant;
-  if (property.hoa !== undefined) result.hoa = property.hoa;
+  if (property.is_owner_occupied !== undefined) result.is_owner_occupied = property.is_owner_occupied;
+  if (property.is_vacant !== undefined) result.is_vacant = property.is_vacant;
+  if (property.is_hoa_present !== undefined) result.is_hoa_present = property.is_hoa_present;
 
   // Handle primary_image_url
   if (property.primary_image_url !== undefined) result.primary_image_url = property.primary_image_url;

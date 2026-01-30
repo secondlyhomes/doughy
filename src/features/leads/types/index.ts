@@ -28,7 +28,6 @@ export interface Lead {
   workspace_id?: string;
   created_at?: string;
   updated_at?: string;
-  inserted_at?: string;
   is_deleted?: boolean;
 
   // Opt Status fields

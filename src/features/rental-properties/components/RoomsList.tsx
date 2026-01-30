@@ -99,7 +99,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
             </Text>
 
             {/* Private Bath indicator */}
-            {room.has_private_bath && (
+            {room.is_private_bath && (
               <View className="flex-row items-center gap-1">
                 <Bath size={12} color={colors.mutedForeground} />
                 <Text
@@ -111,7 +111,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
             )}
 
             {/* Private Entrance indicator */}
-            {room.has_private_entrance && (
+            {room.is_private_entrance && (
               <View className="flex-row items-center gap-1">
                 <DoorOpen size={12} color={colors.mutedForeground} />
                 <Text

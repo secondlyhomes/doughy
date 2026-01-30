@@ -28,7 +28,7 @@ export const rentalPropertyDetailKeys = {
 
 async function fetchPropertyById(id: string): Promise<RentalProperty | null> {
   const { data, error } = await supabase
-    .from('rental_properties')
+    .from('landlord_properties')
     .select('*')
     .eq('id', id)
     .single();
@@ -46,7 +46,7 @@ async function fetchPropertyById(id: string): Promise<RentalProperty | null> {
 
 async function fetchRoomsByPropertyId(propertyId: string): Promise<Room[]> {
   const { data, error } = await supabase
-    .from('rental_rooms')
+    .from('landlord_rooms')
     .select('*')
     .eq('property_id', propertyId)
     .order('name', { ascending: true });
@@ -74,12 +74,12 @@ async function fetchUpcomingBookingsByPropertyId(
   ] as const;
 
   const { data, error } = await supabase
-    .from('rental_bookings')
+    .from('landlord_bookings')
     .select(
       `
       *,
       contact:crm_contacts(id, first_name, last_name, email, phone),
-      room:rental_rooms!rental_bookings_room_id_fkey(id, name)
+      room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
     `
     )
     .eq('property_id', propertyId)
@@ -245,14 +245,14 @@ export function useRentalPropertyMutations(
       if (data.rate_type !== undefined) updateData.rate_type = data.rate_type;
       if (data.cleaning_fee !== undefined) updateData.cleaning_fee = data.cleaning_fee;
       if (data.security_deposit !== undefined) updateData.security_deposit = data.security_deposit;
-      if (data.room_by_room_enabled !== undefined) updateData.room_by_room_enabled = data.room_by_room_enabled;
+      if (data.is_room_by_room_enabled !== undefined) updateData.is_room_by_room_enabled = data.is_room_by_room_enabled;
       if (data.amenities !== undefined) updateData.amenities = data.amenities;
       if (data.house_rules !== undefined) updateData.house_rules = data.house_rules;
       if (data.listing_urls !== undefined) updateData.listing_urls = data.listing_urls;
       if (data.status !== undefined) updateData.status = data.status;
 
       const { data: updated, error } = await supabase
-        .from('rental_properties')
+        .from('landlord_properties')
         .update(updateData)
         .eq('id', propertyId)
         .select()
@@ -277,7 +277,7 @@ export function useRentalPropertyMutations(
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
-        .from('rental_properties')
+        .from('landlord_properties')
         .delete()
         .eq('id', propertyId);
 

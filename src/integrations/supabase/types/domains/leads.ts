@@ -7,7 +7,6 @@ export interface LeadsTable {
     created_at: string | null
     email: string | null
     id: string
-    inserted_at: string
     is_deleted: boolean | null
     name: string
     opt_status: SmsOptStatus | null
@@ -23,7 +22,6 @@ export interface LeadsTable {
     created_at?: string | null
     email?: string | null
     id?: string
-    inserted_at?: string
     is_deleted?: boolean | null
     name: string
     opt_status?: SmsOptStatus | null
@@ -39,7 +37,6 @@ export interface LeadsTable {
     created_at?: string | null
     email?: string | null
     id?: string
-    inserted_at?: string
     is_deleted?: boolean | null
     name?: string
     opt_status?: SmsOptStatus | null
