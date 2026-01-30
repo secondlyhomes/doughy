@@ -20,6 +20,7 @@ import {
   isAfter,
 } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -119,7 +120,7 @@ export function Calendar({
         <TouchableOpacity
           onPress={goToPreviousMonth}
           className="h-8 w-8 items-center justify-center rounded-md"
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
           accessibilityRole="button"
           accessibilityLabel="Previous month"
         >
@@ -135,7 +136,7 @@ export function Calendar({
         <TouchableOpacity
           onPress={goToNextMonth}
           className="h-8 w-8 items-center justify-center rounded-md"
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
           accessibilityRole="button"
           accessibilityLabel="Next month"
         >
@@ -174,7 +175,7 @@ export function Calendar({
                   isSelected && { backgroundColor: colors.primary },
                   !isSelected && isTodayDate && { borderWidth: 1, borderColor: colors.primary },
                 ]}
-                activeOpacity={0.7}
+                activeOpacity={PRESS_OPACITY.DEFAULT}
                 accessibilityRole="button"
                 accessibilityLabel={format(date, 'EEEE, MMMM d, yyyy')}
                 accessibilityState={{ selected: isSelected, disabled: isDisabled }}

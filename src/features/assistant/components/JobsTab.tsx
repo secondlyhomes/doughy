@@ -23,7 +23,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { formatRelativeTime } from '@/utils/format';
-import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { BORDER_RADIUS, SPACING, ICON_SIZES } from '@/constants/design-tokens';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 import {
@@ -101,7 +101,7 @@ export function JobsTab({ dealId, onJobPress }: JobsTabProps) {
             { backgroundColor: colors.muted },
           ]}
         >
-          <Clock size={32} color={colors.mutedForeground} />
+          <Clock size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
         </View>
         <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
           No Jobs Yet
@@ -177,7 +177,7 @@ export function JobsTab({ dealId, onJobPress }: JobsTabProps) {
         onPress={() => refetch()}
         activeOpacity={0.7}
       >
-        <RefreshCw size={16} color={colors.mutedForeground} />
+        <RefreshCw size={ICON_SIZES.md} color={colors.mutedForeground} />
         <Text style={[styles.refreshText, { color: colors.mutedForeground }]}>
           Refresh
         </Text>
@@ -233,7 +233,7 @@ function JobCard({ job, onPress, onCancel }: JobCardProps) {
           <ActivityIndicator size="small" color={colors.info} />
         ) : (
           <StatusIcon
-            size={18}
+            size={ICON_SIZES.ml}
             color={
               statusConfig.color === 'green'
                 ? colors.success
@@ -298,11 +298,11 @@ function JobCard({ job, onPress, onCancel }: JobCardProps) {
             onPress={onCancel}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <X size={14} color={colors.mutedForeground} />
+            <X size={ICON_SIZES.sm} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
         {job.status === 'succeeded' && (
-          <ChevronRight size={18} color={colors.mutedForeground} />
+          <ChevronRight size={ICON_SIZES.ml} color={colors.mutedForeground} />
         )}
       </View>
     </TouchableOpacity>

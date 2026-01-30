@@ -23,6 +23,7 @@ import {
   validatePassword,
 } from '../services/passwordResetService';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 export function ResetPasswordScreen() {
   const router = useRouter();
@@ -110,7 +111,7 @@ export function ResetPasswordScreen() {
             {/* Header */}
             <View className="items-center mb-8">
               <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                <Lock size={32} color={colors.info} />
+                <Lock size={ICON_SIZES['2xl']} color={colors.info} />
               </View>
               <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
                 Set New Password
@@ -123,7 +124,7 @@ export function ResetPasswordScreen() {
             {/* Error Message */}
             {error && (
               <View className="flex-row items-center rounded-lg p-4 mb-6" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
-                <AlertCircle size={20} color={colors.destructive} />
+                <AlertCircle size={ICON_SIZES.lg} color={colors.destructive} />
                 <Text className="ml-2 flex-1" style={{ color: colors.destructive }}>{error}</Text>
               </View>
             )}
@@ -135,7 +136,7 @@ export function ResetPasswordScreen() {
               </Text>
               <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.input }}>
                 <View className="pl-4">
-                  <Lock size={20} color={colors.mutedForeground} />
+                  <Lock size={ICON_SIZES.lg} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3"
@@ -155,9 +156,9 @@ export function ResetPasswordScreen() {
                   disabled={isSubmitting}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color={colors.mutedForeground} />
+                    <EyeOff size={ICON_SIZES.lg} color={colors.mutedForeground} />
                   ) : (
-                    <Eye size={20} color={colors.mutedForeground} />
+                    <Eye size={ICON_SIZES.lg} color={colors.mutedForeground} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -173,7 +174,7 @@ export function ResetPasswordScreen() {
               </Text>
               <View className="flex-row items-center rounded-lg" style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.input }}>
                 <View className="pl-4">
-                  <Lock size={20} color={colors.mutedForeground} />
+                  <Lock size={ICON_SIZES.lg} color={colors.mutedForeground} />
                 </View>
                 <TextInput
                   className="flex-1 px-4 py-3"
@@ -193,9 +194,9 @@ export function ResetPasswordScreen() {
                   disabled={isSubmitting}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff size={20} color={colors.mutedForeground} />
+                    <EyeOff size={ICON_SIZES.lg} color={colors.mutedForeground} />
                   ) : (
-                    <Eye size={20} color={colors.mutedForeground} />
+                    <Eye size={ICON_SIZES.lg} color={colors.mutedForeground} />
                   )}
                 </TouchableOpacity>
               </View>

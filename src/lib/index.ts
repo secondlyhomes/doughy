@@ -5,6 +5,25 @@ export { cn } from './utils';
 export { supabase, realEstateDB, SUPABASE_URL } from './supabase';
 
 // =============================================================================
+// UI Formatting Utilities (shared across features)
+// =============================================================================
+
+export {
+  formatStatus,
+  getStatusBadgeVariant,
+  getScoreColor,
+  getRatingColor,
+  formatCurrency,
+  formatRelativeTime,
+  formatDateRange,
+  formatSquareFeet,
+  formatDate,
+  formatDateTime,
+  // Note: formatPhoneNumber is exported from './twilio' below
+  type BadgeVariant,
+} from './formatters';
+
+// =============================================================================
 // Zone D: Integration Exports
 // =============================================================================
 

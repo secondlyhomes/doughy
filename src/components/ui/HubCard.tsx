@@ -7,7 +7,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-nativ
 import { LucideIcon } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, FONT_SIZES, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, BORDER_RADIUS, ICON_SIZES, GLASS_INTENSITY, PRESS_OPACITY } from '@/constants/design-tokens';
 import { GlassView } from './GlassView';
 
 export interface HubCardProps {
@@ -127,12 +127,12 @@ export function HubCard({
       <TouchableOpacity
         onPress={onPress}
         disabled={disabled}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         testID={testID}
         style={style}
       >
         <GlassView
-          intensity={60}
+          intensity={GLASS_INTENSITY.medium}
           style={[
             styles.container,
             { borderColor: colors.border, opacity: disabled ? 0.5 : 1 },
@@ -148,7 +148,7 @@ export function HubCard({
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       testID={testID}
       style={[
         styles.container,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.sm,

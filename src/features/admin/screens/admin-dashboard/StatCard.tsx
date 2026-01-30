@@ -4,6 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 import type { StatCardProps } from './types';
 
 export const StatCard = React.memo(function StatCard({
@@ -36,7 +37,7 @@ export const StatCard = React.memo(function StatCard({
       <TouchableOpacity
         className="w-1/2 p-2"
         onPress={onPress}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         accessibilityLabel={`${title}: ${value}. ${subtitle}`}
         accessibilityRole="button"
         accessibilityHint={`Tap to view ${title.toLowerCase()} details`}

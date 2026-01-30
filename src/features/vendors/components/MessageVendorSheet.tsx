@@ -14,7 +14,7 @@ import {
   FormField,
   LoadingSpinner,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { Vendor } from '../types';
 
@@ -189,12 +189,12 @@ Property Manager`;
                 gap: SPACING.sm,
               },
             ]}
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
           >
             {isGenerating ? (
               <LoadingSpinner size="small" />
             ) : (
-              <Sparkles size={20} color={colors.primary} />
+              <Sparkles size={ICON_SIZES.lg} color={colors.primary} />
             )}
             <Text
               style={{
@@ -236,7 +236,7 @@ Property Manager`;
                     gap: SPACING.xs,
                   },
                 ]}
-                activeOpacity={0.7}
+                activeOpacity={PRESS_OPACITY.DEFAULT}
               >
                 <Icon
                   size={18}

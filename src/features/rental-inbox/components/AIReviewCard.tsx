@@ -256,7 +256,7 @@ export const AIReviewCard = memo(function AIReviewCard({
               loading={isProcessing}
             >
               <Check size={14} color={colors.primaryForeground} />
-              <Text style={{ color: colors.primaryForeground, marginLeft: 4 }}>
+              <Text style={{ color: colors.primaryForeground, marginLeft: SPACING.xs }}>
                 Send Edited
               </Text>
             </Button>
@@ -270,7 +270,7 @@ export const AIReviewCard = memo(function AIReviewCard({
               disabled={isProcessing}
             >
               <X size={14} color={colors.destructive} />
-              <Text style={{ color: colors.destructive, marginLeft: 4 }}>
+              <Text style={{ color: colors.destructive, marginLeft: SPACING.xs }}>
                 Reject
               </Text>
             </Button>
@@ -281,7 +281,7 @@ export const AIReviewCard = memo(function AIReviewCard({
               disabled={isProcessing}
             >
               <Pencil size={14} color={colors.foreground} />
-              <Text style={{ color: colors.foreground, marginLeft: 4 }}>
+              <Text style={{ color: colors.foreground, marginLeft: SPACING.xs }}>
                 Edit
               </Text>
             </Button>
@@ -293,7 +293,7 @@ export const AIReviewCard = memo(function AIReviewCard({
               loading={isProcessing}
             >
               <Check size={14} color={colors.primaryForeground} />
-              <Text style={{ color: colors.primaryForeground, marginLeft: 4 }}>
+              <Text style={{ color: colors.primaryForeground, marginLeft: SPACING.xs }}>
                 Approve
               </Text>
             </Button>
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
-    gap: 4,
+    gap: SPACING.xs,
   },
   confidenceText: {
     fontSize: FONT_SIZES.xs,

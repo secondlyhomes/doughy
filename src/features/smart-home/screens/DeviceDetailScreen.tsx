@@ -27,6 +27,7 @@ import {
 import { AccessCodeCard } from '../components/AccessCodeCard';
 import { GenerateCodeSheet } from '../components/GenerateCodeSheet';
 import { DEVICE_BRAND_CONFIG } from '../types';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 export function DeviceDetailScreen() {
   const { deviceId } = useLocalSearchParams<{ deviceId: string }>();
@@ -115,7 +116,7 @@ export function DeviceDetailScreen() {
       <ThemedSafeAreaView className="flex-1" edges={['bottom']}>
         <Stack.Screen options={{ title: 'Device' }} />
         <View className="flex-1 items-center justify-center p-8">
-          <Lock size={48} color={colors.mutedForeground} />
+          <Lock size={ICON_SIZES['3xl']} color={colors.mutedForeground} />
           <Text className="mt-4" style={{ color: colors.mutedForeground }}>
             Device not found
           </Text>
@@ -148,7 +149,7 @@ export function DeviceDetailScreen() {
               disabled={isRefreshing}
             >
               <RefreshCw
-                size={20}
+                size={ICON_SIZES.lg}
                 color={colors.primary}
                 style={{ opacity: isRefreshing ? 0.5 : 1 }}
               />
@@ -178,9 +179,9 @@ export function DeviceDetailScreen() {
               }}
             >
               {isLocked ? (
-                <Lock size={48} color={isOnline ? colors.success : colors.mutedForeground} />
+                <Lock size={ICON_SIZES['3xl']} color={isOnline ? colors.success : colors.mutedForeground} />
               ) : (
-                <Unlock size={48} color={isOnline ? colors.warning : colors.mutedForeground} />
+                <Unlock size={ICON_SIZES['3xl']} color={isOnline ? colors.warning : colors.mutedForeground} />
               )}
             </View>
 
@@ -201,9 +202,9 @@ export function DeviceDetailScreen() {
           <View className="flex-row justify-center gap-3 mb-4">
             <View className="flex-row items-center">
               {isOnline ? (
-                <Wifi size={14} color={colors.success} />
+                <Wifi size={ICON_SIZES.sm} color={colors.success} />
               ) : (
-                <WifiOff size={14} color={colors.destructive} />
+                <WifiOff size={ICON_SIZES.sm} color={colors.destructive} />
               )}
               <Text
                 className="text-sm ml-1"
@@ -216,7 +217,7 @@ export function DeviceDetailScreen() {
             {device.battery_level !== undefined && (
               <View className="flex-row items-center">
                 <Battery
-                  size={14}
+                  size={ICON_SIZES.sm}
                   color={lowBattery ? colors.warning : colors.mutedForeground}
                 />
                 <Text
@@ -230,7 +231,7 @@ export function DeviceDetailScreen() {
 
             {device.last_seen_at && (
               <View className="flex-row items-center">
-                <Clock size={14} color={colors.mutedForeground} />
+                <Clock size={ICON_SIZES.sm} color={colors.mutedForeground} />
                 <Text className="text-sm ml-1" style={{ color: colors.mutedForeground }}>
                   {new Date(device.last_seen_at).toLocaleTimeString()}
                 </Text>
@@ -249,7 +250,7 @@ export function DeviceDetailScreen() {
                 disabled={isLocking || isLocked}
               >
                 <View className="flex-row items-center">
-                  <Lock size={16} color={isLocked ? colors.mutedForeground : colors.primaryForeground} />
+                  <Lock size={ICON_SIZES.md} color={isLocked ? colors.mutedForeground : colors.primaryForeground} />
                   <Text
                     className="ml-2"
                     style={{ color: isLocked ? colors.mutedForeground : colors.primaryForeground }}
@@ -266,7 +267,7 @@ export function DeviceDetailScreen() {
                 disabled={isUnlocking || !isLocked}
               >
                 <View className="flex-row items-center">
-                  <Unlock size={16} color={!isLocked ? colors.mutedForeground : colors.destructiveForeground} />
+                  <Unlock size={ICON_SIZES.md} color={!isLocked ? colors.mutedForeground : colors.destructiveForeground} />
                   <Text
                     className="ml-2"
                     style={{ color: !isLocked ? colors.mutedForeground : colors.destructiveForeground }}
@@ -294,7 +295,7 @@ export function DeviceDetailScreen() {
         <View className="px-4 pb-4">
           <View className="flex-row items-center justify-between mb-3">
             <View className="flex-row items-center">
-              <Key size={18} color={colors.foreground} />
+              <Key size={ICON_SIZES.ml} color={colors.foreground} />
               <Text className="font-semibold ml-2" style={{ color: colors.foreground }}>
                 Access Codes
               </Text>
@@ -313,7 +314,7 @@ export function DeviceDetailScreen() {
               onPress={() => setShowGenerateSheet(true)}
             >
               <View className="flex-row items-center">
-                <Plus size={14} color={colors.primaryForeground} />
+                <Plus size={ICON_SIZES.sm} color={colors.primaryForeground} />
                 <Text className="ml-1" style={{ color: colors.primaryForeground }}>
                   Generate
                 </Text>
@@ -387,7 +388,7 @@ export function DeviceDetailScreen() {
               className="rounded-lg p-6 items-center"
               style={{ backgroundColor: colors.card }}
             >
-              <Key size={32} color={colors.mutedForeground} />
+              <Key size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
               <Text
                 className="mt-2 text-center"
                 style={{ color: colors.mutedForeground }}

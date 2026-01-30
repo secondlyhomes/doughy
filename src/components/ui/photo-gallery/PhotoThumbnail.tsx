@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { X, ZoomIn } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { styles } from './styles';
 import type { PhotoItem } from './types';
@@ -45,7 +46,7 @@ export function PhotoThumbnail({
     <View style={styles.thumbnailWrapper}>
       <TouchableOpacity
         onPress={onPress}
-        activeOpacity={0.8}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         style={[
           styles.thumbnail,
           {

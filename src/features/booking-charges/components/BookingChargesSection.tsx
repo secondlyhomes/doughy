@@ -12,6 +12,7 @@ import { useBookingCharges, useChargesSummary } from '../hooks/useBookingCharges
 import { ChargeCard } from './ChargeCard';
 import { AddChargeSheet } from './AddChargeSheet';
 import type { BookingChargeWithRelations } from '../types';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 interface BookingChargesSectionProps {
   bookingId: string;
@@ -60,7 +61,7 @@ export function BookingChargesSection({
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center">
-          <DollarSign size={20} color={colors.foreground} />
+          <DollarSign size={ICON_SIZES.lg} color={colors.foreground} />
           <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>
             Charges & Deposit
           </Text>
@@ -78,7 +79,7 @@ export function BookingChargesSection({
           style={{ backgroundColor: colors.primary }}
           onPress={() => setShowAddSheet(true)}
         >
-          <Plus size={16} color={colors.primaryForeground} />
+          <Plus size={ICON_SIZES.md} color={colors.primaryForeground} />
           <Text className="ml-1 font-medium" style={{ color: colors.primaryForeground }}>
             Add
           </Text>
@@ -178,7 +179,7 @@ export function BookingChargesSection({
           className="rounded-lg p-6 items-center"
           style={{ backgroundColor: colors.card }}
         >
-          <DollarSign size={32} color={colors.mutedForeground} />
+          <DollarSign size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
           <Text
             className="mt-2 text-center"
             style={{ color: colors.mutedForeground }}
@@ -203,7 +204,7 @@ export function BookingChargesSection({
         >
           <View className="flex-row items-center">
             <Text style={{ color: colors.foreground }}>Settle Deposit</Text>
-            <ChevronRight size={16} color={colors.foreground} className="ml-1" />
+            <ChevronRight size={ICON_SIZES.md} color={colors.foreground} className="ml-1" />
           </View>
         </Button>
       )}

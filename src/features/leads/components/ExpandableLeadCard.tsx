@@ -17,7 +17,8 @@ import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge, PropertyImageCard } from '@/components/ui';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { formatStatus, getStatusBadgeVariant, formatCurrency } from '@/lib/formatters';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, PRESS_OPACITY, ICON_SIZES } from '@/constants/design-tokens';
 import { getInvestorPropertyMetrics, getPropertyImageUrl, getPropertyLocation } from '@/lib/property-card-utils';
 import { formatPropertyType } from '@/features/real-estate/utils/formatters';
 import type { Property } from '@/features/real-estate/types/property';
@@ -37,15 +38,6 @@ interface ExpandableLeadCardProps {
   initiallyExpanded?: boolean;
   /** View mode for properties: 'card' shows PropertyCard, 'list' shows compact rows */
   propertyViewMode?: 'list' | 'card';
-}
-
-function formatCurrency(value?: number): string {
-  if (!value) return '-';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 /** Convert LeadProperty to Property for use with PropertyCard */
@@ -96,7 +88,7 @@ const PropertyListRow = React.memo(function PropertyListRow({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -107,13 +99,13 @@ const PropertyListRow = React.memo(function PropertyListRow({
         marginTop: SPACING.xs,
       }}
     >
-      <Home size={16} color={colors.mutedForeground} style={{ marginRight: SPACING.sm }} />
+      <Home size={ICON_SIZES.md} color={colors.mutedForeground} style={{ marginRight: SPACING.sm }} />
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 14, fontWeight: '500', color: colors.foreground }} numberOfLines={1}>
+        <Text style={{ fontSize: FONT_SIZES.sm, fontWeight: '500', color: colors.foreground }} numberOfLines={1}>
           {property.address_line_1}, {property.city} {property.state}
         </Text>
         {detailParts.length > 0 && (
-          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+          <Text style={{ fontSize: FONT_SIZES.xs, color: colors.mutedForeground, marginTop: SPACING.xxs }}>
             {detailParts.join(' · ')}
           </Text>
         )}
@@ -132,10 +124,10 @@ const PropertyListRow = React.memo(function PropertyListRow({
           }}
           accessibilityLabel="Start deal"
         >
-          <Plus size={16} color={colors.primary} />
+          <Plus size={ICON_SIZES.md} color={colors.primary} />
         </TouchableOpacity>
       )}
-      <ChevronRight size={16} color={colors.mutedForeground} />
+      <ChevronRight size={ICON_SIZES.md} color={colors.mutedForeground} />
     </TouchableOpacity>
   );
 });
@@ -161,7 +153,7 @@ const PropertyCardView = React.memo(function PropertyCardView({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 4,
+        gap: SPACING.xs,
         paddingVertical: SPACING.xs,
         paddingHorizontal: SPACING.sm,
         backgroundColor: withOpacity(colors.primary, 'light'),
@@ -169,8 +161,8 @@ const PropertyCardView = React.memo(function PropertyCardView({
       }}
       accessibilityLabel="Start deal with this property"
     >
-      <Plus size={14} color={colors.primary} />
-      <Text style={{ fontSize: 12, fontWeight: '500', color: colors.primary }}>
+      <Plus size={ICON_SIZES.sm} color={colors.primary} />
+      <Text style={{ fontSize: FONT_SIZES.xs, fontWeight: '500', color: colors.primary }}>
         Start Deal
       </Text>
     </TouchableOpacity>
@@ -210,26 +202,6 @@ function ExpandableLeadCardInner({
     setExpanded((prev) => !prev);
   }, []);
 
-  const formatStatus = (status: LeadStatus | undefined) => {
-    if (!status) return 'Unknown';
-    return status.replace(/_/g, ' ').replace(/-/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const getStatusVariant = (status: LeadStatus | undefined) => {
-    switch (status) {
-      case 'new': return 'success' as const;
-      case 'active': return 'info' as const;
-      case 'won': return 'success' as const;
-      case 'lost': return 'destructive' as const;
-      case 'closed': return 'default' as const;
-      case 'inactive': return 'secondary' as const;
-      default: return 'default' as const;
-    }
-  };
-
   const handlePropertyPress = useCallback((property: LeadProperty) => {
     if (onPropertyPress) {
       onPropertyPress(property);
@@ -259,36 +231,36 @@ function ExpandableLeadCardInner({
       {/* Main Lead Header */}
       <TouchableOpacity
         onPress={onLeadPress}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         style={{ padding: SPACING.md }}
         accessibilityRole="button"
         accessibilityLabel={`View ${lead.name || 'lead'} details`}
       >
         {/* Row 1: Name, Star, Status */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.foreground, flex: 1 }} numberOfLines={1}>
+          <Text style={{ fontSize: FONT_SIZES.base, fontWeight: '600', color: colors.foreground, flex: 1 }} numberOfLines={1}>
             {lead.name || 'Unnamed Lead'}
           </Text>
-          {lead.starred && <Star size={14} color={colors.warning} fill={colors.warning} />}
-          <Badge variant={getStatusVariant(lead.status)} size="sm">
+          {lead.starred && <Star size={ICON_SIZES.sm} color={colors.warning} fill={colors.warning} />}
+          <Badge variant={getStatusBadgeVariant(lead.status)} size="sm">
             {formatStatus(lead.status)}
           </Badge>
         </View>
 
         {/* Row 2: Email, Phone, Button */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.xs }}>
           {lead.email && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Mail size={12} color={colors.mutedForeground} />
-              <Text style={{ fontSize: 12, color: colors.mutedForeground }} numberOfLines={1}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
+              <Mail size={ICON_SIZES.xs} color={colors.mutedForeground} />
+              <Text style={{ fontSize: FONT_SIZES.xs, color: colors.mutedForeground }} numberOfLines={1}>
                 {lead.email}
               </Text>
             </View>
           )}
           {lead.phone && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Phone size={12} color={colors.mutedForeground} />
-              <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
+              <Phone size={ICON_SIZES.xs} color={colors.mutedForeground} />
+              <Text style={{ fontSize: FONT_SIZES.xs, color: colors.mutedForeground }}>
                 {lead.phone}
               </Text>
             </View>
@@ -300,7 +272,7 @@ function ExpandableLeadCardInner({
                 e.stopPropagation();
                 toggleExpanded();
               }}
-              activeOpacity={0.7}
+              activeOpacity={PRESS_OPACITY.DEFAULT}
               accessibilityRole="button"
               accessibilityLabel={`${expanded ? 'Hide' : 'Show'} ${lead.propertyCount} ${lead.propertyCount === 1 ? 'property' : 'properties'}`}
               accessibilityState={{ expanded }}
@@ -309,21 +281,21 @@ function ExpandableLeadCardInner({
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 4,
+                  gap: SPACING.xs,
                   backgroundColor: withOpacity(colors.primary, 'light'),
                   paddingVertical: SPACING.xs,
                   paddingHorizontal: SPACING.sm,
                   borderRadius: BORDER_RADIUS.full,
                 }}
               >
-                <Building2 size={14} color={colors.primary} />
-                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>
+                <Building2 size={ICON_SIZES.sm} color={colors.primary} />
+                <Text style={{ fontSize: FONT_SIZES.sm, fontWeight: '600', color: colors.primary }}>
                   {lead.propertyCount}
                 </Text>
                 {expanded ? (
-                  <ChevronDown size={16} color={colors.primary} />
+                  <ChevronDown size={ICON_SIZES.md} color={colors.primary} />
                 ) : (
-                  <ChevronRight size={16} color={colors.primary} />
+                  <ChevronRight size={ICON_SIZES.md} color={colors.primary} />
                 )}
               </View>
             </TouchableOpacity>
@@ -392,8 +364,8 @@ function ExpandableLeadCardInner({
             accessibilityRole="button"
             accessibilityLabel="Start deal"
           >
-            <Plus size={16} color={colors.primary} />
-            <Text style={{ fontSize: 14, fontWeight: '500', color: colors.primary }}>
+            <Plus size={ICON_SIZES.md} color={colors.primary} />
+            <Text style={{ fontSize: FONT_SIZES.sm, fontWeight: '500', color: colors.primary }}>
               Start Deal
             </Text>
           </TouchableOpacity>

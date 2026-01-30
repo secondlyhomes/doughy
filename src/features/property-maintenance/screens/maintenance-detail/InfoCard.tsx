@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { FONT_SIZES } from '@/constants/design-tokens';
+import { FONT_SIZES, SPACING } from '@/constants/design-tokens';
 
 export interface InfoCardProps {
   title: string;
@@ -21,7 +21,7 @@ export function InfoCard({ title, children }: InfoCardProps) {
           color: colors.foreground,
           fontSize: FONT_SIZES.lg,
           fontWeight: '600',
-          marginBottom: 8,
+          marginBottom: SPACING.sm,
         }}
       >
         {title}

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField } from '@/components/ui';
+import { formatStatus } from '@/lib/formatters';
 import { RentalProperty, RentalType, PropertyStatus } from '../types';
 
 interface RentalPropertyCardProps {
@@ -92,11 +93,6 @@ function formatRate(baseRate: number, rateType: string): string {
   }[rateType] || '/mo';
 
   return `${formatted}${suffix}`;
-}
-
-// Helper to format status display
-function formatStatus(status: PropertyStatus): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 export function RentalPropertyCard({

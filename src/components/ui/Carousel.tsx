@@ -18,6 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Carousel Root
 export interface CarouselProps extends ViewProps {
@@ -147,7 +148,7 @@ export function Carousel({
             )}
             onPress={() => scrollToIndex(currentIndex - 1)}
             disabled={currentIndex === 0 && !loop}
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
             accessibilityRole="button"
             accessibilityLabel="Previous slide"
             accessibilityState={{ disabled: currentIndex === 0 && !loop }}
@@ -161,7 +162,7 @@ export function Carousel({
             )}
             onPress={() => scrollToIndex(currentIndex + 1)}
             disabled={currentIndex === itemCount - 1 && !loop}
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
             accessibilityRole="button"
             accessibilityLabel="Next slide"
             accessibilityState={{ disabled: currentIndex === itemCount - 1 && !loop }}
@@ -239,7 +240,7 @@ function CarouselDot({ isActive, onPress }: CarouselDotProps) {
   }));
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity onPress={onPress} activeOpacity={PRESS_OPACITY.DEFAULT}>
       <Animated.View
         style={animatedStyle}
         className={cn(

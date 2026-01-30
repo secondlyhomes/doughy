@@ -30,6 +30,7 @@ import { PhoneCard, EmailCard, AddressCard } from '../components/ContactInfoCard
 import { SKIP_TRACE_STATUS_CONFIG } from '../types';
 import type { PropertyOwnership } from '../types';
 import { formatRelativeTime, formatCurrency } from '@/utils/format';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 // Property Ownership Card Component
 function PropertyOwnershipCard({ property }: { property: PropertyOwnership }) {
@@ -47,7 +48,7 @@ function PropertyOwnershipCard({ property }: { property: PropertyOwnership }) {
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-        <Home size={18} color={colors.primary} style={{ marginRight: 12, marginTop: 2 }} />
+        <Home size={ICON_SIZES.ml} color={colors.primary} style={{ marginRight: 12, marginTop: 2 }} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 16, fontWeight: '500', color: colors.foreground }}>
             {property.address}
@@ -69,7 +70,7 @@ function PropertyOwnershipCard({ property }: { property: PropertyOwnership }) {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 16 }}>
               {property.purchasePrice && (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <DollarSign size={12} color={colors.mutedForeground} style={{ marginRight: 4 }} />
+                  <DollarSign size={ICON_SIZES.xs} color={colors.mutedForeground} style={{ marginRight: 4 }} />
                   <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
                     Paid: {formatCurrency(property.purchasePrice)}
                   </Text>
@@ -77,7 +78,7 @@ function PropertyOwnershipCard({ property }: { property: PropertyOwnership }) {
               )}
               {property.estimatedValue && (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Building2 size={12} color={colors.mutedForeground} style={{ marginRight: 4 }} />
+                  <Building2 size={ICON_SIZES.xs} color={colors.mutedForeground} style={{ marginRight: 4 }} />
                   <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
                     Est: {formatCurrency(property.estimatedValue)}
                   </Text>
@@ -132,9 +133,9 @@ function CollapsibleSection({
           </Badge>
         </View>
         {isOpen ? (
-          <ChevronUp size={18} color={colors.mutedForeground} />
+          <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
         ) : (
-          <ChevronDown size={18} color={colors.mutedForeground} />
+          <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
         )}
       </Pressable>
       {isOpen && <View style={{ paddingTop: 8 }}>{children}</View>}
@@ -200,7 +201,7 @@ export function SkipTraceDetailScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
         <ScreenHeader title="Skip Trace Result" />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <AlertCircle size={48} color={colors.destructive} style={{ marginBottom: 16 }} />
+          <AlertCircle size={ICON_SIZES['3xl']} color={colors.destructive} style={{ marginBottom: 16 }} />
           <Text style={{ fontSize: 18, fontWeight: '500', color: colors.foreground, marginBottom: 8 }}>
             Failed to Load
           </Text>
@@ -223,7 +224,7 @@ export function SkipTraceDetailScreen() {
   if (!result) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
-        <AlertCircle size={48} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
+        <AlertCircle size={ICON_SIZES['3xl']} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
         <Text style={{ fontSize: 18, color: colors.mutedForeground }}>Result not found</Text>
         <Button variant="outline" onPress={() => router.back()} style={{ marginTop: 16 }}>
           <Text style={{ color: colors.foreground }}>Go Back</Text>
@@ -243,14 +244,14 @@ export function SkipTraceDetailScreen() {
   const StatusIcon = () => {
     switch (result.status) {
       case 'completed':
-        return <CheckCircle size={18} color={colors.success} />;
+        return <CheckCircle size={ICON_SIZES.ml} color={colors.success} />;
       case 'pending':
       case 'processing':
-        return <Loader2 size={18} color={colors.warning} />;
+        return <Loader2 size={ICON_SIZES.ml} color={colors.warning} />;
       case 'failed':
-        return <AlertCircle size={18} color={colors.destructive} />;
+        return <AlertCircle size={ICON_SIZES.ml} color={colors.destructive} />;
       default:
-        return <AlertCircle size={18} color={colors.mutedForeground} />;
+        return <AlertCircle size={ICON_SIZES.ml} color={colors.mutedForeground} />;
     }
   };
 
@@ -260,7 +261,7 @@ export function SkipTraceDetailScreen() {
         title="Skip Trace Result"
         rightAction={
           <TouchableOpacity onPress={handleDelete}>
-            <Trash2 size={20} color={colors.destructive} />
+            <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />
           </TouchableOpacity>
         }
       />
@@ -294,7 +295,7 @@ export function SkipTraceDetailScreen() {
                   marginRight: 12,
                 }}
               >
-                <User size={24} color={colors.primary} />
+                <User size={ICON_SIZES.xl} color={colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.foreground }}>{displayName}</Text>
@@ -325,7 +326,7 @@ export function SkipTraceDetailScreen() {
               </Badge>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Clock size={12} color={colors.mutedForeground} style={{ marginRight: 4 }} />
+              <Clock size={ICON_SIZES.xs} color={colors.mutedForeground} style={{ marginRight: 4 }} />
               <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
                 {formatRelativeTime(result.created_at)}
               </Text>
@@ -351,7 +352,7 @@ export function SkipTraceDetailScreen() {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-              <AlertCircle size={18} color={colors.destructive} style={{ marginRight: 8, marginTop: 2 }} />
+              <AlertCircle size={ICON_SIZES.ml} color={colors.destructive} style={{ marginRight: 8, marginTop: 2 }} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 14, fontWeight: '500', color: colors.destructive }}>Error</Text>
                 <Text style={{ fontSize: 14, color: colors.mutedForeground }}>{result.error_message}</Text>
@@ -373,7 +374,7 @@ export function SkipTraceDetailScreen() {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <Link2 size={16} color={colors.success} style={{ marginRight: 8 }} />
+              <Link2 size={ICON_SIZES.md} color={colors.success} style={{ marginRight: 8 }} />
               <Text style={{ fontSize: 14, fontWeight: '600', color: colors.success }}>Matched Property</Text>
               {result.match_confidence && (
                 <Badge variant="outline" style={{ marginLeft: 8 }}>
@@ -397,7 +398,7 @@ export function SkipTraceDetailScreen() {
             {result.phones && result.phones.length > 0 && (
               <CollapsibleSection
                 title="Phone Numbers"
-                icon={<Phone size={16} color={colors.primary} />}
+                icon={<Phone size={ICON_SIZES.md} color={colors.primary} />}
                 count={result.phones.length}
               >
                 {result.phones.map((phone, index) => (
@@ -410,7 +411,7 @@ export function SkipTraceDetailScreen() {
             {result.emails && result.emails.length > 0 && (
               <CollapsibleSection
                 title="Email Addresses"
-                icon={<Mail size={16} color={colors.primary} />}
+                icon={<Mail size={ICON_SIZES.md} color={colors.primary} />}
                 count={result.emails.length}
               >
                 {result.emails.map((email, index) => (
@@ -423,7 +424,7 @@ export function SkipTraceDetailScreen() {
             {result.addresses && result.addresses.length > 0 && (
               <CollapsibleSection
                 title="Known Addresses"
-                icon={<MapPin size={16} color={colors.primary} />}
+                icon={<MapPin size={ICON_SIZES.md} color={colors.primary} />}
                 count={result.addresses.length}
               >
                 {result.addresses.map((address, index) => (
@@ -436,7 +437,7 @@ export function SkipTraceDetailScreen() {
             {result.properties_owned && result.properties_owned.length > 0 && (
               <CollapsibleSection
                 title="Properties Owned"
-                icon={<Home size={16} color={colors.primary} />}
+                icon={<Home size={ICON_SIZES.md} color={colors.primary} />}
                 count={result.properties_owned.length}
               >
                 {result.properties_owned.map((property, index) => (
@@ -460,7 +461,7 @@ export function SkipTraceDetailScreen() {
                     borderColor: colors.border,
                   }}
                 >
-                  <AlertCircle size={32} color={colors.mutedForeground} style={{ marginBottom: 8 }} />
+                  <AlertCircle size={ICON_SIZES['2xl']} color={colors.mutedForeground} style={{ marginBottom: 8 }} />
                   <Text style={{ fontSize: 16, fontWeight: '500', color: colors.mutedForeground }}>
                     No Results Found
                   </Text>
@@ -484,7 +485,7 @@ export function SkipTraceDetailScreen() {
               borderColor: colors.border,
             }}
           >
-            <Loader2 size={32} color={colors.primary} style={{ marginBottom: 8 }} />
+            <Loader2 size={ICON_SIZES['2xl']} color={colors.primary} style={{ marginBottom: 8 }} />
             <Text style={{ fontSize: 16, fontWeight: '500', color: colors.foreground }}>Processing...</Text>
             <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginTop: 4 }}>
               Your skip trace is being processed. Results will appear here shortly.

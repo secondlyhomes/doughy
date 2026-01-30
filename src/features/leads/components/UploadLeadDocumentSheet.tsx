@@ -12,6 +12,7 @@ import {
 import { FileText, Upload, X, AlertCircle } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import * as DocumentPicker from 'expo-document-picker';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useLeadDocumentMutations, DOCUMENT_CATEGORIES, DocumentCategory } from '../hooks/useLeadDocuments';
@@ -134,7 +135,7 @@ export function UploadLeadDocumentSheet({
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
                   <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                    <FileText size={24} color={colors.primary} />
+                    <FileText size={ICON_SIZES.xl} color={colors.primary} />
                   </View>
                   <View className="flex-1">
                     <Text className="font-medium" numberOfLines={1} style={{ color: colors.foreground }}>
@@ -161,7 +162,7 @@ export function UploadLeadDocumentSheet({
                   style={{ backgroundColor: colors.muted }}
                   disabled={isLoading}
                 >
-                  <X size={16} color={colors.mutedForeground} />
+                  <X size={ICON_SIZES.md} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -172,7 +173,7 @@ export function UploadLeadDocumentSheet({
               style={{ backgroundColor: colors.muted, borderColor: colors.border }}
               disabled={isLoading}
             >
-              <Upload size={32} color={colors.mutedForeground} className="mb-2" />
+              <Upload size={ICON_SIZES['2xl']} color={colors.mutedForeground} className="mb-2" />
               <Text className="font-medium" style={{ color: colors.foreground }}>Choose File</Text>
               <Text className="text-xs mt-1" style={{ color: colors.mutedForeground }}>
                 PDF, Images, Word (max 10MB)
@@ -257,7 +258,7 @@ export function UploadLeadDocumentSheet({
         {/* Error Display */}
         {(validationError || error) && (
           <View className="rounded-xl p-4 flex-row items-center" style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}>
-            <AlertCircle size={20} color={colors.destructive} className="mr-2" />
+            <AlertCircle size={ICON_SIZES.lg} color={colors.destructive} className="mr-2" />
             <Text className="flex-1" style={{ color: colors.destructive }}>
               {validationError || error?.message || 'Upload failed'}
             </Text>
@@ -288,7 +289,7 @@ export function UploadLeadDocumentSheet({
               <ActivityIndicator color={colors.primaryForeground} size="small" />
             ) : (
               <>
-                <Upload size={18} color={colors.primaryForeground} />
+                <Upload size={ICON_SIZES.ml} color={colors.primaryForeground} />
                 <Text className="font-semibold ml-2" style={{ color: colors.primaryForeground }}>Upload</Text>
               </>
             )}

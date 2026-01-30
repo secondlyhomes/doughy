@@ -21,6 +21,7 @@ import { PropertyMap } from '../components/PropertyMap';
 import { useProperties } from '../hooks/useProperties';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Property } from '../types';
 import { formatCurrency, formatPropertyType } from '../utils/formatters';
 
@@ -70,7 +71,7 @@ export function PropertyMapScreen() {
             style={{ backgroundColor: colors.card }}
             activeOpacity={0.7}
           >
-            <ArrowLeft size={20} color={colors.foreground} />
+            <ArrowLeft size={ICON_SIZES.lg} color={colors.foreground} />
           </TouchableOpacity>
 
           <View className="px-4 py-2 rounded-full shadow-md" style={{ backgroundColor: colors.card }}>
@@ -83,7 +84,7 @@ export function PropertyMapScreen() {
             style={{ backgroundColor: colors.card }}
             activeOpacity={0.7}
           >
-            <List size={20} color={colors.foreground} />
+            <List size={ICON_SIZES.lg} color={colors.foreground} />
           </TouchableOpacity>
         </View>
       </View>
@@ -128,7 +129,7 @@ export function PropertyMapScreen() {
               style={{ backgroundColor: colors.muted }}
               activeOpacity={0.7}
             >
-              <X size={18} color={colors.mutedForeground} />
+              <X size={ICON_SIZES.lg} color={colors.mutedForeground} />
             </TouchableOpacity>
 
             {selectedProperty && (
@@ -138,7 +139,7 @@ export function PropertyMapScreen() {
                   {selectedProperty.address || 'Address not specified'}
                 </Text>
                 <View className="flex-row items-center mb-4">
-                  <MapPin size={14} color={colors.mutedForeground} />
+                  <MapPin size={ICON_SIZES.sm} color={colors.mutedForeground} />
                   <Text className="ml-1" style={{ color: colors.mutedForeground }}>
                     {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zip}
                   </Text>
@@ -161,21 +162,21 @@ export function PropertyMapScreen() {
                 {/* Property Stats */}
                 <View className="flex-row justify-around rounded-xl p-4 mb-4" style={{ backgroundColor: colors.muted }}>
                   <View className="items-center">
-                    <Bed size={20} color={colors.primary} style={{ marginBottom: 4 }} />
+                    <Bed size={ICON_SIZES.lg} color={colors.primary} style={{ marginBottom: 4 }} />
                     <Text className="font-semibold" style={{ color: colors.foreground }}>
                       {selectedProperty.bedrooms ?? 'N/A'}
                     </Text>
                     <Text className="text-xs" style={{ color: colors.mutedForeground }}>Beds</Text>
                   </View>
                   <View className="items-center">
-                    <Bath size={20} color={colors.primary} style={{ marginBottom: 4 }} />
+                    <Bath size={ICON_SIZES.lg} color={colors.primary} style={{ marginBottom: 4 }} />
                     <Text className="font-semibold" style={{ color: colors.foreground }}>
                       {selectedProperty.bathrooms ?? 'N/A'}
                     </Text>
                     <Text className="text-xs" style={{ color: colors.mutedForeground }}>Baths</Text>
                   </View>
                   <View className="items-center">
-                    <Square size={20} color={colors.primary} style={{ marginBottom: 4 }} />
+                    <Square size={ICON_SIZES.lg} color={colors.primary} style={{ marginBottom: 4 }} />
                     <Text className="font-semibold" style={{ color: colors.foreground }}>
                       {selectedProperty.square_feet?.toLocaleString() ?? 'N/A'}
                     </Text>

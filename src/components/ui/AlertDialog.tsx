@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop } from './GlassView';
 
@@ -233,7 +234,7 @@ export function AlertDialogAction({
       style={{ backgroundColor: colors.destructive }}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
     >
       {typeof children === 'string' ? (
         <Text
@@ -280,7 +281,7 @@ export function AlertDialogCancel({
       }}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
     >
       {typeof children === 'string' ? (
         <Text

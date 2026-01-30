@@ -6,7 +6,7 @@ import { View, Text } from 'react-native';
 import { Star } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui';
-import { FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { FONT_SIZES, BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { VENDOR_CATEGORY_CONFIG } from '../../types';
 import type { Database } from '@/integrations/supabase/types';
@@ -52,7 +52,7 @@ export function VendorHeaderCard({ vendor }: VendorHeaderCardProps) {
               style={{
                 color: colors.mutedForeground,
                 fontSize: FONT_SIZES.base,
-                marginTop: 2,
+                marginTop: SPACING.xxs,
               }}
             >
               {vendor.company_name}
@@ -74,7 +74,7 @@ export function VendorHeaderCard({ vendor }: VendorHeaderCardProps) {
                 color: colors.foreground,
                 fontSize: FONT_SIZES.base,
                 fontWeight: '600',
-                marginLeft: 4,
+                marginLeft: SPACING.xs,
               }}
             >
               {vendor.rating.toFixed(1)}

@@ -7,7 +7,7 @@ import { Sparkles, MessageCircle, HelpCircle, Zap, Info, X } from 'lucide-react-
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
 import type { AISuggestion } from '../types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -141,7 +141,7 @@ function SuggestionCard({ suggestion, onDismiss, onUse, index, darkMode }: Sugge
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <View style={[styles.iconBadge, { backgroundColor: withOpacity(accentColor, 'light') }]}>
-            <IconComponent size={14} color={accentColor} />
+            <IconComponent size={ICON_SIZES.sm} color={accentColor} />
           </View>
           <Text style={[styles.cardLabel, { color: accentColor }]}>
             {getSuggestionLabel(suggestion.type)}
@@ -153,7 +153,7 @@ function SuggestionCard({ suggestion, onDismiss, onUse, index, darkMode }: Sugge
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           accessibilityLabel="Dismiss suggestion"
         >
-          <X size={16} color={mutedColor} />
+          <X size={ICON_SIZES.md} color={mutedColor} />
         </TouchableOpacity>
       </View>
 
@@ -194,7 +194,7 @@ export function AISuggestions({ suggestions, onDismiss, onUseSuggestion, hideHea
       {/* Header - can be hidden when shown separately */}
       {!hideHeader && (
         <View style={styles.header}>
-          <Sparkles size={16} color={colors.primary} />
+          <Sparkles size={ICON_SIZES.md} color={colors.primary} />
           <Text style={[styles.headerText, { color: darkMode ? '#FFFFFF' : colors.foreground }]}>
             AI Coach
           </Text>
@@ -227,7 +227,7 @@ export function AISuggestionsHeader() {
 
   return (
     <View style={styles.header}>
-      <Sparkles size={16} color={colors.primary} />
+      <Sparkles size={ICON_SIZES.md} color={colors.primary} />
       <Text style={[styles.headerText, { color: '#FFFFFF' }]}>
         AI Coach
       </Text>
@@ -282,9 +282,9 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   iconBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: ICON_SIZES.xl,
+    height: ICON_SIZES.xl,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },

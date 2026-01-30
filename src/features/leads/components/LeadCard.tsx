@@ -8,14 +8,17 @@ import {
   Star,
   Phone,
   Mail,
-  Building2,
   ChevronRight,
   MapPin
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 // Zone A UI Components
 import { DataCard, DataCardField } from '@/components/ui';
+
+// Shared formatters
+import { formatStatus, getStatusBadgeVariant, getScoreColor } from '@/lib/formatters';
 
 import { Lead } from '../types';
 
@@ -30,33 +33,6 @@ interface LeadCardProps {
 
 export function LeadCard({ lead, onPress, variant = 'default', glassIntensity = 55 }: LeadCardProps) {
   const colors = useThemeColors();
-
-  const formatStatus = (status: string | undefined) => {
-    if (!status) return 'Unknown';
-    return status.replace(/_/g, ' ').replace(/-/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const getStatusVariant = (status: string | undefined) => {
-    switch (status) {
-      case 'new': return 'success' as const;
-      case 'active': return 'info' as const;
-      case 'won': return 'success' as const;
-      case 'lost': return 'destructive' as const;
-      case 'closed': return 'default' as const;
-      case 'inactive': return 'secondary' as const;
-      default: return 'default' as const;
-    }
-  };
-
-  const getScoreColor = (score: number | undefined) => {
-    if (!score) return colors.mutedForeground;
-    if (score >= 80) return colors.success;
-    if (score >= 50) return colors.warning;
-    return colors.destructive;
-  };
 
   // Build fields array from lead data
   const fields: DataCardField[] = [
@@ -87,10 +63,10 @@ export function LeadCard({ lead, onPress, variant = 'default', glassIntensity = 
       headerIcon={lead.starred ? Star : undefined}
       headerBadge={{
         label: formatStatus(lead.status),
-        variant: getStatusVariant(lead.status),
+        variant: getStatusBadgeVariant(lead.status),
         size: 'sm',
       }}
-      headerRight={<ChevronRight size={20} color={colors.mutedForeground} />}
+      headerRight={<ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />}
       fields={fields}
       badges={cardBadges}
       footerContent={
@@ -98,7 +74,7 @@ export function LeadCard({ lead, onPress, variant = 'default', glassIntensity = 
           {/* Score */}
           {lead.score !== undefined && (
             <View className="flex-row items-center">
-              <Text className="text-sm font-medium" style={{ color: getScoreColor(lead.score) }}>
+              <Text className="text-sm font-medium" style={{ color: getScoreColor(lead.score, colors) }}>
                 {lead.score}
               </Text>
               <Text className="text-xs ml-0.5" style={{ color: colors.mutedForeground }}>

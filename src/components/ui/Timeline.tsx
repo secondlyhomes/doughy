@@ -334,7 +334,7 @@ export function Timeline<T extends TimelineEvent>({
         </View>
       ) : (
         <View className="py-8 items-center">
-          <Clock size={32} color={colors.border} />
+          <Clock size={ICON_SIZES['2xl']} color={colors.border} />
           <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
             {emptyStateMessage}
           </Text>

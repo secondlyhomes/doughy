@@ -22,7 +22,7 @@ import {
   ListEmptyState,
   FilterableTabs,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { useNativeHeader } from '@/hooks';
 import {
   usePropertyInventory,
@@ -171,7 +171,7 @@ export function InventoryListScreen() {
         onPress={() => toggleSection(section.category)}
         className="flex-row items-center justify-between py-3 px-4"
         style={{ backgroundColor: colors.background }}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
       >
         <View className="flex-row items-center">
           <Text
@@ -188,9 +188,9 @@ export function InventoryListScreen() {
           </Badge>
         </View>
         {isCollapsed ? (
-          <ChevronDown size={20} color={colors.mutedForeground} />
+          <ChevronDown size={ICON_SIZES.lg} color={colors.mutedForeground} />
         ) : (
-          <ChevronUp size={20} color={colors.mutedForeground} />
+          <ChevronUp size={ICON_SIZES.lg} color={colors.mutedForeground} />
         )}
       </TouchableOpacity>
     );
@@ -287,7 +287,7 @@ export function InventoryListScreen() {
 
       {/* Add FAB */}
       <SimpleFAB
-        icon={<Plus size={24} color={colors.primaryForeground} />}
+        icon={<Plus size={ICON_SIZES.xl} color={colors.primaryForeground} />}
         onPress={() => setShowAddSheet(true)}
         accessibilityLabel="Add inventory item"
       />

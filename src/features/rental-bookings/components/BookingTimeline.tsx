@@ -14,6 +14,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ICON_SIZES } from '@/constants/design-tokens';
+import { formatDate, formatDateTime } from '@/lib/formatters';
 import { BookingStatus, BookingWithRelations } from '../types';
 
 // Status step configuration
@@ -47,28 +48,6 @@ export interface BookingTimelineProps {
   booking: BookingWithRelations;
   /** Show detailed timestamps */
   showTimestamps?: boolean;
-}
-
-// Format date for display
-function formatDate(dateString: string | null): string {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function formatDateTime(dateString: string | null): string {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
 }
 
 export function BookingTimeline({

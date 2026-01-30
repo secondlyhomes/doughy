@@ -5,13 +5,14 @@ import { View, Text, ViewProps, TextProps, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { GlassView } from './GlassView';
+import { GLASS_INTENSITY, BORDER_RADIUS } from '@/constants/design-tokens';
 
 interface CardProps extends ViewProps {
   className?: string;
   children?: React.ReactNode;
   /** Card variant: 'default' for solid background, 'glass' for glass effect. Default: 'default' */
   variant?: 'default' | 'glass';
-  /** Blur intensity for glass variant (0-100). Default: 60 */
+  /** Blur intensity for glass variant (0-100). Default: GLASS_INTENSITY.medium (55) */
   glassIntensity?: number;
 }
 
@@ -20,7 +21,7 @@ export function Card({
   children,
   style,
   variant = 'default',
-  glassIntensity = 60,
+  glassIntensity = GLASS_INTENSITY.medium,
   ...props
 }: CardProps) {
   const colors = useThemeColors();
@@ -61,7 +62,7 @@ export function Card({
 
 const cardStyles = StyleSheet.create({
   base: {
-    borderRadius: 16,
+    borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
     overflow: 'hidden',
   },

@@ -1,18 +1,39 @@
 // src/utils/format.ts
 // Formatting utility functions for React Native
+//
+// NOTE: Core formatters have been moved to @/lib/formatters for consistency.
+// This file re-exports those and adds utility-specific formatters.
+//
+// @see @/lib/formatters for: formatCurrency, formatDate, formatDateTime,
+//   formatRelativeTime, formatDateRange, formatSquareFeet, formatStatus, etc.
 
-// Format a number as currency
-export const formatCurrency = (value: number | undefined): string => {
-  if (value === undefined) return '$0';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(value);
-};
+// Re-export core formatters from shared library
+export {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  formatRelativeTime,
+  formatDateRange,
+  formatSquareFeet,
+  formatStatus,
+  getStatusBadgeVariant,
+  getScoreColor,
+  getRatingColor,
+} from '@/lib/formatters';
 
-// Format currency with cents
+// Alias for backward compatibility
+export { formatDateTime as formatDatetime } from '@/lib/formatters';
+
+/**
+ * Format currency with cents (always shows 2 decimal places).
+ *
+ * Unlike formatCurrency which auto-detects decimals, this always shows cents.
+ * Useful for invoices, transactions, and financial reports.
+ *
+ * @example
+ * formatCurrencyWithCents(100)    // "$100.00"
+ * formatCurrencyWithCents(99.5)   // "$99.50"
+ */
 export const formatCurrencyWithCents = (value: number | undefined): string => {
   if (value === undefined) return '$0.00';
   return new Intl.NumberFormat('en-US', {
@@ -23,7 +44,15 @@ export const formatCurrencyWithCents = (value: number | undefined): string => {
   }).format(value);
 };
 
-// Format duration in seconds to mm:ss or hh:mm:ss
+/**
+ * Format duration in seconds to mm:ss or hh:mm:ss.
+ *
+ * Useful for call durations, media playback, timers.
+ *
+ * @example
+ * formatDuration(65)    // "01:05"
+ * formatDuration(3665)  // "01:01:05"
+ */
 export const formatDuration = (seconds: number | undefined): string => {
   if (seconds === undefined || isNaN(seconds)) return '00:00';
 
@@ -38,7 +67,12 @@ export const formatDuration = (seconds: number | undefined): string => {
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-// Format timestamp to readable date and time
+/**
+ * Format timestamp to readable date and time (compact format for logs/history).
+ *
+ * @example
+ * formatTimestamp(new Date())  // "Jan 15, 2024, 02:30 PM"
+ */
 export const formatTimestamp = (timestamp: string | number | Date | undefined): string => {
   if (!timestamp) return 'N/A';
 
@@ -54,54 +88,17 @@ export const formatTimestamp = (timestamp: string | number | Date | undefined): 
   });
 };
 
-// Format date only (no time)
-export const formatDate = (
-  dateString: string | number | Date | undefined,
-  options: Intl.DateTimeFormatOptions = {}
-): string => {
-  if (!dateString) return 'N/A';
-
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid date';
-
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      ...options
-    });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Invalid date';
-  }
-};
-
-// Format as date with time separated by "at"
-export const formatDatetime = (dateString: string | number | Date | undefined): string => {
-  if (!dateString) return 'N/A';
-
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid date';
-
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }) + ' at ' +
-    date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (error) {
-    console.error('Error formatting datetime:', error);
-    return 'Invalid date';
-  }
-};
-
-// Format relative time (e.g., "2 hours ago")
-export const formatRelativeTime = (date: Date | string | number): string => {
+/**
+ * Format relative time with compact output (e.g., "2m ago", "3h ago").
+ *
+ * Different from formatRelativeTime which uses full words ("2 minutes ago").
+ * Useful for compact UI elements like message timestamps, notifications.
+ *
+ * @example
+ * formatRelativeTimeCompact(new Date(Date.now() - 120000))  // "2m ago"
+ * formatRelativeTimeCompact(new Date(Date.now() - 7200000)) // "2h ago"
+ */
+export const formatRelativeTimeCompact = (date: Date | string | number): string => {
   const now = new Date();
   const then = new Date(date);
   const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
@@ -111,22 +108,45 @@ export const formatRelativeTime = (date: Date | string | number): string => {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
 
-  return formatDate(then);
+  return then.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 };
 
-// Format number with commas
+/**
+ * Format number with commas (no currency symbol).
+ *
+ * @example
+ * formatNumber(1500000)  // "1,500,000"
+ */
 export const formatNumber = (value: number | undefined): string => {
   if (value === undefined) return '0';
   return new Intl.NumberFormat('en-US').format(value);
 };
 
-// Format percentage
+/**
+ * Format percentage value.
+ *
+ * @example
+ * formatPercentage(75.5)     // "75.5%"
+ * formatPercentage(75.55, 2) // "75.55%"
+ */
 export const formatPercentage = (value: number | undefined, decimals = 1): string => {
   if (value === undefined) return '0%';
   return `${value.toFixed(decimals)}%`;
 };
 
-// Format phone number
+/**
+ * Format phone number for display.
+ *
+ * Note: For more comprehensive phone formatting, consider using @/lib/twilio.
+ *
+ * @example
+ * formatPhoneNumber('5551234567')   // "(555) 123-4567"
+ * formatPhoneNumber('15551234567')  // "+1 (555) 123-4567"
+ */
 export const formatPhoneNumber = (phone: string | undefined): string => {
   if (!phone) return '';
   const cleaned = phone.replace(/\D/g, '');
@@ -139,7 +159,12 @@ export const formatPhoneNumber = (phone: string | undefined): string => {
   return phone;
 };
 
-// Truncate text
+/**
+ * Truncate text with ellipsis.
+ *
+ * @example
+ * truncateText('Hello World', 8)  // "Hello..."
+ */
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength - 3) + '...';

@@ -6,6 +6,7 @@ export default function SecurityLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="ai-firewall" />
+      <Stack.Screen name="user-threat/[userId]" />
     </Stack>
   );
 }

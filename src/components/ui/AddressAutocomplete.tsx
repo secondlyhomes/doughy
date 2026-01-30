@@ -7,6 +7,7 @@ import { View, Text, TouchableOpacity, Modal as RNModal, ViewProps } from 'react
 import { MapPin, X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 import { SearchBar } from './SearchBar';
 import { useAddressSearch, AddressValue, PlacePrediction } from './hooks/useAddressSearch';
 import { AddressSuggestionList } from './AddressSuggestionList';
@@ -99,7 +100,7 @@ export function AddressAutocomplete({
         }}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
       >
         <MapPin size={16} color={colors.mutedForeground} />
         <Text

@@ -52,7 +52,7 @@ export function UnknownSellerCard({
             Properties needing skip trace
           </Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
           <Home size={14} color={colors.warning} />
           <Text style={{ fontSize: 14, fontWeight: '500', color: colors.warning }}>
             {properties.length}

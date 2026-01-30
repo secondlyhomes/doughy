@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Shield, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import type { SecurityHealthCardProps } from './types';
 
 export function SecurityHealthCard({
@@ -48,14 +49,14 @@ export function SecurityHealthCard({
         className="rounded-lg p-4"
         style={{ backgroundColor: colors.card }}
         onPress={onPress}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
       >
         <View className="flex-row items-center">
           <View
             className="w-12 h-12 rounded-full items-center justify-center"
             style={{ backgroundColor: getBackgroundColor() }}
           >
-            <Shield size={24} color={getScoreColor()} />
+            <Shield size={ICON_SIZES.xl} color={getScoreColor()} />
           </View>
           <View className="flex-1 ml-3">
             <View className="flex-row items-center">
@@ -70,7 +71,7 @@ export function SecurityHealthCard({
               {getStatusText()}
             </Text>
           </View>
-          <ChevronRight size={20} color={colors.mutedForeground} />
+          <ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />
         </View>
       </TouchableOpacity>
     </View>

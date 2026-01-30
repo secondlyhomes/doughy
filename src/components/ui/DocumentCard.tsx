@@ -20,7 +20,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { DataCard, DataCardField, DataCardAction, DataCardBadge } from './DataCard';
 import { Badge } from './Badge';
 
@@ -295,7 +295,7 @@ export function DocumentCardCompact({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={[
         {
           flexDirection: 'row',
@@ -333,7 +333,7 @@ export function DocumentCardCompact({
             fontSize: 14,
             fontWeight: '600',
             color: colors.foreground,
-            marginBottom: 2,
+            marginBottom: SPACING.xxs,
           }}
           numberOfLines={1}
         >

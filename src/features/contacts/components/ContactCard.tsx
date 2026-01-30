@@ -7,6 +7,8 @@ import { View, Text } from 'react-native';
 import { Phone, Mail, ChevronRight, Building2, Star } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField, Badge } from '@/components/ui';
+import { formatStatus, getStatusBadgeVariant, getScoreColor } from '@/lib/formatters';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Contact, getContactDisplayName, CrmContactType, CrmContactSource } from '../types';
 
 interface ContactCardProps {
@@ -57,43 +59,6 @@ const formatSource = (source: CrmContactSource): string => {
   return sourceMap[source] || source.charAt(0).toUpperCase() + source.slice(1);
 };
 
-// Get score color based on value
-const getScoreColor = (score: number | null, colors: ReturnType<typeof useThemeColors>): string => {
-  if (!score) return colors.mutedForeground;
-  if (score >= 80) return colors.success;
-  if (score >= 50) return colors.warning;
-  return colors.destructive;
-};
-
-// Format status for display
-const formatStatus = (status: string | null): string => {
-  if (!status) return 'Unknown';
-  return status.replace(/_/g, ' ').replace(/-/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
-// Get status badge variant
-const getStatusVariant = (status: string | null): 'success' | 'info' | 'warning' | 'default' | 'secondary' | 'destructive' => {
-  switch (status) {
-    case 'new':
-      return 'success';
-    case 'contacted':
-      return 'info';
-    case 'qualified':
-      return 'info';
-    case 'active':
-      return 'success';
-    case 'inactive':
-      return 'secondary';
-    case 'archived':
-      return 'default';
-    default:
-      return 'default';
-  }
-};
-
 export function ContactCard({
   contact,
   onPress,
@@ -125,10 +90,10 @@ export function ContactCard({
       subtitle={contact.job_title || undefined}
       headerBadge={{
         label: formatStatus(contact.status),
-        variant: getStatusVariant(contact.status),
+        variant: getStatusBadgeVariant(contact.status),
         size: 'sm',
       }}
-      headerRight={<ChevronRight size={20} color={colors.mutedForeground} />}
+      headerRight={<ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />}
       fields={fields}
       footerContent={
         <View className="mb-2">
@@ -152,7 +117,7 @@ export function ContactCard({
             {/* Score */}
             {contact.score !== null && contact.score !== undefined && (
               <View className="flex-row items-center">
-                <Star size={12} color={getScoreColor(contact.score, colors)} />
+                <Star size={ICON_SIZES.xs} color={getScoreColor(contact.score, colors)} />
                 <Text
                   className="text-sm font-medium ml-1"
                   style={{ color: getScoreColor(contact.score, colors) }}

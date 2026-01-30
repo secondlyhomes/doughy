@@ -19,7 +19,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { CaptureItem, CaptureItemType } from '../types';
 
 interface CaptureItemCardProps {
@@ -107,7 +107,7 @@ export function CaptureItemCard({ item, onPress, onPushToLead }: CaptureItemCard
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         backgroundColor: colors.card,
         borderRadius: BORDER_RADIUS.lg,
@@ -135,7 +135,7 @@ export function CaptureItemCard({ item, onPress, onPushToLead }: CaptureItemCard
         {/* Content */}
         <View style={{ flex: 1 }}>
           {/* Header Row */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.xs }}>
             <Text
               style={{ fontSize: 15, fontWeight: '600', color: colors.foreground, flex: 1 }}
               numberOfLines={1}
@@ -162,7 +162,7 @@ export function CaptureItemCard({ item, onPress, onPushToLead }: CaptureItemCard
           {/* Preview */}
           {preview && (
             <Text
-              style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 4 }}
+              style={{ fontSize: 13, color: colors.mutedForeground, marginTop: SPACING.xs }}
               numberOfLines={2}
             >
               {preview}...
@@ -192,7 +192,7 @@ export function CaptureItemCard({ item, onPress, onPushToLead }: CaptureItemCard
         </View>
 
         {/* Chevron */}
-        <ChevronRight size={20} color={colors.mutedForeground} style={{ marginTop: 12 }} />
+        <ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} style={{ marginTop: SPACING.md }} />
       </View>
 
       {/* Push to Lead Button */}
@@ -215,7 +215,7 @@ export function CaptureItemCard({ item, onPress, onPushToLead }: CaptureItemCard
           accessibilityRole="button"
           accessibilityLabel="Push to Lead"
         >
-          <User size={16} color={colors.primary} />
+          <User size={ICON_SIZES.md} color={colors.primary} />
           <Text style={{ fontSize: 14, fontWeight: '500', color: colors.primary }}>
             Push to Lead
           </Text>

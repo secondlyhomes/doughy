@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react-native';
+import { ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 
 import { useConversations, useCreateConversation, useDeleteConversation } from '../hooks/useConversations';
 import { Conversation } from '../types';
@@ -70,14 +71,14 @@ const ConversationCard = React.memo(function ConversationCard({ conversation, on
       className="rounded-xl p-4 mb-3"
       style={{ backgroundColor: colors.card }}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityLabel={`Conversation: ${conversation.title || 'Untitled'}, ${conversation.message_count} messages`}
       accessibilityRole="button"
       accessibilityHint="Opens conversation"
     >
       <View className="flex-row items-start">
         <View className="rounded-full p-2 mr-3" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-          <MessageCircle size={20} color={colors.info} />
+          <MessageCircle size={ICON_SIZES.lg} color={colors.info} />
         </View>
 
         <View className="flex-1">
@@ -220,7 +221,7 @@ export function ConversationsListScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <View className="rounded-full p-4 mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                <Sparkles size={32} color={colors.info} />
+                <Sparkles size={ICON_SIZES['2xl']} color={colors.info} />
               </View>
               <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>
                 No conversations yet

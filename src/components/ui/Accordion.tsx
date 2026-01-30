@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ChevronDown } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Types
 type AccordionType = 'single' | 'multiple';
@@ -202,7 +203,7 @@ export function AccordionTrigger({
       )}
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityRole="button"
       accessibilityState={{ expanded: isOpen, disabled }}
       accessibilityLabel={typeof children === 'string' ? children : undefined}

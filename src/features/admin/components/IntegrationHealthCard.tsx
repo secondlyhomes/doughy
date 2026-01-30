@@ -7,6 +7,7 @@ import { Database, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react-na
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { supabase, USE_MOCK_DATA } from '@/lib/supabase';
+import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
 
 interface ConnectionHealth {
   connected: boolean;
@@ -140,16 +141,16 @@ export function IntegrationHealthCard({ refreshTrigger }: IntegrationHealthCardP
 
 const styles = StyleSheet.create({
   card: {
-    marginVertical: 8,
-    padding: 16,
-    borderRadius: 12,
+    marginVertical: SPACING.sm,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
   },
   title: {
     fontSize: 14,
@@ -157,10 +158,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   refreshButton: {
-    padding: 4,
+    padding: SPACING.xs,
   },
   status: {
-    gap: 4,
+    gap: SPACING.xs,
   },
   statusRow: {
     flexDirection: 'row',
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
   error: {
     fontSize: 12,
     marginLeft: 22,
-    marginTop: 4,
+    marginTop: SPACING.xs,
     lineHeight: 18,
     flexShrink: 1,
   },

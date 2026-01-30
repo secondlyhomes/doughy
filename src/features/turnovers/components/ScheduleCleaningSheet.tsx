@@ -14,7 +14,7 @@ import {
   LoadingSpinner,
   Badge,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { Vendor, VENDOR_CATEGORY_CONFIG } from '@/features/vendors/types';
 import { useVendors, usePrimaryVendor } from '@/features/vendors/hooks/useVendors';
@@ -165,7 +165,7 @@ export function ScheduleCleaningSheet({
               className="py-6 items-center rounded-xl"
               style={{ backgroundColor: colors.muted }}
             >
-              <User size={32} color={colors.mutedForeground} />
+              <User size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
               <Text
                 style={{
                   color: colors.mutedForeground,
@@ -195,7 +195,7 @@ export function ScheduleCleaningSheet({
                       borderWidth: isSelected ? 1 : 0,
                       borderColor: colors.primary,
                     }}
-                    activeOpacity={0.7}
+                    activeOpacity={PRESS_OPACITY.DEFAULT}
                   >
                     <View
                       className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -277,16 +277,16 @@ export function ScheduleCleaningSheet({
                 ? withOpacity(colors.primary, 'light')
                 : colors.muted,
             }}
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
           >
             <View
               className="w-10 h-10 rounded-full items-center justify-center mr-3"
               style={{ backgroundColor: colors.card }}
             >
               {sendMessage ? (
-                <Sparkles size={20} color={colors.primary} />
+                <Sparkles size={ICON_SIZES.lg} color={colors.primary} />
               ) : (
-                <Send size={20} color={colors.mutedForeground} />
+                <Send size={ICON_SIZES.lg} color={colors.mutedForeground} />
               )}
             </View>
             <View className="flex-1">

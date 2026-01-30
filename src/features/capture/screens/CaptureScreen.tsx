@@ -8,7 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { ThemedSafeAreaView } from '@/components';
 import { BottomSheet, BottomSheetSection, Button, SearchBar } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import { useDebounce } from '@/hooks';
 import {
@@ -40,7 +40,7 @@ function CaptureAction({ icon: Icon, label, color, onPress }: CaptureActionProps
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         alignItems: 'center',
         gap: SPACING.xs,

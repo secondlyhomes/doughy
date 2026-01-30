@@ -14,7 +14,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, BottomSheetSection, Button } from '@/components/ui';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { useCreateTouch, TouchType, TouchOutcome } from '../hooks/useContactTouches';
 import { FocusedProperty } from '@/contexts/FocusModeContext';
@@ -146,10 +146,10 @@ export function TouchLogSheet({
             marginBottom: SPACING.md,
           }}
         >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary }}>
+          <Text style={{ fontSize: FONT_SIZES.sm, fontWeight: '600', color: colors.primary }}>
             {focusedProperty.leadName || 'Unknown Lead'}
           </Text>
-          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+          <Text style={{ fontSize: FONT_SIZES.xs, color: colors.mutedForeground, marginTop: 2 }}>
             {focusedProperty.address}, {focusedProperty.city}
           </Text>
         </View>
@@ -185,7 +185,7 @@ export function TouchLogSheet({
                 />
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: FONT_SIZES.sm,
                     fontWeight: '500',
                     color: isSelected ? colors.primaryForeground : colors.foreground,
                   }}
@@ -236,7 +236,7 @@ export function TouchLogSheet({
                 />
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: FONT_SIZES.sm,
                     fontWeight: '500',
                     color: isSelected ? colors.primaryForeground : colors.foreground,
                   }}
@@ -273,7 +273,7 @@ export function TouchLogSheet({
             />
             <Text
               style={{
-                fontSize: 14,
+                fontSize: FONT_SIZES.sm,
                 fontWeight: '600',
                 color: responded ? colors.primaryForeground : colors.foreground,
               }}
@@ -303,7 +303,7 @@ export function TouchLogSheet({
             />
             <Text
               style={{
-                fontSize: 14,
+                fontSize: FONT_SIZES.sm,
                 fontWeight: '600',
                 color: !responded ? colors.destructiveForeground : colors.foreground,
               }}
@@ -328,7 +328,7 @@ export function TouchLogSheet({
             backgroundColor: colors.muted,
             borderRadius: BORDER_RADIUS.md,
             padding: SPACING.md,
-            fontSize: 14,
+            fontSize: FONT_SIZES.sm,
             color: colors.foreground,
             minHeight: 80,
           }}

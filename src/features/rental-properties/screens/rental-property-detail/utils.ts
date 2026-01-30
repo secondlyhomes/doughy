@@ -4,15 +4,7 @@
 import { ToggleLeft, ToggleRight, Wrench } from 'lucide-react-native';
 import type { PropertyStatus } from '../../types';
 
-export function formatCurrency(amount: number | null): string {
-  if (amount === null || amount === undefined) return '-';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+export { formatCurrency } from '@/lib/formatters';
 
 export function formatRateType(rateType: string): string {
   // Database only has: nightly, weekly, monthly (no 'yearly')

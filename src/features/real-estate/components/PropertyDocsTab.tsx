@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Property, Document } from '../types';
 import { formatDate, formatFileSize } from '../utils/formatters';
 import {
@@ -182,7 +183,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
             className="flex-row items-center flex-1"
           >
             <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.muted }}>
-              <Icon size={20} color={colors.primary} />
+              <Icon size={ICON_SIZES.lg} color={colors.primary} />
             </View>
             <View className="flex-1">
               <Text className="font-medium" numberOfLines={1} style={{ color: colors.foreground }}>
@@ -215,7 +216,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
               className="p-2 rounded-lg"
               style={{ backgroundColor: colors.muted }}
             >
-              <Download size={16} color={colors.mutedForeground} />
+              <Download size={ICON_SIZES.md} color={colors.mutedForeground} />
             </TouchableOpacity>
             <Button
               variant="ghost"
@@ -225,7 +226,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
               loading={isDeletingDoc}
               style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}
             >
-              {!isDeletingDoc && <Trash2 size={16} color={colors.destructive} />}
+              {!isDeletingDoc && <Trash2 size={ICON_SIZES.md} color={colors.destructive} />}
             </Button>
           </View>
         </View>
@@ -271,7 +272,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
             )}
           </View>
           <Button onPress={() => setShowUploadSheet(true)} size="sm">
-            <Upload size={16} color={colors.primaryForeground} />
+            <Upload size={ICON_SIZES.md} color={colors.primaryForeground} />
             Upload
           </Button>
         </View>
@@ -282,7 +283,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
         <>
           <View className="flex-1 items-center justify-center py-12 rounded-xl" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
             <View className="rounded-full p-4 mb-4" style={{ backgroundColor: colors.muted }}>
-              <FileText size={32} color={colors.mutedForeground} />
+              <FileText size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
             </View>
             <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Documents</Text>
             <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
@@ -290,7 +291,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
               property.
             </Text>
             <Button variant="secondary" onPress={() => setShowUploadSheet(true)}>
-              <Upload size={16} color={colors.foreground} />
+              <Upload size={ICON_SIZES.md} color={colors.foreground} />
               Upload First Document
             </Button>
           </View>
@@ -309,7 +310,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
                     className="flex-row items-center px-3 py-2 rounded-lg"
                     style={{ backgroundColor: colors.muted }}
                   >
-                    <Icon size={14} color={colors.mutedForeground} />
+                    <Icon size={ICON_SIZES.sm} color={colors.mutedForeground} />
                     <Text className="text-sm ml-2" style={{ color: colors.foreground }}>{docType.label}</Text>
                   </View>
                 );
@@ -339,14 +340,14 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
                 >
                   <View className="flex-row items-center">
                     <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.muted }}>
-                      <Icon size={18} color={colors.primary} />
+                      <Icon size={ICON_SIZES.lg} color={colors.primary} />
                     </View>
                     <Text className="font-medium" style={{ color: colors.foreground }}>{category.label}</Text>
                     <View className="px-2 py-0.5 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                       <Text className="text-xs font-medium" style={{ color: colors.primary }}>{categoryDocs.length}</Text>
                     </View>
                   </View>
-                  <ChevronIcon size={20} color={colors.mutedForeground} />
+                  <ChevronIcon size={ICON_SIZES.lg} color={colors.mutedForeground} />
                 </TouchableOpacity>
 
                 {/* Category Documents */}
@@ -364,7 +365,7 @@ export function PropertyDocsTab({ property, filterType = 'all', hideHeader = fal
       {/* Upload Info */}
       <View className="rounded-xl p-4" style={{ backgroundColor: colors.muted }}>
         <View className="flex-row items-center mb-2">
-          <Upload size={16} color={colors.mutedForeground} />
+          <Upload size={ICON_SIZES.md} color={colors.mutedForeground} />
           <Text className="text-sm font-medium ml-2" style={{ color: colors.foreground }}>Upload Documents</Text>
         </View>
         <Text className="text-xs" style={{ color: colors.mutedForeground }}>

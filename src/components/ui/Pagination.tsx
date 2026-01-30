@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity, ViewProps } from 'react-native';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Simple API for pagination
 export interface PaginationProps extends ViewProps {
@@ -106,7 +107,7 @@ function PaginationLink({ page, isActive, onPress }: PaginationLinkProps) {
         isActive ? 'bg-primary' : 'bg-transparent'
       )}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityRole="button"
       accessibilityLabel={`Page ${page}`}
       accessibilityState={{ selected: isActive }}
@@ -139,7 +140,7 @@ function PaginationPrevious({ onPress, disabled }: PaginationPreviousProps) {
       )}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityRole="button"
       accessibilityLabel="Previous page"
       accessibilityState={{ disabled }}
@@ -165,7 +166,7 @@ function PaginationNext({ onPress, disabled }: PaginationNextProps) {
       )}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityRole="button"
       accessibilityLabel="Next page"
       accessibilityState={{ disabled }}

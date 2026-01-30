@@ -22,7 +22,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
-import { BORDER_RADIUS } from '@/constants/design-tokens';
+import { BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ErrorBoundary } from '@/features/layout/components/ErrorBoundary';
 import { FAB_SIZE, FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_LEFT_MARGIN, FAB_Z_INDEX } from '@/components/ui/FloatingGlassTabBar';
@@ -216,7 +216,7 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
         {...panResponder.panHandlers}
       >
         <GlassButton
-          icon={<Sparkles size={24} color="white" />}
+          icon={<Sparkles size={ICON_SIZES.xl} color="white" />}
           onPress={handleToggle}
           size={FAB_SIZE}
           effect="regular"
@@ -240,7 +240,7 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <View style={styles.headerLeft}>
-            <Sparkles size={20} color={colors.primary} />
+            <Sparkles size={ICON_SIZES.lg} color={colors.primary} />
             <View>
               <Text style={[styles.headerTitle, { color: colors.foreground }]}>
                 AI Assistant
@@ -261,7 +261,7 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
             accessibilityRole="button"
             accessibilityLabel="Close AI Assistant"
           >
-            <X size={20} color={colors.mutedForeground} />
+            <X size={ICON_SIZES.lg} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
 
@@ -284,7 +284,7 @@ export function DealAssistant({ dealId, onStateChange }: DealAssistantProps) {
                 accessibilityState={{ selected: isActive }}
               >
                 <Icon
-                  size={18}
+                  size={ICON_SIZES.ml}
                   color={isActive ? colors.primary : colors.mutedForeground}
                 />
                 <Text

@@ -6,7 +6,8 @@ import { View, Text, ScrollView, Alert } from 'react-native';
 import { Wrench, Plus, RefreshCw } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING, GLASS_INTENSITY } from '@/components/ui';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Property, RepairEstimate, RepairCategory } from '../types';
 import { useRepairEstimate, useRepairEstimateMutations, REPAIR_CATEGORIES } from '../hooks/useRepairEstimate';
 import { usePropertyMutations } from '../hooks/useProperties';
@@ -134,7 +135,7 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
       <View className="flex-1 items-center justify-center py-12">
         <Text style={{ color: colors.destructive }} className="mb-4">Failed to load repairs</Text>
         <Button variant="secondary" onPress={refetch}>
-          <RefreshCw size={16} color={colors.foreground} />
+          <RefreshCw size={ICON_SIZES.md} color={colors.foreground} />
           Try Again
         </Button>
       </View>
@@ -153,7 +154,7 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
             </Text>
           </View>
           <Button onPress={() => setShowAddSheet(true)} size="sm">
-            <Plus size={16} color={colors.primaryForeground} />
+            <Plus size={ICON_SIZES.md} color={colors.primaryForeground} />
             Add
           </Button>
         </View>
@@ -165,7 +166,7 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
           propertyRepairCost={propertyRepairCost}
           onSyncRepairCost={handleUpdatePropertyRepairCost}
           variant="glass"
-          glassIntensity={55}
+          glassIntensity={GLASS_INTENSITY.medium}
         />
 
         {/* Empty State */}
@@ -173,7 +174,7 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
           <>
             <View style={{ backgroundColor: colors.card, borderColor: colors.border }} className="items-center justify-center py-12 rounded-xl border">
               <View style={{ backgroundColor: colors.muted }} className="rounded-full p-4 mb-4">
-                <Wrench size={32} color={colors.mutedForeground} />
+                <Wrench size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
               </View>
               <Text style={{ color: colors.foreground }} className="text-lg font-semibold mb-2">No Repair Estimates</Text>
               <Text style={{ color: colors.mutedForeground }} className="text-center px-8 mb-4">
@@ -192,7 +193,7 @@ export function PropertyRepairsTab({ property, onPropertyUpdate }: PropertyRepai
                     size="sm"
                     onPress={() => handleAddToCategory(category.id)}
                   >
-                    <Plus size={12} color={colors.mutedForeground} />
+                    <Plus size={ICON_SIZES.xs} color={colors.mutedForeground} />
                     {category.label}
                   </Button>
                 ))}

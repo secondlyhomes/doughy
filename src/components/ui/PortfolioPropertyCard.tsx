@@ -20,7 +20,7 @@ import { View, Text, Image, TouchableOpacity, ViewStyle } from 'react-native';
 import { Home, MapPin, ChevronRight, Calendar } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { Card } from './Card';
 import { Badge } from './Badge';
 
@@ -144,7 +144,7 @@ export function PortfolioPropertyCard({
     return (
       <TouchableOpacity
         onPress={onPress}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         accessibilityRole="button"
         accessibilityLabel={`Property: ${property.address}`}
       >
@@ -178,7 +178,7 @@ export function PortfolioPropertyCard({
             {/* Info */}
             <View style={{ flex: 1 }}>
               <Text
-                style={{ fontSize: 14, fontWeight: '600', color: colors.foreground, marginBottom: 2 }}
+                style={{ fontSize: 14, fontWeight: '600', color: colors.foreground, marginBottom: SPACING.xxs }}
                 numberOfLines={1}
               >
                 {property.address}
@@ -196,7 +196,7 @@ export function PortfolioPropertyCard({
             {/* Metrics */}
             {property.roi !== undefined && (
               <View style={{ alignItems: 'flex-end', marginRight: SPACING.sm }}>
-                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 2 }}>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: SPACING.xxs }}>
                   ROI
                 </Text>
                 <Text style={{ fontSize: 16, fontWeight: '700', color: colors.success }}>
@@ -217,7 +217,7 @@ export function PortfolioPropertyCard({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityRole="button"
       accessibilityLabel={`Property: ${property.address}`}
     >
@@ -290,7 +290,7 @@ export function PortfolioPropertyCard({
             {/* Price */}
             {property.price !== undefined && (
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 2 }}>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: SPACING.xxs }}>
                   Price
                 </Text>
                 <Text style={{ fontSize: 15, fontWeight: '600', color: colors.foreground }}>
@@ -302,7 +302,7 @@ export function PortfolioPropertyCard({
             {/* ARV */}
             {property.arv !== undefined && (
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 2 }}>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: SPACING.xxs }}>
                   ARV
                 </Text>
                 <Text style={{ fontSize: 15, fontWeight: '600', color: colors.foreground }}>
@@ -314,7 +314,7 @@ export function PortfolioPropertyCard({
             {/* ROI */}
             {property.roi !== undefined && (
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 2 }}>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: SPACING.xxs }}>
                   ROI
                 </Text>
                 <Text style={{ fontSize: 15, fontWeight: '700', color: colors.success }}>

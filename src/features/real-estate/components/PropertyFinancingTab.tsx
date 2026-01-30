@@ -6,7 +6,8 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { CreditCard, Plus, Calculator, RefreshCw } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING, GLASS_INTENSITY } from '@/components/ui';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Property, FinancingScenario } from '../types';
 import { useFinancingScenarios, useFinancingScenarioMutations, LoanType } from '../hooks/useFinancingScenarios';
 import { AddFinancingSheet } from './AddFinancingSheet';
@@ -111,7 +112,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
       <View className="flex-1 items-center justify-center py-12">
         <Text className="mb-4" style={{ color: colors.destructive }}>Failed to load scenarios</Text>
         <Button variant="secondary" onPress={refetch}>
-          <RefreshCw size={16} color={colors.foreground} />
+          <RefreshCw size={ICON_SIZES.md} color={colors.foreground} />
           Try Again
         </Button>
       </View>
@@ -132,7 +133,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
             </Text>
           </View>
           <Button onPress={() => setShowAddSheet(true)} size="sm">
-            <Plus size={16} color={colors.primaryForeground} />
+            <Plus size={ICON_SIZES.md} color={colors.primaryForeground} />
             Add
           </Button>
         </View>
@@ -144,14 +145,14 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
         {!hasScenarios && (
           <View className="items-center justify-center py-12 rounded-xl" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
             <View className="rounded-full p-4 mb-4" style={{ backgroundColor: colors.muted }}>
-              <CreditCard size={32} color={colors.mutedForeground} />
+              <CreditCard size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
             </View>
             <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Financing Scenarios</Text>
             <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
               Create financing scenarios to compare different loan options and calculate monthly payments.
             </Text>
             <Button variant="secondary" onPress={() => setShowAddSheet(true)}>
-              <Plus size={16} color={colors.foreground} />
+              <Plus size={ICON_SIZES.md} color={colors.foreground} />
               Create First Scenario
             </Button>
           </View>
@@ -172,7 +173,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
                 onEdit={() => handleEditScenario(scenario)}
                 onDelete={() => handleDeleteScenario(scenario)}
                 variant="glass"
-                glassIntensity={50}
+                glassIntensity={GLASS_INTENSITY.medium}
               />
             ))}
           </View>
@@ -181,7 +182,7 @@ export function PropertyFinancingTab({ property }: PropertyFinancingTabProps) {
         {/* Tips */}
         <View className="rounded-xl p-4" style={{ backgroundColor: colors.muted }}>
           <View className="flex-row items-center mb-2">
-            <Calculator size={16} color={colors.mutedForeground} />
+            <Calculator size={ICON_SIZES.md} color={colors.mutedForeground} />
             <Text className="text-sm font-medium ml-2" style={{ color: colors.foreground }}>Tips</Text>
           </View>
           <Text className="text-xs" style={{ color: colors.mutedForeground }}>

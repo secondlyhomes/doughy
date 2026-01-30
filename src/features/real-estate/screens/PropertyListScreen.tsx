@@ -7,7 +7,7 @@ import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, SimpleFAB, TAB_BAR_SAFE_PADDING, PropertyImageCard } from '@/components/ui';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING } from '@/constants/design-tokens';
+import { SPACING, GLASS_INTENSITY } from '@/constants/design-tokens';
 import { PropertyFiltersSheet } from '../components/PropertyFiltersSheet';
 import { PropertyListEmpty } from '../components/PropertyListEmpty';
 import { Property } from '../types';
@@ -65,7 +65,7 @@ export function PropertyListScreen() {
       isSelected={item.id === selectedPropertyId}
       onPress={() => handlePropertyPress(item)}
       variant="glass"
-      glassIntensity={65}
+      glassIntensity={GLASS_INTENSITY.strong}
     />
   ), [selectedPropertyId, handlePropertyPress]);
 

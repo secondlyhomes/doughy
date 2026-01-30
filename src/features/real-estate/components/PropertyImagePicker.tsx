@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImagePlus, X, Image as ImageIcon } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 interface PropertyImagePickerProps {
   images: string[];
@@ -132,7 +133,7 @@ export function PropertyImagePicker({
               activeOpacity={0.7}
             >
               <ImagePlus
-                size={24}
+                size={ICON_SIZES.xl}
                 color={disabled ? colors.muted : colors.mutedForeground}
               />
               <Text
@@ -157,7 +158,7 @@ export function PropertyImagePicker({
               activeOpacity={0.7}
             >
               <Camera
-                size={24}
+                size={ICON_SIZES.xl}
                 color={disabled ? colors.muted : colors.mutedForeground}
               />
               <Text
@@ -184,7 +185,7 @@ export function PropertyImagePicker({
                   className="absolute -top-2 -right-2 rounded-full w-6 h-6 items-center justify-center shadow-sm"
                   activeOpacity={0.7}
                 >
-                  <X size={14} color={colors.destructiveForeground} />
+                  <X size={ICON_SIZES.sm} color={colors.destructiveForeground} />
                 </TouchableOpacity>
               )}
               {index === 0 && (
@@ -204,7 +205,7 @@ export function PropertyImagePicker({
         </Text>
         {images.length === 0 && (
           <View className="flex-row items-center">
-            <ImageIcon size={12} color={colors.mutedForeground} />
+            <ImageIcon size={ICON_SIZES.xs} color={colors.mutedForeground} />
             <Text style={{ color: colors.mutedForeground }} className="text-xs ml-1">
               Add photos to showcase your property
             </Text>

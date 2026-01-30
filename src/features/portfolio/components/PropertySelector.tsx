@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { getBackdropColor } from '@/lib/design-utils';
 import type { AvailableProperty } from '../hooks/useAvailableProperties';
+import { ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 
 interface PropertySelectorProps {
   value?: string;
@@ -147,7 +148,7 @@ export function PropertySelector({
         }}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled || isLoading}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
       >
         <View className="flex-1 flex-row items-center gap-2">
           <Home size={18} color={colors.mutedForeground} />
@@ -159,7 +160,7 @@ export function PropertySelector({
             {getDisplayText()}
           </Text>
         </View>
-        <ChevronDown size={16} color={colors.mutedForeground} />
+        <ChevronDown size={ICON_SIZES.md} color={colors.mutedForeground} />
       </TouchableOpacity>
 
       {/* Selected property preview */}
@@ -169,7 +170,7 @@ export function PropertySelector({
           style={{ backgroundColor: `${colors.primary}10`, borderWidth: 1, borderColor: `${colors.primary}30` }}
         >
           <View className="flex-row items-start gap-2">
-            <MapPin size={16} color={colors.primary} style={{ marginTop: 2 }} />
+            <MapPin size={ICON_SIZES.md} color={colors.primary} style={{ marginTop: 2 }} />
             <View className="flex-1">
               <Text className="text-sm font-medium" style={{ color: colors.foreground }}>
                 {selectedProperty.address}
@@ -248,7 +249,7 @@ export function PropertySelector({
             {/* List */}
             {filteredProperties.length === 0 ? (
               <View className="py-12 items-center">
-                <Home size={32} color={colors.mutedForeground} />
+                <Home size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
                 <Text className="text-sm mt-2" style={{ color: colors.mutedForeground }}>
                   {searchQuery ? 'No properties match your search' : 'No properties available'}
                 </Text>

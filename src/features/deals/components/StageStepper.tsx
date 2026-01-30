@@ -7,7 +7,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Check, ChevronDown } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui';
 import { DealStage, DEAL_STAGE_CONFIG } from '../types';
 import { haptic } from '@/lib/haptics';
@@ -160,7 +160,7 @@ function StageSelectionSheet({
             <TouchableOpacity
               key={stage}
               onPress={() => handleStagePress(stage)}
-              activeOpacity={0.7}
+              activeOpacity={PRESS_OPACITY.DEFAULT}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -300,7 +300,7 @@ export function StageStepper({
     <>
       <TouchableOpacity
         onPress={handlePillPress}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         accessibilityRole="button"
         accessibilityLabel={`Current stage: ${currentConfig?.label || currentStage}. ${stepDisplay}. Tap to change stage.`}
         style={{

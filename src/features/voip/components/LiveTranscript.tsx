@@ -6,7 +6,7 @@ import { View, Text, ScrollView, StyleSheet, Animated } from 'react-native';
 import { MessageCircle, User } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
 import type { TranscriptSegment } from '../types';
 
 interface LiveTranscriptProps {
@@ -48,9 +48,9 @@ function TranscriptBubble({ segment }: { segment: TranscriptSegment }) {
         ]}
       >
         {isUser ? (
-          <User size={14} color={colors.primary} />
+          <User size={ICON_SIZES.sm} color={colors.primary} />
         ) : (
-          <MessageCircle size={14} color={colors.info} />
+          <MessageCircle size={ICON_SIZES.sm} color={colors.info} />
         )}
       </View>
 
@@ -154,7 +154,7 @@ export function LiveTranscript({
   if (transcript.length === 0 && !isLoading) {
     return (
       <View style={[styles.emptyContainer, { backgroundColor: colors.muted }]}>
-        <MessageCircle size={24} color={colors.mutedForeground} />
+        <MessageCircle size={ICON_SIZES.xl} color={colors.mutedForeground} />
         <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
           Live transcript will appear here...
         </Text>
@@ -165,7 +165,7 @@ export function LiveTranscript({
   return (
     <View style={[styles.container, { backgroundColor: colors.card, maxHeight }]}>
       <View style={styles.header}>
-        <MessageCircle size={16} color={colors.primary} />
+        <MessageCircle size={ICON_SIZES.md} color={colors.primary} />
         <Text style={[styles.headerText, { color: colors.foreground }]}>
           Live Transcript
         </Text>
@@ -252,9 +252,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   avatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: ICON_SIZES.xl,
+    height: ICON_SIZES.xl,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -6,7 +6,8 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { MapPin, Plus, RefreshCw } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING, GLASS_INTENSITY } from '@/components/ui';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Property, PropertyComp } from '../types';
 import { useComps, useCompMutations } from '../hooks/useComps';
 import { usePropertyMutations } from '../hooks/useProperties';
@@ -111,7 +112,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
       <View className="flex-1 items-center justify-center py-12">
         <Text className="mb-4" style={{ color: colors.destructive }}>Failed to load comparables</Text>
         <Button variant="secondary" onPress={refetch}>
-          <RefreshCw size={16} color={colors.foreground} />
+          <RefreshCw size={ICON_SIZES.md} color={colors.foreground} />
           Try Again
         </Button>
       </View>
@@ -138,7 +139,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
             className="flex-row items-center px-3 py-2 rounded-lg"
             style={{ backgroundColor: colors.primary }}
           >
-            <Plus size={16} color={colors.primaryForeground} />
+            <Plus size={ICON_SIZES.md} color={colors.primaryForeground} />
             <Text className="font-medium ml-1" style={{ color: colors.primaryForeground }}>Add Comp</Text>
           </TouchableOpacity>
         </View>
@@ -154,7 +155,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
         {!hasComps && (
           <View className="items-center justify-center py-12 rounded-xl" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
             <View className="rounded-full p-4 mb-4" style={{ backgroundColor: colors.muted }}>
-              <MapPin size={32} color={colors.mutedForeground} />
+              <MapPin size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
             </View>
             <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Comparable Properties</Text>
             <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
@@ -165,7 +166,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
               className="flex-row items-center px-4 py-2 rounded-lg"
               style={{ backgroundColor: colors.muted }}
             >
-              <Plus size={16} color={colors.foreground} />
+              <Plus size={ICON_SIZES.md} color={colors.foreground} />
               <Text className="font-medium ml-2" style={{ color: colors.foreground }}>Add First Comp</Text>
             </TouchableOpacity>
           </View>
@@ -185,7 +186,7 @@ export function PropertyCompsTab({ property, onPropertyUpdate }: PropertyCompsTa
                 onEdit={handleEditComp}
                 onDelete={handleDeleteComp}
                 variant="glass"
-                glassIntensity={50}
+                glassIntensity={GLASS_INTENSITY.medium}
               />
             ))}
           </View>

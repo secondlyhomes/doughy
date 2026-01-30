@@ -5,21 +5,17 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, PRESS_OPACITY } from '@/constants/design-tokens';
 import type { Deal } from '@/features/deals/types';
 import { DEAL_STAGE_CONFIG, getDealAddress, getDealLeadName } from '@/features/deals/types';
 import { useNextAction } from '@/features/deals/hooks/useNextAction';
 import { useDealAnalysis } from '@/features/real-estate/hooks/useDealAnalysis';
 import type { Property } from '@/features/real-estate/types';
+import { formatCurrency } from '@/lib/formatters';
 
 export interface DealCardProps {
   deal: Deal;
   onPress: () => void;
-}
-
-function formatCurrency(value: number | null | undefined): string {
-  if (!value) return '-';
-  return `$${value.toLocaleString()}`;
 }
 
 export function DealCard({ deal, onPress }: DealCardProps) {
@@ -46,6 +42,7 @@ export function DealCard({ deal, onPress }: DealCardProps) {
         padding: SPACING.md,
       }}
       onPress={onPress}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityLabel={`${getDealLeadName(deal)} deal at ${getDealAddress(deal)}`}
       accessibilityRole="button"
     >

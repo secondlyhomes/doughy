@@ -10,6 +10,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { cn } from '@/lib/utils';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Context
 interface CollapsibleContextType {
@@ -88,7 +89,7 @@ export function CollapsibleTrigger({
     <TouchableOpacity
       className={cn(className)}
       onPress={() => onOpenChange(!open)}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
     >
       {children}
     </TouchableOpacity>

@@ -6,6 +6,7 @@ import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react
 import { MapPin, Navigation } from 'lucide-react-native';
 import { PlacePrediction } from './hooks/useAddressSearch';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 interface AddressSuggestionListProps {
   predictions: PlacePrediction[];
@@ -39,7 +40,7 @@ export function AddressSuggestionList({
       onPress={() => onSelectPrediction(item)}
       activeOpacity={0.7}
     >
-      <MapPin size={16} color={colors.mutedForeground} />
+      <MapPin size={ICON_SIZES.md} color={colors.mutedForeground} />
       <View className="flex-1">
         <Text className="text-sm font-medium" style={{ color: colors.foreground }} numberOfLines={1}>
           {item.structured_formatting?.main_text || item.description}
@@ -67,7 +68,7 @@ export function AddressSuggestionList({
           {locationLoading ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <Navigation size={16} color={colors.primary} />
+            <Navigation size={ICON_SIZES.md} color={colors.primary} />
           )}
           <Text className="text-sm font-medium" style={{ color: colors.primary }}>
             {locationLoading ? 'Getting location...' : 'Use current location'}

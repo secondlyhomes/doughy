@@ -13,6 +13,7 @@ import { Search, Send, X, Loader2 } from 'lucide-react-native';
 import { Modal, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/Modal';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { callDocsAssistant, type ChatMessage } from '@/lib/openai';
+import { BORDER_RADIUS, ICON_SIZES, SPACING } from '@/constants/design-tokens';
 
 interface Message {
   id: string;
@@ -152,7 +153,7 @@ export function AskDoughyModal({ visible, onClose }: AskDoughyModalProps) {
               onPress={onClose}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <X size={20} color={colors.mutedForeground} />
+              <X size={ICON_SIZES.lg} color={colors.mutedForeground} />
             </TouchableOpacity>
           </View>
 
@@ -163,11 +164,11 @@ export function AskDoughyModal({ visible, onClose }: AskDoughyModalProps) {
                 flexDirection: 'row',
                 alignItems: 'center',
                 backgroundColor: colors.muted,
-                borderRadius: 8,
-                paddingHorizontal: 12,
+                borderRadius: BORDER_RADIUS.md,
+                paddingHorizontal: SPACING.md,
               }}
             >
-              <Search size={18} color={colors.mutedForeground} />
+              <Search size={ICON_SIZES.ml} color={colors.mutedForeground} />
               <TextInput
                 ref={inputRef}
                 value={inputValue}
@@ -190,7 +191,7 @@ export function AskDoughyModal({ visible, onClose }: AskDoughyModalProps) {
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Send
-                  size={18}
+                  size={ICON_SIZES.ml}
                   color={inputValue.trim() && !isProcessing ? colors.primary : colors.mutedForeground}
                 />
               </TouchableOpacity>
@@ -216,9 +217,9 @@ export function AskDoughyModal({ visible, onClose }: AskDoughyModalProps) {
               <View
                 style={{
                   maxWidth: '80%',
-                  borderRadius: 12,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
+                  borderRadius: BORDER_RADIUS.lg,
+                  paddingHorizontal: SPACING.lg,
+                  paddingVertical: SPACING.md,
                   backgroundColor:
                     message.role === 'user' ? colors.primary : colors.muted,
                   marginLeft: message.role === 'user' ? 48 : 0,

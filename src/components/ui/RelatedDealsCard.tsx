@@ -126,7 +126,7 @@ export function RelatedDealsCard({
     return (
       <Card variant={variant} style={style}>
         <View style={{ padding: SPACING.lg, alignItems: 'center' }}>
-          <Link2 size={32} color={colors.mutedForeground} />
+          <Link2 size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
           <Text style={{ fontSize: 14, color: colors.mutedForeground, marginTop: SPACING.sm, textAlign: 'center' }}>
             No related deals found
           </Text>
@@ -199,7 +199,7 @@ export function RelatedDealsCard({
               {/* Info */}
               <View style={{ flex: 1 }}>
                 <Text
-                  style={{ fontSize: 14, fontWeight: '600', color: colors.foreground, marginBottom: 2 }}
+                  style={{ fontSize: 14, fontWeight: '600', color: colors.foreground, marginBottom: SPACING.xxs }}
                   numberOfLines={1}
                 >
                   {deal.address}

@@ -7,7 +7,7 @@ import { User, Phone, Mail, ExternalLink } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { ICON_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { ICON_SIZES, BORDER_RADIUS, PRESS_OPACITY } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';
 
 export interface GuestInfoCardProps {
@@ -91,7 +91,7 @@ export function GuestInfoCard({
           </Text>
         </View>
         <View className="py-4 items-center">
-          <User size={32} color={colors.border} />
+          <User size={ICON_SIZES['2xl']} color={colors.border} />
           <Text className="text-sm mt-2" style={{ color: colors.mutedForeground }}>
             No guest assigned
           </Text>
@@ -124,7 +124,7 @@ export function GuestInfoCard({
             <Text className="text-sm mr-1" style={{ color: colors.primary }}>
               Profile
             </Text>
-            <ExternalLink size={14} color={colors.primary} />
+            <ExternalLink size={ICON_SIZES.sm} color={colors.primary} />
           </TouchableOpacity>
         )}
       </View>

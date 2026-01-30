@@ -11,6 +11,9 @@ This guide provides before/after examples for migrating to our reusable componen
 3. [Form State Migration (useForm)](#form-state-migration)
 4. [ListEmptyState Migration](#listemptystate-migration)
 5. [Design Token Migration](#design-token-migration)
+6. [MessageBubble Migration (Completed)](#messagebubble-migration-completed)
+7. [VendorCard to DataCard Migration (Completed)](#vendorcard-to-datacard-migration-completed)
+8. [FilterSheet Pattern (Completed)](#filtersheet-pattern-completed)
 
 ---
 
@@ -535,24 +538,303 @@ ICON_SIZES = {
 
 ---
 
+## MessageBubble Migration (Completed)
+
+> **Status:** ✅ Completed - Unified MessageBubble component created (January 2026)
+
+### Unified Component
+
+Location: `/src/components/ui/MessageBubble.tsx`
+
+The unified MessageBubble component consolidates features from both the rental-inbox and assistant implementations:
+
+| Feature | Support |
+|---------|---------|
+| Direction-based positioning | ✅ `direction: 'inbound' \| 'outbound'` |
+| Role-based positioning | ✅ `role: 'user' \| 'assistant' \| 'system'` |
+| AI indicator badge | ✅ `showAIIndicator` prop |
+| Avatar icons (Bot/User) | ✅ `showAvatar` prop |
+| Time format options | ✅ `timeFormat: 'absolute' \| 'relative'` |
+| System messages | ✅ Centered pill style for `role='system'` |
+| Sender labels | ✅ `showSenderLabel` + `senderLabel` props |
+
+### Interface
+
+```typescript
+interface MessageBubbleProps {
+  content: string;
+  timestamp: string;
+  direction?: 'inbound' | 'outbound';
+  role?: 'user' | 'assistant' | 'system';
+  isAI?: boolean;
+  showAIIndicator?: boolean;
+  showAvatar?: boolean;
+  timeFormat?: 'absolute' | 'relative';
+  showSenderLabel?: boolean;
+  senderLabel?: string;
+}
+```
+
+### Usage Examples
+
+**Rental Inbox (AI indicator, absolute time):**
+```typescript
+import { MessageBubble } from '@/components/ui';
+
+<MessageBubble
+  content={message.content}
+  timestamp={message.created_at}
+  direction={message.direction}
+  isAI={message.sent_by === 'ai'}
+  showAIIndicator={true}
+  showAvatar={false}
+  timeFormat="absolute"
+/>
+```
+
+**AI Assistant (avatars, relative time):**
+```typescript
+import { MessageBubble } from '@/components/ui';
+
+<MessageBubble
+  content={message.content}
+  timestamp={message.createdAt}
+  role={message.role}
+  showAvatar={true}
+  showAIIndicator={false}
+  timeFormat="relative"
+  showSenderLabel={false}
+/>
+```
+
+### Feature-Specific Wrappers
+
+For backwards compatibility, feature-specific wrappers exist that adapt local message types:
+
+- `/src/features/rental-inbox/components/MessageBubble.tsx` - Wraps unified component for rental-inbox Message type
+- `/src/features/assistant/components/MessageBubble.tsx` - Wraps unified component for assistant Message type
+
+### Migration Checklist
+
+- [x] Create unified component in `/src/components/ui/MessageBubble.tsx`
+- [x] Support all features from both implementations
+- [x] Update rental-inbox to use unified component
+- [x] Update assistant to use unified component
+- [x] Add exports to `/src/components/ui/index.ts`
+- [x] Document in COMPONENT_MIGRATION.md
+
+---
+
+## VendorCard to DataCard Migration (Completed)
+
+> **Status:** ✅ Completed - VendorCard migrated to DataCard (January 2026)
+
+### Migration Results
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Lines of code | 227 | 137 |
+| Reduction | - | 40% |
+| Custom StyleSheet | Yes | No |
+| Glass variant support | No | Yes |
+
+### Features Preserved
+
+All original features maintained:
+- ✅ Category emoji (now in headerBadge)
+- ✅ Name with primary indicator (Award icon in footerContent)
+- ✅ Company name subtitle
+- ✅ Rating display with star icon
+- ✅ Jobs count
+- ✅ Hourly rate with success color
+- ✅ Contact actions (Call, Email)
+- ✅ Navigation chevron
+- ✅ Compact mode support
+- ✅ Primary vendor border indicator
+
+### Implementation
+
+```typescript
+import { DataCard, DataCardField, DataCardAction } from '@/components/ui';
+import { ChevronRight, Phone, Mail, Star, Award, Briefcase } from 'lucide-react-native';
+
+<DataCard
+  onPress={onPress}
+  variant={variant}
+  glassIntensity={glassIntensity}
+  title={vendor.name}
+  subtitle={vendor.company_name || undefined}
+  headerIcon={Briefcase}
+  headerBadge={{
+    label: `${categoryConfig.emoji} ${categoryConfig.label}`,
+    variant: 'secondary',
+    size: 'sm',
+  }}
+  headerRight={<ChevronRight size={20} color={colors.mutedForeground} />}
+  fields={fields}  // Rating, jobs, hourly rate
+  actions={actions}  // Call, Email buttons
+  footerContent={
+    vendor.is_primary ? (
+      <View className="flex-row items-center gap-1 mb-2">
+        <Award size={14} color={colors.primary} />
+        <Text className="text-xs font-medium" style={{ color: colors.primary }}>
+          Primary Vendor
+        </Text>
+      </View>
+    ) : undefined
+  }
+  style={vendor.is_primary ? { borderLeftWidth: 4, borderLeftColor: colors.primary } : undefined}
+/>
+```
+
+### Key Decisions
+
+1. **Emoji handling**: Moved category emoji into headerBadge label (`"🔧 Plumber"`)
+2. **Primary indicator**: Used footerContent for Award badge + left border via style prop
+3. **Compact mode**: Fields and actions arrays are conditionally empty when compact=true
+4. **Glass support**: Added variant and glassIntensity props for iOS 26 compatibility
+
+### Migration Checklist
+
+- [x] Identify all VendorCard features
+- [x] Map features to DataCard props
+- [x] Replace implementation with DataCard
+- [x] Handle primary vendor indicator
+- [x] Handle compact mode
+- [x] Add glass variant support
+- [x] Remove unused StyleSheet and imports
+
+---
+
+## FilterSheet Pattern (Completed)
+
+> **Status:** ✅ Completed - FilterSheet component and useListFilters hook created (January 2026)
+
+### Components Created
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `FilterSheet` | `/src/components/ui/FilterSheet.tsx` | Base filter sheet with header/content/footer |
+| `FilterSection` | Re-export of BottomSheetSection | Section with title for grouping options |
+| `FilterOptionButton` | `/src/components/ui/FilterSheet.tsx` | Selectable list option with checkmark |
+| `FilterChip` | `/src/components/ui/FilterSheet.tsx` | Compact pill-style filter option |
+| `FilterToggleRow` | `/src/components/ui/FilterSheet.tsx` | Binary toggle (e.g., sort order) |
+| `useListFilters` | `/src/hooks/useListFilters.ts` | Filter state management hook |
+
+### FilterSheet Usage
+
+```typescript
+import { FilterSheet, FilterSection, FilterOptionButton } from '@/components/ui';
+import { useListFilters } from '@/hooks';
+
+// Setup filter state
+const {
+  filters,
+  updateFilter,
+  resetFilters,
+  applyFilters,
+  hasActiveFilters,
+  hasUnsavedChanges,
+} = useListFilters({
+  initialFilters: appliedFilters,
+  defaultFilters: DEFAULT_FILTERS,
+  mode: 'deferred',
+});
+
+// Render filter sheet
+<FilterSheet
+  visible={showFilters}
+  onClose={() => setShowFilters(false)}
+  title="Filter Leads"
+  onReset={resetFilters}
+  onApply={() => {
+    applyFilters();
+    setShowFilters(false);
+  }}
+  hasActiveFilters={hasActiveFilters}
+  hasUnsavedChanges={hasUnsavedChanges}
+  presentation="modal"  // or "sheet"
+  footerStyle="apply"   // or "done" for immediate mode
+>
+  <FilterSection title="Status">
+    {STATUS_OPTIONS.map(option => (
+      <FilterOptionButton
+        key={option.value}
+        label={option.label}
+        selected={filters.status === option.value}
+        onPress={() => updateFilter('status', option.value)}
+      />
+    ))}
+  </FilterSection>
+</FilterSheet>
+```
+
+### useListFilters Hook
+
+Supports two modes:
+
+**Deferred Mode** (for Modal with Apply button):
+```typescript
+const { filters, updateFilter, resetFilters, applyFilters } = useListFilters({
+  initialFilters: appliedFilters,
+  defaultFilters: DEFAULT_FILTERS,
+  mode: 'deferred',
+});
+// Changes are staged, then applied via applyFilters()
+```
+
+**Immediate Mode** (for BottomSheet with live updates):
+```typescript
+const { filters, updateFilter, resetFilters } = useListFilters({
+  initialFilters: appliedFilters,
+  defaultFilters: DEFAULT_FILTERS,
+  mode: 'immediate',
+  onChange: setAppliedFilters,
+});
+// Changes apply immediately via onChange callback
+```
+
+### Migration Checklist
+
+- [x] Create FilterSheet base component
+- [x] Create FilterSection (re-export of BottomSheetSection)
+- [x] Create FilterOptionButton sub-component
+- [x] Create FilterChip sub-component
+- [x] Create FilterToggleRow sub-component
+- [x] Create useListFilters hook
+- [x] Export from `/src/components/ui/index.ts`
+- [x] Export from `/src/hooks/index.ts`
+- [ ] Migrate LeadsFiltersSheet (optional - works with existing code)
+- [ ] Migrate ContactsFiltersSheet (optional - works with existing code)
+- [ ] Migrate PropertyFiltersSheet (optional - works with existing code)
+
+---
+
 ## When to Use Each Pattern
 
 | Component | Use When... | Don't Use When... |
 |-----------|-------------|-------------------|
-| **DataCard** | Displaying structured data with rows | Custom, complex card layouts |
+| **DataCard** | Displaying structured data with rows | Custom layouts, image-heavy cards |
 | **FormField** | Creating form inputs with labels | Non-form inputs, custom layouts |
 | **useForm** | Managing form state with validation | Single input, simple forms |
 | **ListEmptyState** | Showing empty/loading/error states | Custom, unique empty states |
 | **Design Tokens** | Styling any component | One-off, exception values |
+| **MessageBubble** | Chat/conversation UI | Non-message content |
+| **FilterSheet** | List filtering UI | Complex multi-step filters |
+| **useListFilters** | Managing filter state | Simple single-filter scenarios |
+| **formatStatus()** | Displaying status strings | Custom status formatting needed |
+| **GlassView** | Glass effect containers | Android performance-critical lists |
 
 ---
 
 ## Additional Resources
 
-- [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - Complete design system documentation
-- [FORM_MIGRATIONS_LOG.md](./FORM_MIGRATIONS_LOG.md) - Detailed form migration history
+- [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - Design tokens, iOS 26 Liquid Glass, utilities
+- [UI_CONSISTENCY_GUIDE.md](./UI_CONSISTENCY_GUIDE.md) - Consistency patterns and anti-patterns
+- [FORM_UTILITIES_GUIDE.md](./FORM_UTILITIES_GUIDE.md) - FormField and useForm documentation
 - [UI Components](../src/components/ui/) - Component source code
 - [Design Tokens](../src/constants/design-tokens.ts) - Token definitions
+- [Shared Formatters](../src/lib/formatters.ts) - Status formatting utilities
 
 ---
 

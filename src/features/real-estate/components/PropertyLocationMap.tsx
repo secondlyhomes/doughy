@@ -13,6 +13,7 @@ import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import { MapPin, Navigation, ExternalLink, AlertCircle } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 interface PropertyLocationMapProps {
   address: string;
@@ -129,7 +130,7 @@ export function PropertyLocationMap({
         style={{ height, backgroundColor: colors.muted }}
       >
         <View className="flex-1 items-center justify-center p-4">
-          <AlertCircle size={32} color={colors.mutedForeground} style={{ marginBottom: 8 }} />
+          <AlertCircle size={ICON_SIZES['2xl']} color={colors.mutedForeground} style={{ marginBottom: 8 }} />
           <Text className="text-center text-sm" style={{ color: colors.mutedForeground }}>
             Location not available
           </Text>
@@ -144,7 +145,7 @@ export function PropertyLocationMap({
               style={{ backgroundColor: colors.primary }}
               activeOpacity={0.7}
             >
-              <Navigation size={16} color={colors.primaryForeground} />
+              <Navigation size={ICON_SIZES.md} color={colors.primaryForeground} />
               <Text className="font-medium ml-2" style={{ color: colors.primaryForeground }}>
                 Get Directions
               </Text>
@@ -195,7 +196,7 @@ export function PropertyLocationMap({
               className="bg-white/20 backdrop-blur-sm px-3 py-2 rounded-lg flex-row items-center"
               activeOpacity={0.7}
             >
-              <Navigation size={14} color="white" />
+              <Navigation size={ICON_SIZES.sm} color="white" />
               <Text className="text-white text-xs font-medium ml-1">
                 Directions
               </Text>
@@ -211,7 +212,7 @@ export function PropertyLocationMap({
         style={{ backgroundColor: withOpacity(colors.card, 'almostOpaque') }}
         activeOpacity={0.7}
       >
-        <ExternalLink size={12} color={colors.mutedForeground} />
+        <ExternalLink size={ICON_SIZES.xs} color={colors.mutedForeground} />
         <Text className="text-xs ml-1" style={{ color: colors.mutedForeground }}>Open in Maps</Text>
       </TouchableOpacity>
     </View>

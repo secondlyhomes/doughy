@@ -15,6 +15,7 @@ import Animated, {
 import { AlertTriangle, Info, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES, PRESS_OPACITY, SPACING } from '@/constants/design-tokens';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.4; // 40% of screen width
@@ -75,7 +76,7 @@ export function NotificationCard({ notification, onDismiss }: NotificationCardPr
   }));
 
   const getIcon = () => {
-    const iconSize = 18;
+    const iconSize = ICON_SIZES.ml;
     switch (notification.type) {
       case 'overdue':
         return <AlertTriangle size={iconSize} color={colors.destructive} />;
@@ -119,7 +120,7 @@ export function NotificationCard({ notification, onDismiss }: NotificationCardPr
 
   return (
     <GestureDetector gesture={panGesture}>
-      <Animated.View style={[animatedStyle, { marginBottom: 12 }]}>
+      <Animated.View style={[animatedStyle, { marginBottom: SPACING.md }]}>
         <View
           className="rounded-xl p-4"
           style={{
@@ -158,7 +159,7 @@ export function NotificationCard({ notification, onDismiss }: NotificationCardPr
             <TouchableOpacity
               onPress={notification.onAction}
               className="flex-row items-center ml-9"
-              activeOpacity={0.7}
+              activeOpacity={PRESS_OPACITY.DEFAULT}
             >
               <Text className="text-sm font-medium mr-1" style={{ color: colors.primary }}>
                 {notification.actionLabel}

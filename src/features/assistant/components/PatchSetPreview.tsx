@@ -22,7 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
+import { BORDER_RADIUS, SPACING, ICON_SIZES } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useToast } from '@/components/ui/Toast';
 
@@ -106,7 +106,7 @@ export function PatchSetPreview({
         {/* Summary Header */}
         <View style={[styles.summaryCard, { backgroundColor: colors.muted }]}>
           <View style={styles.summaryRow}>
-            <Sparkles size={20} color={colors.primary} />
+            <Sparkles size={ICON_SIZES.lg} color={colors.primary} />
             <Text style={[styles.summaryText, { color: colors.foreground }]}>
               {patchSet.summary}
             </Text>
@@ -149,7 +149,7 @@ export function PatchSetPreview({
             <View style={[styles.eventsCard, { backgroundColor: colors.muted }]}>
               {patchSet.willCreateTimelineEvents.map((event, index) => (
                 <View key={index} style={styles.eventRow}>
-                  <FileText size={14} color={colors.mutedForeground} />
+                  <FileText size={ICON_SIZES.sm} color={colors.mutedForeground} />
                   <Text style={[styles.eventText, { color: colors.foreground }]}>
                     {event.title}
                   </Text>
@@ -162,7 +162,7 @@ export function PatchSetPreview({
         {/* Error Display */}
         {lastResult && !lastResult.success && (
           <View style={[styles.errorCard, { backgroundColor: colors.destructive + '20' }]}>
-            <AlertCircle size={16} color={colors.destructive} />
+            <AlertCircle size={ICON_SIZES.md} color={colors.destructive} />
             <Text style={[styles.errorText, { color: colors.destructive }]}>
               Failed to apply {lastResult.failedOps} operation(s)
             </Text>
@@ -178,7 +178,7 @@ export function PatchSetPreview({
             accessibilityRole="button"
             accessibilityLabel="Cancel and close preview"
           >
-            <X size={18} color={colors.mutedForeground} />
+            <X size={ICON_SIZES.ml} color={colors.mutedForeground} />
             <Text style={[styles.buttonText, { color: colors.mutedForeground }]}>
               Cancel
             </Text>
@@ -201,7 +201,7 @@ export function PatchSetPreview({
               <ActivityIndicator size="small" color={colors.primaryForeground} />
             ) : (
               <>
-                <Check size={18} color={colors.primaryForeground} />
+                <Check size={ICON_SIZES.ml} color={colors.primaryForeground} />
                 <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>
                   Apply Changes
                 </Text>
@@ -284,9 +284,9 @@ function OperationCard({ operation, index, expanded, onToggle }: OperationCardPr
           </Text>
         </View>
         {expanded ? (
-          <ChevronUp size={18} color={colors.mutedForeground} />
+          <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
         ) : (
-          <ChevronDown size={18} color={colors.mutedForeground} />
+          <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
         )}
       </View>
 

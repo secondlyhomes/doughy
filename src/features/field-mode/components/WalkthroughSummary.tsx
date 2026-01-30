@@ -14,6 +14,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { AISummary } from '../../deals/types';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 interface WalkthroughSummaryProps {
   summary: AISummary;
@@ -38,7 +39,7 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
     <Card className="mb-4">
       <CardHeader className="pb-2">
         <View className="flex-row items-center gap-2">
-          <Sparkles size={20} color={colors.primary} />
+          <Sparkles size={ICON_SIZES.lg} color={colors.primary} />
           <CardTitle className="text-lg">AI Summary</CardTitle>
         </View>
       </CardHeader>
@@ -53,7 +54,7 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
             accessibilityRole="button"
           >
             <View className="flex-row items-center gap-2">
-              <AlertTriangle size={18} color={colors.warning} />
+              <AlertTriangle size={ICON_SIZES.ml} color={colors.warning} />
               <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
                 Issues Found
               </Text>
@@ -67,9 +68,9 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
               </View>
             </View>
             {expandedSections.issues ? (
-              <ChevronUp size={18} color={colors.mutedForeground} />
+              <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
             ) : (
-              <ChevronDown size={18} color={colors.mutedForeground} />
+              <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
             )}
           </TouchableOpacity>
 
@@ -93,7 +94,7 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
             accessibilityRole="button"
           >
             <View className="flex-row items-center gap-2">
-              <HelpCircle size={18} color={colors.info} />
+              <HelpCircle size={ICON_SIZES.ml} color={colors.info} />
               <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
                 Questions to Verify
               </Text>
@@ -107,9 +108,9 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
               </View>
             </View>
             {expandedSections.questions ? (
-              <ChevronUp size={18} color={colors.mutedForeground} />
+              <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
             ) : (
-              <ChevronDown size={18} color={colors.mutedForeground} />
+              <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
             )}
           </TouchableOpacity>
 
@@ -133,7 +134,7 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
             accessibilityRole="button"
           >
             <View className="flex-row items-center gap-2">
-              <ClipboardList size={18} color={colors.success} />
+              <ClipboardList size={ICON_SIZES.ml} color={colors.success} />
               <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
                 Scope of Work
               </Text>
@@ -147,9 +148,9 @@ export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
               </View>
             </View>
             {expandedSections.scope ? (
-              <ChevronUp size={18} color={colors.mutedForeground} />
+              <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
             ) : (
-              <ChevronDown size={18} color={colors.mutedForeground} />
+              <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
             )}
           </TouchableOpacity>
 
@@ -179,7 +180,7 @@ export function WalkthroughSummaryPlaceholder() {
           className="w-16 h-16 rounded-full items-center justify-center mb-4"
           style={{ backgroundColor: colors.primary + '20' }}
         >
-          <Sparkles size={32} color={colors.primary} />
+          <Sparkles size={ICON_SIZES['2xl']} color={colors.primary} />
         </View>
         <Text className="text-base font-semibold text-center mb-2" style={{ color: colors.foreground }}>
           Ready to Organize

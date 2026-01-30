@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { FONT_SIZES } from '@/constants/design-tokens';
+import { FONT_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import type { DetailRowProps } from './types';
 
 export function DetailRow({ icon: Icon, label, value, valueColor, onPress }: DetailRowProps) {
@@ -33,7 +33,7 @@ export function DetailRow({ icon: Icon, label, value, valueColor, onPress }: Det
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity onPress={onPress} activeOpacity={PRESS_OPACITY.DEFAULT}>
         {Content}
       </TouchableOpacity>
     );

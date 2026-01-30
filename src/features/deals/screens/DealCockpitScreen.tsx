@@ -15,6 +15,7 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { haptic } from '@/lib/haptics';
+import { BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import {
   Calculator,
   Folder,
@@ -157,7 +158,7 @@ export function DealCockpitScreen() {
         className="flex-1 items-center justify-center px-4"
         edges={['top']}
       >
-        <AlertCircle size={48} color={colors.destructive} />
+        <AlertCircle size={ICON_SIZES['2xl']} color={colors.destructive} />
         <Text
           className="text-center mt-4 mb-4"
           style={{ color: colors.destructive }}
@@ -227,7 +228,7 @@ export function DealCockpitScreen() {
                       {
                         paddingHorizontal: 14,
                         paddingVertical: 6,
-                        borderRadius: 12,
+                        borderRadius: BORDER_RADIUS.lg,
                       },
                       activeTab === tab && {
                         backgroundColor: colors.background,
@@ -280,7 +281,7 @@ export function DealCockpitScreen() {
 
           {activeTab === 'underwrite' && (
             <View className="flex-1 items-center justify-center p-4 pt-12">
-              <Calculator size={48} color={colors.mutedForeground} />
+              <Calculator size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
               <Text
                 className="text-lg font-semibold mt-4"
                 style={{ color: colors.foreground }}
@@ -337,7 +338,7 @@ export function DealCockpitScreen() {
                     backgroundColor: withOpacity(colors.primary, 'muted'),
                   }}
                 >
-                  <Folder size={20} color={colors.primary} />
+                  <Folder size={ICON_SIZES.lg} color={colors.primary} />
                 </View>
                 <View className="flex-1">
                   <Text
@@ -353,7 +354,7 @@ export function DealCockpitScreen() {
                     Contracts, disclosures, and files
                   </Text>
                 </View>
-                <ChevronRight size={20} color={colors.mutedForeground} />
+                <ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />
               </View>
             </TouchableOpacity>
           )}
@@ -372,7 +373,7 @@ export function DealCockpitScreen() {
           }}
         >
           <Check
-            size={24}
+            size={ICON_SIZES.xl}
             color={
               deal.stage === 'closed_won' ? colors.success : colors.mutedForeground
             }

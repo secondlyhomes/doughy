@@ -277,11 +277,11 @@ const styles = StyleSheet.create({
   subtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: SPACING.xxs,
   },
   subtitle: {
     fontSize: FONT_SIZES.sm,
-    marginLeft: 4,
+    marginLeft: SPACING.xs,
   },
   metricsContainer: {
     marginTop: SPACING.sm,

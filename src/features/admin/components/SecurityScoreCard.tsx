@@ -7,6 +7,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Shield, ShieldAlert, ShieldCheck } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
 
 interface SecurityScoreCardProps {
   /** Security score from 0-100 */
@@ -141,14 +142,14 @@ export const SecurityScoreCard = React.memo(function SecurityScoreCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: SPACING.lg,
   },
   progressContainer: {
     position: 'relative',
@@ -177,12 +178,12 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     flex: 1,
-    gap: 4,
+    gap: SPACING.xs,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
   },
   title: {
     fontSize: 18,
@@ -191,10 +192,10 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
   subtitle: {
     fontSize: 13,
-    marginTop: 2,
+    marginTop: SPACING.xxs,
   },
 });

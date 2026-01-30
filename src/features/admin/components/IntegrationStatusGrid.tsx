@@ -4,6 +4,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { BORDER_RADIUS } from '@/constants/design-tokens';
 import type { IntegrationStatus } from '../types/integrations';
 
 interface IntegrationStatusGridProps {
@@ -210,7 +211,7 @@ export const IntegrationStatusGrid = React.memo(function IntegrationStatusGrid({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
     padding: 16,
     marginBottom: 16,
   },

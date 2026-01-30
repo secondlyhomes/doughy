@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { SPACING } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 
 import { SecurityScoreCard } from '../components/SecurityScoreCard';
 import { KeyHealthSummary } from '../components/KeyHealthSummary';
@@ -278,7 +278,7 @@ export function SecurityHealthScreen() {
             style={{
               backgroundColor: colors.destructive + '20',
               padding: 12,
-              borderRadius: 8,
+              borderRadius: BORDER_RADIUS.md,
               marginBottom: 16,
             }}
           >
@@ -291,7 +291,7 @@ export function SecurityHealthScreen() {
           onPress={() => router.push('/(admin)/security/ai-firewall')}
           style={{
             backgroundColor: colors.card,
-            borderRadius: 12,
+            borderRadius: BORDER_RADIUS.lg,
             padding: 16,
             marginBottom: SPACING.md,
             flexDirection: 'row',
@@ -302,14 +302,14 @@ export function SecurityHealthScreen() {
             style={{
               width: 40,
               height: 40,
-              borderRadius: 20,
+              borderRadius: BORDER_RADIUS['2xl'],
               backgroundColor: colors.primary + '20',
               alignItems: 'center',
               justifyContent: 'center',
               marginRight: 12,
             }}
           >
-            <Ionicons name="shield" size={20} color={colors.primary} />
+            <Ionicons name="shield" size={ICON_SIZES.lg} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 15, fontWeight: '600', color: colors.foreground }}>
@@ -319,7 +319,7 @@ export function SecurityHealthScreen() {
               Circuit breakers, threat tracking, pattern monitoring
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
+          <Ionicons name="chevron-forward" size={ICON_SIZES.lg} color={colors.mutedForeground} />
         </TouchableOpacity>
 
         {/* Security Score Card */}
@@ -347,7 +347,7 @@ export function SecurityHealthScreen() {
           <View
             style={{
               backgroundColor: colors.card,
-              borderRadius: 12,
+              borderRadius: BORDER_RADIUS.lg,
               padding: 16,
             }}
           >

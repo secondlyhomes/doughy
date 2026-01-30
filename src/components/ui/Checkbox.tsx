@@ -5,6 +5,7 @@ import { TouchableOpacity, View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 export interface CheckboxProps {
   checked?: boolean;
@@ -29,7 +30,7 @@ export function Checkbox({
       className={cn('flex-row items-center', className)}
       onPress={() => !disabled && onCheckedChange?.(!checked)}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       testID={testID}
       accessibilityRole="checkbox"
       accessibilityState={{ checked, disabled }}

@@ -5,7 +5,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Phone, Mail, MessageSquare } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 
 export interface QuickActionsProps {
@@ -34,7 +34,7 @@ export function QuickActions({ phone, email, onCall, onEmail, onMessage }: Quick
             backgroundColor: colors.muted,
             gap: SPACING.xs,
           }}
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
         >
           <Phone size={18} color={colors.primary} />
           <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm, fontWeight: '600' }}>
@@ -55,7 +55,7 @@ export function QuickActions({ phone, email, onCall, onEmail, onMessage }: Quick
             backgroundColor: colors.muted,
             gap: SPACING.xs,
           }}
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
         >
           <Mail size={18} color={colors.primary} />
           <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm, fontWeight: '600' }}>
@@ -75,7 +75,7 @@ export function QuickActions({ phone, email, onCall, onEmail, onMessage }: Quick
           backgroundColor: withOpacity(colors.primary, 'light'),
           gap: SPACING.xs,
         }}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
       >
         <MessageSquare size={18} color={colors.primary} />
         <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm, fontWeight: '600' }}>

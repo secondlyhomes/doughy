@@ -7,7 +7,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Plus, Camera } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { ICON_SIZES } from '@/constants/design-tokens';
+import { ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import {
   PhotoThumbnail,
   PhotoViewer,
@@ -99,7 +99,7 @@ export function PhotoGallery({
                 borderColor: colors.primary,
               },
             ]}
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
           >
             <Plus size={ICON_SIZES.lg} color={colors.primary} />
             <Text style={[styles.addButtonText, { color: colors.primary }]}>

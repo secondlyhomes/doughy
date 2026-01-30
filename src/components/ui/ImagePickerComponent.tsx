@@ -6,6 +6,7 @@ import * as ExpoImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, X, Plus, AlertCircle } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 export interface ImagePickerProps extends ViewProps {
   value?: ExpoImagePicker.ImagePickerAsset[];
@@ -190,7 +191,7 @@ export function ImagePickerComponent({
               }}
               onPress={handleCamera}
               disabled={disabled}
-              activeOpacity={0.7}
+              activeOpacity={PRESS_OPACITY.DEFAULT}
               accessibilityRole="button"
               accessibilityLabel="Take photo with camera"
             >
@@ -212,7 +213,7 @@ export function ImagePickerComponent({
               }}
               onPress={handleGallery}
               disabled={disabled}
-              activeOpacity={0.7}
+              activeOpacity={PRESS_OPACITY.DEFAULT}
               accessibilityRole="button"
               accessibilityLabel="Select photo from gallery"
             >
@@ -238,7 +239,7 @@ export function ImagePickerComponent({
           }}
           onPress={handleGallery}
           disabled={disabled}
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
           accessibilityRole="button"
           accessibilityLabel="Add more images"
         >

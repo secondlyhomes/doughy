@@ -28,6 +28,7 @@ import {
   type SurveyStep,
 } from '../services/onboardingService';
 import { usePlatform, type Platform } from '@/contexts/PlatformContext';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 // Platform selection is now first step
 const STEPS: SurveyStep[] = ['platformSelection', 'referralSource', 'primaryUseCase', 'experienceLevel', 'companySize'];
@@ -136,7 +137,7 @@ export function OnboardingScreen() {
               disabled={currentStep === 0 || isSubmitting}
               className={currentStep === 0 ? 'opacity-0' : ''}
             >
-              <ArrowLeft size={24} color={colors.mutedForeground} />
+              <ArrowLeft size={ICON_SIZES.xl} color={colors.mutedForeground} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleSkip}
@@ -157,7 +158,7 @@ export function OnboardingScreen() {
           {currentStep === 0 && (
             <View className="items-center mb-6 mt-4">
               <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                <Sparkles size={32} color={colors.info} />
+                <Sparkles size={ICON_SIZES['2xl']} color={colors.info} />
               </View>
               <Text className="text-xl font-semibold text-center" style={{ color: colors.foreground }}>
                 Let's personalize your experience
@@ -209,7 +210,7 @@ export function OnboardingScreen() {
             className="w-full"
           >
             {isLastStep ? 'Get Started' : 'Continue'}
-            {!isLastStep && !isSubmitting && <ArrowRight size={20} color={colors.primaryForeground} />}
+            {!isLastStep && !isSubmitting && <ArrowRight size={ICON_SIZES.lg} color={colors.primaryForeground} />}
           </Button>
 
           {/* Step indicator text */}

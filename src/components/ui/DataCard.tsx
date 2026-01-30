@@ -22,7 +22,7 @@ import { View, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import { LucideIcon } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
-import { BORDER_RADIUS, SPACING, ICON_SIZES } from '@/constants/design-tokens';
+import { BORDER_RADIUS, SPACING, ICON_SIZES, GLASS_INTENSITY, PRESS_OPACITY } from '@/constants/design-tokens';
 import { Card } from './Card';
 import { Badge } from './Badge';
 
@@ -79,7 +79,7 @@ export interface DataCardProps {
 
   /** Card variant: 'default' for solid, 'glass' for glass effect */
   variant?: 'default' | 'glass';
-  /** Blur intensity for glass variant (0-100). Default: 60 */
+  /** Blur intensity for glass variant (0-100). Default: GLASS_INTENSITY.medium (55) */
   glassIntensity?: number;
 }
 
@@ -101,12 +101,12 @@ export function DataCard({
   className,
   style,
   variant = 'default',
-  glassIntensity = 60,
+  glassIntensity = GLASS_INTENSITY.medium,
 }: DataCardProps) {
   const colors = useThemeColors();
 
   const Wrapper = onPress ? TouchableOpacity : View;
-  const wrapperProps = onPress ? { onPress, activeOpacity: 0.7 } : {};
+  const wrapperProps = onPress ? { onPress, activeOpacity: PRESS_OPACITY.DEFAULT } : {};
 
   return (
     <Wrapper {...wrapperProps}>

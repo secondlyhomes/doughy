@@ -6,7 +6,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, User, ChevronRight, X } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { FocusedProperty } from '@/contexts/FocusModeContext';
 
@@ -31,7 +31,7 @@ export function FocusedPropertyCard({ property, onClear, onPress }: FocusedPrope
   return (
     <TouchableOpacity
       onPress={handlePress}
-      activeOpacity={0.8}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         backgroundColor: colors.card,
         borderRadius: BORDER_RADIUS.xl,
@@ -72,7 +72,7 @@ export function FocusedPropertyCard({ property, onClear, onPress }: FocusedPrope
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            fontSize: 14,
+            fontSize: FONT_SIZES.sm,
             fontWeight: '600',
             color: colors.foreground,
           }}
@@ -82,18 +82,18 @@ export function FocusedPropertyCard({ property, onClear, onPress }: FocusedPrope
         </Text>
         <Text
           style={{
-            fontSize: 13,
+            fontSize: FONT_SIZES.sm,
             color: colors.mutedForeground,
-            marginTop: 2,
+            marginTop: SPACING.xxs,
           }}
           numberOfLines={1}
         >
           {property.city}, {property.state}
         </Text>
         {property.leadName && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: SPACING.xs, gap: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: SPACING.xs, gap: SPACING.xs }}>
             <User size={12} color={colors.mutedForeground} />
-            <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+            <Text style={{ fontSize: FONT_SIZES.xs, color: colors.mutedForeground }}>
               {property.leadName}
             </Text>
           </View>
@@ -112,7 +112,7 @@ export function FocusedPropertyCard({ property, onClear, onPress }: FocusedPrope
               borderRadius: BORDER_RADIUS.full,
             }}
           >
-            <X size={16} color={colors.mutedForeground} />
+            <X size={ICON_SIZES.md} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
         <ChevronRight size={ICON_SIZES.sm} color={colors.mutedForeground} />

@@ -14,6 +14,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { Calendar as CalendarIcon, X } from 'lucide-react-native';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 import { Calendar } from './Calendar';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { getBackdropColor } from '@/lib/design-utils';
@@ -187,7 +188,7 @@ export function DatePicker({
         }}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         accessibilityRole="button"
         accessibilityLabel={displayValue ? `Selected date: ${displayValue}` : placeholder}
       >

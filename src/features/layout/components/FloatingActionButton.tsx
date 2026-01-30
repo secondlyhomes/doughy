@@ -24,7 +24,7 @@ import { FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_Z_INDEX, FAB_SIZE } from '@/co
 import { GlassButton } from '@/components/ui/GlassButton';
 import { getFABShadowStyle } from '@/components/ui/fab-styles';
 import { withOpacity } from '@/lib/design-utils';
-import { UI_TIMING, FAB_CONSTANTS } from '@/constants/design-tokens';
+import { UI_TIMING, FAB_CONSTANTS, PRESS_OPACITY } from '@/constants/design-tokens';
 
 export interface FABAction {
   icon: React.ReactNode;
@@ -179,7 +179,7 @@ export function FloatingActionButton({
                     getFABShadowStyle(colors),
                   ]}
                   onPress={() => handleActionPress(action)}
-                  activeOpacity={0.8}
+                  activeOpacity={PRESS_OPACITY.DEFAULT}
                   accessibilityLabel={action.label}
                   accessibilityRole="button"
                 >

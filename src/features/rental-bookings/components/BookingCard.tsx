@@ -14,6 +14,8 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField } from '@/components/ui';
+import { ICON_SIZES, SPACING } from '@/constants/design-tokens';
+import { formatStatus, formatDate, formatCurrency } from '@/lib/formatters';
 import { BookingWithRelations, BookingStatus, BookingType, RateType } from '../types';
 
 interface BookingCardProps {
@@ -25,35 +27,14 @@ interface BookingCardProps {
   glassIntensity?: number;
 }
 
-// Format date to readable string
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-// Format date range
-function formatDateRange(startDate: string, endDate: string | null): string {
+// Format date range for bookings (handles ongoing bookings with null end date)
+function formatBookingDateRange(startDate: string, endDate: string | null): string {
   const start = formatDate(startDate);
   if (!endDate) {
     return `${start} - Ongoing`;
   }
   const end = formatDate(endDate);
   return `${start} - ${end}`;
-}
-
-// Format currency
-function formatCurrency(amount: number | null): string {
-  if (amount === null || amount === undefined) return '-';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 // Format rate with type
@@ -87,11 +68,6 @@ function getStatusVariant(status: BookingStatus) {
   }
 }
 
-// Format status for display
-function formatStatus(status: BookingStatus): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
 // Format booking type for display
 function formatBookingType(type: BookingType): string {
   return type.charAt(0).toUpperCase() + type.slice(1);
@@ -118,7 +94,7 @@ export function BookingCard({
     // Dates
     {
       icon: Calendar,
-      value: formatDateRange(booking.start_date, booking.end_date),
+      value: formatBookingDateRange(booking.start_date, booking.end_date),
     },
     // Property/Room
     ...(booking.room?.name
@@ -187,7 +163,7 @@ export function BookingCard({
         variant: getStatusVariant(booking.status),
         size: 'sm',
       }}
-      headerRight={<ChevronRight size={20} color={colors.mutedForeground} />}
+      headerRight={<ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />}
       fields={fields}
       badges={badges}
       footerContent={
@@ -207,7 +183,7 @@ export function BookingCard({
           {/* Days info */}
           {daysInfo && (
             <View className="flex-row items-center">
-              <Clock size={12} color={colors.info} style={{ marginRight: 4 }} />
+              <Clock size={ICON_SIZES.xs} color={colors.info} style={{ marginRight: SPACING.xs }} />
               <Text className="text-xs" style={{ color: colors.info }}>
                 {daysInfo}
               </Text>

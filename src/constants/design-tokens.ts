@@ -11,6 +11,7 @@
  * Use these for padding, margins, and gaps throughout the app
  */
 export const SPACING = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 12,
@@ -100,9 +101,27 @@ export const ICON_SIZES = {
   xs: 12,
   sm: 14,
   md: 16,
+  ml: 18,   // Intermediate: between md (16) and lg (20)
   lg: 20,
   xl: 24,
   '2xl': 32,
+  '3xl': 48,  // Large icons for empty states, hero sections
+} as const;
+
+/**
+ * Icon container sizes (for width/height on icon wrappers)
+ * Use these for consistent icon container dimensions
+ *
+ * @example
+ * <View style={{ width: ICON_CONTAINER_SIZES.md, height: ICON_CONTAINER_SIZES.md }}>
+ *   <Icon size={ICON_SIZES.lg} />
+ * </View>
+ */
+export const ICON_CONTAINER_SIZES = {
+  sm: 32,
+  md: 40,
+  lg: 48,
+  xl: 56,
 } as const;
 
 /**
@@ -212,6 +231,31 @@ export const GLASS_BLUR = {
   subtle: 'blur(8px)',     // Light glass effect - less prominent
   regular: 'blur(12px)',   // Standard glass (most common use case)
   strong: 'blur(16px)',    // Prominent glass effect - more visible
+} as const;
+
+/**
+ * Glass intensity for native platforms (expo-blur intensity prop)
+ * iOS 26+ uses LiquidGlassView (ignores intensity), iOS < 26 and Android use expo-blur
+ *
+ * Use these instead of hardcoding intensity values to ensure consistency.
+ *
+ * @example
+ * import { GLASS_INTENSITY } from '@/constants/design-tokens';
+ *
+ * <GlassView intensity={GLASS_INTENSITY.medium} />
+ * <BlurView intensity={GLASS_INTENSITY.opaque} tint="dark" />
+ */
+export const GLASS_INTENSITY = {
+  /** 30 - Overlays, tooltips, light glass effect */
+  subtle: 30,
+  /** 40 - Headers, toolbars, navigation elements */
+  light: 40,
+  /** 55 - Cards, containers (default for most uses) */
+  medium: 55,
+  /** 65 - Image overlays, property cards with backgrounds */
+  strong: 65,
+  /** 80 - Bottom sheets, modals requiring more opacity */
+  opaque: 80,
 } as const;
 
 /**

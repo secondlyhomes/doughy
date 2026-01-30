@@ -14,7 +14,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY, DEFAULT_HIT_SLOP } from '@/constants/design-tokens';
 import { Button } from '@/components/ui';
 
 // ============================================
@@ -229,7 +229,7 @@ export function MetricCard({
           {icon}
           <Text style={{ fontSize: 11, color: colors.mutedForeground }}>{label}</Text>
         </View>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground, marginTop: 2 }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground, marginTop: SPACING.xxs }}>
           {formatValue(value)}
         </Text>
         {confidence && (
@@ -239,7 +239,7 @@ export function MetricCard({
               height: 6,
               borderRadius: 3,
               backgroundColor: confidenceColors.indicator,
-              marginTop: 4,
+              marginTop: SPACING.xs,
             }}
           />
         )}
@@ -251,7 +251,7 @@ export function MetricCard({
     <TouchableOpacity
       onPress={handlePress}
       disabled={disabled || !isExpandable}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={[
         {
           borderRadius: BORDER_RADIUS.xl,
@@ -292,7 +292,7 @@ export function MetricCard({
           {isExpandable && (
             <TouchableOpacity
               onPress={handleChevronPress}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={DEFAULT_HIT_SLOP}
               disabled={state === 'collapsed'}
             >
               <Animated.View style={chevronStyle}>
@@ -344,7 +344,7 @@ export function MetricCard({
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         onEvidencePress();
                       }}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      hitSlop={DEFAULT_HIT_SLOP}
                     >
                       <Info size={ICON_SIZES.sm} color={colors.primary} />
                     </TouchableOpacity>

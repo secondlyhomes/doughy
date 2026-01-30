@@ -5,6 +5,7 @@ import { View, Text, TouchableOpacity, ScrollView, ViewProps, TextProps } from '
 import { ChevronRight } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Breadcrumb Root
 export interface BreadcrumbProps extends ViewProps {
@@ -81,7 +82,7 @@ export function BreadcrumbLink({
     <TouchableOpacity
       className={cn(className)}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityRole="link"
     >
       {typeof children === 'string' ? (

@@ -35,7 +35,7 @@ import {
   TAB_BAR_SAFE_PADDING,
   Separator,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, ICON_SIZES, BORDER_RADIUS, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { PropertyStatsRow } from '../components/PropertyStatsRow';
 import { PropertyHubGrid } from '../components/PropertyHubGrid';
@@ -180,13 +180,13 @@ export function RentalPropertyDetailScreen() {
     ),
     headerLeft: () => (
       <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
-        <ArrowLeft size={24} color={colors.foreground} />
+        <ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />
       </TouchableOpacity>
     ),
     headerRight: property
       ? () => (
           <TouchableOpacity onPress={() => setShowStatusSheet(true)} style={{ padding: SPACING.sm }}>
-            <MoreVertical size={24} color={colors.foreground} />
+            <MoreVertical size={ICON_SIZES.xl} color={colors.foreground} />
           </TouchableOpacity>
         )
       : undefined,
@@ -211,7 +211,7 @@ export function RentalPropertyDetailScreen() {
         <Stack.Screen options={headerOptions} />
         <ThemedSafeAreaView className="flex-1" edges={[]}>
           <View className="flex-1 items-center justify-center p-4">
-            <Home size={48} color={colors.mutedForeground} />
+            <Home size={ICON_SIZES['3xl']} color={colors.mutedForeground} />
             <Text
               style={{
                 color: colors.mutedForeground,
@@ -254,7 +254,7 @@ export function RentalPropertyDetailScreen() {
         {property?.primary_image_url ? (
           <Image
             source={{ uri: property.primary_image_url }}
-            style={{ width: '100%', height: 192, borderRadius: 12, marginBottom: 16 }}
+            style={{ width: '100%', height: 192, borderRadius: BORDER_RADIUS.lg, marginBottom: 16 }}
             resizeMode="cover"
           />
         ) : (
@@ -286,10 +286,10 @@ export function RentalPropertyDetailScreen() {
             onPress={handleOpenMap}
             className="p-4 rounded-xl flex-row items-center justify-between"
             style={{ backgroundColor: colors.card }}
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
           >
             <View className="flex-row items-center flex-1">
-              <MapPin size={20} color={colors.primary} />
+              <MapPin size={ICON_SIZES.lg} color={colors.primary} />
               <View className="ml-3 flex-1">
                 <Text
                   style={{
@@ -309,7 +309,7 @@ export function RentalPropertyDetailScreen() {
                 </Text>
               </View>
             </View>
-            <ExternalLink size={18} color={colors.mutedForeground} />
+            <ExternalLink size={ICON_SIZES.ml} color={colors.mutedForeground} />
           </TouchableOpacity>
         </Section>
 
@@ -385,7 +385,7 @@ export function RentalPropertyDetailScreen() {
                         >
                           {platform}
                         </Text>
-                        <ExternalLink size={16} color={colors.primary} />
+                        <ExternalLink size={ICON_SIZES.md} color={colors.primary} />
                       </TouchableOpacity>
                     )
                 )}
@@ -396,7 +396,7 @@ export function RentalPropertyDetailScreen() {
 
       {/* Edit FAB */}
       <SimpleFAB
-        icon={<Edit2 size={24} color={colors.primaryForeground} />}
+        icon={<Edit2 size={ICON_SIZES.xl} color={colors.primaryForeground} />}
         onPress={handleEdit}
         accessibilityLabel="Edit property"
       />
@@ -430,7 +430,7 @@ export function RentalPropertyDetailScreen() {
                     disabled={isSaving}
                   >
                     <StatusIcon
-                      size={20}
+                      size={ICON_SIZES.lg}
                       color={isActive ? colors.primary : colors.foreground}
                     />
                     <Text
@@ -461,7 +461,7 @@ export function RentalPropertyDetailScreen() {
           style={{ backgroundColor: withOpacity(colors.destructive, 'light') }}
           disabled={isSaving}
         >
-          <Trash2 size={20} color={colors.destructive} />
+          <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />
           <Text
             style={{
               color: colors.destructive,

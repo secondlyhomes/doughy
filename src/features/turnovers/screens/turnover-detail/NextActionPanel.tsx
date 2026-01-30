@@ -6,7 +6,7 @@ import { View, Text } from 'react-native';
 import { Clock, CheckCircle2, Home } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Button, Card, Input, FormField } from '@/components/ui';
-import { FONT_SIZES } from '@/constants/design-tokens';
+import { FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
 import type { TurnoverStatus } from '../../types';
 
 interface NextActionPanelProps {
@@ -107,7 +107,7 @@ export function NextActionPanel({
             className="py-4 px-4 rounded-xl items-center"
             style={{ backgroundColor: colors.success + '20' }}
           >
-            <CheckCircle2 size={32} color={colors.success} />
+            <CheckCircle2 size={ICON_SIZES['2xl']} color={colors.success} />
             <Text
               style={{
                 color: colors.success,

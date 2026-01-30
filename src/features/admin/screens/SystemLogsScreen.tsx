@@ -22,7 +22,7 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
-import { SPACING } from '@/constants/design-tokens';
+import { SPACING, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { getLogs, type LogEntry, type LogLevel, type LogFilters } from '../services/logsService';
 
 export function SystemLogsScreen() {
@@ -99,13 +99,13 @@ export function SystemLogsScreen() {
   const getLevelIcon = useCallback((level: LogLevel) => {
     switch (level) {
       case 'error':
-        return <AlertCircle size={16} color={colors.destructive} />;
+        return <AlertCircle size={ICON_SIZES.md} color={colors.destructive} />;
       case 'warning':
-        return <AlertTriangle size={16} color={colors.warning} />;
+        return <AlertTriangle size={ICON_SIZES.md} color={colors.warning} />;
       case 'info':
-        return <Info size={16} color={colors.info} />;
+        return <Info size={ICON_SIZES.md} color={colors.info} />;
       case 'debug':
-        return <Bug size={16} color={colors.mutedForeground} />;
+        return <Bug size={ICON_SIZES.md} color={colors.mutedForeground} />;
     }
   }, [colors]);
 
@@ -148,7 +148,7 @@ export function SystemLogsScreen() {
         className="mx-4 mb-2 p-3 rounded-lg border"
         style={{ backgroundColor: levelStyles.backgroundColor, borderColor: levelStyles.borderColor }}
         onPress={() => setExpandedLog(isExpanded ? null : item.id)}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
       >
         <View className="flex-row items-start">
           <View className="mt-0.5">{getLevelIcon(item.level)}</View>
@@ -174,7 +174,7 @@ export function SystemLogsScreen() {
             )}
           </View>
           <ChevronDown
-            size={16}
+            size={ICON_SIZES.md}
             color={colors.mutedForeground}
             style={{ transform: [{ rotate: isExpanded ? '180deg' : '0deg' }] }}
           />
@@ -280,7 +280,7 @@ export function SystemLogsScreen() {
             initialNumToRender={15}
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center py-24">
-                <Info size={48} color={colors.mutedForeground} />
+                <Info size={ICON_SIZES['3xl']} color={colors.mutedForeground} />
                 <Text className="mt-4 text-base" style={{ color: colors.mutedForeground }}>No logs found</Text>
               </View>
             }

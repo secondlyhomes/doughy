@@ -6,6 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { Upload, File, X, AlertCircle } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 export interface FileUploadProps extends ViewProps {
   value?: DocumentPicker.DocumentPickerAsset[];
@@ -150,7 +151,7 @@ export function FileUpload({
           }}
           onPress={handlePick}
           disabled={disabled}
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
           accessibilityRole="button"
           accessibilityLabel={`Select ${multiple ? 'files' : 'a file'}`}
         >

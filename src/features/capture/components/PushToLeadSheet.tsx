@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, TextInput, Alert } from 'react-native';
 import { BottomSheet, Button, SearchBar, Badge } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import {
   User,
@@ -76,7 +76,7 @@ export function PushToLeadSheet({ visible, item, onClose, onComplete }: PushToLe
     return (
       <TouchableOpacity
         onPress={() => setSelectedLeadId(lead.id)}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -93,14 +93,14 @@ export function PushToLeadSheet({ visible, item, onClose, onComplete }: PushToLe
           style={{
             width: 40,
             height: 40,
-            borderRadius: 20,
+            borderRadius: BORDER_RADIUS['2xl'],
             backgroundColor: withOpacity(colors.primary, 'light'),
             alignItems: 'center',
             justifyContent: 'center',
             marginRight: SPACING.md,
           }}
         >
-          <User size={20} color={colors.primary} />
+          <User size={ICON_SIZES.lg} color={colors.primary} />
         </View>
 
         {/* Info */}
@@ -135,13 +135,13 @@ export function PushToLeadSheet({ visible, item, onClose, onComplete }: PushToLe
             style={{
               width: 24,
               height: 24,
-              borderRadius: 12,
+              borderRadius: BORDER_RADIUS.lg,
               backgroundColor: colors.primary,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Check size={16} color={colors.primaryForeground} />
+            <Check size={ICON_SIZES.md} color={colors.primaryForeground} />
           </View>
         )}
       </TouchableOpacity>

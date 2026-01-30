@@ -5,6 +5,7 @@ import React from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 interface SurveyOptionProps {
   label: string;
@@ -29,7 +30,7 @@ export function SurveyOption({
       } ${disabled ? 'opacity-50' : ''}`}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
     >
       <View
         className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3 ${

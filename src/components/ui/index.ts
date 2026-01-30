@@ -10,6 +10,9 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { DataCard } from './DataCard';
 export type { DataCardProps, DataCardField, DataCardBadge, DataCardAction } from './DataCard';
 
+export { DetailRow } from './DetailRow';
+export type { DetailRowProps } from './DetailRow';
+
 export { DocumentCard, DocumentCardCompact } from './DocumentCard';
 export type { DocumentCardProps, DocumentCardDocument } from './DocumentCard';
 
@@ -260,6 +263,22 @@ export type { AddressAutocompleteProps, AddressValue } from './AddressAutocomple
 export { BottomSheet, BottomSheetSection } from './BottomSheet';
 export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';
 
+// Filter Sheet (built on BottomSheet/Modal)
+export {
+  FilterSheet,
+  FilterSection,
+  FilterOptionButton,
+  FilterChip,
+  FilterToggleRow,
+} from './FilterSheet';
+export type {
+  FilterSheetProps,
+  FilterSectionProps,
+  FilterOptionButtonProps,
+  FilterChipProps,
+  FilterToggleRowProps,
+} from './FilterSheet';
+
 // Screen Header
 export { ScreenHeader } from './ScreenHeader';
 export type { ScreenHeaderProps } from './ScreenHeader';
@@ -284,6 +303,14 @@ export type { GlassButtonProps } from './GlassButton';
 
 export { ConversationHeader } from './ConversationHeader';
 export type { ConversationHeaderProps } from './ConversationHeader';
+
+export { MessageBubble } from './MessageBubble';
+export type {
+  MessageBubbleProps,
+  MessageDirection,
+  MessageRole,
+  TimeFormat,
+} from './MessageBubble';
 
 // Property cards
 export { PropertyImageCard } from './PropertyImageCard';

@@ -6,7 +6,7 @@ import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { MapPin, Clock, Search, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { BottomSheet, SearchBar, LoadingSpinner, Button } from '@/components/ui';
 import { useProperties } from '@/features/real-estate/hooks/useProperties';
@@ -63,7 +63,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
   const renderPropertyItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       onPress={() => handleSelect(item)}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -99,13 +99,13 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
       )}
       <View style={{ flex: 1 }}>
         <Text
-          style={{ fontSize: 14, fontWeight: '500', color: colors.foreground }}
+          style={{ fontSize: FONT_SIZES.sm, fontWeight: '500', color: colors.foreground }}
           numberOfLines={1}
         >
           {item.address_line_1 || item.address}
         </Text>
         <Text
-          style={{ fontSize: 13, color: colors.mutedForeground }}
+          style={{ fontSize: FONT_SIZES.sm, color: colors.mutedForeground }}
           numberOfLines={1}
         >
           {item.city}, {item.state}
@@ -120,7 +120,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
         onSelect(item);
         onClose();
       }}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -132,7 +132,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
       }}
     >
       <Clock size={14} color={colors.primary} />
-      <Text style={{ fontSize: 13, color: colors.primary }} numberOfLines={1}>
+      <Text style={{ fontSize: FONT_SIZES.sm, color: colors.primary }} numberOfLines={1}>
         {item.address}
       </Text>
     </TouchableOpacity>
@@ -162,7 +162,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
           <View style={{ marginBottom: SPACING.md }}>
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZES.xs,
                 fontWeight: '600',
                 color: colors.mutedForeground,
                 paddingHorizontal: SPACING.md,
@@ -187,7 +187,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
           {!searchQuery && (
             <Text
               style={{
-                fontSize: 12,
+                fontSize: FONT_SIZES.xs,
                 fontWeight: '600',
                 color: colors.mutedForeground,
                 marginBottom: SPACING.sm,
@@ -206,7 +206,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
               <MapPin size={48} color={colors.mutedForeground} />
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: FONT_SIZES.base,
                   fontWeight: '500',
                   color: colors.foreground,
                   marginTop: SPACING.md,
@@ -216,7 +216,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
               </Text>
               <Text
                 style={{
-                  fontSize: 14,
+                  fontSize: FONT_SIZES.sm,
                   color: colors.mutedForeground,
                   marginTop: SPACING.xs,
                   textAlign: 'center',
@@ -233,7 +233,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
                   size="default"
                   style={{ marginTop: SPACING.md }}
                 >
-                  <Plus size={16} color={colors.primaryForeground} />
+                  <Plus size={ICON_SIZES.md} color={colors.primaryForeground} />
                   <Text style={{ color: colors.primaryForeground, marginLeft: SPACING.xs }}>
                     Add Property
                   </Text>

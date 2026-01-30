@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Send, Sparkles, User, Loader2 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { BORDER_RADIUS, SPACING, FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS } from '@/constants/design-tokens';
+import { BORDER_RADIUS, SPACING, FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useKeyboardAvoidance } from '@/hooks';
@@ -107,7 +107,7 @@ export function AskTab({ dealId }: AskTabProps) {
                 { backgroundColor: withOpacity(colors.primary, 'muted') },
               ]}
             >
-              <Sparkles size={32} color={colors.primary} />
+              <Sparkles size={ICON_SIZES['2xl']} color={colors.primary} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
               How can I help?
@@ -175,7 +175,7 @@ export function AskTab({ dealId }: AskTabProps) {
             accessibilityState={{ disabled: !inputText.trim() || isLoading }}
           >
             <Send
-              size={18}
+              size={ICON_SIZES.ml}
               color={inputText.trim() && !isLoading ? colors.primaryForeground : colors.mutedForeground}
             />
           </TouchableOpacity>
@@ -215,7 +215,7 @@ function MessageBubble({ message }: { message: Message }) {
             </View>
           ) : (
             <View style={[styles.avatar, { backgroundColor: withOpacity(colors.primary, 'light') }]}>
-              <Sparkles size={14} color={colors.primary} />
+              <Sparkles size={ICON_SIZES.sm} color={colors.primary} />
             </View>
           )}
         </View>
@@ -239,7 +239,7 @@ function MessageBubble({ message }: { message: Message }) {
       {isUser && (
         <View style={styles.avatarContainer}>
           <View style={[styles.avatar, { backgroundColor: withOpacity(colors.primaryForeground, 'light') }]}>
-            <User size={14} color={colors.primaryForeground} />
+            <User size={ICON_SIZES.sm} color={colors.primaryForeground} />
           </View>
         </View>
       )}

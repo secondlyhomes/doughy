@@ -14,7 +14,7 @@ import {
   LoadingSpinner,
   Badge,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import {
   GuestMessageTemplate,
@@ -191,7 +191,7 @@ export function GuestMessageSheet({
                 className="py-6 items-center rounded-xl"
                 style={{ backgroundColor: colors.muted }}
               >
-                <FileText size={32} color={colors.mutedForeground} />
+                <FileText size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
                 <Text
                   style={{
                     color: colors.mutedForeground,
@@ -213,7 +213,7 @@ export function GuestMessageSheet({
                       onPress={() => handleSelectTemplate(template)}
                       className="p-3 rounded-xl flex-row items-center"
                       style={{ backgroundColor: colors.muted }}
-                      activeOpacity={0.7}
+                      activeOpacity={PRESS_OPACITY.DEFAULT}
                     >
                       <View
                         className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -246,9 +246,9 @@ export function GuestMessageSheet({
                         size="sm"
                       >
                         {template.channel === 'sms' ? (
-                          <MessageSquare size={12} color={colors.primaryForeground} />
+                          <MessageSquare size={ICON_SIZES.xs} color={colors.primaryForeground} />
                         ) : (
-                          <Mail size={12} color={colors.foreground} />
+                          <Mail size={ICON_SIZES.xs} color={colors.foreground} />
                         )}
                       </Badge>
                     </TouchableOpacity>
@@ -265,13 +265,13 @@ export function GuestMessageSheet({
                     borderColor: colors.border,
                     borderStyle: 'dashed',
                   }}
-                  activeOpacity={0.7}
+                  activeOpacity={PRESS_OPACITY.DEFAULT}
                 >
                   <View
                     className="w-10 h-10 rounded-full items-center justify-center mr-3"
                     style={{ backgroundColor: colors.card }}
                   >
-                    <Send size={18} color={colors.primary} />
+                    <Send size={ICON_SIZES.ml} color={colors.primary} />
                   </View>
                   <Text
                     style={{
@@ -295,7 +295,7 @@ export function GuestMessageSheet({
                   onPress={handleReset}
                   className="flex-row items-center justify-between p-3 rounded-lg"
                   style={{ backgroundColor: withOpacity(colors.primary, 'light') }}
-                  activeOpacity={0.7}
+                  activeOpacity={PRESS_OPACITY.DEFAULT}
                 >
                   <View className="flex-row items-center gap-2">
                     <Text style={{ fontSize: 16 }}>
@@ -339,10 +339,10 @@ export function GuestMessageSheet({
                     borderColor: colors.primary,
                     opacity: canSendSMS ? 1 : 0.5,
                   }}
-                  activeOpacity={0.7}
+                  activeOpacity={PRESS_OPACITY.DEFAULT}
                 >
                   <MessageSquare
-                    size={18}
+                    size={ICON_SIZES.ml}
                     color={channel === 'sms' ? colors.primary : colors.mutedForeground}
                   />
                   <Text
@@ -369,10 +369,10 @@ export function GuestMessageSheet({
                     borderColor: colors.primary,
                     opacity: canSendEmail ? 1 : 0.5,
                   }}
-                  activeOpacity={0.7}
+                  activeOpacity={PRESS_OPACITY.DEFAULT}
                 >
                   <Mail
-                    size={18}
+                    size={ICON_SIZES.ml}
                     color={channel === 'email' ? colors.primary : colors.mutedForeground}
                   />
                   <Text
@@ -463,7 +463,7 @@ export function GuestMessageSheet({
             {isSending ? (
               <LoadingSpinner size="small" color="white" />
             ) : (
-              <Send size={18} color="white" />
+              <Send size={ICON_SIZES.ml} color="white" />
             )}
             <Text style={{ color: 'white', fontWeight: '600' }}>
               {isSending ? 'Sending...' : 'Send'}

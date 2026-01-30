@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp, CheckCheck } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { NotificationCard, Notification } from './NotificationCard';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -49,7 +50,7 @@ export function NotificationStack({ notifications, onDismiss, onDismissAll }: No
         className="mx-4 mb-4 rounded-xl p-6 items-center"
         style={{ backgroundColor: withOpacity(colors.success, 'muted') }}
       >
-        <CheckCheck size={32} color={colors.success} />
+        <CheckCheck size={ICON_SIZES['2xl']} color={colors.success} />
         <Text className="text-base font-medium mt-2" style={{ color: colors.success }}>
           All caught up!
         </Text>
@@ -78,7 +79,7 @@ export function NotificationStack({ notifications, onDismiss, onDismissAll }: No
           <TouchableOpacity
             onPress={handleDismissAll}
             className="flex-row items-center"
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
           >
             <CheckCheck size={14} color={colors.primary} />
             <Text className="text-sm font-medium ml-1" style={{ color: colors.primary }}>
@@ -107,18 +108,18 @@ export function NotificationStack({ notifications, onDismiss, onDismissAll }: No
             borderWidth: 1,
             borderColor: colors.border,
           }}
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
         >
           {isExpanded ? (
             <>
-              <ChevronUp size={16} color={colors.mutedForeground} />
+              <ChevronUp size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text className="text-sm font-medium ml-2" style={{ color: colors.foreground }}>
                 Show Less
               </Text>
             </>
           ) : (
             <>
-              <ChevronDown size={16} color={colors.mutedForeground} />
+              <ChevronDown size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text className="text-sm font-medium ml-2" style={{ color: colors.foreground }}>
                 View {hiddenCount} More
               </Text>

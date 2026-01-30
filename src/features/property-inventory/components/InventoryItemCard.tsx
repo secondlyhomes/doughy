@@ -13,7 +13,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { SPACING, FONT_SIZES, ICON_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, ICON_SIZES, BORDER_RADIUS, PRESS_OPACITY } from '@/constants/design-tokens';
 import {
   InventoryItem,
   InventoryCondition,
@@ -41,7 +41,7 @@ export function InventoryItemCard({
   const firstPhoto = item.photos?.[0];
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity onPress={onPress} activeOpacity={PRESS_OPACITY.DEFAULT}>
       <Card className="mb-2" style={{ overflow: 'hidden' }}>
         <View className="flex-row p-3">
           {/* Photo thumbnail or placeholder */}
@@ -58,7 +58,7 @@ export function InventoryItemCard({
                 resizeMode="cover"
               />
             ) : (
-              <Package size={24} color={colors.mutedForeground} />
+              <Package size={ICON_SIZES.xl} color={colors.mutedForeground} />
             )}
           </View>
 
@@ -124,7 +124,7 @@ export function InventoryItemCard({
 
           {/* Chevron */}
           <View className="justify-center ml-2">
-            <ChevronRight size={20} color={colors.mutedForeground} />
+            <ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />
           </View>
         </View>
       </Card>
@@ -174,11 +174,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: FONT_SIZES.sm,
-    marginTop: 2,
+    marginTop: SPACING.xxs,
   },
   detail: {
     fontSize: FONT_SIZES.xs,
-    marginLeft: 4,
+    marginLeft: SPACING.xs,
   },
 });
 

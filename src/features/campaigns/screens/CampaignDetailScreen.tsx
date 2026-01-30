@@ -17,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 import {
   useCampaign,
@@ -176,7 +177,7 @@ export function CampaignDetailScreen() {
         style={{ borderBottomColor: colors.border }}
       >
         <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-          <ArrowLeft size={24} color={colors.foreground} />
+          <ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />
         </TouchableOpacity>
         <Text
           className="text-lg font-semibold flex-1 mx-3"
@@ -189,7 +190,7 @@ export function CampaignDetailScreen() {
           onPress={() => setShowActionsSheet(true)}
           className="p-2 -mr-2"
         >
-          <MoreVertical size={24} color={colors.foreground} />
+          <MoreVertical size={ICON_SIZES.xl} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 
@@ -233,12 +234,12 @@ export function CampaignDetailScreen() {
             >
               {campaign.status === 'active' ? (
                 <>
-                  <Pause size={16} color={colors.foreground} />
+                  <Pause size={ICON_SIZES.md} color={colors.foreground} />
                   <Text className="ml-2">Pause</Text>
                 </>
               ) : (
                 <>
-                  <Play size={16} color={colors.primaryForeground} />
+                  <Play size={ICON_SIZES.md} color={colors.primaryForeground} />
                   <Text className="ml-2">Activate</Text>
                 </>
               )}
@@ -248,7 +249,7 @@ export function CampaignDetailScreen() {
           {/* Lead Type */}
           {leadTypeConfig && (
             <View className="flex-row items-center mb-4">
-              <Target size={16} color={colors.primary} />
+              <Target size={ICON_SIZES.md} color={colors.primary} />
               <Text className="ml-2 text-sm" style={{ color: colors.foreground }}>
                 {leadTypeConfig.label}
               </Text>
@@ -282,7 +283,7 @@ export function CampaignDetailScreen() {
               className="flex-row items-center"
               onPress={() => router.push(`/(tabs)/campaigns/${id}/enroll`)}
             >
-              <UserPlus size={16} color={colors.primary} />
+              <UserPlus size={ICON_SIZES.md} color={colors.primary} />
               <Text
                 className="ml-1 text-sm font-medium"
                 style={{ color: colors.primary }}
@@ -299,7 +300,7 @@ export function CampaignDetailScreen() {
               className="rounded-xl p-6 items-center"
               style={{ backgroundColor: colors.muted }}
             >
-              <Users size={32} color={colors.mutedForeground} />
+              <Users size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
               <Text
                 className="text-sm mt-2 text-center"
                 style={{ color: colors.mutedForeground }}

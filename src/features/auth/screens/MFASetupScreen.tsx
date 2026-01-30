@@ -22,6 +22,7 @@ import {
   verifyMFAEnrollment,
   type MFAEnrollResult,
 } from '../services/mfaService';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 type SetupStep = 'loading' | 'scan' | 'verify' | 'success';
 
@@ -143,7 +144,7 @@ export function MFASetupScreen() {
             {/* Icon */}
             <View className="items-center mb-6">
               <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                <Shield size={32} color={colors.info} />
+                <Shield size={ICON_SIZES['2xl']} color={colors.info} />
               </View>
             </View>
 
@@ -199,7 +200,7 @@ export function MFASetupScreen() {
             {/* Icon */}
             <View className="items-center mb-6">
               <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                <Shield size={32} color={colors.info} />
+                <Shield size={ICON_SIZES['2xl']} color={colors.info} />
               </View>
             </View>
 

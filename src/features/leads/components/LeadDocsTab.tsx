@@ -17,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Document } from '@/features/real-estate/types';
 import {
@@ -26,6 +27,7 @@ import {
   DocumentCategory,
 } from '../hooks/useLeadDocuments';
 import { UploadLeadDocumentSheet } from './UploadLeadDocumentSheet';
+import { formatDate } from '@/lib/formatters';
 
 interface LeadDocsTabProps {
   leadId: string;
@@ -42,13 +44,6 @@ const DOC_TYPE_ICONS: Record<string, typeof File> = {
   receipt: FileText,
   other: File,
 };
-
-// Format date helper
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabProps) {
   const colors = useThemeColors();
@@ -147,7 +142,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
             className="flex-row items-center flex-1"
           >
             <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.muted }}>
-              <Icon size={20} color={colors.primary} />
+              <Icon size={ICON_SIZES.lg} color={colors.primary} />
             </View>
             <View className="flex-1">
               <Text className="font-medium" numberOfLines={1} style={{ color: colors.foreground }}>
@@ -180,7 +175,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
               className="p-2 rounded-lg"
               style={{ backgroundColor: colors.muted }}
             >
-              <Download size={16} color={colors.mutedForeground} />
+              <Download size={ICON_SIZES.md} color={colors.mutedForeground} />
             </TouchableOpacity>
             {!readOnly && (
               <Button
@@ -191,7 +186,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
                 loading={isDeletingDoc}
                 style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}
               >
-                {!isDeletingDoc && <Trash2 size={16} color={colors.destructive} />}
+                {!isDeletingDoc && <Trash2 size={ICON_SIZES.md} color={colors.destructive} />}
               </Button>
             )}
           </View>
@@ -240,7 +235,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
           </View>
           {!readOnly && (
             <Button onPress={() => setShowUploadSheet(true)} size="sm">
-              <Upload size={16} color={colors.primaryForeground} />
+              <Upload size={ICON_SIZES.md} color={colors.primaryForeground} />
               Upload
             </Button>
           )}
@@ -251,7 +246,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
           <>
             <View className="flex-1 items-center justify-center py-12 rounded-xl" style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
               <View className="rounded-full p-4 mb-4" style={{ backgroundColor: colors.muted }}>
-                <FileText size={32} color={colors.mutedForeground} />
+                <FileText size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
               </View>
               <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>No Documents</Text>
               <Text className="text-center px-8 mb-4" style={{ color: colors.mutedForeground }}>
@@ -261,7 +256,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
               </Text>
               {!readOnly && (
                 <Button variant="secondary" onPress={() => setShowUploadSheet(true)}>
-                  <Upload size={16} color={colors.foreground} />
+                  <Upload size={ICON_SIZES.md} color={colors.foreground} />
                   Upload First Document
                 </Button>
               )}
@@ -289,14 +284,14 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
                   >
                     <View className="flex-row items-center">
                       <View className="rounded-lg p-2 mr-3" style={{ backgroundColor: colors.muted }}>
-                        <Icon size={18} color={colors.primary} />
+                        <Icon size={ICON_SIZES.ml} color={colors.primary} />
                       </View>
                       <Text className="font-medium" style={{ color: colors.foreground }}>{category.label}</Text>
                       <View className="px-2 py-0.5 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
                         <Text className="text-xs font-medium" style={{ color: colors.primary }}>{categoryDocs.length}</Text>
                       </View>
                     </View>
-                    <ChevronIcon size={20} color={colors.mutedForeground} />
+                    <ChevronIcon size={ICON_SIZES.lg} color={colors.mutedForeground} />
                   </TouchableOpacity>
 
                   {/* Category Documents */}
@@ -315,7 +310,7 @@ export function LeadDocsTab({ leadId, leadName, readOnly = false }: LeadDocsTabP
         {!readOnly && (
           <View className="rounded-xl p-4" style={{ backgroundColor: colors.muted }}>
             <View className="flex-row items-center mb-2">
-              <Upload size={16} color={colors.mutedForeground} />
+              <Upload size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text className="text-sm font-medium ml-2" style={{ color: colors.foreground }}>Upload Documents</Text>
             </View>
             <Text className="text-xs" style={{ color: colors.mutedForeground }}>

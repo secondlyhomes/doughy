@@ -4,6 +4,7 @@ import React, { createContext, useContext } from 'react';
 import { View, Text, TouchableOpacity, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Radio Group Context
 interface RadioGroupContextType {
@@ -68,7 +69,7 @@ export function RadioGroupItem({
       className={cn('flex-row items-center', className)}
       onPress={() => !disabled && onValueChange(value)}
       disabled={disabled}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityRole="radio"
       accessibilityState={{ selected: isSelected, disabled }}
       accessibilityLabel={label}

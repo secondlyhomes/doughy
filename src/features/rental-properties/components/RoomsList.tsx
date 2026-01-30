@@ -12,25 +12,16 @@ import {
   DoorOpen,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { FONT_SIZES } from '@/constants/design-tokens';
+import { FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { Badge, Button } from '@/components/ui';
 import { Room, RoomStatus } from '@/stores/rental-rooms-store';
+import { formatCurrency } from '@/lib/formatters';
 
 interface RoomsListProps {
   rooms: Room[];
   isLoading?: boolean;
   onRoomPress?: (room: Room) => void;
   onAddRoom?: () => void;
-}
-
-// Format currency
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 // Get status badge variant and label
@@ -66,13 +57,13 @@ function RoomCard({ room, onPress }: RoomCardProps) {
       onPress={onPress}
       className="p-3 rounded-xl mb-2"
       style={{ backgroundColor: colors.card }}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           {/* Room Name */}
           <View className="flex-row items-center gap-2">
-            <BedDouble size={18} color={colors.primary} />
+            <BedDouble size={ICON_SIZES.ml} color={colors.primary} />
             <Text
               style={{
                 color: colors.foreground,
@@ -101,7 +92,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
             {/* Private Bath indicator */}
             {room.is_private_bath && (
               <View className="flex-row items-center gap-1">
-                <Bath size={12} color={colors.mutedForeground} />
+                <Bath size={ICON_SIZES.xs} color={colors.mutedForeground} />
                 <Text
                   style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}
                 >
@@ -113,7 +104,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
             {/* Private Entrance indicator */}
             {room.is_private_entrance && (
               <View className="flex-row items-center gap-1">
-                <DoorOpen size={12} color={colors.mutedForeground} />
+                <DoorOpen size={ICON_SIZES.xs} color={colors.mutedForeground} />
                 <Text
                   style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}
                 >
@@ -129,7 +120,7 @@ function RoomCard({ room, onPress }: RoomCardProps) {
           <Badge variant={statusBadge.variant} size="sm">
             {statusBadge.label}
           </Badge>
-          {onPress && <ChevronRight size={18} color={colors.mutedForeground} />}
+          {onPress && <ChevronRight size={ICON_SIZES.ml} color={colors.mutedForeground} />}
         </View>
       </View>
     </TouchableOpacity>
@@ -184,7 +175,7 @@ export function RoomsList({
             onPress={onAddRoom}
             className="flex-row items-center gap-1"
           >
-            <Plus size={14} color={colors.primary} />
+            <Plus size={ICON_SIZES.sm} color={colors.primary} />
             <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm, fontWeight: '500' }}>
               Add Room
             </Text>
@@ -205,7 +196,7 @@ export function RoomsList({
           className="py-8 items-center rounded-xl"
           style={{ backgroundColor: colors.muted }}
         >
-          <BedDouble size={32} color={colors.mutedForeground} />
+          <BedDouble size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
           <Text
             style={{
               color: colors.mutedForeground,

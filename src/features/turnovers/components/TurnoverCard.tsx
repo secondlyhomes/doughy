@@ -76,7 +76,7 @@ export function TurnoverCard({ turnover, onPress, showProperty = false }: Turnov
                 style={{
                   color: colors.mutedForeground,
                   fontSize: FONT_SIZES.sm,
-                  marginTop: 4,
+                  marginTop: SPACING.xs,
                   marginLeft: 24,
                 }}
               >
@@ -105,7 +105,7 @@ export function TurnoverCard({ turnover, onPress, showProperty = false }: Turnov
                 style={{
                   color: colors.mutedForeground,
                   fontSize: FONT_SIZES.xs,
-                  marginTop: 4,
+                  marginTop: SPACING.xs,
                 }}
               >
                 🧹 {turnover.cleaner.name}

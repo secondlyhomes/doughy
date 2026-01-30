@@ -10,7 +10,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancel
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { BADGE_CONSTANTS, FONT_SIZES } from '@/constants/design-tokens';
+import { BADGE_CONSTANTS, FONT_SIZES, ICON_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
 
 // Safe haptics - requires native rebuild to work
 const triggerHaptic = async () => {
@@ -294,7 +294,7 @@ export function FloatingGlassTabBar({
               const icon = options.tabBarIcon?.({
                 focused: isFocused,
                 color: isFocused ? colors.primary : colors.mutedForeground,
-                size: 24,
+                size: ICON_SIZES.xl,
               });
               return (
                 <View
@@ -303,7 +303,7 @@ export function FloatingGlassTabBar({
                     styles.tab,
                     isFocused && {
                       backgroundColor: withOpacity(colors.primary, 'light'),
-                      borderRadius: 12,
+                      borderRadius: BORDER_RADIUS.lg,
                       marginHorizontal: 4,
                     },
                   ]}
@@ -387,7 +387,7 @@ export function FloatingGlassTabBar({
           const icon = options.tabBarIcon?.({
             focused: isFocused,
             color: isFocused ? colors.primary : colors.mutedForeground,
-            size: 24,
+            size: ICON_SIZES.xl,
           });
           return (
             <View

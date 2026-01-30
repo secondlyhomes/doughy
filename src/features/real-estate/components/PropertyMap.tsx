@@ -12,6 +12,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-nati
 import MapView, { Marker, Callout, Region, PROVIDER_DEFAULT } from 'react-native-maps';
 import { MapPin, Navigation, Layers, X } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { Property, GeoPoint } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
@@ -139,7 +140,7 @@ export function PropertyMap({
   if (propertiesWithCoords.length === 0) {
     return (
       <View className="flex-1 items-center justify-center" style={[style, { backgroundColor: colors.muted }]}>
-        <MapPin size={48} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
+        <MapPin size={ICON_SIZES['3xl']} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
         <Text className="text-center px-8" style={{ color: colors.mutedForeground }}>
           No properties with location data to display on the map.
         </Text>
@@ -221,7 +222,7 @@ export function PropertyMap({
           style={{ backgroundColor: colors.card }}
           activeOpacity={0.7}
         >
-          <Layers size={20} color={colors.foreground} />
+          <Layers size={ICON_SIZES.lg} color={colors.foreground} />
         </TouchableOpacity>
 
         {/* Center on Properties */}
@@ -231,7 +232,7 @@ export function PropertyMap({
           style={{ backgroundColor: colors.card }}
           activeOpacity={0.7}
         >
-          <Navigation size={20} color={colors.foreground} />
+          <Navigation size={ICON_SIZES.lg} color={colors.foreground} />
         </TouchableOpacity>
       </View>
 

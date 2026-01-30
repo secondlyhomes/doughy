@@ -8,8 +8,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { formatStatus, getStatusBadgeVariant } from '@/lib/formatters';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button, GlassButton, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
+import { LoadingSpinner, Button, GlassButton, Badge, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { useLeadDocuments } from '../hooks/useLeadDocuments';
@@ -126,26 +128,6 @@ export function LeadDetailScreen() {
     );
   };
 
-  const getStatusColor = (status: string | undefined) => {
-    const statusColors: Record<string, string> = {
-      new: colors.success,
-      active: colors.info,
-      won: colors.success,
-      lost: colors.destructive,
-      closed: colors.primary,
-      inactive: colors.mutedForeground,
-    };
-    return statusColors[status || ''] || colors.mutedForeground;
-  };
-
-  const formatStatus = (status: string | undefined) => {
-    if (!status) return 'Unknown';
-    return status.replace(/_/g, ' ').replace(/-/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
   if (isLoading) {
     return (
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
@@ -172,7 +154,7 @@ export function LeadDetailScreen() {
       >
         <View className="flex-row items-center justify-between">
           <GlassButton
-            icon={<ArrowLeft size={24} color={colors.foreground} />}
+            icon={<ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />}
             onPress={() => router.back()}
             size={40}
             effect="clear"
@@ -181,13 +163,13 @@ export function LeadDetailScreen() {
 
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={handleToggleStar} accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`} accessibilityRole="button">
-              <Star size={24} color={lead.starred ? colors.warning : colors.mutedForeground} fill={lead.starred ? colors.warning : 'transparent'} />
+              <Star size={ICON_SIZES.xl} color={lead.starred ? colors.warning : colors.mutedForeground} fill={lead.starred ? colors.warning : 'transparent'} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)} accessibilityLabel={`Edit ${lead.name}`} accessibilityRole="button">
-              <Edit2 size={22} color={colors.mutedForeground} />
+              <Edit2 size={ICON_SIZES.lg} color={colors.mutedForeground} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDelete} disabled={isDeleting} accessibilityLabel={`Delete ${lead.name}`} accessibilityRole="button">
-              {isDeleting ? <ActivityIndicator size="small" color={colors.destructive} /> : <Trash2 size={22} color={colors.destructive} />}
+              {isDeleting ? <ActivityIndicator size="small" color={colors.destructive} /> : <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />}
             </TouchableOpacity>
           </View>
         </View>
@@ -206,17 +188,14 @@ export function LeadDetailScreen() {
               <Text className="text-2xl font-bold" style={{ color: colors.foreground }}>{lead.name || 'Unnamed Lead'}</Text>
               {lead.company && (
                 <View className="flex-row items-center mt-1">
-                  <Building2 size={14} color={colors.mutedForeground} />
+                  <Building2 size={ICON_SIZES.sm} color={colors.mutedForeground} />
                   <Text className="ml-1" style={{ color: colors.mutedForeground }}>{lead.company}</Text>
                 </View>
               )}
             </View>
-            <View
-              className="px-3 py-1 rounded-full"
-              style={{ backgroundColor: getStatusColor(lead.status) }}
-            >
-              <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>{formatStatus(lead.status)}</Text>
-            </View>
+            <Badge variant={getStatusBadgeVariant(lead.status)} size="sm">
+              {formatStatus(lead.status)}
+            </Badge>
           </View>
 
           {/* Score */}
@@ -250,7 +229,7 @@ export function LeadDetailScreen() {
                 <Text className="text-base font-semibold mr-2" style={{ color: colors.primaryForeground }}>
                   Convert to Deal
                 </Text>
-                <ArrowRight size={20} color={colors.primaryForeground} />
+                <ArrowRight size={ICON_SIZES.lg} color={colors.primaryForeground} />
               </>
             )}
           </TouchableOpacity>
@@ -271,7 +250,7 @@ export function LeadDetailScreen() {
         {lead.tags && lead.tags.length > 0 && (
           <View className="p-4 mb-4" style={{ backgroundColor: colors.card }}>
             <View className="flex-row items-center mb-3">
-              <Tag size={18} color={colors.mutedForeground} />
+              <Tag size={ICON_SIZES.ml} color={colors.mutedForeground} />
               <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Tags</Text>
             </View>
             <View className="flex-row flex-wrap gap-2">
@@ -290,7 +269,7 @@ export function LeadDetailScreen() {
         {/* Documents Section */}
         <View className="p-4 mb-4" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center mb-4">
-            <FileText size={18} color={colors.mutedForeground} />
+            <FileText size={ICON_SIZES.ml} color={colors.mutedForeground} />
             <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Documents</Text>
             {documents.length > 0 && (
               <View className="px-2 py-0.5 rounded-full ml-2" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>

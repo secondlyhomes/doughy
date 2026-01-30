@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: SPACING.xxs,
   },
   name: {
     fontSize: FONT_SIZES.base,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: SPACING.xs,
   },
   time: {
     fontSize: FONT_SIZES.xs,
@@ -307,9 +307,9 @@ const styles = StyleSheet.create({
   channelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: SPACING.xs,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: SPACING.xxs,
     borderRadius: BORDER_RADIUS.sm,
   },
   channelText: {
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   sourceBadge: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: SPACING.xxs,
     borderRadius: BORDER_RADIUS.sm,
   },
   sourceText: {
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: SPACING.xxs,
     borderRadius: BORDER_RADIUS.sm,
   },
   statusText: {
@@ -345,9 +345,9 @@ const styles = StyleSheet.create({
   pendingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.md,
     alignSelf: 'flex-start',
   },

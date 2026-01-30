@@ -28,6 +28,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card } from '@/components/ui/Card';
 import { PhotoBucket, WalkthroughItem, PHOTO_BUCKET_CONFIG } from '../../deals/types';
+import { ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 
 // Icon mapping for buckets
 const BUCKET_ICONS: Record<PhotoBucket, React.ComponentType<{ size: number; color: string }>> = {
@@ -146,7 +147,7 @@ export function PhotoBucketCard({
           accessibilityLabel="Remove photo"
           accessibilityRole="button"
         >
-          <X size={12} color={colors.destructiveForeground} />
+          <X size={ICON_SIZES.xs} color={colors.destructiveForeground} />
         </TouchableOpacity>
       )}
     </View>
@@ -158,7 +159,7 @@ export function PhotoBucketCard({
       <TouchableOpacity
         className="flex-row items-center justify-between p-4"
         onPress={() => setIsExpanded(!isExpanded)}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         accessibilityLabel={`${config.label} section, ${photos.length} photos, ${memos.length} memos`}
         accessibilityRole="button"
       >
@@ -167,7 +168,7 @@ export function PhotoBucketCard({
             className="w-10 h-10 rounded-lg items-center justify-center mr-3"
             style={{ backgroundColor: colors.muted }}
           >
-            <Icon size={20} color={colors.primary} />
+            <Icon size={ICON_SIZES.lg} color={colors.primary} />
           </View>
           <View className="flex-1">
             <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
@@ -179,9 +180,9 @@ export function PhotoBucketCard({
           </View>
         </View>
         {isExpanded ? (
-          <ChevronUp size={20} color={colors.mutedForeground} />
+          <ChevronUp size={ICON_SIZES.lg} color={colors.mutedForeground} />
         ) : (
-          <ChevronDown size={20} color={colors.mutedForeground} />
+          <ChevronDown size={ICON_SIZES.lg} color={colors.mutedForeground} />
         )}
       </TouchableOpacity>
 
@@ -210,7 +211,7 @@ export function PhotoBucketCard({
                   className="flex-row items-center p-2 rounded-md mb-1"
                   style={{ backgroundColor: colors.muted }}
                 >
-                  <Mic size={16} color={colors.primary} />
+                  <Mic size={ICON_SIZES.md} color={colors.primary} />
                   <Text className="flex-1 ml-2 text-sm" style={{ color: colors.foreground }} numberOfLines={1}>
                     {memo.transcript || 'Voice memo'}
                   </Text>
@@ -220,7 +221,7 @@ export function PhotoBucketCard({
                       accessibilityLabel="Remove memo"
                       accessibilityRole="button"
                     >
-                      <X size={16} color={colors.mutedForeground} />
+                      <X size={ICON_SIZES.md} color={colors.mutedForeground} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -238,7 +239,7 @@ export function PhotoBucketCard({
                 accessibilityLabel="Take photo"
                 accessibilityRole="button"
               >
-                <Camera size={16} color={colors.mutedForeground} />
+                <Camera size={ICON_SIZES.md} color={colors.mutedForeground} />
                 <Text className="text-sm" style={{ color: colors.mutedForeground }}>Camera</Text>
               </TouchableOpacity>
 
@@ -249,7 +250,7 @@ export function PhotoBucketCard({
                 accessibilityLabel="Select from gallery"
                 accessibilityRole="button"
               >
-                <ImageIcon size={16} color={colors.mutedForeground} />
+                <ImageIcon size={ICON_SIZES.md} color={colors.mutedForeground} />
                 <Text className="text-sm" style={{ color: colors.mutedForeground }}>Gallery</Text>
               </TouchableOpacity>
 
@@ -260,7 +261,7 @@ export function PhotoBucketCard({
                 accessibilityLabel="Record voice memo"
                 accessibilityRole="button"
               >
-                <Mic size={16} color={colors.mutedForeground} />
+                <Mic size={ICON_SIZES.md} color={colors.mutedForeground} />
                 <Text className="text-sm" style={{ color: colors.mutedForeground }}>Memo</Text>
               </TouchableOpacity>
             </View>

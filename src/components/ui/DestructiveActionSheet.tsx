@@ -7,7 +7,7 @@ import type { LucideIcon } from 'lucide-react-native';
 import { AlertTriangle, Trash2 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { BottomSheet } from './BottomSheet';
 import { Button } from './Button';
 
@@ -63,7 +63,7 @@ export function DestructiveActionSheet({
             { backgroundColor: withOpacity(variantColor, 'light') },
           ]}
         >
-          <Icon size={32} color={variantColor} />
+          <Icon size={ICON_SIZES['2xl']} color={variantColor} />
         </View>
 
         <Text style={[styles.description, { color: colors.foreground }]}>
@@ -101,7 +101,7 @@ export function DestructiveActionSheet({
           style={styles.button}
         >
           <View style={styles.confirmContent}>
-            <Trash2 size={16} color={colors.destructiveForeground} />
+            <Trash2 size={ICON_SIZES.md} color={colors.destructiveForeground} />
             <Text style={[styles.confirmLabel, { color: colors.destructiveForeground }]}>
               {isLoading ? 'Deleting...' : confirmLabel}
             </Text>

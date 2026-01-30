@@ -22,7 +22,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { Badge, SearchBar, EmptyState, LoadingSpinner } from '@/components/ui';
 
 // ============================================
@@ -149,7 +149,7 @@ function ConversationItemCard({ item, onPress }: ConversationItemCardProps) {
   return (
     <TouchableOpacity
       onPress={handlePress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         backgroundColor: colors.card,
         borderRadius: BORDER_RADIUS.lg,
@@ -229,9 +229,9 @@ function ConversationItemCard({ item, onPress }: ConversationItemCardProps) {
             }}
           >
             {expanded ? (
-              <ChevronUp size={16} color={colors.mutedForeground} />
+              <ChevronUp size={ICON_SIZES.md} color={colors.mutedForeground} />
             ) : (
-              <ChevronDown size={16} color={colors.mutedForeground} />
+              <ChevronDown size={ICON_SIZES.md} color={colors.mutedForeground} />
             )}
             <Text style={{ fontSize: 12, color: colors.mutedForeground, marginLeft: SPACING.xs }}>
               {expanded ? 'Less' : 'More details'}
@@ -504,7 +504,7 @@ export function ConversationsView({
           }}
           accessibilityLabel="Add conversation"
         >
-          <Plus size={24} color={colors.primaryForeground} />
+          <Plus size={ICON_SIZES.xl} color={colors.primaryForeground} />
         </TouchableOpacity>
       )}
     </View>

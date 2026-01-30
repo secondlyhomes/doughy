@@ -158,7 +158,7 @@ export function LinkDocumentSheet({
         >
           {filteredProperties.length === 0 ? (
             <View style={styles.emptyState}>
-              <Search size={32} color={colors.mutedForeground} />
+              <Search size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
               <Text style={{ fontSize: 14, color: colors.mutedForeground, marginTop: SPACING.sm }}>
                 No properties found
               </Text>

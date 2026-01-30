@@ -1,8 +1,12 @@
 // src/features/contacts/screens/contact-detail/formatters.ts
 // Formatting functions for contact display
+// Re-exports shared formatters + contact-specific formatters
 
-import type { ThemeColors } from '@/contexts/ThemeContext';
-import type { CrmContactType, CrmContactStatus, CrmContactSource } from '../../types';
+import type { CrmContactType, CrmContactSource } from '../../types';
+
+// Re-export shared formatters for backwards compatibility
+// These are now centralized in @/lib/formatters
+export { formatStatus, getScoreColor } from '@/lib/formatters';
 
 export function formatContactType(type: CrmContactType): string {
   return type.charAt(0).toUpperCase() + type.slice(1);
@@ -25,16 +29,6 @@ export function getContactTypeBadgeVariant(
   }
 }
 
-export function formatStatus(status: CrmContactStatus | null): string {
-  if (!status) return 'Unknown';
-  return status
-    .replace(/_/g, ' ')
-    .replace(/-/g, ' ')
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
 export function formatSource(source: CrmContactSource): string {
   const sourceMap: Record<CrmContactSource, string> = {
     furnishedfinder: 'Furnished Finder',
@@ -49,11 +43,4 @@ export function formatSource(source: CrmContactSource): string {
     other: 'Other',
   };
   return sourceMap[source] || source.charAt(0).toUpperCase() + source.slice(1);
-}
-
-export function getScoreColor(score: number | null, colors: ThemeColors): string {
-  if (!score) return colors.mutedForeground;
-  if (score >= 80) return colors.success;
-  if (score >= 50) return colors.warning;
-  return colors.destructive;
 }

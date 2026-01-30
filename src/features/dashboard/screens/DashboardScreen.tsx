@@ -39,7 +39,7 @@ import { Card, CardContent, CardHeader, CardTitle, Badge, Progress, TAB_BAR_SAFE
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { getTrendColor } from '@/utils';
-import { UI_TIMING } from '@/constants/design-tokens';
+import { UI_TIMING, ICON_SIZES } from '@/constants/design-tokens';
 
 // Zone D Components
 import { QuickActionFAB } from '@/features/layout';
@@ -88,9 +88,9 @@ const StatCard = React.memo<StatCardProps>(({ title, value, icon, trend }) => {
             return (
               <>
                 {trend.direction === 'up' ? (
-                  <ArrowUp size={12} color={trendColor} />
+                  <ArrowUp size={ICON_SIZES.xs} color={trendColor} />
                 ) : (
-                  <ArrowDown size={12} color={trendColor} />
+                  <ArrowDown size={ICON_SIZES.xs} color={trendColor} />
                 )}
                 <Text style={{ color: trendColor }} className="text-xs ml-1">{trend.value}</Text>
               </>
@@ -102,7 +102,7 @@ const StatCard = React.memo<StatCardProps>(({ title, value, icon, trend }) => {
   );
 });
 
-const ActionIcon = React.memo<{ category: ActionCategory; color: string; size?: number }>(({ category, color, size = 16 }) => {
+const ActionIcon = React.memo<{ category: ActionCategory; color: string; size?: number }>(({ category, color, size = ICON_SIZES.md }) => {
   switch (category) {
     case 'contact':
       return <Phone size={size} color={color} />;
@@ -221,22 +221,22 @@ export function DashboardScreen() {
           <StatCard
             title="Active Deals"
             value={activeDeals}
-            icon={<Briefcase size={16} color={colors.info} />}
+            icon={<Briefcase size={ICON_SIZES.md} color={colors.info} />}
           />
           <StatCard
             title="In Negotiation"
             value={dealsInNegotiation}
-            icon={<MessageCircle size={16} color={colors.info} />}
+            icon={<MessageCircle size={ICON_SIZES.md} color={colors.info} />}
           />
           <StatCard
             title="Overdue Actions"
             value={overdueActions}
-            icon={<AlertTriangle size={16} color={overdueActions > 0 ? colors.destructive : colors.info} />}
+            icon={<AlertTriangle size={ICON_SIZES.md} color={overdueActions > 0 ? colors.destructive : colors.info} />}
           />
           <StatCard
             title="AI Credits"
             value="750"
-            icon={<CreditCard size={16} color={colors.info} />}
+            icon={<CreditCard size={ICON_SIZES.md} color={colors.info} />}
           />
         </View>
         </View>
@@ -252,7 +252,7 @@ export function DashboardScreen() {
         {/* Top Actions */}
         <View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center mb-2">
-            <Clock size={20} color={colors.primary} />
+            <Clock size={ICON_SIZES.lg} color={colors.primary} />
             <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Today's Actions</Text>
           </View>
           <Text className="text-sm mb-4" style={{ color: colors.mutedForeground }}>
@@ -265,7 +265,7 @@ export function DashboardScreen() {
             </View>
           ) : actionDeals.length === 0 ? (
             <View className="py-8 items-center">
-              <CheckCircle size={32} color={colors.success} />
+              <CheckCircle size={ICON_SIZES['2xl']} color={colors.success} />
               <Text className="font-medium mt-2" style={{ color: colors.foreground }}>All caught up!</Text>
               <Text className="text-sm mt-1" style={{ color: colors.mutedForeground }}>No pending actions</Text>
             </View>
@@ -314,7 +314,7 @@ export function DashboardScreen() {
                         </View>
                       </View>
                     </View>
-                    <ArrowRight size={16} color={colors.mutedForeground} />
+                    <ArrowRight size={ICON_SIZES.md} color={colors.mutedForeground} />
                   </View>
                 </TouchableOpacity>
               );

@@ -34,6 +34,7 @@ import { Property } from '../types';
 import { formatPropertyType, getPropertyTypeBadgeColor } from '../utils/formatters';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { GlassView } from '@/components/ui/GlassView';
+import { GLASS_INTENSITY, PRESS_OPACITY, ICON_SIZES, SPACING } from '@/constants/design-tokens';
 
 interface PropertyCardProps {
   property: Property;
@@ -42,7 +43,7 @@ interface PropertyCardProps {
   compact?: boolean;
   /** Use glass effect instead of solid background */
   variant?: 'default' | 'glass';
-  /** Blur intensity for glass variant (0-100). Default: 65 */
+  /** Blur intensity for glass variant. Default: GLASS_INTENSITY.strong (65) */
   glassIntensity?: number;
 }
 
@@ -52,7 +53,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
   onPress,
   compact = false,
   variant = 'default',
-  glassIntensity = 65,
+  glassIntensity = GLASS_INTENSITY.strong,
 }) => {
   const colors = useThemeColors();
 
@@ -83,16 +84,16 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
             className="w-full h-32 items-center justify-center"
             style={{ backgroundColor: colors.muted }}
           >
-            <Home size={32} color={colors.mutedForeground} />
+            <Home size={ICON_SIZES['2xl']} color={colors.mutedForeground} />
           </View>
         )}
 
         {/* Text Content - Glass or solid background */}
         {variant === 'glass' ? (
-          <GlassView intensity={glassIntensity} effect="regular" style={{ padding: 12 }}>
+          <GlassView intensity={glassIntensity} effect="regular" style={{ padding: SPACING.md }}>
             <View className="flex-row justify-between">
               {/* Left column: Address, City/State, Price */}
-              <View style={{ flex: 1, marginRight: 8 }}>
+              <View style={{ flex: 1, marginRight: SPACING.sm }}>
                 <Text
                   className="text-sm font-semibold"
                   style={{ color: colors.foreground }}
@@ -131,7 +132,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
                 <View className="flex-row items-center gap-2 mt-1">
                   {property.bedrooms != null && (
                     <View className="flex-row items-center gap-0.5">
-                      <Bed size={12} color={colors.mutedForeground} />
+                      <Bed size={ICON_SIZES.xs} color={colors.mutedForeground} />
                       <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         {property.bedrooms}
                       </Text>
@@ -139,7 +140,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
                   )}
                   {property.bathrooms != null && (
                     <View className="flex-row items-center gap-0.5">
-                      <Bath size={12} color={colors.mutedForeground} />
+                      <Bath size={ICON_SIZES.xs} color={colors.mutedForeground} />
                       <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         {property.bathrooms}
                       </Text>
@@ -147,7 +148,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
                   )}
                   {property.square_feet != null && (
                     <View className="flex-row items-center gap-0.5">
-                      <Square size={12} color={colors.mutedForeground} />
+                      <Square size={ICON_SIZES.xs} color={colors.mutedForeground} />
                       <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         {property.square_feet.toLocaleString()}
                       </Text>
@@ -161,7 +162,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
           <View className="p-3">
             <View className="flex-row justify-between">
               {/* Left column: Address, City/State, Price */}
-              <View style={{ flex: 1, marginRight: 8 }}>
+              <View style={{ flex: 1, marginRight: SPACING.sm }}>
                 <Text
                   className="text-sm font-semibold"
                   style={{ color: colors.foreground }}
@@ -200,7 +201,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
                 <View className="flex-row items-center gap-2 mt-1">
                   {property.bedrooms != null && (
                     <View className="flex-row items-center gap-0.5">
-                      <Bed size={12} color={colors.mutedForeground} />
+                      <Bed size={ICON_SIZES.xs} color={colors.mutedForeground} />
                       <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         {property.bedrooms}
                       </Text>
@@ -208,7 +209,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
                   )}
                   {property.bathrooms != null && (
                     <View className="flex-row items-center gap-0.5">
-                      <Bath size={12} color={colors.mutedForeground} />
+                      <Bath size={ICON_SIZES.xs} color={colors.mutedForeground} />
                       <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         {property.bathrooms}
                       </Text>
@@ -216,7 +217,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
                   )}
                   {property.square_feet != null && (
                     <View className="flex-row items-center gap-0.5">
-                      <Square size={12} color={colors.mutedForeground} />
+                      <Square size={ICON_SIZES.xs} color={colors.mutedForeground} />
                       <Text className="text-xs" style={{ color: colors.mutedForeground }}>
                         {property.square_feet.toLocaleString()}
                       </Text>
@@ -239,7 +240,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
           borderWidth: isSelected ? 2 : 1,
           borderColor: isSelected ? colors.primary : colors.border,
         }}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
         accessibilityLabel={`Property at ${property.address || 'unknown address'}, ${property.city || ''}, ${property.state || ''}`}
         accessibilityRole="button"
         accessibilityHint="Tap to view property details"
@@ -264,14 +265,14 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
           className="w-full h-48 items-center justify-center"
           style={{ backgroundColor: colors.muted }}
         >
-          <Home size={48} color={colors.mutedForeground} />
+          <Home size={ICON_SIZES['3xl']} color={colors.mutedForeground} />
           <Text className="mt-2" style={{ color: colors.mutedForeground }}>No Image</Text>
         </View>
       )}
 
       {/* Property Info - Glass or solid background */}
       {variant === 'glass' ? (
-        <GlassView intensity={glassIntensity} effect="regular" style={{ padding: 16 }}>
+        <GlassView intensity={glassIntensity} effect="regular" style={{ padding: SPACING.lg }}>
           {/* Price and Type */}
           <View className="flex-row justify-between items-start mb-2">
             <Text
@@ -300,7 +301,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
 
           {/* Location */}
           <View className="flex-row items-center mb-3">
-            <MapPin size={14} color={colors.mutedForeground} />
+            <MapPin size={ICON_SIZES.sm} color={colors.mutedForeground} />
             <Text
               className="text-sm ml-1"
               style={{ color: colors.mutedForeground }}
@@ -314,7 +315,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
           {/* Property Stats */}
           <View className="flex-row gap-4">
             <View className="flex-row items-center">
-              <Bed size={16} color={colors.mutedForeground} />
+              <Bed size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text
                 className="text-sm ml-1"
                 style={{ color: colors.mutedForeground }}
@@ -324,7 +325,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
             </View>
 
             <View className="flex-row items-center">
-              <Bath size={16} color={colors.mutedForeground} />
+              <Bath size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text
                 className="text-sm ml-1"
                 style={{ color: colors.mutedForeground }}
@@ -334,7 +335,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
             </View>
 
             <View className="flex-row items-center">
-              <Square size={16} color={colors.mutedForeground} />
+              <Square size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text
                 className="text-sm ml-1"
                 style={{ color: colors.mutedForeground }}
@@ -353,7 +354,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
               style={{ borderTopWidth: 1, borderTopColor: colors.border }}
             >
               <View className="flex-row items-center mb-1">
-                <FileText size={12} color={colors.mutedForeground} />
+                <FileText size={ICON_SIZES.xs} color={colors.mutedForeground} />
                 <Text
                   className="text-xs ml-1"
                   style={{ color: colors.mutedForeground }}
@@ -401,7 +402,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
 
           {/* Location */}
           <View className="flex-row items-center mb-3">
-            <MapPin size={14} color={colors.mutedForeground} />
+            <MapPin size={ICON_SIZES.sm} color={colors.mutedForeground} />
             <Text
               className="text-sm ml-1"
               style={{ color: colors.mutedForeground }}
@@ -415,7 +416,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
           {/* Property Stats */}
           <View className="flex-row gap-4">
             <View className="flex-row items-center">
-              <Bed size={16} color={colors.mutedForeground} />
+              <Bed size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text
                 className="text-sm ml-1"
                 style={{ color: colors.mutedForeground }}
@@ -425,7 +426,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
             </View>
 
             <View className="flex-row items-center">
-              <Bath size={16} color={colors.mutedForeground} />
+              <Bath size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text
                 className="text-sm ml-1"
                 style={{ color: colors.mutedForeground }}
@@ -435,7 +436,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
             </View>
 
             <View className="flex-row items-center">
-              <Square size={16} color={colors.mutedForeground} />
+              <Square size={ICON_SIZES.md} color={colors.mutedForeground} />
               <Text
                 className="text-sm ml-1"
                 style={{ color: colors.mutedForeground }}
@@ -454,7 +455,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
               style={{ borderTopWidth: 1, borderTopColor: colors.border }}
             >
               <View className="flex-row items-center mb-1">
-                <FileText size={12} color={colors.mutedForeground} />
+                <FileText size={ICON_SIZES.xs} color={colors.mutedForeground} />
                 <Text
                   className="text-xs ml-1"
                   style={{ color: colors.mutedForeground }}
@@ -485,7 +486,7 @@ export const PropertyCard = React.memo<PropertyCardProps>(({
         borderWidth: isSelected ? 2 : 1,
         borderColor: isSelected ? colors.primary : colors.border,
       }}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       accessibilityLabel={`Property at ${property.address || 'unknown address'}, ${property.city || ''}, ${property.state || ''}. ${property.bedrooms || 0} beds, ${property.bathrooms || 0} baths`}
       accessibilityRole="button"
       accessibilityHint="Tap to view property details"

@@ -2,19 +2,22 @@
 
 Comprehensive guide to the Doughy AI design system: tokens, utilities, components, and patterns.
 
-**Last Updated:** January 2026
-**Status:** Phase 1 & Phase 2 Complete
+**Last Updated:** January 30, 2026
+**Status:** Phase 1, 2, & 3 Complete (iOS 26 Liquid Glass, Shared Formatters, Platform Considerations)
 
 ---
 
 ## Table of Contents
 
 1. [Design Tokens](#design-tokens)
-2. [Utility Functions](#utility-functions)
-3. [Reusable Components](#reusable-components)
-4. [Color Guidelines](#color-guidelines)
-5. [Migration Guides](#migration-guides)
-6. [Best Practices](#best-practices)
+2. [iOS 26 Liquid Glass](#ios-26-liquid-glass)
+3. [Utility Functions](#utility-functions)
+4. [Shared Formatters](#shared-formatters)
+5. [Reusable Components](#reusable-components)
+6. [Color Guidelines](#color-guidelines)
+7. [Migration Guides](#migration-guides)
+8. [Best Practices](#best-practices)
+9. [Platform Considerations](#platform-considerations)
 
 ---
 
@@ -116,6 +119,87 @@ import { ICON_SIZES } from '@/constants/design-tokens';
 - `xl: 24` - Extra large icons
 - `2xl: 32` - Hero icons
 
+### Glass Intensity
+
+Native platform blur intensity values for expo-blur (iOS < 26 and Android).
+
+```typescript
+import { GLASS_INTENSITY } from '@/constants/design-tokens';
+
+// Use with GlassView or BlurView intensity prop
+<GlassView intensity={GLASS_INTENSITY.medium} />
+```
+
+**Available values:**
+- `subtle: 30` - Overlays, tooltips, light glass effect
+- `light: 40` - Headers, toolbars, navigation elements
+- `medium: 55` - Cards, containers (default for most uses)
+- `strong: 65` - Image overlays, property cards with backgrounds
+- `opaque: 80` - Bottom sheets, modals requiring more opacity
+
+**When to use each:**
+| Component Type | Intensity | Reason |
+|---------------|-----------|--------|
+| Modal backdrop | `subtle` | Don't obscure content too much |
+| Card on image | `strong` | Need readable text on varied backgrounds |
+| Bottom sheet | `opaque` | Focus user on sheet content |
+| Floating tab bar | `medium` | Balance visibility with glass aesthetic |
+
+---
+
+## iOS 26 Liquid Glass
+
+The app uses iOS 26 Liquid Glass as the forward-looking design language, with graceful degradation for older iOS and Android.
+
+### Core Principles
+
+Per [Apple's Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/materials):
+
+1. **Content First**: Interface controls visually recede when not actively used
+2. **Dynamic Hierarchy**: UI adapts based on user actions and content
+3. **Translucency**: Glass reflects and refracts surroundings naturally
+4. **Accessibility**: Maintain WCAG 4.5:1 contrast ratio on glass surfaces
+
+### GlassView Component
+
+Location: `/src/components/ui/GlassView.tsx`
+
+```typescript
+import { GlassView, GlassBackdrop } from '@/components/ui';
+
+// Standard glass container
+<GlassView intensity={GLASS_INTENSITY.medium} effect="regular">
+  <Text>Content on glass</Text>
+</GlassView>
+
+// Modal backdrop with blur
+<GlassBackdrop intensity={20}>
+  <ModalContent />
+</GlassBackdrop>
+```
+
+**Props:**
+- `intensity` - Blur intensity for expo-blur fallback (0-100)
+- `tint` - Tint color ('light' | 'dark' | 'default')
+- `effect` - Liquid Glass effect type ('clear' | 'regular') - iOS 26+ only
+- `interactive` - Enable touch interaction effects - iOS 26+ only
+
+### Platform Rendering
+
+| Platform | Rendering Approach |
+|----------|-------------------|
+| iOS 26+ | Native `LiquidGlassView` from `@callstack/liquid-glass` |
+| iOS < 26 | `expo-blur` with intensity matching |
+| Android | `expo-blur` (consider solid fallback for performance-critical lists) |
+| Web | CSS `backdrop-filter: blur()` |
+
+### Glass Hierarchy (Future Enhancement)
+
+> **TODO**: Consider adding hierarchy-aware variants for iOS 26 dynamic behavior:
+> - `prominent` - Higher opacity, stays visible
+> - `standard` - Default glass appearance
+> - `receding` - Lower opacity when content is scrolled
+
 ---
 
 ## Utility Functions
@@ -179,6 +263,79 @@ const backdropColor = getBackdropColor(colorScheme === 'dark');
 **Returns:**
 - Light mode: `rgba(0, 0, 0, 0.4)` - 40% black
 - Dark mode: `rgba(0, 0, 0, 0.6)` - 60% black
+
+---
+
+## Shared Formatters
+
+Location: `/src/lib/formatters.ts`
+
+Centralized formatting utilities to eliminate duplication across the codebase. These functions were previously duplicated in 9+ files.
+
+### formatStatus()
+
+Format status strings for display with proper capitalization.
+
+```typescript
+import { formatStatus } from '@/lib/formatters';
+
+const displayStatus = formatStatus('in_progress'); // "In Progress"
+const displayStatus = formatStatus('NEW');         // "New"
+const displayStatus = formatStatus(null);          // "Unknown"
+```
+
+### getStatusBadgeVariant()
+
+Get the appropriate Badge variant for a status string.
+
+```typescript
+import { getStatusBadgeVariant } from '@/lib/formatters';
+
+<Badge variant={getStatusBadgeVariant(lead.status)}>
+  {formatStatus(lead.status)}
+</Badge>
+```
+
+**Variant mapping:**
+| Status | Variant | Color |
+|--------|---------|-------|
+| new, open | `success` | Green |
+| active, in_progress, contacted | `info` | Blue |
+| pending, scheduled | `warning` | Yellow |
+| won, completed, confirmed | `success` | Green |
+| lost, cancelled, declined | `destructive` | Red |
+| closed, archived | `secondary` | Gray |
+
+### getScoreColor()
+
+Get theme-aware color for score displays (lead scores, ratings, etc.).
+
+```typescript
+import { getScoreColor } from '@/lib/formatters';
+
+const scoreColor = getScoreColor(lead.score, colors);
+
+<Text style={{ color: scoreColor }}>{lead.score} pts</Text>
+```
+
+**Color thresholds:**
+- Score >= 80: `colors.success` (green)
+- Score >= 50: `colors.warning` (yellow)
+- Score < 50: `colors.mutedForeground` (gray)
+
+### Migration Note
+
+If you find `formatStatus()`, `getStatusVariant()`, or similar functions in feature components, migrate them to use the shared utilities:
+
+```typescript
+// ❌ Before - duplicated in each component
+const formatStatus = (status: string) => {
+  return status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+};
+
+// ✅ After - use shared utility
+import { formatStatus, getStatusBadgeVariant } from '@/lib/formatters';
+```
 
 ---
 
@@ -968,6 +1125,74 @@ const BOTTOM_BAR_HEIGHT = 72;
 5. **Test on both iPhone SE and iPhone 14 Pro** to verify correct behavior
 
 This pattern is standardized across the app. The working examples are ConversationsListScreen, SettingsScreen, and PortfolioScreen - use them as reference!
+
+---
+
+## Platform Considerations
+
+### Priority: iOS First, Android Second
+
+This app prioritizes iOS design patterns and uses iOS 26 Liquid Glass as the forward-looking design language. Android receives graceful degradation.
+
+### Platform-Specific Rendering
+
+| Component | iOS 26+ | iOS < 26 | Android | Web |
+|-----------|---------|----------|---------|-----|
+| Glass surfaces | `LiquidGlassView` | `expo-blur` | `expo-blur` | CSS `backdrop-filter` |
+| Tab bar | Liquid Glass pill | Blur pill | Blur pill | CSS blur |
+| Cards | Glass variant | Blur fallback | Solid + shadow | CSS blur |
+| Modals | Native blur | expo-blur | expo-blur | CSS blur |
+
+### Platform Detection Pattern
+
+```typescript
+import { Platform } from 'react-native';
+import { isLiquidGlassSupported } from '@callstack/liquid-glass';
+
+// iOS 26+ specific features
+if (Platform.OS === 'ios' && isLiquidGlassSupported) {
+  // Use LiquidGlassView
+}
+
+// iOS (any version) vs Android
+if (Platform.OS === 'ios') {
+  // iOS-specific behavior
+} else if (Platform.OS === 'android') {
+  // Android-specific behavior (may need performance optimizations)
+}
+```
+
+### Android Performance Considerations
+
+expo-blur can be expensive on Android. For performance-critical areas:
+
+```typescript
+// Option 1: Reduce blur intensity on Android
+const intensity = Platform.OS === 'android'
+  ? GLASS_INTENSITY.subtle  // Lower intensity = better performance
+  : GLASS_INTENSITY.medium;
+
+// Option 2: Use solid background on Android for lists
+const useGlass = Platform.OS !== 'android' || !isPerformanceCritical;
+
+<View style={{
+  backgroundColor: useGlass ? undefined : colors.card,
+}}>
+  {useGlass ? (
+    <GlassView intensity={intensity}>{children}</GlassView>
+  ) : (
+    children
+  )}
+</View>
+```
+
+### Testing Checklist
+
+Before shipping, verify on:
+- [ ] iOS 26+ (Liquid Glass native)
+- [ ] iOS 15-25 (expo-blur fallback)
+- [ ] Android 12+ (expo-blur)
+- [ ] Web (CSS backdrop-filter)
 
 ---
 

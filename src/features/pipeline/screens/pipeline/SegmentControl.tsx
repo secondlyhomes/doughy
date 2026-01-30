@@ -6,7 +6,7 @@ import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { SEGMENTS, SEGMENT_CONTROL_HEIGHT } from './constants';
 import type { PipelineSegment } from './types';
 
@@ -110,7 +110,7 @@ export function SegmentControl({ value, onChange, counts }: SegmentControlProps)
             />
             <Text
               style={{
-                fontSize: 14,
+                fontSize: FONT_SIZES.sm,
                 fontWeight: '600',
                 color: isActive ? colors.foreground : colors.mutedForeground,
               }}
@@ -132,7 +132,7 @@ export function SegmentControl({ value, onChange, counts }: SegmentControlProps)
               >
                 <Text
                   style={{
-                    fontSize: 11,
+                    fontSize: FONT_SIZES.xs,
                     fontWeight: '600',
                     color: isActive ? colors.primary : colors.mutedForeground,
                   }}

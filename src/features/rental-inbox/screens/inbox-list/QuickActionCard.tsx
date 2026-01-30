@@ -74,10 +74,10 @@ export function QuickActionCard({
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 4,
+                gap: SPACING.xs,
                 backgroundColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'light'),
-                paddingHorizontal: 8,
-                paddingVertical: 2,
+                paddingHorizontal: SPACING.sm,
+                paddingVertical: SPACING.xxs,
                 borderRadius: BORDER_RADIUS.full,
               }}
             >
@@ -95,7 +95,7 @@ export function QuickActionCard({
           </View>
 
           {/* Platform and time */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: SPACING.xxs }}>
             <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
               {conversation.platform || conversation.channel}
             </Text>
@@ -153,9 +153,9 @@ export function QuickActionCard({
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 4,
+              gap: SPACING.xs,
               paddingVertical: 6,
-              paddingHorizontal: 12,
+              paddingHorizontal: SPACING.md,
               borderRadius: BORDER_RADIUS.md,
               backgroundColor: colors.primary,
             }}

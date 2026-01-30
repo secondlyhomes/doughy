@@ -19,6 +19,7 @@ import { useKeyboardAvoidance } from '@/hooks';
 
 // Zone A UI Components
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { ICON_SIZES } from '@/constants/design-tokens';
 
 import { MessageBubble } from '../components/MessageBubble';
 import { SuggestionChips } from '../components/SuggestionChips';
@@ -84,7 +85,7 @@ export function AssistantScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-8">
               <View className="rounded-full p-4 mb-4" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                <Sparkles size={32} color={colors.info} />
+                <Sparkles size={ICON_SIZES['2xl']} color={colors.info} />
               </View>
               <Text className="text-lg font-semibold mb-2" style={{ color: colors.foreground }}>
                 AI Assistant
@@ -151,7 +152,7 @@ export function AssistantScreen() {
               activeOpacity={0.7}
             >
               <Send
-                size={20}
+                size={ICON_SIZES.lg}
                 color={input.trim() && !isLoading ? colors.primaryForeground : colors.mutedForeground}
               />
             </TouchableOpacity>

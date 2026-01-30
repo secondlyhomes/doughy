@@ -14,7 +14,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { SPACING, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import {
   MaintenanceWorkOrder,
@@ -50,7 +50,7 @@ export function MaintenanceCard({
     workOrder.priority === 'emergency' || workOrder.priority === 'high';
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity onPress={onPress} activeOpacity={PRESS_OPACITY.DEFAULT}>
       <Card
         className="mb-2"
         style={[
@@ -162,7 +162,7 @@ export function MaintenanceCard({
                         color: colors.warning,
                         fontSize: FONT_SIZES.xs,
                         fontWeight: '600',
-                        marginLeft: 4,
+                        marginLeft: SPACING.xs,
                       }}
                     >
                       Guest Charge
@@ -194,7 +194,7 @@ export function MaintenanceCard({
               transform: [{ translateY: -10 }],
             }}
           >
-            <ChevronRight size={20} color={colors.mutedForeground} />
+            <ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />
           </View>
         </View>
       </Card>
@@ -210,11 +210,11 @@ const styles = StyleSheet.create({
   },
   workOrderNumber: {
     fontSize: FONT_SIZES.xs,
-    marginTop: 2,
+    marginTop: SPACING.xxs,
   },
   infoText: {
     fontSize: FONT_SIZES.sm,
-    marginLeft: 4,
+    marginLeft: SPACING.xs,
   },
   location: {
     fontSize: FONT_SIZES.sm,

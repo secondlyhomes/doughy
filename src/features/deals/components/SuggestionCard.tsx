@@ -27,7 +27,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES, PRESS_OPACITY, DEFAULT_HIT_SLOP } from '@/constants/design-tokens';
 import { Badge } from '@/components/ui';
 import { AISuggestion } from '../services/aiSuggestions';
 import { ActionCategory } from '../hooks/useNextAction';
@@ -91,12 +91,12 @@ function PriorityBadge({ priority }: { priority: 'high' | 'medium' | 'low' }) {
     <View
       style={{
         paddingHorizontal: SPACING.xs,
-        paddingVertical: 2,
+        paddingVertical: SPACING.xxs,
         borderRadius: BORDER_RADIUS.sm,
         backgroundColor: withOpacity(color, 'subtle'),
       }}
     >
-      <Text style={{ fontSize: 10, fontWeight: '600', color }}>
+      <Text style={{ fontSize: FONT_SIZES['2xs'], fontWeight: '600', color }}>
         {label}
       </Text>
     </View>
@@ -117,7 +117,7 @@ function ConfidenceIndicator({ confidence }: { confidence: number }) {
   };
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xxs }}>
       <View
         style={{
           width: 4,
@@ -126,7 +126,7 @@ function ConfidenceIndicator({ confidence }: { confidence: number }) {
           backgroundColor: getColor(),
         }}
       />
-      <Text style={{ fontSize: 10, color: colors.mutedForeground }}>
+      <Text style={{ fontSize: FONT_SIZES['2xs'], color: colors.mutedForeground }}>
         {confidence}%
       </Text>
     </View>
@@ -167,7 +167,7 @@ export function SuggestionCard({
       >
         <TouchableOpacity
           onPress={handleAction}
-          activeOpacity={0.7}
+          activeOpacity={PRESS_OPACITY.DEFAULT}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -192,12 +192,12 @@ export function SuggestionCard({
             <Icon size={14} color={categoryConfig.color} />
           </View>
           <Text
-            style={{ flex: 1, fontSize: 13, color: colors.foreground }}
+            style={{ flex: 1, fontSize: FONT_SIZES.sm, color: colors.foreground }}
             numberOfLines={1}
           >
             {suggestion.action}
           </Text>
-          <ChevronRight size={16} color={colors.mutedForeground} />
+          <ChevronRight size={ICON_SIZES.md} color={colors.mutedForeground} />
         </TouchableOpacity>
       </Animated.View>
     );
@@ -252,9 +252,9 @@ export function SuggestionCard({
         {onDismiss && (
           <TouchableOpacity
             onPress={handleDismiss}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={DEFAULT_HIT_SLOP}
           >
-            <X size={16} color={colors.mutedForeground} />
+            <X size={ICON_SIZES.md} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
       </View>
@@ -299,7 +299,7 @@ export function SuggestionCard({
         <Text style={{ fontSize: 14, fontWeight: '600', color: categoryConfig.color }}>
           Take Action
         </Text>
-        <ChevronRight size={16} color={categoryConfig.color} />
+        <ChevronRight size={ICON_SIZES.md} color={categoryConfig.color} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -378,7 +378,7 @@ export function SuggestionBanner({
   return (
     <TouchableOpacity
       onPress={handleAction}
-      activeOpacity={0.8}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -390,10 +390,10 @@ export function SuggestionBanner({
         gap: SPACING.sm,
       }}
     >
-      <Sparkles size={16} color={colors.primary} />
+      <Sparkles size={ICON_SIZES.md} color={colors.primary} />
       <View style={{ flex: 1 }}>
         <Text
-          style={{ fontSize: 13, fontWeight: '500', color: colors.foreground }}
+          style={{ fontSize: FONT_SIZES.sm, fontWeight: '500', color: colors.foreground }}
           numberOfLines={1}
         >
           {suggestion.action}
@@ -402,7 +402,7 @@ export function SuggestionBanner({
       <View
         style={{
           paddingHorizontal: SPACING.sm,
-          paddingVertical: 4,
+          paddingVertical: SPACING.xs,
           borderRadius: BORDER_RADIUS.full,
           backgroundColor: colors.primary,
         }}

@@ -13,7 +13,7 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import type { ConversationWithRelations, Channel } from '@/stores/rental-conversations-store';
 
@@ -80,7 +80,7 @@ export const ConversationCard = memo(function ConversationCard({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={PRESS_OPACITY.DEFAULT}
       style={{
         backgroundColor: colors.card,
         borderRadius: BORDER_RADIUS.lg,
@@ -104,7 +104,7 @@ export const ConversationCard = memo(function ConversationCard({
             marginRight: SPACING.sm,
           }}
         >
-          <ChannelIcon size={22} color={channelColor} />
+          <ChannelIcon size={ICON_SIZES.xl - 2} color={channelColor} />
         </View>
 
         {/* Content */}
@@ -149,12 +149,12 @@ export const ConversationCard = memo(function ConversationCard({
                 marginBottom: SPACING.xs,
               }}
             >
-              <Building2 size={12} color={colors.mutedForeground} />
+              <Building2 size={ICON_SIZES.xs} color={colors.mutedForeground} />
               <Text
                 style={{
                   fontSize: FONT_SIZES.xs,
                   color: colors.mutedForeground,
-                  marginLeft: 4,
+                  marginLeft: SPACING.xs,
                   flex: 1,
                 }}
                 numberOfLines={1}
@@ -181,17 +181,17 @@ export const ConversationCard = memo(function ConversationCard({
                   alignItems: 'center',
                   backgroundColor: withOpacity(colors.warning, 'light'),
                   paddingHorizontal: SPACING.sm,
-                  paddingVertical: 2,
+                  paddingVertical: SPACING.xxs,
                   borderRadius: BORDER_RADIUS.sm,
                 }}
               >
-                <AlertCircle size={12} color={colors.warning} />
+                <AlertCircle size={ICON_SIZES.xs} color={colors.warning} />
                 <Text
                   style={{
                     fontSize: FONT_SIZES['2xs'],
                     fontWeight: '600',
                     color: colors.warning,
-                    marginLeft: 4,
+                    marginLeft: SPACING.xs,
                   }}
                 >
                   Needs Review
@@ -207,17 +207,17 @@ export const ConversationCard = memo(function ConversationCard({
                   alignItems: 'center',
                   backgroundColor: withOpacity(colors.info, 'light'),
                   paddingHorizontal: SPACING.sm,
-                  paddingVertical: 2,
+                  paddingVertical: SPACING.xxs,
                   borderRadius: BORDER_RADIUS.sm,
                 }}
               >
-                <Bot size={12} color={colors.info} />
+                <Bot size={ICON_SIZES.xs} color={colors.info} />
                 <Text
                   style={{
                     fontSize: FONT_SIZES['2xs'],
                     fontWeight: '500',
                     color: colors.info,
-                    marginLeft: 4,
+                    marginLeft: SPACING.xs,
                   }}
                 >
                   AI
@@ -227,12 +227,12 @@ export const ConversationCard = memo(function ConversationCard({
 
             {/* Message count */}
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MessageSquare size={12} color={colors.mutedForeground} />
+              <MessageSquare size={ICON_SIZES.xs} color={colors.mutedForeground} />
               <Text
                 style={{
                   fontSize: FONT_SIZES['2xs'],
                   color: colors.mutedForeground,
-                  marginLeft: 4,
+                  marginLeft: SPACING.xs,
                 }}
               >
                 {conversation.message_count}

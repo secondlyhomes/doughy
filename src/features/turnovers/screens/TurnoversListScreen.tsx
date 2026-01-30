@@ -21,7 +21,7 @@ import {
   Badge,
   ListEmptyState,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { useNativeHeader } from '@/hooks';
 import { useTurnovers } from '../hooks/useTurnovers';
 import { TurnoverCard } from '../components/TurnoverCard';
@@ -114,7 +114,7 @@ export function TurnoversListScreen() {
             style={{
               backgroundColor: isActive ? colors.primary : colors.muted,
             }}
-            activeOpacity={0.7}
+            activeOpacity={PRESS_OPACITY.DEFAULT}
           >
             <Text
               style={{

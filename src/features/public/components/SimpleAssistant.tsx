@@ -17,6 +17,7 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { callPublicAssistant } from '@/lib/openai';
 import { getShadowStyle } from '@/lib/design-utils';
 import { useKeyboardAvoidance } from '@/hooks';
+import { BORDER_RADIUS, ICON_SIZES, SPACING } from '@/constants/design-tokens';
 
 interface Message {
   id: string;
@@ -59,7 +60,7 @@ function MessageBubble({ message, colors }: MessageBubbleProps) {
         >
           {message.content}
         </Text>
-        {isLoading && <Loader2 size={16} color={colors.mutedForeground} />}
+        {isLoading && <Loader2 size={ICON_SIZES.md} color={colors.mutedForeground} />}
       </View>
     </View>
   );
@@ -75,12 +76,12 @@ const bubbleStyles = StyleSheet.create({
   },
   bubble: {
     maxWidth: '80%',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: BORDER_RADIUS.lg,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
   },
   text: {
     fontSize: 14,
@@ -227,7 +228,7 @@ export function SimpleAssistant() {
               width: panelWidth,
               maxHeight: 500,
               backgroundColor: colors.background,
-              borderRadius: 12,
+              borderRadius: BORDER_RADIUS.lg,
               borderWidth: 1,
               borderColor: colors.border,
               ...getShadowStyle(colors, { size: 'lg' }),
@@ -261,13 +262,13 @@ export function SimpleAssistant() {
                   onPress={toggleMinimize}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <ChevronDown size={20} color={colors.mutedForeground} />
+                  <ChevronDown size={ICON_SIZES.lg} color={colors.mutedForeground} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={toggleOpen}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <X size={20} color={colors.mutedForeground} />
+                  <X size={ICON_SIZES.lg} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -307,7 +308,7 @@ export function SimpleAssistant() {
                 style={{
                   flex: 1,
                   backgroundColor: colors.muted,
-                  borderRadius: 8,
+                  borderRadius: BORDER_RADIUS.md,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
                   fontSize: 14,
@@ -320,14 +321,14 @@ export function SimpleAssistant() {
                 style={{
                   width: 40,
                   height: 40,
-                  borderRadius: 8,
+                  borderRadius: BORDER_RADIUS.md,
                   backgroundColor: inputValue.trim() && !isLoading ? colors.primary : colors.muted,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
                 <Send
-                  size={18}
+                  size={ICON_SIZES.ml}
                   color={inputValue.trim() && !isLoading ? colors.primaryForeground : colors.mutedForeground}
                 />
               </TouchableOpacity>
@@ -343,22 +344,22 @@ export function SimpleAssistant() {
           style={{
             marginBottom: 8,
             backgroundColor: colors.card,
-            borderRadius: 12,
+            borderRadius: BORDER_RADIUS.lg,
             borderWidth: 1,
             borderColor: colors.border,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
+            paddingHorizontal: SPACING.lg,
+            paddingVertical: SPACING.md,
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 8,
+            gap: SPACING.sm,
             ...getShadowStyle(colors, { size: 'md' }),
           }}
         >
-          <MessageSquare size={20} color={colors.primary} />
+          <MessageSquare size={ICON_SIZES.lg} color={colors.primary} />
           <Text style={{ color: colors.foreground, fontWeight: '500' }}>
             Chat with Doughy
           </Text>
-          <ChevronUp size={18} color={colors.mutedForeground} />
+          <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
         </TouchableOpacity>
       )}
 
@@ -378,9 +379,9 @@ export function SimpleAssistant() {
           accessibilityLabel="Chat with assistant"
         >
           {isOpen && isMinimized ? (
-            <ChevronUp size={24} color={colors.primaryForeground} />
+            <ChevronUp size={ICON_SIZES.xl} color={colors.primaryForeground} />
           ) : (
-            <MessageSquare size={24} color={colors.primaryForeground} />
+            <MessageSquare size={ICON_SIZES.xl} color={colors.primaryForeground} />
           )}
         </TouchableOpacity>
       </Animated.View>

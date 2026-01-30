@@ -13,6 +13,7 @@ import {
 import { ChevronDown, Check } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { PRESS_OPACITY } from '@/constants/design-tokens';
 import { getBackdropColor } from '@/lib/design-utils';
 
 export interface SelectOption {
@@ -77,7 +78,7 @@ export function Select({
         }}
         onPress={() => !disabled && setIsOpen(true)}
         disabled={disabled}
-        activeOpacity={0.7}
+        activeOpacity={PRESS_OPACITY.DEFAULT}
       >
         <Text
           className="text-sm"
