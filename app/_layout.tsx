@@ -5,20 +5,23 @@ import '../global.css';
 import { View, LogBox } from 'react-native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 
 // Suppress warnings from dependencies we can't control
 const SUPPRESSED_WARNINGS = [
   'SafeAreaView has been deprecated',
   "Cannot find native module 'ExponentAV'",
-];
+] as const;
 
-LogBox.ignoreLogs(SUPPRESSED_WARNINGS);
+LogBox.ignoreLogs([...SUPPRESSED_WARNINGS]);
 
 // Also suppress from console output (LogBox only hides yellow box UI)
+// Note: We log suppressions in __DEV__ for visibility while debugging
 const originalWarn = console.warn;
 console.warn = (...args: unknown[]) => {
   const message = typeof args[0] === 'string' ? args[0] : '';
   if (SUPPRESSED_WARNINGS.some((warning) => message.includes(warning))) {
+    if (__DEV__) console.debug('[Suppressed Warning]', message.substring(0, 80));
     return;
   }
   originalWarn.apply(console, args);
@@ -29,6 +32,7 @@ const originalError = console.error;
 console.error = (...args: unknown[]) => {
   const message = typeof args[0] === 'string' ? args[0] : String(args[0]);
   if (message.includes("Cannot find native module 'ExponentAV'")) {
+    if (__DEV__) console.debug('[Suppressed Error]', message.substring(0, 80));
     return;
   }
   originalError.apply(console, args);
@@ -40,7 +44,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { UnreadCountsProvider, ErrorBoundary } from '@/features/layout';
-import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { ThemeProvider, useTheme, useThemeColors } from '@/context/ThemeContext';
 import { FocusModeProvider } from '@/context/FocusModeContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ErrorProvider } from '@/context/ErrorContext';
@@ -56,11 +60,13 @@ const queryClient = new QueryClient({
   },
 });
 
-// Wrapper for flex layout - no className to avoid NativeWind's CssInterop.View bug
-// Dark mode is synced via Appearance API in ThemeProvider instead
+// Wrapper for flex layout with themed background
+// Uses style instead of className to avoid NativeWind's CssInterop.View bug
+// Background color ensures no white flash during screen transitions in dark mode
 function ThemeSync({ children }: { children: React.ReactNode }) {
+  const colors = useThemeColors();
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {children}
     </View>
   );
@@ -75,9 +81,16 @@ function ThemedStatusBar() {
 // Root layout with all providers
 export default function RootLayout() {
   // Load fonts in background - don't block render
-  useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Lobster: require('../assets/fonts/Lobster-Regular.ttf'),
   });
+
+  // Log font loading errors for debugging
+  useEffect(() => {
+    if (fontError) {
+      console.error('[Font Loading] Failed to load fonts:', fontError);
+    }
+  }, [fontError]);
 
   return (
     <ErrorBoundary>

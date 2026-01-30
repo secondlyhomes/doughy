@@ -97,10 +97,24 @@ export function canSeedDatabase(): SafetyCheckResult {
     };
   }
 
-  // Layer 2: Production database check
-  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-  const isProd = supabaseUrl?.includes('vpqglbaedcpeprnlnfxd');
+  // Layer 2: Verify configuration exists (fail closed - if we can't verify, don't allow)
+  if (!Constants.expoConfig?.extra) {
+    return {
+      allowed: false,
+      reason: 'Cannot verify environment: expoConfig.extra is not configured. Seeding blocked for safety.',
+    };
+  }
 
+  // Layer 3: Production database check
+  const supabaseUrl = Constants.expoConfig.extra.supabaseUrl;
+  if (!supabaseUrl) {
+    return {
+      allowed: false,
+      reason: 'Cannot verify database target: supabaseUrl is not configured. Seeding blocked for safety.',
+    };
+  }
+
+  const isProd = supabaseUrl.includes('vpqglbaedcpeprnlnfxd');
   if (isProd) {
     return {
       allowed: false,
@@ -108,8 +122,8 @@ export function canSeedDatabase(): SafetyCheckResult {
     };
   }
 
-  // Layer 3: Explicit environment check (optional but recommended)
-  const env = process.env.EXPO_PUBLIC_ENV || Constants.expoConfig?.extra?.env;
+  // Layer 4: Explicit environment check (optional but recommended)
+  const env = process.env.EXPO_PUBLIC_ENV || Constants.expoConfig.extra.env;
   if (env === 'production') {
     return {
       allowed: false,
@@ -201,9 +215,9 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     // Delete in reverse foreign key order (children first, then parents)
     // Only delete from tables that actually exist in the database schema
 
-    // 0a. Delete investor_ai_queue (depends on investor_conversations, investor_messages)
+    // 0a. Delete investor_ai_queue_items (depends on investor_conversations, investor_messages)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: deletedAIQueue, error: aiQueueError } = await (supabase.from('investor_ai_queue' as any) as any)
+    const { data: deletedAIQueue, error: aiQueueError } = await (supabase.from('investor_ai_queue_items' as any) as any)
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -211,8 +225,8 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     if (aiQueueError) {
       if (isTableNotFoundError(aiQueueError)) {
         // Table not yet created - this is expected before migration runs
-        result.warnings!.push('investor_ai_queue table not yet created (run migration first)');
-        console.info('[seedService] investor_ai_queue table not found, skipping');
+        result.warnings!.push('investor_ai_queue_items table not yet created (run migration first)');
+        console.info('[seedService] investor_ai_queue_items table not found, skipping');
       } else {
         // Real error - treat as error, not warning
         result.errors!.push(`Investor AI Queue: ${aiQueueError.message}`);
@@ -720,15 +734,15 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const queueData = createTestInvestorAIQueueItem(i, userId, conv.id);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from('investor_ai_queue' as any) as any)
+      const { error } = await (supabase.from('investor_ai_queue_items' as any) as any)
         .insert(queueData);
 
       if (error) {
         if (isTableNotFoundError(error)) {
           // Table not yet created - warn but don't fail
           if (i === 0) { // Only log once
-            result.warnings!.push('investor_ai_queue table not yet created (run migration first)');
-            console.info('[seedService] investor_ai_queue table not found, skipping seed');
+            result.warnings!.push('investor_ai_queue_items table not yet created (run migration first)');
+            console.info('[seedService] investor_ai_queue_items table not found, skipping seed');
           }
           break; // No point trying more queue items
         } else {

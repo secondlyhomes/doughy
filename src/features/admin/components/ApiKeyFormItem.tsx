@@ -27,7 +27,11 @@ interface ApiKeyFormItemProps {
   type?: IntegrationFieldType;
   required?: boolean;
   options?: string[];
-  onSaved?: () => void;
+  /**
+   * Called after save/delete with optional health check result.
+   * Pass the result to update parent state directly.
+   */
+  onSaved?: (healthResult?: IntegrationHealth) => void;
   healthStatus?: IntegrationStatus;
   placeholder?: string;
   description?: string;
@@ -58,54 +62,6 @@ async function triggerHaptic(type: 'success' | 'error' | 'light' = 'light') {
       console.debug('[Haptics] Not available:', error);
     }
   }
-}
-
-/**
- * Get troubleshooting suggestions based on error message
- */
-function getTroubleshootingSuggestions(message: string | undefined): string[] {
-  if (!message) return [];
-
-  const messageLower = message.toLowerCase();
-  const suggestions: string[] = [];
-
-  // Authentication errors
-  if (messageLower.includes('401') || messageLower.includes('unauthorized') || messageLower.includes('invalid') && messageLower.includes('key')) {
-    suggestions.push('Check that your API key hasn\'t expired');
-    suggestions.push('Verify the key was copied correctly');
-    suggestions.push('Try generating a new key from the provider\'s dashboard');
-  }
-
-  // Rate limiting
-  if (messageLower.includes('429') || messageLower.includes('rate limit') || messageLower.includes('too many requests')) {
-    suggestions.push('You\'ve hit the rate limit - wait a few minutes');
-    suggestions.push('Consider upgrading your API plan');
-  }
-
-  // Permission errors
-  if (messageLower.includes('403') || messageLower.includes('forbidden') || messageLower.includes('permission')) {
-    suggestions.push('Check that your API key has the required permissions');
-    suggestions.push('Some features may require a paid plan');
-  }
-
-  // HMAC/Decryption errors
-  if (messageLower.includes('hmac') || messageLower.includes('decrypt') || messageLower.includes('verification failed')) {
-    suggestions.push('The key may be corrupted - delete and re-enter it');
-  }
-
-  // Network errors
-  if (messageLower.includes('network') || messageLower.includes('timeout') || messageLower.includes('econnrefused')) {
-    suggestions.push('Check your internet connection');
-    suggestions.push('The API service may be temporarily down');
-  }
-
-  // Generic fallback
-  if (suggestions.length === 0) {
-    suggestions.push('Try deleting the key and re-entering it');
-    suggestions.push('Check the API provider\'s status page');
-  }
-
-  return suggestions;
 }
 
 /**
@@ -159,12 +115,16 @@ export function ApiKeyFormItem({
   const [isEditing, setIsEditing] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false); // Replace mode: test new key before replacing
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isSaveLoading, setIsSaveLoading] = useState(false); // Local save loading for immediate feedback
   const { key, keyExistsInDB, setKey, save, deleteKey, loading, isSaving, loadKey, hasLoaded } = useApiKey(service, { deferLoad });
   const [hasWarning, setHasWarning] = useState(false);
 
   // Health test state
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<IntegrationHealth | null>(null);
+
+  // Combined saving state for immediate UI feedback
+  const isCurrentlySaving = isSaveLoading || isSaving;
 
   const initializedRef = useRef(false);
 
@@ -205,7 +165,28 @@ export function ApiKeyFormItem({
       return;
     }
 
-    // Validate with flexible validation
+    // Set loading immediately for instant feedback
+    setIsSaveLoading(true);
+
+    // CRITICAL: Force React to render the spinner before PBKDF2 blocks the thread
+    // Double RAF ensures the frame is painted before we start CPU-intensive encryption
+    // Includes timeout fallback in case RAF never fires (e.g., app backgrounded)
+    await new Promise<void>(resolve => {
+      const timeoutId = setTimeout(resolve, 100);
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            clearTimeout(timeoutId);
+            resolve();
+          });
+        });
+      } else {
+        clearTimeout(timeoutId);
+        resolve();
+      }
+    });
+
+    // Validate with flexible validation (validation is fast, done after spinner shows)
     const validation = validateApiKeyFormat(inputValue, service);
 
     // Show warning if needed
@@ -218,6 +199,7 @@ export function ApiKeyFormItem({
 
     // Block only if completely invalid
     if (!validation.isValid) {
+      setIsSaveLoading(false);
       toast({ type: 'error', title: 'Invalid Key', description: validation.warning || 'Please enter a valid API key' });
       return;
     }
@@ -233,9 +215,34 @@ export function ApiKeyFormItem({
         setInputValue('');
         setShowValue(false);
         setIsEditing(false);
-        // Clear health cache so status refreshes immediately
+
+        // Clear health cache and verify the key works
         clearHealthCache(service);
-        onSaved?.();
+        setIsTesting(true);
+        setTestResult(null);
+
+        // Run health check to verify the saved key
+        let healthResult: IntegrationHealth | undefined;
+        try {
+          healthResult = await checkIntegrationHealth(service, true);
+          setTestResult(healthResult);
+
+          if (healthResult.status === 'error') {
+            toast({
+              type: 'warning',
+              title: 'Key Saved',
+              description: `Saved but verification failed: ${healthResult.message}`,
+              duration: 6000,
+            });
+          }
+        } catch (healthError) {
+          console.error('Health check after save failed:', healthError);
+        } finally {
+          setIsTesting(false);
+        }
+
+        // Pass health result to parent so it can update its state directly
+        onSaved?.(healthResult);
       } else {
         triggerHaptic('error');
         toast({ type: 'error', title: 'Save Failed', description: result.error || 'Please try again', duration: 6000 });
@@ -244,6 +251,8 @@ export function ApiKeyFormItem({
       triggerHaptic('error');
       console.error('Error saving API key:', error);
       toast({ type: 'error', title: 'Error', description: 'An unexpected error occurred', duration: 6000 });
+    } finally {
+      setIsSaveLoading(false);
     }
   }, [inputValue, service, label, save, toast, onSaved]);
 
@@ -268,10 +277,17 @@ export function ApiKeyFormItem({
                 setIsEditing(true);
                 setHasWarning(false);
                 initializedRef.current = true;
+                setTestResult(null);
                 // Clear health cache so status refreshes immediately
                 clearHealthCache(service);
                 toast({ type: 'success', title: 'Deleted', description: `${label} has been removed` });
-                onSaved?.();
+                // Pass not-configured status to parent
+                onSaved?.({
+                  name: label,
+                  service,
+                  status: 'not-configured',
+                  lastChecked: new Date(),
+                });
               } else {
                 triggerHaptic('error');
                 toast({ type: 'error', title: 'Delete Failed', description: result.error || 'Please try again', duration: 6000 });
@@ -318,8 +334,8 @@ export function ApiKeyFormItem({
         });
       }
 
-      // Trigger parent refresh to update status
-      onSaved?.();
+      // Pass result to parent to update status
+      onSaved?.(result);
     } catch (error) {
       triggerHaptic('error');
       console.error('Error testing connection:', error);
@@ -390,7 +406,8 @@ export function ApiKeyFormItem({
       setShowValue(false);
       setIsReplacing(false);
       setTestResult(testResultData);
-      onSaved?.();
+      // Pass result to parent to update status
+      onSaved?.(testResultData);
     } catch (error) {
       triggerHaptic('error');
       console.error('Error replacing key:', error);
@@ -430,7 +447,7 @@ export function ApiKeyFormItem({
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={[styles.label, { color: colors.foreground }]}>
-            {label} {required && <Text style={styles.required}>*</Text>}
+            {label} {required && <Text style={{ color: colors.destructive }}>*</Text>}
           </Text>
           <StatusBadge hasKey={!!key} hasWarning={hasWarning} healthStatus={effectiveStatus} loading={loading} colors={colors} />
         </View>
@@ -450,7 +467,7 @@ export function ApiKeyFormItem({
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={[styles.label, { color: colors.foreground }]}>
-          {label} {required && <Text style={styles.required}>*</Text>}
+          {label} {required && <Text style={{ color: colors.destructive }}>*</Text>}
         </Text>
         <StatusBadge hasKey={!!key} hasWarning={hasWarning} healthStatus={effectiveStatus} loading={loading} colors={colors} />
       </View>
@@ -537,7 +554,7 @@ export function ApiKeyFormItem({
                 onChangeText={setInputValue}
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!isSaving}
+                editable={!isCurrentlySaving}
               />
             ) : (
               <TextInput
@@ -551,7 +568,7 @@ export function ApiKeyFormItem({
               <TouchableOpacity
                 style={styles.eyeButton}
                 onPress={() => setShowValue(!showValue)}
-                disabled={isSaving}
+                disabled={isCurrentlySaving}
               >
                 {showValue ? (
                   <EyeOff size={20} color={colors.mutedForeground} />
@@ -566,9 +583,9 @@ export function ApiKeyFormItem({
             <TouchableOpacity
               style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
               onPress={handleSave}
-              disabled={isSaving || (required && !inputValue)}
+              disabled={isCurrentlySaving || (required && !inputValue)}
             >
-              {isSaving ? (
+              {isCurrentlySaving ? (
                 <ActivityIndicator size="small" color={colors.primaryForeground} />
               ) : (
                 <>
@@ -633,41 +650,12 @@ export function ApiKeyFormItem({
         </View>
       )}
 
-      {/* Inline status info - show latency or error message with troubleshooting */}
-      {!isEditing && keyExists && (effectiveLatency || effectiveMessage) && (
+      {/* Inline status info - show latency only (errors shown via toasts) */}
+      {!isEditing && keyExists && effectiveLatency && effectiveStatus !== 'error' && (
         <View style={styles.statusInfo}>
-          {effectiveStatus === 'error' && effectiveMessage ? (
-            <View style={[styles.errorPanel, { backgroundColor: withOpacity(colors.destructive, 'muted'), borderColor: withOpacity(colors.destructive, 'strong') }]}>
-              <View style={styles.errorHeader}>
-                <AlertTriangle size={14} color={colors.destructive} />
-                <Text style={[styles.errorTitle, { color: colors.destructive }]}>
-                  Connection Error
-                </Text>
-              </View>
-              <Text
-                style={[styles.errorMessage, { color: colors.foreground }]}
-                selectable={true}
-              >
-                {effectiveMessage}
-              </Text>
-              {getTroubleshootingSuggestions(effectiveMessage).length > 0 && (
-                <View style={styles.suggestions}>
-                  <Text style={[styles.suggestionsTitle, { color: colors.mutedForeground }]}>
-                    Suggestions:
-                  </Text>
-                  {getTroubleshootingSuggestions(effectiveMessage).map((suggestion, index) => (
-                    <Text key={index} style={[styles.suggestionItem, { color: colors.mutedForeground }]}>
-                      • {suggestion}
-                    </Text>
-                  ))}
-                </View>
-              )}
-            </View>
-          ) : effectiveLatency ? (
-            <Text style={[styles.latencyText, { color: colors.mutedForeground }]}>
-              Response time: {effectiveLatency}
-            </Text>
-          ) : null}
+          <Text style={[styles.latencyText, { color: colors.mutedForeground }]}>
+            Response time: {effectiveLatency}
+          </Text>
         </View>
       )}
     </View>
@@ -765,9 +753,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  required: {
-    color: '#ef4444', // Note: StyleSheet requires static values; theme color applied inline where needed
-  },
+  // Note: Required asterisk color now applied inline using colors.destructive
   description: {
     fontSize: 12,
     marginBottom: 8,
@@ -870,43 +856,6 @@ const styles = StyleSheet.create({
   },
   statusInfo: {
     marginTop: 8,
-  },
-  errorPanel: {
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  errorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  errorTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  errorMessage: {
-    fontSize: 12,
-    marginBottom: 8,
-    flexWrap: 'wrap',
-    lineHeight: 18,
-  },
-  suggestions: {
-    marginTop: 4,
-  },
-  suggestionsTitle: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  suggestionItem: {
-    fontSize: 11,
-    marginLeft: 4,
-    marginBottom: 2,
-  },
-  errorText: {
-    fontSize: 12,
   },
   latencyText: {
     fontSize: 11,

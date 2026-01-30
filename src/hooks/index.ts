@@ -19,3 +19,7 @@ export type {
 
 export { useFieldRef } from './useFieldRef';
 export type { UseFieldRefOptions, UseFieldRefReturn } from './useFieldRef';
+
+// Native header hook
+export { useNativeHeader } from './useNativeHeader';
+export type { UseNativeHeaderOptions, UseNativeHeaderReturn } from './useNativeHeader';

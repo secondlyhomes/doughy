@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Linking,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -64,6 +65,7 @@ export function IntegrationsScreen() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [expandedIntegration, setExpandedIntegration] = useState<string>('');
+  const [apiKeyRefreshTrigger, setApiKeyRefreshTrigger] = useState(0);
 
   // Shared callback for progressive health status updates
   const handleHealthResult = useCallback((service: string, health: IntegrationHealth) => {
@@ -197,7 +199,7 @@ export function IntegrationsScreen() {
 
     return (
       <View
-        className="mx-4 mb-3 rounded-xl overflow-hidden"
+        className="mx-4 mb-3 rounded-xl"
         style={{
           backgroundColor: colors.card,
           borderWidth: 1,
@@ -233,7 +235,7 @@ export function IntegrationsScreen() {
                 </View>
               </View>
             </AccordionTrigger>
-            <AccordionContent className="px-4">
+            <AccordionContent className="px-4 pb-4">
               {/* Integration Fields */}
               <View className="gap-3 pt-2">
                 {item.fields.map((field) => (
@@ -247,17 +249,41 @@ export function IntegrationsScreen() {
                     placeholder={field.placeholder}
                     description={field.description}
                     healthStatus={healthStatuses.get(field.key)?.status}
-                    onSaved={handleRefresh}
+                    onSaved={(healthResult) => {
+                      // Update health status directly if result provided
+                      if (healthResult) {
+                        handleHealthResult(healthResult.service, healthResult);
+                        // Also update the integration's primary service if different
+                        if (healthResult.service !== item.service) {
+                          // Propagate to parent integration status
+                          handleHealthResult(item.service, healthResult);
+                        }
+                      }
+                      // Trigger refresh of API key count
+                      setApiKeyRefreshTrigger((prev) => prev + 1);
+                    }}
                   />
                 ))}
               </View>
 
-              {/* Documentation Link */}
+              {/* Documentation Link - always stays visible within card */}
               {item.docsUrl && (
                 <TouchableOpacity
-                  className="flex-row items-center mt-4 pt-3"
+                  className="flex-row items-center mt-3 pt-3"
                   style={{ borderTopWidth: 1, borderTopColor: colors.border }}
-                  onPress={() => Linking.openURL(item.docsUrl!)}
+                  onPress={async () => {
+                    try {
+                      const canOpen = await Linking.canOpenURL(item.docsUrl!);
+                      if (canOpen) {
+                        await Linking.openURL(item.docsUrl!);
+                      } else {
+                        Alert.alert('Cannot Open', 'Unable to open the documentation link on this device.');
+                      }
+                    } catch (error) {
+                      console.error('[IntegrationsScreen] Failed to open docs URL:', error);
+                      Alert.alert('Error', 'Failed to open the documentation link.');
+                    }
+                  }}
                 >
                   <ExternalLink size={14} color={colors.primary} />
                   <Text
@@ -273,7 +299,7 @@ export function IntegrationsScreen() {
         </Accordion>
       </View>
     );
-  }, [colors, healthStatuses, handleRefresh, expandedIntegration]);
+  }, [colors, healthStatuses, handleHealthResult, expandedIntegration]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -404,7 +430,7 @@ export function IntegrationsScreen() {
                     </View>
                   </View>
                 )}
-                <IntegrationHealthCard />
+                <IntegrationHealthCard refreshTrigger={apiKeyRefreshTrigger} />
                 {/* Error message with retry */}
                 {loadError && (
                   <TouchableOpacity
