@@ -11,7 +11,7 @@ import {
   Linking,
   KeyboardAvoidingView,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   CheckCircle,
   XCircle,
@@ -45,16 +45,6 @@ import type { Integration, IntegrationHealth, IntegrationStatus } from '../types
 // Filter type for status filtering
 type StatusFilter = 'all' | 'operational' | 'error' | 'not-configured' | 'configured';
 
-// Spacing constants for floating search bar
-const SEARCH_BAR_CONTAINER_HEIGHT =
-  SPACING.sm +  // pt-2 (8px top padding)
-  40 +          // SearchBar size="md" estimated height
-  SPACING.xs;   // pb-1 (4px bottom padding)
-  // Total: ~52px
-
-const FILTER_PILLS_HEIGHT = 40; // Approximate height of filter pills row
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
-
 // Extended integration type with health data
 interface IntegrationWithHealth extends Integration {
   health?: IntegrationHealth;
@@ -63,8 +53,7 @@ interface IntegrationWithHealth extends Integration {
 
 export function IntegrationsScreen() {
   const colors = useThemeColors();
-  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
-  const insets = useSafeAreaInsets();
+  const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -286,74 +275,21 @@ export function IntegrationsScreen() {
     );
   }, [colors, healthStatuses, handleRefresh, expandedIntegration]);
 
-  // Loading state with skeletons - matches floating search bar layout
-  if (isLoading) {
-    return (
-      <ThemedSafeAreaView className="flex-1" edges={[]}>
-        {/* Floating search bar skeleton */}
-        <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-          <View className="px-4 pt-2 pb-1">
-            <Skeleton className="h-10 rounded-full" />
-          </View>
-        </View>
-
-        {/* Content skeletons with matching paddingTop */}
-        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP }}>
-          <View className="px-4">
-            {/* Progress indicator */}
-            {healthProgress && (
-              <View className="mb-4">
-                <Text
-                  className="text-sm text-center mb-2"
-                  style={{ color: colors.mutedForeground }}
-                >
-                  Checking integrations... {healthProgress.completed} of {healthProgress.total}
-                </Text>
-                <View
-                  className="h-1.5 rounded-full overflow-hidden"
-                  style={{ backgroundColor: colors.muted }}
-                >
-                  <View
-                    className="h-full rounded-full"
-                    style={{
-                      backgroundColor: colors.primary,
-                      width: `${(healthProgress.completed / healthProgress.total) * 100}%`,
-                    }}
-                  />
-                </View>
-              </View>
-            )}
-            {/* IntegrationHealthCard skeleton */}
-            <Skeleton className="h-24 rounded-xl mb-3" />
-            {/* Integration cards skeleton */}
-            {[1, 2, 3, 4].map((i) => (
-              <View key={i} className="mb-3">
-                <Skeleton className="h-20 rounded-xl" />
-              </View>
-            ))}
-          </View>
-        </View>
-      </ThemedSafeAreaView>
-    );
-  }
-
-  // Calculate dynamic padding based on filter visibility
-  const listPaddingTop = SEARCH_BAR_CONTAINER_HEIGHT + insets.top + SEARCH_BAR_TO_CONTENT_GAP + (showFilters ? FILTER_PILLS_HEIGHT : 0);
-
   return (
-    <ThemedSafeAreaView className="flex-1" edges={[]}>
-      <KeyboardAvoidingView
-        behavior={keyboardProps.behavior}
-        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
-        className="flex-1"
-      >
-      {/* Floating Glass Search Bar - positioned absolutely at top */}
-      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-        <View className="px-4 pt-2 pb-1">
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        <KeyboardAvoidingView
+          behavior={keyboardProps.behavior}
+          keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
+          className="flex-1"
+          style={{ backgroundColor: colors.background }}
+        >
+        {/* Search Bar - always rendered in normal document flow */}
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
           <SearchBar
             value={search}
             onChangeText={setSearch}
-            placeholder={`Search ${integrationsWithHealth.length} integrations...`}
+            placeholder={isLoading ? 'Search integrations...' : `Search ${integrationsWithHealth.length} integrations...`}
             size="md"
             glass={true}
             onFilter={() => setShowFilters(!showFilters)}
@@ -361,9 +297,9 @@ export function IntegrationsScreen() {
           />
         </View>
 
-        {/* Filter Pills - same pattern as other screens */}
+        {/* Filter Pills */}
         {showFilters && (
-          <View className="px-4 pb-2">
+          <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
             <View className="flex-row flex-wrap gap-2">
               <FilterPill
                 label="All"
@@ -398,22 +334,13 @@ export function IntegrationsScreen() {
             </View>
           </View>
         )}
-      </View>
 
-      {/* Integration List - content scrolls beneath search bar */}
-      <FlatList
-        data={filteredIntegrations}
-        keyExtractor={(item) => item.id}
-        renderItem={renderIntegration}
-        extraData={expandedIntegration}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-        ListHeaderComponent={
-          <View className="px-4 mb-3">
-            {/* Progress indicator during refresh */}
-            {isRefreshing && healthProgress && (
-              <View className="mb-3">
+        {/* Content: Loading skeletons or Integration List */}
+        {isLoading && !integrationsWithHealth?.length ? (
+          <View style={{ paddingHorizontal: SPACING.md }}>
+            {/* Progress indicator */}
+            {healthProgress && (
+              <View className="mb-4">
                 <Text
                   className="text-sm text-center mb-2"
                   style={{ color: colors.mutedForeground }}
@@ -434,60 +361,105 @@ export function IntegrationsScreen() {
                 </View>
               </View>
             )}
-            <IntegrationHealthCard />
-            {/* Error message with retry */}
-            {loadError && (
-              <TouchableOpacity
-                className="flex-row items-center p-3 rounded-xl mb-3"
-                style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}
-                onPress={loadAllHealth}
-              >
-                <AlertTriangle size={18} color={colors.destructive} />
-                <View className="flex-1 ml-2">
-                  <Text className="text-sm font-medium" style={{ color: colors.destructive }}>
-                    {loadError}
-                  </Text>
-                  <Text className="text-xs mt-0.5" style={{ color: colors.destructive }}>
-                    Tap to retry
-                  </Text>
-                </View>
-                <RefreshCw size={16} color={colors.destructive} />
-              </TouchableOpacity>
-            )}
-            {/* Subtle count text */}
-            {filteredIntegrations.length !== integrationsWithHealth.length && (
-              <Text
-                className="text-xs mt-2 text-center"
-                style={{ color: colors.mutedForeground }}
-              >
-                Showing {filteredIntegrations.length} of {integrationsWithHealth.length} integrations
-              </Text>
-            )}
+            {/* IntegrationHealthCard skeleton */}
+            <Skeleton className="h-24 rounded-xl mb-3" />
+            {/* Integration cards skeleton */}
+            {[1, 2, 3, 4].map((i) => (
+              <View key={i} className="mb-3">
+                <Skeleton className="h-20 rounded-xl" />
+              </View>
+            ))}
           </View>
-        }
-        ListEmptyComponent={
-          <View className="flex-1 items-center justify-center py-24">
-            <XCircle size={48} color={colors.mutedForeground} />
-            <Text
-              className="mt-4 text-base"
-              style={{ color: colors.mutedForeground }}
-            >
-              No integrations found
-            </Text>
-          </View>
-        }
-        contentContainerStyle={{
-          paddingTop: listPaddingTop,
-          paddingBottom: TAB_BAR_SAFE_PADDING, // Just breathing room - iOS auto-handles tab bar with NativeTabs
-        }}
-        // Performance optimizations
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={8}
-      />
-      </KeyboardAvoidingView>
-    </ThemedSafeAreaView>
+        ) : (
+          <FlatList
+            data={filteredIntegrations}
+            keyExtractor={(item) => item.id}
+            renderItem={renderIntegration}
+            extraData={expandedIntegration}
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            }
+            ListHeaderComponent={
+              <View style={{ paddingHorizontal: SPACING.md, marginBottom: SPACING.sm }}>
+                {/* Progress indicator during refresh */}
+                {isRefreshing && healthProgress && (
+                  <View className="mb-3">
+                    <Text
+                      className="text-sm text-center mb-2"
+                      style={{ color: colors.mutedForeground }}
+                    >
+                      Checking integrations... {healthProgress.completed} of {healthProgress.total}
+                    </Text>
+                    <View
+                      className="h-1.5 rounded-full overflow-hidden"
+                      style={{ backgroundColor: colors.muted }}
+                    >
+                      <View
+                        className="h-full rounded-full"
+                        style={{
+                          backgroundColor: colors.primary,
+                          width: `${(healthProgress.completed / healthProgress.total) * 100}%`,
+                        }}
+                      />
+                    </View>
+                  </View>
+                )}
+                <IntegrationHealthCard />
+                {/* Error message with retry */}
+                {loadError && (
+                  <TouchableOpacity
+                    className="flex-row items-center p-3 rounded-xl mb-3"
+                    style={{ backgroundColor: withOpacity(colors.destructive, 'muted') }}
+                    onPress={loadAllHealth}
+                  >
+                    <AlertTriangle size={18} color={colors.destructive} />
+                    <View className="flex-1 ml-2">
+                      <Text className="text-sm font-medium" style={{ color: colors.destructive }}>
+                        {loadError}
+                      </Text>
+                      <Text className="text-xs mt-0.5" style={{ color: colors.destructive }}>
+                        Tap to retry
+                      </Text>
+                    </View>
+                    <RefreshCw size={16} color={colors.destructive} />
+                  </TouchableOpacity>
+                )}
+                {/* Subtle count text */}
+                {filteredIntegrations.length !== integrationsWithHealth.length && (
+                  <Text
+                    className="text-xs mt-2 text-center"
+                    style={{ color: colors.mutedForeground }}
+                  >
+                    Showing {filteredIntegrations.length} of {integrationsWithHealth.length} integrations
+                  </Text>
+                )}
+              </View>
+            }
+            ListEmptyComponent={
+              <View className="flex-1 items-center justify-center py-24">
+                <XCircle size={48} color={colors.mutedForeground} />
+                <Text
+                  className="mt-4 text-base"
+                  style={{ color: colors.mutedForeground }}
+                >
+                  No integrations found
+                </Text>
+              </View>
+            }
+            contentContainerStyle={{
+              paddingBottom: TAB_BAR_SAFE_PADDING,
+            }}
+            contentInsetAdjustmentBehavior="automatic"
+            // Performance optimizations
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            initialNumToRender={8}
+          />
+        )}
+        </KeyboardAvoidingView>
+      </ThemedSafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 

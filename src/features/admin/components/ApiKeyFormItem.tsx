@@ -223,6 +223,9 @@ export function ApiKeyFormItem({
     }
 
     try {
+      // Show progress toast before the save call (encryption can take 1-2 seconds)
+      toast({ type: 'info', title: 'Saving...', description: 'Encrypting and saving your API key' });
+
       const result = await save(inputValue);
       if (result.success) {
         triggerHaptic('success');
@@ -641,7 +644,10 @@ export function ApiKeyFormItem({
                   Connection Error
                 </Text>
               </View>
-              <Text style={[styles.errorMessage, { color: colors.foreground }]}>
+              <Text
+                style={[styles.errorMessage, { color: colors.foreground }]}
+                selectable={true}
+              >
                 {effectiveMessage}
               </Text>
               {getTroubleshootingSuggestions(effectiveMessage).length > 0 && (
@@ -883,6 +889,8 @@ const styles = StyleSheet.create({
   errorMessage: {
     fontSize: 12,
     marginBottom: 8,
+    flexWrap: 'wrap',
+    lineHeight: 18,
   },
   suggestions: {
     marginTop: 4,

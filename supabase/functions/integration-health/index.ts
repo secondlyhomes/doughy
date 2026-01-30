@@ -133,7 +133,7 @@ serve(async (req) => {
     // Get the API key from the database if this is an API key-based service
     const { data: apiKeyData, error: apiKeyError } = await supabase
       .from('security_api_keys')
-      .select('key_ciphertext, service, group_name, description')
+      .select('key_ciphertext, service, group_name, description, is_encrypted')
       .eq('service', serviceToCheck)
       .maybeSingle();
 
@@ -177,14 +177,14 @@ serve(async (req) => {
         
         // Update the encrypted flag if this is an unencrypted key that we successfully decrypted
         // This helps with the migration process
-        if (apiKeyData.encrypted === false && apiKeyData.key_ciphertext.startsWith("DEV.")) {
+        if (apiKeyData.is_encrypted === false && apiKeyData.key_ciphertext.startsWith("DEV.")) {
           // Log that we're updating the flag
           logInfo(`Updating encryption flag for service: ${service}`, {});
-          
+
           // Update the flag silently in the background
           await supabase
             .from('security_api_keys')
-            .update({ encrypted: true })
+            .update({ is_encrypted: true })
             .eq('service', serviceToCheck);
         }
       } catch (decryptError) {
@@ -330,15 +330,24 @@ function normalizeServiceName(service: string): string {
  */
 async function updateHealthCheck(supabase, service: string, result: any, groupName: string) {
   try {
+    // Map health status to valid database enum values
+    // DB enum: 'invalid', 'revoked', 'unchecked', 'valid'
+    let dbStatus: 'valid' | 'invalid' | 'unchecked' = 'unchecked';
+    if (result.status === 'operational' || result.status === 'configured') {
+      dbStatus = 'valid';
+    } else if (result.status === 'error') {
+      dbStatus = 'invalid';
+    }
+
     // Only update the api_keys table with last_used timestamp
     const { error } = await supabase
       .from('security_api_keys')
-      .update({ 
+      .update({
         last_used: new Date().toISOString(),
-        status: result.status || 'error'
+        status: dbStatus
       })
       .eq('service', service);
-      
+
     if (error) {
       logError('Error updating API key status:', error);
     }

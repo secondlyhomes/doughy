@@ -477,6 +477,61 @@ Use `useTabBarPadding()` hook which accounts for device differences
 
 ---
 
+### Problem: App Background Color Shows at Keyboard Corners (iOS)
+
+**Symptoms:** When the keyboard opens, small triangular "slices" of the app's background color appear at the top-left and top-right corners of the keyboard area, making the keyboard look rectangular instead of having rounded edges.
+
+**Root Cause:** The `KeyboardAvoidingView` doesn't have a background color set. When the keyboard animates up on iOS, it pushes content by adjusting the view's padding/height. During this animation, the transparent corners of the KeyboardAvoidingView reveal whatever is behind it (the window's default background).
+
+**Diagnosis:**
+```bash
+# Check if KeyboardAvoidingView has a background color
+rg "KeyboardAvoidingView" src/features/*/screens/YourScreen.tsx -A 5
+```
+
+Look for `KeyboardAvoidingView` without a `style={{ backgroundColor: ... }}` prop.
+
+**Solution:**
+```typescript
+import { useThemeColors } from '@/context/ThemeContext';
+
+function MyScreen() {
+  const colors = useThemeColors();
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: colors.background }}  // ← Add this
+    >
+      {/* content */}
+    </KeyboardAvoidingView>
+  );
+}
+```
+
+**Why It Works:**
+Setting `backgroundColor: colors.background` on the KeyboardAvoidingView ensures the entire view, including its corners during keyboard animation, matches your app's background - eliminating the visual artifacts.
+
+**Example Fix (IntegrationsScreen):**
+```typescript
+// Before - corner artifacts visible
+<KeyboardAvoidingView
+  behavior={keyboardProps.behavior}
+  keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
+  className="flex-1"
+>
+
+// After - no artifacts
+<KeyboardAvoidingView
+  behavior={keyboardProps.behavior}
+  keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
+  className="flex-1"
+  style={{ backgroundColor: colors.background }}
+>
+```
+
+---
+
 ## Examples from Codebase
 
 ### Example 1: Simple List (Conversations)

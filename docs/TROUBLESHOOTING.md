@@ -865,6 +865,103 @@ A RAF (requestAnimationFrame) workaround in `GlassView.tsx` was attempted but is
 
 ---
 
+## App Background Color Shows at Keyboard Corners (iOS)
+
+### Symptoms
+
+- Small triangular "slices" of the app's background color appear at the top-left and top-right corners of the keyboard area when the keyboard opens
+- The keyboard looks rectangular instead of having rounded/flush edges
+- Issue only occurs on iOS during keyboard animation
+
+### Root Cause
+
+**Missing Background Color on KeyboardAvoidingView**
+
+When using `KeyboardAvoidingView` on iOS, the view adjusts its content by modifying padding/height during keyboard animation. If the `KeyboardAvoidingView` doesn't have a background color set (transparent by default), the corners of the view reveal whatever is behind it - typically the window's default background color.
+
+### Diagnosis
+
+```bash
+# Check if KeyboardAvoidingView has a background color
+rg "KeyboardAvoidingView" src/features/*/screens/YourScreen.tsx -A 5
+```
+
+Look for `KeyboardAvoidingView` without a `style={{ backgroundColor: ... }}` prop.
+
+### The Solution
+
+Add a background color to the `KeyboardAvoidingView` that matches your screen's background:
+
+```typescript
+import { useThemeColors } from '@/context/ThemeContext';
+
+function MyScreen() {
+  const colors = useThemeColors();
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: colors.background }}  // ← Add this
+    >
+      {/* content */}
+    </KeyboardAvoidingView>
+  );
+}
+```
+
+### Why It Works
+
+Setting `backgroundColor: colors.background` on the `KeyboardAvoidingView` ensures the entire view, including its corners during keyboard animation, matches your app's background. This eliminates the visual artifacts because there's no longer a color mismatch between the view and its parent.
+
+### Example Fix
+
+**Before (corner artifacts visible):**
+```typescript
+<KeyboardAvoidingView
+  behavior={keyboardProps.behavior}
+  keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
+  className="flex-1"
+>
+```
+
+**After (no artifacts):**
+```typescript
+<KeyboardAvoidingView
+  behavior={keyboardProps.behavior}
+  keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
+  className="flex-1"
+  style={{ backgroundColor: colors.background }}
+>
+```
+
+### Related Issue: Extra Keyboard Padding
+
+If there's an extra gap (e.g., 44pt) above the keyboard when editing form fields, check the `useKeyboardAvoidance` hook configuration:
+
+```typescript
+// WRONG - adds 44pt offset for a header that doesn't exist
+const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
+
+// CORRECT - no header in tab navigator
+const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
+```
+
+The `hasNavigationHeader` option adds 44pt (standard iOS nav bar height) to the keyboard offset. Only use `true` when the screen is in a Stack navigator with a visible header.
+
+### Key Takeaways
+
+1. ✅ **Always add background color** to `KeyboardAvoidingView` matching screen background
+2. ✅ **Set `hasNavigationHeader: false`** in `useKeyboardAvoidance` for tab screens without stack headers
+3. ✅ **Use `colors.background`** from `useThemeColors()` for theme-aware coloring
+4. ❌ **Don't leave KeyboardAvoidingView transparent** - it causes visual artifacts on iOS
+
+### Related Documentation
+
+- [UI_UX_TAB_BAR_SAFE_AREAS.md](./UI_UX_TAB_BAR_SAFE_AREAS.md) - Pattern 4: Keyboard Form Screens
+- `src/hooks/useKeyboardAvoidance.ts` - Keyboard avoidance hook implementation
+
+---
+
 ## References
 
 - [NativeWind Dark Mode Docs](https://www.nativewind.dev/docs/core-concepts/dark-mode)
