@@ -5,7 +5,7 @@
 // Now includes Leads|Residents toggle for focused communication
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, SectionList, Animated, Platform, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, RefreshControl, SectionList, Animated, Platform, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -611,7 +611,11 @@ export function InboxListScreen() {
   const handleQuickApprove = useCallback(
     async (conversationId: string) => {
       const pending = pendingResponses.find((p) => p.conversation_id === conversationId);
-      if (!pending) return;
+      if (!pending) {
+        // Provide user feedback when pending response not found (may have been processed)
+        Alert.alert('Already Processed', 'This response has already been approved or expired.');
+        return;
+      }
 
       try {
         const success = await quickApprove(pending.id);

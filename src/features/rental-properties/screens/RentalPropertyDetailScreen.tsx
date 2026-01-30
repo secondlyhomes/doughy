@@ -227,17 +227,16 @@ export function RentalPropertyDetailScreen() {
   const params = useLocalSearchParams();
   const propertyId = params.id as string;
 
-  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
-  if (!propertyId || !UUID_REGEX.test(propertyId)) {
-    return <Redirect href="/(tabs)/rental-properties" />;
-  }
-
+  // Call all hooks unconditionally (before any early returns) to follow React's rules of hooks
   const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
 
   const [showStatusSheet, setShowStatusSheet] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Check if propertyId is a valid UUID (hooks must be called before any returns)
+  const isValidUUID = Boolean(propertyId && UUID_REGEX.test(propertyId));
 
   const {
     property,
@@ -249,16 +248,22 @@ export function RentalPropertyDetailScreen() {
     error,
     refetch,
     refetchRooms,
-  } = useRentalPropertyDetail(propertyId);
+  } = useRentalPropertyDetail(isValidUUID ? propertyId : '');
 
   const { updateStatus, deleteProperty, isSaving } =
-    useRentalPropertyMutations(propertyId);
+    useRentalPropertyMutations(isValidUUID ? propertyId : '');
 
   // Hub counts for the property management grid
-  const { data: inventoryCount = 0, isLoading: isLoadingInventory } = useInventoryCount(propertyId);
-  const { data: maintenanceCount = 0, isLoading: isLoadingMaintenance } = useOpenMaintenanceCount(propertyId);
-  const { data: vendorCount = 0, isLoading: isLoadingVendors } = useVendorCount(propertyId);
-  const { data: nextTurnover, isLoading: isLoadingTurnover } = useNextTurnover(propertyId);
+  const { data: inventoryCount = 0, isLoading: isLoadingInventory } = useInventoryCount(isValidUUID ? propertyId : '');
+  const { data: maintenanceCount = 0, isLoading: isLoadingMaintenance } = useOpenMaintenanceCount(isValidUUID ? propertyId : '');
+  const { data: vendorCount = 0, isLoading: isLoadingVendors } = useVendorCount(isValidUUID ? propertyId : '');
+  const { data: nextTurnover, isLoading: isLoadingTurnover } = useNextTurnover(isValidUUID ? propertyId : '');
+
+  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
+  // Must come AFTER all hook calls to follow React's rules of hooks
+  if (!isValidUUID) {
+    return <Redirect href="/(tabs)/rental-properties" />;
+  }
 
   const isLoadingHubCounts = isLoadingInventory || isLoadingMaintenance || isLoadingVendors || isLoadingTurnover;
 
@@ -561,7 +566,7 @@ export function RentalPropertyDetailScreen() {
 
       {/* Edit FAB */}
       <SimpleFAB
-        icon={<Edit2 size={24} color="white" />}
+        icon={<Edit2 size={24} color={colors.primaryForeground} />}
         onPress={handleEdit}
         accessibilityLabel="Edit property"
       />

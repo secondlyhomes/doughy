@@ -94,7 +94,8 @@ export function PortfolioPropertyDetailScreen() {
       await Promise.all([refetch(), refetchPerformance()]);
     } catch (error) {
       console.error('[PortfolioPropertyDetailScreen] Refresh failed:', error);
-      // Silently fail for refresh - user can try again
+      // Show brief error feedback so user knows refresh failed
+      Alert.alert('Refresh Failed', 'Could not refresh data. Please try again.');
     } finally {
       setRefreshing(false);
     }
