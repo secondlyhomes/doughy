@@ -1,7 +1,10 @@
 # AI Security & Compliance Guide
 
-> Comprehensive security and compliance documentation for the Doughy AI security infrastructure.
-> Last updated: January 2026
+> **Document Version:** 1.0
+> **Last Updated:** January 2026
+> **Classification:** Internal Engineering Reference
+
+---
 
 ## Table of Contents
 
@@ -16,33 +19,66 @@
 
 ## 1. Executive Summary
 
-### Current Vulnerabilities Assessment
+This document provides comprehensive security and compliance guidance for the AI Security infrastructure in Doughy. It addresses current vulnerabilities, compliance requirements (GDPR, CCPA, EU AI Act), and provides actionable recommendations for developers.
 
-The AI security module provides robust real-time protection against prompt injection, data exfiltration, and other AI-specific threats. However, the following critical vulnerabilities have been identified:
+### 1.1 Current Security Assessment
 
-| Issue | Severity | Description |
-|-------|----------|-------------|
-| **Admin Compromise = Total Bypass** | CRITICAL | An attacker with admin access can disable all patterns, reset circuit breakers, clear threat scores, then attack undetected |
-| **No Immutable Audit Trail** | HIGH | Admin actions can be modified/deleted via service role access |
-| **No Separation of Duties** | HIGH | Single `admin` role controls viewing AND modifying all security settings |
-| **No MFA for Destructive Actions** | MEDIUM | Deleting patterns, unblocking users, resetting circuit breakers requires no re-authentication |
+#### What's Working Well
 
-### Compliance Gap Analysis
+| Area | Status | Details |
+|------|--------|---------|
+| **Database RLS** | Complete | 100% RLS coverage on all tables |
+| **SQL Injection** | Protected | Using Supabase client with parameterized queries |
+| **Encryption** | Implemented | Sensitive data encrypted at rest |
+| **Pattern Matching** | Active | Database-driven threat patterns with regex scanning |
+| **Circuit Breakers** | Active | Global, function-level, and user-level controls |
+| **Rate Limiting** | Active | Cross-function rate limiting with burst protection |
+| **Threat Scoring** | Active | Cumulative user threat tracking with decay |
+| **SMS Webhook** | Secured | Twilio signature validation implemented |
+| **CORS** | Acceptable | Wildcard only in dev mode without credentials |
 
-| Regulation | Gap |
-|------------|-----|
-| **GDPR (Art. 6, 17, 25)** | User prompts logged without documented legal basis; no data minimization strategy; no retention policy; erasure rights conflict with audit needs |
-| **CCPA 2026 (ADMT)** | No Automated Decision-Making Technology disclosure; no opt-out mechanism for threat scoring; automated decisions affecting user access |
-| **EU AI Act 2026 (Art. 12)** | Logs not tamper-resistant; no cryptographic integrity verification; no documented human oversight mechanism |
+#### Security Vulnerabilities Requiring Attention
 
-### Risk Matrix
+| Issue | Severity | Description | Remediation Status |
+|-------|----------|-------------|-------------------|
+| Admin Compromise = Total Bypass | CRITICAL | A compromised admin account can disable all patterns, reset circuit breakers, clear threat scores, then attack undetected | Requires immutable audit trail |
+| No Immutable Audit Trail | HIGH | Admin actions can be modified/deleted via service role | Implementing hash-chained logs |
+| No Separation of Duties | HIGH | Single admin role controls viewing AND modifying security settings | Requires role hierarchy |
+| No MFA for Destructive Actions | MEDIUM | Deleting patterns, unblocking users requires no re-authentication | Implementing step-up auth |
+| Hard Delete of Patterns | MEDIUM | Deleted patterns are permanently removed, losing audit history | Implementing soft-delete |
+| Error Message Leakage | LOW | Some edge functions return raw error.message to clients | Sanitizing responses |
 
-| Risk Category | Current State | Target State | Priority |
-|---------------|---------------|--------------|----------|
-| Insider Threat | HIGH | LOW | P0 |
-| Audit Integrity | HIGH | LOW | P0 |
-| Regulatory Non-compliance | HIGH | LOW | P1 |
-| Attack Detection Gap | MEDIUM | LOW | P2 |
+### 1.2 Risk Matrix
+
+```
+IMPACT
+  ^
+  |  +--------------+--------------+
+  |  | Admin        |              |
+H |  | Compromise   |              |
+  |  +--------------+--------------+
+  |  | No Audit     | No MFA for   |
+M |  | Trail        | Destructive  |
+  |  |              | Actions      |
+  |  +--------------+--------------+
+  |  |              | Error        |
+L |  |              | Leakage      |
+  |  +--------------+--------------+
+     L              M              H
+                LIKELIHOOD
+```
+
+### 1.3 Compliance Gap Analysis
+
+| Regulation | Gap | Impact |
+|------------|-----|--------|
+| **GDPR Art. 6** | User prompts logged without documented legal basis | Potential regulatory action |
+| **GDPR Art. 5** | No data minimization for AI inputs | Regulatory action risk |
+| **GDPR Art. 17** | Erasure rights conflict with audit requirements | Requires crypto-shredding |
+| **CCPA 2026** | No ADMT disclosure for automated threat decisions | Civil penalties |
+| **CCPA 2026** | No opt-out mechanism for threat scoring | Litigation risk |
+| **EU AI Act Art. 12** | Logs not tamper-resistant | Compliance failure |
+| **EU AI Act** | No cryptographic integrity verification | Audit failure |
 
 ---
 
@@ -50,207 +86,145 @@ The AI security module provides robust real-time protection against prompt injec
 
 ### 2.1 Role Hierarchy (Defense in Depth)
 
-The current system uses a flat `admin` and `support` role structure. The recommended defense-in-depth approach separates concerns:
+The current single `admin` role should be expanded to a security-specific hierarchy:
 
 ```
-SECURITY_VIEWER      - View dashboard, logs, scores (read-only)
-SECURITY_OPERATOR    - Reset circuit breakers, view scores, respond to alerts
-SECURITY_ADMIN       - Add/edit patterns, block users, configure thresholds
-SECURITY_SUPER_ADMIN - Delete patterns, bulk operations (MFA + approval required)
++------------------------------------------------------------------+
+|                    SECURITY_SUPER_ADMIN                           |
+|  - Delete patterns (MFA + audit required)                        |
+|  - Access full audit history                                     |
+|  - Emergency global shutdown                                     |
+|  - Approve pattern changes (four-eyes principle)                 |
++------------------------------------------------------------------+
+|                    SECURITY_ADMIN                                 |
+|  - Add/edit patterns (pending approval)                          |
+|  - Block/unblock users (MFA required)                            |
+|  - Reset user threat scores (MFA required)                       |
+|  - View all security data                                        |
++------------------------------------------------------------------+
+|                    SECURITY_OPERATOR                              |
+|  - Reset circuit breakers                                        |
+|  - View threat scores (anonymized)                               |
+|  - View pattern performance metrics                              |
+|  - No modification capabilities                                  |
++------------------------------------------------------------------+
+|                    SECURITY_VIEWER                                |
+|  - View only (dashboards, metrics)                               |
+|  - No access to user-specific data                               |
+|  - Alert subscription only                                       |
++------------------------------------------------------------------+
 ```
 
-**Implementation:**
-
-```sql
--- Example role hierarchy in user_profiles
-CREATE TYPE security_role AS ENUM (
-  'security_viewer',
-  'security_operator',
-  'security_admin',
-  'security_super_admin'
-);
-
-ALTER TABLE user_profiles
-ADD COLUMN security_role security_role DEFAULT NULL;
-
--- RLS policy example for pattern deletion
-CREATE POLICY "Only super_admins can delete patterns"
-  ON ai_moltbot_blocked_patterns FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE id = auth.uid()
-      AND security_role = 'security_super_admin'
-    )
-  );
-```
+**Implementation Note:** Until full RBAC is implemented, enforce step-up MFA verification for all destructive actions.
 
 ### 2.2 Immutable Audit Logging
 
-Current audit logs can be modified via service role access. Implement tamper-evident logging:
+#### Hash Chain Design
 
-**Hash Chain Design:**
+All security-related admin actions must be logged with cryptographic hash chaining:
 
 ```sql
--- Append-only audit table with cryptographic chaining
-CREATE TABLE ai_security_audit_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-  -- Event details
-  event_type TEXT NOT NULL,
-  actor_id UUID REFERENCES auth.users(id),
-  target_type TEXT, -- 'pattern', 'circuit_breaker', 'user_score', etc.
-  target_id TEXT,
-  action TEXT NOT NULL, -- 'create', 'update', 'delete', 'reset'
-  old_value JSONB,
-  new_value JSONB,
-
-  -- Context
-  ip_address_hash TEXT, -- SHA-256 hash, not raw IP
-  user_agent TEXT,
-  session_id TEXT,
-
-  -- Integrity
-  previous_hash TEXT NOT NULL,
-  current_hash TEXT NOT NULL,
-
-  -- Timestamp
-  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
--- Prevent any modifications
-CREATE POLICY "Audit log is append-only"
-  ON ai_security_audit_log FOR ALL
-  USING (false)  -- Blocks UPDATE/DELETE
-  WITH CHECK (true);  -- Allows INSERT
-
--- Only service role can INSERT (via trigger)
-CREATE POLICY "Service role can insert audit"
-  ON ai_security_audit_log FOR INSERT
-  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+-- Each log entry includes a hash of the previous entry
+current_hash = SHA256(
+  event_type +
+  actor_id +
+  target_type +
+  target_id +
+  action +
+  JSON.stringify(old_value) +
+  JSON.stringify(new_value) +
+  previous_hash +
+  timestamp
+)
 ```
 
-**Hash Generation Function:**
+#### What Must Be Logged
+
+| Event Type | Actor | Target | Action | Old/New Values |
+|------------|-------|--------|--------|----------------|
+| `pattern.create` | Admin ID | Pattern ID | `create` | null / pattern data |
+| `pattern.update` | Admin ID | Pattern ID | `update` | old pattern / new pattern |
+| `pattern.delete` | Admin ID | Pattern ID | `soft_delete` | pattern data / deleted_at |
+| `circuit_breaker.trip` | Admin ID | Scope | `trip` | closed / open + reason |
+| `circuit_breaker.reset` | Admin ID | Scope | `reset` | open / closed |
+| `threat_score.reset` | Admin ID | User ID | `reset` | old score / 0 |
+| `user.block` | Admin ID | User ID | `block` | is_blocked=false / true |
+| `user.unblock` | Admin ID | User ID | `unblock` | is_blocked=true / false |
+
+#### Append-Only Policy
 
 ```sql
-CREATE OR REPLACE FUNCTION generate_audit_hash()
-RETURNS TRIGGER AS $$
-DECLARE
-  v_previous_hash TEXT;
-  v_payload TEXT;
-BEGIN
-  -- Get previous hash (or genesis hash)
-  SELECT current_hash INTO v_previous_hash
-  FROM ai_security_audit_log
-  ORDER BY created_at DESC
-  LIMIT 1;
+-- RLS policy prevents UPDATE/DELETE on audit table
+CREATE POLICY "Audit logs are append-only"
+  ON ai_security_audit_log
+  FOR INSERT
+  USING (true);
 
-  IF v_previous_hash IS NULL THEN
-    v_previous_hash := 'GENESIS_HASH_' || gen_random_uuid()::TEXT;
-  END IF;
-
-  -- Create hash payload
-  v_payload := concat_ws('|',
-    NEW.event_type,
-    NEW.actor_id::TEXT,
-    NEW.target_type,
-    NEW.target_id,
-    NEW.action,
-    NEW.old_value::TEXT,
-    NEW.new_value::TEXT,
-    NEW.created_at::TEXT,
-    v_previous_hash
-  );
-
-  NEW.previous_hash := v_previous_hash;
-  NEW.current_hash := encode(sha256(v_payload::BYTEA), 'hex');
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER audit_hash_trigger
-  BEFORE INSERT ON ai_security_audit_log
-  FOR EACH ROW
-  EXECUTE FUNCTION generate_audit_hash();
+-- No UPDATE or DELETE policies = immutable
 ```
 
 ### 2.3 Four-Eyes Principle
 
-Critical security changes require approval from a second authorized user:
+For critical security changes, require approval from a second administrator:
+
+**Pattern Changes Requiring Approval:**
+- Pattern deletion (soft-delete)
+- Pattern deactivation
+- Severity downgrade
+- Global circuit breaker trip/reset
+
+**Emergency Bypass:**
+When a circuit breaker is already tripped due to active attack, a single admin can make immediate changes. All bypass actions are logged with `emergency_bypass: true`.
+
+### 2.4 MFA for Destructive Actions (Step-Up Authentication)
+
+Before executing destructive actions, require MFA verification even if user is authenticated:
+
+**Actions Requiring Step-Up:**
+1. Pattern deletion
+2. Threat score reset
+3. User unblocking
+4. Global circuit breaker reset
+5. Bulk operations affecting > 10 records
+
+**Implementation Pattern:**
 
 ```typescript
-// Pattern change approval workflow
-interface PatternChangeRequest {
-  id: string;
-  requestedBy: string;
-  changeType: 'create' | 'update' | 'delete';
-  patternData: Partial<SecurityPattern>;
-  status: 'pending' | 'approved' | 'rejected';
-  approvedBy?: string;
-  approvedAt?: Date;
-  reason: string;
-}
+// useStepUpAuth hook usage
+const { requireStepUp } = useStepUpAuth();
 
-// Only apply changes after approval
-async function applyPatternChange(requestId: string, approverId: string) {
-  const request = await getChangeRequest(requestId);
-
-  // Enforce four-eyes: requester cannot approve their own change
-  if (request.requestedBy === approverId) {
-    throw new Error('Cannot approve own change request');
-  }
-
-  // Apply the change
-  await executePatternChange(request);
-
-  // Log with both actors
-  await logAuditEvent({
-    eventType: 'pattern_change',
-    actorId: approverId,
-    metadata: {
-      requestedBy: request.requestedBy,
-      approvedBy: approverId
-    }
+const handleDelete = async (patternId: string) => {
+  const verified = await requireStepUp({
+    reason: 'Delete security pattern',
+    actionType: 'pattern_delete',
   });
-}
+
+  if (!verified) return;
+
+  // Proceed with deletion
+  await deletePattern(patternId);
+};
 ```
 
-**Emergency Bypass:** Four-eyes can be bypassed ONLY when a circuit breaker is already tripped, documented in audit log with justification.
+### 2.5 Soft-Delete Pattern
 
-### 2.4 MFA for Destructive Actions
+Security patterns should never be hard-deleted:
 
-Require step-up authentication before critical operations:
+```sql
+-- Add to ai_moltbot_blocked_patterns
+deleted_at TIMESTAMPTZ,
+deleted_by UUID REFERENCES auth.users(id)
 
-```typescript
-// Actions requiring MFA verification
-const MFA_REQUIRED_ACTIONS = [
-  'pattern.delete',
-  'pattern.bulk_disable',
-  'threat_score.reset',
-  'threat_score.bulk_reset',
-  'user.unblock',
-  'circuit_breaker.global_reset',
-];
-
-async function requireMFAVerification(
-  userId: string,
-  action: string
-): Promise<boolean> {
-  if (!MFA_REQUIRED_ACTIONS.includes(action)) {
-    return true;
-  }
-
-  // Check if user has verified MFA in last 5 minutes
-  const recentMFA = await checkRecentMFAVerification(userId, 5 * 60 * 1000);
-  if (recentMFA) {
-    return true;
-  }
-
-  // Trigger MFA challenge
-  throw new MFARequiredError(action);
-}
+-- Update RLS to filter soft-deleted by default
+CREATE POLICY "Users see active patterns only"
+  ON ai_moltbot_blocked_patterns FOR SELECT
+  USING (deleted_at IS NULL AND ...);
 ```
+
+**Benefits:**
+- Audit trail preserved
+- Patterns can be restored if deleted in error
+- Historical data for compliance reporting
 
 ---
 
@@ -258,258 +232,196 @@ async function requireMFAVerification(
 
 ### 3.1 GDPR Compliance
 
-**Legal Basis: Legitimate Interest (Article 6(1)(f))**
+#### Legal Basis for Processing
 
-Security monitoring qualifies under legitimate interest because:
-- It protects the service and other users from attacks
-- It is proportionate (only security-relevant data)
-- Users are informed in the privacy policy
+| Data Type | Legal Basis | Justification |
+|-----------|-------------|---------------|
+| User AI inputs | Legitimate Interest (Art. 6(1)(f)) | Security monitoring to protect users and systems |
+| Threat scores | Legitimate Interest | Preventing abuse and protecting service |
+| Security event logs | Legal Obligation (Art. 6(1)(c)) | Required for security incident response |
+| Admin audit logs | Legitimate Interest | Corporate governance and accountability |
 
 **Documentation Required:**
-```
-Legitimate Interest Assessment (LIA)
-- Purpose: Detect and prevent AI system attacks (injection, exfiltration, abuse)
-- Necessity: AI systems are vulnerable to prompt injection; no less intrusive alternative
-- Balancing: Minimal personal data collected; security benefit outweighs privacy impact
-- Safeguards: Data minimization, retention limits, access controls
-```
+- Legitimate Interest Assessment (LIA) for security processing
+- Privacy policy disclosure of AI security monitoring
+- Records of Processing Activities (ROPA) entry
 
-**Data Minimization (Article 25):**
+#### Data Minimization (Art. 5(1)(c))
 
-Replace raw prompt storage with hashing:
+**Current Issue:** Raw user prompts may be stored in security logs.
+
+**Solution:** Hash user inputs instead of storing raw text:
 
 ```typescript
-// Instead of storing raw user input
-const rawInput = userMessage; // DON'T store this
-
-// Store a one-way hash for pattern matching analytics
+// Before logging
 const inputHash = await crypto.subtle.digest(
   'SHA-256',
-  new TextEncoder().encode(rawInput + SALT)
+  new TextEncoder().encode(userInput)
 );
-const hashHex = Array.from(new Uint8Array(inputHash))
-  .map(b => b.toString(16).padStart(2, '0'))
-  .join('');
 
-// Store only the hash for analytics
+// Log only the hash, not the raw input
 await logSecurityEvent({
-  inputHash: hashHex,
-  inputLength: rawInput.length,
-  detectedPatterns: matchedPatternIds, // IDs only, not content
-  riskScore: scan.riskScore,
+  input_hash: arrayBufferToHex(inputHash),
+  // NOT: input: userInput
 });
 ```
 
-**Crypto-Shredding for GDPR Erasure (Article 17):**
+#### Retention Policy
+
+| Data Type | Retention Period | Justification |
+|-----------|-----------------|---------------|
+| Raw AI inputs | 7 days | Short-term debugging only |
+| Hashed inputs | 90 days | Security analysis window |
+| Threat scores | 2 years | Pattern analysis and legal |
+| Admin audit logs | 7 years | Corporate governance |
+| Pattern definitions | Forever | Historical security reference |
+
+**Implementation:** Scheduled job to purge data beyond retention period.
+
+#### Right to Erasure (Art. 17) - Crypto-Shredding
+
+When a user requests erasure, we cannot delete security audit logs (legitimate interest override). Instead, use crypto-shredding:
+
+```
+Per-User Encryption Key
+         |
+         v
++---------------------+
+| User's security     |
+| event details       |--> Encrypted with user's key
+| (input hashes,      |
+|  matched patterns)  |
++---------------------+
+         |
+         v
+On erasure request:
+- Delete user's encryption key
+- Encrypted data becomes unreadable
+- Audit log structure preserved
+```
+
+### 3.2 CCPA 2026 - Automated Decision-Making Technology (ADMT)
+
+#### Required Disclosures
+
+**At Signup (Privacy Notice):**
+> "We use automated security systems that analyze your interactions to protect against fraud and abuse. These systems may:
+> - Detect and block potentially harmful content
+> - Assign a risk score based on your activity patterns
+> - Temporarily or permanently restrict access based on security concerns
+>
+> You have the right to opt out of behavioral scoring and request human review of any automated decisions affecting your access."
+
+**In Privacy Policy:**
+- List of ADMT uses (threat scoring, pattern matching)
+- Categories of data used
+- Logic involved (high-level explanation)
+- How to exercise opt-out rights
+- How to request human review
+
+#### Opt-Out Mechanism
+
+Users can opt out of **threat scoring** (behavioral analysis) but NOT pattern matching (content filtering):
+
+```typescript
+// user_profiles table
+threat_scoring_opt_out BOOLEAN DEFAULT false
+
+// Pattern matching still applies (cannot opt out - security requirement)
+// But cumulative threat scoring is disabled
+```
+
+**When opt-out is enabled:**
+- User is not tracked in `ai_moltbot_user_threat_scores`
+- Individual requests still scanned for patterns
+- Blocking requires manual admin action
+- Higher threshold for automated restrictions
+
+#### Right to Explanation
+
+When a user is blocked or restricted, provide:
+1. The fact that an automated decision was made
+2. General categories of factors involved
+3. How to request human review
+4. Contact information for appeals
+
+```typescript
+// Example blocking response
+{
+  "blocked": true,
+  "reason": "automated_security",
+  "explanation": "Our security systems detected activity patterns that triggered protective measures.",
+  "human_review_url": "https://doughy.ai/support/security-review",
+  "reference_id": "SEC-2026-XXXX"
+}
+```
+
+### 3.3 EU AI Act 2026 Compliance
+
+#### Article 12 - Record-Keeping Requirements
+
+For AI systems that make decisions affecting users, logs must be:
+
+1. **Tamper-Resistant:** Hash chaining with verification capability
+2. **Time-Synchronized:** UTC timestamps with NTP verification
+3. **Integrity-Verified:** Periodic hash chain validation
+4. **Human-Readable:** Logs must be interpretable by humans
+5. **Duration-Adequate:** Retention matching risk level (minimum 6 months)
+
+#### Technical Logging Requirements
 
 ```sql
--- Per-user encryption key for erasable data
-CREATE TABLE user_encryption_keys (
-  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  encrypted_key BYTEA NOT NULL, -- DEK encrypted with KEK
-  key_version INTEGER DEFAULT 1,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- Required fields per EU AI Act
+CREATE TABLE ai_security_audit_log (
+  id UUID PRIMARY KEY,
+
+  -- Timestamp with high precision
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Actor identification
+  actor_id UUID NOT NULL,
+  actor_type TEXT NOT NULL, -- 'admin', 'system', 'automated'
+
+  -- Action details
+  event_type TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target_type TEXT,
+  target_id TEXT,
+
+  -- Decision context (for explainability)
+  decision_factors JSONB, -- What triggered this action
+  confidence_score NUMERIC(4,3), -- If applicable
+
+  -- State change
+  old_value JSONB,
+  new_value JSONB,
+
+  -- Tamper-resistance
+  previous_hash TEXT NOT NULL,
+  current_hash TEXT NOT NULL,
+
+  -- Human oversight
+  requires_review BOOLEAN DEFAULT false,
+  reviewed_by UUID,
+  reviewed_at TIMESTAMPTZ
 );
-
--- To satisfy erasure request: delete the key
--- All user's encrypted data becomes unreadable
-DELETE FROM user_encryption_keys WHERE user_id = $1;
 ```
 
-**Retention Policy:**
+#### Human Oversight Capability
 
-| Data Type | Retention | Justification |
-|-----------|-----------|---------------|
-| Raw user inputs | 0 days (hash only) | Data minimization |
-| Input hashes | 90 days | Pattern analysis |
-| Threat scores | Until reset or user deletion | Security operation |
-| Security events (hashed) | 2 years | Incident investigation |
-| Admin audit log | 7 years | Legal/compliance requirement |
+The system must support human intervention:
 
-### 3.2 CCPA 2026 ADMT Compliance
-
-California's 2026 CCPA amendments require disclosure of Automated Decision-Making Technology.
-
-**Required Disclosure (at signup and in privacy policy):**
-
-```markdown
-## Automated Decision-Making Technology Notice
-
-We use automated systems to protect our AI services:
-
-**What we do:**
-- Analyze your messages for security threats before processing
-- Track a "threat score" based on security events
-- Automatically limit or block access if threats are detected
-
-**How it affects you:**
-- Messages matching threat patterns may be blocked
-- Repeated security events may result in temporary access limits
-- High threat scores may restrict AI feature access
-
-**Your rights:**
-- View your current threat score in Account Settings
-- Request human review of automated blocking decisions
-- Opt out of threat scoring (pattern matching still applies)
-```
-
-**Opt-Out Mechanism:**
+1. **Review Queue:** Flag high-impact automated decisions for human review
+2. **Override Capability:** Admins can override any automated decision
+3. **Escalation Path:** Clear process for escalating complex cases
+4. **Appeal Mechanism:** Users can request human review
 
 ```typescript
-interface UserSecurityPreferences {
-  userId: string;
-  // Pattern matching cannot be opted out (security requirement)
-  threatScoringEnabled: boolean; // CAN opt out
-  threatScoringOptOutDate?: Date;
-}
-
-// Check before updating threat score
-async function shouldTrackThreatScore(userId: string): Promise<boolean> {
-  const prefs = await getUserSecurityPreferences(userId);
-  return prefs.threatScoringEnabled;
-}
-```
-
-**Right to Explanation:**
-
-When a user is blocked, provide explainable output:
-
-```typescript
-interface BlockingExplanation {
-  decision: 'blocked' | 'rate_limited' | 'flagged';
-  reason: string; // Human-readable
-  factors: string[]; // e.g., ["High threat score", "Pattern match detected"]
-  appealProcess: string;
-  humanReviewAvailable: boolean;
-}
-
-// Return explanation with blocked response
-if (securityScan.action === 'blocked') {
-  return {
-    error: 'Request blocked due to security policy',
-    code: 'THREAT_BLOCKED',
-    explanation: {
-      decision: 'blocked',
-      reason: 'Your message matched our security patterns',
-      factors: ['Potential prompt injection detected'],
-      appealProcess: 'Contact support@example.com for human review',
-      humanReviewAvailable: true,
-    }
-  };
-}
-```
-
-### 3.3 EU AI Act 2026 Compliance (Article 12)
-
-The EU AI Act requires tamper-resistant logging for high-risk AI systems.
-
-**Tamper-Resistant Logging:**
-
-See Section 2.2 (Hash Chain Design) for implementation.
-
-**Verification Function:**
-
-```sql
-CREATE OR REPLACE FUNCTION verify_audit_chain()
-RETURNS TABLE(
-  id UUID,
-  is_valid BOOLEAN,
-  error_message TEXT
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  rec RECORD;
-  v_expected_hash TEXT;
-  v_payload TEXT;
-  v_prev_hash TEXT := NULL;
-BEGIN
-  FOR rec IN
-    SELECT * FROM ai_security_audit_log
-    ORDER BY created_at ASC
-  LOOP
-    -- Check previous hash link
-    IF v_prev_hash IS NOT NULL AND rec.previous_hash != v_prev_hash THEN
-      id := rec.id;
-      is_valid := false;
-      error_message := 'Previous hash mismatch';
-      RETURN NEXT;
-      CONTINUE;
-    END IF;
-
-    -- Verify current hash
-    v_payload := concat_ws('|',
-      rec.event_type, rec.actor_id::TEXT, rec.target_type,
-      rec.target_id, rec.action, rec.old_value::TEXT,
-      rec.new_value::TEXT, rec.created_at::TEXT, rec.previous_hash
-    );
-    v_expected_hash := encode(sha256(v_payload::BYTEA), 'hex');
-
-    IF rec.current_hash != v_expected_hash THEN
-      id := rec.id;
-      is_valid := false;
-      error_message := 'Hash verification failed';
-      RETURN NEXT;
-    ELSE
-      id := rec.id;
-      is_valid := true;
-      error_message := NULL;
-      RETURN NEXT;
-    END IF;
-
-    v_prev_hash := rec.current_hash;
-  END LOOP;
-END;
-$$;
-```
-
-**Human Oversight Capability:**
-
-```typescript
-// Human override endpoint for security decisions
-interface HumanOverrideRequest {
-  userId: string;
-  overrideType: 'unblock' | 'allow_request' | 'clear_score';
-  justification: string;
-  authorizedBy: string; // Security admin
-  expiresAt?: Date;
-}
-
-// Log human oversight decisions
-await logAuditEvent({
-  eventType: 'human_override',
-  actorId: adminId,
-  targetId: userId,
-  action: 'override',
-  metadata: {
-    overrideType: request.overrideType,
-    justification: request.justification,
-    expiresAt: request.expiresAt,
-  }
-});
-```
-
-**Decision Explainability:**
-
-Store reasoning with each automated decision:
-
-```typescript
-// Enhanced security event logging
-interface ExplainableSecurityEvent {
-  // Existing fields
-  eventType: string;
-  action: 'allowed' | 'flagged' | 'blocked';
-  riskScore: number;
-
-  // Explainability additions
-  decisionFactors: {
-    factor: string;
-    weight: number;
-    triggered: boolean;
-  }[];
-  thresholdUsed: number;
-  alternativeActionsConsidered: string[];
-}
+// Mark decision for human review
+await supabase.from('ai_security_audit_log').update({
+  requires_review: true,
+  review_reason: 'High impact automated decision',
+}).eq('id', logId);
 ```
 
 ---
@@ -518,298 +430,273 @@ interface ExplainableSecurityEvent {
 
 ### Phase 1: Immediate (Week 1-2)
 
-**P1.1: Add Admin Audit Logging Trigger**
+| Task | Priority | Effort | Impact |
+|------|----------|--------|--------|
+| Add admin audit logging with hash chaining | P0 | Medium | High |
+| Convert pattern delete to soft-delete | P0 | Low | Medium |
+| Add MFA verification for destructive actions | P0 | Medium | High |
+| Sanitize edge function error messages | P1 | Low | Medium |
+| Verify .env files are gitignored | P1 | Trivial | High |
 
-```sql
--- Trigger for pattern changes
-CREATE OR REPLACE FUNCTION audit_pattern_changes()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO ai_security_audit_log (
-    event_type, actor_id, target_type, target_id,
-    action, old_value, new_value
-  ) VALUES (
-    'pattern_change',
-    auth.uid(),
-    'pattern',
-    COALESCE(NEW.id, OLD.id)::TEXT,
-    TG_OP,
-    CASE WHEN TG_OP IN ('UPDATE', 'DELETE') THEN to_jsonb(OLD) END,
-    CASE WHEN TG_OP IN ('INSERT', 'UPDATE') THEN to_jsonb(NEW) END
-  );
-  RETURN COALESCE(NEW, OLD);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER audit_blocked_patterns
-  AFTER INSERT OR UPDATE OR DELETE ON ai_moltbot_blocked_patterns
-  FOR EACH ROW EXECUTE FUNCTION audit_pattern_changes();
-```
-
-**P1.2: Convert Pattern Delete to Soft-Delete**
-
-```sql
--- Add soft-delete column
-ALTER TABLE ai_moltbot_blocked_patterns
-ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES auth.users(id);
-
--- Modify RLS to exclude soft-deleted
-CREATE OR REPLACE POLICY "Admins can view active patterns"
-  ON ai_moltbot_blocked_patterns FOR SELECT
-  USING (
-    deleted_at IS NULL AND
-    EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE id = auth.uid() AND role IN ('admin', 'support')
-    )
-  );
-```
-
-**P1.3: Add MFA Verification for Destructive Actions**
-
-Implement in dashboard:
-
-```typescript
-// src/features/admin/screens/ai-security-dashboard/hooks/useMFAVerification.ts
-export function useMFAVerification() {
-  const [mfaVerified, setMFAVerified] = useState(false);
-  const [mfaVerifiedAt, setMFAVerifiedAt] = useState<Date | null>(null);
-
-  const MFA_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
-
-  const isMFAValid = () => {
-    if (!mfaVerified || !mfaVerifiedAt) return false;
-    return Date.now() - mfaVerifiedAt.getTime() < MFA_VALIDITY_MS;
-  };
-
-  const requireMFA = async (action: string): Promise<boolean> => {
-    if (isMFAValid()) return true;
-
-    // Trigger MFA challenge
-    const verified = await promptMFAChallenge(action);
-    if (verified) {
-      setMFAVerified(true);
-      setMFAVerifiedAt(new Date());
-    }
-    return verified;
-  };
-
-  return { requireMFA, isMFAValid };
-}
-```
+**Deliverables:**
+- `ai_security_audit_log` table with triggers
+- `useStepUpAuth` hook
+- `StepUpVerificationSheet` component
+- Updated `PatternEditorSheet` with soft-delete
+- Sanitized error responses
 
 ### Phase 2: Short-Term (Week 3-6)
 
-**P2.1: Hash User Inputs**
+| Task | Priority | Effort | Impact |
+|------|----------|--------|--------|
+| Hash user inputs instead of storing raw | P1 | Medium | High |
+| Implement data retention jobs | P1 | Medium | Medium |
+| Add ADMT disclosure in app | P1 | Low | High |
+| Add threat scoring opt-out toggle | P2 | Medium | Medium |
+| Create security admin role (RBAC) | P2 | High | High |
 
-Replace raw input logging in `firewall.ts`:
-
-```typescript
-// In logSecurityEvent function
-const logSecurityEvent = (details: SecurityEventDetails): void => {
-  // Hash raw input before logging
-  const inputHash = details.rawInput
-    ? await hashInput(details.rawInput)
-    : null;
-
-  supabase.rpc('log_security_event', {
-    p_user_id: userId,
-    p_event_type: details.eventType,
-    p_input_hash: inputHash, // Hash instead of raw
-    p_input_length: details.rawInput?.length,
-    p_detected_pattern_ids: details.detectedPatterns, // IDs only
-    p_risk_score: details.riskScore,
-  });
-};
-```
-
-**P2.2: Implement Data Retention Jobs**
-
-```sql
--- Scheduled job for data retention (run daily)
-CREATE OR REPLACE FUNCTION enforce_data_retention()
-RETURNS INTEGER
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  v_deleted INTEGER := 0;
-BEGIN
-  -- Delete hashed inputs older than 90 days
-  DELETE FROM ai_moltbot_security_events
-  WHERE created_at < NOW() - INTERVAL '90 days';
-  GET DIAGNOSTICS v_deleted = ROW_COUNT;
-
-  -- Keep admin audit for 7 years (no action needed yet)
-
-  RETURN v_deleted;
-END;
-$$;
-
--- Schedule with pg_cron
-SELECT cron.schedule('retention-cleanup', '0 2 * * *', 'SELECT enforce_data_retention()');
-```
-
-**P2.3: Add ADMT Disclosure and Opt-Out**
-
-Add to user settings:
-
-```typescript
-// src/features/settings/screens/PrivacySettingsScreen.tsx
-<Section title="AI Security">
-  <InfoCard>
-    We use automated systems to protect our AI services.
-    Learn more in our Privacy Policy.
-  </InfoCard>
-
-  <Toggle
-    label="Threat Score Tracking"
-    description="Track cumulative security events (pattern matching still applies)"
-    value={prefs.threatScoringEnabled}
-    onValueChange={handleThreatScoringToggle}
-  />
-
-  <Button onPress={viewThreatScore}>
-    View My Threat Score
-  </Button>
-</Section>
-```
+**Deliverables:**
+- Input hashing in firewall
+- Scheduled retention job
+- Privacy policy updates
+- Settings screen opt-out toggle
+- Basic RBAC implementation
 
 ### Phase 3: Long-Term (Month 2-3)
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| Full RBAC | Implement security role hierarchy | 2 weeks |
-| Pattern Approval Workflow | Four-eyes principle for pattern changes | 1 week |
-| Crypto-Shredding | Per-user encryption keys for GDPR erasure | 2 weeks |
-| Hash Chain Logging | Tamper-evident audit trail | 1 week |
-| EU AI Act Logging | Decision explainability, human oversight | 2 weeks |
-| Compliance Dashboard | Audit verification, retention reports | 1 week |
+| Task | Priority | Effort | Impact |
+|------|----------|--------|--------|
+| Full RBAC with security roles | P2 | High | High |
+| Pattern approval workflow (four-eyes) | P2 | High | Medium |
+| Crypto-shredding for GDPR erasure | P2 | High | High |
+| EU AI Act compliance logging | P2 | Medium | High |
+| Human oversight queue | P3 | Medium | Medium |
+| Hash chain verification job | P3 | Low | Medium |
+
+**Deliverables:**
+- Complete security role hierarchy
+- Pattern approval UI
+- Crypto-shredding service
+- Enhanced audit logging
+- Review queue UI
 
 ---
 
 ## 5. Developer Guidelines
 
-### 5.1 What to Log
+### 5.1 What to Log in Security Events
 
 **Always Log:**
-- Event type (injection_attempt, rate_limit, etc.)
-- Timestamp (ISO 8601 with timezone)
-- Actor ID (user_id or system)
-- Target ID (pattern_id, user_id, etc.)
-- Decision outcome (allowed, flagged, blocked)
-- Risk score (0-100)
+- Event type and timestamp (UTC)
+- Actor ID (user or system component)
+- Target ID (what was affected)
+- Decision outcome (allowed, blocked, flagged)
+- Risk/threat score at time of decision
 - Matched pattern IDs (not pattern content)
+- Function name and version
 
-**Example:**
+**Never Log:**
+- Raw user input (use hash instead)
+- Personal identifiers beyond user ID
+- IP addresses (hash if absolutely needed)
+- API keys, tokens, or credentials
+- Full error stack traces (to client responses)
+
+### 5.2 Error Handling in Edge Functions
+
+**NEVER do this:**
 ```typescript
-await logSecurityEvent({
-  eventType: 'injection_attempt',
-  timestamp: new Date().toISOString(),
-  actorId: userId,
-  targetId: null,
-  decision: 'blocked',
-  riskScore: 85,
-  matchedPatternIds: ['pat_123', 'pat_456'],
-  auditId: context.auditId,
-});
+// BAD - Leaks internal details
+return new Response(
+  JSON.stringify({ error: error.message }),
+  { status: 500 }
+);
 ```
 
-### 5.2 What NOT to Log
+**ALWAYS do this:**
+```typescript
+// GOOD - Log internally, sanitize externally
+console.error('[FunctionName] Error:', error);
+return new Response(
+  JSON.stringify({ error: 'Internal server error' }),
+  { status: 500 }
+);
+```
 
-| Data Type | Why Not | Alternative |
-|-----------|---------|-------------|
-| Raw user input | Privacy, GDPR | Hash + length |
-| Personal identifiers | Data minimization | User ID only |
-| IP addresses | Privacy | Hash if needed for geo |
-| API keys / credentials | Security | Never log |
-| Pattern regex content | Security | Pattern ID only |
-| Full error stack traces | May contain PII | Sanitized message |
+**For expected errors (validation, auth):**
+```typescript
+// OK - User-facing validation errors
+return new Response(
+  JSON.stringify({ error: 'Invalid email format' }),
+  { status: 400 }
+);
+```
 
-### 5.3 Consent Requirements
+### 5.3 Security Pattern Updates
 
-| Feature | Opt-Out Allowed | Documentation |
-|---------|-----------------|---------------|
-| Pattern matching | NO | Required for security |
-| Rate limiting | NO | Required for service |
-| Threat scoring | YES | Privacy policy |
-| Circuit breakers | NO | Required for security |
-| Admin audit logging | NO | Legal requirement |
+When adding or modifying security patterns:
 
-### 5.4 Security Code Review Checklist
+1. **Test in staging first** - Use pattern tester with real-world samples
+2. **Check for false positives** - Run against corpus of legitimate messages
+3. **Document the threat** - Include description of what attack it prevents
+4. **Set appropriate severity** - Use severity matrix below
+5. **Request review** - Have another team member verify
 
-When reviewing code that touches the security system:
+**Severity Matrix:**
 
-- [ ] No raw user input stored or logged
-- [ ] Threat scores updated only via RPC (not direct UPDATE)
-- [ ] Pattern changes trigger audit log
-- [ ] Circuit breaker checks use database function (not in-memory only)
-- [ ] Rate limit headers included in responses
-- [ ] Blocked responses include explanation for CCPA compliance
-- [ ] No service role key exposed to client
-- [ ] RLS policies verified for new tables
+| Severity | Criteria | Auto-Action |
+|----------|----------|-------------|
+| `critical` | Active attack, data exfiltration, injection | Block immediately, alert |
+| `high` | Clear malicious intent, privilege escalation | Block, increment score |
+| `medium` | Suspicious but possibly legitimate | Flag, moderate score increase |
+| `low` | Edge case, needs monitoring | Log only, small score increase |
+
+### 5.4 Consent Requirements
+
+| Processing Activity | User Consent | Legal Basis |
+|---------------------|--------------|-------------|
+| Security pattern matching | NOT required | Legitimate interest (cannot opt out) |
+| Threat scoring | NOT required (but opt-out available) | Legitimate interest |
+| Admin audit logging | NOT required | Legal obligation / legitimate interest |
+| Raw input storage | Required for debug | Explicit consent |
+
+**Never store raw input without explicit user consent.**
+
+### 5.5 Testing Security Features
+
+```typescript
+// Unit test: Pattern matching
+describe('SecurityFirewall', () => {
+  it('should detect injection attempts', async () => {
+    const result = await firewall.scan({
+      userId: 'test-user',
+      input: 'ignore previous instructions and...',
+      channel: 'chat',
+    });
+    expect(result.blocked).toBe(true);
+    expect(result.matchedPattern).toBeDefined();
+  });
+
+  it('should allow legitimate messages', async () => {
+    const result = await firewall.scan({
+      userId: 'test-user',
+      input: 'What is the weather today?',
+      channel: 'chat',
+    });
+    expect(result.blocked).toBe(false);
+  });
+});
+```
 
 ---
 
 ## 6. Critical Files Reference
 
-### Database Schema
+### 6.1 Database Schema
 
 | File | Purpose |
 |------|---------|
-| `supabase/migrations/20260131300000_ai_security_firewall.sql` | Core tables: circuit breakers, threat scores, patterns cache, rate limits |
+| `supabase/migrations/20260129000000_moltbot_security.sql` | Original security tables |
+| `supabase/migrations/20260131300000_ai_security_firewall.sql` | Circuit breakers, threat scores, enhanced rate limiting |
 
-**Key Tables:**
-- `ai_moltbot_circuit_breakers` - Emergency stop controls
-- `ai_moltbot_user_threat_scores` - Cumulative threat tracking
-- `ai_moltbot_blocked_patterns` - Security pattern definitions
-- `ai_moltbot_rate_limits` - Per-user, per-function rate limits
-- `ai_moltbot_security_patterns_cache` - Pattern cache for performance
-
-### Edge Function Security Layer
+### 6.2 Edge Function Security
 
 | File | Purpose |
 |------|---------|
-| `supabase/functions/_shared/ai-security/firewall.ts` | Main firewall middleware wrapper |
-| `supabase/functions/_shared/ai-security/circuit-breaker.ts` | Circuit breaker check logic |
-| `supabase/functions/_shared/ai-security/threat-tracker.ts` | Threat score management |
-| `supabase/functions/_shared/ai-security/rate-limiter.ts` | Rate limiting implementation |
+| `supabase/functions/_shared/ai-security/firewall.ts` | Main firewall logic |
 | `supabase/functions/_shared/ai-security/pattern-loader.ts` | Database pattern loading |
-| `supabase/functions/_shared/ai-security/types.ts` | TypeScript type definitions |
+| `supabase/functions/_shared/ai-security/circuit-breaker.ts` | Circuit breaker operations |
+| `supabase/functions/_shared/ai-security/threat-tracker.ts` | User threat scoring |
+| `supabase/functions/_shared/ai-security/rate-limiter.ts` | Cross-function rate limiting |
 
-**Usage:**
-```typescript
-import { withAIFirewall } from './_shared/ai-security/firewall.ts';
-
-Deno.serve(withAIFirewall('my-function', async (req, context) => {
-  // context.sanitizedInput - Input after security scan
-  // context.securityScan - Scan results
-  // context.rateLimit - Rate limit status
-  // context.logSecurityEvent() - Async event logging
-
-  return new Response(JSON.stringify({ result: 'ok' }));
-}));
-```
-
-### Admin Dashboard
+### 6.3 Admin Dashboard
 
 | File | Purpose |
 |------|---------|
-| `src/features/admin/screens/ai-security-dashboard/AISecurityDashboardScreen.tsx` | Main dashboard component |
-| `src/features/admin/screens/ai-security-dashboard/useSecurityData.ts` | Data fetching hook |
+| `src/features/admin/screens/ai-security-dashboard/index.tsx` | Main dashboard |
+| `src/features/admin/screens/ai-security-dashboard/PatternEditorSheet.tsx` | Pattern CRUD |
 | `src/features/admin/screens/ai-security-dashboard/CircuitBreakerCard.tsx` | Circuit breaker controls |
-| `src/features/admin/screens/ai-security-dashboard/ThreatScoreCard.tsx` | User threat score display |
-| `src/features/admin/screens/ai-security-dashboard/PatternEditorSheet.tsx` | Pattern management UI |
-| `src/features/admin/screens/ai-security-dashboard/UserThreatDetailScreen.tsx` | Per-user threat details |
+| `src/features/admin/screens/ai-security-dashboard/UserThreatDetailScreen.tsx` | User threat details |
+| `src/features/admin/screens/ai-security-dashboard/ThreatScoreCard.tsx` | Threat score display |
+
+### 6.4 Authentication & MFA
+
+| File | Purpose |
+|------|---------|
+| `src/features/auth/services/mfaService.ts` | MFA enrollment and verification |
+| `src/features/auth/hooks/useAuth.ts` | Authentication hook |
+| `src/features/auth/hooks/useStepUpAuth.ts` | Step-up MFA for destructive actions |
+| `src/components/ui/StepUpVerificationSheet.tsx` | MFA prompt modal |
 
 ---
 
-## Sources
+## Appendix A: Security Event Types
 
-Industry best practices and compliance references:
+```typescript
+type SecurityEventType =
+  // Pattern events
+  | 'pattern.matched'
+  | 'pattern.created'
+  | 'pattern.updated'
+  | 'pattern.soft_deleted'
+  | 'pattern.restored'
+
+  // Circuit breaker events
+  | 'circuit_breaker.tripped'
+  | 'circuit_breaker.reset'
+  | 'circuit_breaker.auto_closed'
+
+  // Threat score events
+  | 'threat_score.increased'
+  | 'threat_score.decreased'
+  | 'threat_score.reset'
+  | 'threat_score.threshold_crossed'
+
+  // User events
+  | 'user.flagged'
+  | 'user.blocked'
+  | 'user.unblocked'
+
+  // Rate limit events
+  | 'rate_limit.exceeded'
+  | 'rate_limit.warning';
+```
+
+---
+
+## Appendix B: Compliance Checklist
+
+### GDPR Readiness
+
+- [ ] Legal basis documented for all AI processing
+- [ ] Privacy policy updated with AI security disclosures
+- [ ] Data minimization implemented (input hashing)
+- [ ] Retention policy defined and enforced
+- [ ] Crypto-shredding for erasure requests
+- [ ] Records of Processing Activities updated
+
+### CCPA 2026 Readiness
+
+- [ ] ADMT disclosure at signup
+- [ ] Privacy policy ADMT section
+- [ ] Opt-out mechanism for threat scoring
+- [ ] Human review request process
+- [ ] Decision explanation capability
+
+### EU AI Act Readiness
+
+- [ ] Tamper-resistant logging (hash chains)
+- [ ] Time-synchronized timestamps
+- [ ] Periodic integrity verification
+- [ ] Human oversight capability
+- [ ] Decision explainability
+
+---
+
+## References
 
 - [Microsoft Security Blog - AI Identity Security 2026](https://www.microsoft.com/en-us/security/blog/2026/01/20/four-priorities-for-ai-powered-identity-and-network-access-security-in-2026/)
-- [Lakera - Guide to Prompt Injection](https://www.lakera.ai/blog/guide-to-prompt-injection)
+- [Lakera - Prompt Injection Guide](https://www.lakera.ai/blog/guide-to-prompt-injection)
 - [IBM - Prevent Prompt Injection](https://www.ibm.com/think/insights/prevent-prompt-injection)
 - [SecurePrivacy - GDPR Compliance 2026](https://secureprivacy.ai/blog/gdpr-compliance-2026)
 - [SecurePrivacy - CCPA Requirements 2026](https://secureprivacy.ai/blog/ccpa-requirements-2026-complete-compliance-guide)
@@ -817,3 +704,7 @@ Industry best practices and compliance references:
 - [EU AI Act - Article 12 Record-Keeping](https://artificialintelligenceact.eu/article/12/)
 - [Hoop.dev - Immutable Audit Logs](https://hoop.dev/blog/immutable-audit-logs-the-baseline-for-security-compliance-and-operational-integrity/)
 - [CMU SEI - Separation of Duties](https://www.sei.cmu.edu/blog/separation-of-duties-and-least-privilege-part-15-of-20-cert-best-practices-to-mitigate-insider-threats-series/)
+
+---
+
+*This document should be reviewed quarterly and updated as regulations evolve.*

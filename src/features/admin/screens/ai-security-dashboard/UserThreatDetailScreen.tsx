@@ -16,8 +16,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, Badge, ScreenHeader } from '@/components/ui';
+import { Button, Badge, ScreenHeader, StepUpVerificationSheet } from '@/components/ui';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useStepUpAuth } from '@/features/auth/hooks';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { supabase } from '@/lib/supabase';
 
@@ -28,6 +29,9 @@ export function UserThreatDetailScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const { userId } = useLocalSearchParams<{ userId: string }>();
+
+  // Step-up MFA authentication for destructive actions
+  const { requireStepUp, verifyStepUp, cancelStepUp, state: stepUpState } = useStepUpAuth();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -111,40 +115,36 @@ export function UserThreatDetailScreen() {
     setIsRefreshing(false);
   }, [loadUserData]);
 
-  // Reset threat score
-  const handleResetScore = useCallback(() => {
-    Alert.alert(
-      'Reset Threat Score',
-      'This will reset the user\'s threat score to 0. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          onPress: async () => {
-            setActionLoading('reset');
-            try {
-              const { error } = await supabase
-                .from('ai_moltbot_user_threat_scores' as 'profiles')
-                .update({
-                  current_score: 0,
-                  event_count_24h: 0,
-                  is_flagged: false,
-                })
-                .eq('user_id', userId);
+  // Reset threat score - requires step-up MFA
+  const handleResetScore = useCallback(async () => {
+    const verified = await requireStepUp({
+      reason: 'Reset user threat score',
+      actionType: 'threat_score_reset',
+    });
 
-              if (error) throw error;
-              await loadUserData();
-              Alert.alert('Success', 'Threat score has been reset');
-            } catch (err) {
-              Alert.alert('Error', err instanceof Error ? err.message : 'Failed to reset score');
-            } finally {
-              setActionLoading(null);
-            }
-          },
-        },
-      ]
-    );
-  }, [userId, loadUserData]);
+    if (verified) {
+      setActionLoading('reset');
+      try {
+        const { error } = await supabase
+          .from('ai_moltbot_user_threat_scores' as 'profiles')
+          .update({
+            current_score: 0,
+            event_count_24h: 0,
+            is_flagged: false,
+          })
+          .eq('user_id', userId);
+
+        if (error) throw error;
+        await loadUserData();
+        Alert.alert('Success', 'Threat score has been reset');
+      } catch (err) {
+        console.error('[UserThreatDetail] Error resetting score:', err);
+        Alert.alert('Error', err instanceof Error ? err.message : 'Failed to reset score');
+      } finally {
+        setActionLoading(null);
+      }
+    }
+  }, [userId, loadUserData, requireStepUp]);
 
   // Block user
   const handleBlockUser = useCallback(() => {
@@ -186,37 +186,43 @@ export function UserThreatDetailScreen() {
     );
   }, [userId, loadUserData]);
 
-  // Unblock user
-  const handleUnblockUser = useCallback(() => {
-    Alert.alert(
-      'Unblock User',
-      'This will restore the user\'s access to AI features. Continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Unblock',
-          onPress: async () => {
-            setActionLoading('unblock');
-            try {
-              const { error } = await supabase
-                .from('profiles')
-                .update({ is_blocked: false })
-                .eq('id', userId);
+  // Unblock user - requires step-up MFA
+  const handleUnblockUser = useCallback(async () => {
+    const verified = await requireStepUp({
+      reason: 'Unblock user from AI features',
+      actionType: 'user_unblock',
+    });
 
-              if (error) throw error;
+    if (verified) {
+      setActionLoading('unblock');
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ is_blocked: false })
+          .eq('id', userId);
 
-              await loadUserData();
-              Alert.alert('Success', 'User has been unblocked');
-            } catch (err) {
-              Alert.alert('Error', err instanceof Error ? err.message : 'Failed to unblock user');
-            } finally {
-              setActionLoading(null);
-            }
-          },
-        },
-      ]
-    );
-  }, [userId, loadUserData]);
+        if (error) throw error;
+
+        await loadUserData();
+        Alert.alert('Success', 'User has been unblocked');
+      } catch (err) {
+        console.error('[UserThreatDetail] Error unblocking user:', err);
+        Alert.alert('Error', err instanceof Error ? err.message : 'Failed to unblock user');
+      } finally {
+        setActionLoading(null);
+      }
+    }
+  }, [userId, loadUserData, requireStepUp]);
+
+  // Handle step-up verification completion
+  const handleStepUpVerify = useCallback(async (code: string): Promise<boolean> => {
+    return verifyStepUp(code);
+  }, [verifyStepUp]);
+
+  // Handle step-up cancellation
+  const handleStepUpCancel = useCallback(() => {
+    cancelStepUp();
+  }, [cancelStepUp]);
 
   const getScoreColor = (score: number): string => {
     if (score >= 800) return colors.destructive;
@@ -395,6 +401,14 @@ export function UserThreatDetailScreen() {
           ))
         )}
       </ScrollView>
+
+      {/* Step-up verification sheet for MFA on destructive actions */}
+      <StepUpVerificationSheet
+        visible={stepUpState.isRequired || stepUpState.status === 'mfa_not_configured'}
+        onClose={handleStepUpCancel}
+        onVerify={handleStepUpVerify}
+        state={stepUpState}
+      />
     </ThemedSafeAreaView>
   );
 }

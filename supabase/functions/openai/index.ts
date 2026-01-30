@@ -445,8 +445,9 @@ serve(async (req) => {
       );
     } catch (error) {
       console.error('Error calling OpenAI API:', error);
+      // Sanitize error response - don't leak internal details
       return new Response(
-        JSON.stringify({ error: error.message || "Error calling OpenAI API" }),
+        JSON.stringify({ error: 'An error occurred processing your request' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -456,8 +457,9 @@ serve(async (req) => {
     const origin = req.headers.get('origin');
     const corsHeaders = getCorsHeaders(origin, false);
 
+    // Sanitize error response - don't leak internal details
     return new Response(
-      JSON.stringify({ error: error.message || "An unexpected error occurred" }),
+      JSON.stringify({ error: 'An unexpected error occurred' }),
       { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }

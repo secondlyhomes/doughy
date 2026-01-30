@@ -206,18 +206,19 @@ serve(async (req) => {
     
   } catch (error) {
     logError("Error in perplexity-api edge function:", error);
-    
+
+    // Sanitize error response - don't leak internal details
     const errorResponse = new Response(
       JSON.stringify({
         status: "error",
-        message: error instanceof Error ? error.message : "An unexpected error occurred",
+        message: "An unexpected error occurred",
       }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
       }
     );
-    
+
     return addCorsHeaders(errorResponse, req);
   }
 });

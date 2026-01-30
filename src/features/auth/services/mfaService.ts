@@ -143,6 +143,7 @@ export async function createMFAChallenge(
       challengeId: data.id,
     };
   } catch (error) {
+    console.error('[mfa] Error creating challenge:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create challenge',

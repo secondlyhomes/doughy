@@ -413,9 +413,10 @@ serve(async (req: Request) => {
 
   } catch (error) {
     console.error('Lead scorer error:', error);
+    // Sanitize error response - don't leak internal details
     return addCorsHeaders(
       new Response(
-        JSON.stringify({ error: error.message || 'Internal server error' }),
+        JSON.stringify({ error: 'Internal server error' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       ),
       req

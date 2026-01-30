@@ -75,16 +75,19 @@ serve(async (req) => {
     
     console.log(`[CORS] Error response with headers:`, JSON.stringify(errorHeaders));
     
+    // Log the actual error internally
+    console.error('[Health] Error:', error);
+
+    // Sanitize error response - don't leak internal details
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Internal server error',
-        message: error.message,
         status: 'error',
         timestamp: new Date().toISOString(),
         origin: origin
       }),
-      { 
-        status: 500, 
+      {
+        status: 500,
         headers: errorHeaders
       }
     );

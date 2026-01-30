@@ -335,6 +335,9 @@ export type { OAuthConnectButtonProps } from './OAuthConnectButton';
 export { DestructiveActionSheet } from './DestructiveActionSheet';
 export type { DestructiveActionSheetProps } from './DestructiveActionSheet';
 
+// Step-up verification (MFA for destructive actions)
+export { StepUpVerificationSheet } from './StepUpVerificationSheet';
+
 // Filterable tabs
 export { FilterableTabs } from './FilterableTabs';
 export type { FilterableTabsProps, FilterableTab } from './FilterableTabs';

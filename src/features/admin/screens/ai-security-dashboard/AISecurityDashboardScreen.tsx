@@ -17,8 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { Button, TAB_BAR_SAFE_PADDING, StepUpVerificationSheet } from '@/components/ui';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
+import { useStepUpAuth } from '@/features/auth/hooks';
 
 import { useSecurityData } from './useSecurityData';
 import { CircuitBreakerCard } from './CircuitBreakerCard';
@@ -29,6 +30,9 @@ export function AISecurityDashboardScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const [showPatternEditor, setShowPatternEditor] = useState(false);
+
+  // Step-up MFA authentication for global circuit breaker reset
+  const { requireStepUp, verifyStepUp, cancelStepUp, state: stepUpState } = useStepUpAuth();
 
   const {
     isLoading,
@@ -43,6 +47,34 @@ export function AISecurityDashboardScreen() {
     handleTripCircuitBreaker,
     handleResetCircuitBreaker,
   } = useSecurityData();
+
+  // Wrap circuit breaker reset with MFA for global scope
+  const handleResetWithMFA = async (scope: string) => {
+    // Only require MFA for global circuit breaker reset
+    if (scope === 'global') {
+      const verified = await requireStepUp({
+        reason: 'Reset global circuit breaker',
+        actionType: 'circuit_breaker_global_reset',
+      });
+
+      if (verified) {
+        await handleResetCircuitBreaker(scope);
+      }
+    } else {
+      // Non-global resets don't require MFA
+      await handleResetCircuitBreaker(scope);
+    }
+  };
+
+  // Handle step-up verification completion
+  const handleStepUpVerify = async (code: string): Promise<boolean> => {
+    return verifyStepUp(code);
+  };
+
+  // Handle step-up cancellation
+  const handleStepUpCancel = () => {
+    cancelStepUp();
+  };
 
   // Navigate to user threat detail screen
   const handleUserPress = (userId: string) => {
@@ -129,7 +161,7 @@ export function AISecurityDashboardScreen() {
               key={breaker.scope}
               state={breaker}
               onTrip={handleTripCircuitBreaker}
-              onReset={handleResetCircuitBreaker}
+              onReset={handleResetWithMFA}
               loading={actionLoading === breaker.scope}
             />
           ))
@@ -256,6 +288,14 @@ export function AISecurityDashboardScreen() {
         onClose={() => setShowPatternEditor(false)}
         patterns={patterns}
         onPatternsChanged={handleRefresh}
+      />
+
+      {/* Step-up verification sheet for MFA on global circuit breaker reset */}
+      <StepUpVerificationSheet
+        visible={stepUpState.isRequired || stepUpState.status === 'mfa_not_configured'}
+        onClose={handleStepUpCancel}
+        onVerify={handleStepUpVerify}
+        state={stepUpState}
       />
     </ThemedSafeAreaView>
   );

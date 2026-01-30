@@ -10,3 +10,10 @@ export {
   type Permissions,
 } from './usePermissions';
 export { useGoogleAuth, type UseGoogleAuthResult } from './useGoogleAuth';
+export {
+  useStepUpAuth,
+  STEP_UP_REQUIRED_ACTIONS,
+  type StepUpAction,
+  type StepUpRequest,
+  type StepUpState,
+} from './useStepUpAuth';

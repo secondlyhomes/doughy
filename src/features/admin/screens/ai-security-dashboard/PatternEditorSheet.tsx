@@ -14,7 +14,9 @@ import {
   Select,
   Switch,
   Badge,
+  StepUpVerificationSheet,
 } from '@/components/ui';
+import { useStepUpAuth } from '@/features/auth/hooks';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { supabase } from '@/lib/supabase';
 
@@ -56,6 +58,9 @@ export function PatternEditorSheet({
   const [editingPattern, setEditingPattern] = useState<SecurityPattern | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Step-up MFA authentication for destructive actions
+  const { requireStepUp, verifyStepUp, cancelStepUp, state: stepUpState } = useStepUpAuth();
 
   // Form state
   const [pattern, setPattern] = useState('');
@@ -173,6 +178,7 @@ export function PatternEditorSheet({
       setMode('list');
       resetForm();
     } catch (err) {
+      console.error('[PatternEditorSheet] Error saving pattern:', err);
       Alert.alert('Error', err instanceof Error ? err.message : 'Failed to save pattern');
     } finally {
       setIsSubmitting(false);
@@ -192,6 +198,7 @@ export function PatternEditorSheet({
         if (error) throw error;
         await onPatternsChanged();
       } catch (err) {
+        console.error('[PatternEditorSheet] Error toggling pattern:', err);
         Alert.alert('Error', err instanceof Error ? err.message : 'Failed to toggle pattern');
       } finally {
         setTogglingId(null);
@@ -200,32 +207,52 @@ export function PatternEditorSheet({
     [onPatternsChanged]
   );
 
-  // Delete pattern
+  // Soft-delete pattern (preserves audit trail) - requires step-up MFA
   const handleDelete = useCallback(
-    (patternItem: SecurityPattern) => {
-      Alert.alert('Delete Pattern', 'Are you sure you want to delete this pattern?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from('ai_moltbot_blocked_patterns' as 'profiles')
-                .delete()
-                .eq('id', patternItem.id);
+    async (patternItem: SecurityPattern) => {
+      // Request step-up authentication
+      const verified = await requireStepUp({
+        reason: 'Delete security pattern',
+        actionType: 'pattern_delete',
+      });
 
-              if (error) throw error;
-              await onPatternsChanged();
-            } catch (err) {
-              Alert.alert('Error', err instanceof Error ? err.message : 'Failed to delete pattern');
+      if (verified) {
+        // Proceed with deletion after MFA verification
+        try {
+          const { error } = await supabase.rpc('soft_delete_pattern', {
+            p_pattern_id: patternItem.id,
+          });
+
+          if (error) {
+            // Check for "function does not exist" error
+            if (error.message?.includes('does not exist')) {
+              throw new Error('Pattern archival is not yet available. Please contact support.');
             }
-          },
-        },
-      ]);
+            throw error;
+          }
+          await onPatternsChanged();
+          Alert.alert('Success', 'Pattern has been archived');
+        } catch (err) {
+          console.error('[PatternEditorSheet] Error archiving pattern:', err);
+          Alert.alert('Error', err instanceof Error ? err.message : 'Failed to archive pattern');
+        }
+      }
     },
-    [onPatternsChanged]
+    [onPatternsChanged, requireStepUp]
   );
+
+  // Handle step-up verification completion
+  const handleStepUpVerify = useCallback(
+    async (code: string): Promise<boolean> => {
+      return verifyStepUp(code);
+    },
+    [verifyStepUp]
+  );
+
+  // Handle step-up cancellation
+  const handleStepUpCancel = useCallback(() => {
+    cancelStepUp();
+  }, [cancelStepUp]);
 
   const getSeverityColor = (sev: string | undefined | null): string => {
     if (sev === 'critical') return colors.destructive;
@@ -252,7 +279,9 @@ export function PatternEditorSheet({
           marginBottom: 8,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <View
+          style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}
+        >
           <View style={{ flex: 1, marginRight: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
               <Badge
@@ -271,221 +300,265 @@ export function PatternEditorSheet({
                 {formatThreatType(item.threatType)}
               </Text>
             </View>
-          <Text
-            style={{ fontSize: 12, color: colors.foreground, fontFamily: 'monospace' }}
-            numberOfLines={2}
-          >
-            {item.pattern}
-          </Text>
-          {item.description && (
-            <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 4 }} numberOfLines={1}>
-              {item.description}
+            <Text
+              style={{ fontSize: 12, color: colors.foreground, fontFamily: 'monospace' }}
+              numberOfLines={2}
+            >
+              {item.pattern}
             </Text>
-          )}
-          <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>
-            {item.hitCount} hits
-          </Text>
-        </View>
+            {item.description && (
+              <Text
+                style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 4 }}
+                numberOfLines={1}
+              >
+                {item.description}
+              </Text>
+            )}
+            <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>
+              {item.hitCount} hits
+            </Text>
+          </View>
 
-        <View style={{ alignItems: 'flex-end', gap: 8 }}>
-          {togglingId === item.id ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Switch
-              checked={item.isActive}
-              onCheckedChange={() => handleToggleActive(item)}
-            />
-          )}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              onPress={() => {
-                setEditingPattern(item);
-                setMode('edit');
-              }}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="pencil" size={ICON_SIZES.md} color={colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleDelete(item)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="trash-outline" size={ICON_SIZES.md} color={colors.destructive} />
-            </TouchableOpacity>
+          <View style={{ alignItems: 'flex-end', gap: 8 }}>
+            {togglingId === item.id ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Switch checked={item.isActive} onCheckedChange={() => handleToggleActive(item)} />
+            )}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setEditingPattern(item);
+                  setMode('edit');
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="pencil" size={ICON_SIZES.md} color={colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleDelete(item)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="trash-outline" size={ICON_SIZES.md} color={colors.destructive} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
-    </View>
     );
   };
+
+  // Determine if step-up sheet should be visible
+  const showStepUpSheet = stepUpState.isRequired || stepUpState.status === 'mfa_not_configured';
 
   // List view
   if (mode === 'list') {
     return (
-      <BottomSheet
-        visible={visible}
-        onClose={onClose}
-        title="Security Patterns"
-        snapPoints={['85%']}
-        scrollable={false}
-      >
-        <View style={{ flex: 1 }}>
-          <Button
-            onPress={() => {
-              resetForm();
-              setMode('add');
-            }}
-            style={{ marginBottom: SPACING.md }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="add" size={ICON_SIZES.ml} color="#fff" />
-              <Text style={{ color: '#fff', fontWeight: '600' }}>Add Pattern</Text>
-            </View>
-          </Button>
-
-          <FlatList
-            data={patterns}
-            keyExtractor={(item) => item.id}
-            renderItem={renderPatternItem}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-                <Ionicons name="shield-outline" size={ICON_SIZES['3xl']} color={colors.mutedForeground} />
-                <Text style={{ color: colors.mutedForeground, marginTop: 12 }}>
-                  No patterns configured
-                </Text>
+      <>
+        <BottomSheet
+          visible={visible}
+          onClose={onClose}
+          title="Security Patterns"
+          snapPoints={['85%']}
+          scrollable={false}
+        >
+          <View style={{ flex: 1 }}>
+            <Button
+              onPress={() => {
+                resetForm();
+                setMode('add');
+              }}
+              style={{ marginBottom: SPACING.md }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="add" size={ICON_SIZES.ml} color="#fff" />
+                <Text style={{ color: '#fff', fontWeight: '600' }}>Add Pattern</Text>
               </View>
-            }
-          />
-        </View>
-      </BottomSheet>
+            </Button>
+
+            <FlatList
+              data={patterns}
+              keyExtractor={(item) => item.id}
+              renderItem={renderPatternItem}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+                  <Ionicons
+                    name="shield-outline"
+                    size={ICON_SIZES['3xl']}
+                    color={colors.mutedForeground}
+                  />
+                  <Text style={{ color: colors.mutedForeground, marginTop: 12 }}>
+                    No patterns configured
+                  </Text>
+                </View>
+              }
+            />
+          </View>
+        </BottomSheet>
+
+        {/* Step-up verification sheet for MFA on destructive actions - rendered outside to avoid nesting issues */}
+        <StepUpVerificationSheet
+          visible={showStepUpSheet}
+          onClose={handleStepUpCancel}
+          onVerify={handleStepUpVerify}
+          state={stepUpState}
+        />
+      </>
     );
   }
 
   // Add/Edit view
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={() => {
-        setMode('list');
-        resetForm();
-      }}
-      title={mode === 'add' ? 'Add Pattern' : 'Edit Pattern'}
-      snapPoints={['85%']}
-    >
-      <BottomSheetSection>
-        <FormField
-          label="Regex Pattern"
-          required
-          value={pattern}
-          onChangeText={setPattern}
-          placeholder="e\.g\. (ignore|forget).*instructions"
-          autoCapitalize="none"
-          autoCorrect={false}
-          style={{ fontFamily: 'monospace' }}
-        />
-
-        <View style={{ flexDirection: 'row', gap: 12, marginTop: SPACING.md }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '500', color: colors.foreground, marginBottom: 6 }}>
-              Severity *
-            </Text>
-            <Select
-              value={severity}
-              onValueChange={setSeverity}
-              options={SEVERITY_OPTIONS}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '500', color: colors.foreground, marginBottom: 6 }}>
-              Threat Type *
-            </Text>
-            <Select
-              value={threatType}
-              onValueChange={setThreatType}
-              options={THREAT_TYPE_OPTIONS}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginTop: SPACING.md }}>
+    <>
+      <BottomSheet
+        visible={visible}
+        onClose={() => {
+          setMode('list');
+          resetForm();
+        }}
+        title={mode === 'add' ? 'Add Pattern' : 'Edit Pattern'}
+        snapPoints={['85%']}
+      >
+        <BottomSheetSection>
           <FormField
-            label="Description"
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Brief description of what this pattern detects"
+            label="Regex Pattern"
+            required
+            value={pattern}
+            onChangeText={setPattern}
+            placeholder="e\.g\. (ignore|forget).*instructions"
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={{ fontFamily: 'monospace' }}
           />
-        </View>
-      </BottomSheetSection>
 
-      <BottomSheetSection title="Test Pattern">
-        <FormField
-          label="Test Input"
-          value={testInput}
-          onChangeText={setTestInput}
-          placeholder="Enter text to test against the pattern"
-          multiline
-          numberOfLines={3}
-        />
-
-        {testResult && (
-          <View
-            style={{
-              marginTop: SPACING.sm,
-              padding: 12,
-              borderRadius: BORDER_RADIUS.md,
-              backgroundColor: testResult.error
-                ? colors.destructive + '20'
-                : testResult.matches
-                  ? colors.success + '20'
-                  : colors.muted,
-            }}
-          >
-            {testResult.error ? (
-              <Text style={{ color: colors.destructive, fontSize: 13 }}>
-                Error: {testResult.error}
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: SPACING.md }}>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: colors.foreground,
+                  marginBottom: 6,
+                }}
+              >
+                Severity *
               </Text>
-            ) : (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons
-                  name={testResult.matches ? 'checkmark-circle' : 'close-circle'}
-                  size={ICON_SIZES.ml}
-                  color={testResult.matches ? colors.success : colors.mutedForeground}
-                />
-                <Text
-                  style={{
-                    marginLeft: 8,
-                    color: testResult.matches ? colors.success : colors.mutedForeground,
-                    fontSize: 13,
-                  }}
-                >
-                  {testResult.matches ? 'Pattern matches!' : 'No match'}
-                </Text>
-              </View>
-            )}
+              <Select value={severity} onValueChange={setSeverity} options={SEVERITY_OPTIONS} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: colors.foreground,
+                  marginBottom: 6,
+                }}
+              >
+                Threat Type *
+              </Text>
+              <Select
+                value={threatType}
+                onValueChange={setThreatType}
+                options={THREAT_TYPE_OPTIONS}
+              />
+            </View>
           </View>
-        )}
-      </BottomSheetSection>
 
-      <View style={{ flexDirection: 'row', gap: 12, paddingTop: SPACING.md, paddingBottom: SPACING.lg }}>
-        <Button
-          variant="outline"
-          onPress={() => {
-            setMode('list');
-            resetForm();
+          <View style={{ marginTop: SPACING.md }}>
+            <FormField
+              label="Description"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Brief description of what this pattern detects"
+            />
+          </View>
+        </BottomSheetSection>
+
+        <BottomSheetSection title="Test Pattern">
+          <FormField
+            label="Test Input"
+            value={testInput}
+            onChangeText={setTestInput}
+            placeholder="Enter text to test against the pattern"
+            multiline
+            numberOfLines={3}
+          />
+
+          {testResult && (
+            <View
+              style={{
+                marginTop: SPACING.sm,
+                padding: 12,
+                borderRadius: BORDER_RADIUS.md,
+                backgroundColor: testResult.error
+                  ? colors.destructive + '20'
+                  : testResult.matches
+                    ? colors.success + '20'
+                    : colors.muted,
+              }}
+            >
+              {testResult.error ? (
+                <Text style={{ color: colors.destructive, fontSize: 13 }}>
+                  Error: {testResult.error}
+                </Text>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons
+                    name={testResult.matches ? 'checkmark-circle' : 'close-circle'}
+                    size={ICON_SIZES.ml}
+                    color={testResult.matches ? colors.success : colors.mutedForeground}
+                  />
+                  <Text
+                    style={{
+                      marginLeft: 8,
+                      color: testResult.matches ? colors.success : colors.mutedForeground,
+                      fontSize: 13,
+                    }}
+                  >
+                    {testResult.matches ? 'Pattern matches!' : 'No match'}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </BottomSheetSection>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 12,
+            paddingTop: SPACING.md,
+            paddingBottom: SPACING.lg,
           }}
-          style={{ flex: 1 }}
         >
-          Cancel
-        </Button>
-        <Button
-          onPress={handleSave}
-          disabled={!pattern.trim() || isSubmitting}
-          style={{ flex: 1 }}
-        >
-          {isSubmitting ? 'Saving...' : mode === 'add' ? 'Add Pattern' : 'Save Changes'}
-        </Button>
-      </View>
-    </BottomSheet>
+          <Button
+            variant="outline"
+            onPress={() => {
+              setMode('list');
+              resetForm();
+            }}
+            style={{ flex: 1 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onPress={handleSave}
+            disabled={!pattern.trim() || isSubmitting}
+            style={{ flex: 1 }}
+          >
+            {isSubmitting ? 'Saving...' : mode === 'add' ? 'Add Pattern' : 'Save Changes'}
+          </Button>
+        </View>
+      </BottomSheet>
+
+      {/* Step-up verification sheet for MFA on destructive actions - rendered outside to avoid nesting issues */}
+      <StepUpVerificationSheet
+        visible={showStepUpSheet}
+        onClose={handleStepUpCancel}
+        onVerify={handleStepUpVerify}
+        state={stepUpState}
+      />
+    </>
   );
 }

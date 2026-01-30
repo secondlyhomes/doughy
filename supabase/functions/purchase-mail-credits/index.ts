@@ -429,9 +429,10 @@ serve(async (req: Request) => {
 
   } catch (error) {
     console.error('[PurchaseCredits] Error:', error);
+    // Sanitize error response - don't leak internal details
     return addCorsHeaders(
       new Response(
-        JSON.stringify({ success: false, error: error.message || 'Internal server error' }),
+        JSON.stringify({ success: false, error: 'Internal server error' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       ),
       req
