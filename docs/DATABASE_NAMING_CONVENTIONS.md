@@ -718,6 +718,155 @@ CREATE POLICY "Admins can view all properties"
 
 ---
 
+## Multi-Tenancy (Workspace Isolation)
+
+### Overview
+
+Doughy supports team collaboration via workspaces. All team-shareable tables use `workspace_id` for access control, enabling multiple users to share data within their workspace.
+
+**Key Concepts:**
+- **Workspace** = Team container (platform-agnostic)
+- Same `workspace_id` works across BOTH Investor and Landlord platforms
+- Teams can use one platform, the other, or both
+- RLS filters by workspace_id regardless of platform
+
+### Required Columns for Workspace Tables
+
+All team-shareable tables MUST have:
+
+```sql
+-- Required for workspace access control
+workspace_id UUID REFERENCES workspaces(id)
+
+-- Kept for audit trail (tracks record creator)
+user_id UUID REFERENCES auth.users(id)
+```
+
+**Note**: Keep `user_id` even with workspace_id. They serve different purposes:
+- `workspace_id` → Access control (who can see this)
+- `user_id` → Audit trail (who created this)
+
+### Tables by Scope
+
+| Scope | Pattern | Example Tables |
+|-------|---------|----------------|
+| **Workspace-scoped** | Has `workspace_id` | `landlord_*`, `investor_*`, `crm_*` |
+| **User-scoped** | Only `user_id` | `user_settings`, `user_profiles`, `user_mfa_*` |
+| **System-scoped** | No user/workspace | `system_*`, `billing_*`, analytics tables |
+
+### RLS Pattern for Workspace Tables
+
+```sql
+-- Helper functions for performance (cacheable by PostgreSQL)
+CREATE FUNCTION user_workspace_ids() RETURNS SETOF UUID AS $$
+  SELECT workspace_id FROM workspace_members
+  WHERE user_id = auth.uid() AND is_active = true;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE FUNCTION user_owned_workspace_ids() RETURNS SETOF UUID AS $$
+  SELECT workspace_id FROM workspace_members
+  WHERE user_id = auth.uid() AND is_active = true AND role = 'owner';
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Standard workspace policies
+CREATE POLICY "table_workspace_select" ON table_name
+  FOR SELECT USING (workspace_id IN (SELECT user_workspace_ids()));
+
+CREATE POLICY "table_workspace_insert" ON table_name
+  FOR INSERT WITH CHECK (workspace_id IN (SELECT user_workspace_ids()));
+
+CREATE POLICY "table_workspace_update" ON table_name
+  FOR UPDATE USING (workspace_id IN (SELECT user_workspace_ids()));
+
+-- DELETE restricted to workspace owners only
+CREATE POLICY "table_workspace_delete" ON table_name
+  FOR DELETE USING (workspace_id IN (SELECT user_owned_workspace_ids()));
+```
+
+### Role Permissions
+
+Simple Owner + Member model:
+
+| Action | Owner | Member |
+|--------|-------|--------|
+| SELECT | ✓ | ✓ |
+| INSERT | ✓ | ✓ |
+| UPDATE | ✓ | ✓ |
+| DELETE | ✓ | ✗ |
+| Invite Members | ✓ | ✗ |
+
+### Auto-Set Trigger Pattern
+
+Always create triggers to auto-populate `workspace_id`:
+
+```sql
+CREATE OR REPLACE FUNCTION set_workspace_id_from_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.workspace_id IS NULL THEN
+    SELECT wm.workspace_id INTO NEW.workspace_id
+    FROM workspace_members wm
+    WHERE wm.user_id = COALESCE(NEW.user_id, auth.uid())
+      AND wm.is_active = true
+    ORDER BY wm.created_at ASC
+    LIMIT 1;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER set_workspace_id_trigger
+  BEFORE INSERT ON table_name
+  FOR EACH ROW EXECUTE FUNCTION set_workspace_id_from_user();
+```
+
+### Index Requirements
+
+Every `workspace_id` column MUST have:
+
+```sql
+-- Basic index for RLS performance
+CREATE INDEX idx_table_workspace_id ON table_name(workspace_id);
+
+-- Composite indexes for common query patterns
+CREATE INDEX idx_table_workspace_status ON table_name(workspace_id, status);
+CREATE INDEX idx_table_workspace_dates ON table_name(workspace_id, created_at DESC);
+```
+
+### Child Table Inheritance
+
+For child tables without `user_id`, inherit `workspace_id` from parent:
+
+```sql
+-- Example: landlord_rooms inherits from landlord_properties
+CREATE OR REPLACE FUNCTION set_workspace_id_from_landlord_property()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.workspace_id IS NULL AND NEW.property_id IS NOT NULL THEN
+    SELECT workspace_id INTO NEW.workspace_id
+    FROM landlord_properties WHERE id = NEW.property_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+```
+
+### Migration Checklist for New Workspace Tables
+
+- [ ] Add `workspace_id UUID REFERENCES workspaces(id)` column
+- [ ] Keep `user_id` for audit trail
+- [ ] Create index on `workspace_id`
+- [ ] Create composite indexes for common queries
+- [ ] Create auto-set trigger for `workspace_id`
+- [ ] Update RLS policies to use workspace membership pattern
+- [ ] Add column comment: `'Team workspace for multi-tenant access control'`
+
+---
+
 ## Migration File Naming
 
 ### Pattern
