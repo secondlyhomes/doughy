@@ -2,8 +2,8 @@
 // Portfolio property detail screen with tabs for Performance, Financials, Debt, Valuations, Docs
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
+import { useLocalSearchParams, useRouter, Redirect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Briefcase } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -28,6 +28,9 @@ import { PortfolioActionsSheet } from '../components/PortfolioActionsSheet';
 
 type TabValue = 'performance' | 'financials' | 'debt' | 'valuations' | 'docs';
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function PortfolioPropertyDetailScreen() {
   const { propertyId } = useLocalSearchParams<{ propertyId: string }>();
   const router = useRouter();
@@ -38,6 +41,10 @@ export function PortfolioPropertyDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
 
+  // Check if propertyId is a valid UUID (hooks must be called before any returns)
+  const isValidUUID = Boolean(propertyId && UUID_REGEX.test(propertyId));
+
+  // Call hooks unconditionally (they should handle invalid IDs gracefully)
   const {
     entry,
     property,
@@ -48,13 +55,19 @@ export function PortfolioPropertyDetailScreen() {
     refetch,
     removeEntry,
     isRemoving,
-  } = usePortfolioProperty(propertyId);
+  } = usePortfolioProperty(isValidUUID ? propertyId : '');
 
   const {
     performance,
     benchmark,
     refetch: refetchPerformance,
   } = usePortfolioPerformance(portfolioEntryId);
+
+  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
+  // Must come AFTER all hook calls to follow React's rules of hooks
+  if (!isValidUUID) {
+    return <Redirect href="/(tabs)/pipeline" />;
+  }
 
   // Calculate ownership duration
   const ownershipDuration = useMemo(() => {
@@ -77,8 +90,14 @@ export function PortfolioPropertyDetailScreen() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetch(), refetchPerformance()]);
-    setRefreshing(false);
+    try {
+      await Promise.all([refetch(), refetchPerformance()]);
+    } catch (error) {
+      console.error('[PortfolioPropertyDetailScreen] Refresh failed:', error);
+      // Silently fail for refresh - user can try again
+    } finally {
+      setRefreshing(false);
+    }
   }, [refetch, refetchPerformance]);
 
   const handleTabChange = useCallback((value: string) => {
@@ -100,8 +119,14 @@ export function PortfolioPropertyDetailScreen() {
   }, [router]);
 
   const handleRemove = useCallback(async () => {
-    await removeEntry();
-    router.back();
+    try {
+      await removeEntry();
+      router.back();
+    } catch (error) {
+      console.error('[PortfolioPropertyDetailScreen] Failed to remove entry:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to remove property: ${message}`);
+    }
   }, [removeEntry, router]);
 
   if (isLoading && !property) {

@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Wrench, Plus, Filter, AlertTriangle } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -18,9 +18,9 @@ import {
   TabsTrigger,
   TabsContent,
 } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
+import { useNativeHeader } from '@/hooks';
 import {
   useFilteredMaintenance,
 } from '../hooks/usePropertyMaintenance';
@@ -60,10 +60,19 @@ export function MaintenanceListScreen() {
     [workOrders]
   );
 
-  // Navigation handlers
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
+  // Native header configuration
+  const { headerOptions } = useNativeHeader({
+    title: 'Maintenance',
+    fallbackRoute: `/(tabs)/rental-properties/${propertyId}`,
+    rightAction: emergencyCount > 0 ? (
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <AlertTriangle size={16} color={colors.destructive} />
+        <Badge variant="danger" size="sm" style={{ marginLeft: 4 }}>
+          {emergencyCount}
+        </Badge>
+      </View>
+    ) : undefined,
+  });
 
   const handleWorkOrderPress = useCallback(
     (workOrder: MaintenanceWorkOrder) => {
@@ -81,29 +90,19 @@ export function MaintenanceListScreen() {
   // Loading state
   if (isLoading && workOrders.length === 0) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading maintenance..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading maintenance..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader
-        title="Maintenance"
-        backButton
-        onBack={handleBack}
-        rightAction={
-          emergencyCount > 0 && (
-            <View className="flex-row items-center">
-              <AlertTriangle size={16} color={colors.destructive} />
-              <Badge variant="danger" size="sm" className="ml-1">
-                {emergencyCount}
-              </Badge>
-            </View>
-          )
-        }
-      />
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
 
       {/* Tabs */}
       <View className="px-4 pb-2">
@@ -188,6 +187,7 @@ export function MaintenanceListScreen() {
             paddingTop: SPACING.sm,
             paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -201,7 +201,7 @@ export function MaintenanceListScreen() {
 
       {/* Add FAB */}
       <SimpleFAB
-        icon={<Plus size={24} color="white" />}
+        icon={<Plus size={24} color={colors.primaryForeground} />}
         onPress={() => setShowAddSheet(true)}
         accessibilityLabel="Report issue"
       />
@@ -213,7 +213,8 @@ export function MaintenanceListScreen() {
         propertyId={propertyId}
         onSuccess={handleAddSuccess}
       />
-    </ThemedSafeAreaView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

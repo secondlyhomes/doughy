@@ -9,7 +9,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Package, Plus, ChevronDown, ChevronUp, Search } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -20,9 +20,10 @@ import {
   TAB_BAR_SAFE_PADDING,
   Badge,
   ListEmptyState,
+  FilterableTabs,
 } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { useNativeHeader } from '@/hooks';
 import {
   usePropertyInventory,
   useInventoryGroupedByCategory,
@@ -32,7 +33,9 @@ import { AddInventorySheet } from '../components/AddInventorySheet';
 import {
   InventoryItem,
   InventoryCategory,
+  InventoryType,
   INVENTORY_CATEGORY_LABELS,
+  INVENTORY_TYPE_CONFIG,
 } from '../types';
 
 export function InventoryListScreen() {
@@ -43,6 +46,7 @@ export function InventoryListScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddSheet, setShowAddSheet] = useState(false);
+  const [activeTab, setActiveTab] = useState<InventoryType | 'all'>('all');
   const [collapsedSections, setCollapsedSections] = useState<Set<InventoryCategory>>(
     new Set()
   );
@@ -55,19 +59,49 @@ export function InventoryListScreen() {
     error,
   } = usePropertyInventory(propertyId);
 
-  // Filter items by search query
-  const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
+  // Native header configuration
+  const { headerOptions } = useNativeHeader({
+    title: 'Inventory',
+    fallbackRoute: `/(tabs)/rental-properties/${propertyId}`,
+  });
 
-    const query = searchQuery.toLowerCase();
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.brand?.toLowerCase().includes(query) ||
-        item.model?.toLowerCase().includes(query) ||
-        item.location?.toLowerCase().includes(query)
-    );
-  }, [items, searchQuery]);
+  // Count items by type
+  const assetCount = useMemo(
+    () => items.filter((item) => item.inventory_type === 'asset' || !item.inventory_type).length,
+    [items]
+  );
+  const supplyCount = useMemo(
+    () => items.filter((item) => item.inventory_type === 'supply').length,
+    [items]
+  );
+
+  // Filter items by search query and inventory type
+  const filteredItems = useMemo(() => {
+    let result = items;
+
+    // Filter by inventory type
+    if (activeTab !== 'all') {
+      result = result.filter((item) => {
+        // Default to 'asset' if inventory_type is not set
+        const itemType = item.inventory_type || 'asset';
+        return itemType === activeTab;
+      });
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.name.toLowerCase().includes(query) ||
+          item.brand?.toLowerCase().includes(query) ||
+          item.model?.toLowerCase().includes(query) ||
+          item.location?.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [items, searchQuery, activeTab]);
 
   // Group items by category
   const sections = useMemo(() => {
@@ -110,11 +144,6 @@ export function InventoryListScreen() {
       return next;
     });
   }, []);
-
-  // Navigation handlers
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
 
   const handleItemPress = useCallback(
     (item: InventoryItem) => {
@@ -170,22 +199,34 @@ export function InventoryListScreen() {
   // Loading state
   if (isLoading && items.length === 0) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading inventory..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading inventory..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader
-        title="Inventory"
-        backButton
-        onBack={handleBack}
-        rightAction={
-          <Badge variant="default">{items.length} items</Badge>
-        }
-      />
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+
+      {/* Inventory Type Tabs */}
+      <View className="px-4 pb-2">
+        <FilterableTabs
+          tabs={[
+            { key: 'all', label: 'All', count: items.length },
+            { key: 'asset', label: 'Assets', count: assetCount },
+            { key: 'supply', label: 'Supplies', count: supplyCount },
+          ]}
+          value={activeTab}
+          onChange={(key) => setActiveTab(key as InventoryType | 'all')}
+          variant="segment"
+          size="sm"
+        />
+      </View>
 
       {/* Search Bar */}
       <View className="px-4 pb-2">
@@ -231,6 +272,7 @@ export function InventoryListScreen() {
           contentContainerStyle={{
             paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -245,7 +287,7 @@ export function InventoryListScreen() {
 
       {/* Add FAB */}
       <SimpleFAB
-        icon={<Plus size={24} color="white" />}
+        icon={<Plus size={24} color={colors.primaryForeground} />}
         onPress={() => setShowAddSheet(true)}
         accessibilityLabel="Add inventory item"
       />
@@ -257,7 +299,8 @@ export function InventoryListScreen() {
         propertyId={propertyId}
         onSuccess={handleAddSuccess}
       />
-    </ThemedSafeAreaView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

@@ -57,8 +57,10 @@ export function LeadDetailScreen() {
     if (lead) {
       try {
         await updateLead.mutateAsync({ id: lead.id, data: { starred: !lead.starred } });
-      } catch {
-        Alert.alert('Error', 'Failed to update lead');
+      } catch (error) {
+        console.error('[LeadDetailScreen] Failed to toggle star:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        Alert.alert('Error', `Failed to update lead: ${message}`);
       }
     }
   };
@@ -77,8 +79,10 @@ export function LeadDetailScreen() {
             try {
               await deleteLead.mutateAsync(leadId);
               router.back();
-            } catch {
-              Alert.alert('Error', 'Failed to delete lead');
+            } catch (error) {
+              console.error('[LeadDetailScreen] Failed to delete lead:', error);
+              const message = error instanceof Error ? error.message : 'Unknown error';
+              Alert.alert('Error', `Failed to delete lead: ${message}`);
             } finally {
               setIsDeleting(false);
             }
@@ -111,8 +115,10 @@ export function LeadDetailScreen() {
 
               // Navigate to the new deal
               router.push(`/(tabs)/deals/${newDeal.id}`);
-            } catch {
-              Alert.alert('Error', 'Failed to create deal from lead');
+            } catch (error) {
+              console.error('[LeadDetailScreen] Failed to create deal:', error);
+              const message = error instanceof Error ? error.message : 'Unknown error';
+              Alert.alert('Error', `Failed to create deal: ${message}`);
             }
           },
         },
@@ -223,8 +229,8 @@ export function LeadDetailScreen() {
             </View>
           )}
 
-          {/* Quick Actions */}
-          <LeadQuickActions name={lead.name || 'Lead'} phone={lead.phone} email={lead.email} />
+          {/* Quick Actions - Call uses VoIP for pro/premium users */}
+          <LeadQuickActions leadId={lead.id} name={lead.name || 'Lead'} phone={lead.phone} email={lead.email} />
         </View>
 
         {/* Convert to Deal Action */}
