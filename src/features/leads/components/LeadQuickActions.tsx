@@ -1,38 +1,71 @@
 // src/features/leads/components/LeadQuickActions.tsx
 // Quick action buttons for calling, emailing, and texting leads
+// Uses VoIP for in-app calling (pro/premium users)
 
-import React from 'react';
-import { View, Text, TouchableOpacity, Linking } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
 import { Phone, Mail, MessageSquare } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { sanitizePhone } from '@/utils/sanitize';
+import { useVoipCall } from '@/features/voip';
+import type { SubscriptionTier } from '@/features/voip';
 
 interface LeadQuickActionsProps {
+  leadId?: string;
   name: string;
   phone?: string | null;
   email?: string | null;
+  /** Subscription tier determines VoIP behavior: 'free' uses native dialer, 'pro'/'premium' use in-app calling.
+   * Defaults to 'pro' to enable in-app calling for most users. */
+  subscriptionTier?: SubscriptionTier;
 }
 
-export function LeadQuickActions({ name, phone, email }: LeadQuickActionsProps) {
+export function LeadQuickActions({ leadId, name, phone, email, subscriptionTier = 'pro' }: LeadQuickActionsProps) {
   const colors = useThemeColors();
 
-  const handleCall = () => {
-    if (phone) {
-      Linking.openURL(`tel:${sanitizePhone(phone)}`);
-    }
-  };
+  // VoIP calling - uses in-app calling for pro/premium, native dialer for free
+  const { startCall } = useVoipCall({ subscriptionTier });
 
-  const handleEmail = () => {
-    if (email) {
-      Linking.openURL(`mailto:${encodeURIComponent(email)}`);
-    }
-  };
-
-  const handleSMS = () => {
+  const handleCall = useCallback(() => {
+    if (__DEV__) console.log('[VOIP DEBUG] handleCall triggered, phone:', phone);
     if (phone) {
-      Linking.openURL(`sms:${sanitizePhone(phone)}`);
+      const sanitizedPhone = sanitizePhone(phone);
+      if (__DEV__) console.log('[VOIP DEBUG] Calling startCall with:', sanitizedPhone, leadId, name);
+      startCall(sanitizedPhone, leadId, name);
     }
-  };
+  }, [phone, leadId, name, startCall]);
+
+  const handleEmail = useCallback(async () => {
+    if (!email) return;
+    const url = `mailto:${encodeURIComponent(email)}`;
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Unable to Email', 'No email app is configured on this device.');
+      }
+    } catch (err) {
+      if (__DEV__) console.error('Failed to open email:', err);
+      Alert.alert('Email Error', 'Unable to open email app. Please try again.');
+    }
+  }, [email]);
+
+  const handleSMS = useCallback(async () => {
+    if (!phone) return;
+    const url = `sms:${sanitizePhone(phone)}`;
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Unable to Send SMS', 'SMS is not available on this device.');
+      }
+    } catch (err) {
+      if (__DEV__) console.error('Failed to open SMS:', err);
+      Alert.alert('SMS Error', 'Unable to open messaging app. Please try again.');
+    }
+  }, [phone]);
 
   return (
     <View className="flex-row gap-3">

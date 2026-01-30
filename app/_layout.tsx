@@ -4,7 +4,7 @@ import 'react-native-get-random-values'; // Polyfill for crypto.getRandomValues
 import '../global.css';
 import { View, LogBox } from 'react-native';
 import { useFonts } from 'expo-font';
-import { Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 
 // Suppress warnings from dependencies we can't control
 const SUPPRESSED_WARNINGS = [
@@ -93,7 +93,21 @@ export default function RootLayout() {
                         <UnreadCountsProvider>
                           <SafeAreaProvider>
                             <ThemedStatusBar />
-                            <Slot />
+                            <Stack screenOptions={{ headerShown: false }}>
+                              <Stack.Screen name="(tabs)" />
+                              <Stack.Screen name="(auth)" />
+                              <Stack.Screen name="(public)" />
+                              <Stack.Screen name="(admin)" />
+                              <Stack.Screen name="skip-tracing" />
+                              <Stack.Screen
+                                name="(modals)"
+                                options={{
+                                  presentation: 'fullScreenModal',
+                                  animation: 'slide_from_bottom',
+                                }}
+                              />
+                              <Stack.Screen name="index" />
+                            </Stack>
                           </SafeAreaProvider>
                         </UnreadCountsProvider>
                       </ErrorProvider>
