@@ -4,7 +4,6 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { View, Text, SectionList, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Briefcase, Search, FolderPlus, ChevronDown, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -19,10 +18,6 @@ import { AddToPortfolioSheet, CreateGroupSheet, PortfolioSummaryCard } from '../
 import { PropertyCard } from '@/features/real-estate/components/PropertyCard';
 import type { AddToPortfolioInput, PortfolioProperty, CreateGroupInput, PortfolioGroupWithStats, PortfolioGroup } from '../types';
 import type { Property } from '@/features/real-estate/types';
-
-// Spacing Constants
-const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs;
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg;
 
 interface GroupedSection {
   id: string;
@@ -113,7 +108,6 @@ const SectionHeader = React.memo(function SectionHeader({
 export function PortfolioScreen() {
   const colors = useThemeColors();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   // Portfolio data
   const {
@@ -232,20 +226,36 @@ export function PortfolioScreen() {
   }, []);
 
   const handleGroupSubmit = useCallback(async (data: CreateGroupInput) => {
-    if (editingGroup) {
-      await updateGroup({ id: editingGroup.id, ...data });
-    } else {
-      await createGroup(data);
+    try {
+      if (editingGroup) {
+        await updateGroup({ id: editingGroup.id, ...data });
+      } else {
+        await createGroup(data);
+      }
+      setShowGroupSheet(false);
+      setEditingGroup(null);
+    } catch (error) {
+      console.error('[PortfolioScreen] Failed to save group:', error);
+      Alert.alert(
+        'Failed to Save Group',
+        error instanceof Error ? error.message : 'Unable to save the group. Please try again.'
+      );
     }
-    setShowGroupSheet(false);
-    setEditingGroup(null);
   }, [editingGroup, createGroup, updateGroup]);
 
   const handleGroupDelete = useCallback(async () => {
     if (editingGroup) {
-      await deleteGroup(editingGroup.id);
-      setShowGroupSheet(false);
-      setEditingGroup(null);
+      try {
+        await deleteGroup(editingGroup.id);
+        setShowGroupSheet(false);
+        setEditingGroup(null);
+      } catch (error) {
+        console.error('[PortfolioScreen] Failed to delete group:', error);
+        Alert.alert(
+          'Failed to Delete Group',
+          error instanceof Error ? error.message : 'Unable to delete the group. Please try again.'
+        );
+      }
     }
   }, [editingGroup, deleteGroup]);
 
@@ -306,24 +316,22 @@ export function PortfolioScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Glass Search Bar */}
-      <View className="absolute top-0 left-0 right-0 z-10" style={{ paddingTop: insets.top }}>
-        <View className="px-4 pt-2 pb-1">
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search portfolio..."
-            size="md"
-            glass={true}
-            onFilter={() => setShowFiltersSheet(true)}
-            hasActiveFilters={searchQuery.trim().length > 0}
-          />
-        </View>
+      {/* Search Bar - in normal document flow */}
+      <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search portfolio..."
+          size="md"
+          glass={true}
+          onFilter={() => setShowFiltersSheet(true)}
+          hasActiveFilters={searchQuery.trim().length > 0}
+        />
       </View>
 
       {/* Portfolio List */}
       {isLoadingAll ? (
-        <View style={{ paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP, paddingHorizontal: 16 }}>
+        <View style={{ paddingHorizontal: SPACING.md }}>
           <SkeletonList count={4} component={PropertyCardSkeleton} />
         </View>
       ) : (
@@ -334,10 +342,10 @@ export function PortfolioScreen() {
           keyExtractor={keyExtractor}
           ListHeaderComponent={renderListHeader}
           contentContainerStyle={{
-            paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
-            paddingHorizontal: 16,
+            paddingHorizontal: SPACING.md,
             paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           ItemSeparatorComponent={() => <View className="h-3" />}
           SectionSeparatorComponent={() => <View className="h-4" />}
           stickySectionHeadersEnabled={false}

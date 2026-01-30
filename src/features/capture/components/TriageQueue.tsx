@@ -6,7 +6,7 @@ import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Inbox, CheckCircle, Search, AlertCircle } from 'lucide-react-native';
-import { SPACING } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 
 import { CaptureItem } from '../types';
 import { useCaptureItems } from '../hooks/useCaptureItems';
@@ -88,7 +88,7 @@ export function TriageQueue({ onItemPress, showAssigned = false, searchQuery, pr
     <View style={{ flex: 1 }}>
       {/* Header Count */}
       <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
-        <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
+        <Text style={{ fontSize: FONT_SIZES.xs, color: colors.mutedForeground }}>
           {displayItems.length} item{displayItems.length !== 1 ? 's' : ''} to review
         </Text>
       </View>
@@ -102,6 +102,7 @@ export function TriageQueue({ onItemPress, showAssigned = false, searchQuery, pr
           paddingHorizontal: SPACING.md,
           paddingBottom: TAB_BAR_SAFE_PADDING,
         }}
+        contentInsetAdjustmentBehavior="automatic"
         ItemSeparatorComponent={ItemSeparator}
         refreshControl={
           <RefreshControl

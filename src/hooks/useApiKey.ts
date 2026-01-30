@@ -72,7 +72,7 @@ export function useApiKey(service: string, options: UseApiKeyOptions = {}) {
           {
             service: normalizedService,
             key_ciphertext: ciphertext,
-            encrypted: true,
+            is_encrypted: true,
             user_id: user.id,
             group_name: getGroupForService(normalizedService),
             updated_at: new Date().toISOString(),
@@ -196,13 +196,21 @@ export function useApiKey(service: string, options: UseApiKeyOptions = {}) {
   // Fetch API key on mount (unless deferred)
   useEffect(() => {
     isMountedRef.current = true;
+    let cleanup: (() => void) | undefined;
 
     if (!deferLoad) {
-      fetchKey();
+      // Capture the cleanup function returned by fetchKey
+      const result = fetchKey();
+      if (result && typeof result.then === 'function') {
+        result.then((cleanupFn) => {
+          cleanup = cleanupFn;
+        });
+      }
     }
 
     return () => {
       isMountedRef.current = false;
+      cleanup?.();
     };
   }, [deferLoad, fetchKey]);
 

@@ -15,7 +15,7 @@ const logInfo = (message: string, details?: any) => {
   // Try to log to the database if possible
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);
@@ -41,7 +41,7 @@ const logError = (message: string, details?: any) => {
   // Try to log to the database if possible
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (supabaseUrl && supabaseKey) {
       const supabase = createClient(supabaseUrl, supabaseKey);
@@ -82,10 +82,46 @@ serve(async (req) => {
     logInfo("Handling CORS preflight request for integration-health");
     return corsResponse;
   }
-  
+
   // Set CORS headers for all response types based on request
   const headers = getCorsHeaders(req.headers.get('origin'), !!req.headers.get('authorization'));
-  
+
+  // SECURITY: Verify user authentication before processing any health checks
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    logError('Authentication required but no Authorization header provided');
+    return addCorsHeaders(
+      new Response(
+        JSON.stringify({ status: 'error', message: 'Not authenticated' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      ),
+      req
+    );
+  }
+
+  // Verify the token with Supabase Auth
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (supabaseUrl && supabaseKey) {
+    const authSupabase = createClient(supabaseUrl, supabaseKey);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser(token);
+
+    if (authError || !user) {
+      logError('Invalid authentication token', { error: authError?.message });
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({ status: 'error', message: 'Invalid authentication' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        ),
+        req
+      );
+    }
+
+    logInfo(`Authenticated user: ${user.id}`);
+  }
+
   try {
     // Parse request body
     const requestData = await req.json();
@@ -108,12 +144,12 @@ serve(async (req) => {
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
       logError("Missing required environment variables", {
         SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
-        SUPABASE_SECRET_KEY: supabaseKey ? "set" : "MISSING",
+        SUPABASE_SERVICE_ROLE_KEY: supabaseKey ? "set" : "MISSING",
       });
       const errorResponse = new Response(JSON.stringify({
         status: 'error',
@@ -261,10 +297,11 @@ serve(async (req) => {
           };
       }
     } catch (decryptError) {
-      logError('Error decrypting key:', decryptError);
+      const errorMsg = decryptError instanceof Error ? decryptError.message : 'Unknown error';
+      logError('Decryption failed:', { error: errorMsg, service: serviceToCheck });
       healthResult = {
         status: 'error',
-        message: 'Error decrypting integration key',
+        message: `Decryption error: ${errorMsg}`,
         service: serviceToCheck,
       };
     }
@@ -325,31 +362,21 @@ function normalizeServiceName(service: string): string {
 }
 
 /**
- * Update health check status (no longer persists to database)
- * The api_health_checks table has been removed to simplify the database
+ * Update health check record - only updates last_used timestamp
+ * Status is returned directly to the client, not persisted to avoid enum mismatches
  */
 async function updateHealthCheck(supabase, service: string, result: any, groupName: string) {
   try {
-    // Map health status to valid database enum values
-    // DB enum: 'invalid', 'revoked', 'unchecked', 'valid'
-    let dbStatus: 'valid' | 'invalid' | 'unchecked' = 'unchecked';
-    if (result.status === 'operational' || result.status === 'configured') {
-      dbStatus = 'valid';
-    } else if (result.status === 'error') {
-      dbStatus = 'invalid';
-    }
-
-    // Only update the api_keys table with last_used timestamp
+    // Only update the last_used timestamp - status is returned to client directly
     const { error } = await supabase
       .from('security_api_keys')
       .update({
-        last_used: new Date().toISOString(),
-        status: dbStatus
+        last_used: new Date().toISOString()
       })
       .eq('service', service);
 
     if (error) {
-      logError('Error updating API key status:', error);
+      logError('Error updating API key last_used:', error);
     }
   } catch (err) {
     logError('Exception in updateHealthCheck:', err);
@@ -433,17 +460,16 @@ async function checkOpenAI(apiKey: string) {
 }
 
 /**
- * Check Anthropic API health using HEAD request
+ * Check Anthropic API health using GET request to models endpoint
  * This method does not consume tokens as it only checks API connectivity
  */
 async function checkAnthropic(apiKey: string) {
   try {
-    logInfo("Checking Anthropic API health using HEAD request...", {});
-    
+    logInfo("Checking Anthropic API health...", {});
+
     const startTime = Date.now();
-    
+
     // Use GET request to check API connectivity without spending tokens
-    // Some APIs don't support HEAD requests properly
     const response = await fetch('https://api.anthropic.com/v1/models', {
       method: 'GET',
       headers: {
@@ -452,12 +478,12 @@ async function checkAnthropic(apiKey: string) {
         'Content-Type': 'application/json'
       }
     });
-    
+
     const endTime = Date.now();
     const latency = endTime - startTime;
-    
+
     logInfo(`Anthropic API response status: ${response.status}`, {});
-    
+
     if (response.ok) {
       return {
         status: 'operational',
@@ -466,15 +492,39 @@ async function checkAnthropic(apiKey: string) {
         latency: `${latency}ms`
       };
     }
-    
-    // If HEAD request fails, provide error information
-    logError(`Anthropic API error: ${response.status} ${response.statusText}`, {});
-    
+
+    // Read response body to get detailed error message
+    let errorDetails = '';
+    try {
+      const responseBody = await response.json();
+      errorDetails = responseBody?.error?.message || '';
+      logError(`Anthropic API error details:`, { httpStatus: response.status, body: responseBody });
+    } catch (e) {
+      logError(`Anthropic API error (no body):`, { httpStatus: response.status });
+    }
+
+    // Provide specific error messages based on HTTP status
+    let errorMessage = '';
+    if (response.status === 401) {
+      errorMessage = errorDetails || 'Invalid or expired API key';
+    } else if (response.status === 403) {
+      errorMessage = errorDetails || 'API key lacks required permissions';
+    } else if (response.status === 429) {
+      errorMessage = 'Rate limit exceeded';
+    } else if (response.status >= 500) {
+      errorMessage = 'Anthropic service temporarily unavailable';
+    } else {
+      errorMessage = errorDetails || `Anthropic API error: ${response.status} ${response.statusText}`;
+    }
+
+    logError(errorMessage, { httpStatus: response.status });
+
     return {
       status: 'error',
-      message: `Anthropic API error: ${response.status} ${response.statusText}`,
+      message: errorMessage,
       service: 'anthropic',
-      latency: `${latency}ms`
+      latency: `${latency}ms`,
+      http_status: response.status
     };
   } catch (error) {
     logError('Anthropic health check error:', error);

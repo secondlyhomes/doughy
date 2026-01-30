@@ -9,7 +9,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Users, Plus, ChevronDown, ChevronUp, Search, Award } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -21,8 +21,8 @@ import {
   Badge,
   ListEmptyState,
 } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { useNativeHeader } from '@/hooks';
 import {
   useVendorsGroupedByCategory,
 } from '../hooks/useVendors';
@@ -56,6 +56,12 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
     refetch,
     error,
   } = useVendorsGroupedByCategory(propertyId);
+
+  // Native header configuration
+  const { headerOptions } = useNativeHeader({
+    title: isGlobal ? 'My Vendors' : 'Vendors',
+    fallbackRoute: isGlobal ? '/(tabs)/settings' : `/(tabs)/rental-properties/${propertyId}`,
+  });
 
   // Filter vendors by search query
   const filteredGroups = useMemo(() => {
@@ -100,11 +106,6 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
       return next;
     });
   }, []);
-
-  // Navigation handlers
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
 
   const handleVendorPress = useCallback(
     (vendor: Vendor) => {
@@ -174,20 +175,19 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
   // Loading state
   if (isLoading && vendors.length === 0) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading vendors..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading vendors..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader
-        title={isGlobal ? 'My Vendors' : 'Vendors'}
-        backButton
-        onBack={handleBack}
-        rightAction={<Badge variant="default">{vendors.length}</Badge>}
-      />
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
 
       {/* Search Bar */}
       <View className="px-4 pb-2">
@@ -198,8 +198,27 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
         />
       </View>
 
+      {/* Error Banner */}
+      {error && (
+        <View className="px-4 pb-2">
+          <View
+            style={{
+              backgroundColor: colors.destructive + '20',
+              borderRadius: 8,
+              padding: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: colors.destructive, flex: 1, fontSize: 14 }}>
+              Failed to load vendors. Pull down to retry.
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Content */}
-      {vendors.length === 0 ? (
+      {!error && vendors.length === 0 ? (
         <ListEmptyState
           icon={Users}
           title="No Vendors"
@@ -233,6 +252,7 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
           contentContainerStyle={{
             paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -259,7 +279,8 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
         propertyId={propertyId}
         onSuccess={handleAddSuccess}
       />
-    </ThemedSafeAreaView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

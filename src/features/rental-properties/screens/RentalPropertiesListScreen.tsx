@@ -9,6 +9,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import {
@@ -28,22 +29,11 @@ import { useThemeColors } from '@/context/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RentalProperty, RentalType, PropertyStatus } from '../types';
 import { useRentalPropertiesWithRooms } from '../hooks/useRentalProperties';
-import { RentalPropertyCard } from '../components/RentalPropertyCard';
-
-// ============================================
-// Spacing Constants
-// ============================================
-
-const SEARCH_BAR_CONTAINER_HEIGHT =
-  SPACING.sm + // pt-2 (8px top padding)
-  40 + // SearchBar size="md" estimated height
-  SPACING.xs; // pb-1 (4px bottom padding)
-
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg; // 16px comfortable gap
+import { PropertyImageCard } from '@/components/ui';
+import { formatCurrency } from '@/utils/format';
 
 // ============================================
 // Filter Types
@@ -107,7 +97,6 @@ interface RentalPropertyWithRooms extends RentalProperty {
 export function RentalPropertiesListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeFilter, setActiveFilter] = useState<RentalType | 'all'>('all');
@@ -115,7 +104,7 @@ export function RentalPropertiesListScreen() {
   const [advancedFilters, setAdvancedFilters] =
     useState<RentalPropertyFilters>(defaultFilters);
 
-  const { properties, isLoading, refetch } = useRentalPropertiesWithRooms();
+  const { properties, isLoading, refetch, error } = useRentalPropertiesWithRooms();
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -195,15 +184,72 @@ export function RentalPropertiesListScreen() {
   }, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: RentalPropertyWithRooms }) => (
-      <RentalPropertyCard
-        property={item}
-        onPress={() => handlePropertyPress(item)}
-        roomsCount={item.rooms_count}
-        occupiedRooms={item.occupied_rooms}
-      />
-    ),
-    [handlePropertyPress]
+    ({ item }: { item: RentalPropertyWithRooms }) => {
+      // Badge based on rental type - STR gets standout styling
+      const rentalTypeBadge = {
+        str: { label: 'STR', variant: 'success' as const },
+        mtr: { label: 'MTR', variant: 'info' as const },
+        ltr: { label: 'LTR', variant: 'secondary' as const },
+      }[item.rental_type] || { label: 'LTR', variant: 'secondary' as const };
+
+      // Format rate with period label
+      const rateLabel = item.rate_type === 'nightly'
+        ? '/night'
+        : item.rate_type === 'weekly'
+          ? '/week'
+          : '/mo';
+
+      // Build occupancy footer for room-by-room properties
+      const occupancyFooter = item.is_room_by_room_enabled && item.rooms_count > 0 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View
+            style={{
+              flex: 1,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: colors.muted,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                height: '100%',
+                borderRadius: 3,
+                width: `${(item.occupied_rooms / item.rooms_count) * 100}%`,
+                backgroundColor: item.occupied_rooms === item.rooms_count
+                  ? colors.success
+                  : colors.primary,
+              }}
+            />
+          </View>
+          <Text style={{ color: colors.mutedForeground, fontSize: 12, fontWeight: '500' }}>
+            {item.occupied_rooms}/{item.rooms_count}
+          </Text>
+        </View>
+      ) : undefined;
+
+      return (
+        <PropertyImageCard
+          imageUrl={item.primary_image_url}
+          badgeOverlay={rentalTypeBadge}
+          title={item.name}
+          subtitle={`${item.city}, ${item.state}`}
+          metrics={[
+            {
+              label: 'Rate',
+              value: `${formatCurrency(item.base_rate)}${rateLabel}`,
+              color: colors.success,
+            },
+            { label: 'Beds', value: String(item.bedrooms) },
+            { label: 'Baths', value: String(item.bathrooms) },
+          ]}
+          footerContent={occupancyFooter}
+          onPress={() => handlePropertyPress(item)}
+          variant="glass"
+        />
+      );
+    },
+    [handlePropertyPress, colors]
   );
 
   const keyExtractor = useCallback(
@@ -219,32 +265,41 @@ export function RentalPropertiesListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Glass Search Bar - positioned absolutely at top */}
-        <View
-          className="absolute top-0 left-0 right-0 z-10"
-          style={{ paddingTop: insets.top }}
-        >
-          <View className="px-4 pt-2 pb-1">
-            <SearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search properties..."
-              size="md"
-              glass={true}
-              onFilter={() => setShowFiltersSheet(true)}
-              hasActiveFilters={hasActiveFilters}
-            />
-          </View>
+        {/* Search Bar - in normal flow */}
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.sm }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search properties..."
+            size="md"
+            glass={true}
+            onFilter={() => setShowFiltersSheet(true)}
+            hasActiveFilters={hasActiveFilters}
+          />
         </View>
+
+        {/* Error Banner */}
+        {error && (
+          <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
+            <View
+              style={{
+                backgroundColor: colors.destructive + '20',
+                borderRadius: 8,
+                padding: SPACING.sm,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: colors.destructive, flex: 1, fontSize: 14 }}>
+                Failed to load properties. Pull down to retry.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Properties List */}
         {isLoading && !properties?.length ? (
-          <View
-            style={{
-              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
-              paddingHorizontal: 16,
-            }}
-          >
+          <View style={{ paddingHorizontal: SPACING.md }}>
             <SkeletonList count={5} component={DataCardSkeleton} />
           </View>
         ) : (
@@ -253,10 +308,10 @@ export function RentalPropertiesListScreen() {
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             contentContainerStyle={{
-              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
-              paddingHorizontal: 16,
+              paddingHorizontal: SPACING.md,
               paddingBottom: TAB_BAR_SAFE_PADDING,
             }}
+            contentInsetAdjustmentBehavior="automatic"
             ItemSeparatorComponent={ItemSeparator}
             initialNumToRender={10}
             maxToRenderPerBatch={10}
