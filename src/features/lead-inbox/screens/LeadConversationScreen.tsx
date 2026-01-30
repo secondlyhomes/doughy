@@ -2,7 +2,7 @@
 // Conversation detail screen for lead communication inbox
 // Displays message thread with AI review capabilities
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -176,57 +176,58 @@ export function LeadConversationScreen() {
     );
   }, [pendingResponse, confidenceRecord, leadSituation, handleApprove, handleReject, handleToggleAutoSend, isSending]);
 
+  // Memoize header options to prevent infinite re-renders (per UI_CONVENTIONS.md)
+  const headerOptions = useMemo(() => ({
+    headerShown: true,
+    headerStyle: {
+      backgroundColor: colors.background,
+    },
+    headerShadowVisible: false,
+    // Explicitly set status bar height for fullScreenModal presentation
+    headerStatusBarHeight: insets.top,
+    headerTitle: () => (
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+          {leadName}
+        </Text>
+        {conversation && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <ChannelIcon size={12} color={colors.mutedForeground} />
+            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
+              {conversation.channel.toUpperCase()}
+            </Text>
+            {conversation.is_ai_enabled && (
+              <>
+                <Text style={{ color: colors.mutedForeground }}> | </Text>
+                <Sparkles size={12} color={colors.info} />
+                <Text style={{ color: colors.info, fontSize: FONT_SIZES.xs }}>AI</Text>
+              </>
+            )}
+          </View>
+        )}
+      </View>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={{ padding: SPACING.sm }}
+      >
+        <ArrowLeft size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+    headerRight: () => (
+      <TouchableOpacity
+        onPress={() => setShowSettingsSheet(true)}
+        style={{ padding: SPACING.sm }}
+      >
+        <MoreVertical size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+  }), [colors, insets.top, leadName, conversation, ChannelIcon, router]);
+
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: colors.background,
-          },
-          headerShadowVisible: false,
-          // Explicitly set status bar height for fullScreenModal presentation
-          headerStatusBarHeight: insets.top,
-          headerTitle: () => (
-            <View style={{ alignItems: 'center' }}>
-              <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
-                {leadName}
-              </Text>
-              {conversation && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <ChannelIcon size={12} color={colors.mutedForeground} />
-                  <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
-                    {conversation.channel.toUpperCase()}
-                  </Text>
-                  {conversation.ai_enabled && (
-                    <>
-                      <Text style={{ color: colors.mutedForeground }}> | </Text>
-                      <Sparkles size={12} color={colors.info} />
-                      <Text style={{ color: colors.info, fontSize: FONT_SIZES.xs }}>AI</Text>
-                    </>
-                  )}
-                </View>
-              )}
-            </View>
-          ),
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ padding: SPACING.sm }}
-            >
-              <ArrowLeft size={24} color={colors.foreground} />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => setShowSettingsSheet(true)}
-              style={{ padding: SPACING.sm }}
-            >
-              <MoreVertical size={24} color={colors.foreground} />
-            </TouchableOpacity>
-          ),
-        }}
-      />
+      <Stack.Screen options={headerOptions} />
 
       <ThemedSafeAreaView className="flex-1" edges={[]}>
         <KeyboardAvoidingView
@@ -370,15 +371,15 @@ export function LeadConversationScreen() {
                   </Text>
                 </View>
                 <Button
-                  variant={conversation?.ai_enabled ? 'default' : 'outline'}
+                  variant={conversation?.is_ai_enabled ? 'default' : 'outline'}
                   size="sm"
-                  onPress={() => setAIEnabled(!conversation?.ai_enabled)}
+                  onPress={() => setAIEnabled(!conversation?.is_ai_enabled)}
                 >
-                  {conversation?.ai_enabled ? 'On' : 'Off'}
+                  {conversation?.is_ai_enabled ? 'On' : 'Off'}
                 </Button>
               </View>
 
-              {conversation?.ai_enabled && (
+              {conversation?.is_ai_enabled && (
                 <View
                   style={{
                     flexDirection: 'row',
@@ -395,11 +396,11 @@ export function LeadConversationScreen() {
                     </Text>
                   </View>
                   <Button
-                    variant={conversation?.ai_auto_respond ? 'default' : 'outline'}
+                    variant={conversation?.is_ai_auto_respond ? 'default' : 'outline'}
                     size="sm"
-                    onPress={() => setAutoRespond(!conversation?.ai_auto_respond)}
+                    onPress={() => setAutoRespond(!conversation?.is_ai_auto_respond)}
                   >
-                    {conversation?.ai_auto_respond ? 'On' : 'Off'}
+                    {conversation?.is_ai_auto_respond ? 'On' : 'Off'}
                   </Button>
                 </View>
               )}

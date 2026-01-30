@@ -53,8 +53,8 @@ export interface Message {
   sent_by: SentBy;
   ai_confidence: number | null;
   ai_model: string | null;
-  ai_prompt_tokens: number | null;
-  ai_completion_tokens: number | null;
+  ai_prompt_token_count: number | null;
+  ai_completion_token_count: number | null;
   is_requires_approval: boolean;
   approved_by: string | null;
   approved_at: string | null;
@@ -129,6 +129,27 @@ export interface ApprovalMetadata {
   responseTimeSeconds: number;
 }
 
+// Pending send state for delay/undo functionality
+export interface PendingSend {
+  queueItemId: string;
+  conversationId: string;
+  messageId: string;
+  responseText: string;
+  timeoutId: ReturnType<typeof setTimeout>;
+  scheduledAt: number; // timestamp when send is scheduled
+}
+
+// Send result from lead-response-sender
+export interface SendResult {
+  success: boolean;
+  messageId?: string;
+  externalMessageId?: string;
+  deliveredAt?: string;
+  error?: string;
+  requiresManualAction?: boolean;
+  warnings?: string[];
+}
+
 // Conversation with related data for display
 export interface ConversationWithRelations extends Conversation {
   contact?: {
@@ -155,6 +176,9 @@ export interface RentalConversationsState {
   messages: Record<string, Message[]>; // keyed by conversation_id
   pendingResponses: AIResponseQueueItem[];
   selectedConversationId: string | null;
+
+  // Pending send state (for delay/undo functionality)
+  pendingSend: PendingSend | null;
 
   // Filters
   statusFilter: ConversationStatus | 'all';
@@ -190,6 +214,7 @@ export interface RentalConversationsState {
   fetchPendingResponses: () => Promise<void>;
   approveResponse: (id: string, metadata: ApprovalMetadata) => Promise<boolean>;
   rejectResponse: (id: string, responseTimeSeconds: number) => Promise<boolean>;
+  cancelPendingSend: () => void;
 
   // Filter actions
   setStatusFilter: (status: ConversationStatus | 'all') => void;
@@ -204,12 +229,16 @@ export interface RentalConversationsState {
   reset: () => void;
 }
 
+// Constants for send delay
+const SEND_DELAY_MS = 5000; // 5 seconds for manual approvals
+
 const initialState = {
   conversations: [],
   conversationsWithRelations: [],
   messages: {},
   pendingResponses: [],
   selectedConversationId: null,
+  pendingSend: null as PendingSend | null,
   statusFilter: 'all' as const,
   channelFilter: 'all' as const,
   isLoading: false,
@@ -492,6 +521,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           const { editedResponse, editSeverity, responseTimeSeconds } = metadata;
           const status = editedResponse ? 'edited' : 'approved';
           const reviewedAt = new Date().toISOString();
+          const finalResponseText = editedResponse || response.suggested_response;
 
           const updateData: Partial<AIResponseQueueItem> = {
             status,
@@ -550,7 +580,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
               platform: conversation?.platform,
               initial_confidence: response.confidence,
               suggested_response: response.suggested_response,
-              final_response: editedResponse || response.suggested_response,
+              final_response: finalResponseText,
               outcome: status as 'approved' | 'edited',
               edit_severity: editSeverity,
               response_time_seconds: responseTimeSeconds,
@@ -569,15 +599,192 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
             });
           }
 
+          // Remove from pending responses
           set((state) => ({
             pendingResponses: state.pendingResponses.filter((p) => p.id !== id),
           }));
+
+          // Create outbound message in database (status will be updated by send flow)
+          const { data: newMessage, error: messageError } = await supabase
+            .from('landlord_messages')
+            .insert({
+              conversation_id: response.conversation_id,
+              direction: 'outbound',
+              content: finalResponseText,
+              content_type: 'text',
+              sent_by: 'ai',
+              ai_confidence: response.confidence,
+              is_requires_approval: false,
+              approved_by: response.user_id,
+              approved_at: reviewedAt,
+              metadata: {
+                queue_item_id: id,
+                edited: !!editedResponse,
+                edit_severity: editSeverity,
+              },
+            })
+            .select('*')
+            .single();
+
+          if (messageError) {
+            console.error('[ApproveResponse] Failed to create message:', messageError);
+            set({ error: 'Approved but failed to create message record' });
+            return false;
+          }
+
+          // Add new message to local state (prepend since array is sorted newest first)
+          set((state) => ({
+            messages: {
+              ...state.messages,
+              [response.conversation_id]: [
+                newMessage as Message,
+                ...(state.messages[response.conversation_id] || []),
+              ],
+            },
+          }));
+
+          // Schedule delayed send with undo capability
+          const scheduledAt = Date.now() + SEND_DELAY_MS;
+
+          const timeoutId = setTimeout(async () => {
+            // Clear pending send state
+            set({ pendingSend: null });
+
+            // Execute the actual send via edge function
+            try {
+              set({ isSending: true });
+
+              const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+              const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+              if (!supabaseUrl || !supabaseAnonKey) {
+                throw new Error('Supabase configuration missing');
+              }
+
+              // Get the current session for auth
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session) {
+                throw new Error('Not authenticated');
+              }
+
+              const sendResponse = await fetch(
+                `${supabaseUrl}/functions/v1/lead-response-sender`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                  },
+                  body: JSON.stringify({
+                    messageId: newMessage.id,
+                    conversationId: response.conversation_id,
+                    responseText: finalResponseText,
+                  }),
+                }
+              );
+
+              const result: SendResult = await sendResponse.json();
+
+              if (!result.success) {
+                console.error('[ApproveResponse] Send failed:', result.error);
+                if (result.requiresManualAction) {
+                  set({ error: result.error || 'Please reply manually on the platform' });
+                } else {
+                  set({ error: result.error || 'Failed to send response' });
+                }
+              } else {
+                // Update local message state with delivered timestamp
+                set((state) => ({
+                  messages: {
+                    ...state.messages,
+                    [response.conversation_id]: (state.messages[response.conversation_id] || []).map(
+                      (m) => m.id === newMessage.id
+                        ? { ...m, delivered_at: result.deliveredAt }
+                        : m
+                    ),
+                  },
+                }));
+
+                if (__DEV__) {
+                  console.log('[ApproveResponse] Email sent successfully:', result.externalMessageId);
+                }
+              }
+            } catch (sendError) {
+              console.error('[ApproveResponse] Send error:', sendError);
+              set({
+                error: sendError instanceof Error ? sendError.message : 'Failed to send response',
+              });
+            } finally {
+              set({ isSending: false });
+            }
+          }, SEND_DELAY_MS);
+
+          // Store pending send state for undo capability
+          set({
+            pendingSend: {
+              queueItemId: id,
+              conversationId: response.conversation_id,
+              messageId: newMessage.id,
+              responseText: finalResponseText,
+              timeoutId,
+              scheduledAt,
+            },
+          });
 
           return true;
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to approve response';
           set({ error: message });
           return false;
+        }
+      },
+
+      cancelPendingSend: async () => {
+        const { pendingSend } = get();
+        if (!pendingSend) return;
+
+        // Clear the timeout to prevent sending
+        clearTimeout(pendingSend.timeoutId);
+
+        // Track if any operations failed
+        let hasError = false;
+        let errorMessage = '';
+
+        // Delete the message that was created
+        const { error: deleteError } = await supabase
+          .from('landlord_messages')
+          .delete()
+          .eq('id', pendingSend.messageId);
+
+        if (deleteError) {
+          console.error('[CancelPendingSend] Failed to delete message:', deleteError);
+          hasError = true;
+          errorMessage = 'Failed to cancel message deletion.';
+        }
+
+        // Revert the queue item status back to pending so it can be reviewed again
+        const { error: revertError } = await supabase
+          .from('landlord_ai_queue_items')
+          .update({ status: 'pending', reviewed_at: null })
+          .eq('id', pendingSend.queueItemId);
+
+        if (revertError) {
+          console.error('[CancelPendingSend] Failed to revert queue item:', revertError);
+          hasError = true;
+          errorMessage = errorMessage || 'Failed to revert AI response status.';
+        } else {
+          // Refresh pending responses to show the item again
+          get().fetchPendingResponses();
+        }
+
+        // Clear the pending send state but set error if operations failed
+        set({
+          pendingSend: null,
+          error: hasError ? errorMessage : null,
+        });
+
+        if (__DEV__) {
+          console.log('[CancelPendingSend] Send cancelled, message deleted');
         }
       },
 
@@ -1089,3 +1296,5 @@ export const selectNeedsReviewConversations = (state: RentalConversationsState) 
   state.conversationsWithRelations.filter((c) =>
     state.pendingResponses.some((p) => p.conversation_id === c.id)
   );
+export const selectPendingSend = (state: RentalConversationsState) => state.pendingSend;
+export const selectIsSending = (state: RentalConversationsState) => state.isSending;
