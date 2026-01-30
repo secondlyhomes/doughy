@@ -9,9 +9,10 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { CalendarClock, Plus, Filter } from 'lucide-react-native';
 import { useThemeColors } from '@/context/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import {
   LoadingSpinner,
@@ -20,8 +21,8 @@ import {
   Badge,
   ListEmptyState,
 } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { useNativeHeader } from '@/hooks';
 import { useTurnovers } from '../hooks/useTurnovers';
 import { TurnoverCard } from '../components/TurnoverCard';
 import { TurnoverWithRelations, TurnoverStatus, TURNOVER_STATUS_CONFIG } from '../types';
@@ -51,6 +52,12 @@ export function TurnoversListScreen() {
     error,
   } = useTurnovers(propertyId);
 
+  // Native header configuration
+  const { headerOptions } = useNativeHeader({
+    title: 'Turnovers',
+    fallbackRoute: `/(tabs)/rental-properties/${propertyId}`,
+  });
+
   // Filter turnovers based on selected filter
   const filteredTurnovers = useMemo(() => {
     switch (filter) {
@@ -66,11 +73,6 @@ export function TurnoversListScreen() {
         return turnovers;
     }
   }, [turnovers, filter]);
-
-  // Handlers
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
 
   const handleTurnoverPress = useCallback(
     (turnover: TurnoverWithRelations) => {
@@ -116,7 +118,7 @@ export function TurnoversListScreen() {
           >
             <Text
               style={{
-                color: isActive ? 'white' : colors.foreground,
+                color: isActive ? colors.primaryForeground : colors.foreground,
                 fontSize: FONT_SIZES.sm,
                 fontWeight: isActive ? '600' : '400',
               }}
@@ -128,13 +130,13 @@ export function TurnoversListScreen() {
                 className="px-1.5 py-0.5 rounded-full"
                 style={{
                   backgroundColor: isActive
-                    ? 'rgba(255,255,255,0.2)'
+                    ? withOpacity(colors.primaryForeground, 'medium')
                     : colors.card,
                 }}
               >
                 <Text
                   style={{
-                    color: isActive ? 'white' : colors.mutedForeground,
+                    color: isActive ? colors.primaryForeground : colors.mutedForeground,
                     fontSize: FONT_SIZES.xs,
                     fontWeight: '500',
                   }}
@@ -159,20 +161,19 @@ export function TurnoversListScreen() {
   // Loading state
   if (isLoading && turnovers.length === 0) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading turnovers..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading turnovers..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader
-        title="Turnovers"
-        backButton
-        onBack={handleBack}
-        rightAction={<Badge variant="default">{turnovers.length}</Badge>}
-      />
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
 
       {/* Filter Tabs */}
       {renderFilterTabs()}
@@ -202,6 +203,7 @@ export function TurnoversListScreen() {
           contentContainerStyle={{
             paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
+          contentInsetAdjustmentBehavior="automatic"
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -212,7 +214,8 @@ export function TurnoversListScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
         />
       )}
-    </ThemedSafeAreaView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

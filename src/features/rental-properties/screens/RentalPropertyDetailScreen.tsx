@@ -10,8 +10,9 @@ import {
   Alert,
   Linking,
   TouchableOpacity,
+  Image,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack, Redirect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import {
@@ -55,6 +56,13 @@ import { useInventoryCount } from '@/features/property-inventory';
 import { useOpenMaintenanceCount } from '@/features/property-maintenance';
 import { useVendorCount } from '@/features/vendors';
 import { useNextTurnover } from '@/features/turnovers';
+
+// ============================================
+// Constants
+// ============================================
+
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ============================================
 // Helper Functions
@@ -216,11 +224,17 @@ function AmenityChip({ amenity }: { amenity: string }) {
 // ============================================
 
 export function RentalPropertyDetailScreen() {
+  const params = useLocalSearchParams();
+  const propertyId = params.id as string;
+
+  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
+  if (!propertyId || !UUID_REGEX.test(propertyId)) {
+    return <Redirect href="/(tabs)/rental-properties" />;
+  }
+
   const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams();
-  const propertyId = params.id as string;
 
   const [showStatusSheet, setShowStatusSheet] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -278,7 +292,9 @@ export function RentalPropertyDetailScreen() {
         setShowStatusSheet(false);
         refetch();
       } catch (error) {
-        Alert.alert('Error', 'Failed to update property status');
+        console.error('[RentalPropertyDetailScreen] Failed to update status:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        Alert.alert('Error', `Failed to update property status: ${message}`);
       }
     },
     [updateStatus, refetch]
@@ -290,7 +306,9 @@ export function RentalPropertyDetailScreen() {
       setShowDeleteConfirm(false);
       router.back();
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete property');
+      console.error('[RentalPropertyDetailScreen] Failed to delete property:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to delete property: ${message}`);
     }
   }, [deleteProperty, router]);
 
@@ -395,8 +413,16 @@ export function RentalPropertyDetailScreen() {
           />
         }
       >
-        {/* Property Image Placeholder */}
-        <PropertyImagePlaceholder />
+        {/* Property Image */}
+        {property?.primary_image_url ? (
+          <Image
+            source={{ uri: property.primary_image_url }}
+            style={{ width: '100%', height: 192, borderRadius: 12, marginBottom: 16 }}
+            resizeMode="cover"
+          />
+        ) : (
+          <PropertyImagePlaceholder />
+        )}
 
         {/* Property Stats Row */}
         <PropertyStatsRow
@@ -531,20 +557,6 @@ export function RentalPropertyDetailScreen() {
               </View>
             </Section>
           )}
-
-        {/* Danger Zone */}
-        <Section title="Danger Zone">
-          <Button
-            variant="destructive"
-            onPress={() => setShowDeleteConfirm(true)}
-            className="flex-row items-center justify-center gap-2"
-          >
-            <Trash2 size={16} color="white" />
-            <Text style={{ color: 'white', fontWeight: '600' }}>
-              Delete Property
-            </Text>
-          </Button>
-        </Section>
       </ScrollView>
 
       {/* Edit FAB */}
@@ -558,9 +570,9 @@ export function RentalPropertyDetailScreen() {
       <BottomSheet
         visible={showStatusSheet}
         onClose={() => setShowStatusSheet(false)}
-        title="Change Status"
+        title="Property Options"
       >
-        <BottomSheetSection title="Select Status">
+        <BottomSheetSection title="Status">
           <View className="gap-2">
             {(['active', 'inactive', 'maintenance'] as PropertyStatus[]).map(
               (status) => {
@@ -602,6 +614,30 @@ export function RentalPropertyDetailScreen() {
             )}
           </View>
         </BottomSheetSection>
+
+        {/* Danger Zone in sheet */}
+        <Separator className="my-4" />
+        <TouchableOpacity
+          onPress={() => {
+            setShowStatusSheet(false);
+            setTimeout(() => setShowDeleteConfirm(true), 300);
+          }}
+          className="flex-row items-center p-4 rounded-xl"
+          style={{ backgroundColor: withOpacity(colors.destructive, 'light') }}
+          disabled={isSaving}
+        >
+          <Trash2 size={20} color={colors.destructive} />
+          <Text
+            style={{
+              color: colors.destructive,
+              fontSize: FONT_SIZES.base,
+              fontWeight: '500',
+              marginLeft: 12,
+            }}
+          >
+            Delete Property
+          </Text>
+        </TouchableOpacity>
 
         <View className="pt-4 pb-6">
           <Button

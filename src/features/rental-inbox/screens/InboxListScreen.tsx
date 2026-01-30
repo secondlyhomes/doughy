@@ -2,12 +2,13 @@
 // Inbox list screen for Landlord platform
 // Displays conversations with AI-suggested responses for review
 // Enhanced with sectioned layout: NEW LEADS, NEEDS REVIEW, AI HANDLED
+// Now includes Leads|Residents toggle for focused communication
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, SectionList } from 'react-native';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, SectionList, Animated, Platform, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import {
   MessageSquare,
   Bot,
@@ -21,6 +22,8 @@ import {
   CheckCircle2,
   ChevronRight,
   WifiOff,
+  Users,
+  Home,
 } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
@@ -36,7 +39,7 @@ import {
 } from '@/components/ui';
 import { ConversationCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
 import { useThemeColors, ThemeColors } from '@/context/ThemeContext';
-import { withOpacity } from '@/lib/design-utils';
+import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';
 
@@ -45,9 +48,169 @@ import { ConversationCard } from '../components/ConversationCard';
 import type { InboxFilter, InboxSort } from '../types';
 import type { ConversationWithRelations, AIResponseQueueItem } from '@/stores/rental-conversations-store';
 
-// Search bar height calculation
-const SEARCH_BAR_CONTAINER_HEIGHT = SPACING.sm + 40 + SPACING.xs;
-const SEARCH_BAR_TO_CONTENT_GAP = SPACING.lg;
+const SEGMENT_CONTROL_HEIGHT = 38; // Inner content height (excludes 3px padding on each side)
+
+// ============================================
+// Inbox Mode Types
+// ============================================
+
+type InboxMode = 'leads' | 'residents';
+
+interface InboxModeOption {
+  id: InboxMode;
+  label: string;
+  icon: React.ComponentType<{ size: number; color: string }>;
+  description: string;
+}
+
+const INBOX_MODES: InboxModeOption[] = [
+  { id: 'leads', label: 'Leads', icon: UserPlus, description: 'New inquiries & prospecting' },
+  { id: 'residents', label: 'Residents', icon: Home, description: 'Current tenants & guests' },
+];
+
+// ============================================
+// Inbox Mode Segment Control
+// ============================================
+
+interface InboxModeControlProps {
+  value: InboxMode;
+  onChange: (mode: InboxMode) => void;
+  leadCount: number;
+  residentCount: number;
+}
+
+function InboxModeControl({ value, onChange, leadCount, residentCount }: InboxModeControlProps) {
+  const colors = useThemeColors();
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const [segmentWidths, setSegmentWidths] = useState<number[]>([]);
+
+  const activeIndex = INBOX_MODES.findIndex((m) => m.id === value);
+
+  useEffect(() => {
+    if (segmentWidths.length === INBOX_MODES.length && activeIndex >= 0) {
+      const targetX = segmentWidths.slice(0, activeIndex).reduce((sum, w) => sum + w, 0);
+      Animated.spring(slideAnim, {
+        toValue: targetX,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 30,
+      }).start();
+    }
+  }, [activeIndex, segmentWidths, slideAnim]);
+
+  const handleSegmentLayout = useCallback((index: number, width: number) => {
+    setSegmentWidths((prev) => {
+      const newWidths = [...prev];
+      newWidths[index] = width;
+      return newWidths;
+    });
+  }, []);
+
+  const handlePress = useCallback(
+    (mode: InboxMode) => {
+      if (mode !== value) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onChange(mode);
+      }
+    },
+    [value, onChange]
+  );
+
+  const activePillWidth = segmentWidths[activeIndex] || 0;
+  const counts: Record<InboxMode, number> = { leads: leadCount, residents: residentCount };
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        borderRadius: BORDER_RADIUS.full,
+        padding: 3,
+        backgroundColor: withOpacity(colors.muted, 'strong'),
+      }}
+    >
+      {/* Animated pill indicator */}
+      {segmentWidths.length === INBOX_MODES.length && activeIndex >= 0 && (
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: 3,
+            left: 3,
+            width: activePillWidth,
+            height: SEGMENT_CONTROL_HEIGHT,
+            borderRadius: BORDER_RADIUS.full,
+            backgroundColor: colors.background,
+            ...getShadowStyle(colors, { size: 'sm' }),
+            transform: [{ translateX: slideAnim }],
+          }}
+        />
+      )}
+
+      {/* Segments */}
+      {INBOX_MODES.map((mode, index) => {
+        const isActive = mode.id === value;
+        const IconComponent = mode.icon;
+        const count = counts[mode.id] || 0;
+
+        return (
+          <TouchableOpacity
+            key={mode.id}
+            onLayout={(e) => handleSegmentLayout(index, e.nativeEvent.layout.width)}
+            onPress={() => handlePress(mode.id)}
+            accessibilityLabel={`${mode.label} (${count})`}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: SEGMENT_CONTROL_HEIGHT,
+              gap: SPACING.xs,
+            }}
+          >
+            <IconComponent
+              size={16}
+              color={isActive ? colors.foreground : colors.mutedForeground}
+            />
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: '600',
+                color: isActive ? colors.foreground : colors.mutedForeground,
+              }}
+            >
+              {mode.label}
+            </Text>
+            {count > 0 && (
+              <View
+                style={{
+                  backgroundColor: isActive
+                    ? withOpacity(colors.primary, 'light')
+                    : withOpacity(colors.muted, 'strong'),
+                  paddingHorizontal: 6,
+                  paddingVertical: 1,
+                  borderRadius: BORDER_RADIUS.full,
+                  minWidth: 20,
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: isActive ? colors.primary : colors.mutedForeground,
+                  }}
+                >
+                  {count > 99 ? '99+' : count}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
 
 // Filter options
 const FILTER_OPTIONS: { key: InboxFilter; label: string; icon: React.ComponentType<{ size: number; color: string }> }[] = [
@@ -248,11 +411,13 @@ function SectionHeader({
   colors,
   collapsed,
   onToggle,
+  isFirst,
 }: {
   section: InboxSection;
   colors: ThemeColors;
   collapsed?: boolean;
   onToggle?: () => void;
+  isFirst?: boolean;
 }) {
   const IconComponent = section.icon;
 
@@ -264,7 +429,7 @@ function SectionHeader({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: SPACING.sm,
-        marginTop: SPACING.md,
+        marginTop: isFirst ? 0 : SPACING.md,
         marginBottom: SPACING.xs,
       }}
     >
@@ -310,9 +475,9 @@ function SectionHeader({
 export function InboxListScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
 
   // State
+  const [inboxMode, setInboxMode] = useState<InboxMode>('leads');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [activeFilter, setActiveFilter] = useState<InboxFilter>('all');
@@ -321,7 +486,36 @@ export function InboxListScreen() {
 
   // Data hooks
   const { pendingCount, pendingResponses, isLoading, isRefreshing, error, subscriptionError, refresh, quickApprove, clearError } = useInbox();
-  const filteredConversations = useFilteredInbox(activeFilter, activeSort, debouncedSearch);
+  const allConversations = useFilteredInbox(activeFilter, activeSort, debouncedSearch);
+
+  // Filter conversations by mode (leads vs residents)
+  const filteredConversations = useMemo(() => {
+    return allConversations.filter((conv) => {
+      const isLead = conv.contact?.contact_types?.includes('lead');
+      if (inboxMode === 'leads') {
+        // Show leads and new inquiries (contacts without type or with lead type)
+        return isLead || !conv.contact?.contact_types?.length;
+      } else {
+        // Show residents (guests, tenants - anyone not primarily a lead)
+        return !isLead && conv.contact?.contact_types?.length;
+      }
+    });
+  }, [allConversations, inboxMode]);
+
+  // Count for each mode (for badges)
+  const modeCounts = useMemo(() => {
+    let leads = 0;
+    let residents = 0;
+    allConversations.forEach((conv) => {
+      const isLead = conv.contact?.contact_types?.includes('lead');
+      if (isLead || !conv.contact?.contact_types?.length) {
+        leads++;
+      } else {
+        residents++;
+      }
+    });
+    return { leads, residents };
+  }, [allConversations]);
 
   // Create sections from conversations
   const sections: InboxSection[] = useMemo(() => {
@@ -417,8 +611,16 @@ export function InboxListScreen() {
   const handleQuickApprove = useCallback(
     async (conversationId: string) => {
       const pending = pendingResponses.find((p) => p.conversation_id === conversationId);
-      if (pending) {
-        await quickApprove(pending.id);
+      if (!pending) return;
+
+      try {
+        const success = await quickApprove(pending.id);
+        if (!success) {
+          Alert.alert('Approval Failed', 'Could not approve this response. It may have expired.');
+        }
+      } catch (error) {
+        console.error('[InboxListScreen] Quick approve error:', error);
+        Alert.alert('Error', 'Failed to approve response. Please try again.');
       }
     },
     [quickApprove, pendingResponses]
@@ -465,10 +667,11 @@ export function InboxListScreen() {
   );
 
   const renderSectionHeader = useCallback(
-    ({ section }: { section: InboxSection }) => (
-      <SectionHeader section={section} colors={colors} />
-    ),
-    [colors]
+    ({ section }: { section: InboxSection }) => {
+      const isFirst = sections.indexOf(section) === 0;
+      return <SectionHeader section={section} colors={colors} isFirst={isFirst} />;
+    },
+    [colors, sections]
   );
 
   const keyExtractor = useCallback(
@@ -477,7 +680,7 @@ export function InboxListScreen() {
   );
 
   const ItemSeparator = useCallback(
-    () => <View style={{ height: SPACING.xs }} />,
+    () => <View style={{ height: SPACING.md }} />,
     []
   );
 
@@ -487,32 +690,30 @@ export function InboxListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Glass Search Bar */}
-        <View
-          className="absolute top-0 left-0 right-0 z-10"
-          style={{ paddingTop: insets.top }}
-        >
-          <View className="px-4 pt-2 pb-1">
-            <SearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search conversations..."
-              size="md"
-              glass={true}
-              onFilter={() => setShowFiltersSheet(true)}
-              hasActiveFilters={hasActiveFilters}
-            />
-          </View>
+        {/* Header - in normal flow */}
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.sm }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search conversations..."
+            size="md"
+            glass={true}
+            onFilter={() => setShowFiltersSheet(true)}
+            hasActiveFilters={hasActiveFilters}
+          />
+        </View>
+        <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
+          <InboxModeControl
+            value={inboxMode}
+            onChange={setInboxMode}
+            leadCount={modeCounts.leads}
+            residentCount={modeCounts.residents}
+          />
         </View>
 
         {/* Error Banner */}
         {(error || subscriptionError) && (
-          <View
-            style={{
-              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SPACING.sm,
-              paddingHorizontal: SPACING.md,
-            }}
-          >
+          <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
             <Alert variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
               <AlertDescription variant="destructive">
                 {error || subscriptionError}
@@ -531,12 +732,7 @@ export function InboxListScreen() {
 
         {/* Conversation List */}
         {isLoading && !filteredConversations.length ? (
-          <View
-            style={{
-              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
-              paddingHorizontal: 16,
-            }}
-          >
+          <View style={{ paddingHorizontal: SPACING.md }}>
             <SkeletonList count={5} component={ConversationCardSkeleton} />
           </View>
         ) : (
@@ -546,9 +742,9 @@ export function InboxListScreen() {
             renderSectionHeader={renderSectionHeader}
             keyExtractor={keyExtractor}
             stickySectionHeadersEnabled={false}
+            contentInsetAdjustmentBehavior="automatic"
             contentContainerStyle={{
-              paddingTop: SEARCH_BAR_CONTAINER_HEIGHT + SEARCH_BAR_TO_CONTENT_GAP,
-              paddingHorizontal: 16,
+              paddingHorizontal: SPACING.md,
               paddingBottom: TAB_BAR_SAFE_PADDING,
             }}
             ItemSeparatorComponent={ItemSeparator}
@@ -566,14 +762,16 @@ export function InboxListScreen() {
             ListEmptyComponent={
               <ListEmptyState
                 state={searchQuery ? 'filtered' : 'empty'}
-                icon={searchQuery ? Search : MessageSquare}
-                title={searchQuery ? 'No Results Found' : 'No Conversations Yet'}
+                icon={searchQuery ? Search : inboxMode === 'leads' ? UserPlus : Home}
+                title={searchQuery ? 'No Results Found' : inboxMode === 'leads' ? 'No Leads Yet' : 'No Residents Yet'}
                 description={
                   searchQuery
                     ? 'No conversations match your search.'
                     : activeFilter === 'needs_review'
                     ? 'No AI responses waiting for review.'
-                    : 'Conversations with guests and leads will appear here.'
+                    : inboxMode === 'leads'
+                    ? 'New inquiries and prospective tenants will appear here.'
+                    : 'Conversations with current tenants and guests will appear here.'
                 }
                 primaryAction={{
                   label: searchQuery ? 'Clear Search' : 'Refresh',
