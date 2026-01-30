@@ -62,6 +62,7 @@ export function MyListScreen() {
       <FlatList
         data={items}
         contentContainerStyle={{ paddingBottom: contentPadding }}
+        contentInsetAdjustmentBehavior="automatic"  // Let iOS handle insets
         // Returns just 16px - iOS auto-handles tab bar + safe area
       />
     </ThemedSafeAreaView>
@@ -74,6 +75,7 @@ export function MyListScreen() {
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 
 contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
+contentInsetAdjustmentBehavior="automatic"  // Let iOS handle insets
 ```
 
 **Examples:**
@@ -104,6 +106,7 @@ export function MyDetailScreen() {
           contentContainerStyle={{
             paddingBottom: BOTTOM_BAR_HEIGHT + 16  // Element height + margin
           }}
+          contentInsetAdjustmentBehavior="automatic"  // Let iOS handle insets
         >
           {/* content */}
         </ScrollView>
@@ -197,6 +200,7 @@ export function MyFormScreen() {
             padding: 16,
             paddingBottom: contentPadding,
           }}
+          contentInsetAdjustmentBehavior="automatic"  // Let iOS handle insets
           keyboardShouldPersistTaps="handled"
         >
           <FormField label="Name" ... />
@@ -332,6 +336,80 @@ Test on at least 2 devices:
 ---
 
 ## Troubleshooting
+
+### Problem: Glass/Blur Effects Don't Render on Initial Load
+
+**Symptoms:** Search bars or other `GlassView`/`LiquidGlassView` components don't show the glass effect on first render. They may appear as plain views or only render correctly after navigating away and back.
+
+**Root Cause:** Missing Stack navigator layout. When a screen is rendered directly in NativeTabs without a Stack buffer, LiquidGlassView has timing issues calculating its bounds on initial mount.
+
+**Architecture Comparison:**
+| Tab Structure | Glass Works? |
+|---------------|--------------|
+| `NativeTabs → Stack → Screen` (folder with `_layout.tsx`) | ✅ YES |
+| `NativeTabs → Screen` (direct route file) | ❌ NO |
+
+**Example of the Problem:**
+```
+app/(admin)/
+├── _layout.tsx          # NativeTabs
+├── users/               # ✅ Works - has Stack layout
+│   ├── _layout.tsx      # Stack navigator
+│   └── index.tsx        # Screen
+├── logs.tsx             # ❌ Broken - direct file, no Stack
+└── integrations.tsx     # ❌ Broken - direct file, no Stack
+```
+
+**The Solution:**
+
+Convert direct route files to folder-based routes with Stack layouts:
+
+```
+app/(admin)/
+├── _layout.tsx          # NativeTabs
+├── users/               # ✅ Has Stack
+│   ├── _layout.tsx
+│   └── index.tsx
+├── logs/                # ✅ Now has Stack
+│   ├── _layout.tsx      # Stack navigator
+│   └── index.tsx        # Screen (moved from logs.tsx)
+└── integrations/        # ✅ Now has Stack
+    ├── _layout.tsx      # Stack navigator
+    └── index.tsx        # Screen (moved from integrations.tsx)
+```
+
+**Stack Layout Template:**
+```tsx
+// app/(admin)/logs/_layout.tsx
+import { Stack } from 'expo-router';
+
+export default function AdminLogsLayout() {
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}
+    />
+  );
+}
+```
+
+**Screen File (moved to index.tsx):**
+```tsx
+// app/(admin)/logs/index.tsx
+export { SystemLogsScreen as default } from '@/features/admin/screens/SystemLogsScreen';
+```
+
+**After making changes:** Clear Metro cache and restart:
+```bash
+npx expo start -c
+```
+
+**Why This Works:**
+The Stack navigator provides a layout buffer that gives LiquidGlassView time to properly calculate its bounds before rendering. Without it, the glass effect layer doesn't initialize correctly on the first frame.
+
+---
 
 ### Problem: Content goes under tab bar
 

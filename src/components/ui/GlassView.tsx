@@ -1,7 +1,7 @@
 // src/components/ui/GlassView.tsx
 // Glass effect component with Liquid Glass (iOS 26+) and expo-blur fallback
 import React from 'react';
-import { Platform, View, ViewProps, StyleSheet, useColorScheme } from 'react-native';
+import { Platform, View, ViewProps, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import {
   LiquidGlassView,

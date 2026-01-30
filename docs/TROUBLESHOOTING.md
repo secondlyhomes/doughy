@@ -711,6 +711,160 @@ const { buttonBottom } = useTabBarPadding();
 
 ---
 
+## LiquidGlassView / GlassView Not Rendering on Initial Load
+
+### Symptoms
+
+- Search bars or other glass effect components appear as plain views on first render
+- Glass blur effect only appears after navigating away and back to the screen
+- Works fine after hot reload but not on fresh app launch
+- Issue affects specific screens while others work correctly
+
+### Root Cause
+
+**Missing Stack Navigator Layout**
+
+When using Expo Router's **NativeTabs** (native `UITabBarController`), screens need a Stack navigator buffer for `LiquidGlassView` to properly calculate its bounds on initial mount.
+
+**The Architecture:**
+```
+✅ WORKS:    NativeTabs → Stack → Screen
+❌ BROKEN:   NativeTabs → Screen (no Stack)
+```
+
+**Why It Happens:**
+`LiquidGlassView` (from `@callstack/liquid-glass`) has a timing issue when rendered directly within NativeTabs. The glass effect layer needs the Stack navigator's layout pass to properly calculate its rendering bounds on the first frame.
+
+### Diagnosis
+
+Check if the affected screen is a direct route file vs. a folder-based route:
+
+```bash
+# List the route structure
+ls -la app/(admin)/
+
+# Direct files (PROBLEM):
+# logs.tsx              ← No Stack, glass won't render
+# integrations.tsx      ← No Stack, glass won't render
+
+# Folder-based (WORKS):
+# users/                ← Has _layout.tsx with Stack
+#   _layout.tsx
+#   index.tsx
+```
+
+**Pattern Comparison:**
+| Route Structure | Has Stack? | Glass Works? |
+|-----------------|------------|--------------|
+| `app/(tabs)/logs.tsx` | NO | ❌ |
+| `app/(tabs)/logs/_layout.tsx` + `index.tsx` | YES | ✅ |
+
+### The Solution
+
+Convert direct route files to folder-based routes with Stack layouts.
+
+**Before (broken):**
+```
+app/(admin)/
+├── _layout.tsx          # NativeTabs
+├── logs.tsx             # ❌ Direct file - no Stack buffer
+└── integrations.tsx     # ❌ Direct file - no Stack buffer
+```
+
+**After (fixed):**
+```
+app/(admin)/
+├── _layout.tsx          # NativeTabs
+├── logs/
+│   ├── _layout.tsx      # ✅ Stack navigator
+│   └── index.tsx        # Screen (content from logs.tsx)
+└── integrations/
+    ├── _layout.tsx      # ✅ Stack navigator
+    └── index.tsx        # Screen (content from integrations.tsx)
+```
+
+### Implementation
+
+**Step 1: Create the Stack layout file:**
+```tsx
+// app/(admin)/logs/_layout.tsx
+import { Stack } from 'expo-router';
+
+export default function AdminLogsLayout() {
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}
+    />
+  );
+}
+```
+
+**Step 2: Move screen export to index.tsx:**
+```tsx
+// app/(admin)/logs/index.tsx
+export { SystemLogsScreen as default } from '@/features/admin/screens/SystemLogsScreen';
+```
+
+**Step 3: Delete the old direct route file:**
+```bash
+rm app/(admin)/logs.tsx
+```
+
+**Step 4: Clear Metro cache and restart:**
+```bash
+npx expo start -c
+```
+
+The `-c` flag is **critical** - Metro caches routes, and without clearing, you'll get duplicate screen errors.
+
+### Common Error After Fix
+
+```
+ERROR [Error: A navigator cannot contain multiple 'Screen' components
+with the same name (found duplicate screen named 'logs')]
+```
+
+**Cause:** Metro bundler cached the old route structure.
+
+**Solution:** Always run `npx expo start -c` after changing route files.
+
+### Quick Checklist
+
+When adding new tabs to NativeTabs:
+
+- [ ] Create folder-based route (not direct file)
+- [ ] Add `_layout.tsx` with Stack navigator
+- [ ] Add `index.tsx` with screen export
+- [ ] Run `npx expo start -c` to clear cache
+- [ ] Verify glass effects render on first load
+
+### Why Not Fix in GlassView?
+
+A RAF (requestAnimationFrame) workaround in `GlassView.tsx` was attempted but is not the correct fix:
+- It causes a visible flash (plain view → glass view)
+- It doesn't address the root architectural issue
+- The Stack navigator is the proper solution per Expo Router's design
+
+### Related Files
+
+- `src/components/ui/GlassView.tsx` - Glass effect component
+- `app/(tabs)/_layout.tsx` - Main app NativeTabs
+- `app/(admin)/_layout.tsx` - Admin panel NativeTabs
+- Any `_layout.tsx` files using NativeTabs
+
+### Key Takeaways
+
+1. ✅ **Always use folder-based routes** for NativeTabs screens
+2. ✅ **Include a Stack layout** in each tab folder
+3. ✅ **Clear Metro cache** (`npx expo start -c`) after route changes
+4. ❌ **Don't use direct route files** (e.g., `logs.tsx`) in NativeTabs
+5. ❌ **Don't add RAF workarounds** to GlassView - fix the architecture
+
+---
+
 ## References
 
 - [NativeWind Dark Mode Docs](https://www.nativewind.dev/docs/core-concepts/dark-mode)
