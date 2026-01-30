@@ -13,7 +13,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ContextSwitcher, type ContextOption } from '@/components/ui/ContextSwitcher';
 import { SPACING, ICON_SIZES } from '@/constants/design-tokens';
 

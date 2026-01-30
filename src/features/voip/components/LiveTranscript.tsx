@@ -4,7 +4,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Animated } from 'react-native';
 import { MessageCircle, User } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import type { TranscriptSegment } from '../types';

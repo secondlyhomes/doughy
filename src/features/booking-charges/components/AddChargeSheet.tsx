@@ -4,7 +4,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { BottomSheet, Button, Badge } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useChargeMutations } from '../hooks/useBookingCharges';
 import type { BookingChargeType, CreateChargeInput } from '../types';
 import { CHARGE_TYPE_CONFIG } from '../types';

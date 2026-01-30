@@ -23,7 +23,7 @@ import {
   Info,
   Tag,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import {
   LoadingSpinner,

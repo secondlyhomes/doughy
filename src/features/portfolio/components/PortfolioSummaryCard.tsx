@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { TrendingUp, DollarSign, Home, Wallet } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import type { PortfolioSummary } from '../types';
 

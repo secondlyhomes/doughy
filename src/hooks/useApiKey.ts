@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { InteractionManager } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { encrypt, decrypt } from '@/lib/cryptoNative';
+import { encrypt, decrypt } from '@/lib/crypto-native';
 import type { ApiKeySaveResult } from '@/features/admin/types/integrations';
 import { normalizeServiceName, getGroupForService } from '@/features/admin/utils/serviceHelpers';
 

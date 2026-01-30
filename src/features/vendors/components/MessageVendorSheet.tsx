@@ -4,7 +4,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Alert, TouchableOpacity } from 'react-native';
 import { Send, Sparkles, Phone, Mail, MessageSquare, RefreshCw } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import {
   BottomSheet,
   BottomSheetSection,

@@ -5,7 +5,7 @@
 
 import { withOpacity, getShadowStyle, getBackdropColor } from '../design-utils';
 import { OPACITY, SHADOWS } from '@/constants/design-tokens';
-import { ThemeColors } from '@/context/ThemeContext';
+import { ThemeColors } from '@/contexts/ThemeContext';
 
 // Mock theme colors for testing
 const mockColors: ThemeColors = {

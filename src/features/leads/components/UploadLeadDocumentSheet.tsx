@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { FileText, Upload, X, AlertCircle } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import * as DocumentPicker from 'expo-document-picker';
 import { BottomSheet } from '@/components/ui/BottomSheet';

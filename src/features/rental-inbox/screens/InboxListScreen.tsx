@@ -4,25 +4,16 @@
 // Enhanced with sectioned layout: NEW LEADS, NEEDS REVIEW, AI HANDLED
 // Now includes Leads|Residents toggle for focused communication
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, RefreshControl, SectionList, Animated, Platform, Alert } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, TouchableOpacity, RefreshControl, SectionList, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 import {
   MessageSquare,
-  Bot,
-  Clock,
-  Filter,
   Search,
-  AlertCircle,
   Check,
-  Sparkles,
   UserPlus,
-  CheckCircle2,
-  ChevronRight,
   WifiOff,
-  Users,
   Home,
 } from 'lucide-react-native';
 
@@ -34,443 +25,30 @@ import {
   BottomSheet,
   BottomSheetSection,
   Button,
-  Alert,
+  Alert as AlertUI,
   AlertDescription,
 } from '@/components/ui';
 import { ConversationCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
-import { useThemeColors, ThemeColors } from '@/context/ThemeContext';
-import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
+import { useThemeColors } from '@/contexts/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
+import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';
 
 import { useInbox, useFilteredInbox } from '../hooks/useInbox';
 import { ConversationCard } from '../components/ConversationCard';
 import type { InboxFilter, InboxSort } from '../types';
-import type { ConversationWithRelations, AIResponseQueueItem } from '@/stores/rental-conversations-store';
+import type { ConversationWithRelations } from '@/stores/rental-conversations-store';
 
-const SEGMENT_CONTROL_HEIGHT = 38; // Inner content height (excludes 3px padding on each side)
-
-// ============================================
-// Inbox Mode Types
-// ============================================
-
-type InboxMode = 'leads' | 'residents';
-
-interface InboxModeOption {
-  id: InboxMode;
-  label: string;
-  icon: React.ComponentType<{ size: number; color: string }>;
-  description: string;
-}
-
-const INBOX_MODES: InboxModeOption[] = [
-  { id: 'leads', label: 'Leads', icon: UserPlus, description: 'New inquiries & prospecting' },
-  { id: 'residents', label: 'Residents', icon: Home, description: 'Current tenants & guests' },
-];
-
-// ============================================
-// Inbox Mode Segment Control
-// ============================================
-
-interface InboxModeControlProps {
-  value: InboxMode;
-  onChange: (mode: InboxMode) => void;
-  leadCount: number;
-  residentCount: number;
-}
-
-function InboxModeControl({ value, onChange, leadCount, residentCount }: InboxModeControlProps) {
-  const colors = useThemeColors();
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const [segmentWidths, setSegmentWidths] = useState<number[]>([]);
-
-  const activeIndex = INBOX_MODES.findIndex((m) => m.id === value);
-
-  useEffect(() => {
-    if (segmentWidths.length === INBOX_MODES.length && activeIndex >= 0) {
-      const targetX = segmentWidths.slice(0, activeIndex).reduce((sum, w) => sum + w, 0);
-      Animated.spring(slideAnim, {
-        toValue: targetX,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 30,
-      }).start();
-    }
-  }, [activeIndex, segmentWidths, slideAnim]);
-
-  const handleSegmentLayout = useCallback((index: number, width: number) => {
-    setSegmentWidths((prev) => {
-      const newWidths = [...prev];
-      newWidths[index] = width;
-      return newWidths;
-    });
-  }, []);
-
-  const handlePress = useCallback(
-    (mode: InboxMode) => {
-      if (mode !== value) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onChange(mode);
-      }
-    },
-    [value, onChange]
-  );
-
-  const activePillWidth = segmentWidths[activeIndex] || 0;
-  const counts: Record<InboxMode, number> = { leads: leadCount, residents: residentCount };
-
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        borderRadius: BORDER_RADIUS.full,
-        padding: 3,
-        backgroundColor: withOpacity(colors.muted, 'strong'),
-      }}
-    >
-      {/* Animated pill indicator */}
-      {segmentWidths.length === INBOX_MODES.length && activeIndex >= 0 && (
-        <Animated.View
-          style={{
-            position: 'absolute',
-            top: 3,
-            left: 3,
-            width: activePillWidth,
-            height: SEGMENT_CONTROL_HEIGHT,
-            borderRadius: BORDER_RADIUS.full,
-            backgroundColor: colors.background,
-            ...getShadowStyle(colors, { size: 'sm' }),
-            transform: [{ translateX: slideAnim }],
-          }}
-        />
-      )}
-
-      {/* Segments */}
-      {INBOX_MODES.map((mode, index) => {
-        const isActive = mode.id === value;
-        const IconComponent = mode.icon;
-        const count = counts[mode.id] || 0;
-
-        return (
-          <TouchableOpacity
-            key={mode.id}
-            onLayout={(e) => handleSegmentLayout(index, e.nativeEvent.layout.width)}
-            onPress={() => handlePress(mode.id)}
-            accessibilityLabel={`${mode.label} (${count})`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: SEGMENT_CONTROL_HEIGHT,
-              gap: SPACING.xs,
-            }}
-          >
-            <IconComponent
-              size={16}
-              color={isActive ? colors.foreground : colors.mutedForeground}
-            />
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: isActive ? colors.foreground : colors.mutedForeground,
-              }}
-            >
-              {mode.label}
-            </Text>
-            {count > 0 && (
-              <View
-                style={{
-                  backgroundColor: isActive
-                    ? withOpacity(colors.primary, 'light')
-                    : withOpacity(colors.muted, 'strong'),
-                  paddingHorizontal: 6,
-                  paddingVertical: 1,
-                  borderRadius: BORDER_RADIUS.full,
-                  minWidth: 20,
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: '600',
-                    color: isActive ? colors.primary : colors.mutedForeground,
-                  }}
-                >
-                  {count > 99 ? '99+' : count}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
-
-// Filter options
-const FILTER_OPTIONS: { key: InboxFilter; label: string; icon: React.ComponentType<{ size: number; color: string }> }[] = [
-  { key: 'all', label: 'All', icon: MessageSquare },
-  { key: 'needs_review', label: 'Needs Review', icon: AlertCircle },
-  { key: 'archived', label: 'Archived', icon: Clock },
-];
-
-// Sort options
-const SORT_OPTIONS: { key: InboxSort; label: string }[] = [
-  { key: 'recent', label: 'Most Recent' },
-  { key: 'pending_first', label: 'Pending First' },
-  { key: 'oldest', label: 'Oldest First' },
-];
-
-// Extended conversation type for inbox with pending response
-// hasPendingResponse comes from useFilteredInbox (always present)
-// pendingResponse is added when conversation has a pending AI response
-type InboxConversation = ConversationWithRelations & {
-  hasPendingResponse: boolean;
-  pendingResponse?: AIResponseQueueItem;
-};
-
-// Section type for the sectioned inbox
-interface InboxSection {
-  title: string;
-  icon: React.ComponentType<{ size: number; color: string }>;
-  iconColor: string;
-  iconBgColor: string;
-  description?: string;
-  data: InboxConversation[];
-}
-
-// Quick Action Card for AI responses
-function QuickActionCard({
-  conversation,
-  pendingResponse,
-  onPress,
-  onQuickApprove,
-  colors,
-}: {
-  conversation: ConversationWithRelations;
-  pendingResponse?: AIResponseQueueItem;
-  onPress: () => void;
-  onQuickApprove: () => void;
-  colors: ThemeColors;
-}) {
-  const contactName = conversation.contact
-    ? `${conversation.contact.first_name || ''} ${conversation.contact.last_name || ''}`.trim() || 'Unknown'
-    : 'Unknown';
-
-  // Confidence is 0-1 scale (not 0-100), matches AIReviewCard thresholds
-  const confidence = pendingResponse?.confidence || 0;
-  const confidencePercent = Math.round(confidence * 100);
-  const isHighConfidence = confidence >= 0.85;
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: BORDER_RADIUS.lg,
-        padding: SPACING.md,
-        marginBottom: SPACING.sm,
-        borderWidth: 1,
-        borderColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'medium'),
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`Conversation with ${contactName}, ${confidencePercent}% confidence`}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm }}>
-        {/* Avatar */}
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.muted,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: colors.foreground, fontWeight: '600' }}>
-            {contactName.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-
-        {/* Content */}
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
-              {contactName}
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                backgroundColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'light'),
-                paddingHorizontal: 8,
-                paddingVertical: 2,
-                borderRadius: BORDER_RADIUS.full,
-              }}
-            >
-              <Sparkles size={12} color={isHighConfidence ? colors.success : colors.warning} />
-              <Text
-                style={{
-                  color: isHighConfidence ? colors.success : colors.warning,
-                  fontSize: FONT_SIZES['2xs'],
-                  fontWeight: '600',
-                }}
-              >
-                {confidencePercent}%
-              </Text>
-            </View>
-          </View>
-
-          {/* Platform and time */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: 2 }}>
-            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
-              {conversation.platform || conversation.channel}
-            </Text>
-            {conversation.contact?.contact_types?.includes('lead') && (
-              <View
-                style={{
-                  backgroundColor: withOpacity(colors.info, 'light'),
-                  paddingHorizontal: 6,
-                  paddingVertical: 1,
-                  borderRadius: BORDER_RADIUS.sm,
-                }}
-              >
-                <Text style={{ color: colors.info, fontSize: FONT_SIZES['2xs'], fontWeight: '600' }}>Lead</Text>
-              </View>
-            )}
-          </View>
-
-          {/* AI suggested response preview */}
-          {pendingResponse && (
-            <Text
-              numberOfLines={2}
-              style={{
-                color: colors.mutedForeground,
-                fontSize: FONT_SIZES.sm,
-                marginTop: SPACING.xs,
-                fontStyle: 'italic',
-              }}
-            >
-              "{pendingResponse.suggested_response.slice(0, 100)}..."
-            </Text>
-          )}
-        </View>
-      </View>
-
-      {/* Quick Actions */}
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm, marginTop: SPACING.sm }}>
-        <TouchableOpacity
-          onPress={onPress}
-          style={{
-            paddingVertical: 6,
-            paddingHorizontal: 12,
-            borderRadius: BORDER_RADIUS.md,
-            backgroundColor: colors.muted,
-          }}
-        >
-          <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm }}>View</Text>
-        </TouchableOpacity>
-
-        {isHighConfidence && (
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              onQuickApprove();
-            }}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: BORDER_RADIUS.md,
-              backgroundColor: colors.primary,
-            }}
-          >
-            <Check size={14} color={colors.primaryForeground} />
-            <Text style={{ color: colors.primaryForeground, fontSize: FONT_SIZES.sm, fontWeight: '600' }}>
-              Quick Approve
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// Section Header Component
-function SectionHeader({
-  section,
-  colors,
-  collapsed,
-  onToggle,
-  isFirst,
-}: {
-  section: InboxSection;
-  colors: ThemeColors;
-  collapsed?: boolean;
-  onToggle?: () => void;
-  isFirst?: boolean;
-}) {
-  const IconComponent = section.icon;
-
-  return (
-    <TouchableOpacity
-      onPress={onToggle}
-      disabled={!onToggle}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: SPACING.sm,
-        marginTop: isFirst ? 0 : SPACING.md,
-        marginBottom: SPACING.xs,
-      }}
-    >
-      <View
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
-          backgroundColor: section.iconBgColor,
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginRight: SPACING.sm,
-        }}
-      >
-        <IconComponent size={18} color={section.iconColor} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
-          {section.title}
-        </Text>
-        {section.description && (
-          <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
-            {section.description}
-          </Text>
-        )}
-      </View>
-      <View
-        style={{
-          backgroundColor: section.iconBgColor,
-          paddingHorizontal: 8,
-          paddingVertical: 2,
-          borderRadius: BORDER_RADIUS.full,
-        }}
-      >
-        <Text style={{ color: section.iconColor, fontWeight: '600', fontSize: FONT_SIZES.sm }}>
-          {section.data.length}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
+import {
+  InboxModeControl,
+  QuickActionCard,
+  SectionHeader,
+  FILTER_OPTIONS,
+  SORT_OPTIONS,
+  type InboxMode,
+  type InboxSection,
+  type InboxConversation,
+} from './inbox-list';
 
 export function InboxListScreen() {
   const router = useRouter();
@@ -540,7 +118,6 @@ export function InboxListScreen() {
     // Categorize conversations
     const newLeads: InboxConversation[] = [];
     const needsReview: InboxConversation[] = [];
-    const aiHandled: InboxConversation[] = [];
     const otherActive: InboxConversation[] = [];
 
     filteredConversations.forEach((conv) => {
@@ -579,7 +156,7 @@ export function InboxListScreen() {
     if (needsReview.length > 0) {
       result.push({
         title: 'Needs Your Review',
-        icon: AlertCircle,
+        icon: MessageSquare,
         iconColor: colors.warning,
         iconBgColor: withOpacity(colors.warning, 'light'),
         description: 'AI responses waiting for approval',
@@ -622,8 +199,8 @@ export function InboxListScreen() {
         if (!success) {
           Alert.alert('Approval Failed', 'Could not approve this response. It may have expired.');
         }
-      } catch (error) {
-        console.error('[InboxListScreen] Quick approve error:', error);
+      } catch (err) {
+        console.error('[InboxListScreen] Quick approve error:', err);
         Alert.alert('Error', 'Failed to approve response. Please try again.');
       }
     },
@@ -688,9 +265,6 @@ export function InboxListScreen() {
     []
   );
 
-  // Stats banner removed - section headers already show counts,
-  // having both was confusing the UX flow
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
@@ -718,7 +292,7 @@ export function InboxListScreen() {
         {/* Error Banner */}
         {(error || subscriptionError) && (
           <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
-            <Alert variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
+            <AlertUI variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
               <AlertDescription variant="destructive">
                 {error || subscriptionError}
               </AlertDescription>
@@ -730,7 +304,7 @@ export function InboxListScreen() {
                   Dismiss
                 </Button>
               </View>
-            </Alert>
+            </AlertUI>
           </View>
         )}
 

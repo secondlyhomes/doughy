@@ -5,7 +5,7 @@ import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Mic, MicOff, Volume2, VolumeX, Pause, Play, PhoneOff } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 import type { CallControls as CallControlsType } from '../types';

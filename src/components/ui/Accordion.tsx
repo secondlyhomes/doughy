@@ -2,7 +2,7 @@
 // Accordion component - multiple collapsible sections
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { View, TouchableOpacity, Text, ViewProps, LayoutChangeEvent } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,

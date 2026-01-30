@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ChevronRight, Briefcase, Plus } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { DEAL_STAGE_CONFIG, DealStage } from '@/features/deals/types';
 import type { PropertyDeal } from '@/features/deals/hooks/usePropertyDeals';

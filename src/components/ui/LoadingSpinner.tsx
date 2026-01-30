@@ -3,7 +3,7 @@
 import React from 'react';
 import { ActivityIndicator, View, Text, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export interface LoadingSpinnerProps extends ViewProps {
   /** Spinner size */

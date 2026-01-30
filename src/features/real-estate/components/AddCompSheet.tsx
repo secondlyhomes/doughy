@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { X, MapPin, Home, DollarSign, Info } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { BottomSheet, FormField } from '@/components/ui';
 import { useForm } from '@/hooks/useForm';

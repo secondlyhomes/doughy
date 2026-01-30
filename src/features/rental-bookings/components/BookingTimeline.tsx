@@ -11,7 +11,7 @@ import {
   LogOut,
   XCircle,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ICON_SIZES } from '@/constants/design-tokens';
 import { BookingStatus, BookingWithRelations } from '../types';

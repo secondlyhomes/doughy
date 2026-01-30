@@ -1,12 +1,18 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decode as base64Decode } from "https://deno.land/std@0.177.0/encoding/base64.ts";
-import { 
-  handleCors, 
-  getCorsHeaders, 
-  addCorsHeaders 
+import {
+  handleCors,
+  getCorsHeaders,
+  addCorsHeaders
 } from "../_shared/cors.ts";
 import { decryptServer } from "../_shared/crypto-server.ts";
+import { scanForThreats } from "../_shared/security.ts";
+import {
+  isCircuitBreakerOpen,
+  checkRateLimit,
+  calculateRetryAfter,
+} from "../_shared/ai-security/index.ts";
 
 // Simple logging functions
 const logInfo = (message: string, details?: any) => {
@@ -153,12 +159,27 @@ serve(async (req) => {
     // Decrypt API key
     const apiKey = await decryptServer(apiKeyData.key_ciphertext);
 
+    // Circuit breaker check (uses cached state - minimal latency)
+    const circuitState = await isCircuitBreakerOpen(supabase as SupabaseClient, 'perplexity-api', null);
+    if (circuitState.isOpen) {
+      logInfo(`Circuit breaker open: ${circuitState.reason}`);
+      const errorResponse = new Response(
+        JSON.stringify({
+          status: "error",
+          message: `Service temporarily unavailable: ${circuitState.reason}`,
+          code: 'CIRCUIT_BREAKER_OPEN',
+        }),
+        { status: 503, headers: { "Content-Type": "application/json" } }
+      );
+      return addCorsHeaders(errorResponse, req);
+    }
+
     // Process based on action
     let response;
-    
+
     switch (action) {
       case "query":
-        response = await handleQuery(req, requestData, apiKey);
+        response = await handleQuery(req, requestData, apiKey, supabase as SupabaseClient);
         break;
       case "status":
         response = await handleStatus(apiKey);
@@ -204,18 +225,40 @@ serve(async (req) => {
 /**
  * Handle Perplexity API query requests
  */
-async function handleQuery(req: Request, requestData: any, apiKey: string) {
+async function handleQuery(req: Request, requestData: any, apiKey: string, supabase?: SupabaseClient) {
   try {
     const { query, model, messages, options } = requestData;
-    
+
+    // Security scan query content
+    const queryText = query || (messages && messages.map((m: any) => m.content).join(' ')) || '';
+    const securityScan = scanForThreats(queryText);
+
+    if (securityScan.action === 'blocked') {
+      logInfo('Query blocked due to security scan');
+      return new Response(
+        JSON.stringify({
+          status: "error",
+          message: "Query contains prohibited content",
+          code: 'SECURITY_BLOCKED',
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Create the request payload based on input format
     let payload: any;
-    
+
     if (messages) {
-      // Use chat completion format
+      // Use chat completion format with sanitized messages
+      const sanitizedMessages = messages.map((m: any) => ({
+        ...m,
+        content: typeof m.content === 'string' && m.role === 'user'
+          ? scanForThreats(m.content).sanitized
+          : m.content
+      }));
       payload = {
         model: model || "sonar",
-        messages: messages,
+        messages: sanitizedMessages,
         max_tokens: options?.max_tokens || 1024,
         temperature: options?.temperature || 0.7,
         stream: options?.stream || false,

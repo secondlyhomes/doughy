@@ -3,7 +3,7 @@
 
 import React, { useMemo } from 'react';
 import { View, Text, Dimensions, ScrollView } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface CashFlowDataPoint {
   month: string;

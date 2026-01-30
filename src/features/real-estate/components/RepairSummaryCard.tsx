@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { AlertCircle, Wrench } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard } from '@/components/ui';
 import { formatCurrency } from '../utils/formatters';
 import { withOpacity } from '@/lib/design-utils';

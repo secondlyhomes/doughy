@@ -13,7 +13,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop } from './GlassView';
 

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Switch as RNSwitch, SwitchProps as RNSwitchProps, View, Text } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export interface SwitchProps extends Omit<RNSwitchProps, 'value' | 'onValueChange'> {
   checked?: boolean;

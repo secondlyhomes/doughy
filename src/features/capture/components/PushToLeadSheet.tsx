@@ -4,7 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, TextInput, Alert } from 'react-native';
 import { BottomSheet, Button, SearchBar, Badge } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import {

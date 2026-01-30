@@ -1,8 +1,13 @@
 // Supabase Edge Function to process uploaded documents
 import { serve } from "http/server.ts";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { corsHeaders, getCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { decryptServer } from "../_shared/crypto-server.ts";
+import { scanForThreats } from "../_shared/security.ts";
+import {
+  isCircuitBreakerOpen,
+  checkRateLimit,
+} from "../_shared/ai-security/index.ts";
 
 const OPENAI_EMBEDDING_MODEL = "text-embedding-ada-002";
 const EMBEDDING_DIMENSIONS = 1536;
@@ -103,11 +108,37 @@ serve(async (req: Request) => {
 
     // Parse request body
     const { documentId } = await req.json();
-    
+
     if (!documentId) {
       return new Response(
         JSON.stringify({ error: "Missing documentId parameter" }),
         { status: 400, headers: { ...customCorsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Circuit breaker check (minimal latency with caching)
+    const circuitState = await isCircuitBreakerOpen(supabaseClient as SupabaseClient, 'process-document', user.id);
+    if (circuitState.isOpen) {
+      console.warn(`[process-document] Circuit breaker open: ${circuitState.reason}`);
+      return new Response(
+        JSON.stringify({ error: `Service temporarily unavailable: ${circuitState.reason}` }),
+        { status: 503, headers: { ...customCorsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limiting check
+    const rateLimit = await checkRateLimit(
+      supabaseClient as SupabaseClient,
+      user.id,
+      'process-document',
+      'api',
+      { functionHourlyLimit: 50, globalHourlyLimit: 200, burstLimit: 10 }
+    );
+    if (!rateLimit.allowed) {
+      console.warn(`[process-document] Rate limit exceeded for user ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: `Rate limit exceeded: ${rateLimit.limitType}` }),
+        { status: 429, headers: { ...customCorsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -146,9 +177,20 @@ serve(async (req: Request) => {
       
       // Extract text based on file type
       const text = await extractTextFromFile(fileData, document.file_type);
-      
-      // Process the extracted text
-      await processTextContent(supabaseClient, documentId, text, openaiApiKey);
+
+      // Security scan document content before embedding
+      const securityScan = scanForThreats(text);
+      if (securityScan.action === 'blocked') {
+        console.warn(`[process-document] Document content blocked: ${documentId}`);
+        return new Response(
+          JSON.stringify({ error: "Document content contains prohibited patterns", documentId }),
+          { status: 400, headers: { ...customCorsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Process the sanitized text
+      const processedText = securityScan.sanitized;
+      await processTextContent(supabaseClient, documentId, processedText, openaiApiKey);
     }
     
     // Update document processing status

@@ -7,7 +7,7 @@ import { TouchableOpacity, View, Text } from 'react-native';
 import { useRouter, usePathname, useSegments } from 'expo-router';
 import { ArrowLeft, ChevronLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, ICON_SIZES } from '@/constants/design-tokens';
 
 // ============================================

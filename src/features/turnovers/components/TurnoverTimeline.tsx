@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Check, Circle } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FONT_SIZES, SPACING } from '@/constants/design-tokens';
 import { TurnoverStatus, TURNOVER_STATUS_CONFIG } from '../types';
 

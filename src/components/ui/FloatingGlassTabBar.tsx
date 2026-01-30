@@ -8,7 +8,7 @@ import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } fro
 import { BlurView } from 'expo-blur';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancelAnimation, withTiming, interpolate } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useTheme, useThemeColors } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { BADGE_CONSTANTS, FONT_SIZES } from '@/constants/design-tokens';
 

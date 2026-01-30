@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { CalendarClock, ChevronRight, User, Home } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card, Badge } from '@/components/ui';
 import { FONT_SIZES, SPACING } from '@/constants/design-tokens';
 import { TurnoverWithRelations, TURNOVER_STATUS_CONFIG } from '../types';

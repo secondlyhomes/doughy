@@ -27,10 +27,17 @@ const GOOGLE_USERINFO_ENDPOINT = 'https://www.googleapis.com/oauth2/v2/userinfo'
 // Types
 // =============================================================================
 
+/**
+ * Valid Google service types
+ */
+type GoogleServiceType = 'gmail' | 'calendar';
+
 interface CallbackRequest {
   code: string;
   codeVerifier: string;
   redirectUri: string;
+  /** Which Google services to enable (defaults to ['gmail']) */
+  services?: GoogleServiceType[];
 }
 
 interface TokenResponse {
@@ -109,7 +116,7 @@ serve(async (req: Request) => {
 
     // Parse request body
     const body: CallbackRequest = await req.json();
-    const { code, codeVerifier, redirectUri } = body;
+    const { code, codeVerifier, redirectUri, services = ['gmail'] } = body;
 
     if (!code || !codeVerifier || !redirectUri) {
       return addCorsHeaders(
@@ -120,6 +127,19 @@ serve(async (req: Request) => {
         req
       );
     }
+
+    // Validate services array
+    const validServices: GoogleServiceType[] = ['gmail', 'calendar'];
+    const requestedServices = services.filter((s): s is GoogleServiceType =>
+      validServices.includes(s as GoogleServiceType)
+    );
+
+    // Ensure at least gmail is included (required for email sync)
+    if (!requestedServices.includes('gmail')) {
+      requestedServices.unshift('gmail');
+    }
+
+    console.log(`${LOG_PREFIX} Requested services: ${requestedServices.join(', ')}`);
 
     console.log(`${LOG_PREFIX} Exchanging code for tokens`);
 
@@ -234,6 +254,7 @@ serve(async (req: Request) => {
           token_expires_at: tokenExpiresAt,
           is_active: true,
           sync_error: null,
+          google_services: requestedServices,
         })
         .eq('id', existing.id);
 
@@ -249,7 +270,7 @@ serve(async (req: Request) => {
       }
 
       connectionId = existing.id;
-      console.log(`${LOG_PREFIX} Updated existing connection ${connectionId}`);
+      console.log(`${LOG_PREFIX} Updated existing connection ${connectionId} with services: ${requestedServices.join(', ')}`);
     } else {
       // Create new connection
       const { data: newConnection, error: insertError } = await supabase
@@ -263,6 +284,7 @@ serve(async (req: Request) => {
           refresh_token_encrypted: refreshTokenEncrypted,
           token_expires_at: tokenExpiresAt,
           is_active: true,
+          google_services: requestedServices,
         })
         .select('id')
         .single();
@@ -279,7 +301,7 @@ serve(async (req: Request) => {
       }
 
       connectionId = newConnection.id;
-      console.log(`${LOG_PREFIX} Created new connection ${connectionId}`);
+      console.log(`${LOG_PREFIX} Created new connection ${connectionId} with services: ${requestedServices.join(', ')}`);
     }
 
     // Trigger initial sync
@@ -306,6 +328,7 @@ serve(async (req: Request) => {
           success: true,
           email: userInfo.email,
           connectionId,
+          services: requestedServices,
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       ),

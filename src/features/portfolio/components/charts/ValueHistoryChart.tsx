@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { View, Text, Dimensions, TouchableOpacity } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import type { PortfolioValuation } from '../../types';
 
 interface ValueHistoryChartProps {

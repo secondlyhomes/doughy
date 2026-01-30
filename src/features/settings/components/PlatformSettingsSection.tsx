@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { TrendingUp, Home, Check, ChevronRight, AlertCircle } from 'lucide-react-native';
 import { usePlatform, Platform } from '@/contexts/PlatformContext';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Switch } from '@/components/ui/Switch';
 import { PlatformSwitcher } from '@/components/ui/PlatformSwitcher';
 import { withOpacity } from '@/lib/design-utils';

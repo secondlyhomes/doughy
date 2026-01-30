@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Mic, Square, Pause, Play, X, Check } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useVoiceRecording, formatDuration } from '../hooks/useVoiceRecording';
 import { PhotoBucket, PHOTO_BUCKET_CONFIG } from '../../deals/types';

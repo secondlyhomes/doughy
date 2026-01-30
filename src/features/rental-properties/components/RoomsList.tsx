@@ -11,7 +11,7 @@ import {
   Bath,
   DoorOpen,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FONT_SIZES } from '@/constants/design-tokens';
 import { Badge, Button } from '@/components/ui';
 import { Room, RoomStatus } from '@/stores/rental-rooms-store';

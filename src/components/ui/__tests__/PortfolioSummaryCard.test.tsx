@@ -8,7 +8,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { PortfolioSummaryCard, PortfolioMetrics } from '../PortfolioSummaryCard';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useTheme: () => ({
     isDark: false,
     toggleTheme: jest.fn(),

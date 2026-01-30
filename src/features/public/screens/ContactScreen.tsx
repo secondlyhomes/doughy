@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, Linking, useWindowDimensions, Alert } from 'react-native';
 import { Mail, Phone, MapPin, Send } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 

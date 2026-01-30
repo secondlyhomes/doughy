@@ -18,7 +18,7 @@ import {
   Check,
 } from 'lucide-react-native';
 import { BottomSheet, BottomSheetSection, Button } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { logDealEvent } from '../hooks/useDealEvents';
 import type { DealEventType } from '../types/events';

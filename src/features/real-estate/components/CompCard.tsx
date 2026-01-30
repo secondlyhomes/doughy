@@ -14,7 +14,7 @@ import {
   Trash2,
   Edit2,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField, DataCardAction } from '@/components/ui';
 import { PropertyComp } from '../types';
 import { formatCurrency, formatNumber, formatDate } from '../utils/formatters';

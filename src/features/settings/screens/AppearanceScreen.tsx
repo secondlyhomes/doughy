@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Sun, Moon, Smartphone, Check } from 'lucide-react-native';
-import { useTheme, ThemeMode, useThemeColors } from '@/context/ThemeContext';
+import { useTheme, ThemeMode, useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

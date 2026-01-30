@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Bell, MessageCircle, TrendingUp, AlertTriangle, Settings } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPermissionsAsync, requestPermissionsAsync } from '@/utils/notifications';

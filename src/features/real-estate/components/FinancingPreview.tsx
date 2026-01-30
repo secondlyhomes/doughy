@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Calculator } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { FinancingCalculations } from '../hooks/useFinancingForm';
 import { formatCurrency } from '../utils/formatters';

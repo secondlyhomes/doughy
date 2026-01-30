@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, ScrollView } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, BottomSheetSection } from '@/components/ui/BottomSheet';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';

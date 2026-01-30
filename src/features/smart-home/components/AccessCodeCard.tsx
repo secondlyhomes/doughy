@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Key, Calendar, User, Trash2 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui';
 import type { AccessCodeWithRelations } from '../types';
 

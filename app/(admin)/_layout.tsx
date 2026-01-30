@@ -6,7 +6,7 @@ import { View, ActivityIndicator, DynamicColorIOS } from 'react-native';
 import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useTheme, useThemeColors } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 
 export default function AdminLayout() {
   const { isLoading } = useAuth();
@@ -56,6 +56,11 @@ export default function AdminLayout() {
       <NativeTabs.Trigger name="integrations">
         <Icon sf={{ default: 'link', selected: 'link.circle.fill' }} />
         <Label>Integrations</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="security">
+        <Icon sf={{ default: 'shield', selected: 'shield.fill' }} />
+        <Label>Security</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

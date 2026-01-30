@@ -5,7 +5,7 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, PRESS_OPACITY, DEFAULT_HIT_SLOP } from '@/constants/design-tokens';
 
 export interface HeaderBackButtonProps {

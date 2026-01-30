@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { View, Text, Pressable, ScrollView, ViewProps, TextProps } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle } from '@/lib/design-utils';
 import { FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS, PRESS_OPACITY } from '@/constants/design-tokens';
 

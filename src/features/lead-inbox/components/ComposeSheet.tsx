@@ -4,7 +4,7 @@
 import React, { memo, useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { Send, Sparkles, User } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, Button } from '@/components/ui';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';

@@ -7,7 +7,7 @@ import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
 import { LoadingSpinner } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface EmailVerifiedGuardProps {
   children: React.ReactNode;

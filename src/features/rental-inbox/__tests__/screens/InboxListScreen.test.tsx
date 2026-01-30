@@ -29,7 +29,7 @@ jest.mock('react-native-gesture-handler', () => {
   };
 });
 
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     info: '#3b82f6',
     primary: '#2563eb',

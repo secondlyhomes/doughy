@@ -12,7 +12,7 @@ import {
   LayoutChangeEvent,
 } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 
 export interface FormFieldProps extends Omit<TextInputProps, 'style'> {

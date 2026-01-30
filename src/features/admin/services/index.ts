@@ -55,3 +55,26 @@ export {
   type SeedUsersResult,
   type ClearUsersResult,
 } from './testUserService';
+
+export {
+  calculateKeyAgeDays,
+  getKeyAgeStatus,
+  getEffectiveDate,
+  calculateSecurityScore,
+  getSecurityHealthSummary,
+  getKeysNeedingAttention,
+  fetchAllApiKeys,
+  formatKeyAge,
+  getAgeStatusMessage,
+} from './securityHealthService';
+
+export {
+  investorSeeder,
+  seedService, // Backward compatibility alias
+  canSeedDatabase,
+  clearDatabase,
+  seedDatabase,
+  type SeedResult,
+  type ClearResult,
+  type SafetyCheckResult,
+} from './investorSeeder';

@@ -30,7 +30,7 @@ const mockColors = {
   success: '#28a745',
   destructive: '#dc3545',
 };
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => mockColors,
 }));
 

@@ -4,7 +4,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SortOption, SORT_OPTIONS } from '../hooks/usePropertyFilters';
 

@@ -2,7 +2,7 @@
 // Stack navigator for property detail and sub-screens
 
 import { Stack } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export default function PropertyDetailLayout() {
   const colors = useThemeColors();

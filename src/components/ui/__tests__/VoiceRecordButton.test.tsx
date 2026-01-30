@@ -8,7 +8,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { VoiceRecordButton } from '../VoiceRecordButton';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     destructive: '#EF4444',
     primary: '#4D7C5F',

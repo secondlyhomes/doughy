@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Bed, Bath, Maximize2 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FONT_SIZES } from '@/constants/design-tokens';
 import { Badge } from '@/components/ui';
 import { RentalType } from '../types';

@@ -9,7 +9,7 @@ import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
 import { FloatingActionButton, FABAction } from '@/features/layout/components/FloatingActionButton';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DealStrategy, OfferTerms, DEAL_STRATEGY_CONFIG } from '../types';
 import { getEmptyOfferTerms } from '../data/mockOffers';
 import { StrategySelector } from '../components/StrategySelector';

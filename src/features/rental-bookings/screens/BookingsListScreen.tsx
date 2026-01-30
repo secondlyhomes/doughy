@@ -25,7 +25,7 @@ import { LeadCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Plus, Calendar, Search, Check, WifiOff } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';

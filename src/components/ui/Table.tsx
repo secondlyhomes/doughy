@@ -3,7 +3,7 @@
 import React from 'react';
 import { View, Text, FlatList, ScrollView, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 // Simple Table API with columns configuration
 export interface TableColumn<T> {

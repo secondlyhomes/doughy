@@ -8,7 +8,7 @@ import { ArrowLeft, MoreVertical, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 
 export interface ConversationHeaderProps {

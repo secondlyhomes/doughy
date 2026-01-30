@@ -36,7 +36,7 @@ import {
 
 // Zone A UI Components
 import { Card, CardContent, CardHeader, CardTitle, Badge, Progress, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { getTrendColor } from '@/utils';
 import { UI_TIMING } from '@/constants/design-tokens';

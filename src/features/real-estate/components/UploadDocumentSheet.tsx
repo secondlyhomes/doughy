@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { FileText, Upload, X, Check, AlertCircle } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import * as DocumentPicker from 'expo-document-picker';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useDocumentMutations, DOCUMENT_CATEGORIES, DocumentCategory } from '../hooks/usePropertyDocuments';

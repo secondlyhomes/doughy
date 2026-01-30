@@ -1,5 +1,9 @@
 // src/features/real-estate/types/property.ts
-// Core property types
+// Core property types for RE Investor domain
+//
+// NAMING CONVENTIONS:
+// - InvestorProperty: Primary type for RE Investor properties
+// - Property: Backward-compatible alias (deprecated, use InvestorProperty)
 
 import { Document } from './documents';
 import { PropertyAnalysis } from './analysis';
@@ -47,7 +51,11 @@ export interface DBProperty {
   primary_image_url?: string;
 }
 
-export interface Property {
+/**
+ * Property for RE Investor platform.
+ * Renamed from Property to InvestorProperty to distinguish from other property types.
+ */
+export interface InvestorProperty {
   id: string;
 
   address: string;
@@ -79,7 +87,7 @@ export interface Property {
   created_at?: string;
   updated_at?: string;
   created_by?: string;
-  properties?: Property[];
+  properties?: InvestorProperty[];
   leadIds?: string[];
   owner_occupied?: boolean;
   vacant?: boolean;
@@ -103,6 +111,10 @@ export interface Property {
   // Direct image URL (fallback when images array is empty)
   primary_image_url?: string;
 }
+
+// Backward-compatible alias (deprecated - use InvestorProperty instead)
+/** @deprecated Use InvestorProperty instead */
+export type Property = InvestorProperty;
 
 export interface DBPropertyInsert {
   address_line_1: string;
@@ -164,12 +176,12 @@ export interface DBPropertyWithImages extends DBProperty {
 }
 
 // Helper functions for property conversion
-export const dbToFeatureProperty = (dbProperty: DBPropertyWithImages): Property => {
+export const dbToFeatureProperty = (dbProperty: DBPropertyWithImages): InvestorProperty => {
   // Determine address from either field for maximum compatibility
   const address = dbProperty.address_line_1 || dbProperty.address || '';
 
   // Create base property with required fields
-  const result: Partial<Property> = {
+  const result: Partial<InvestorProperty> = {
     id: dbProperty.id,
     address: address,
     address_line_1: address,
@@ -237,10 +249,10 @@ export const dbToFeatureProperty = (dbProperty: DBPropertyWithImages): Property 
     result.primary_image_url = dbProperty.primary_image_url;
   }
 
-  return result as Property;
+  return result as InvestorProperty;
 };
 
-export const featureToDbProperty = (property: Property): DBProperty => {
+export const featureToDbProperty = (property: InvestorProperty): DBProperty => {
   // Get the address from the appropriate property field
   const addressValue = property.address || property.address_line_1 || '';
 

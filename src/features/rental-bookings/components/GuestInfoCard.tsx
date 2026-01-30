@@ -5,7 +5,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
 import { User, Phone, Mail, ExternalLink } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ICON_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';

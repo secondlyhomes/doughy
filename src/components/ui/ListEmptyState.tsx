@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Button } from './Button';
 import { SPACING, ICON_SIZES } from '@/constants/design-tokens';
 

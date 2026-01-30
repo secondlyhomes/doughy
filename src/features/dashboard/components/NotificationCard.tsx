@@ -13,7 +13,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { AlertTriangle, Info, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;

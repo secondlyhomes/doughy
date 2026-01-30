@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Edit2, Trash2 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard } from '@/components/ui';
 import { FinancingScenario, ScenarioDetails } from '../types';
 import { FinancingScenarioWithCalcs, LOAN_TYPES, LoanType } from '../hooks/useFinancingScenarios';

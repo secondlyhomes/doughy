@@ -11,7 +11,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Linking, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import { MapPin, Navigation, ExternalLink, AlertCircle } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
 interface PropertyLocationMapProps {

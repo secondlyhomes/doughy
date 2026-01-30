@@ -7,7 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { ThemedSafeAreaView } from '@/components';
 import { BottomSheet, BottomSheetSection, Button, SearchBar } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import { useDebounce } from '@/hooks';

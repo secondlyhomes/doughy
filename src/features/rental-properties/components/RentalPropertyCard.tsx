@@ -14,7 +14,7 @@ import {
   Users,
   LayoutGrid,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField } from '@/components/ui';
 import { RentalProperty, RentalType, PropertyStatus } from '../types';
 

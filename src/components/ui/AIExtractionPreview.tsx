@@ -15,7 +15,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import { Sparkles, Edit2, Check, X } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { Card } from './Card';

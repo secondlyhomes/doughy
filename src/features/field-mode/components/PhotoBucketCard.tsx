@@ -25,7 +25,7 @@ import {
   FileText,
   Mic,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card } from '@/components/ui/Card';
 import { PhotoBucket, WalkthroughItem, PHOTO_BUCKET_CONFIG } from '../../deals/types';
 

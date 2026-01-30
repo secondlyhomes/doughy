@@ -4,7 +4,7 @@ import React from 'react';
 import { View, TextInput, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { Search, X, SlidersHorizontal, List, LayoutGrid } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { GlassView } from './GlassView';
 
 export interface SearchBarProps {

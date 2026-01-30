@@ -5,7 +5,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
 import { Wrench, Plus, RefreshCw } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Property, RepairEstimate, RepairCategory } from '../types';
 import { useRepairEstimate, useRepairEstimateMutations, REPAIR_CATEGORIES } from '../hooks/useRepairEstimate';

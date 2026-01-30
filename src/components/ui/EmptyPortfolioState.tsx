@@ -15,7 +15,7 @@
 import React from 'react';
 import { View, Text, ViewStyle } from 'react-native';
 import { Home, Search, Filter, AlertCircle, Plus } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { Button } from './Button';

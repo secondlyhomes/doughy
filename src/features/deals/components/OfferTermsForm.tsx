@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { DealStrategy, OfferTerms } from '../types';

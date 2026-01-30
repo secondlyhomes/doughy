@@ -8,7 +8,7 @@ import { FileText, Home, MapPin } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Property } from '../types';
 import { formatNumber, formatDate } from '../utils/formatters';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { usePropertyDeals } from '@/features/deals/hooks/usePropertyDeals';
 import { RelatedDealsCard } from './RelatedDealsCard';
 

@@ -7,7 +7,7 @@ import {
   LiquidGlassView,
   isLiquidGlassSupported,
 } from '@callstack/liquid-glass';
-import { useTheme, useThemeColors } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { getBackdropColor, withOpacity } from '@/lib/design-utils';
 import { GLASS_BLUR } from '@/constants/design-tokens';
 

@@ -3,7 +3,7 @@
 import React, { useState, useCallback, forwardRef } from 'react';
 import { TextInput, TextInputProps, View, Text, LayoutChangeEvent } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
 
 export interface InputProps extends TextInputProps {

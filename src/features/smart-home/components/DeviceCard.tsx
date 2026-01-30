@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Lock, Unlock, Wifi, WifiOff, Battery, ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui';
 import type { SmartDevice } from '../types';
 import { DEVICE_CONNECTION_STATUS_CONFIG, LOCK_STATE_CONFIG, DEVICE_BRAND_CONFIG } from '../types';

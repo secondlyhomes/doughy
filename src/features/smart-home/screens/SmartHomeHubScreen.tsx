@@ -9,7 +9,7 @@ import type { NativeStackNavigationOptions } from '@react-navigation/native-stac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { Button, LoadingSpinner, OAuthConnectButton } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { ArrowLeft } from 'lucide-react-native';
 import {

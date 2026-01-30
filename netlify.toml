@@ -1,0 +1,76 @@
+# Netlify Configuration for Doughy Web App
+# Branch-based deployments:
+#   - main     → Production (www.doughy.app)
+#   - develop  → Staging (stage.doughy.app or develop--doughy.netlify.app)
+#   - feature/* → Preview (deploy-preview-123--doughy.netlify.app)
+
+[build]
+  command = "npm run build:web"
+  publish = "dist"
+
+# Production (main branch)
+[context.production]
+  command = "npm run build:web"
+  environment = { NODE_ENV = "production" }
+
+# Staging (develop branch specifically)
+[context.develop]
+  command = "npm run build:web"
+  environment = { NODE_ENV = "staging" }
+
+# Other branch deploys (feature branches, etc.)
+[context.branch-deploy]
+  command = "npm run build:web"
+  environment = { NODE_ENV = "development" }
+
+# Preview deployments (PRs)
+[context.deploy-preview]
+  command = "npm run build:web"
+  environment = { NODE_ENV = "development" }
+
+# =============================================
+# CRITICAL: SPA routing for Expo Router
+# Without this, direct links like /deals/123 will 404
+# =============================================
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# =============================================
+# Caching Strategy
+# =============================================
+
+# Cache static assets forever (they have content hashes)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, immutable, max-age=31536000"
+
+[[headers]]
+  for = "/_expo/*"
+  [headers.values]
+    Cache-Control = "public, immutable, max-age=31536000"
+
+# Don't cache HTML (so updates show immediately)
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# =============================================
+# Security Headers (OWASP recommended)
+# =============================================
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

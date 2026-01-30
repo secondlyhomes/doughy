@@ -13,7 +13,7 @@ import {
   Animated,
 } from 'react-native';
 import { Send, Sparkles, User, Loader2 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BORDER_RADIUS, SPACING, FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';

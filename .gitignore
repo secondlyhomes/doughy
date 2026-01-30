@@ -18,6 +18,9 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# Deployment credentials
+google-service-account.json
+
 # Metro
 .metro-health-check*
 

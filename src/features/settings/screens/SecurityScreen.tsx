@@ -23,7 +23,7 @@ import {
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import {
   listMFAFactors,
   unenrollMFA,

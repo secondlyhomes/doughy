@@ -18,7 +18,7 @@ import {
   Bug,
   ChevronDown,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';

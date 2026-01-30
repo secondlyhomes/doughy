@@ -12,7 +12,7 @@ import {
   Building2,
   AlertCircle,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import type { ConversationWithRelations, Channel } from '@/stores/rental-conversations-store';

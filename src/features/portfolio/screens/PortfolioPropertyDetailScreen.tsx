@@ -7,7 +7,7 @@ import { useLocalSearchParams, useRouter, Redirect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar, Briefcase } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import {
   LoadingSpinner,

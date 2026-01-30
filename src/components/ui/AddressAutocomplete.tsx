@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Modal as RNModal, ViewProps } from 'react-native';
 import { MapPin, X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SearchBar } from './SearchBar';
 import { useAddressSearch, AddressValue, PlacePrediction } from './hooks/useAddressSearch';
 import { AddressSuggestionList } from './AddressSuggestionList';

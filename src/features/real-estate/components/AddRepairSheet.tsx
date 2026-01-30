@@ -12,7 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { X, Wrench, DollarSign, FileText, AlertCircle } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, FormField } from '@/components/ui';
 import { useForm } from '@/hooks/useForm';
 import { RepairEstimate, RepairCategory } from '../types';

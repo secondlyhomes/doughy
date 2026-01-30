@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, Button } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';

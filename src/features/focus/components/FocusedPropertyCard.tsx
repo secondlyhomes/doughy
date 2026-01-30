@@ -5,10 +5,10 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, User, ChevronRight, X } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
-import { FocusedProperty } from '@/context/FocusModeContext';
+import { FocusedProperty } from '@/contexts/FocusModeContext';
 
 interface FocusedPropertyCardProps {
   property: FocusedProperty;

@@ -4,12 +4,12 @@
 // Standalone tab screen (renamed from Focus tab)
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, SectionList, RefreshControl, TouchableOpacity, Platform } from 'react-native';
+import { View, SectionList, RefreshControl, TouchableOpacity, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   MessageSquare,
-  AlertCircle,
   Sparkles,
+  AlertCircle,
   Clock,
   Check,
   WifiOff,
@@ -28,7 +28,7 @@ import {
   AlertDescription,
 } from '@/components/ui';
 import { ConversationCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
-import { useThemeColors, ThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';
@@ -40,256 +40,18 @@ import type {
   LeadInboxFilter,
   LeadInboxSort,
   LeadConversationListItem,
-  InvestorAIQueueItem,
   InvestorConversationWithRelations,
 } from '../types';
-
-// Filter options
-const FILTER_OPTIONS: { key: LeadInboxFilter; label: string; icon: React.ComponentType<{ size: number; color: string }> }[] = [
-  { key: 'all', label: 'All', icon: MessageSquare },
-  { key: 'ai_waiting', label: 'AI Waiting', icon: Sparkles },
-  { key: 'needs_response', label: 'Needs Response', icon: AlertCircle },
-  { key: 'resolved', label: 'Resolved', icon: Check },
-];
-
-// Sort options
-const SORT_OPTIONS: { key: LeadInboxSort; label: string }[] = [
-  { key: 'pending_first', label: 'Pending First' },
-  { key: 'recent', label: 'Most Recent' },
-  { key: 'unread_first', label: 'Unread First' },
-  { key: 'oldest', label: 'Oldest First' },
-];
-
-// Section type for the sectioned inbox
-interface LeadInboxSection {
-  title: string;
-  icon: React.ComponentType<{ size: number; color: string }>;
-  iconColor: string;
-  iconBgColor: string;
-  description?: string;
-  data: LeadConversationListItem[];
-}
+import {
+  FILTER_OPTIONS,
+  SORT_OPTIONS,
+  QuickActionCard,
+  SectionHeader,
+  type LeadInboxSection,
+} from './lead-inbox-list';
 
 // Module-level separator component for SectionList
 const ItemSeparator = () => <View style={{ height: SPACING.xs }} />;
-
-// Quick Action Card for AI responses
-function QuickActionCard({
-  conversation,
-  pendingResponse,
-  onPress,
-  onQuickApprove,
-  colors,
-}: {
-  conversation: InvestorConversationWithRelations;
-  pendingResponse?: InvestorAIQueueItem;
-  onPress: () => void;
-  onQuickApprove: () => void;
-  colors: ThemeColors;
-}) {
-  const leadName = conversation.lead?.name || 'Unknown Lead';
-  const confidence = pendingResponse?.confidence || 0;
-  const confidencePercent = Math.round(confidence * 100);
-  const isHighConfidence = confidence >= 0.85;
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: BORDER_RADIUS.lg,
-        padding: SPACING.md,
-        marginBottom: SPACING.sm,
-        borderWidth: 1,
-        borderColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'medium'),
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`Conversation with ${leadName}, ${confidencePercent}% confidence`}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm }}>
-        {/* Avatar */}
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.muted,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: colors.foreground, fontWeight: '600' }}>
-            {leadName.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-
-        {/* Content */}
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
-              {leadName}
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                backgroundColor: withOpacity(isHighConfidence ? colors.success : colors.warning, 'light'),
-                paddingHorizontal: 8,
-                paddingVertical: 2,
-                borderRadius: BORDER_RADIUS.full,
-              }}
-            >
-              <Sparkles size={12} color={isHighConfidence ? colors.success : colors.warning} />
-              <Text
-                style={{
-                  color: isHighConfidence ? colors.success : colors.warning,
-                  fontSize: FONT_SIZES['2xs'],
-                  fontWeight: '600',
-                }}
-              >
-                {confidencePercent}%
-              </Text>
-            </View>
-          </View>
-
-          {/* Channel and tags */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: 2 }}>
-            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
-              {conversation.channel.toUpperCase()}
-            </Text>
-            {conversation.lead?.source && (
-              <View
-                style={{
-                  backgroundColor: colors.muted,
-                  paddingHorizontal: 6,
-                  paddingVertical: 1,
-                  borderRadius: BORDER_RADIUS.sm,
-                }}
-              >
-                <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES['2xs'] }}>
-                  {conversation.lead.source}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* AI suggested response preview */}
-          {pendingResponse && (
-            <Text
-              numberOfLines={2}
-              style={{
-                color: colors.mutedForeground,
-                fontSize: FONT_SIZES.sm,
-                marginTop: SPACING.xs,
-                fontStyle: 'italic',
-              }}
-            >
-              "{pendingResponse.suggested_response.slice(0, 100)}..."
-            </Text>
-          )}
-        </View>
-      </View>
-
-      {/* Quick Actions */}
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.sm, marginTop: SPACING.sm }}>
-        <TouchableOpacity
-          onPress={onPress}
-          style={{
-            paddingVertical: 6,
-            paddingHorizontal: 12,
-            borderRadius: BORDER_RADIUS.md,
-            backgroundColor: colors.muted,
-          }}
-        >
-          <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm }}>View</Text>
-        </TouchableOpacity>
-
-        {isHighConfidence && (
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              onQuickApprove();
-            }}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: BORDER_RADIUS.md,
-              backgroundColor: colors.primary,
-            }}
-          >
-            <Check size={14} color={colors.primaryForeground} />
-            <Text style={{ color: colors.primaryForeground, fontSize: FONT_SIZES.sm, fontWeight: '600' }}>
-              Quick Approve
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// Section Header Component
-function SectionHeader({
-  section,
-  colors,
-}: {
-  section: LeadInboxSection;
-  colors: ThemeColors;
-}) {
-  const IconComponent = section.icon;
-
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: SPACING.sm,
-        marginTop: SPACING.md,
-        marginBottom: SPACING.xs,
-      }}
-    >
-      <View
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
-          backgroundColor: section.iconBgColor,
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginRight: SPACING.sm,
-        }}
-      >
-        <IconComponent size={18} color={section.iconColor} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
-          {section.title}
-        </Text>
-        {section.description && (
-          <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.xs }}>
-            {section.description}
-          </Text>
-        )}
-      </View>
-      <View
-        style={{
-          backgroundColor: section.iconBgColor,
-          paddingHorizontal: 8,
-          paddingVertical: 2,
-          borderRadius: BORDER_RADIUS.full,
-        }}
-      >
-        <Text style={{ color: section.iconColor, fontWeight: '600', fontSize: FONT_SIZES.sm }}>
-          {section.data.length}
-        </Text>
-      </View>
-    </View>
-  );
-}
 
 export function LeadInboxListScreen() {
   const router = useRouter();

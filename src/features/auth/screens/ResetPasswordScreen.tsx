@@ -14,7 +14,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import {

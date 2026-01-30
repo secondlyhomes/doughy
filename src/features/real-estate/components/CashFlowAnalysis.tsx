@@ -13,7 +13,7 @@ import {
   Info,
   Calculator,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { Property } from '../types';
 import { useDealAnalysis, RentalAssumptions, DEFAULT_RENTAL_ASSUMPTIONS } from '../hooks/useDealAnalysis';

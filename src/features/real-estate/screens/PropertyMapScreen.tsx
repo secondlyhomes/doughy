@@ -19,7 +19,7 @@ import { ArrowLeft, List, X, MapPin, Bed, Bath, Square } from 'lucide-react-nati
 import { ThemedSafeAreaView } from '@/components';
 import { PropertyMap } from '../components/PropertyMap';
 import { useProperties } from '../hooks/useProperties';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { Property } from '../types';
 import { formatCurrency, formatPropertyType } from '../utils/formatters';

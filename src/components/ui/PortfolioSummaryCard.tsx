@@ -16,7 +16,7 @@
 import React from 'react';
 import { View, Text, ViewStyle } from 'react-native';
 import { Home, DollarSign, TrendingUp, TrendingDown, Activity } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { Card } from './Card';

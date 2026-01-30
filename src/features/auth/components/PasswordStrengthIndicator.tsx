@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import type { PasswordStrength } from '../services/passwordResetService';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface PasswordStrengthIndicatorProps {
   strength: PasswordStrength;

@@ -13,7 +13,7 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { User, Shield, ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
 import { SPACING } from '@/constants/design-tokens';

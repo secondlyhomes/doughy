@@ -3,7 +3,7 @@
 import React from 'react';
 import { View, Text, ViewProps, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 

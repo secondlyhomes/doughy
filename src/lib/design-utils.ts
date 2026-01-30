@@ -1,5 +1,5 @@
 import { ViewStyle } from 'react-native';
-import { ThemeColors } from '@/context/ThemeContext';
+import { ThemeColors } from '@/contexts/ThemeContext';
 import { SHADOWS, OPACITY } from '@/constants/design-tokens';
 
 export interface ShadowOptions {

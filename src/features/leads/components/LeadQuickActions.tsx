@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
 import { Phone, Mail, MessageSquare } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { sanitizePhone } from '@/utils/sanitize';
 import { useVoipCall } from '@/features/voip';
 import type { SubscriptionTier } from '@/features/voip';

@@ -25,7 +25,7 @@ import {
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
 interface Plan {

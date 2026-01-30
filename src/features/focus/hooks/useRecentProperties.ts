@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { FocusedProperty } from '@/context/FocusModeContext';
+import { FocusedProperty } from '@/contexts/FocusModeContext';
 
 const RECENT_PROPERTIES_KEY = 'doughy_recent_properties';
 const MAX_RECENT_PROPERTIES = 5;

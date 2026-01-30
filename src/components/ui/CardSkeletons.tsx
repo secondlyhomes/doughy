@@ -22,7 +22,7 @@
 import React from 'react';
 import { View, ViewProps } from 'react-native';
 import { Skeleton } from './Skeleton';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 
 interface CardSkeletonProps extends ViewProps {

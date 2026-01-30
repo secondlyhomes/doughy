@@ -10,7 +10,7 @@ jest.mock('../../hooks/useDealEvents', () => ({
   logDealEvent: jest.fn(),
 }));
 
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     primary: '#4d7c5f',
     info: '#3b82f6',

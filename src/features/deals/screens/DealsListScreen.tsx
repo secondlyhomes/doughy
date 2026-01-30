@@ -17,7 +17,7 @@ import { DealCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SlidersHorizontal, MapPin, Calendar, DollarSign, ChevronRight, Briefcase, Search } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';

@@ -1,0 +1,74 @@
+{
+  "cli": {
+    "version": ">= 8.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "APP_VARIANT": "development"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "APP_VARIANT": "staging"
+      },
+      "ios": {
+        "autoIncrement": true
+      },
+      "android": {
+        "buildType": "apk",
+        "autoIncrement": true
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "channel": "production",
+      "env": {
+        "APP_VARIANT": "production"
+      },
+      "ios": {
+        "autoIncrement": true
+      },
+      "android": {
+        "buildType": "aab",
+        "autoIncrement": true
+      }
+    }
+  },
+  "submit": {
+    "staging": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID",
+        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "YOUR_TEAM_ID"
+      },
+      "android": {
+        "track": "internal",
+        "serviceAccountKeyPath": "./google-service-account.json"
+      }
+    },
+    "production": {
+      "ios": {
+        "appleId": "YOUR_APPLE_ID",
+        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "YOUR_TEAM_ID"
+      },
+      "android": {
+        "track": "production",
+        "serviceAccountKeyPath": "./google-service-account.json"
+      }
+    }
+  }
+}

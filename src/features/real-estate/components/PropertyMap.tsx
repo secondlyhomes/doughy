@@ -11,7 +11,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import MapView, { Marker, Callout, Region, PROVIDER_DEFAULT } from 'react-native-maps';
 import { MapPin, Navigation, Layers, X } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Property, GeoPoint } from '../types';
 import { formatCurrency } from '../utils/formatters';
 

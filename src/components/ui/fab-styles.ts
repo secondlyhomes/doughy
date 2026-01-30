@@ -2,7 +2,7 @@
 // Shared FAB shadow and glow styling utilities
 
 import { ViewStyle } from 'react-native';
-import { ThemeColors } from '@/context/ThemeContext';
+import { ThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle } from '@/lib/design-utils';
 
 export interface FABShadowOptions {

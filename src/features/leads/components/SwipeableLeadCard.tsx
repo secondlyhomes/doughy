@@ -5,7 +5,7 @@ import React, { useRef, useCallback, memo } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert, Animated } from 'react-native';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { Phone, MessageSquare, Archive, Star } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { haptic } from '@/lib/haptics';
 import { SWIPE_ACTION_WIDTH } from '@/constants/design-tokens';
 

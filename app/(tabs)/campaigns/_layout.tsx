@@ -1,7 +1,7 @@
 // app/(tabs)/campaigns/_layout.tsx
 // Stack navigator for Campaigns (accessed from Deals or Settings)
 import { Stack } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export default function CampaignsLayout() {
   const colors = useThemeColors();

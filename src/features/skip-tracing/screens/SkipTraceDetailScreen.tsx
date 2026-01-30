@@ -24,7 +24,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Badge } from '@/components/ui';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useSkipTraceResult, useDeleteSkipTrace } from '../hooks/useSkipTracing';
 import { PhoneCard, EmailCard, AddressCard } from '../components/ContactInfoCard';
 import { SKIP_TRACE_STATUS_CONFIG } from '../types';

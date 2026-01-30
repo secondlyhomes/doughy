@@ -3,7 +3,7 @@
 import React from 'react';
 import { TextInput, TextInputProps, View, Text } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export interface TextAreaProps extends TextInputProps {
   className?: string;

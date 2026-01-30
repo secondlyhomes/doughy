@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
-import { useFocusMode, NudgeSettings, DEFAULT_NUDGE_SETTINGS } from '@/context/FocusModeContext';
+import { useFocusMode, NudgeSettings, DEFAULT_NUDGE_SETTINGS } from '@/contexts/FocusModeContext';
 import { Nudge, NudgePriority, NudgeSummary } from '../types';
 
 // Storage key for snoozed nudges

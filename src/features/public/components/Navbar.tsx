@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Pressable, Alert, Platform } from 'react-native';
 import { Link, useRouter, usePathname, Href } from 'expo-router';
 import { ChevronDown, Menu, X, LogOut, Sun, Moon, Search } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { AskDoughyModal } from '@/features/docs/components/AskDoughyModal';

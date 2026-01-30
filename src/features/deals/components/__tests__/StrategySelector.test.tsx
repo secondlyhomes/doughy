@@ -32,7 +32,7 @@ jest.mock('lucide-react-native', () => {
 });
 
 // Mock ThemeContext
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     primary: '#007AFF',
     primaryForeground: '#FFFFFF',

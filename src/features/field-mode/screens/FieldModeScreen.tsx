@@ -14,7 +14,7 @@ import {
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, TAB_BAR_HEIGHT, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PhotoBucket, PHOTO_BUCKET_CONFIG } from '../../deals/types';
 import { useWalkthrough } from '../hooks/useWalkthrough';

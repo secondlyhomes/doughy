@@ -4,7 +4,7 @@ import React from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export interface CheckboxProps {
   checked?: boolean;

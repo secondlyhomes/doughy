@@ -8,7 +8,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { DocumentCard, DocumentCardCompact, DocumentCardDocument } from '../DocumentCard';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useTheme: () => ({
     isDark: false,
     toggleTheme: jest.fn(),

@@ -15,7 +15,7 @@ import {
   ThumbsDown,
   Zap,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import {
   SPACING,

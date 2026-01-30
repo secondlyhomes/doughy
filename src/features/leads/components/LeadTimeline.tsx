@@ -15,7 +15,7 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { Timeline, TimelineEvent, TimelineEventConfig } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export type ActivityType =
   | 'call'

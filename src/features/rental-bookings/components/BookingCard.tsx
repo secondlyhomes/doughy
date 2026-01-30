@@ -12,7 +12,7 @@ import {
   Clock,
   BedDouble,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField } from '@/components/ui';
 import { BookingWithRelations, BookingStatus, BookingType, RateType } from '../types';
 

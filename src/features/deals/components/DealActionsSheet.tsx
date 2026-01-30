@@ -19,8 +19,8 @@ import {
   Check,
 } from 'lucide-react-native';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { useThemeColors } from '@/context/ThemeContext';
-import { useFocusMode } from '@/context/FocusModeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
+import { useFocusMode } from '@/contexts/FocusModeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { Deal } from '../types';
 

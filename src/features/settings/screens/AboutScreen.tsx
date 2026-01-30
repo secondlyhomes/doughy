@@ -22,7 +22,7 @@ import {
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 

@@ -7,7 +7,7 @@ import { View, Text, Pressable, Animated, LayoutChangeEvent, StyleSheet } from '
 import { TrendingUp, Home } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { usePlatform, Platform } from '@/contexts/PlatformContext';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES } from '@/constants/design-tokens';
 

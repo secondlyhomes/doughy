@@ -21,21 +21,14 @@ import {
   ExternalLink,
   Trash2,
   Home,
-  ToggleLeft,
-  ToggleRight,
-  Wrench,
-  ImageIcon,
-  ChevronDown,
-  ChevronUp,
   ArrowLeft,
   MoreVertical,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import {
   LoadingSpinner,
   Button,
-  Badge,
   BottomSheet,
   BottomSheetSection,
   SimpleFAB,
@@ -57,171 +50,17 @@ import { useOpenMaintenanceCount } from '@/features/property-maintenance';
 import { useVendorCount } from '@/features/vendors';
 import { useNextTurnover } from '@/features/turnovers';
 
-// ============================================
-// Constants
-// ============================================
-
-// UUID validation regex
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-// ============================================
-// Helper Functions
-// ============================================
-
-function formatCurrency(amount: number | null): string {
-  if (amount === null || amount === undefined) return '-';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatRateType(rateType: string): string {
-  // Database only has: nightly, weekly, monthly (no 'yearly')
-  const suffixes: Record<string, string> = {
-    nightly: '/night',
-    weekly: '/week',
-    monthly: '/mo',
-  };
-  return suffixes[rateType] || '/mo';
-}
-
-function getStatusInfo(status: PropertyStatus): {
-  label: string;
-  variant: 'success' | 'secondary' | 'warning';
-  icon: React.ElementType;
-} {
-  switch (status) {
-    case 'active':
-      return { label: 'Active', variant: 'success', icon: ToggleRight };
-    case 'inactive':
-      return { label: 'Inactive', variant: 'secondary', icon: ToggleLeft };
-    case 'maintenance':
-      return { label: 'Maintenance', variant: 'warning', icon: Wrench };
-    default:
-      return { label: status, variant: 'secondary', icon: ToggleLeft };
-  }
-}
-
-// ============================================
-// Section Components
-// ============================================
-
-interface SectionProps {
-  title: string;
-  children: React.ReactNode;
-  rightElement?: React.ReactNode;
-  /** If true, section can be collapsed */
-  collapsible?: boolean;
-  /** Initial collapsed state */
-  defaultCollapsed?: boolean;
-}
-
-function Section({ title, children, rightElement, collapsible = false, defaultCollapsed = false }: SectionProps) {
-  const colors = useThemeColors();
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-
-  const handleToggle = useCallback(() => {
-    if (collapsible) {
-      setIsCollapsed((prev) => !prev);
-    }
-  }, [collapsible]);
-
-  return (
-    <View className="mb-6">
-      <TouchableOpacity
-        onPress={handleToggle}
-        disabled={!collapsible}
-        activeOpacity={collapsible ? 0.7 : 1}
-        className="flex-row items-center justify-between mb-3"
-      >
-        <View className="flex-row items-center flex-1">
-          <Text
-            style={{ color: colors.foreground, fontSize: FONT_SIZES.lg, fontWeight: '600' }}
-          >
-            {title}
-          </Text>
-          {collapsible && (
-            isCollapsed ? (
-              <ChevronDown size={20} color={colors.mutedForeground} style={{ marginLeft: 8 }} />
-            ) : (
-              <ChevronUp size={20} color={colors.mutedForeground} style={{ marginLeft: 8 }} />
-            )
-          )}
-        </View>
-        {rightElement}
-      </TouchableOpacity>
-      {!isCollapsed && children}
-    </View>
-  );
-}
-
-// Property Image Placeholder
-function PropertyImagePlaceholder() {
-  const colors = useThemeColors();
-
-  return (
-    <View
-      className="w-full h-48 rounded-xl items-center justify-center mb-4"
-      style={{ backgroundColor: colors.muted }}
-    >
-      <ImageIcon size={48} color={colors.mutedForeground} />
-      <Text
-        style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginTop: 8 }}
-      >
-        No Photos Added
-      </Text>
-    </View>
-  );
-}
-
-// Financial Row Item
-interface FinancialRowProps {
-  label: string;
-  value: string;
-  valueColor?: string;
-}
-
-function FinancialRow({ label, value, valueColor }: FinancialRowProps) {
-  const colors = useThemeColors();
-
-  return (
-    <View className="flex-row justify-between py-2">
-      <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}>
-        {label}
-      </Text>
-      <Text
-        style={{
-          color: valueColor || colors.foreground,
-          fontSize: FONT_SIZES.sm,
-          fontWeight: '600',
-        }}
-      >
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-// Amenity Chip
-function AmenityChip({ amenity }: { amenity: string }) {
-  const colors = useThemeColors();
-
-  return (
-    <View
-      className="px-3 py-1 rounded-full mr-2 mb-2"
-      style={{ backgroundColor: colors.muted }}
-    >
-      <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm }}>{amenity}</Text>
-    </View>
-  );
-}
-
-// ============================================
-// Main Screen Component
-// ============================================
+// Extracted components and utilities
+import {
+  UUID_REGEX,
+  formatCurrency,
+  formatRateType,
+  getStatusInfo,
+  Section,
+  PropertyImagePlaceholder,
+  FinancialRow,
+  AmenityChip,
+} from './rental-property-detail';
 
 export function RentalPropertyDetailScreen() {
   const params = useLocalSearchParams();
@@ -244,10 +83,8 @@ export function RentalPropertyDetailScreen() {
     upcomingBookings,
     isLoading,
     isLoadingRooms,
-    isLoadingBookings,
     error,
     refetch,
-    refetchRooms,
   } = useRentalPropertyDetail(isValidUUID ? propertyId : '');
 
   const { updateStatus, deleteProperty, isSaving } =
@@ -318,17 +155,12 @@ export function RentalPropertyDetailScreen() {
   }, [deleteProperty, router]);
 
   const handleAddRoom = useCallback(() => {
-    // Navigate to add room screen
-    router.push(
-      `/(tabs)/rental-properties/${propertyId}/rooms/add` as never
-    );
+    router.push(`/(tabs)/rental-properties/${propertyId}/rooms/add` as never);
   }, [router, propertyId]);
 
   const handleRoomPress = useCallback(
     (room: { id: string }) => {
-      router.push(
-        `/(tabs)/rental-properties/${propertyId}/rooms/${room.id}` as never
-      );
+      router.push(`/(tabs)/rental-properties/${propertyId}/rooms/${room.id}` as never);
     },
     [router, propertyId]
   );
@@ -527,8 +359,6 @@ export function RentalPropertyDetailScreen() {
             />
           </Section>
         )}
-
-        {/* Note: Bookings are now accessible via the Hub Grid above */}
 
         {/* Listing URLs Section */}
         {property.listing_urls &&

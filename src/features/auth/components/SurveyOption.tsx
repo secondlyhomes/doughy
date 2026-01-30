@@ -4,7 +4,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface SurveyOptionProps {
   label: string;

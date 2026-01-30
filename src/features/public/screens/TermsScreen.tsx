@@ -3,7 +3,7 @@
 //
 // NOTE: Public marketing page - hardcoded brand colors intentional
 import { View, Text } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 const sections = [
   {

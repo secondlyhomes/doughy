@@ -12,7 +12,7 @@ import {
   ChevronRight,
   MapPin
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 // Zone A UI Components
 import { DataCard, DataCardField } from '@/components/ui';

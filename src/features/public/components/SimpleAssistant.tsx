@@ -13,7 +13,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { MessageSquare, X, Send, ChevronDown, ChevronUp, Loader2 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { callPublicAssistant } from '@/lib/openai';
 import { getShadowStyle } from '@/lib/design-utils';
 import { useKeyboardAvoidance } from '@/hooks';

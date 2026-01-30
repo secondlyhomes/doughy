@@ -16,7 +16,7 @@ import {
   Heart,
   Home,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { Property, PropertyImage } from '../types';
 import { formatCurrency, formatPropertyType, getPropertyTypeBadgeColor } from '../utils/formatters';

@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface PortfolioActionsSheetProps {
   isOpen: boolean;

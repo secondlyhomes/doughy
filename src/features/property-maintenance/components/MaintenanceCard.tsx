@@ -11,7 +11,7 @@ import {
   DollarSign,
   User,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { SPACING, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';

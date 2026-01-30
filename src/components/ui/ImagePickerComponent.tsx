@@ -5,7 +5,7 @@ import { View, Text, TouchableOpacity, Image, FlatList, ViewProps } from 'react-
 import * as ExpoImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, X, Plus, AlertCircle } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export interface ImagePickerProps extends ViewProps {
   value?: ExpoImagePicker.ImagePickerAsset[];

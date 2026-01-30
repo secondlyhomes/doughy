@@ -36,8 +36,9 @@ export {
 } from './services';
 
 export {
-  seedService,
+  investorSeeder,
+  seedService, // Backward compatibility alias
   type SeedResult,
   type ClearResult,
   type SafetyCheckResult,
-} from './services/seedService';
+} from './services/investorSeeder';

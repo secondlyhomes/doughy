@@ -11,7 +11,7 @@ import {
   ChevronUp,
   Sparkles,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { AISummary } from '../../deals/types';
 

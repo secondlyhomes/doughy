@@ -14,7 +14,7 @@ import {
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { Button, LoadingSpinner, Badge } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { formatCurrency } from '@/utils/format';
 import {
   useBookingCharges,

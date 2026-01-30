@@ -12,7 +12,7 @@ import {
   Trash2,
   Edit2,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { RepairEstimate, RepairCategory } from '../types';
 import { formatCurrency } from '../utils/formatters';

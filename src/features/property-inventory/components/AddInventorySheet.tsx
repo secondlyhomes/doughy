@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, Alert } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import {
   BottomSheet,
   BottomSheetSection,

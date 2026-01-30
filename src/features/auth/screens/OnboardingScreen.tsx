@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { useAuth } from '../hooks/useAuth';

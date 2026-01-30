@@ -8,7 +8,7 @@ import { ArrowLeft, Save, Eye, Edit3, Share2 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, Input, TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   SellerReportOptions,

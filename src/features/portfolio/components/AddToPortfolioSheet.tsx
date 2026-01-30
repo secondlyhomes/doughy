@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { X, Home, Plus, Building, Calendar, DollarSign, FileText } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, Button, FormField, DatePicker, Select } from '@/components/ui';
 import { useAddToPortfolioForm } from '../hooks/useAddToPortfolioForm';
 import { useAvailableProperties } from '../hooks/useAvailableProperties';

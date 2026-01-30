@@ -3,7 +3,7 @@
 import React from 'react';
 import { View, Text, ViewProps, TextProps, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { GlassView } from './GlassView';
 
 interface CardProps extends ViewProps {

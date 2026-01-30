@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, Pressable, Animated, LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 

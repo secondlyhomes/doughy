@@ -6,7 +6,7 @@ import { View, FlatList, RefreshControl } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, SimpleFAB, TAB_BAR_SAFE_PADDING, PropertyImageCard } from '@/components/ui';
 import { useRouter } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING } from '@/constants/design-tokens';
 import { PropertyFiltersSheet } from '../components/PropertyFiltersSheet';
 import { PropertyListEmpty } from '../components/PropertyListEmpty';

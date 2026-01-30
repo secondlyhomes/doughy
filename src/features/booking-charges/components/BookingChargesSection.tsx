@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Plus, DollarSign, AlertCircle, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge, Button } from '@/components/ui';
 import { formatCurrency } from '@/utils/format';
 import { useBookingCharges, useChargesSummary } from '../hooks/useBookingCharges';

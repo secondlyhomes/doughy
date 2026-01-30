@@ -8,7 +8,7 @@ import { render } from '@testing-library/react-native';
 import { Progress } from '../Progress';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     primary: '#4D7C5F',
     success: '#22c55e',

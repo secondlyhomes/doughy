@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { View, Text, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { Check, X, ChevronDown, ChevronUp } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';

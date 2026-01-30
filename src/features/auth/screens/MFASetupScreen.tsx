@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { Shield, Copy, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner, Button } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import * as Clipboard from 'expo-clipboard';
 import { MFACodeInput } from '../components/MFACodeInput';

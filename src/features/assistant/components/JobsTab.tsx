@@ -21,7 +21,7 @@ import {
   ChevronRight,
   RefreshCw,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { formatRelativeTime } from '@/utils/format';
 import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';

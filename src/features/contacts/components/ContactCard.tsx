@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Phone, Mail, ChevronRight, Building2, Star } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField, Badge } from '@/components/ui';
 import { Contact, getContactDisplayName, CrmContactType, CrmContactSource } from '../types';
 

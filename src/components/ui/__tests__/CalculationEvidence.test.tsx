@@ -8,7 +8,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { CalculationEvidence, CalculationStep } from '../CalculationEvidence';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useTheme: () => ({ isDark: false, toggleTheme: jest.fn() }),
   useThemeColors: () => ({
     primary: '#4D7C5F',

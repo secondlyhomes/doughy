@@ -25,7 +25,7 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { GlassButton } from '@/components/ui';
 import { getBackdropColor, withOpacity } from '@/lib/design-utils';

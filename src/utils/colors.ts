@@ -1,7 +1,7 @@
 // src/utils/colors.ts
 // Color utility functions for theme-aware color selection
 
-import { ThemeColors } from '@/context/ThemeContext';
+import { ThemeColors } from '@/contexts/ThemeContext';
 
 export type StatusType = 'success' | 'warning' | 'info' | 'destructive';
 export type ActivityType = 'call' | 'email' | 'meeting' | 'note' | 'task' | 'other';

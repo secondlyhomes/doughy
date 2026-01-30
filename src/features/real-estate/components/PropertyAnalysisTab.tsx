@@ -9,7 +9,7 @@ import { Property } from '../types';
 import { useDealAnalysis } from '../hooks/useDealAnalysis';
 import { CashFlowAnalysis } from './CashFlowAnalysis';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
 interface PropertyAnalysisTabProps {

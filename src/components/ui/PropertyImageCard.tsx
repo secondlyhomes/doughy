@@ -6,7 +6,7 @@ import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Home, MapPin, ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, FONT_SIZES, BORDER_RADIUS, PRESS_OPACITY } from '@/constants/design-tokens';
 import { MetricsRow, Metric } from './MetricsRow';

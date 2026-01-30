@@ -2,35 +2,13 @@
 // Admin dashboard screen for mobile
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  Users,
-  Database,
-  Server,
-  AlertTriangle,
-  TrendingUp,
-  Activity,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  LogOut,
-  UserPlus,
-  UserMinus,
-} from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Users, TrendingUp, Database, Activity, AlertTriangle, RefreshCw } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { SPACING } from '@/constants/design-tokens';
-import { useThemeColors } from '@/context/ThemeContext';
-import { withOpacity } from '@/lib/design-utils';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import {
@@ -40,12 +18,24 @@ import {
   type SystemHealth,
 } from '../services/adminService';
 import { testUserService } from '../services/testUserService';
+import {
+  fetchAllApiKeys,
+  getSecurityHealthSummary,
+  getKeysNeedingAttention,
+} from '../services/securityHealthService';
+import type { SecurityHealthSummary } from '../types/security';
+import {
+  StatCard,
+  SystemStatusSection,
+  SecurityHealthCard,
+  DevToolsSection,
+  AccountSection,
+} from './admin-dashboard';
 
 export function AdminDashboardScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
-  const { isLoading: authLoading, signOut, profile } = useAuth();
+  const { isLoading: authLoading, signOut } = useAuth();
   const { canViewAdminPanel, canManageUsers } = usePermissions();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,12 +45,15 @@ export function AdminDashboardScreen() {
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [systems, setSystems] = useState<SystemHealth[]>([]);
+  const [securitySummary, setSecuritySummary] = useState<SecurityHealthSummary | null>(null);
+  const [keysNeedingAttention, setKeysNeedingAttention] = useState(0);
 
   const loadDashboardData = useCallback(async () => {
     try {
-      const [statsResult, healthResult] = await Promise.all([
+      const [statsResult, healthResult, keysResult] = await Promise.all([
         getAdminStats(),
         getSystemHealth(),
+        fetchAllApiKeys(),
       ]);
 
       if (statsResult.success && statsResult.stats) {
@@ -75,6 +68,13 @@ export function AdminDashboardScreen() {
       } else if (!healthResult.success) {
         console.error('Failed to load system health:', healthResult.error);
         Alert.alert('Health Check Error', healthResult.error || 'Failed to load system health');
+      }
+
+      if (keysResult.success && keysResult.keys.length > 0) {
+        const summary = getSecurityHealthSummary(keysResult.keys);
+        setSecuritySummary(summary);
+        const attention = getKeysNeedingAttention(keysResult.keys);
+        setKeysNeedingAttention(attention.length);
       }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -97,31 +97,26 @@ export function AdminDashboardScreen() {
   }, [loadDashboardData]);
 
   const handleSignOut = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            setIsSigningOut(true);
-            try {
-              await signOut();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
-            } finally {
-              setIsSigningOut(false);
-            }
-          },
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          setIsSigningOut(true);
+          try {
+            await signOut();
+          } catch (error) {
+            Alert.alert('Error', 'Failed to sign out. Please try again.');
+          } finally {
+            setIsSigningOut(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleSeedTestUsers = async () => {
-    // Safety checks
     const safetyCheck = testUserService.canSeedTestUsers();
     if (!safetyCheck.allowed) {
       Alert.alert('Cannot Seed Test Users', safetyCheck.reason || 'Safety check failed');
@@ -133,7 +128,6 @@ export function AdminDashboardScreen() {
       return;
     }
 
-    // Confirm before seeding
     const userCount = testUserService.getTestUserCount();
     Alert.alert(
       'Seed Test Users',
@@ -146,7 +140,6 @@ export function AdminDashboardScreen() {
             setIsSeeding(true);
             try {
               const result = await testUserService.seedTestUsers();
-
               if (result.success) {
                 const warnings = result.warnings?.length
                   ? `\n\nUpdated existing: ${result.warnings.length}`
@@ -163,10 +156,7 @@ export function AdminDashboardScreen() {
                 );
               }
             } catch (error) {
-              Alert.alert(
-                'Error',
-                error instanceof Error ? error.message : 'Failed to seed test users'
-              );
+              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to seed test users');
             } finally {
               setIsSeeding(false);
             }
@@ -177,7 +167,6 @@ export function AdminDashboardScreen() {
   };
 
   const handleClearTestUsers = async () => {
-    // Safety checks
     const safetyCheck = testUserService.canSeedTestUsers();
     if (!safetyCheck.allowed) {
       Alert.alert('Cannot Clear Test Users', safetyCheck.reason || 'Safety check failed');
@@ -189,7 +178,6 @@ export function AdminDashboardScreen() {
       return;
     }
 
-    // Confirmation for destructive action
     Alert.alert(
       'Remove Test Users?',
       'This will permanently delete ALL users with @example.com emails.\n\nThis action cannot be undone.',
@@ -202,7 +190,6 @@ export function AdminDashboardScreen() {
             setIsClearing(true);
             try {
               const result = await testUserService.clearTestUsers();
-
               if (result.success) {
                 Alert.alert(
                   'Success',
@@ -216,10 +203,7 @@ export function AdminDashboardScreen() {
                 );
               }
             } catch (error) {
-              Alert.alert(
-                'Error',
-                error instanceof Error ? error.message : 'Failed to clear test users'
-              );
+              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to clear test users');
             } finally {
               setIsClearing(false);
             }
@@ -229,39 +213,14 @@ export function AdminDashboardScreen() {
     );
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'operational':
-        return colors.success;
-      case 'degraded':
-        return colors.warning;
-      case 'outage':
-        return colors.destructive;
-      default:
-        return colors.mutedForeground;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'operational':
-        return <CheckCircle size={16} color={colors.success} />;
-      case 'degraded':
-        return <AlertTriangle size={16} color={colors.warning} />;
-      case 'outage':
-        return <XCircle size={16} color={colors.destructive} />;
-      default:
-        return <Activity size={16} color={colors.mutedForeground} />;
-    }
-  };
-
-  // Check if user has admin access (uses consistent permission check)
   if (!authLoading && !canViewAdminPanel) {
     return (
       <ThemedSafeAreaView className="flex-1">
         <View className="flex-1 items-center justify-center p-6">
           <AlertTriangle size={48} color={colors.destructive} />
-          <Text className="text-xl font-semibold mt-4" style={{ color: colors.foreground }}>Access Denied</Text>
+          <Text className="text-xl font-semibold mt-4" style={{ color: colors.foreground }}>
+            Access Denied
+          </Text>
           <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
             You don't have permission to access the admin dashboard.
           </Text>
@@ -287,9 +246,7 @@ export function AdminDashboardScreen() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING + SPACING['4xl'] * 2 }}
         contentInsetAdjustmentBehavior="automatic"
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
       >
         {/* Stats Cards */}
         <View className="p-4">
@@ -329,124 +286,26 @@ export function AdminDashboardScreen() {
           </View>
         </View>
 
-        {/* System Status */}
-        <View className="p-4">
-          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
-            System Status
-          </Text>
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
-            {systems.map((system, index) => (
-              <View
-                key={system.name}
-                className="flex-row items-center p-4"
-                style={index !== systems.length - 1 ? { borderBottomWidth: 1, borderColor: colors.border } : undefined}
-              >
-                <Server size={20} color={colors.mutedForeground} />
-                <View className="flex-1 ml-3">
-                  <Text className="font-medium" style={{ color: colors.foreground }}>{system.name}</Text>
-                  {system.latency != null && (
-                    <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                      Response: {system.latency}ms
-                    </Text>
-                  )}
-                </View>
-                <View className="flex-row items-center">
-                  {getStatusIcon(system.status)}
-                  <Text
-                    className="ml-2 text-sm capitalize"
-                    style={{ color: getStatusColor(system.status) }}
-                  >
-                    {system.status}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
+        <SystemStatusSection systems={systems} />
 
-        {/* Developer Tools (Dev Mode Only) */}
+        <SecurityHealthCard
+          score={securitySummary?.score ?? null}
+          totalKeys={securitySummary?.totalKeys ?? 0}
+          keysNeedingAttention={keysNeedingAttention}
+          onPress={() => router.push('/(admin)/security')}
+        />
+
         {__DEV__ && canManageUsers && (
-          <View className="p-4">
-            <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
-              Developer Tools
-            </Text>
-            <View className="rounded-lg p-4" style={{ backgroundColor: colors.card }}>
-              {/* Warning Banner */}
-              <View className="flex-row items-center mb-4 p-3 rounded" style={{ backgroundColor: withOpacity(colors.warning, 'muted') }}>
-                <AlertTriangle size={16} color={colors.warning} />
-                <Text className="ml-2 text-xs font-medium" style={{ color: colors.warning }}>
-                  DEV MODE ONLY - These actions affect your real database
-                </Text>
-              </View>
-
-              {/* Seed Test Users Button */}
-              <View className="mb-3">
-                <Button
-                  onPress={handleSeedTestUsers}
-                  disabled={isSeeding || isClearing}
-                  variant="default"
-                  className="flex-row items-center justify-center"
-                >
-                  {isSeeding ? (
-                    <LoadingSpinner size="small" color={colors.primaryForeground} />
-                  ) : (
-                    <UserPlus size={18} color={colors.primaryForeground} />
-                  )}
-                  <Text className="ml-2 font-semibold" style={{ color: colors.primaryForeground }}>
-                    {isSeeding ? 'Creating Test Users...' : 'Create Test Users'}
-                  </Text>
-                </Button>
-                <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
-                  Creates 40 test users with @example.com emails
-                </Text>
-              </View>
-
-              {/* Clear Test Users Button */}
-              <View>
-                <Button
-                  onPress={handleClearTestUsers}
-                  disabled={isSeeding || isClearing}
-                  variant="destructive"
-                  className="flex-row items-center justify-center"
-                >
-                  {isClearing ? (
-                    <LoadingSpinner size="small" color={colors.destructiveForeground} />
-                  ) : (
-                    <UserMinus size={18} color={colors.destructiveForeground} />
-                  )}
-                  <Text className="ml-2 font-semibold" style={{ color: colors.destructiveForeground }}>
-                    {isClearing ? 'Removing Test Users...' : 'Remove Test Users'}
-                  </Text>
-                </Button>
-                <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
-                  Deletes all users with @example.com emails
-                </Text>
-              </View>
-            </View>
-          </View>
+          <DevToolsSection
+            isSeeding={isSeeding}
+            isClearing={isClearing}
+            onSeedTestUsers={handleSeedTestUsers}
+            onClearTestUsers={handleClearTestUsers}
+          />
         )}
 
-        {/* Account Actions */}
-        <View className="p-4">
-          <Text className="text-sm font-medium mb-3 px-2" style={{ color: colors.mutedForeground }}>
-            Account
-          </Text>
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
-            <TouchableOpacity
-              className="flex-row items-center p-4"
-              onPress={handleSignOut}
-              disabled={isSigningOut}
-            >
-              <LogOut size={20} color={colors.destructive} />
-              <Text className="flex-1 ml-3 font-medium" style={{ color: colors.destructive }}>
-                {isSigningOut ? 'Signing out...' : 'Sign Out'}
-              </Text>
-              {isSigningOut && <LoadingSpinner size="small" color={colors.destructive} />}
-            </TouchableOpacity>
-          </View>
-        </View>
+        <AccountSection isSigningOut={isSigningOut} onSignOut={handleSignOut} />
 
-        {/* Refresh Button */}
         <View className="p-4">
           <Button variant="outline" onPress={handleRefresh}>
             <RefreshCw size={18} color={colors.mutedForeground} />
@@ -457,51 +316,3 @@ export function AdminDashboardScreen() {
     </ThemedSafeAreaView>
   );
 }
-
-// Helper components
-interface StatCardProps {
-  icon: React.ReactNode;
-  title: string;
-  value: string;
-  subtitle: string;
-  onPress?: () => void;
-  cardColor?: string;
-}
-
-const StatCard = React.memo(function StatCard({ icon, title, value, subtitle, onPress, cardColor }: StatCardProps) {
-  const colors = useThemeColors();
-  const content = (
-    <View className="rounded-lg p-4" style={{ backgroundColor: cardColor }}>
-      {icon}
-      <Text className="text-2xl font-bold mt-2" style={{ color: colors.foreground }}>{value}</Text>
-      <Text className="text-sm" style={{ color: colors.foreground }}>{title}</Text>
-      <Text className="text-xs" style={{ color: colors.mutedForeground }}>{subtitle}</Text>
-    </View>
-  );
-
-  if (onPress) {
-    return (
-      <TouchableOpacity
-        className="w-1/2 p-2"
-        onPress={onPress}
-        activeOpacity={0.7}
-        accessibilityLabel={`${title}: ${value}. ${subtitle}`}
-        accessibilityRole="button"
-        accessibilityHint={`Tap to view ${title.toLowerCase()} details`}
-      >
-        {content}
-      </TouchableOpacity>
-    );
-  }
-
-  return (
-    <View
-      className="w-1/2 p-2"
-      accessibilityLabel={`${title}: ${value}. ${subtitle}`}
-      accessibilityRole="text"
-    >
-      {content}
-    </View>
-  );
-});
-

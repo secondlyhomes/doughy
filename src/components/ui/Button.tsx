@@ -3,7 +3,7 @@
 import React, { useCallback } from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { haptic } from '@/lib/haptics';
 import { PRESS_OPACITY, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
 

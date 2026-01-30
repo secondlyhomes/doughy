@@ -24,7 +24,7 @@ import {
 
 import { useConversations, useCreateConversation, useDeleteConversation } from '../hooks/useConversations';
 import { Conversation } from '../types';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 
 function formatTimeAgo(dateString: string | undefined): string {

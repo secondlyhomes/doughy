@@ -15,13 +15,13 @@ import {
 import { ThemedSafeAreaView } from '@/components';
 import { useRouter } from 'expo-router';
 import { X, User, Mail, Phone, Building2, Tag, FileText, ChevronDown, Mic, Camera } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { FormField, VoiceRecordButton, PhotoCaptureButton } from '@/components/ui';
 import { useFormValidation, useFieldRef, useKeyboardAvoidance } from '@/hooks';
 import { useVoiceCapture } from '@/features/real-estate/hooks/useVoiceCapture';
 import { usePhotoExtract } from '@/features/real-estate/hooks/usePhotoExtract';
-import { useErrorHandler } from '@/context/ErrorContext';
+import { useErrorHandler } from '@/contexts/ErrorContext';
 import { leadFormSchema, leadFormFieldOrder } from '@/lib/validation';
 
 import { useCreateLead } from '../hooks/useLeads';

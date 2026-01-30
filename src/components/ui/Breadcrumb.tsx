@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ViewProps, TextProps } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 // Breadcrumb Root
 export interface BreadcrumbProps extends ViewProps {

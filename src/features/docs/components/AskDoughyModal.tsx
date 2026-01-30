@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Search, Send, X, Loader2 } from 'lucide-react-native';
 import { Modal, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/Modal';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { callDocsAssistant, type ChatMessage } from '@/lib/openai';
 
 interface Message {

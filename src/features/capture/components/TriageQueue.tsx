@@ -3,7 +3,7 @@
 
 import React, { useCallback, useState, useMemo } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ListEmptyState, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Inbox, CheckCircle, Search, AlertCircle } from 'lucide-react-native';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';

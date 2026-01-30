@@ -16,7 +16,7 @@ import {
   Sparkles,
   User,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui';
 import { getShadowStyle, withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';

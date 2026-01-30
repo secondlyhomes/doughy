@@ -5,7 +5,7 @@ import { View, Text, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedSafeAreaView } from '@/components';
 import { BottomSheetSection, Button, Input, Select } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useCreateDeal, CreateDealInput } from '@/features/deals/hooks/useDeals';
 import { useLeads } from '@/features/leads/hooks/useLeads';
 import { useProperties } from '@/features/real-estate/hooks/useProperties';

@@ -21,7 +21,7 @@ import {
   ArrowRight,
   Sparkles,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BORDER_RADIUS, SPACING } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useToast } from '@/components/ui/Toast';

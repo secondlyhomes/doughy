@@ -5,7 +5,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { MapPin, Navigation } from 'lucide-react-native';
 import { PlacePrediction } from './hooks/useAddressSearch';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface AddressSuggestionListProps {
   predictions: PlacePrediction[];

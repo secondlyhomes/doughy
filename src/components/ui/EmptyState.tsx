@@ -3,7 +3,7 @@
 import React from 'react';
 import { View, Text, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Button } from './Button';
 
 export interface EmptyStateProps extends ViewProps {

@@ -5,9 +5,9 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Database, Trash2, Play, Home, TrendingUp, Sparkles, ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { seedScenarios, runSeedScenario, clearAllLandlordData } from '../services/landlordSeeder';
-import { seedService } from '@/features/admin/services/seedService';
+import { investorSeeder } from '@/features/admin/services';
 import { PORTFOLIO_DEALS_COUNT } from '@/features/admin/factories/testDataFactories';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
@@ -87,7 +87,7 @@ export function DevSeederSection() {
     }
 
     // Check if seeding is allowed
-    const safetyCheck = seedService.canSeedDatabase();
+    const safetyCheck = investorSeeder.canSeedInvestorDatabase();
     if (!safetyCheck.allowed) {
       Alert.alert('Blocked', safetyCheck.reason || 'Seeding not allowed');
       return;
@@ -95,7 +95,7 @@ export function DevSeederSection() {
 
     setIsLoading('investor-seed');
     try {
-      const result = await seedService.seedDatabase(user.id);
+      const result = await investorSeeder.seedInvestorData(user.id);
       if (result.success) {
         // Build success message with optional warnings
         let message =
@@ -160,7 +160,7 @@ export function DevSeederSection() {
           onPress: async () => {
             setIsLoading('investor-clear');
             try {
-              const result = await seedService.clearDatabase(user.id);
+              const result = await investorSeeder.clearInvestorData(user.id);
               if (result.success) {
                 // Build success message with optional warnings
                 let message =

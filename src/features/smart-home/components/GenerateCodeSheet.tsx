@@ -5,7 +5,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Calendar, Key, User } from 'lucide-react-native';
 import { BottomSheet, Button } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useAccessCodeMutations } from '../hooks/useSmartHome';
 import type { SmartDevice, CreateAccessCodeInput } from '../types';
 

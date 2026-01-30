@@ -7,7 +7,7 @@ import { Redirect } from 'expo-router';
 import { ShieldAlert } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface AdminGuardProps {
   children: React.ReactNode;

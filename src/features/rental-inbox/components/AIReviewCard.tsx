@@ -5,7 +5,7 @@
 import React, { memo, useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { Bot, Check, X, Pencil, Sparkles } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import {
   SPACING,

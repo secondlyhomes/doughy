@@ -10,7 +10,7 @@ import {
   Calendar,
   MapPin,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { SPACING, FONT_SIZES, ICON_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';

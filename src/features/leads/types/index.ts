@@ -1,5 +1,10 @@
-// Lead types for React Native
+// Lead types for React Native (RE Investor domain)
 // Converted from web app src/features/leads/hooks/types.ts
+//
+// NAMING CONVENTIONS:
+// - InvestorLead: Primary type for RE Investor leads
+// - LeadContact: Contact associated with a lead (to distinguish from CRM contacts)
+// - Lead/Contact: Backward-compatible aliases (deprecated, use InvestorLead/LeadContact)
 
 // LeadStatus aligned with Supabase database schema
 export type LeadStatus = 'active' | 'inactive' | 'new' | 'closed' | 'won' | 'lost';
@@ -11,7 +16,50 @@ export interface ContactMethod {
   isPrimary: boolean;
 }
 
-export interface Lead {
+/**
+ * Contact associated with an investor lead.
+ * Renamed from Contact to LeadContact to distinguish from CRM contacts.
+ */
+export interface LeadContact {
+  id?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  emails?: {
+    value: string;
+    type: string;
+    is_primary?: boolean;
+  }[];
+  phones?: {
+    value: string;
+    type: string;
+    is_primary?: boolean;
+  }[];
+  company?: string;
+  is_primary?: boolean;
+  job_title?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+}
+
+export interface Note {
+  id: string;
+  lead_id: string;
+  user_id?: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Lead for RE Investor platform.
+ * Renamed from Lead to InvestorLead to distinguish from other lead types.
+ */
+export interface InvestorLead {
   id: string;
   name: string;
   status: LeadStatus;
@@ -39,7 +87,7 @@ export interface Lead {
   source?: string;
   starred?: boolean;
   notes?: Note[];
-  contacts?: Contact[];
+  contacts?: LeadContact[];
 
   // Fields for multiple emails and phones
   emails?: ContactMethod[];
@@ -55,40 +103,11 @@ export interface Lead {
   last_contacted_at?: string;
 }
 
-export interface Note {
-  id: string;
-  lead_id: string;
-  user_id?: string;
-  content: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Contact {
-  id?: string;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  phone?: string;
-  emails?: {
-    value: string;
-    type: string;
-    is_primary?: boolean;
-  }[];
-  phones?: {
-    value: string;
-    type: string;
-    is_primary?: boolean;
-  }[];
-  company?: string;
-  is_primary?: boolean;
-  job_title?: string;
-  address_line_1?: string;
-  address_line_2?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-}
+// Backward-compatible aliases (deprecated - use InvestorLead/LeadContact instead)
+/** @deprecated Use InvestorLead instead */
+export type Lead = InvestorLead;
+/** @deprecated Use LeadContact instead */
+export type Contact = LeadContact;
 
 export interface LeadFormData {
   name: string;
@@ -126,7 +145,7 @@ export interface LeadProperty {
   images?: LeadPropertyImage[];
 }
 
-export interface LeadWithProperties extends Lead {
+export interface LeadWithProperties extends InvestorLead {
   properties: LeadProperty[];
   propertyCount: number;
 }

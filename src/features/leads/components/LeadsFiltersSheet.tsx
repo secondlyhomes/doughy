@@ -11,7 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import { X, Check, ChevronDown, RotateCcw } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button } from '@/components/ui';

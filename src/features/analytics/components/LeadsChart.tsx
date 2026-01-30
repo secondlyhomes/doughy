@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, useWindowDimensions } from 'react-native';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { TrendingUp } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, opacity: number) => {

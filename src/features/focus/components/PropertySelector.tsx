@@ -5,13 +5,13 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { MapPin, Clock, Search, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { BottomSheet, SearchBar, LoadingSpinner, Button } from '@/components/ui';
 import { useProperties } from '@/features/real-estate/hooks/useProperties';
 import { useRecentProperties } from '../hooks/useRecentProperties';
-import { FocusedProperty } from '@/context/FocusModeContext';
+import { FocusedProperty } from '@/contexts/FocusModeContext';
 
 interface PropertySelectorProps {
   visible: boolean;

@@ -1,7 +1,7 @@
 // app/(tabs)/deals/_layout.tsx
 // Stack navigator for Deals tab
 import { Stack } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export default function DealsLayout() {
   const colors = useThemeColors();

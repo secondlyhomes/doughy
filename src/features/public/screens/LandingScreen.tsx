@@ -6,7 +6,7 @@
 import { View, Text, Image, Pressable, useWindowDimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { ArrowRight, CheckCircle, Star, Clock, BarChart3, Clock3, Calculator, TrendingUp, DollarSign } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';

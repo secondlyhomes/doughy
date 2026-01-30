@@ -2873,7 +2873,7 @@ describe('Full Inquiry Flow', () => {
 ```yaml
 # e2e/inbox-approve.yaml (Maestro)
 
-appId: com.dinothesecond.doughy-ai-mobile
+appId: app.doughy
 ---
 - launchApp
 - tapOn: "Inbox"

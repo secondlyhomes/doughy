@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   Info,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import {
   SellerReportOptions,

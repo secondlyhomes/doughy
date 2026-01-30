@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;

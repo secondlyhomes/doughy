@@ -26,14 +26,14 @@ export const INTEGRATIONS: Integration[] = [
       },
       {
         key: 'netlify_site_id',
-        label: 'Site ID',
+        label: 'Site ID (Prod)',
         type: 'text',
         required: true,
         description: 'Production site ID',
       },
       {
         key: 'netlify_stage_site_id',
-        label: 'Staging Site ID',
+        label: 'Site ID (Stage)',
         type: 'text',
         required: false,
         description: 'Staging site ID (optional)',

@@ -30,7 +30,7 @@ import {
 
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, ListEmptyState, Alert, AlertDescription, Button } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import {
   SPACING,
   BORDER_RADIUS,

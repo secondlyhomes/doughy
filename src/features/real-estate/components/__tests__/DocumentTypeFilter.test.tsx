@@ -12,7 +12,7 @@ import {
 } from '../DocumentTypeFilter';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     foreground: '#000000',
     background: '#FFFFFF',

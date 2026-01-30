@@ -2,7 +2,7 @@
 // Convenient hook for Google OAuth integration
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useGoogleStore } from '@/store/googleStore';
+import { useGoogleStore } from '@/stores/google-store';
 
 export interface UseGoogleAuthResult {
   isAuthorized: boolean;

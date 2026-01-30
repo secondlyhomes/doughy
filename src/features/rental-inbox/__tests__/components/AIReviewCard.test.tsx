@@ -25,7 +25,7 @@ jest.mock('@/lib/haptics', () => ({
 }));
 
 // Mock ThemeContext
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     card: '#ffffff',
     info: '#3b82f6',

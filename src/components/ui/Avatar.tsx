@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { View, Image, Text, ImageProps, ViewProps, TextProps } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 // Avatar Root
 export interface AvatarProps extends ViewProps {

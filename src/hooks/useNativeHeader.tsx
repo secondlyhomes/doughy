@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { ArrowLeft } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 
 export interface UseNativeHeaderOptions {

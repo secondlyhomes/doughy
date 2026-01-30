@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { haptic } from '@/lib/haptics';
 import { ArrowLeft, ArrowRight, Check, X, Mic, Camera } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { withOpacity } from '@/lib/design-utils';
 import { Button } from '@/components/ui';

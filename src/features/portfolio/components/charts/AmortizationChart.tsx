@@ -4,7 +4,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import type { AmortizationSchedule } from '../../types';
 
 interface AmortizationChartProps {

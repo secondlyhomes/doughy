@@ -17,7 +17,7 @@ import {
   Modal,
 } from 'react-native';
 import { MapPin, X, ChevronDown } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { supabase, SUPABASE_URL } from '@/lib/supabase';
 
 export interface AddressResult {

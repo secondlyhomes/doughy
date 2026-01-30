@@ -32,7 +32,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Home, MapPin, Bed, Bath, Square, FileText } from 'lucide-react-native';
 import { Property } from '../types';
 import { formatPropertyType, getPropertyTypeBadgeColor } from '../utils/formatters';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { GlassView } from '@/components/ui/GlassView';
 
 interface PropertyCardProps {

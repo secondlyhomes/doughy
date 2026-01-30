@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
 import { MaintenanceWorkOrder, MaintenanceStatus } from '../types';

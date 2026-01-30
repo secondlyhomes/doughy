@@ -7,8 +7,8 @@ import { Stack } from 'expo-router';
 import { Bell, Clock, AlertCircle, TrendingDown, Minus, Plus } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
-import { useFocusMode, DEFAULT_NUDGE_SETTINGS, NudgeSettings } from '@/context/FocusModeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
+import { useFocusMode, DEFAULT_NUDGE_SETTINGS, NudgeSettings } from '@/contexts/FocusModeContext';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 
 interface DayStepperProps {

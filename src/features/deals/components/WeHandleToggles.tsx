@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Check, Square, Package, DollarSign, Search, Link2, Wrench } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { WeHandleOptions } from '../types';
 import { WE_HANDLE_CONFIG } from '../data/mockSellerReport';

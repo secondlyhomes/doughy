@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView as RNScrollView } from 'react-native';
 import { ChevronDown, MapPin } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { PropertyConstants } from '../types';
 import { AddressAutocomplete, AddressResult } from './AddressAutocomplete';

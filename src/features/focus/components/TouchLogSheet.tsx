@@ -12,12 +12,12 @@ import {
   Clock,
   MessageSquare,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, BottomSheetSection, Button } from '@/components/ui';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { useCreateTouch, TouchType, TouchOutcome } from '../hooks/useContactTouches';
-import { FocusedProperty } from '@/context/FocusModeContext';
+import { FocusedProperty } from '@/contexts/FocusModeContext';
 
 // ============================================
 // Types

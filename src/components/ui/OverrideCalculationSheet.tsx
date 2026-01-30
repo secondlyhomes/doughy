@@ -33,7 +33,7 @@ import Animated, {
   withSpring,
   Easing,
 } from 'react-native-reanimated';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, OPACITY_VALUES } from '@/constants/design-tokens';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';

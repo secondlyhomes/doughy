@@ -4,7 +4,7 @@
 // NOTE: Public marketing component - hardcoded brand colors intentional
 import { ScrollView, View } from 'react-native';
 import { usePathname } from 'expo-router';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { SimpleAssistant } from './SimpleAssistant';

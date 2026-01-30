@@ -31,7 +31,7 @@ import {
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import {
   useGmailAuth,

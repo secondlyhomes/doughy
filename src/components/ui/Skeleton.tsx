@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export interface SkeletonProps extends ViewProps {
   className?: string;

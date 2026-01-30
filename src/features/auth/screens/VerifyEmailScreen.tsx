@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { Mail, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { usePermissions } from '../hooks/usePermissions';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';

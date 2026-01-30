@@ -363,6 +363,73 @@ export interface HealthStatusFromDBResult {
 }
 
 /**
+ * Result of credential existence check
+ */
+export interface CredentialExistsResult {
+  exists: boolean;
+  service: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Check if credentials exist for given services (no decryption needed)
+ * Used for initial UI status before health checks complete
+ *
+ * @param services - Array of service names to check
+ * @returns Map of service → existence result
+ */
+export async function checkCredentialsExist(
+  services: string[]
+): Promise<Map<string, CredentialExistsResult>> {
+  const results = new Map<string, CredentialExistsResult>();
+
+  if (services.length === 0) {
+    return results;
+  }
+
+  try {
+    // Normalize all service names
+    const normalizedServices = services.map(normalizeServiceName);
+
+    // Query for existence only - no key_ciphertext needed
+    const { data, error } = await supabase
+      .from('security_api_keys')
+      .select('service, created_at, updated_at')
+      .in('service', normalizedServices);
+
+    if (error) {
+      console.error('[admin] Error checking credential existence:', error);
+      // Return empty results on error - health checks will handle status
+      return results;
+    }
+
+    // Create a set of services that exist for O(1) lookup
+    const existingServices = new Map(
+      (data || []).map((row) => [row.service, row])
+    );
+
+    // Map results for all requested services
+    for (const service of services) {
+      const normalizedService = normalizeServiceName(service);
+      const record = existingServices.get(normalizedService);
+
+      results.set(service, {
+        exists: !!record,
+        service: normalizedService,
+        createdAt: record?.created_at ?? undefined,
+        updatedAt: record?.updated_at ?? undefined,
+      });
+    }
+
+    return results;
+  } catch (error) {
+    console.error('[admin] Exception checking credential existence:', error);
+    return results;
+  }
+}
+
+/**
  * Get health status for a service from the database
  * (Uses cached status from last health check)
  *

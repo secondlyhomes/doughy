@@ -1,7 +1,7 @@
 // app/(tabs)/portfolio/[propertyId]/_layout.tsx
 // Stack navigator for portfolio property detail screens
 import { Stack } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export default function PortfolioPropertyLayout() {
   const colors = useThemeColors();

@@ -2,7 +2,7 @@
 // Investor Inbox stack navigator for RE Investor platform
 // Supports Lead Communication Inbox with conversation detail screens
 import { Stack } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export default function FocusLayout() {
   const colors = useThemeColors();

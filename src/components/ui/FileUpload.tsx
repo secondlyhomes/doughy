@@ -5,7 +5,7 @@ import { View, Text, TouchableOpacity, FlatList, ViewProps } from 'react-native'
 import * as DocumentPicker from 'expo-document-picker';
 import { Upload, File, X, AlertCircle } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export interface FileUploadProps extends ViewProps {
   value?: DocumentPicker.DocumentPickerAsset[];

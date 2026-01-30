@@ -1,6 +1,6 @@
 /**
  * Production-ready OpenAI Edge Function
- * 
+ *
  * This implementation includes:
  * - Robust CORS handling for all environments
  * - Full OpenAI API integration with multiple model support
@@ -8,11 +8,17 @@
  * - Error handling with meaningful responses
  * - Support for Just-In-Time context from the assistant
  * - Gets API keys from the Supabase api_keys table with proper decryption
+ * - AI Firewall integration for circuit breaker, rate limiting, and threat tracking
  */
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { decryptServer } from "../_shared/crypto-server.ts";
 import { scanForThreats, sanitizeForLogging } from "../_shared/security.ts";
+import {
+  isCircuitBreakerOpen,
+  checkRateLimit,
+  calculateRetryAfter,
+} from "../_shared/ai-security/index.ts";
 
 // Environment configuration
 const DEFAULT_MODEL = Deno.env.get('DEFAULT_MODEL') || 'gpt-4.1-mini';
@@ -324,88 +330,124 @@ async function callOpenAI(requestBody) {
 
 /**
  * Main service handler
+ *
+ * Includes AI Firewall checks:
+ * - Circuit breaker for emergency stops
+ * - Rate limiting for abuse prevention
  */
 serve(async (req) => {
   try {
     // Log request for debugging
     console.log(`Request received: ${req.method} ${req.url}`);
-    
+
     // Get request details
     const origin = req.headers.get('origin');
     const hasCredentials = req.headers.get('authorization') ? true : false;
-    
+
     // Handle preflight requests (OPTIONS)
     if (req.method === 'OPTIONS') {
       return handlePreflightRequest(req);
     }
-    
+
     // For regular requests, get appropriate CORS headers
     const corsHeaders = getCorsHeaders(origin, hasCredentials);
-    
+
+    // Initialize Supabase for security checks
+    const supabase = SUPABASE_URL && SUPABASE_SECRET_KEY
+      ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY)
+      : null;
+
+    // Extract user ID from auth header for security checks
+    let userId: string | null = null;
+    const authHeader = req.headers.get('authorization');
+    if (authHeader && supabase) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        userId = user?.id || null;
+      } catch {
+        // Continue without user ID - security checks will be skipped
+      }
+    }
+
+    // Circuit breaker check (fast path - uses cached state)
+    if (supabase) {
+      const circuitState = await isCircuitBreakerOpen(supabase, 'openai', userId);
+      if (circuitState.isOpen) {
+        console.warn(`[OpenAI] Circuit breaker open: ${circuitState.reason}`);
+        return new Response(
+          JSON.stringify({
+            error: `AI service temporarily unavailable: ${circuitState.reason || 'Circuit breaker open'}`,
+            code: 'CIRCUIT_BREAKER_OPEN',
+          }),
+          { status: 503, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+        );
+      }
+    }
+
+    // Rate limiting check (for authenticated users)
+    if (userId && supabase) {
+      const rateLimit = await checkRateLimit(supabase, userId, 'openai', 'api', {
+        globalHourlyLimit: 200,
+        functionHourlyLimit: 100,
+        burstLimit: 20,
+      });
+
+      if (!rateLimit.allowed) {
+        const retryAfter = calculateRetryAfter(rateLimit.limitType);
+        console.warn(`[OpenAI] Rate limit exceeded for user ${userId}: ${rateLimit.limitType}`);
+        return new Response(
+          JSON.stringify({
+            error: `Rate limit exceeded: ${rateLimit.limitType}`,
+            code: 'RATE_LIMITED',
+            retryAfter,
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': retryAfter.toString(),
+              ...corsHeaders,
+            },
+          }
+        );
+      }
+    }
+
     // Parse the request body
     let requestBody;
     try {
       const bodyText = await req.text();
       requestBody = JSON.parse(bodyText);
-    } catch (error) {
-      console.error('Error parsing request body:', error);
+    } catch {
+      console.error('Error parsing request body');
       return new Response(
-        JSON.stringify({ 
-          error: "Invalid request body" 
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders
-          }
-        }
+        JSON.stringify({ error: "Invalid request body" }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
-    
+
     // Validate request
     if (!requestBody.messages || !Array.isArray(requestBody.messages)) {
       return new Response(
-        JSON.stringify({ 
-          error: "Request must include messages array" 
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders
-          }
-        }
+        JSON.stringify({ error: "Request must include messages array" }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
-    
+
     // Call OpenAI API
     try {
       const result = await callOpenAI(requestBody);
-      
+
       return new Response(
         JSON.stringify(result),
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders
-          }
-        }
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     } catch (error) {
       console.error('Error calling OpenAI API:', error);
       return new Response(
-        JSON.stringify({
-          error: error.message || "Error calling OpenAI API"
-        }),
-        {
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders
-          }
-        }
+        JSON.stringify({ error: error.message || "Error calling OpenAI API" }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
   } catch (error) {
@@ -413,18 +455,10 @@ serve(async (req) => {
     console.error('Unhandled error:', error);
     const origin = req.headers.get('origin');
     const corsHeaders = getCorsHeaders(origin, false);
-    
+
     return new Response(
-      JSON.stringify({
-        error: error.message || "An unexpected error occurred"
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders
-        }
-      }
+      JSON.stringify({ error: error.message || "An unexpected error occurred" }),
+      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
 });

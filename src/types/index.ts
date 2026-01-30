@@ -108,9 +108,11 @@ export interface Lead {
 export type LeadFormData = Omit<Lead, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
 
 // ============================================
-// Conversation/Message Types
+// AI Assistant Conversation/Message Types
 // ============================================
-export interface Message {
+// These types are specifically for the AI assistant feature
+// For Landlord platform conversations, use LandlordConversation/LandlordMessage from @/stores
+export interface AssistantMessage {
   id: string;
   conversation_id: string;
   role: 'user' | 'assistant' | 'system';
@@ -119,11 +121,11 @@ export interface Message {
   metadata?: Record<string, unknown>;
 }
 
-export interface Conversation {
+export interface AssistantConversation {
   id: string;
   user_id: string;
   title?: string;
-  messages: Message[];
+  messages: AssistantMessage[];
   created_at: string;
   updated_at?: string;
 }

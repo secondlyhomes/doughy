@@ -1,5 +1,5 @@
 {
-  "name": "doughy-ai-mobile",
+  "name": "doughy-app",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
@@ -13,10 +13,25 @@
     "test:coverage": "jest --coverage",
     "test:admin": "jest --coverage --collectCoverageFrom='src/features/admin/**/*.{ts,tsx}' --collectCoverageFrom='src/routes/AdminNavigator.tsx'",
     "lint": "expo lint",
+    "build:web": "expo export -p web",
+    "build:ios:dev": "APP_VARIANT=development eas build --platform ios --profile development --local",
+    "build:ios:stage": "APP_VARIANT=staging eas build --platform ios --profile staging",
+    "build:ios:prod": "APP_VARIANT=production eas build --platform ios --profile production",
+    "build:android:dev": "APP_VARIANT=development eas build --platform android --profile development --local",
+    "build:android:stage": "APP_VARIANT=staging eas build --platform android --profile staging",
+    "build:android:prod": "APP_VARIANT=production eas build --platform android --profile production",
+    "submit:ios": "eas submit --platform ios --profile production --latest",
+    "submit:android": "eas submit --platform android --profile production --latest",
+    "deploy:functions:stage": "supabase functions deploy --project-ref lqmbyobweeaigrwmvizo",
+    "deploy:functions:prod": "supabase functions deploy --project-ref vpqglbaedcpeprnlnfxd",
     "db:types": "npx supabase gen types typescript --project-id lqmbyobweeaigrwmvizo --schema public > src/integrations/supabase/types/generated.ts",
+    "db:types:stage": "supabase gen types typescript --project-ref lqmbyobweeaigrwmvizo > src/integrations/supabase/types/generated.ts",
+    "db:types:prod": "supabase gen types typescript --project-ref vpqglbaedcpeprnlnfxd > src/integrations/supabase/types/generated.ts",
     "db:lint": "npx supabase db lint",
     "db:diff": "npx supabase db diff --schema public",
-    "db:push": "npx supabase db push"
+    "db:push": "npx supabase db push",
+    "db:push:stage": "supabase db push --project-ref lqmbyobweeaigrwmvizo",
+    "db:push:prod": "supabase db push --project-ref vpqglbaedcpeprnlnfxd"
   },
   "dependencies": {
     "@callstack/liquid-glass": "^0.7.0",

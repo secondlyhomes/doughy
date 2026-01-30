@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, FolderOpen, User, Home, ChevronDown, ChevronRight, ExternalLink, Upload } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner, GlassButton, TAB_BAR_SAFE_PADDING } from '@/components/ui';

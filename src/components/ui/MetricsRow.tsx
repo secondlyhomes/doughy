@@ -3,7 +3,7 @@
 
 import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FONT_SIZES, SPACING } from '@/constants/design-tokens';
 
 export interface Metric {

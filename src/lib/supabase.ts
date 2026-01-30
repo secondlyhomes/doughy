@@ -106,7 +106,7 @@ const realSupabase = (!USE_MOCK_DATA && SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY
       },
       global: {
         headers: {
-          'X-Client-Info': 'doughy-ai-mobile',
+          'X-Client-Info': 'doughy-app',
         },
       },
     })

@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { TouchableOpacity, Text } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 interface UserRoleButtonProps {
   label: string;

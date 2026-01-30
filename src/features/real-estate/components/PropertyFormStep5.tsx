@@ -16,7 +16,7 @@ import {
   Image as ImageIcon,
   CheckCircle,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { formatCurrency, formatNumber, formatPropertyType } from '../utils/formatters';
 import { Step1Data } from './PropertyFormStep1';

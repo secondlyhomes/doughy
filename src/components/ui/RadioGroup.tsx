@@ -3,7 +3,7 @@
 import React, { createContext, useContext } from 'react';
 import { View, Text, TouchableOpacity, ViewProps } from 'react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 // Radio Group Context
 interface RadioGroupContextType {

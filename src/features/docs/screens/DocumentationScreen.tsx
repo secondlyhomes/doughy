@@ -20,7 +20,7 @@ import {
   Settings,
   Database,
 } from 'lucide-react-native';
-import { useTheme, useThemeColors } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import {
   documentationData,

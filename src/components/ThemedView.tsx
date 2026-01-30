@@ -3,7 +3,7 @@
 import React from 'react';
 import { View, ViewProps, Text, TextProps, ScrollView, ScrollViewProps } from 'react-native';
 import { SafeAreaView, SafeAreaViewProps } from 'react-native-safe-area-context';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 type BackgroundVariant = 'background' | 'card' | 'muted' | 'secondary' | 'popover' | 'destructive' | 'primary';
 

@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, SimpleFAB, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useSkipTraceResults, useSkipTraceSummary } from '../hooks/useSkipTracing';
 import { SkipTraceResultCard } from '../components/SkipTraceResultCard';
 import { RunSkipTraceSheet } from '../components/RunSkipTraceSheet';

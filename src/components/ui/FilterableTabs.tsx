@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, StyleProp, ViewStyle } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import {
   SPACING,
   FONT_SIZES,

@@ -4,7 +4,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { X, CreditCard } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, Button } from '@/components/ui';
 import { FinancingScenario } from '../types';
 import { LoanType } from '../hooks/useFinancingScenarios';

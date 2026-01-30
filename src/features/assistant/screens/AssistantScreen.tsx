@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { Send, Sparkles, RefreshCw } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { useKeyboardAvoidance } from '@/hooks';
 

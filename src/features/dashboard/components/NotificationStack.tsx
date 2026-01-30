@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { ChevronDown, ChevronUp, CheckCheck } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { NotificationCard, Notification } from './NotificationCard';
 import { withOpacity } from '@/lib/design-utils';
 

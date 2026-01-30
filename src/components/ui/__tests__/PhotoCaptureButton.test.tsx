@@ -8,7 +8,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { PhotoCaptureButton } from '../PhotoCaptureButton';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     success: '#22c55e',
     primary: '#4D7C5F',

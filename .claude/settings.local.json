@@ -208,7 +208,13 @@
       "WebFetch(domain:amanhimself.dev)",
       "Bash(git -C /Users/dinosaur/Developer/doughy-ai log --oneline -20)",
       "WebFetch(domain:molt.bot)",
-      "Bash(do wc -l \"$file\")"
+      "Bash(do wc -l \"$file\")",
+      "WebFetch(domain:docs.github.com)",
+      "mcp__plugin_supabase_supabase__search_docs",
+      "Bash(npx expo config:*)",
+      "Bash(while read f)",
+      "Bash(do grep -q \"CREATE TABLE.*security_api_keys\" \"$f\")",
+      "Bash(git branch:*)"
     ]
   }
 }

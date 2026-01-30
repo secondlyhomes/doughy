@@ -11,7 +11,7 @@ import { ThemedSafeAreaView } from '@/components';
 import { ScreenHeader, LoadingSpinner } from '@/components/ui';
 import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Property } from '../types';
 
 export function EditPropertyScreen() {

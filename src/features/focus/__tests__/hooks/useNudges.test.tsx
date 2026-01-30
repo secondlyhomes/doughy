@@ -19,7 +19,7 @@ const mockNudgeSettings = {
   dealStalledDays: 7,
 };
 
-jest.mock('@/context/FocusModeContext', () => ({
+jest.mock('@/contexts/FocusModeContext', () => ({
   useFocusMode: () => ({
     nudgeSettings: mockNudgeSettings,
   }),

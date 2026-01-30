@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Filter, Grid, List, ArrowUpDown, X } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { PropertyFilters, SORT_OPTIONS, SortOption } from '../hooks/usePropertyFilters';
 

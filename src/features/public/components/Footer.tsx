@@ -5,7 +5,7 @@
 import { View, Text, Image, Pressable, Linking, Alert, Platform } from 'react-native';
 import { Link } from 'expo-router';
 import { Twitter, Facebook, Instagram, Linkedin } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export function Footer() {
   const { colors } = useTheme();

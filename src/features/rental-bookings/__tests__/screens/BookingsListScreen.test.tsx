@@ -39,7 +39,7 @@ const mockColors = {
   border: '#cccccc',
   info: '#17a2b8',
 };
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => mockColors,
 }));
 

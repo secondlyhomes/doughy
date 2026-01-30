@@ -5,7 +5,7 @@ import React, { useCallback, useState, useMemo } from 'react';
 import { View, Text, SectionList, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Briefcase, Search, FolderPlus, ChevronDown, ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import { SimpleFAB, SearchBar, TAB_BAR_SAFE_PADDING, ListEmptyState, BottomSheet, BottomSheetSection, Button } from '@/components/ui';
 import { PropertyCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';

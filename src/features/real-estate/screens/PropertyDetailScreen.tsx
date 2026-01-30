@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams, usePathname } from 'expo-router';
 import { Edit2 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner, SimpleFAB, BottomSheet } from '@/components/ui';

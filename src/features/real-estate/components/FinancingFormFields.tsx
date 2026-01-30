@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { DollarSign, Percent, FileText } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FormField } from '@/components/ui';
 import { LOAN_TYPES, LoanType } from '../hooks/useFinancingScenarios';
 import { FinancingFormData, FinancingCalculations } from '../hooks/useFinancingForm';

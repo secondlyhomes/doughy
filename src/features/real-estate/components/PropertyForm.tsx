@@ -17,7 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { ChevronDown, Save, X, MapPin, Home, DollarSign, FileText } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FormField, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useForm } from '@/hooks/useForm';
 import { Property, PropertyType, PropertyConstants } from '../types';

@@ -1,6 +1,14 @@
 // src/stores/index.ts
-// Export all Zustand stores for the Landlord platform
-// Part of Zone 3: UI scaffolding for the Doughy architecture refactor
+// Export all Zustand stores
+// Consolidates stores from legacy /src/store/ and landlord platform stores
+
+// App Store (global app state)
+export { useAppStore } from './app-store';
+export type { AppState } from './app-store';
+
+// Google Store (re-export from integrations)
+export { useGoogleStore } from './google-store';
+export type { GoogleState, GoogleEvent } from './google-store';
 
 // Rental Properties Store
 export {
@@ -63,9 +71,14 @@ export {
   selectNeedsReviewConversations,
 } from './rental-conversations-store';
 export type {
+  // New canonical names (use these)
+  LandlordConversation,
+  LandlordMessage,
+  // Backward-compatible aliases (deprecated)
   Conversation,
-  ConversationWithRelations,
   Message,
+  // Other types
+  ConversationWithRelations,
   AIResponseQueueItem,
   Channel,
   ConversationStatus,

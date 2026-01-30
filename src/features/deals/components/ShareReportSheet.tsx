@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Link2, MessageSquare, Mail, Download, Copy } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, BottomSheetSection } from '@/components/ui/BottomSheet';
 import { generateShareMessage, generateShareEmail } from '../data/mockSellerReport';
 

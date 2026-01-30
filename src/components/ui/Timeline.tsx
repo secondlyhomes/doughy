@@ -21,7 +21,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Platform, StyleSheet }
 import { LucideIcon, Calendar, Clock, Plus } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
-import { useTheme, useThemeColors } from '@/context/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ICON_SIZES } from '@/constants/design-tokens';
 

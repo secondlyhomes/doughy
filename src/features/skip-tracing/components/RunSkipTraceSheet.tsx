@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, Alert } from 'react-native';
 import { Search, User, MapPin, Building2 } from 'lucide-react-native';
 import { BottomSheet, Button } from '@/components/ui';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useRunSkipTrace } from '../hooks/useSkipTracing';
 import { isValidSkipTraceInput, getSkipTraceInputValidationError } from '../types';
 import type { SkipTraceInput } from '../types';

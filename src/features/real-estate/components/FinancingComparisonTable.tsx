@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { FinancingScenarioWithCalcs } from '../hooks/useFinancingScenarios';
 import { formatCurrency } from '../utils/formatters';
 

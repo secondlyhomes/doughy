@@ -2,7 +2,7 @@
 // Landlord Inbox stack navigator for Landlord platform
 // Detail screens use fullScreenModal presentation to hide the tab bar
 import { Stack } from 'expo-router';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 export default function InboxLayout() {
   const colors = useThemeColors();

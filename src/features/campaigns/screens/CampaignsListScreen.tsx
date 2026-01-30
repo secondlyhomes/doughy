@@ -36,7 +36,7 @@ import {
   Phone,
   Instagram,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { ChevronDown, Check } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { getBackdropColor } from '@/lib/design-utils';
 
 export interface SelectOption {

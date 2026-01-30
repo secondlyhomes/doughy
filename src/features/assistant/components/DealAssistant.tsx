@@ -20,7 +20,7 @@ import {
   MessageCircle,
   Clock,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { BORDER_RADIUS } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';

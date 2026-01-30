@@ -4,7 +4,7 @@
 import React from 'react';
 import { TouchableOpacityProps, ViewStyle } from 'react-native';
 import { Plus } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { LoadingSpinner } from './LoadingSpinner';
 import { GlassButton } from './GlassButton';

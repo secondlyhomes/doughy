@@ -44,10 +44,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from '@/features/auth/context/AuthProvider';
 import { UnreadCountsProvider, ErrorBoundary } from '@/features/layout';
-import { ThemeProvider, useTheme, useThemeColors } from '@/context/ThemeContext';
-import { FocusModeProvider } from '@/context/FocusModeContext';
+import { ThemeProvider, useTheme, useThemeColors } from '@/contexts/ThemeContext';
+import { FocusModeProvider } from '@/contexts/FocusModeContext';
 import { ToastProvider } from '@/components/ui/Toast';
-import { ErrorProvider } from '@/context/ErrorContext';
+import { ErrorProvider } from '@/contexts/ErrorContext';
 import { PlatformProvider } from '@/contexts/PlatformContext';
 
 // Create a client for React Query

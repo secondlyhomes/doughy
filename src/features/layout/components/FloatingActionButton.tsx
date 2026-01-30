@@ -18,7 +18,7 @@ import {
   MessageCircle,
   FileText,
 } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { FAB_BOTTOM_OFFSET, FAB_RIGHT_MARGIN, FAB_Z_INDEX, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
 import { GlassButton } from '@/components/ui/GlassButton';

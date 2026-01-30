@@ -8,7 +8,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { OverrideCalculationSheet, CalculationOverride } from '../OverrideCalculationSheet';
 
 // Mock theme colors
-jest.mock('@/context/ThemeContext', () => ({
+jest.mock('@/contexts/ThemeContext', () => ({
   useThemeColors: () => ({
     primary: '#4D7C5F',
     foreground: '#111827',

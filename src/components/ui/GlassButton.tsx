@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { BlurView } from 'expo-blur';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { GLASS_BLUR, PRESS_OPACITY } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';

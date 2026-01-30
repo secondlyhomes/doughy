@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, Button, GlassButton, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';

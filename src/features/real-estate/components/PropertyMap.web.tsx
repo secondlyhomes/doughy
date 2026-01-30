@@ -8,7 +8,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { MapPin, Navigation, Layers, ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Property, GeoPoint } from '../types';
 import { formatCurrency } from '../utils/formatters';
 

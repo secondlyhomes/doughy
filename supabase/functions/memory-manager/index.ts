@@ -26,6 +26,11 @@ import {
   createCorsResponse,
   createCorsErrorResponse,
 } from "../_shared/cors-standardized.ts";
+import { scanForThreats } from "../_shared/security.ts";
+import {
+  isCircuitBreakerOpen,
+  checkRateLimit,
+} from "../_shared/ai-security/index.ts";
 
 // =============================================================================
 // Types
@@ -630,6 +635,53 @@ serve(async (req: Request) => {
 
     // Use authenticated user ID for security
     const userId = user.id;
+
+    // Circuit breaker check (uses cached state - minimal latency)
+    const circuitState = await isCircuitBreakerOpen(supabase, 'memory-manager', userId);
+    if (circuitState.isOpen) {
+      console.warn(`[memory-manager] Circuit breaker open: ${circuitState.reason}`);
+      return createCorsErrorResponse(
+        `Service temporarily unavailable: ${circuitState.reason}`,
+        503,
+        corsHeaders
+      );
+    }
+
+    // Rate limiting for write operations
+    const isWriteAction = ['store_user_memory', 'store_episodic', 'store_response_example', 'learn_from_outcome'].includes(action);
+    if (isWriteAction) {
+      const rateLimit = await checkRateLimit(supabase, userId, 'memory-manager', 'api', {
+        functionHourlyLimit: 100,
+        globalHourlyLimit: 200,
+        burstLimit: 20,
+      });
+      if (!rateLimit.allowed) {
+        console.warn(`[memory-manager] Rate limit exceeded for user ${userId}`);
+        return createCorsErrorResponse(`Rate limit exceeded: ${rateLimit.limitType}`, 429, corsHeaders);
+      }
+    }
+
+    // Security scan for memory content being stored
+    if (action === 'store_user_memory' && payload) {
+      const memoryPayload = payload as UserMemoryPayload;
+      const contentToScan = typeof memoryPayload.value === 'string'
+        ? memoryPayload.value
+        : JSON.stringify(memoryPayload.value);
+      const securityScan = scanForThreats(contentToScan);
+      if (securityScan.action === 'blocked') {
+        console.warn(`[memory-manager] Memory content blocked for user ${userId}`);
+        return createCorsErrorResponse('Memory content contains prohibited patterns', 400, corsHeaders);
+      }
+    }
+
+    if (action === 'store_episodic' && payload) {
+      const episodicPayload = payload as EpisodicMemoryPayload;
+      const securityScan = scanForThreats(episodicPayload.summary);
+      if (securityScan.action === 'blocked') {
+        console.warn(`[memory-manager] Episodic memory blocked for user ${userId}`);
+        return createCorsErrorResponse('Memory content contains prohibited patterns', 400, corsHeaders);
+      }
+    }
 
     // Route to appropriate handler
     let result: { success: boolean; [key: string]: unknown };

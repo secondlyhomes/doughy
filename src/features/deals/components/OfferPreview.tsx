@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Copy, Mail, Phone, FileText } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { DealStrategy, OfferTerms, Deal, getDealAddress, getDealLeadName } from '../types';
 import { offerScriptTemplates, offerEmailTemplates, formatCurrency, formatPercent } from '../data/mockOffers';

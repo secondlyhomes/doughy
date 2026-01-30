@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { View, Text, Animated, TouchableOpacity, Platform } from 'react-native';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 
 // Toast types
 export type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info';

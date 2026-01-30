@@ -4,30 +4,27 @@
 // Apple-like simplicity with ADHD-friendly focus
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, Animated, ListRenderItem, Platform } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, ListRenderItem, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Users, Briefcase, Building, Search, Plus } from 'lucide-react-native';
+import { Users, Briefcase, Building, Search } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, TAB_BAR_SAFE_PADDING, ListEmptyState, SimpleFAB, BottomSheet, BottomSheetSection, Button, FormField } from '@/components/ui';
 import { LeadCardSkeleton, DealCardSkeleton, PropertyCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
-import { useThemeColors } from '@/context/ThemeContext';
-import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { useThemeColors } from '@/contexts/ThemeContext';
+import { SPACING } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks';
-import { useRouter } from 'expo-router';
 
 // Import list content from existing features
 import { useLeadsWithProperties, useCreateLead } from '@/features/leads/hooks/useLeads';
 import { ExpandableLeadCard } from '@/features/leads/components/ExpandableLeadCard';
 import type { LeadWithProperties, LeadProperty } from '@/features/leads/types';
 
-import { useDeals, useCreateDeal } from '@/features/deals/hooks/useDeals';
-import type { Deal, DealStrategy } from '@/features/deals/types';
-import { DEAL_STAGE_CONFIG, getDealAddress, getDealLeadName } from '@/features/deals/types';
-import { useNextAction } from '@/features/deals/hooks/useNextAction';
-import { useDealAnalysis } from '@/features/real-estate/hooks/useDealAnalysis';
+import { useDeals } from '@/features/deals/hooks/useDeals';
+import type { Deal } from '@/features/deals/types';
+import { getDealAddress, getDealLeadName } from '@/features/deals/types';
 import type { Property } from '@/features/real-estate/types';
 
 import { usePortfolio } from '@/features/portfolio/hooks/usePortfolio';
@@ -37,275 +34,13 @@ import type { PortfolioProperty, AddToPortfolioInput } from '@/features/portfoli
 import { getInvestorPropertyMetrics, getPropertyImageUrl, getPropertyLocation } from '@/lib/property-card-utils';
 import { formatPropertyType } from '@/features/real-estate/utils/formatters';
 
-// ============================================
-// Types
-// ============================================
-
-type PipelineSegment = 'leads' | 'deals' | 'portfolio';
-
-// Union type for all pipeline items (used for FlatList typing)
-type PipelineItem = LeadWithProperties | Deal | PortfolioProperty;
-
-interface SegmentOption {
-  id: PipelineSegment;
-  label: string;
-  icon: React.ComponentType<{ size: number; color: string }>;
-}
-
-const SEGMENTS: SegmentOption[] = [
-  { id: 'leads', label: 'Leads', icon: Users },
-  { id: 'deals', label: 'Deals', icon: Briefcase },
-  { id: 'portfolio', label: 'Portfolio', icon: Building },
-];
-
-const SEGMENT_CONTROL_HEIGHT = 38; // Inner content height (excludes 3px padding on each side)
-
-// ============================================
-// Segment Control Component
-// ============================================
-
-interface SegmentControlProps {
-  value: PipelineSegment;
-  onChange: (segment: PipelineSegment) => void;
-  counts: Record<PipelineSegment, number>;
-}
-
-function SegmentControl({ value, onChange, counts }: SegmentControlProps) {
-  const colors = useThemeColors();
-  const slideAnim = React.useRef(new Animated.Value(0)).current;
-  const [segmentWidths, setSegmentWidths] = React.useState<number[]>([]);
-
-  const activeIndex = SEGMENTS.findIndex((s) => s.id === value);
-
-  React.useEffect(() => {
-    if (segmentWidths.length === SEGMENTS.length && activeIndex >= 0) {
-      const targetX = segmentWidths.slice(0, activeIndex).reduce((sum, w) => sum + w, 0);
-      Animated.spring(slideAnim, {
-        toValue: targetX,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 30,
-      }).start();
-    }
-  }, [activeIndex, segmentWidths, slideAnim]);
-
-  const handleSegmentLayout = useCallback((index: number, width: number) => {
-    setSegmentWidths((prev) => {
-      const newWidths = [...prev];
-      newWidths[index] = width;
-      return newWidths;
-    });
-  }, []);
-
-  const handlePress = useCallback(
-    (segment: PipelineSegment) => {
-      if (segment !== value) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onChange(segment);
-      }
-    },
-    [value, onChange]
-  );
-
-  const activePillWidth = segmentWidths[activeIndex] || 0;
-
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        borderRadius: BORDER_RADIUS.full,
-        padding: 3,
-        backgroundColor: withOpacity(colors.muted, 'strong'),
-      }}
-    >
-      {/* Animated pill indicator */}
-      {segmentWidths.length === SEGMENTS.length && activeIndex >= 0 && (
-        <Animated.View
-          style={{
-            position: 'absolute',
-            top: 3,
-            left: 3,
-            width: activePillWidth,
-            height: SEGMENT_CONTROL_HEIGHT,
-            borderRadius: BORDER_RADIUS.full,
-            backgroundColor: colors.background,
-            ...getShadowStyle(colors, { size: 'sm' }),
-            transform: [{ translateX: slideAnim }],
-          }}
-        />
-      )}
-
-      {/* Segments */}
-      {SEGMENTS.map((segment, index) => {
-        const isActive = segment.id === value;
-        const IconComponent = segment.icon;
-        const count = counts[segment.id] || 0;
-
-        return (
-          <TouchableOpacity
-            key={segment.id}
-            onLayout={(e) => handleSegmentLayout(index, e.nativeEvent.layout.width)}
-            onPress={() => handlePress(segment.id)}
-            accessibilityLabel={`${segment.label} (${count})`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: SEGMENT_CONTROL_HEIGHT,
-              gap: SPACING.xs,
-            }}
-          >
-            <IconComponent
-              size={16}
-              color={isActive ? colors.foreground : colors.mutedForeground}
-            />
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: isActive ? colors.foreground : colors.mutedForeground,
-              }}
-            >
-              {segment.label}
-            </Text>
-            {count > 0 && (
-              <View
-                style={{
-                  backgroundColor: isActive
-                    ? withOpacity(colors.primary, 'light')
-                    : withOpacity(colors.muted, 'strong'),
-                  paddingHorizontal: 6,
-                  paddingVertical: 1,
-                  borderRadius: BORDER_RADIUS.full,
-                  minWidth: 20,
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: '600',
-                    color: isActive ? colors.primary : colors.mutedForeground,
-                  }}
-                >
-                  {count > 99 ? '99+' : count}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
-
-// ============================================
-// Deal Card Component (simplified inline)
-// ============================================
-
-interface DealCardProps {
-  deal: Deal;
-  onPress: () => void;
-}
-
-function DealCard({ deal, onPress }: DealCardProps) {
-  const colors = useThemeColors();
-  const nextAction = useNextAction(deal);
-  const stageConfig = DEAL_STAGE_CONFIG[deal.stage] || { label: deal.stage || 'Unknown', color: 'bg-gray-500', order: 0 };
-
-  const propertyForAnalysis: Partial<Property> = {
-    id: deal.property?.id || '',
-    address: deal.property?.address || '',
-    purchase_price: deal.property?.purchase_price || 0,
-    repair_cost: deal.property?.repair_cost || 0,
-    arv: deal.property?.arv || 0,
-  };
-
-  const analysis = useDealAnalysis(propertyForAnalysis as Property);
-  const mao = analysis.mao > 0 ? analysis.mao : null;
-
-  const formatCurrency = (value: number | null | undefined) => {
-    if (!value) return '-';
-    return `$${value.toLocaleString()}`;
-  };
-
-  return (
-    <TouchableOpacity
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: BORDER_RADIUS.lg,
-        padding: SPACING.md,
-      }}
-      onPress={onPress}
-      accessibilityLabel={`${getDealLeadName(deal)} deal at ${getDealAddress(deal)}`}
-      accessibilityRole="button"
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.xs }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <View
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: BORDER_RADIUS.full,
-              backgroundColor: withOpacity(colors.primary, 'light'),
-              marginRight: SPACING.sm,
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.primary }}>
-              {stageConfig.label}
-            </Text>
-          </View>
-          <Text
-            style={{ fontSize: 15, fontWeight: '600', color: colors.foreground, flex: 1 }}
-            numberOfLines={1}
-          >
-            {getDealLeadName(deal)}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={{ fontSize: 13, color: colors.mutedForeground, marginBottom: SPACING.xs }} numberOfLines={1}>
-        {getDealAddress(deal)}
-      </Text>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.md }}>
-        <Text style={{ fontSize: 13, color: colors.foreground }}>
-          MAO: <Text style={{ fontWeight: '600', color: colors.success }}>{formatCurrency(mao)}</Text>
-        </Text>
-        {deal.strategy && (
-          <View style={{ backgroundColor: colors.muted, paddingHorizontal: 8, paddingVertical: 2, borderRadius: BORDER_RADIUS.sm }}>
-            <Text style={{ fontSize: 11, color: colors.mutedForeground, textTransform: 'capitalize' }}>
-              {deal.strategy.replace('_', ' ')}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {nextAction && (
-        <View
-          style={{
-            marginTop: SPACING.sm,
-            padding: SPACING.sm,
-            borderRadius: BORDER_RADIUS.md,
-            backgroundColor: withOpacity(colors.primary, 'muted'),
-          }}
-        >
-          <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Next Action</Text>
-          <Text style={{ fontSize: 13, color: colors.foreground }} numberOfLines={1}>
-            {nextAction.action}
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-}
-
-// ============================================
-// Main Pipeline Screen
-// ============================================
+// Extracted components
+import {
+  type PipelineSegment,
+  type PipelineItem,
+  SegmentControl,
+  DealCard,
+} from './pipeline';
 
 export function PipelineScreen() {
   const router = useRouter();
@@ -382,26 +117,26 @@ export function PipelineScreen() {
 
   // Navigation handlers
   const handleLeadPress = useCallback((lead: LeadWithProperties) => {
-    router.push(`/(tabs)/pipeline/lead/${lead.id}` as any);
+    router.push(`/(tabs)/pipeline/lead/${lead.id}` as never);
   }, [router]);
 
   const handlePropertyPress = useCallback((property: LeadProperty) => {
-    router.push(`/(tabs)/pipeline/property/${property.id}` as any);
+    router.push(`/(tabs)/pipeline/property/${property.id}` as never);
   }, [router]);
 
   const handleStartDeal = useCallback((leadId: string | undefined, propertyId?: string) => {
     const params = new URLSearchParams();
     if (leadId) params.set('lead_id', leadId);
     if (propertyId) params.set('property_id', propertyId);
-    router.push(`/(tabs)/pipeline/deal/new?${params.toString()}` as any);
+    router.push(`/(tabs)/pipeline/deal/new?${params.toString()}` as never);
   }, [router]);
 
   const handleDealPress = useCallback((deal: Deal) => {
-    router.push(`/(tabs)/pipeline/deal/${deal.id}` as any);
+    router.push(`/(tabs)/pipeline/deal/${deal.id}` as never);
   }, [router]);
 
   const handlePortfolioPropertyPress = useCallback((property: Property) => {
-    router.push(`/(tabs)/pipeline/portfolio/${property.id}` as any);
+    router.push(`/(tabs)/pipeline/portfolio/${property.id}` as never);
   }, [router]);
 
   // FAB action based on active segment
@@ -547,7 +282,6 @@ export function PipelineScreen() {
         ) : (
           <FlatList<PipelineItem>
             data={currentData}
-            // Safe cast: activeSegment controls both currentData and renderItem
             renderItem={renderItem as ListRenderItem<PipelineItem>}
             keyExtractor={keyExtractor}
             contentInsetAdjustmentBehavior="automatic"

@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { DollarSign, FileText, Home, Repeat, Hammer, RefreshCw, Building } from 'lucide-react-native';
-import { useThemeColors } from '@/context/ThemeContext';
+import { useThemeColors } from '@/contexts/ThemeContext';
 import { DealStrategy, DEAL_STRATEGY_CONFIG } from '../types';
 
 // Icon mapping for strategies
