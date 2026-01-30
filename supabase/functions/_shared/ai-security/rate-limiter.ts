@@ -92,7 +92,7 @@ export async function getRateLimitStatus(
 
     // Get all rate limit records for this user in the current hour
     const { data, error } = await supabase
-      .from('moltbot_rate_limits')
+      .from('ai_moltbot_rate_limits')
       .select('function_name, request_count, window_start')
       .eq('user_id', userId)
       .gte('window_start', hourStart.toISOString());

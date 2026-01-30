@@ -234,26 +234,37 @@ This domain supports automated multi-channel outreach campaigns.
 
 ---
 
-#### 3e. MoltBot AI Domain
-**Pattern**: `moltbot_*` prefix (REQUIRED for all AI/ML tables)
+#### 3e. AI Domain
+**Pattern**: `ai_*` prefix for general AI tables, `ai_moltbot_*` for MoltBot-specific tables
 
-This domain supports the MoltBot AI assistant features.
+This domain supports all AI/ML features including MoltBot assistant.
+
+**Note**: As of migration 20260130500002, all `moltbot_*` tables were renamed to `ai_moltbot_*` for consistency with the broader AI domain organization.
 
 | Table | Purpose | Status |
 |-------|---------|--------|
-| `moltbot_user_memory` | User preference memory | ✅ Existing |
-| `moltbot_episodic_memory` | Contact interaction memory | ✅ Existing |
-| `moltbot_knowledge_sources` | Knowledge base sources | ✅ Existing |
-| `moltbot_knowledge_chunks` | Vectorized knowledge chunks | ✅ Existing |
-| `moltbot_sync_history` | Sync operation history | ✅ Existing |
-| `moltbot_security_events` | Security event logging | ✅ Existing |
-| `moltbot_ip_blocks` | IP block list | ✅ Existing |
-| `moltbot_rate_limits` | Rate limiting records | ✅ Existing |
-| `moltbot_blocked_patterns` | Content filter patterns | ✅ Existing |
-| `moltbot_email_analysis` | Email analysis cache | ✅ Existing |
-| `moltbot_learning_queue` | Learning opportunity queue | ✅ Existing |
+| `ai_jobs` | AI processing jobs | ✅ Existing |
+| `ai_sessions` | AI assistant sessions | ✅ Existing |
+| `ai_auto_send_rules` | Auto-send configuration | ✅ Existing |
+| `ai_moltbot_user_memories` | User preference memory | ✅ Existing |
+| `ai_moltbot_episodic_memories` | Contact interaction memory | ✅ Existing |
+| `ai_moltbot_knowledge_sources` | Knowledge base sources | ✅ Existing |
+| `ai_moltbot_knowledge_chunks` | Vectorized knowledge chunks | ✅ Existing |
+| `ai_moltbot_knowledge_tags` | Knowledge categorization | ✅ Existing |
+| `ai_moltbot_knowledge_chunk_tags` | Chunk-tag junction | ✅ Existing |
+| `ai_moltbot_sync_records` | Sync operation history | ✅ Existing |
+| `ai_moltbot_security_logs` | Security event logging | ✅ Existing |
+| `ai_moltbot_blocked_ips` | IP block list | ✅ Existing |
+| `ai_moltbot_rate_limits` | Rate limiting records | ✅ Existing |
+| `ai_moltbot_blocked_patterns` | Content filter patterns | ✅ Existing |
+| `ai_moltbot_email_analyses` | Email analysis cache | ✅ Existing |
+| `ai_moltbot_learning_queue_items` | Learning opportunity queue | ✅ Existing |
+| `ai_moltbot_global_knowledge` | Global knowledge base | ✅ Existing |
+| `ai_moltbot_response_examples` | Response examples | ✅ Existing |
 
-**Future tables in this domain**: MUST use `moltbot_*` prefix
+**Future tables in this domain**:
+- General AI tables: Use `ai_*` prefix (e.g., `ai_embeddings`, `ai_model_configs`)
+- MoltBot-specific tables: Use `ai_moltbot_*` prefix (e.g., `ai_moltbot_conversations`)
 
 ---
 

@@ -41,7 +41,7 @@ export async function isUserBlocked(
 
   try {
     const { data, error } = await supabase
-      .from('moltbot_user_threat_scores')
+      .from('ai_moltbot_user_threat_scores')
       .select('is_blocked')
       .eq('user_id', userId)
       .maybeSingle();
@@ -133,7 +133,7 @@ export async function getUserThreatScore(
 ): Promise<ThreatScoreResult | null> {
   try {
     const { data, error } = await supabase
-      .from('moltbot_user_threat_scores')
+      .from('ai_moltbot_user_threat_scores')
       .select('current_score, is_flagged, is_blocked')
       .eq('user_id', userId)
       .maybeSingle();
@@ -167,7 +167,7 @@ export async function clearUserThreatScore(
 ): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('moltbot_user_threat_scores')
+      .from('ai_moltbot_user_threat_scores')
       .update({
         current_score: 0,
         is_flagged: false,

@@ -25,7 +25,7 @@ export async function sendSMS(
 ): Promise<ChannelResult> {
   // Get user's Twilio credentials
   const { data: credentials, error: credError } = await supabase
-    .from('moltbot_channel_credentials')
+    .from('ai_moltbot_channel_credentials')
     .select('account_sid, auth_token, phone_number')
     .eq('user_id', userId)
     .eq('channel', 'sms')

@@ -299,10 +299,11 @@ export function AISecurityDashboardScreen() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Load circuit breaker states (moltbot_circuit_breakers per DBA guidelines)
+  // Load circuit breaker states (ai_moltbot_circuit_breakers per DBA guidelines)
+  // Type assertion needed until migration is applied and types regenerated
   const loadCircuitBreakers = useCallback(async () => {
     const { data, error: fetchError } = await supabase
-      .from('moltbot_circuit_breakers')
+      .from('ai_moltbot_circuit_breakers' as 'profiles')  // Type workaround for new table
       .select('*')
       .order('scope');
 
@@ -311,7 +312,17 @@ export function AISecurityDashboardScreen() {
       return [];
     }
 
-    return (data || []).map((row) => ({
+    // Cast to any[] since table types not generated yet
+    const rows = (data || []) as Array<{
+      scope: string;
+      is_open: boolean;
+      opened_at: string | null;
+      opened_by: string | null;
+      reason: string | null;
+      auto_close_at: string | null;
+    }>;
+
+    return rows.map((row) => ({
       scope: row.scope,
       isOpen: row.is_open,
       openedAt: row.opened_at,
@@ -321,10 +332,10 @@ export function AISecurityDashboardScreen() {
     }));
   }, []);
 
-  // Load threat scores (moltbot_user_threat_scores per DBA guidelines)
+  // Load threat scores (ai_moltbot_user_threat_scores per DBA guidelines)
   const loadThreatScores = useCallback(async () => {
     const { data, error: fetchError } = await supabase
-      .from('moltbot_user_threat_scores')
+      .from('ai_moltbot_user_threat_scores' as 'profiles')  // Type workaround for new table
       .select('*')
       .or('is_flagged.eq.true,current_score.gte.200')
       .order('current_score', { ascending: false })
@@ -366,7 +377,7 @@ export function AISecurityDashboardScreen() {
   // Load recent security events
   const loadSecurityEvents = useCallback(async () => {
     const { data, error: fetchError } = await supabase
-      .from('moltbot_security_log')
+      .from('ai_moltbot_security_log' as 'profiles')  // Type workaround for new table
       .select('*')
       .order('created_at', { ascending: false })
       .limit(50);
@@ -410,7 +421,7 @@ export function AISecurityDashboardScreen() {
   // Load security patterns
   const loadPatterns = useCallback(async () => {
     const { data, error: fetchError } = await supabase
-      .from('moltbot_blocked_patterns')
+      .from('ai_moltbot_blocked_patterns' as 'profiles')  // Type workaround for new table
       .select('*')
       .order('severity', { ascending: false });
 

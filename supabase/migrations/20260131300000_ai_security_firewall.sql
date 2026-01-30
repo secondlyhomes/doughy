@@ -5,12 +5,12 @@
 -- DBA Guidelines: Following docs/DATABASE_NAMING_CONVENTIONS.md
 
 -- ============================================================================
--- 1. MOLTBOT_CIRCUIT_BREAKERS TABLE (moltbot_* prefix per DBA guidelines)
+-- 1. MOLTBOT_CIRCUIT_BREAKERS TABLE (ai_moltbot_* prefix per DBA guidelines)
 -- ============================================================================
 -- Emergency stop capability for AI systems
 -- Allows instant shutdown at global, function, or user level
 
-CREATE TABLE IF NOT EXISTS moltbot_circuit_breakers (
+CREATE TABLE IF NOT EXISTS ai_moltbot_circuit_breakers (
   -- Scope can be 'global', 'function:ai-responder', 'user:uuid', etc.
   scope TEXT PRIMARY KEY,
 
@@ -35,10 +35,10 @@ CREATE TABLE IF NOT EXISTS moltbot_circuit_breakers (
 );
 
 -- Indexes (idx_{table}_{column} pattern per DBA guidelines)
-CREATE INDEX idx_moltbot_circuit_breakers_is_open
-  ON moltbot_circuit_breakers(is_open) WHERE is_open = true;
-CREATE INDEX idx_moltbot_circuit_breakers_auto_close
-  ON moltbot_circuit_breakers(auto_close_at)
+CREATE INDEX idx_ai_moltbot_circuit_breakers_is_open
+  ON ai_moltbot_circuit_breakers(is_open) WHERE is_open = true;
+CREATE INDEX idx_ai_moltbot_circuit_breakers_auto_close
+  ON ai_moltbot_circuit_breakers(auto_close_at)
   WHERE auto_close_at IS NOT NULL AND is_open = true;
 
 -- ============================================================================
@@ -46,7 +46,7 @@ CREATE INDEX idx_moltbot_circuit_breakers_auto_close
 -- ============================================================================
 -- Tracks cumulative threat scores for users to detect slow attacks
 
-CREATE TABLE IF NOT EXISTS moltbot_user_threat_scores (
+CREATE TABLE IF NOT EXISTS ai_moltbot_user_threat_scores (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
 
   -- Current threat score (0-1000)
@@ -72,38 +72,38 @@ CREATE TABLE IF NOT EXISTS moltbot_user_threat_scores (
 );
 
 -- Indexes (idx_{table}_{column} pattern per DBA guidelines)
-CREATE INDEX idx_moltbot_user_threat_scores_is_flagged
-  ON moltbot_user_threat_scores(is_flagged) WHERE is_flagged = true;
-CREATE INDEX idx_moltbot_user_threat_scores_is_blocked
-  ON moltbot_user_threat_scores(is_blocked) WHERE is_blocked = true;
-CREATE INDEX idx_moltbot_user_threat_scores_high_score
-  ON moltbot_user_threat_scores(current_score DESC) WHERE current_score >= 500;
+CREATE INDEX idx_ai_moltbot_user_threat_scores_is_flagged
+  ON ai_moltbot_user_threat_scores(is_flagged) WHERE is_flagged = true;
+CREATE INDEX idx_ai_moltbot_user_threat_scores_is_blocked
+  ON ai_moltbot_user_threat_scores(is_blocked) WHERE is_blocked = true;
+CREATE INDEX idx_ai_moltbot_user_threat_scores_high_score
+  ON ai_moltbot_user_threat_scores(current_score DESC) WHERE current_score >= 500;
 
 -- ============================================================================
 -- 3. ENHANCE MOLTBOT_RATE_LIMITS
 -- ============================================================================
 -- Add function-level tracking for cross-function rate limiting
 
-ALTER TABLE moltbot_rate_limits
+ALTER TABLE ai_moltbot_rate_limits
   ADD COLUMN IF NOT EXISTS function_name TEXT DEFAULT 'default';
 
 -- Drop and recreate the primary key to include function_name
-ALTER TABLE moltbot_rate_limits DROP CONSTRAINT IF EXISTS moltbot_rate_limits_pkey;
-ALTER TABLE moltbot_rate_limits
+ALTER TABLE ai_moltbot_rate_limits DROP CONSTRAINT IF EXISTS ai_moltbot_rate_limits_pkey;
+ALTER TABLE ai_moltbot_rate_limits
   ADD PRIMARY KEY (user_id, channel, window_start, function_name);
 
 -- Create index for cross-function queries (idx_{table}_{columns} pattern)
-CREATE INDEX IF NOT EXISTS idx_moltbot_rate_limits_user_function
-  ON moltbot_rate_limits(user_id, function_name, window_start DESC);
-CREATE INDEX IF NOT EXISTS idx_moltbot_rate_limits_user_window
-  ON moltbot_rate_limits(user_id, window_start DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_moltbot_rate_limits_user_function
+  ON ai_moltbot_rate_limits(user_id, function_name, window_start DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_moltbot_rate_limits_user_window
+  ON ai_moltbot_rate_limits(user_id, window_start DESC);
 
 -- ============================================================================
--- 4. MOLTBOT_SECURITY_PATTERNS_CACHE TABLE (moltbot_* prefix)
+-- 4. MOLTBOT_SECURITY_PATTERNS_CACHE TABLE (ai_moltbot_* prefix)
 -- ============================================================================
 -- Cache for loaded security patterns to reduce DB queries
 
-CREATE TABLE IF NOT EXISTS moltbot_security_patterns_cache (
+CREATE TABLE IF NOT EXISTS ai_moltbot_security_patterns_cache (
   cache_key TEXT PRIMARY KEY DEFAULT 'active_patterns',
   patterns JSONB NOT NULL DEFAULT '[]'::jsonb,
   pattern_count INTEGER DEFAULT 0,
@@ -117,55 +117,55 @@ CREATE TABLE IF NOT EXISTS moltbot_security_patterns_cache (
 -- ============================================================================
 
 -- Enable RLS on new tables
-ALTER TABLE moltbot_circuit_breakers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE moltbot_user_threat_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE moltbot_security_patterns_cache ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_moltbot_circuit_breakers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_moltbot_user_threat_scores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_moltbot_security_patterns_cache ENABLE ROW LEVEL SECURITY;
 
 -- Circuit breakers: Admin/support can view, service role can modify
 -- Pattern: "{Subject} can {action} {object}"
 CREATE POLICY "Admins can view all circuit_breakers"
-  ON moltbot_circuit_breakers FOR SELECT
+  ON ai_moltbot_circuit_breakers FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM user_profiles
       WHERE id = auth.uid() AND role IN ('admin', 'support')
     )
   );
 
 CREATE POLICY "Service role can manage circuit_breakers"
-  ON moltbot_circuit_breakers FOR ALL
+  ON ai_moltbot_circuit_breakers FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role');
 
 -- Threat scores: Users can view own, admin/support can view all, service role manages
 CREATE POLICY "Users can view own threat_score"
-  ON moltbot_user_threat_scores FOR SELECT
+  ON ai_moltbot_user_threat_scores FOR SELECT
   USING (auth.uid() = user_id);
 
 CREATE POLICY "Admins can view all threat_scores"
-  ON moltbot_user_threat_scores FOR SELECT
+  ON ai_moltbot_user_threat_scores FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM user_profiles
       WHERE id = auth.uid() AND role IN ('admin', 'support')
     )
   );
 
 CREATE POLICY "Service role can manage threat_scores"
-  ON moltbot_user_threat_scores FOR ALL
+  ON ai_moltbot_user_threat_scores FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role');
 
 -- Patterns cache: Admin can view, service role manages
 CREATE POLICY "Admins can view patterns_cache"
-  ON moltbot_security_patterns_cache FOR SELECT
+  ON ai_moltbot_security_patterns_cache FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
+      SELECT 1 FROM user_profiles
       WHERE id = auth.uid() AND role IN ('admin', 'support')
     )
   );
 
 CREATE POLICY "Service role can manage patterns_cache"
-  ON moltbot_security_patterns_cache FOR ALL
+  ON ai_moltbot_security_patterns_cache FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role');
 
 -- ============================================================================
@@ -189,9 +189,9 @@ SET search_path = public
 AS $$
 BEGIN
   -- Auto-close expired circuit breakers first
-  UPDATE moltbot_circuit_breakers
+  UPDATE ai_moltbot_circuit_breakers
   SET is_open = false, updated_at = NOW()
-  WHERE moltbot_circuit_breakers.is_open = true
+  WHERE ai_moltbot_circuit_breakers.is_open = true
     AND auto_close_at IS NOT NULL
     AND auto_close_at < NOW();
 
@@ -200,12 +200,12 @@ BEGIN
 
   -- Check global first
   IF EXISTS (
-    SELECT 1 FROM moltbot_circuit_breakers cb
+    SELECT 1 FROM ai_moltbot_circuit_breakers cb
     WHERE cb.scope = 'global' AND cb.is_open = true
   ) THEN
     RETURN QUERY
     SELECT cb.is_open, cb.scope, cb.reason, cb.opened_at
-    FROM moltbot_circuit_breakers cb
+    FROM ai_moltbot_circuit_breakers cb
     WHERE cb.scope = 'global' AND cb.is_open = true
     LIMIT 1;
     RETURN;
@@ -213,12 +213,12 @@ BEGIN
 
   -- Check function-specific
   IF p_function_name IS NOT NULL AND EXISTS (
-    SELECT 1 FROM moltbot_circuit_breakers cb
+    SELECT 1 FROM ai_moltbot_circuit_breakers cb
     WHERE cb.scope = 'function:' || p_function_name AND cb.is_open = true
   ) THEN
     RETURN QUERY
     SELECT cb.is_open, cb.scope, cb.reason, cb.opened_at
-    FROM moltbot_circuit_breakers cb
+    FROM ai_moltbot_circuit_breakers cb
     WHERE cb.scope = 'function:' || p_function_name AND cb.is_open = true
     LIMIT 1;
     RETURN;
@@ -226,12 +226,12 @@ BEGIN
 
   -- Check user-specific
   IF p_user_id IS NOT NULL AND EXISTS (
-    SELECT 1 FROM moltbot_circuit_breakers cb
+    SELECT 1 FROM ai_moltbot_circuit_breakers cb
     WHERE cb.scope = 'user:' || p_user_id::TEXT AND cb.is_open = true
   ) THEN
     RETURN QUERY
     SELECT cb.is_open, cb.scope, cb.reason, cb.opened_at
-    FROM moltbot_circuit_breakers cb
+    FROM ai_moltbot_circuit_breakers cb
     WHERE cb.scope = 'user:' || p_user_id::TEXT AND cb.is_open = true
     LIMIT 1;
     RETURN;
@@ -263,15 +263,15 @@ BEGIN
   END IF;
 
   -- Insert or update circuit breaker
-  INSERT INTO moltbot_circuit_breakers (scope, is_open, opened_at, opened_by, reason, auto_close_at, trip_count)
+  INSERT INTO ai_moltbot_circuit_breakers (scope, is_open, opened_at, opened_by, reason, auto_close_at, trip_count)
   VALUES (p_scope, true, NOW(), p_user_id, p_reason, v_auto_close, 1)
   ON CONFLICT (scope) DO UPDATE SET
     is_open = true,
     opened_at = NOW(),
-    opened_by = COALESCE(p_user_id, moltbot_circuit_breakers.opened_by),
+    opened_by = COALESCE(p_user_id, ai_moltbot_circuit_breakers.opened_by),
     reason = p_reason,
     auto_close_at = v_auto_close,
-    trip_count = moltbot_circuit_breakers.trip_count + 1,
+    trip_count = ai_moltbot_circuit_breakers.trip_count + 1,
     updated_at = NOW();
 
   RETURN true;
@@ -288,7 +288,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  UPDATE moltbot_circuit_breakers
+  UPDATE ai_moltbot_circuit_breakers
   SET is_open = false, updated_at = NOW()
   WHERE scope = p_scope;
 
@@ -321,7 +321,7 @@ BEGIN
     bp.description,
     bp.applies_to_channels,
     bp.hit_count
-  FROM moltbot_blocked_patterns bp
+  FROM ai_moltbot_blocked_patterns bp
   WHERE bp.is_active = true
     AND (bp.user_id IS NULL)  -- Only global patterns for now
   ORDER BY
@@ -359,29 +359,29 @@ DECLARE
   v_block_threshold INTEGER := 800;
 BEGIN
   -- Get or create threat score record
-  INSERT INTO moltbot_user_threat_scores (user_id, current_score, event_count_24h, event_count_total, last_event_at)
+  INSERT INTO ai_moltbot_user_threat_scores (user_id, current_score, event_count_24h, event_count_total, last_event_at)
   VALUES (p_user_id, LEAST(1000, GREATEST(0, p_score_delta)), 1, 1, NOW())
   ON CONFLICT (user_id) DO UPDATE SET
-    current_score = LEAST(1000, GREATEST(0, moltbot_user_threat_scores.current_score + p_score_delta)),
-    event_count_24h = moltbot_user_threat_scores.event_count_24h + 1,
-    event_count_total = moltbot_user_threat_scores.event_count_total + 1,
+    current_score = LEAST(1000, GREATEST(0, ai_moltbot_user_threat_scores.current_score + p_score_delta)),
+    event_count_24h = ai_moltbot_user_threat_scores.event_count_24h + 1,
+    event_count_total = ai_moltbot_user_threat_scores.event_count_total + 1,
     last_event_at = NOW(),
     updated_at = NOW()
   RETURNING
-    moltbot_user_threat_scores.current_score,
-    moltbot_user_threat_scores.is_flagged,
-    moltbot_user_threat_scores.is_blocked
+    ai_moltbot_user_threat_scores.current_score,
+    ai_moltbot_user_threat_scores.is_flagged,
+    ai_moltbot_user_threat_scores.is_blocked
   INTO v_new_score, v_is_flagged, v_is_blocked;
 
   -- Check if we need to update flags
   IF v_new_score >= v_block_threshold AND NOT v_is_blocked THEN
-    UPDATE moltbot_user_threat_scores
+    UPDATE ai_moltbot_user_threat_scores
     SET is_blocked = true, blocked_at = NOW(), is_flagged = true, flagged_at = COALESCE(flagged_at, NOW())
     WHERE user_id = p_user_id;
     v_is_blocked := true;
     v_is_flagged := true;
   ELSIF v_new_score >= v_flag_threshold AND NOT v_is_flagged THEN
-    UPDATE moltbot_user_threat_scores
+    UPDATE ai_moltbot_user_threat_scores
     SET is_flagged = true, flagged_at = NOW()
     WHERE user_id = p_user_id;
     v_is_flagged := true;
@@ -401,7 +401,7 @@ AS $$
 DECLARE
   v_updated INTEGER;
 BEGIN
-  UPDATE moltbot_user_threat_scores
+  UPDATE ai_moltbot_user_threat_scores
   SET
     current_score = GREATEST(0, FLOOR(current_score * decay_rate)::INTEGER),
     event_count_24h = 0,
@@ -411,7 +411,7 @@ BEGIN
   GET DIAGNOSTICS v_updated = ROW_COUNT;
 
   -- Reset flags for users below thresholds
-  UPDATE moltbot_user_threat_scores
+  UPDATE ai_moltbot_user_threat_scores
   SET is_flagged = false
   WHERE is_flagged = true AND current_score < 500 AND is_blocked = false;
 
@@ -451,14 +451,14 @@ BEGIN
   -- Get global hourly count (across all functions)
   SELECT COALESCE(SUM(request_count), 0)
   INTO v_global_count
-  FROM moltbot_rate_limits
+  FROM ai_moltbot_rate_limits
   WHERE user_id = p_user_id
     AND window_start = v_hour_start;
 
   -- Get function-specific hourly count
   SELECT COALESCE(SUM(request_count), 0)
   INTO v_function_count
-  FROM moltbot_rate_limits
+  FROM ai_moltbot_rate_limits
   WHERE user_id = p_user_id
     AND function_name = p_function_name
     AND window_start = v_hour_start;
@@ -466,7 +466,7 @@ BEGIN
   -- Get burst count (last minute, all functions)
   SELECT COALESCE(SUM(request_count), 0)
   INTO v_burst_count
-  FROM moltbot_rate_limits
+  FROM ai_moltbot_rate_limits
   WHERE user_id = p_user_id
     AND window_start >= v_minute_start;
 
@@ -489,10 +489,10 @@ BEGIN
   END IF;
 
   -- Update rate limit counters
-  INSERT INTO moltbot_rate_limits (user_id, channel, window_start, function_name, request_count, last_request_at)
+  INSERT INTO ai_moltbot_rate_limits (user_id, channel, window_start, function_name, request_count, last_request_at)
   VALUES (p_user_id, p_channel, v_hour_start, p_function_name, 1, NOW())
   ON CONFLICT (user_id, channel, window_start, function_name) DO UPDATE
-  SET request_count = moltbot_rate_limits.request_count + 1,
+  SET request_count = ai_moltbot_rate_limits.request_count + 1,
       last_request_at = NOW();
 
   -- Return success with remaining counts
@@ -512,7 +512,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  UPDATE moltbot_blocked_patterns
+  UPDATE ai_moltbot_blocked_patterns
   SET hit_count = hit_count + 1, last_hit_at = NOW()
   WHERE id = p_pattern_id;
 END;
@@ -522,7 +522,7 @@ $$;
 -- SEED DEFAULT CIRCUIT BREAKER ENTRIES
 -- ============================================================================
 
-INSERT INTO moltbot_circuit_breakers (scope, is_open, reason)
+INSERT INTO ai_moltbot_circuit_breakers (scope, is_open, reason)
 VALUES
   ('global', false, 'Global AI system circuit breaker'),
   ('function:ai-responder', false, 'AI Responder circuit breaker'),
@@ -535,9 +535,9 @@ ON CONFLICT (scope) DO NOTHING;
 -- ============================================================================
 -- SEED ADDITIONAL BLOCKED PATTERNS
 -- ============================================================================
--- These activate the moltbot_blocked_patterns table with common threats
+-- These activate the ai_moltbot_blocked_patterns table with common threats
 
-INSERT INTO moltbot_blocked_patterns (pattern, pattern_type, severity, description, is_active)
+INSERT INTO ai_moltbot_blocked_patterns (pattern, pattern_type, severity, description, is_active)
 VALUES
   -- Additional injection patterns
   ('(?i)system\s*:?\s*you\s+are', 'injection', 'critical', 'System role injection attempt', true),
@@ -566,7 +566,7 @@ ON CONFLICT DO NOTHING;
 -- ============================================================================
 
 -- Update timestamp trigger for circuit breakers
-CREATE OR REPLACE FUNCTION update_moltbot_circuit_breakers_updated_at()
+CREATE OR REPLACE FUNCTION update_ai_moltbot_circuit_breakers_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -574,13 +574,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_moltbot_circuit_breakers_updated_at
-  BEFORE UPDATE ON moltbot_circuit_breakers
+CREATE TRIGGER trigger_ai_moltbot_circuit_breakers_updated_at
+  BEFORE UPDATE ON ai_moltbot_circuit_breakers
   FOR EACH ROW
-  EXECUTE FUNCTION update_moltbot_circuit_breakers_updated_at();
+  EXECUTE FUNCTION update_ai_moltbot_circuit_breakers_updated_at();
 
 -- Update timestamp trigger for threat scores
-CREATE OR REPLACE FUNCTION update_moltbot_user_threat_scores_updated_at()
+CREATE OR REPLACE FUNCTION update_ai_moltbot_user_threat_scores_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -588,28 +588,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_moltbot_user_threat_scores_updated_at
-  BEFORE UPDATE ON moltbot_user_threat_scores
+CREATE TRIGGER trigger_ai_moltbot_user_threat_scores_updated_at
+  BEFORE UPDATE ON ai_moltbot_user_threat_scores
   FOR EACH ROW
-  EXECUTE FUNCTION update_moltbot_user_threat_scores_updated_at();
+  EXECUTE FUNCTION update_ai_moltbot_user_threat_scores_updated_at();
 
 -- ============================================================================
 -- TABLE COMMENTS (per DBA guidelines)
 -- ============================================================================
 
-COMMENT ON TABLE moltbot_circuit_breakers IS 'Emergency stop capability for AI systems - can halt AI at global, function, or user level';
-COMMENT ON TABLE moltbot_user_threat_scores IS 'Cumulative threat tracking for users - detects slow attacks over multiple messages';
-COMMENT ON TABLE moltbot_security_patterns_cache IS 'Cache for loaded security patterns to reduce database queries';
+COMMENT ON TABLE ai_moltbot_circuit_breakers IS 'Emergency stop capability for AI systems - can halt AI at global, function, or user level';
+COMMENT ON TABLE ai_moltbot_user_threat_scores IS 'Cumulative threat tracking for users - detects slow attacks over multiple messages';
+COMMENT ON TABLE ai_moltbot_security_patterns_cache IS 'Cache for loaded security patterns to reduce database queries';
 
-COMMENT ON COLUMN moltbot_circuit_breakers.scope IS 'Circuit breaker scope: global, function:{name}, or user:{uuid}';
-COMMENT ON COLUMN moltbot_circuit_breakers.is_open IS 'Whether the circuit breaker is currently open (blocking AI operations)';
-COMMENT ON COLUMN moltbot_circuit_breakers.trip_count IS 'Number of times this circuit breaker has been tripped';
+COMMENT ON COLUMN ai_moltbot_circuit_breakers.scope IS 'Circuit breaker scope: global, function:{name}, or user:{uuid}';
+COMMENT ON COLUMN ai_moltbot_circuit_breakers.is_open IS 'Whether the circuit breaker is currently open (blocking AI operations)';
+COMMENT ON COLUMN ai_moltbot_circuit_breakers.trip_count IS 'Number of times this circuit breaker has been tripped';
 
-COMMENT ON COLUMN moltbot_user_threat_scores.current_score IS 'Cumulative threat score (0-1000)';
-COMMENT ON COLUMN moltbot_user_threat_scores.event_count_24h IS 'Number of security events in the last 24 hours';
-COMMENT ON COLUMN moltbot_user_threat_scores.event_count_total IS 'Total number of security events for this user';
-COMMENT ON COLUMN moltbot_user_threat_scores.is_flagged IS 'Whether user is flagged for review (score >= 500)';
-COMMENT ON COLUMN moltbot_user_threat_scores.is_blocked IS 'Whether user is blocked from AI services (score >= 800)';
+COMMENT ON COLUMN ai_moltbot_user_threat_scores.current_score IS 'Cumulative threat score (0-1000)';
+COMMENT ON COLUMN ai_moltbot_user_threat_scores.event_count_24h IS 'Number of security events in the last 24 hours';
+COMMENT ON COLUMN ai_moltbot_user_threat_scores.event_count_total IS 'Total number of security events for this user';
+COMMENT ON COLUMN ai_moltbot_user_threat_scores.is_flagged IS 'Whether user is flagged for review (score >= 500)';
+COMMENT ON COLUMN ai_moltbot_user_threat_scores.is_blocked IS 'Whether user is blocked from AI services (score >= 800)';
 
 COMMENT ON FUNCTION is_circuit_breaker_open IS 'Check if any circuit breaker is open for the given context (global > function > user hierarchy)';
 COMMENT ON FUNCTION trip_circuit_breaker IS 'Trip a circuit breaker to stop AI processing for a given scope';
