@@ -13,6 +13,9 @@ export type { DataCardProps, DataCardField, DataCardBadge, DataCardAction } from
 export { DetailRow } from './DetailRow';
 export type { DetailRowProps } from './DetailRow';
 
+export { Section } from './Section';
+export type { SectionProps } from './Section';
+
 export { DocumentCard, DocumentCardCompact } from './DocumentCard';
 export type { DocumentCardProps, DocumentCardDocument } from './DocumentCard';
 
