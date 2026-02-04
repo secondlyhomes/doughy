@@ -9,9 +9,8 @@ import type { NativeStackNavigationOptions } from '@react-navigation/native-stac
 import { Phone, Mail, Building2, MapPin, Star, Tag, Clock, ArrowLeft } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, ListEmptyState, Badge } from '@/components/ui';
+import { LoadingSpinner, ListEmptyState, Badge, Section, DetailRow } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { withOpacity } from '@/lib/design-utils';
 import { SPACING, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';
 import { formatDate } from '@/lib/formatters';
@@ -21,10 +20,8 @@ import { getContactDisplayName, type Contact } from '../types';
 import { useVoipCall } from '@/features/voip';
 
 import {
-  InfoRow,
   ProfileSection,
   QuickActions,
-  Section,
   formatSource,
   getScoreColor,
 } from './contact-detail';
@@ -153,35 +150,40 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
           />
 
           <Section title="Contact Information">
-            {contact!.email && <InfoRow icon={Mail} label="Email" value={contact!.email} onPress={handleEmail} />}
-            {contact!.phone && <InfoRow icon={Phone} label="Phone" value={contact!.phone} onPress={handleCall} />}
-            {contact!.company && <InfoRow icon={Building2} label="Company" value={contact!.company} />}
+            {contact!.email && (
+              <DetailRow icon={Mail} label="Email" value={contact!.email} onPress={handleEmail} iconBackground />
+            )}
+            {contact!.phone && (
+              <DetailRow icon={Phone} label="Phone" value={contact!.phone} onPress={handleCall} iconBackground />
+            )}
+            {contact!.company && (
+              <DetailRow icon={Building2} label="Company" value={contact!.company} iconBackground />
+            )}
             {(contact!.city || contact!.state || contact!.zip) && (
-              <InfoRow
+              <DetailRow
                 icon={MapPin}
                 label="Location"
                 value={[contact!.city, contact!.state, contact!.zip].filter(Boolean).join(', ')}
+                iconBackground
               />
             )}
           </Section>
 
           <Section title="Details">
-            {contact!.source && <InfoRow icon={Tag} label="Source" value={formatSource(contact!.source)} />}
+            {contact!.source && (
+              <DetailRow icon={Tag} label="Source" value={formatSource(contact!.source)} iconBackground />
+            )}
             {contact!.score !== null && contact!.score !== undefined && (
-              <View style={styles.infoRow}>
-                <View style={[styles.infoIcon, { backgroundColor: withOpacity(getScoreColor(contact!.score, colors), 'light') }]}>
-                  <Star size={16} color={getScoreColor(contact!.score, colors)} />
-                </View>
-                <View style={styles.infoContent}>
-                  <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Score</Text>
-                  <Text style={[styles.infoValue, { color: getScoreColor(contact!.score, colors) }]}>
-                    {contact!.score} pts
-                  </Text>
-                </View>
-              </View>
+              <DetailRow
+                icon={Star}
+                label="Score"
+                value={`${contact!.score} pts`}
+                valueColor={getScoreColor(contact!.score, colors)}
+                iconBackground
+              />
             )}
             {contact!.created_at && (
-              <InfoRow icon={Clock} label="Added" value={formatDate(contact!.created_at)} />
+              <DetailRow icon={Clock} label="Added" value={formatDate(contact!.created_at)} iconBackground />
             )}
           </Section>
 
