@@ -29,6 +29,8 @@ export interface DetailRowProps {
   showChevron?: boolean;
   /** Hide the row if value is null/undefined/empty */
   hideIfEmpty?: boolean;
+  /** Show icon in a circular background (primary color, light opacity) */
+  iconBackground?: boolean;
 }
 
 /**
@@ -77,6 +79,7 @@ export function DetailRow({
   layout = 'vertical',
   showChevron,
   hideIfEmpty = false,
+  iconBackground = false,
 }: DetailRowProps) {
   const colors = useThemeColors();
 
@@ -95,7 +98,11 @@ export function DetailRow({
     if (layout === 'horizontal') {
       return (
         <View style={styles.horizontalContainer}>
-          {Icon && (
+          {Icon && iconBackground ? (
+            <View style={[styles.iconCircle, { backgroundColor: withOpacity(colors.primary, 'light') }]}>
+              <Icon size={16} color={colors.primary} />
+            </View>
+          ) : Icon && (
             <Icon
               size={ICON_SIZES.ml}
               color={resolvedIconColor}
@@ -135,7 +142,11 @@ export function DetailRow({
     // Vertical layout
     return (
       <View style={styles.verticalContainer}>
-        {Icon && (
+        {Icon && iconBackground ? (
+          <View style={[styles.iconCircle, { backgroundColor: withOpacity(colors.primary, 'light') }]}>
+            <Icon size={16} color={colors.primary} />
+          </View>
+        ) : Icon && (
           <Icon
             size={ICON_SIZES.ml}
             color={resolvedIconColor}
@@ -205,6 +216,14 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: SPACING.md,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.sm,
   },
   label: {
     fontSize: FONT_SIZES.xs,
