@@ -8,10 +8,22 @@ export interface RealtimeConfig {
   channelName: string;
   userId: string;
   tables: Array<{
-    tableName: string;
+    tableName: string; // Can be 'schema.table' format or just 'table' (defaults to public)
     onEvent: (payload: Record<string, unknown>) => Promise<void>;
   }>;
   onStatusChange?: (status: SubscriptionStatus) => void;
+}
+
+/**
+ * Parse a table name that may include a schema prefix (e.g., 'investor.conversations')
+ * Returns the schema and table name separately
+ */
+function parseTableName(tableName: string): { schema: string; table: string } {
+  if (tableName.includes('.')) {
+    const [schema, table] = tableName.split('.');
+    return { schema, table };
+  }
+  return { schema: 'public', table: tableName };
 }
 
 export type SubscriptionStatus = {
@@ -62,25 +74,27 @@ export function createRealtimeSubscription(config: RealtimeConfig): () => void {
     const channelBuilder = supabase.channel(channelName);
 
     // Add listeners for each table
-    for (const table of tables) {
+    for (const tableConfig of tables) {
+      const { schema, table } = parseTableName(tableConfig.tableName);
+
       if (useFilters) {
         channelBuilder.on(
           'postgres_changes',
           {
             event: '*',
-            schema: 'public',
-            table: table.tableName,
+            schema,
+            table,
             filter: `user_id=eq.${userId}`,
           },
           async (payload) => {
             if (isCleanedUp) return;
             if (__DEV__) {
-              console.log(`[Real-time] ${table.tableName} change:`, payload.eventType);
+              console.log(`[Real-time] ${schema}.${table} change:`, payload.eventType);
             }
             try {
-              await table.onEvent(payload.new as Record<string, unknown>);
+              await tableConfig.onEvent(payload.new as Record<string, unknown>);
             } catch (error) {
-              console.warn(`[Real-time] Failed to handle ${table.tableName} event`, {
+              console.warn(`[Real-time] Failed to handle ${schema}.${table} event`, {
                 error: error instanceof Error ? error.message : String(error),
               });
             }
@@ -92,8 +106,8 @@ export function createRealtimeSubscription(config: RealtimeConfig): () => void {
           'postgres_changes',
           {
             event: '*',
-            schema: 'public',
-            table: table.tableName,
+            schema,
+            table,
           },
           async (payload) => {
             if (isCleanedUp) return;
@@ -102,12 +116,12 @@ export function createRealtimeSubscription(config: RealtimeConfig): () => void {
             if (record?.user_id !== userId) return;
 
             if (__DEV__) {
-              console.log(`[Real-time] ${table.tableName} change:`, payload.eventType);
+              console.log(`[Real-time] ${schema}.${table} change:`, payload.eventType);
             }
             try {
-              await table.onEvent(record);
+              await tableConfig.onEvent(record);
             } catch (error) {
-              console.warn(`[Real-time] Failed to handle ${table.tableName} event`, {
+              console.warn(`[Real-time] Failed to handle ${schema}.${table} event`, {
                 error: error instanceof Error ? error.message : String(error),
               });
             }
@@ -220,7 +234,7 @@ export function createRealtimeSubscription(config: RealtimeConfig): () => void {
  */
 export function createMessageSubscription(
   conversationId: string,
-  tableName: string,
+  tableName: string, // Can be 'schema.table' format or just 'table' (defaults to public)
   onNewMessage: (message: Record<string, unknown>) => void
 ): () => void {
   let isCleanedUp = false;
@@ -228,19 +242,20 @@ export function createMessageSubscription(
   let useFilter = true;
   let retryCount = 0;
   const maxRetries = 2;
+  const { schema, table } = parseTableName(tableName);
 
   const subscribe = () => {
     if (isCleanedUp) return;
 
-    const channelBuilder = supabase.channel(`${tableName}-${conversationId}`);
+    const channelBuilder = supabase.channel(`${schema}.${table}-${conversationId}`);
 
     if (useFilter) {
       channelBuilder.on(
         'postgres_changes',
         {
           event: 'INSERT',
-          schema: 'public',
-          table: tableName,
+          schema,
+          table,
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
@@ -253,8 +268,8 @@ export function createMessageSubscription(
         'postgres_changes',
         {
           event: 'INSERT',
-          schema: 'public',
-          table: tableName,
+          schema,
+          table,
         },
         (payload) => {
           if (isCleanedUp) return;
@@ -271,7 +286,7 @@ export function createMessageSubscription(
       if (status === 'SUBSCRIBED') {
         retryCount = 0;
         if (__DEV__) {
-          console.log(`[Real-time] ${tableName} subscription active for ${conversationId}`);
+          console.log(`[Real-time] ${schema}.${table} subscription active for ${conversationId}`);
         }
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
         const errorMessage = error?.message || String(error) || '';
@@ -279,7 +294,7 @@ export function createMessageSubscription(
 
         if (isMismatchError && useFilter && !isCleanedUp) {
           if (__DEV__) {
-            console.log(`[Real-time] ${tableName} filter mismatch, retrying without filter`);
+            console.log(`[Real-time] ${schema}.${table} filter mismatch, retrying without filter`);
           }
           useFilter = false;
           if (channel) {
@@ -299,7 +314,7 @@ export function createMessageSubscription(
         }
 
         if (__DEV__) {
-          console.log(`[Real-time] ${tableName} subscription gave up for ${conversationId}`);
+          console.log(`[Real-time] ${schema}.${table} subscription gave up for ${conversationId}`);
         }
       }
     });
@@ -325,7 +340,7 @@ export function createMessageSubscription(
   return () => {
     isCleanedUp = true;
     if (__DEV__) {
-      console.log(`[Real-time] Unsubscribing from ${tableName} for ${conversationId}`);
+      console.log(`[Real-time] Unsubscribing from ${schema}.${table} for ${conversationId}`);
     }
     if (channel) {
       supabase.removeChannel(channel);

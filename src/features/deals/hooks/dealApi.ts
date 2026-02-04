@@ -1,11 +1,13 @@
 // src/features/deals/hooks/dealApi.ts
 // API functions for deal CRUD operations
+// Uses RPC functions for cross-schema queries
 
-import { supabase } from '@/lib/supabase';
+import { supabase, db } from '@/lib/supabase';
+import { getDealsWithLead, getDealById as getDealByIdRPC } from '@/lib/rpc/investor';
+import { mapDealRPC } from '@/lib/rpc/mappers';
 import type { Deal } from '../types';
 import type {
   DealRow,
-  DealWithRelations,
   DealsFilters,
   CreateDealInput,
   PaginatedDealsResult,
@@ -13,121 +15,19 @@ import type {
 import { PAGE_SIZE } from './dealTypes';
 
 // ============================================
-// Mappers
-// ============================================
-
-function mapDealRowToDeal(row: DealWithRelations): Deal {
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    lead_id: row.lead_id,
-    property_id: row.property_id,
-    stage: row.stage || 'new',
-    strategy: row.strategy,
-    next_action: row.next_action,
-    next_action_due: row.next_action_due,
-    risk_score: row.risk_score,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    lead: row.lead
-      ? {
-          id: row.lead.id,
-          name: row.lead.name,
-          phone: row.lead.phone,
-          email: row.lead.email,
-          status: row.lead.status,
-          score: row.lead.score,
-          tags: row.lead.tags,
-        }
-      : undefined,
-    property: row.property
-      ? {
-          id: row.property.id,
-          address: row.property.address_line_1,
-          address_line_1: row.property.address_line_1,
-          address_line_2: row.property.address_line_2,
-          city: row.property.city,
-          state: row.property.state,
-          zip: row.property.zip,
-          county: row.property.county,
-          bedrooms: row.property.bedrooms,
-          bathrooms: row.property.bathrooms,
-          sqft: row.property.square_feet,
-          square_feet: row.property.square_feet,
-          lot_size: row.property.lot_size,
-          lotSize: row.property.lot_size,
-          year_built: row.property.year_built,
-          yearBuilt: row.property.year_built,
-          propertyType: row.property.property_type,
-          property_type: row.property.property_type,
-          arv: row.property.arv,
-          purchase_price: row.property.purchase_price,
-          notes: row.property.notes,
-          status: row.property.status,
-        }
-      : undefined,
-  } as Deal;
-}
-
-// ============================================
-// Query builders
-// ============================================
-
-const DEAL_SELECT_QUERY = `
-  *,
-  lead:crm_leads(id, name, phone, email, status, score),
-  property:investor_properties(id, address_line_1, city, state, zip, bedrooms, bathrooms, square_feet, arv, purchase_price)
-`;
-
-const DEAL_SELECT_QUERY_FULL = `
-  *,
-  lead:crm_leads(id, name, phone, email, status, score, tags),
-  property:investor_properties(id, address_line_1, address_line_2, city, state, zip, county, bedrooms, bathrooms, square_feet, lot_size, year_built, property_type, arv, purchase_price, notes, status)
-`;
-
-function applyFilters(
-  query: ReturnType<typeof supabase.from>,
-  filters?: DealsFilters
-) {
-  let q = query;
-
-  if (filters?.stage && filters.stage !== 'all') {
-    q = q.eq('stage', filters.stage);
-  }
-
-  if (filters?.strategy) {
-    q = q.eq('strategy', filters.strategy);
-  }
-
-  if (filters?.activeOnly) {
-    q = q.not('stage', 'in', '(closed_won,closed_lost)');
-  }
-
-  // Apply sorting
-  const sortBy = filters?.sortBy || 'created_at';
-  const ascending = filters?.sortDirection === 'asc';
-  q = q.order(sortBy, { ascending, nullsFirst: false });
-
-  return q;
-}
-
-// ============================================
-// Fetch functions
+// Fetch functions (using RPC)
 // ============================================
 
 export async function fetchDeals(filters?: DealsFilters): Promise<Deal[]> {
-  let query = supabase.from('investor_deals_pipeline').select(DEAL_SELECT_QUERY);
+  const data = await getDealsWithLead({
+    stage: filters?.stage !== 'all' ? filters?.stage : undefined,
+    strategy: filters?.strategy,
+    activeOnly: filters?.activeOnly,
+    sortBy: filters?.sortBy as 'created_at' | 'updated_at' | 'next_action_due',
+    sortDirection: filters?.sortDirection,
+  });
 
-  query = applyFilters(query, filters);
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching deals:', error);
-    throw error;
-  }
-
-  return (data || []).map((row: DealWithRelations) => mapDealRowToDeal(row));
+  return data.map(mapDealRPC) as Deal[];
 }
 
 export async function fetchDealsPaginated(
@@ -135,25 +35,20 @@ export async function fetchDealsPaginated(
   filters?: DealsFilters
 ): Promise<PaginatedDealsResult> {
   const from = pageParam * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
 
-  let query = supabase
-    .from('investor_deals_pipeline')
-    .select(DEAL_SELECT_QUERY, { count: 'exact' });
+  const data = await getDealsWithLead({
+    stage: filters?.stage !== 'all' ? filters?.stage : undefined,
+    strategy: filters?.strategy,
+    activeOnly: filters?.activeOnly,
+    sortBy: filters?.sortBy as 'created_at' | 'updated_at' | 'next_action_due',
+    sortDirection: filters?.sortDirection,
+    limit: PAGE_SIZE,
+    offset: from,
+  });
 
-  query = applyFilters(query, filters);
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
-
-  if (error) {
-    console.error('Error fetching paginated deals:', error);
-    throw error;
-  }
-
-  const deals = (data || []).map((row: DealWithRelations) => mapDealRowToDeal(row));
-  const totalCount = count || 0;
-  const hasMore = (pageParam + 1) * PAGE_SIZE < totalCount;
+  const deals = data.map(mapDealRPC) as Deal[];
+  // RPC doesn't return count, so we determine hasMore by checking if we got a full page
+  const hasMore = data.length === PAGE_SIZE;
 
   return {
     deals,
@@ -163,23 +58,9 @@ export async function fetchDealsPaginated(
 }
 
 export async function fetchDealById(id: string): Promise<Deal | null> {
-  const { data, error } = await supabase
-    .from('investor_deals_pipeline')
-    .select(DEAL_SELECT_QUERY_FULL)
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return null;
-    }
-    console.error('Error fetching deal:', error);
-    throw error;
-  }
-
+  const data = await getDealByIdRPC(id);
   if (!data) return null;
-
-  return mapDealRowToDeal(data as DealWithRelations);
+  return mapDealRPC(data) as Deal;
 }
 
 // ============================================
@@ -206,7 +87,7 @@ export async function createDeal(dealData: CreateDealInput): Promise<Deal> {
   };
 
   const { data, error } = await supabase
-    .from('investor_deals_pipeline')
+    .schema('investor').from('deals_pipeline')
     .insert(insertData)
     .select()
     .single();
@@ -247,7 +128,7 @@ export async function updateDeal(
   if (updates.property_id !== undefined) updateData.property_id = updates.property_id;
 
   const { data, error } = await supabase
-    .from('investor_deals_pipeline')
+    .schema('investor').from('deals_pipeline')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -276,7 +157,7 @@ export async function updateDeal(
 
 export async function deleteDeal(id: string): Promise<void> {
   const { error } = await supabase
-    .from('investor_deals_pipeline')
+    .schema('investor').from('deals_pipeline')
     .delete()
     .eq('id', id);
 

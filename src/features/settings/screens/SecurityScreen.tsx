@@ -10,9 +10,8 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import {
-  ArrowLeft,
   Shield,
   Smartphone,
   Key,
@@ -22,14 +21,16 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { LoadingSpinner, Button, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import {
   listMFAFactors,
   unenrollMFA,
   isMFAEnabled,
   type MFAFactor,
 } from '@/features/auth/services/mfaService';
+import { formatDate } from '@/lib/formatters';
 
 export function SecurityScreen() {
   const router = useRouter();
@@ -39,6 +40,11 @@ export function SecurityScreen() {
   const [mfaFactors, setMfaFactors] = useState<MFAFactor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Security',
+    fallbackRoute: '/(tabs)/settings',
+  });
 
   // Load MFA status
   useEffect(() => {
@@ -114,19 +120,20 @@ export function SecurityScreen() {
 
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1">
-        <ScreenHeader title="Security" backButton bordered />
-        <LoadingSpinner fullScreen />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader title="Security" backButton bordered />
-
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Two-Factor Authentication */}
         <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           TWO-FACTOR AUTHENTICATION
@@ -172,7 +179,7 @@ export function SecurityScreen() {
                   {factor.friendlyName || 'Authenticator App'}
                 </Text>
                 <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-                  Added {new Date(factor.createdAt).toLocaleDateString()}
+                  Added {formatDate(factor.createdAt)}
                 </Text>
               </View>
               <Button
@@ -253,7 +260,8 @@ export function SecurityScreen() {
             </Text>
           </View>
         </View>
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

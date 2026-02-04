@@ -23,7 +23,7 @@ async function fetchPropertyTimeline(propertyId: string): Promise<TimelineEvent[
 
   // Fetch capture items assigned to this property
   const { data: captures, error: capturesError } = await supabase
-    .from('ai_capture_items')
+    .schema('ai').from('capture_items')
     .select('id, type, title, created_at, transcript, content')
     .eq('assigned_property_id', propertyId)
     .order('created_at', { ascending: false })
@@ -62,14 +62,14 @@ async function fetchPropertyTimeline(propertyId: string): Promise<TimelineEvent[
 
   // Fetch deals for this property and their events
   const { data: deals, error: dealsError } = await supabase
-    .from('investor_deals_pipeline')
+    .schema('investor').from('deals_pipeline')
     .select(`
       id,
       stage,
       created_at,
       updated_at,
       next_action,
-      events:investor_deal_events(id, event_type, description, created_at)
+      events:deal_events(id, event_type, description, created_at)
     `)
     .eq('property_id', propertyId)
     .order('created_at', { ascending: false })

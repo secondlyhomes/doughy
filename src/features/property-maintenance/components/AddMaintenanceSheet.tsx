@@ -1,12 +1,13 @@
 // src/features/property-maintenance/components/AddMaintenanceSheet.tsx
-// Bottom sheet for reporting a new maintenance issue with voice input
+// Focused sheet for reporting a new maintenance issue with voice input
+// Uses FocusedSheet for voice memo + photos + 5 fields media capture flow
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, Alert } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import {
-  BottomSheet,
-  BottomSheetSection,
+  FocusedSheet,
+  FocusedSheetSection,
   Button,
   Input,
   Select,
@@ -14,7 +15,7 @@ import {
   PhotoGallery,
 } from '@/components/ui';
 import { VoiceRecordButton } from '@/components/ui/VoiceRecordButton';
-import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { FONT_SIZES } from '@/constants/design-tokens';
 import {
   MaintenanceCategory,
   MaintenancePriority,
@@ -152,120 +153,124 @@ export function AddMaintenanceSheet({
   ];
 
   return (
-    <BottomSheet
+    <FocusedSheet
       visible={visible}
       onClose={onClose}
       title="Report Issue"
-      snapPoints={['90%']}
+      subtitle="Document maintenance problem"
+      doneLabel="Report Issue"
+      onDone={handleSubmit}
+      doneDisabled={!title.trim()}
+      isSubmitting={isCreating}
     >
       {/* Photos Section */}
-        <BottomSheetSection title="Photos">
-          <PhotoGallery
-            photos={photos.map((p, i) => ({
-              id: p.url,
-              url: p.url,
-              caption: p.caption,
-              type: p.type,
-            }))}
-            onAddPhoto={handleAddPhoto}
-            onRemovePhoto={handleRemovePhoto}
-            editable
-            maxPhotos={5}
-            size="medium"
-            emptyText="Add photos of the issue"
+      <FocusedSheetSection title="Photos">
+        <PhotoGallery
+          photos={photos.map((p) => ({
+            id: p.url,
+            url: p.url,
+            caption: p.caption,
+            type: p.type,
+          }))}
+          onAddPhoto={handleAddPhoto}
+          onRemovePhoto={handleRemovePhoto}
+          editable
+          maxPhotos={5}
+          size="medium"
+          emptyText="Add photos of the issue"
+        />
+      </FocusedSheetSection>
+
+      {/* Issue Details */}
+      <FocusedSheetSection title="Issue Details">
+        <FormField label="Title" required>
+          <View className="flex-row items-end gap-2">
+            <View className="flex-1">
+              <Input
+                value={title}
+                onChangeText={setTitle}
+                placeholder="e.g., Leaking faucet in kitchen"
+                autoCapitalize="sentences"
+              />
+            </View>
+            <VoiceRecordButton
+              onTranscription={handleVoiceTitleResult}
+              size="sm"
+            />
+          </View>
+        </FormField>
+
+        <FormField label="Description" className="mt-3">
+          <View className="flex-row items-end gap-2">
+            <View className="flex-1">
+              <Input
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Describe the issue in detail..."
+                multiline
+                numberOfLines={4}
+                style={{ minHeight: 100 }}
+              />
+            </View>
+            <VoiceRecordButton
+              onTranscription={handleVoiceResult}
+              size="md"
+            />
+          </View>
+        </FormField>
+
+        <FormField label="Category" className="mt-3">
+          <Select
+            value={category}
+            onValueChange={(v) => setCategory(v as MaintenanceCategory)}
+            options={categoryOptions}
           />
-        </BottomSheetSection>
+        </FormField>
 
-        {/* Issue Details */}
-        <BottomSheetSection title="Issue Details">
-          <FormField label="Title" required>
-            <View className="flex-row items-end gap-2">
-              <View className="flex-1">
-                <Input
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder="e.g., Leaking faucet in kitchen"
-                  autoCapitalize="sentences"
-                />
-              </View>
-              <VoiceRecordButton
-                onTranscription={handleVoiceTitleResult}
-                size="sm"
-              />
-            </View>
-          </FormField>
+        <FormField label="Location" className="mt-3">
+          <Select
+            value={location}
+            onValueChange={setLocation}
+            options={locationOptions}
+            placeholder="Select location..."
+          />
+        </FormField>
+      </FocusedSheetSection>
 
-          <FormField label="Description" className="mt-3">
-            <View className="flex-row items-end gap-2">
-              <View className="flex-1">
-                <Input
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Describe the issue in detail..."
-                  multiline
-                  numberOfLines={4}
-                  style={{ minHeight: 100 }}
-                />
-              </View>
-              <VoiceRecordButton
-                onTranscription={handleVoiceResult}
-                size="md"
-              />
-            </View>
-          </FormField>
+      {/* Priority & Charge */}
+      <FocusedSheetSection title="Priority & Billing">
+        <FormField label="Priority">
+          <Select
+            value={priority}
+            onValueChange={(v) => setPriority(v as MaintenancePriority)}
+            options={priorityOptions}
+          />
+        </FormField>
 
-          <FormField label="Category" className="mt-3">
-            <Select
-              value={category}
-              onValueChange={(v) => setCategory(v as MaintenanceCategory)}
-              options={categoryOptions}
-            />
-          </FormField>
+        <FormField label="Charge To" className="mt-3">
+          <Select
+            value={chargeTo}
+            onValueChange={(v) => setChargeTo(v as MaintenanceChargeTo)}
+            options={chargeToOptions}
+          />
+        </FormField>
 
-          <FormField label="Location" className="mt-3">
-            <Select
-              value={location}
-              onValueChange={setLocation}
-              options={locationOptions}
-              placeholder="Select location..."
-            />
-          </FormField>
-        </BottomSheetSection>
-
-        {/* Priority & Charge */}
-        <BottomSheetSection title="Priority & Billing">
-          <FormField label="Priority">
-            <Select
-              value={priority}
-              onValueChange={(v) => setPriority(v as MaintenancePriority)}
-              options={priorityOptions}
-            />
-          </FormField>
-
-          <FormField label="Charge To" className="mt-3">
-            <Select
-              value={chargeTo}
-              onValueChange={(v) => setChargeTo(v as MaintenanceChargeTo)}
-              options={chargeToOptions}
-            />
-          </FormField>
-
-          <FormField label="Estimated Cost" className="mt-3">
-            <Input
-              value={estimatedCost}
-              onChangeText={setEstimatedCost}
-              placeholder="0.00"
-              keyboardType="decimal-pad"
-              leftIcon={
-                <Text style={{ color: colors.mutedForeground }}>$</Text>
-              }
-            />
-          </FormField>
-        </BottomSheetSection>
+        <FormField label="Estimated Cost" className="mt-3">
+          <Input
+            value={estimatedCost}
+            onChangeText={setEstimatedCost}
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+            leftIcon={
+              <Text style={{ color: colors.mutedForeground }}>$</Text>
+            }
+          />
+        </FormField>
+      </FocusedSheetSection>
 
       {/* Context Info */}
       {(initialInventoryItemName || initialBookingId) && (
-        <BottomSheetSection title="Linked To">
+        <FocusedSheetSection title="Linked To">
           {initialInventoryItemName && (
             <View
               className="p-3 rounded-lg mb-2"
@@ -292,31 +297,9 @@ export function AddMaintenanceSheet({
               </Text>
             </View>
           )}
-        </BottomSheetSection>
+        </FocusedSheetSection>
       )}
-
-      {/* Footer Actions */}
-      <View
-        className="flex-row gap-3 pt-4 pb-6 px-4"
-        style={{ borderTopWidth: 1, borderTopColor: colors.border }}
-      >
-        <Button
-          variant="outline"
-          onPress={onClose}
-          className="flex-1"
-          disabled={isCreating}
-        >
-          Cancel
-        </Button>
-        <Button
-          onPress={handleSubmit}
-          className="flex-1"
-          disabled={isCreating || !title.trim()}
-        >
-          {isCreating ? 'Reporting...' : 'Report Issue'}
-        </Button>
-      </View>
-    </BottomSheet>
+    </FocusedSheet>
   );
 }
 

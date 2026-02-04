@@ -203,7 +203,7 @@ export function DashboardScreen() {
   };
 
   const handleStartChat = () => {
-    router.push('/assistant');
+    router.push('/(tabs)/assistant');
   };
 
   return (

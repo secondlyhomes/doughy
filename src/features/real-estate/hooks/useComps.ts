@@ -37,7 +37,7 @@ export function useComps({ propertyId }: UseCompsOptions): UseCompsReturn {
       setError(null);
 
       const { data, error: queryError } = await supabase
-        .from('investor_comps')
+        .schema('investor').from('comps')
         .select('*')
         .eq('property_id', propertyId)
         .order('created_at', { ascending: false });
@@ -161,7 +161,7 @@ export function useCompMutations() {
       };
 
       const { data, error: insertError } = await supabase
-        .from('investor_comps')
+        .schema('investor').from('comps')
         .insert(insertData)
         .select()
         .single();
@@ -211,7 +211,7 @@ export function useCompMutations() {
       if (updates.distance !== undefined) updateData.distance = updates.distance;
 
       const { data, error: updateError } = await supabase
-        .from('investor_comps')
+        .schema('investor').from('comps')
         .update(updateData)
         .eq('id', compId)
         .select()
@@ -238,7 +238,7 @@ export function useCompMutations() {
       setError(null);
 
       const { error: deleteError } = await supabase
-        .from('investor_comps')
+        .schema('investor').from('comps')
         .delete()
         .eq('id', compId);
 

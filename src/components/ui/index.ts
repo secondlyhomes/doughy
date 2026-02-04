@@ -73,7 +73,7 @@ export { Label } from './Label';
 export type { LabelProps } from './Label';
 
 export { Badge } from './Badge';
-export type { BadgeProps } from './Badge';
+export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
 
 export { Switch } from './Switch';
 export type { SwitchProps } from './Switch';
@@ -259,9 +259,22 @@ export type { OTPInputProps } from './OTPInput';
 export { AddressAutocomplete } from './AddressAutocomplete';
 export type { AddressAutocompleteProps, AddressValue } from './AddressAutocomplete';
 
+// New unified address autofill (combines DB + OSM with verification)
+export { AddressAutofill, AddressSuggestionItem, useAddressAutofill } from './AddressAutofill';
+export type {
+  AddressAutofillProps,
+  AddressValue as AddressAutofillValue,
+  AddressSource,
+  AddressSuggestion,
+} from './AddressAutofill';
+
 // Bottom Sheet
 export { BottomSheet, BottomSheetSection } from './BottomSheet';
 export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';
+
+// Focused Sheet (iOS Page Sheet for complex forms)
+export { FocusedSheet, FocusedSheetSection, FocusedSheetFooter } from './FocusedSheet';
+export type { FocusedSheetProps, FocusedSheetSectionProps, FocusedSheetFooterProps } from './FocusedSheet';
 
 // Filter Sheet (built on BottomSheet/Modal)
 export {

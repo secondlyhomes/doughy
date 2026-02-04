@@ -326,11 +326,11 @@ describe('useRentalConversationsStore', () => {
         await store.fetchConversations();
       });
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('landlord_conversations');
-      // Verify select includes relations
+      expect(mockSupabase.from).toHaveBeenCalledWith('conversations');
+      // Verify select includes relations (using FK hint format)
       const selectQuery = selectMock.mock.calls[0][0];
-      expect(selectQuery).toContain('contact:crm_contacts');
-      expect(selectQuery).toContain('property:landlord_properties');
+      expect(selectQuery).toContain('contact:contacts!landlord_conversations_contact_id_fkey');
+      expect(selectQuery).toContain('property:properties');
     });
   });
 

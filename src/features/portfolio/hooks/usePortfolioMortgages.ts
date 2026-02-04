@@ -28,7 +28,7 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
       if (!portfolioEntryId) return [];
 
       const { data, error } = await supabase
-        .from('investor_portfolio_mortgages')
+        .schema('investor').from('portfolio_mortgages')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId)
         .order('is_primary', { ascending: false });
@@ -48,14 +48,19 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
     mutationFn: async (input: MortgageInput): Promise<PortfolioMortgage> => {
       // If this is primary, unset any existing primary
       if (input.is_primary !== false) {
-        await supabase
-          .from('investor_portfolio_mortgages')
+        const { error: unsetError } = await supabase
+          .schema('investor').from('portfolio_mortgages')
           .update({ is_primary: false })
           .eq('portfolio_entry_id', input.portfolio_entry_id);
+
+        if (unsetError) {
+          console.error('[usePortfolioMortgages] Failed to unset existing primary:', unsetError);
+          throw new Error('Failed to update existing mortgages. Please try again.');
+        }
       }
 
       const { data, error } = await supabase
-        .from('investor_portfolio_mortgages')
+        .schema('investor').from('portfolio_mortgages')
         .insert({
           portfolio_entry_id: input.portfolio_entry_id,
           lender_name: input.lender_name,
@@ -94,15 +99,20 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
     }): Promise<PortfolioMortgage> => {
       // If setting as primary, unset any existing primary
       if (updates.is_primary === true && portfolioEntryId) {
-        await supabase
-          .from('investor_portfolio_mortgages')
+        const { error: unsetError } = await supabase
+          .schema('investor').from('portfolio_mortgages')
           .update({ is_primary: false })
           .eq('portfolio_entry_id', portfolioEntryId)
           .neq('id', id);
+
+        if (unsetError) {
+          console.error('[usePortfolioMortgages] Failed to unset existing primary:', unsetError);
+          throw new Error('Failed to update existing mortgages. Please try again.');
+        }
       }
 
       const { data, error } = await supabase
-        .from('investor_portfolio_mortgages')
+        .schema('investor').from('portfolio_mortgages')
         .update(updates)
         .eq('id', id)
         .select()
@@ -121,7 +131,7 @@ export function usePortfolioMortgages(portfolioEntryId: string | undefined) {
   const deleteMortgage = useMutation({
     mutationFn: async (id: string): Promise<void> => {
       const { error } = await supabase
-        .from('investor_portfolio_mortgages')
+        .schema('investor').from('portfolio_mortgages')
         .delete()
         .eq('id', id);
 

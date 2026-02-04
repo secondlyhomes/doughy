@@ -15,12 +15,12 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import {
-  LoadingSpinner,
   SimpleFAB,
   TAB_BAR_SAFE_PADDING,
   Badge,
   ListEmptyState,
 } from '@/components/ui';
+import { SkeletonList, ListItemSkeleton } from '@/components/ui/CardSkeletons';
 import { SPACING, FONT_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { useNativeHeader } from '@/hooks';
 import { useTurnovers } from '../hooks/useTurnovers';
@@ -164,7 +164,9 @@ export function TurnoversListScreen() {
       <>
         <Stack.Screen options={headerOptions} />
         <ThemedSafeAreaView className="flex-1" edges={[]}>
-          <LoadingSpinner fullScreen text="Loading turnovers..." />
+          <View style={{ padding: SPACING.md }}>
+            <SkeletonList count={5} component={ListItemSkeleton} />
+          </View>
         </ThemedSafeAreaView>
       </>
     );

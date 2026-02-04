@@ -10,9 +10,8 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import {
-  ArrowLeft,
   ExternalLink,
   FileText,
   Shield,
@@ -21,18 +20,21 @@ import {
   Info,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNativeHeader } from '@/hooks';
 import Constants from 'expo-constants';
 
 const APP_VERSION = Constants.expoConfig?.version || '1.0.0';
 const BUILD_NUMBER = Constants.expoConfig?.ios?.buildNumber || '1';
 
 export function AboutScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
+
+  const { headerOptions } = useNativeHeader({
+    title: 'About',
+    fallbackRoute: '/(tabs)/settings',
+  });
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -57,11 +59,10 @@ export function AboutScreen() {
   };
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader title="About" backButton bordered />
-
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* App Logo and Info */}
         <View className="items-center mb-8">
           <View className="w-24 h-24 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: colors.primary }}>
@@ -140,8 +141,9 @@ export function AboutScreen() {
             © {new Date().getFullYear()} Doughy AI. All rights reserved.
           </Text>
         </View>
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

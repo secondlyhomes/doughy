@@ -42,7 +42,7 @@ export async function createBookings(
   }));
 
   const { data: bookings, error } = await supabase
-    .from('landlord_bookings')
+    .schema('landlord').from('bookings')
     .insert(bookingInserts)
     .select();
 
@@ -63,7 +63,7 @@ export async function deleteUserBookings(userId: string): Promise<{ errors: Arra
 
   // Get booking IDs first
   const { data: bookings } = await supabase
-    .from('landlord_bookings')
+    .schema('landlord').from('bookings')
     .select('id')
     .eq('user_id', userId);
   const bookingIds = bookings?.map((b) => b.id) || [];
@@ -71,29 +71,29 @@ export async function deleteUserBookings(userId: string): Promise<{ errors: Arra
   // Delete booking-related data first
   if (bookingIds.length > 0) {
     const { error: chargesError } = await supabase
-      .from('landlord_booking_charges')
+      .schema('landlord').from('booking_charges')
       .delete()
       .in('booking_id', bookingIds);
     if (chargesError) {
-      errors.push({ table: 'booking_charges', message: chargesError.message });
+      errors.push({ table: 'landlord.booking_charges', message: chargesError.message });
     }
 
     const { error: settlementsError } = await supabase
-      .from('landlord_deposit_settlements')
+      .schema('landlord').from('deposit_settlements')
       .delete()
       .in('booking_id', bookingIds);
     if (settlementsError) {
-      errors.push({ table: 'deposit_settlements', message: settlementsError.message });
+      errors.push({ table: 'landlord.deposit_settlements', message: settlementsError.message });
     }
   }
 
   // Delete bookings
   const { error: bookingsError } = await supabase
-    .from('landlord_bookings')
+    .schema('landlord').from('bookings')
     .delete()
     .eq('user_id', userId);
   if (bookingsError) {
-    errors.push({ table: 'landlord_bookings', message: bookingsError.message });
+    errors.push({ table: 'landlord.bookings', message: bookingsError.message });
   }
 
   return { errors };

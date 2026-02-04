@@ -74,7 +74,7 @@ export const usePropertyStore = create<PropertyStore>()(
 
         try {
           const { data, error } = await supabase
-            .from('investor_properties')
+            .schema('investor').from('properties')
             .select('*')
             .eq('id', id)
             .single();
@@ -121,7 +121,7 @@ export const usePropertyStore = create<PropertyStore>()(
         try {
           const dbData = mapBasicInfoToDbUpdate(data);
           const { data: updatedData, error } = await supabase
-            .from('investor_properties')
+            .schema('investor').from('properties')
             .update(dbData)
             .eq('id', selectedPropertyId)
             .select()

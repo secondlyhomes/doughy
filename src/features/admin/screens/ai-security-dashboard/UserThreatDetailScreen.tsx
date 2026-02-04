@@ -11,13 +11,14 @@ import {
   Alert,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, Badge, ScreenHeader, StepUpVerificationSheet } from '@/components/ui';
+import { Button, Badge, StepUpVerificationSheet } from '@/components/ui';
 import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useNativeHeader } from '@/hooks';
 import { useStepUpAuth } from '@/features/auth/hooks';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { supabase } from '@/lib/supabase';
@@ -40,6 +41,11 @@ export function UserThreatDetailScreen() {
   const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
+  const { headerOptions } = useNativeHeader({
+    title: 'User Threat Details',
+    fallbackRoute: '/(tabs)/admin/ai-security',
+  });
+
   // Load user data
   const loadUserData = useCallback(async () => {
     if (!userId) return;
@@ -58,7 +64,7 @@ export function UserThreatDetailScreen() {
 
       // Get threat score
       const { data: scoreData } = await supabase
-        .from('ai_moltbot_user_threat_scores' as 'profiles')
+        .schema('ai').from('moltbot_user_threat_scores' as unknown as 'profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -75,7 +81,7 @@ export function UserThreatDetailScreen() {
 
       // Get security events for this user
       const { data: eventsData } = await supabase
-        .from('ai_moltbot_security_logs' as 'profiles')
+        .schema('ai').from('moltbot_security_logs' as unknown as 'profiles')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -126,7 +132,7 @@ export function UserThreatDetailScreen() {
       setActionLoading('reset');
       try {
         const { error } = await supabase
-          .from('ai_moltbot_user_threat_scores' as 'profiles')
+          .schema('ai').from('moltbot_user_threat_scores' as unknown as 'profiles')
           .update({
             current_score: 0,
             event_count_24h: 0,
@@ -146,45 +152,45 @@ export function UserThreatDetailScreen() {
     }
   }, [userId, loadUserData, requireStepUp]);
 
-  // Block user
-  const handleBlockUser = useCallback(() => {
-    Alert.alert(
-      'Block User',
-      'This will prevent the user from using AI features. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            setActionLoading('block');
-            try {
-              // Update user profile to blocked
-              const { error } = await supabase
-                .from('profiles')
-                .update({ is_blocked: true })
-                .eq('id', userId);
+  // Block user - requires step-up MFA (destructive action)
+  const handleBlockUser = useCallback(async () => {
+    const verified = await requireStepUp({
+      reason: 'Block user from AI features',
+      actionType: 'user_block',
+    });
 
-              if (error) throw error;
+    if (verified) {
+      setActionLoading('block');
+      try {
+        // Update user profile to blocked
+        const { error } = await supabase
+          .from('profiles')
+          .update({ is_blocked: true })
+          .eq('id', userId);
 
-              // Also flag in threat scores
-              await supabase
-                .from('ai_moltbot_user_threat_scores' as 'profiles')
-                .update({ is_flagged: true })
-                .eq('user_id', userId);
+        if (error) throw error;
 
-              await loadUserData();
-              Alert.alert('Success', 'User has been blocked');
-            } catch (err) {
-              Alert.alert('Error', err instanceof Error ? err.message : 'Failed to block user');
-            } finally {
-              setActionLoading(null);
-            }
-          },
-        },
-      ]
-    );
-  }, [userId, loadUserData]);
+        // Also flag in threat scores
+        const { error: threatError } = await supabase
+          .schema('ai').from('moltbot_user_threat_scores' as unknown as 'profiles')
+          .update({ is_flagged: true })
+          .eq('user_id', userId);
+
+        if (threatError) {
+          console.error('[UserThreatDetail] Error flagging in threat scores:', threatError);
+          // Non-critical, user is blocked but threat score update failed
+        }
+
+        await loadUserData();
+        Alert.alert('Success', 'User has been blocked');
+      } catch (err) {
+        console.error('[UserThreatDetail] Error blocking user:', err);
+        Alert.alert('Error', err instanceof Error ? err.message : 'Failed to block user');
+      } finally {
+        setActionLoading(null);
+      }
+    }
+  }, [userId, loadUserData, requireStepUp]);
 
   // Unblock user - requires step-up MFA
   const handleUnblockUser = useCallback(async () => {
@@ -240,20 +246,22 @@ export function UserThreatDetailScreen() {
 
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <ScreenHeader title="User Threat Details" onBack={() => router.back()} />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader title="User Threat Details" onBack={() => router.back()} />
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingHorizontal: SPACING.md,
@@ -402,14 +410,15 @@ export function UserThreatDetailScreen() {
         )}
       </ScrollView>
 
-      {/* Step-up verification sheet for MFA on destructive actions */}
-      <StepUpVerificationSheet
-        visible={stepUpState.isRequired || stepUpState.status === 'mfa_not_configured'}
-        onClose={handleStepUpCancel}
-        onVerify={handleStepUpVerify}
-        state={stepUpState}
-      />
-    </ThemedSafeAreaView>
+        {/* Step-up verification sheet for MFA on destructive actions */}
+        <StepUpVerificationSheet
+          visible={stepUpState.isRequired || stepUpState.status === 'mfa_not_configured'}
+          onClose={handleStepUpCancel}
+          onVerify={handleStepUpVerify}
+          state={stepUpState}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

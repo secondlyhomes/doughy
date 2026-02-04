@@ -3,13 +3,14 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { Save, Eye, Edit3 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
 import { FloatingActionButton, FABAction } from '@/features/layout/components/FloatingActionButton';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import { DealStrategy, OfferTerms, DEAL_STRATEGY_CONFIG } from '../types';
 import { getEmptyOfferTerms } from '../data/mockOffers';
 import { StrategySelector } from '../components/StrategySelector';
@@ -58,61 +59,47 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
     setViewMode((prev) => (prev === 'edit' ? 'preview' : 'edit'));
   }, []);
 
-  return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3" style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>
-        <View className="flex-row items-center flex-1">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-3 p-1"
-            accessibilityLabel="Go back"
-            accessibilityRole="button"
-          >
-            <ArrowLeft size={24} color={colors.foreground} />
-          </TouchableOpacity>
-          <View>
-            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
-              Offer Builder
-            </Text>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-              {DEAL_STRATEGY_CONFIG[strategy].label}
-            </Text>
-          </View>
-        </View>
+  const { headerOptions } = useNativeHeader({
+    title: 'Offer Builder',
+    subtitle: DEAL_STRATEGY_CONFIG[strategy].label,
+    fallbackRoute: effectiveDealId !== 'demo' ? `/(tabs)/deals/${effectiveDealId}` : '/(tabs)/deals',
+    rightAction: (
+      <View className="flex-row items-center gap-2">
+        <TouchableOpacity
+          onPress={toggleViewMode}
+          className="p-2"
+          accessibilityLabel={viewMode === 'edit' ? 'Preview offer' : 'Edit offer'}
+          accessibilityRole="button"
+        >
+          {viewMode === 'edit' ? (
+            <Eye size={22} color={colors.primary} />
+          ) : (
+            <Edit3 size={22} color={colors.primary} />
+          )}
+        </TouchableOpacity>
 
-        {/* Action buttons */}
-        <View className="flex-row items-center gap-2">
-          <TouchableOpacity
-            onPress={toggleViewMode}
-            className="p-2"
-            accessibilityLabel={viewMode === 'edit' ? 'Preview offer' : 'Edit offer'}
-            accessibilityRole="button"
-          >
-            {viewMode === 'edit' ? (
-              <Eye size={22} color={colors.primary} />
-            ) : (
-              <Edit3 size={22} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={isSaving}
-            className="p-2"
-            accessibilityLabel="Save offer"
-            accessibilityRole="button"
-          >
-            {isSaving ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <Save size={22} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={isSaving}
+          className="p-2"
+          accessibilityLabel="Save offer"
+          accessibilityRole="button"
+        >
+          {isSaving ? (
+            <LoadingSpinner size="small" />
+          ) : (
+            <Save size={22} color={colors.primary} />
+          )}
+        </TouchableOpacity>
       </View>
+    ),
+  });
 
-      <ScrollView
+  return (
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         className="flex-1"
         contentContainerStyle={{
           padding: 16,
@@ -163,24 +150,25 @@ export function OfferBuilderScreen({ dealId }: OfferBuilderScreenProps) {
         )}
       </ScrollView>
 
-      {/* Floating Action Button with expandable options */}
-      <FloatingActionButton
-        actions={[
-          {
-            icon: viewMode === 'edit' ? <Eye size={20} color="white" /> : <Edit3 size={20} color="white" />,
-            label: viewMode === 'edit' ? 'Preview Scripts & Email' : 'Back to Edit',
-            onPress: toggleViewMode,
-            color: colors.primary,
-          },
-          {
-            icon: <Save size={20} color="white" />,
-            label: 'Save Draft',
-            onPress: handleSave,
-            color: colors.success,
-          },
-        ]}
-      />
-    </ThemedSafeAreaView>
+        {/* Floating Action Button with expandable options */}
+        <FloatingActionButton
+          actions={[
+            {
+              icon: viewMode === 'edit' ? <Eye size={20} color="white" /> : <Edit3 size={20} color="white" />,
+              label: viewMode === 'edit' ? 'Preview Scripts & Email' : 'Back to Edit',
+              onPress: toggleViewMode,
+              color: colors.primary,
+            },
+            {
+              icon: <Save size={20} color="white" />,
+              label: 'Save Draft',
+              onPress: handleSave,
+              color: colors.success,
+            },
+          ]}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

@@ -68,7 +68,7 @@ export async function sendDirectMail(
 
   // Get user's return address
   const { data: postgridCreds } = await supabase
-    .from('postgrid_credentials')
+    .schema('integrations').from('postgrid_credentials')
     .select('*')
     .eq('user_id', userId)
     .single();
@@ -171,16 +171,17 @@ export async function sendDirectMail(
       trackingNumber: result.data?.trackingNumber,
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Direct mail send failed';
     // Refund credits on error
     const { error: refundError } = await supabase.rpc('add_mail_credits_refund', {
       p_user_id: userId,
       p_amount: cost,
-      p_reason: `Error: ${(error as Error).message}`,
+      p_reason: `Error: ${errorMessage}`,
     });
     if (refundError) {
       console.error('[DirectMail] CRITICAL: Failed to refund credits after error:', refundError);
-      return { success: false, error: `${(error as Error).message}. Credit refund failed - contact support.` };
+      return { success: false, error: `${errorMessage}. Credit refund failed - contact support.` };
     }
-    return { success: false, error: (error as Error).message };
+    return { success: false, error: errorMessage };
   }
 }

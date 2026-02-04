@@ -41,13 +41,15 @@ export async function checkRateLimit(
     });
 
     if (error) {
-      console.error('[RateLimiter] Error checking rate limit:', error.message);
-      // On error, allow the request (fail open)
+      console.error('[RateLimiter] CRITICAL: Error checking rate limit:', error.message);
+      // SECURITY: Fail closed - deny request when rate limit cannot be verified
+      // This prevents attackers from bypassing rate limits by causing DB errors
       return {
-        allowed: true,
-        limitType: 'allowed',
+        allowed: false,
+        limitType: 'error',
         currentCount: 0,
-        remaining: limits.functionHourlyLimit,
+        remaining: 0,
+        error: 'Rate limit check failed - please retry',
       };
     }
 
@@ -59,13 +61,14 @@ export async function checkRateLimit(
       remaining: row?.remaining || limits.functionHourlyLimit,
     };
   } catch (err) {
-    console.error('[RateLimiter] Exception checking rate limit:', err);
-    // Fail open
+    console.error('[RateLimiter] CRITICAL: Exception checking rate limit:', err);
+    // SECURITY: Fail closed - deny request when rate limit cannot be verified
     return {
-      allowed: true,
-      limitType: 'allowed',
+      allowed: false,
+      limitType: 'error',
       currentCount: 0,
-      remaining: limits.functionHourlyLimit,
+      remaining: 0,
+      error: 'Rate limit check failed - please retry',
     };
   }
 }
@@ -92,7 +95,8 @@ export async function getRateLimitStatus(
 
     // Get all rate limit records for this user in the current hour
     const { data, error } = await supabase
-      .from('ai_moltbot_rate_limits')
+      .schema('ai')
+      .from('moltbot_rate_limits')
       .select('function_name, request_count, window_start')
       .eq('user_id', userId)
       .gte('window_start', hourStart.toISOString());

@@ -1,8 +1,8 @@
 // src/features/contacts/screens/ContactDetailScreen.tsx
 // Contact detail screen showing contact info with focused view (no tab bar)
 
-import React, { useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, Linking, TouchableOpacity } from 'react-native';
+import React, { useMemo, useCallback, useState } from 'react';
+import { View, Text, ScrollView, Linking, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
@@ -14,6 +14,7 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';
+import { formatDate } from '@/lib/formatters';
 
 import { useContact } from '../hooks/useContacts';
 import { getContactDisplayName, type Contact } from '../types';
@@ -37,7 +38,14 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const { contact, isLoading, error } = useContact(contactId);
+  const { contact, isLoading, error, refetch } = useContact(contactId);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  }, [refetch]);
   const { startCall } = useVoipCall({ subscriptionTier: 'pro' });
 
   const handleCall = useCallback(() => {
@@ -126,6 +134,13 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
           style={styles.scrollView}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + SPACING.xl }]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+            />
+          }
         >
           <ProfileSection contact={contact!} />
 
@@ -166,7 +181,7 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
               </View>
             )}
             {contact!.created_at && (
-              <InfoRow icon={Clock} label="Added" value={new Date(contact!.created_at).toLocaleDateString()} />
+              <InfoRow icon={Clock} label="Added" value={formatDate(contact!.created_at)} />
             )}
           </Section>
 

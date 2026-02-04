@@ -27,7 +27,7 @@ export function usePortfolioMonthlyRecords(portfolioEntryId: string | undefined)
       if (!portfolioEntryId) return [];
 
       const { data, error } = await supabase
-        .from('investor_portfolio_monthly_records')
+        .schema('investor').from('portfolio_monthly_records')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId)
         .order('month', { ascending: false });
@@ -48,7 +48,7 @@ export function usePortfolioMonthlyRecords(portfolioEntryId: string | undefined)
       const expenses = calculateExpenseTotal(input.expenses);
 
       const { data, error } = await supabase
-        .from('investor_portfolio_monthly_records')
+        .schema('investor').from('portfolio_monthly_records')
         .upsert(
           {
             portfolio_entry_id: input.portfolio_entry_id,
@@ -99,7 +99,7 @@ export function usePortfolioMonthlyRecords(portfolioEntryId: string | undefined)
       }
 
       const { data, error } = await supabase
-        .from('investor_portfolio_monthly_records')
+        .schema('investor').from('portfolio_monthly_records')
         .update(updateData)
         .eq('id', id)
         .select()
@@ -118,7 +118,7 @@ export function usePortfolioMonthlyRecords(portfolioEntryId: string | undefined)
   const deleteRecord = useMutation({
     mutationFn: async (id: string): Promise<void> => {
       const { error } = await supabase
-        .from('investor_portfolio_monthly_records')
+        .schema('investor').from('portfolio_monthly_records')
         .delete()
         .eq('id', id);
 

@@ -108,7 +108,7 @@ async function updateRateLimitCounters(
     : new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
   const { error: updateError } = await supabase
-    .from('meta_dm_credentials')
+    .schema('integrations').from('meta_dm_credentials')
     .update({
       hourly_dm_count: hourlyCount + 1,
       hourly_dm_reset_at: hourlyResetAt,
@@ -204,7 +204,7 @@ serve(async (req: Request) => {
 
     // Get user's Meta credentials
     const { data: credentials, error: credError } = await supabase
-      .from('meta_dm_credentials')
+      .schema('integrations').from('meta_dm_credentials')
       .select('*')
       .eq('user_id', userId)
       .eq('is_active', true)
@@ -239,7 +239,8 @@ serve(async (req: Request) => {
 
     // Get contact with Meta ID
     const { data: contact, error: contactError } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .select('id, first_name, last_name, metadata')
       .eq('id', contact_id)
       .eq('user_id', userId)
@@ -337,7 +338,7 @@ serve(async (req: Request) => {
 
       // Update credentials with error - check for failures
       const { error: credUpdateError } = await supabase
-        .from('meta_dm_credentials')
+        .schema('integrations').from('meta_dm_credentials')
         .update({
           last_error: responseData.error?.message || 'Unknown error',
           last_error_at: new Date().toISOString()
@@ -362,7 +363,7 @@ serve(async (req: Request) => {
         userError = 'Access token expired. Please reconnect your Facebook Page.';
         // Mark credentials as inactive
         const { error: deactivateError } = await supabase
-          .from('meta_dm_credentials')
+          .schema('integrations').from('meta_dm_credentials')
           .update({ is_active: false })
           .eq('id', credentials.id);
         if (deactivateError) {

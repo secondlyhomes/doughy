@@ -8,12 +8,12 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, Sun, Moon, Smartphone, Check } from 'lucide-react-native';
+import { Stack } from 'expo-router';
+import { Sun, Moon, Smartphone, Check } from 'lucide-react-native';
 import { useTheme, ThemeMode, useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useNativeHeader } from '@/hooks';
 
 interface ThemeOption {
   value: ThemeMode;
@@ -44,21 +44,23 @@ const themeOptions: ThemeOption[] = [
 ];
 
 export function AppearanceScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
   const { mode, setMode } = useTheme();
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Appearance',
+    fallbackRoute: '/(tabs)/settings',
+  });
 
   const handleSelectTheme = (theme: ThemeMode) => {
     setMode(theme);
   };
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader title="Appearance" backButton bordered />
-
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Theme Selection */}
         <Text className="text-sm font-medium mb-3" style={{ color: colors.mutedForeground }}>
           THEME
@@ -127,7 +129,8 @@ export function AppearanceScreen() {
         <Text className="text-sm mt-6 text-center" style={{ color: colors.mutedForeground }}>
           Theme changes will apply immediately across the app.
         </Text>
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

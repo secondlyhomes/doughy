@@ -2,10 +2,9 @@
 // Portfolio property detail screen with tabs for Performance, Financials, Debt, Valuations, Docs
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter, Redirect } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Calendar, Briefcase } from 'lucide-react-native';
+import { View, Text, ScrollView, RefreshControl, Alert, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter, Redirect, Stack } from 'expo-router';
+import { Calendar, Briefcase, MoreVertical } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -15,8 +14,7 @@ import {
   Badge,
 } from '@/components/ui';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
-import { EntityHeader } from '@/components/navigation/EntityHeader';
-import { SPACING } from '@/constants/design-tokens';
+import { useNativeHeader } from '@/hooks';
 import { usePortfolioProperty } from '../hooks/usePortfolioProperty';
 import { usePortfolioPerformance } from '../hooks/usePortfolioPerformance';
 import { PortfolioPerformanceTab } from '../components/tabs/PortfolioPerformanceTab';
@@ -35,7 +33,6 @@ export function PortfolioPropertyDetailScreen() {
   const { propertyId } = useLocalSearchParams<{ propertyId: string }>();
   const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
 
   const [activeTab, setActiveTab] = useState<TabValue>('performance');
   const [refreshing, setRefreshing] = useState(false);
@@ -62,6 +59,17 @@ export function PortfolioPropertyDetailScreen() {
     benchmark,
     refetch: refetchPerformance,
   } = usePortfolioPerformance(portfolioEntryId);
+
+  // Native header with actions
+  const { headerOptions } = useNativeHeader({
+    title: 'Portfolio Property',
+    fallbackRoute: '/(tabs)/pipeline',
+    rightAction: property ? (
+      <TouchableOpacity onPress={() => setShowActionsSheet(true)} style={{ padding: 8 }}>
+        <MoreVertical size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ) : undefined,
+  });
 
   // Guard against invalid UUIDs (e.g., "add" being captured by this route)
   // Must come AFTER all hook calls to follow React's rules of hooks
@@ -106,19 +114,6 @@ export function PortfolioPropertyDetailScreen() {
     setActiveTab(value as TabValue);
   }, []);
 
-  const handleContextChange = useCallback(
-    (context: 'deal' | 'property', entityId: string) => {
-      if (context === 'deal' && entry?.deal_id) {
-        router.push(`/(tabs)/deals/${entry.deal_id}` as any);
-      }
-    },
-    [router, entry?.deal_id]
-  );
-
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
   const handleRemove = useCallback(async () => {
     try {
       await removeEntry();
@@ -132,21 +127,27 @@ export function PortfolioPropertyDetailScreen() {
 
   if (isLoading && !property) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading property..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading property..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   if (error || !property) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <View className="flex-1 items-center justify-center p-4">
-          <Text style={{ color: colors.mutedForeground, textAlign: 'center' }}>
-            {error?.message || 'Property not found in portfolio'}
-          </Text>
-        </View>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <View className="flex-1 items-center justify-center p-4">
+            <Text style={{ color: colors.mutedForeground, textAlign: 'center' }}>
+              {error?.message || 'Property not found in portfolio'}
+            </Text>
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -154,29 +155,20 @@ export function PortfolioPropertyDetailScreen() {
   const cityStateZip = [property.city, property.state, property.zip].filter(Boolean).join(', ');
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <EntityHeader
-        context="property"
-        propertyId={propertyId}
-        dealId={entry?.deal_id || undefined}
-        hasLinkedDeal={!!entry?.deal_id}
-        onContextChange={handleContextChange}
-        onBack={handleBack}
-        onMore={() => setShowActionsSheet(true)}
-      />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-          />
-        }
-      >
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+            />
+          }
+        >
         {/* Property Info Header */}
         <View className="px-4 py-3">
           {/* Address */}
@@ -327,17 +319,18 @@ export function PortfolioPropertyDetailScreen() {
             </TabsContent>
           </Tabs>
         </View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Actions Sheet */}
-      <PortfolioActionsSheet
-        isOpen={showActionsSheet}
-        onClose={() => setShowActionsSheet(false)}
-        onRemove={handleRemove}
-        isRemoving={isRemoving}
-        propertyAddress={address}
-      />
-    </ThemedSafeAreaView>
+        {/* Actions Sheet */}
+        <PortfolioActionsSheet
+          isOpen={showActionsSheet}
+          onClose={() => setShowActionsSheet(false)}
+          onRemove={handleRemove}
+          isRemoving={isRemoving}
+          propertyAddress={address}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

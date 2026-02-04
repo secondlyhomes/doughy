@@ -333,7 +333,7 @@ async function getUserContext(
   let globalKnowledge = null;
   if (request.include_global) {
     const { data: global, error: globalError } = await supabase
-      .from('ai_moltbot_global_knowledge')
+      .schema('ai').from('moltbot_global_knowledge')
       .select('category, key, value')
       .eq('is_active', true)
       .order('priority', { ascending: false })
@@ -385,7 +385,7 @@ async function getContactHistory(
   request: ContactHistoryRequest
 ): Promise<{ success: boolean; memories?: unknown[]; error?: string }> {
   let query = supabase
-    .from('ai_moltbot_episodic_memory')
+    .schema('ai').from('moltbot_episodic_memories')
     .select('*')
     .eq('user_id', userId)
     .eq('contact_id', request.contact_id)
@@ -467,7 +467,7 @@ async function learnFromOutcome(
     // Only store if we have topic/category info
     if (payload.topic || payload.message_type) {
       await supabase
-        .from('ai_moltbot_response_examples')
+        .schema('ai').from('moltbot_response_examples')
         .insert({
           user_id: userId,
           category: payload.message_type || 'general',
@@ -491,7 +491,7 @@ async function getResponseExamples(
   payload: { category?: string; topic?: string; limit?: number }
 ): Promise<{ success: boolean; examples?: unknown[]; error?: string }> {
   let query = supabase
-    .from('ai_moltbot_response_examples')
+    .schema('ai').from('moltbot_response_examples')
     .select('*')
     .eq('user_id', userId)
     .eq('is_active', true)
@@ -523,7 +523,7 @@ async function storeResponseExample(
   payload: ResponseExamplePayload
 ): Promise<{ success: boolean; example_id?: string; error?: string }> {
   const { data, error } = await supabase
-    .from('ai_moltbot_response_examples')
+    .schema('ai').from('moltbot_response_examples')
     .insert({
       user_id: userId,
       category: payload.category,
@@ -572,14 +572,15 @@ async function deleteMemory(
   payload: { memory_id: string; memory_table: 'user' | 'episodic' | 'example' }
 ): Promise<{ success: boolean; error?: string }> {
   const tableMap = {
-    user: 'moltbot_user_memory',
-    episodic: 'moltbot_episodic_memory',
+    user: 'moltbot_user_memories',
+    episodic: 'moltbot_episodic_memories',
     example: 'moltbot_response_examples',
   };
 
   const table = tableMap[payload.memory_table];
 
   const { error } = await supabase
+    .schema('ai')
     .from(table)
     .delete()
     .eq('id', payload.memory_id)

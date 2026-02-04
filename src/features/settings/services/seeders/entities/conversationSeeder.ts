@@ -36,7 +36,7 @@ export async function createConversations(
   }));
 
   const { data: conversations, error } = await supabase
-    .from('landlord_conversations')
+    .schema('landlord').from('conversations')
     .insert(conversationInserts)
     .select();
 
@@ -69,7 +69,7 @@ export async function createMessages(
     ai_confidence: m.ai_confidence,
   }));
 
-  const { error } = await supabase.from('landlord_messages').insert(messageInserts);
+  const { error } = await supabase.schema('landlord').from('messages').insert(messageInserts);
 
   if (error) {
     console.error('Error creating messages:', error);
@@ -98,7 +98,7 @@ export async function createMessagesForConversations(
 
   if (allMessages.length === 0) return;
 
-  const { error } = await supabase.from('landlord_messages').insert(allMessages);
+  const { error } = await supabase.schema('landlord').from('messages').insert(allMessages);
 
   if (error) {
     console.error('Error creating messages:', error);
@@ -118,7 +118,7 @@ export async function createPendingAIResponse(
   confidence: number,
   reasoning: string
 ): Promise<void> {
-  const { error } = await supabase.from('landlord_ai_queue_items').insert({
+  const { error } = await supabase.schema('landlord').from('ai_queue_items').insert({
     user_id: userId,
     conversation_id: conversationId,
     suggested_response: suggestedResponse,
@@ -144,7 +144,7 @@ export async function deleteUserConversations(userId: string): Promise<{ errors:
 
   // Get conversation IDs first
   const { data: conversations } = await supabase
-    .from('landlord_conversations')
+    .schema('landlord').from('conversations')
     .select('id')
     .eq('user_id', userId);
   const conversationIds = conversations?.map((c) => c.id) || [];
@@ -152,30 +152,30 @@ export async function deleteUserConversations(userId: string): Promise<{ errors:
   // Delete messages first
   if (conversationIds.length > 0) {
     const { error: messagesError } = await supabase
-      .from('landlord_messages')
+      .schema('landlord').from('messages')
       .delete()
       .in('conversation_id', conversationIds);
     if (messagesError) {
-      errors.push({ table: 'landlord_messages', message: messagesError.message });
+      errors.push({ table: 'landlord.messages', message: messagesError.message });
     }
   }
 
   // Delete AI queue items
   const { error: aiQueueError } = await supabase
-    .from('landlord_ai_queue_items')
+    .schema('landlord').from('ai_queue_items')
     .delete()
     .eq('user_id', userId);
   if (aiQueueError) {
-    errors.push({ table: 'landlord_ai_queue_items', message: aiQueueError.message });
+    errors.push({ table: 'landlord.ai_queue_items', message: aiQueueError.message });
   }
 
   // Delete conversations
   const { error: conversationsError } = await supabase
-    .from('landlord_conversations')
+    .schema('landlord').from('conversations')
     .delete()
     .eq('user_id', userId);
   if (conversationsError) {
-    errors.push({ table: 'landlord_conversations', message: conversationsError.message });
+    errors.push({ table: 'landlord.conversations', message: conversationsError.message });
   }
 
   return { errors };

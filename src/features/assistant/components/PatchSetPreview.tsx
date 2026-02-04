@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Platform,
 } from 'react-native';
 import {
@@ -25,6 +24,7 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { BORDER_RADIUS, SPACING, ICON_SIZES } from '@/constants/design-tokens';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useToast } from '@/components/ui/Toast';
+import { LoadingSpinner } from '@/components/ui';
 
 import {
   PatchSet,
@@ -198,7 +198,7 @@ export function PatchSetPreview({
             accessibilityState={{ disabled: isApplying }}
           >
             {isApplying ? (
-              <ActivityIndicator size="small" color={colors.primaryForeground} />
+              <LoadingSpinner size="small" />
             ) : (
               <>
                 <Check size={ICON_SIZES.ml} color={colors.primaryForeground} />

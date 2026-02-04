@@ -41,7 +41,7 @@ export function useInquiryCreation({ userId, userEmail }: UseInquiryCreationOpti
 
     // 1. Create or find contact
     const { data: existingContacts } = await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .select('id')
       .eq('email', contactEmail.trim().toLowerCase())
       .limit(1);
@@ -51,7 +51,7 @@ export function useInquiryCreation({ userId, userEmail }: UseInquiryCreationOpti
     if (existingContacts && existingContacts.length > 0) {
       contactId = existingContacts[0].id;
       await supabase
-        .from('crm_contacts')
+        .schema('crm').from('contacts')
         .update({
           first_name: firstName,
           last_name: lastName,
@@ -60,7 +60,7 @@ export function useInquiryCreation({ userId, userEmail }: UseInquiryCreationOpti
         .eq('id', contactId);
     } else {
       const { data: newContact, error: contactError } = await supabase
-        .from('crm_contacts')
+        .schema('crm').from('contacts')
         .insert({
           first_name: firstName,
           last_name: lastName,
@@ -82,7 +82,7 @@ export function useInquiryCreation({ userId, userEmail }: UseInquiryCreationOpti
 
     // 2. Get a property to associate
     const { data: properties } = await supabase
-      .from('landlord_properties')
+      .schema('landlord').from('properties')
       .select('id, name')
       .limit(1);
 
@@ -90,7 +90,7 @@ export function useInquiryCreation({ userId, userEmail }: UseInquiryCreationOpti
 
     // 3. Create conversation
     const { data: conversation, error: convError } = await supabase
-      .from('landlord_conversations')
+      .schema('landlord').from('conversations')
       .insert({
         contact_id: contactId,
         property_id: propertyId,
@@ -110,7 +110,7 @@ export function useInquiryCreation({ userId, userEmail }: UseInquiryCreationOpti
 
     // 4. Create inbound message
     const { error: msgError } = await supabase
-      .from('landlord_messages')
+      .schema('landlord').from('messages')
       .insert({
         conversation_id: conversation.id,
         direction: 'inbound',
@@ -137,7 +137,7 @@ export function useInquiryCreation({ userId, userEmail }: UseInquiryCreationOpti
     );
 
     const { error: queueError } = await supabase
-      .from('landlord_ai_queue_items')
+      .schema('landlord').from('ai_queue_items')
       .insert({
         conversation_id: conversation.id,
         suggested_response: suggestedResponse,

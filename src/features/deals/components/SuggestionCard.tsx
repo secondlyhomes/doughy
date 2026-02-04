@@ -29,7 +29,7 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity, getShadowStyle } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES, PRESS_OPACITY, DEFAULT_HIT_SLOP } from '@/constants/design-tokens';
 import { Badge } from '@/components/ui';
-import { AISuggestion } from '../services/aiSuggestions';
+import { AISuggestion } from '../services/ai-suggestions';
 import { ActionCategory } from '../hooks/useNextAction';
 
 // ============================================

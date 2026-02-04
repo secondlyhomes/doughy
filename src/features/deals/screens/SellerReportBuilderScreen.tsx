@@ -3,13 +3,14 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Save, Eye, Edit3, Share2 } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { Save, Eye, Edit3, Share2 } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, Input, TAB_BAR_SAFE_PADDING, TAB_BAR_HEIGHT } from '@/components/ui';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNativeHeader } from '@/hooks';
 import {
   SellerReportOptions,
   WeHandleOptions,
@@ -109,68 +110,55 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
     setViewMode((prev) => (prev === 'edit' ? 'preview' : 'edit'));
   }, []);
 
-  return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
-        <View className="flex-row items-center flex-1">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-3 p-1"
-            accessibilityLabel="Go back"
-            accessibilityRole="button"
-          >
-            <ArrowLeft size={24} color={colors.foreground} />
-          </TouchableOpacity>
-          <View>
-            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
-              Seller Report
-            </Text>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-              {viewMode === 'edit' ? 'Edit options' : 'Preview report'}
-            </Text>
-          </View>
-        </View>
+  const { headerOptions } = useNativeHeader({
+    title: 'Seller Report',
+    subtitle: viewMode === 'edit' ? 'Edit options' : 'Preview report',
+    fallbackRoute: effectiveDealId !== 'demo' ? `/(tabs)/deals/${effectiveDealId}` : '/(tabs)/deals',
+    rightAction: (
+      <View className="flex-row items-center gap-2">
+        <TouchableOpacity
+          onPress={() => setShowShareSheet(true)}
+          className="p-2"
+          accessibilityLabel="Share report"
+          accessibilityRole="button"
+        >
+          <Share2 size={22} color={colors.primary} />
+        </TouchableOpacity>
 
-        {/* Action buttons */}
-        <View className="flex-row items-center gap-2">
-          <TouchableOpacity
-            onPress={() => setShowShareSheet(true)}
-            className="p-2"
-            accessibilityLabel="Share report"
-            accessibilityRole="button"
-          >
-            <Share2 size={22} color={colors.primary} />
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={toggleViewMode}
+          className="p-2"
+          accessibilityLabel={viewMode === 'edit' ? 'Preview report' : 'Edit report'}
+          accessibilityRole="button"
+        >
+          {viewMode === 'edit' ? (
+            <Eye size={22} color={colors.primary} />
+          ) : (
+            <Edit3 size={22} color={colors.primary} />
+          )}
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={toggleViewMode}
-            className="p-2"
-            accessibilityLabel={viewMode === 'edit' ? 'Preview report' : 'Edit report'}
-            accessibilityRole="button"
-          >
-            {viewMode === 'edit' ? (
-              <Eye size={22} color={colors.primary} />
-            ) : (
-              <Edit3 size={22} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={isSaving}
-            className="p-2"
-            accessibilityLabel="Save report"
-            accessibilityRole="button"
-          >
-            {isSaving ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <Save size={22} color={colors.primary} />
-            )}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={isSaving}
+          className="p-2"
+          accessibilityLabel="Save report"
+          accessibilityRole="button"
+        >
+          {isSaving ? (
+            <LoadingSpinner size="small" />
+          ) : (
+            <Save size={22} color={colors.primary} />
+          )}
+        </TouchableOpacity>
       </View>
+    ),
+  });
+
+  return (
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
 
       {/* Edit Mode */}
       {viewMode === 'edit' && (
@@ -331,15 +319,16 @@ export function SellerReportBuilderScreen({ dealId }: SellerReportBuilderScreenP
         </TouchableOpacity>
       </View>
 
-      {/* Share Sheet */}
-      <ShareReportSheet
-        visible={showShareSheet}
-        onClose={() => setShowShareSheet(false)}
-        sellerName={sellerName}
-        propertyAddress={propertyAddress}
-        shareToken={shareToken}
-      />
-    </ThemedSafeAreaView>
+        {/* Share Sheet */}
+        <ShareReportSheet
+          visible={showShareSheet}
+          onClose={() => setShowShareSheet(false)}
+          sellerName={sellerName}
+          propertyAddress={propertyAddress}
+          shareToken={shareToken}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

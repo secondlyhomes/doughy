@@ -129,7 +129,7 @@ export function useFinancingScenarios({ propertyId }: UseFinancingScenariosOptio
       setError(null);
 
       const { data, error: queryError } = await supabase
-        .from('investor_financing_scenarios')
+        .schema('investor').from('financing_scenarios')
         .select('*')
         .eq('property_id', propertyId)
         .order('created_at', { ascending: false });
@@ -247,7 +247,7 @@ export function useFinancingScenarioMutations() {
       };
 
       const { data: result, error: insertError } = await supabase
-        .from('investor_financing_scenarios')
+        .schema('investor').from('financing_scenarios')
         .insert(insertData)
         .select()
         .single();
@@ -292,7 +292,7 @@ export function useFinancingScenarioMutations() {
 
       // First get the existing scenario
       const { data: existing, error: fetchError } = await supabase
-        .from('investor_financing_scenarios')
+        .schema('investor').from('financing_scenarios')
         .select('*')
         .eq('id', scenarioId)
         .single();
@@ -329,7 +329,7 @@ export function useFinancingScenarioMutations() {
       if (data.notes !== undefined) updateData.description = data.notes;
 
       const { data: result, error: updateError } = await supabase
-        .from('investor_financing_scenarios')
+        .schema('investor').from('financing_scenarios')
         .update(updateData)
         .eq('id', scenarioId)
         .select()
@@ -361,7 +361,7 @@ export function useFinancingScenarioMutations() {
       setError(null);
 
       const { error: deleteError } = await supabase
-        .from('investor_financing_scenarios')
+        .schema('investor').from('financing_scenarios')
         .delete()
         .eq('id', scenarioId);
 

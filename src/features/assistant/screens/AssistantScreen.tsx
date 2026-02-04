@@ -9,7 +9,6 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  ActivityIndicator
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { Send, Sparkles, RefreshCw } from 'lucide-react-native';
@@ -106,7 +105,7 @@ export function AssistantScreen() {
               <View className="flex-row items-center py-4">
                 <View className="rounded-2xl rounded-bl-sm px-4 py-3" style={{ backgroundColor: colors.muted }}>
                   <View className="flex-row items-center">
-                    <ActivityIndicator size="small" color={colors.info} />
+                    <LoadingSpinner size="small" />
                     <Text className="ml-2" style={{ color: colors.mutedForeground }}>Thinking...</Text>
                   </View>
                 </View>

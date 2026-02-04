@@ -182,7 +182,7 @@ async function handleListDevices(
 ): Promise<{ success: boolean; devices: unknown[] }> {
   // Get devices from our database
   const { data: devices, error } = await supabase
-    .from('seam_connected_devices')
+    .schema('integrations').from('seam_connected_devices')
     .select('*, rental_properties(name, address)')
     .eq('user_id', userId)
     .order('device_name');
@@ -200,7 +200,7 @@ async function handleGetDevice(
 ): Promise<{ success: boolean; device: unknown }> {
   // Get from our database first
   const { data: device, error } = await supabase
-    .from('seam_connected_devices')
+    .schema('integrations').from('seam_connected_devices')
     .select('*, rental_properties(name, address)')
     .eq('id', deviceId)
     .eq('user_id', userId)
@@ -216,7 +216,7 @@ async function handleGetDevice(
 
     // Update our database with fresh status
     await supabase
-      .from('seam_connected_devices')
+      .schema('integrations').from('seam_connected_devices')
       .update({
         is_online: seamDevice.properties.online,
         battery_level: seamDevice.properties.battery?.level,
@@ -247,7 +247,7 @@ async function handleLock(
 ): Promise<{ success: boolean; message: string }> {
   // Get device
   const { data: device, error } = await supabase
-    .from('seam_connected_devices')
+    .schema('integrations').from('seam_connected_devices')
     .select('seam_device_id')
     .eq('id', deviceId)
     .eq('user_id', userId)
@@ -280,7 +280,7 @@ async function handleUnlock(
 ): Promise<{ success: boolean; message: string }> {
   // Get device
   const { data: device, error } = await supabase
-    .from('seam_connected_devices')
+    .schema('integrations').from('seam_connected_devices')
     .select('seam_device_id')
     .eq('id', deviceId)
     .eq('user_id', userId)
@@ -315,7 +315,7 @@ async function handleCreateAccessCode(
 ): Promise<{ success: boolean; access_code: unknown }> {
   // Get device
   const { data: device, error } = await supabase
-    .from('seam_connected_devices')
+    .schema('integrations').from('seam_connected_devices')
     .select('seam_device_id')
     .eq('id', deviceId)
     .eq('user_id', userId)
@@ -345,7 +345,7 @@ async function handleCreateAccessCode(
   let contactId: string | null = null;
   if (bookingId) {
     const { data: booking } = await supabase
-      .from('rental_bookings')
+      .schema('landlord').from('bookings')
       .select('contact_id')
       .eq('id', bookingId)
       .single();
@@ -354,7 +354,7 @@ async function handleCreateAccessCode(
 
   // Store in our database
   const { data: accessCode, error: insertError } = await supabase
-    .from('seam_access_codes')
+    .schema('integrations').from('seam_access_codes')
     .insert({
       user_id: userId,
       device_id: deviceId,
@@ -394,7 +394,7 @@ async function handleDeleteAccessCode(
 ): Promise<{ success: boolean; message: string }> {
   // Get access code
   const { data: code, error } = await supabase
-    .from('seam_access_codes')
+    .schema('integrations').from('seam_access_codes')
     .select('*, seam_connected_devices(seam_device_id)')
     .eq('id', accessCodeId)
     .eq('user_id', userId)
@@ -411,7 +411,7 @@ async function handleDeleteAccessCode(
 
   // Update status in our database
   await supabase
-    .from('seam_access_codes')
+    .schema('integrations').from('seam_access_codes')
     .update({ status: 'removed', updated_at: new Date().toISOString() })
     .eq('id', accessCodeId);
 
@@ -434,8 +434,8 @@ async function handleListAccessCodes(
   deviceId?: string
 ): Promise<{ success: boolean; access_codes: unknown[] }> {
   let query = supabase
-    .from('seam_access_codes')
-    .select('*, seam_connected_devices(device_name), rental_bookings(check_in_date, check_out_date), crm_contacts(first_name, last_name)')
+    .schema('integrations').from('seam_access_codes')
+    .select('*, seam_connected_devices(device_name), rental_bookings(check_in_date, check_out_date), crm.contacts(first_name, last_name)')
     .eq('user_id', userId)
     .neq('status', 'removed')
     .order('created_at', { ascending: false });
@@ -466,7 +466,7 @@ async function handleSyncDevices(
 
     // Upsert into our database
     const { data, error } = await supabase
-      .from('seam_connected_devices')
+      .schema('integrations').from('seam_connected_devices')
       .upsert(
         {
           user_id: userId,

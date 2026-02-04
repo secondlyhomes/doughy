@@ -54,7 +54,7 @@ Deno.test('Document Upload: User can create property document', async () => {
   try {
     // Create test property
     const { data: property, error: propError } = await supabase
-      .from('re_properties')
+      .schema('investor').from('properties')
       .insert({
         user_id: userId,
         address_line_1: '123 Test St',
@@ -70,7 +70,7 @@ Deno.test('Document Upload: User can create property document', async () => {
 
     // Create document for the property
     const { data: document, error: docError } = await supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .insert({
         user_id: userId,
         property_id: property.id,
@@ -97,7 +97,7 @@ Deno.test('Document Upload: User cannot access other users documents', async () 
   try {
     // User 1 creates a property and document
     const { data: property1 } = await user1.supabase
-      .from('re_properties')
+      .schema('investor').from('properties')
       .insert({
         user_id: user1.userId,
         address_line_1: '456 User1 St',
@@ -109,7 +109,7 @@ Deno.test('Document Upload: User cannot access other users documents', async () 
       .single();
 
     const { data: document1 } = await user1.supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .insert({
         user_id: user1.userId,
         property_id: property1!.id,
@@ -124,7 +124,7 @@ Deno.test('Document Upload: User cannot access other users documents', async () 
 
     // User 2 tries to access User 1's document (should fail due to RLS)
     const { data: otherUserDoc, error: otherDocError } = await user2.supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .select('*')
       .eq('id', document1.id)
       .single();
@@ -148,7 +148,7 @@ Deno.test('Document Upload: Lead documents are properly isolated', async () => {
   try {
     // User 1 creates a lead and document
     const { data: lead1 } = await user1.supabase
-      .from('crm_leads')
+      .schema('crm').from('leads')
       .insert({
         user_id: user1.userId,
         name: 'Test Lead',
@@ -158,7 +158,7 @@ Deno.test('Document Upload: Lead documents are properly isolated', async () => {
       .single();
 
     const { data: leadDoc1 } = await user1.supabase
-      .from('re_lead_documents')
+      .schema('crm').from('lead_documents')
       .insert({
         lead_id: lead1!.id,
         title: 'Tax Return',
@@ -172,7 +172,7 @@ Deno.test('Document Upload: Lead documents are properly isolated', async () => {
 
     // User 2 tries to access User 1's lead document (should fail)
     const { data: otherLeadDoc, error: otherLeadDocError } = await user2.supabase
-      .from('re_lead_documents')
+      .schema('crm').from('lead_documents')
       .select('*')
       .eq('id', leadDoc1.id)
       .single();
@@ -194,7 +194,7 @@ Deno.test('Document Upload: Property-documents junction table works', async () =
   try {
     // Create property
     const { data: property } = await supabase
-      .from('re_properties')
+      .schema('investor').from('properties')
       .insert({
         user_id: userId,
         address_line_1: '789 Junction St',
@@ -207,7 +207,7 @@ Deno.test('Document Upload: Property-documents junction table works', async () =
 
     // Create document
     const { data: document } = await supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .insert({
         user_id: userId,
         property_id: property!.id,
@@ -225,7 +225,7 @@ Deno.test('Document Upload: Property-documents junction table works', async () =
 
     // Create junction entry manually
     const { data: junction, error: junctionError } = await supabase
-      .from('re_property_documents')
+      .schema('investor').from('property_documents')
       .insert({
         property_id: property!.id,
         document_id: document!.id,
@@ -248,7 +248,7 @@ Deno.test('Document Upload: Cannot create duplicate junction entries', async () 
   try {
     // Create property and document
     const { data: property } = await supabase
-      .from('re_properties')
+      .schema('investor').from('properties')
       .insert({
         user_id: userId,
         address_line_1: '321 Duplicate St',
@@ -260,7 +260,7 @@ Deno.test('Document Upload: Cannot create duplicate junction entries', async () 
       .single();
 
     const { data: document } = await supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .insert({
         user_id: userId,
         property_id: property!.id,
@@ -273,7 +273,7 @@ Deno.test('Document Upload: Cannot create duplicate junction entries', async () 
 
     // Create first junction entry
     const { error: firstError } = await supabase
-      .from('re_property_documents')
+      .schema('investor').from('property_documents')
       .insert({
         property_id: property!.id,
         document_id: document!.id,
@@ -283,7 +283,7 @@ Deno.test('Document Upload: Cannot create duplicate junction entries', async () 
 
     // Try to create duplicate junction entry (should fail)
     const { error: duplicateError } = await supabase
-      .from('re_property_documents')
+      .schema('investor').from('property_documents')
       .insert({
         property_id: property!.id,
         document_id: document!.id,
@@ -301,7 +301,7 @@ Deno.test('Document Upload: Document type validation works', async () => {
   try {
     // Create property
     const { data: property } = await supabase
-      .from('re_properties')
+      .schema('investor').from('properties')
       .insert({
         user_id: userId,
         address_line_1: '555 Type Test St',
@@ -314,7 +314,7 @@ Deno.test('Document Upload: Document type validation works', async () => {
 
     // Try to create document with invalid type
     const { error: invalidTypeError } = await supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .insert({
         user_id: userId,
         property_id: property!.id,
@@ -327,7 +327,7 @@ Deno.test('Document Upload: Document type validation works', async () => {
 
     // Create document with valid type
     const { data: validDoc, error: validTypeError } = await supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .insert({
         user_id: userId,
         property_id: property!.id,
@@ -351,7 +351,7 @@ Deno.test('Document Upload: Lead document type validation works', async () => {
   try {
     // Create lead
     const { data: lead } = await supabase
-      .from('crm_leads')
+      .schema('crm').from('leads')
       .insert({
         user_id: userId,
         name: 'Doc Type Test Lead',
@@ -362,7 +362,7 @@ Deno.test('Document Upload: Lead document type validation works', async () => {
 
     // Try invalid lead document type
     const { error: invalidError } = await supabase
-      .from('re_lead_documents')
+      .schema('crm').from('lead_documents')
       .insert({
         lead_id: lead!.id,
         title: 'Invalid Lead Doc',
@@ -374,7 +374,7 @@ Deno.test('Document Upload: Lead document type validation works', async () => {
 
     // Create with valid type
     const { data: validDoc, error: validError } = await supabase
-      .from('re_lead_documents')
+      .schema('crm').from('lead_documents')
       .insert({
         lead_id: lead!.id,
         title: 'Valid Lead Doc',
@@ -397,7 +397,7 @@ Deno.test('Document Upload: Cascade delete works for property documents', async 
   try {
     // Create property with document
     const { data: property } = await supabase
-      .from('re_properties')
+      .schema('investor').from('properties')
       .insert({
         user_id: userId,
         address_line_1: '999 Cascade St',
@@ -409,7 +409,7 @@ Deno.test('Document Upload: Cascade delete works for property documents', async 
       .single();
 
     const { data: document } = await supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .insert({
         user_id: userId,
         property_id: property!.id,
@@ -424,7 +424,7 @@ Deno.test('Document Upload: Cascade delete works for property documents', async 
 
     // Delete property (should cascade to documents via property_id)
     const { error: deleteError } = await supabase
-      .from('re_properties')
+      .schema('investor').from('properties')
       .delete()
       .eq('id', property!.id);
 
@@ -432,7 +432,7 @@ Deno.test('Document Upload: Cascade delete works for property documents', async 
 
     // Verify document still exists (only junction should cascade, not document itself)
     const { data: stillExists } = await supabase
-      .from('re_documents')
+      .schema('investor').from('documents')
       .select('*')
       .eq('id', document.id)
       .single();

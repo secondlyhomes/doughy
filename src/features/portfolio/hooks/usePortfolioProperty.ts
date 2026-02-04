@@ -36,26 +36,29 @@ export function usePortfolioProperty(propertyId: string | undefined) {
 
       // First try to find portfolio entry by property_id
       const { data: entry, error: entryError } = await supabase
-        .from('investor_portfolio_entries')
+        .schema('investor').from('portfolio_entries')
         .select(`
           *,
-          group:investor_portfolio_groups(*)
+          group:portfolio_groups(*)
         `)
         .eq('property_id', propertyId)
         .eq('user_id', user.id)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (entryError && !entryError.message.includes('not found')) {
-        console.error('Error fetching portfolio entry:', entryError);
+      if (entryError) {
+        // maybeSingle() should not return errors for "not found" - those return null
+        // Any error here is a real database error that should be surfaced
+        console.error('[usePortfolioProperty] Error fetching portfolio entry:', entryError);
+        throw entryError;
       }
 
       // Fetch the property
       const { data: property, error: propertyError } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .select(`
           *,
-          images:investor_property_images(id, url, is_primary, label, filename)
+          images:property_images(id, url, is_primary, label, filename)
         `)
         .eq('id', propertyId)
         .single();
@@ -68,12 +71,12 @@ export function usePortfolioProperty(propertyId: string | undefined) {
       // If no portfolio entry but property exists, check if it's from a closed deal
       if (!entry) {
         const { data: deal } = await supabase
-          .from('investor_deals_pipeline')
+          .schema('investor').from('deals_pipeline')
           .select('*')
           .eq('property_id', propertyId)
           .eq('user_id', user.id)
           .eq('stage', 'closed_won')
-          .single();
+          .maybeSingle();
 
         if (!deal) {
           // Property exists but not in portfolio
@@ -118,7 +121,7 @@ export function usePortfolioProperty(propertyId: string | undefined) {
       }
 
       const { error } = await supabase
-        .from('investor_portfolio_entries')
+        .schema('investor').from('portfolio_entries')
         .update(updates)
         .eq('id', data.entry.id);
 
@@ -138,7 +141,7 @@ export function usePortfolioProperty(propertyId: string | undefined) {
       // For deal-based entries, revert deal stage back to negotiating
       if (data.entry.deal_id && data.entry.id.startsWith('deal-')) {
         const { error } = await supabase
-          .from('investor_deals_pipeline')
+          .schema('investor').from('deals_pipeline')
           .update({ stage: 'negotiating', updated_at: new Date().toISOString() })
           .eq('id', data.entry.deal_id)
           .eq('user_id', user?.id); // Security: ensure user owns the deal
@@ -147,7 +150,7 @@ export function usePortfolioProperty(propertyId: string | undefined) {
       } else {
         // For manual entries, soft delete by setting is_active = false
         const { error } = await supabase
-          .from('investor_portfolio_entries')
+          .schema('investor').from('portfolio_entries')
           .update({ is_active: false, updated_at: new Date().toISOString() })
           .eq('id', data.entry.id)
           .eq('user_id', user?.id); // Security: ensure user owns the entry
@@ -188,13 +191,13 @@ export function usePortfolioPropertyByEntryId(entryId: string | undefined) {
       if (!entryId || !user?.id) return null;
 
       const { data: entry, error: entryError } = await supabase
-        .from('investor_portfolio_entries')
+        .schema('investor').from('portfolio_entries')
         .select(`
           *,
-          group:investor_portfolio_groups(*),
-          property:investor_properties(
+          group:portfolio_groups(*),
+          property:properties(
             *,
-            images:investor_property_images(id, url, is_primary, label, filename)
+            images:property_images(id, url, is_primary, label, filename)
           )
         `)
         .eq('id', entryId)

@@ -62,7 +62,8 @@ export const useSmartHomeStore = create<SmartHomeState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('smart_devices')
+        .schema('integrations')
+        .from('seam_connected_devices')
         .select('*')
         .eq('property_id', propertyId)
         .order('name');
@@ -83,7 +84,8 @@ export const useSmartHomeStore = create<SmartHomeState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('smart_devices')
+        .schema('integrations')
+        .from('seam_connected_devices')
         .select('*')
         .eq('id', deviceId)
         .single();
@@ -200,24 +202,11 @@ export const useSmartHomeStore = create<SmartHomeState>((set, get) => ({
   fetchAccessCodesByDevice: async (deviceId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from('access_codes')
-        .select(`
-          *,
-          device:smart_devices(*),
-          booking:rental_bookings(
-            id,
-            start_date,
-            end_date,
-            contact:crm_contacts(first_name, last_name)
-          )
-        `)
-        .eq('device_id', deviceId)
-        .order('created_at', { ascending: false });
+      // Use RPC function for cross-schema join
+      const { getAccessCodesWithBooking, mapAccessCodeRPC } = await import('@/lib/rpc');
+      const data = await getAccessCodesWithBooking({ deviceId });
 
-      if (error) throw error;
-
-      const codes = (data || []) as AccessCodeWithRelations[];
+      const codes = data.map(mapAccessCodeRPC) as AccessCodeWithRelations[];
       set({ accessCodes: codes, isLoading: false });
       return codes;
     } catch (error) {
@@ -230,37 +219,11 @@ export const useSmartHomeStore = create<SmartHomeState>((set, get) => ({
   fetchAccessCodesByProperty: async (propertyId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // First get all device IDs for this property
-      const { data: devices } = await supabase
-        .from('smart_devices')
-        .select('id')
-        .eq('property_id', propertyId);
+      // Use RPC function for cross-schema join (handles the device lookup internally)
+      const { getAccessCodesByProperty, mapAccessCodeRPC } = await import('@/lib/rpc');
+      const data = await getAccessCodesByProperty(propertyId);
 
-      if (!devices || devices.length === 0) {
-        set({ accessCodes: [], isLoading: false });
-        return [];
-      }
-
-      const deviceIds = devices.map((d) => d.id);
-
-      const { data, error } = await supabase
-        .from('access_codes')
-        .select(`
-          *,
-          device:smart_devices(*),
-          booking:rental_bookings(
-            id,
-            start_date,
-            end_date,
-            contact:crm_contacts(first_name, last_name)
-          )
-        `)
-        .in('device_id', deviceIds)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const codes = (data || []) as AccessCodeWithRelations[];
+      const codes = data.map(mapAccessCodeRPC) as AccessCodeWithRelations[];
       set({ accessCodes: codes, isLoading: false });
       return codes;
     } catch (error) {
@@ -280,7 +243,8 @@ export const useSmartHomeStore = create<SmartHomeState>((set, get) => ({
 
       // Create in local database
       const { data, error } = await supabase
-        .from('access_codes')
+        .schema('integrations')
+        .from('seam_access_codes')
         .insert({
           user_id: userData.user.id,
           device_id: input.device_id,
@@ -296,23 +260,29 @@ export const useSmartHomeStore = create<SmartHomeState>((set, get) => ({
 
       if (error) throw error;
 
-      // Also create in Seam via edge function
-      try {
-        await supabase.functions.invoke('seam-create-access-code', {
-          body: {
-            accessCodeId: data.id,
-            deviceId: input.device_id,
-            code,
-            name: input.name,
-            startsAt: input.starts_at,
-            endsAt: input.ends_at,
-          },
-        });
+      // Also create in Seam via edge function - this MUST succeed for the code to work on the lock
+      const { error: seamError } = await supabase.functions.invoke('seam-create-access-code', {
+        body: {
+          accessCodeId: data.id,
+          deviceId: input.device_id,
+          code,
+          name: input.name,
+          startsAt: input.starts_at,
+          endsAt: input.ends_at,
+        },
+      });
 
-        // Update with seam_access_code_id if returned
-      } catch (seamError) {
-        console.warn('Failed to sync access code to Seam:', seamError);
-        // Continue anyway - code is saved locally
+      if (seamError) {
+        // CRITICAL: The code exists in our DB but NOT on the actual lock.
+        // Delete the local record to prevent user from thinking the code works.
+        await supabase
+          .schema('integrations')
+          .from('seam_access_codes')
+          .delete()
+          .eq('id', data.id);
+
+        console.error('[SmartHome] Failed to sync access code to Seam - local record deleted:', seamError);
+        throw new Error('Failed to create access code on smart lock. Please try again.');
       }
 
       // Refresh access codes list
@@ -332,27 +302,38 @@ export const useSmartHomeStore = create<SmartHomeState>((set, get) => ({
     try {
       // Get the code first
       const { data: codeData } = await supabase
-        .from('access_codes')
-        .select('*, device:smart_devices(id)')
+        .schema('integrations')
+        .from('seam_access_codes')
+        .select('*, device:seam_connected_devices!integrations_seam_access_codes_device_id_fkey(id)')
         .eq('id', accessCodeId)
         .single();
 
       // Update status to revoked
       const { error } = await supabase
-        .from('access_codes')
+        .schema('integrations')
+        .from('seam_access_codes')
         .update({ status: 'revoked', updated_at: new Date().toISOString() })
         .eq('id', accessCodeId);
 
       if (error) throw error;
 
       // Also revoke in Seam if it has a seam_access_code_id
+      // CRITICAL: If this fails, the code is marked revoked locally but still works on the lock
       if (codeData?.seam_access_code_id) {
-        try {
-          await supabase.functions.invoke('seam-revoke-access-code', {
-            body: { seamAccessCodeId: codeData.seam_access_code_id },
-          });
-        } catch (seamError) {
-          console.warn('Failed to revoke access code in Seam:', seamError);
+        const { error: seamError } = await supabase.functions.invoke('seam-revoke-access-code', {
+          body: { seamAccessCodeId: codeData.seam_access_code_id },
+        });
+
+        if (seamError) {
+          // Revert the local status change since we couldn't revoke on the lock
+          await supabase
+            .schema('integrations')
+            .from('seam_access_codes')
+            .update({ status: 'active', updated_at: new Date().toISOString() })
+            .eq('id', accessCodeId);
+
+          console.error('[SmartHome] SECURITY: Failed to revoke access code in Seam - local status reverted:', seamError);
+          throw new Error('Failed to revoke access code on smart lock. The code is still active. Please try again.');
         }
       }
 

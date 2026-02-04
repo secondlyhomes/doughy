@@ -4,10 +4,9 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, TAB_BAR_SAFE_PADDING, LoadingSpinner } from '@/components/ui';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Button, TAB_BAR_SAFE_PADDING, LoadingSpinner, Badge } from '@/components/ui';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import {
-  ArrowLeft,
   Play,
   Pause,
   Users,
@@ -18,6 +17,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ICON_SIZES } from '@/constants/design-tokens';
+import { useNativeHeader } from '@/hooks';
 
 import {
   useCampaign,
@@ -153,48 +153,46 @@ export function CampaignDetailScreen() {
     ? LEAD_TYPE_CONFIG[campaign.lead_type]
     : null;
 
+  const { headerOptions } = useNativeHeader({
+    title: campaign?.name || 'Campaign',
+    fallbackRoute: '/(tabs)/campaigns',
+    rightAction: campaign ? (
+      <TouchableOpacity
+        onPress={() => setShowActionsSheet(true)}
+        className="p-2"
+      >
+        <MoreVertical size={ICON_SIZES.xl} color={colors.foreground} />
+      </TouchableOpacity>
+    ) : undefined,
+  });
+
   if (campaignLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1 items-center justify-center">
-        <LoadingSpinner />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={[]}>
+          <LoadingSpinner />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   if (!campaign) {
     return (
-      <ThemedSafeAreaView className="flex-1 items-center justify-center">
-        <Text style={{ color: colors.mutedForeground }}>Campaign not found</Text>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={[]}>
+          <Text style={{ color: colors.mutedForeground }}>Campaign not found</Text>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <View
-        className="flex-row items-center justify-between px-4 py-3 border-b"
-        style={{ borderBottomColor: colors.border }}
-      >
-        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-          <ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />
-        </TouchableOpacity>
-        <Text
-          className="text-lg font-semibold flex-1 mx-3"
-          numberOfLines={1}
-          style={{ color: colors.foreground }}
-        >
-          {campaign.name}
-        </Text>
-        <TouchableOpacity
-          onPress={() => setShowActionsSheet(true)}
-          className="p-2 -mr-2"
-        >
-          <MoreVertical size={ICON_SIZES.xl} color={colors.foreground} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
@@ -323,15 +321,16 @@ export function CampaignDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Actions Sheet */}
-      <CampaignActionsSheet
-        visible={showActionsSheet}
-        onClose={() => setShowActionsSheet(false)}
-        onEdit={() => router.push(`/(tabs)/campaigns/${id}/edit`)}
-        onAddContacts={() => router.push(`/(tabs)/campaigns/${id}/enroll`)}
-        onDelete={handleDelete}
-      />
-    </ThemedSafeAreaView>
+        {/* Actions Sheet */}
+        <CampaignActionsSheet
+          visible={showActionsSheet}
+          onClose={() => setShowActionsSheet(false)}
+          onEdit={() => router.push(`/(tabs)/campaigns/${id}/edit`)}
+          onAddContacts={() => router.push(`/(tabs)/campaigns/${id}/enroll`)}
+          onDelete={handleDelete}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

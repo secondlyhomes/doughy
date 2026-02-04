@@ -168,7 +168,8 @@ serve(async (req: Request) => {
 
     // Get contact with address
     const { data: contact, error: contactError } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .select('id, first_name, last_name, address')
       .eq('id', contact_id)
       .eq('user_id', userId)
@@ -204,7 +205,7 @@ serve(async (req: Request) => {
 
     // Get user's PostGrid settings
     const { data: postgridCreds } = await supabase
-      .from('postgrid_credentials')
+      .schema('integrations').from('postgrid_credentials')
       .select('*')
       .eq('user_id', userId)
       .single();
@@ -467,7 +468,7 @@ serve(async (req: Request) => {
 
     // Credits already deducted above - update PostGrid credentials with last send time
     const { error: updateError } = await supabase
-      .from('postgrid_credentials')
+      .schema('integrations').from('postgrid_credentials')
       .update({ last_mail_sent_at: new Date().toISOString() })
       .eq('user_id', userId);
 

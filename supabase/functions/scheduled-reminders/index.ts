@@ -167,8 +167,8 @@ serve(async (req) => {
         next_action,
         next_action_due,
         status,
-        lead:crm_leads(id, name, email, phone),
-        property:re_properties(id, address_line_1, city, state)
+        lead:crm.leads(id, name, email, phone),
+        property:investor.properties(id, address_line_1, city, state)
       `)
       .gte('next_action_due', now.toISOString())
       .lte('next_action_due', tomorrow.toISOString())

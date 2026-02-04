@@ -568,3 +568,110 @@ For routes like `bookings/[id]/index.tsx` or `rental-properties/[id]/index.tsx`:
 | White banner with "[id]" | Parent layout showing route as title | Set parent `headerShown: false`, child `headerShown: true` |
 | Missing header | Layout has `headerShown: false` | Add `headerShown: true` to layout screen config |
 | Stale data in header | Derived values outside useMemo | Move all derivations inside useMemo callback |
+
+---
+
+## Modal & Sheet Presentation Patterns
+
+Different presentation styles serve different purposes. Choose based on the complexity and focus requirements of the content.
+
+### When to Use Each Presentation Style
+
+| Style | Component | Use Case | Examples |
+|-------|-----------|----------|----------|
+| Bottom Sheet | `BottomSheet` | Quick actions, filters, confirmations, 1-4 fields | Action menus, sort/filter, quick add |
+| Focused Sheet | `FocusedSheet` | Focused forms, 5+ fields, calculations | Financing, Mortgage, Portfolio add |
+| Full Screen | Stack navigation | Multi-step wizards, complex editors | Property wizard, Pattern editor |
+
+### Decision Tree
+
+1. **Is it quick (1-4 fields, 3-5 actions)?** → **Bottom Sheet**
+2. **Is it a focused single form (5+ fields)?** → **Focused Sheet**
+3. **Is it multi-step (3+ distinct views)?** → **Stack Navigation**
+4. **Does it have mode switching (list/add/edit)?** → **Stack Navigation**
+
+### Bottom Sheet (`BottomSheet`)
+
+Use for low-friction, contextual interactions that don't require full attention:
+
+```tsx
+import { BottomSheet, BottomSheetSection } from '@/components/ui';
+
+<BottomSheet
+  visible={isOpen}
+  onClose={handleClose}
+  title="Filter Properties"
+  snapPoints={['50%']}
+>
+  <BottomSheetSection title="Status">
+    {/* Filter toggles */}
+  </BottomSheetSection>
+</BottomSheet>
+```
+
+**Good for:**
+- Action menus (3-5 options)
+- Filter/sort selections
+- Quick confirmations
+- Single-field inputs
+
+### Focused Sheet (`FocusedSheet`)
+
+Use for forms that need user concentration. Uses iOS native `pageSheet` presentation with swipe-down dismiss:
+
+```tsx
+import { FocusedSheet, FocusedSheetSection } from '@/components/ui';
+
+<FocusedSheet
+  visible={isOpen}
+  onClose={handleClose}
+  title="Add Financing"
+  subtitle="Compare loan options"
+  doneLabel="Save"
+  onDone={handleSubmit}
+  isSubmitting={isLoading}
+>
+  <FocusedSheetSection title="Loan Details">
+    {/* Complex form fields */}
+  </FocusedSheetSection>
+</FocusedSheet>
+```
+
+**Good for:**
+- Forms with 5+ fields
+- Real-time calculations (mortgage, financing)
+- Mode toggle forms (existing/new)
+- Media capture flows (voice + photos)
+
+**Benefits over BottomSheet:**
+- Parent content dimmed (reduced distraction)
+- Native iOS page sheet gesture
+- Built-in header with Cancel/Done
+
+### Stack Navigation
+
+Use for complex flows with multiple distinct steps:
+
+```tsx
+// Define screens in navigator
+<Stack.Screen name="security-patterns" component={SecurityPatternsScreen} />
+<Stack.Screen name="security-pattern-editor" component={SecurityPatternEditorScreen} />
+
+// Navigate between screens
+router.push('/admin/security-patterns');
+router.push({ pathname: '/admin/security-pattern-editor', params: { id: patternId } });
+```
+
+**Good for:**
+- Multi-step wizards (3+ steps)
+- List → Add → Edit flows
+- Complex editors with multiple views
+
+### Hick's Law Limits
+
+Apply cognitive load limits consistently:
+
+- **Action menus:** Max 5 options (use dividers to group)
+- **Form fields visible:** Max 5 at once (use steps for more)
+- **Tab bars:** Max 5 tabs (hide others in overflow menu)
+- **Grid selections:** Max 6 prominent items (hide rest behind "More")

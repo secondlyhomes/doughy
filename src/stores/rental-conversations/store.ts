@@ -53,18 +53,11 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       fetchConversations: async () => {
         set({ isLoading: true, error: null });
         try {
-          const { data, error } = await supabase
-            .from('landlord_conversations')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone, contact_types),
-              property:landlord_properties(id, name, address)
-            `)
-            .order('last_message_at', { ascending: false });
+          // Use RPC function for cross-schema join
+          const { getConversationsWithContact, mapLandlordConversationRPC } = await import('@/lib/rpc');
+          const data = await getConversationsWithContact();
 
-          if (error) throw error;
-
-          const conversations = (data || []) as ConversationWithRelations[];
+          const conversations = data.map(mapLandlordConversationRPC) as ConversationWithRelations[];
           set({
             conversations: conversations.map(({ contact, property, ...c }) => c),
             conversationsWithRelations: conversations,
@@ -78,19 +71,16 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
 
       fetchConversationById: async (id: string) => {
         try {
-          const { data, error } = await supabase
-            .from('landlord_conversations')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone, contact_types),
-              property:landlord_properties(id, name, address)
-            `)
-            .eq('id', id)
-            .single();
+          // Use RPC function for cross-schema join
+          const { getConversationsWithContact, mapLandlordConversationRPC } = await import('@/lib/rpc');
+          const data = await getConversationsWithContact([id]);
 
-          if (error) throw error;
+          if (!data || data.length === 0) {
+            set({ error: 'Conversation not found' });
+            return null;
+          }
 
-          const conversation = data as ConversationWithRelations;
+          const conversation = mapLandlordConversationRPC(data[0]) as ConversationWithRelations;
           set((state) => ({
             conversationsWithRelations: state.conversationsWithRelations.some((c) => c.id === id)
               ? state.conversationsWithRelations.map((c) => (c.id === id ? conversation : c))
@@ -109,7 +99,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data: queueItems, error: queueError } = await supabase
-            .from('landlord_ai_queue_items')
+            .schema('landlord')
+            .from('ai_queue_items')
             .select('conversation_id')
             .eq('status', 'pending');
 
@@ -121,20 +112,12 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
             return;
           }
 
-          const { data, error } = await supabase
-            .from('landlord_conversations')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone, contact_types),
-              property:landlord_properties(id, name, address)
-            `)
-            .in('id', conversationIds)
-            .order('last_message_at', { ascending: false });
-
-          if (error) throw error;
+          // Use RPC function for cross-schema join
+          const { getConversationsWithContact, mapLandlordConversationRPC } = await import('@/lib/rpc');
+          const data = await getConversationsWithContact(conversationIds);
 
           set({
-            conversationsWithRelations: (data || []) as ConversationWithRelations[],
+            conversationsWithRelations: data.map(mapLandlordConversationRPC) as ConversationWithRelations[],
             isLoading: false,
           });
         } catch (error) {
@@ -150,7 +133,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       updateConversationStatus: async (id: string, status: ConversationStatus) => {
         try {
           const { error } = await supabase
-            .from('landlord_conversations')
+            .schema('landlord')
+            .from('conversations')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id);
 
@@ -174,7 +158,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
       toggleAI: async (id: string, enabled: boolean) => {
         try {
           const { error } = await supabase
-            .from('landlord_conversations')
+            .schema('landlord')
+            .from('conversations')
             .update({ is_ai_enabled: enabled, updated_at: new Date().toISOString() })
             .eq('id', id);
 
@@ -203,7 +188,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('landlord_messages')
+            .schema('landlord')
+            .from('messages')
             .select('*')
             .eq('conversation_id', conversationId)
             .order('created_at', { ascending: false });
@@ -227,7 +213,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         set({ isSending: true, error: null });
         try {
           const { data: newMessage, error } = await supabase
-            .from('landlord_messages')
+            .schema('landlord')
+            .from('messages')
             .insert({
               conversation_id: conversationId,
               direction: 'outbound',
@@ -263,7 +250,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('landlord_ai_queue_items')
+            .schema('landlord')
+            .from('ai_queue_items')
             .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
@@ -313,7 +301,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           }
 
           const { error, count } = await supabase
-            .from('landlord_ai_queue_items')
+            .schema('landlord')
+            .from('ai_queue_items')
             .update(updateData)
             .eq('id', id)
             .gt('expires_at', new Date().toISOString())
@@ -361,7 +350,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
 
           // Create outbound message
           const { data: newMessage, error: messageError } = await supabase
-            .from('landlord_messages')
+            .schema('landlord')
+            .from('messages')
             .insert({
               conversation_id: response.conversation_id,
               direction: 'outbound',
@@ -494,7 +484,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         let errorMessage = '';
 
         const { error: deleteError } = await supabase
-          .from('landlord_messages')
+          .schema('landlord')
+          .from('messages')
           .delete()
           .eq('id', pendingSend.messageId);
 
@@ -505,7 +496,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
         }
 
         const { error: revertError } = await supabase
-          .from('landlord_ai_queue_items')
+          .schema('landlord')
+          .from('ai_queue_items')
           .update({ status: 'pending', reviewed_at: null })
           .eq('id', pendingSend.queueItemId);
 
@@ -534,7 +526,8 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           const reviewedAt = new Date().toISOString();
 
           const { error } = await supabase
-            .from('landlord_ai_queue_items')
+            .schema('landlord')
+            .from('ai_queue_items')
             .update({ status: 'rejected', reviewed_at: reviewedAt })
             .eq('id', id);
 
@@ -602,13 +595,13 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
           userId,
           tables: [
             {
-              tableName: 'landlord_conversations',
+              tableName: 'landlord.conversations',
               onEvent: async () => {
                 await get().fetchConversations();
               },
             },
             {
-              tableName: 'landlord_ai_queue_items',
+              tableName: 'landlord.ai_queue_items',
               onEvent: async () => {
                 await get().fetchPendingResponses();
               },
@@ -640,7 +633,7 @@ export const useRentalConversationsStore = create<RentalConversationsState>()(
 
         const cleanup = createMessageSubscription(
           conversationId,
-          'landlord_messages',
+          'landlord.messages',
           (newMessage) => {
             set((state) => ({
               messages: {

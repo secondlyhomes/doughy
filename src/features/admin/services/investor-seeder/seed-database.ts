@@ -103,7 +103,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
     for (let i = 0; i < leadCount; i++) {
       const leadData = createTestLead(i, userId, workspaceId);
       const { data, error } = await supabase
-        .from('crm_leads')
+        .schema('crm').from('leads')
         .insert(leadData)
         .select('id')
         .single();
@@ -146,7 +146,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const leadId = getLeadIdForProperty(i);
       const propertyData = createTestProperty(i, userId, workspaceId, leadId);
       const { data, error } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .insert(propertyData)
         .select('id')
         .single();
@@ -180,7 +180,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const dealData = createTestDeal(i, userId, leadId, propertyId);
 
       const { data, error } = await supabase
-        .from('investor_deals_pipeline')
+        .schema('investor').from('deals_pipeline')
         .insert(dealData)
         .select('id')
         .single();
@@ -217,7 +217,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const captureItemData = createTestCaptureItem(i, userId, context);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from('ai_capture_items' as any) as any)
+      const { error } = await (supabase.schema('ai').from('capture_items' as any) as any)
         .insert(captureItemData);
 
       if (error) {
@@ -248,7 +248,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const conversationData = createTestInvestorConversation(i, userId, leadId, propertyId, dealId);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.from('investor_conversations' as any) as any)
+      const { data, error } = await (supabase.schema('investor').from('conversations' as any) as any)
         .insert(conversationData)
         .select('id')
         .single();
@@ -282,7 +282,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
 
       for (const msgData of messagesData) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('investor_messages' as any) as any)
+        const { error } = await (supabase.schema('investor').from('messages' as any) as any)
           .insert(msgData);
 
         if (error) {
@@ -312,7 +312,7 @@ export async function seedDatabase(userId: string): Promise<SeedResult> {
       const queueData = createTestInvestorAIQueueItem(i, userId, conv.id);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from('investor_ai_queue_items' as any) as any)
+      const { error } = await (supabase.schema('investor').from('ai_queue_items' as any) as any)
         .insert(queueData);
 
       if (error) {

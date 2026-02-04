@@ -294,7 +294,8 @@ async function updateJobProgress(
   }
 
   await (supabase as any)
-    .from('ai_jobs')
+    .schema('ai')
+    .from('jobs')
     .update({
       progress,
       status: progress === 100 ? 'succeeded' : 'running',
@@ -312,7 +313,8 @@ async function completeJob(jobId: string, result: JobResult): Promise<void> {
   }
 
   await (supabase as any)
-    .from('ai_jobs')
+    .schema('ai')
+    .from('jobs')
     .update({
       status: result.success ? 'succeeded' : 'failed',
       progress: 100,
@@ -335,7 +337,8 @@ export async function executeJob(
     // Mark job as running
     if (!USE_MOCK_DATA) {
       await (supabase as any)
-        .from('ai_jobs')
+        .schema('ai')
+        .from('jobs')
         .update({
           status: 'running',
           started_at: new Date().toISOString(),
@@ -380,7 +383,8 @@ export async function processPendingJobs(): Promise<void> {
   try {
     // Fetch pending jobs
     const { data: jobs, error } = await (supabase as any)
-      .from('ai_jobs')
+      .schema('ai')
+      .from('jobs')
       .select('*')
       .eq('status', 'queued')
       .order('created_at', { ascending: true })

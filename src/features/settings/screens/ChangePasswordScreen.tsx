@@ -11,13 +11,13 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
+import { useRouter, Stack } from 'expo-router';
+import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
-import { useKeyboardAvoidance } from '@/hooks';
+import { useKeyboardAvoidance, useNativeHeader } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { changePassword } from '../services/profileService';
 import {
@@ -40,6 +40,11 @@ export function ChangePasswordScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Change Password',
+    fallbackRoute: '/(tabs)/settings/security',
+  });
 
   const passwordStrength = useMemo(
     () => calculatePasswordStrength(newPassword),
@@ -87,31 +92,33 @@ export function ChangePasswordScreen() {
 
   if (success) {
     return (
-      <ThemedSafeAreaView className="flex-1">
-        <View className="flex-1 items-center justify-center px-6">
-          <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: withOpacity(colors.success, 'medium') }}>
-            <CheckCircle size={48} color={colors.success} />
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <View className="flex-1 items-center justify-center px-6">
+            <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: withOpacity(colors.success, 'medium') }}>
+              <CheckCircle size={48} color={colors.success} />
+            </View>
+            <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
+              Password Changed!
+            </Text>
+            <Text className="text-center mt-2 mb-8" style={{ color: colors.mutedForeground }}>
+              Your password has been successfully updated.
+            </Text>
+            <Button onPress={() => router.back()} size="lg">
+              Done
+            </Button>
           </View>
-          <Text className="text-2xl font-bold text-center" style={{ color: colors.foreground }}>
-            Password Changed!
-          </Text>
-          <Text className="text-center mt-2 mb-8" style={{ color: colors.mutedForeground }}>
-            Your password has been successfully updated.
-          </Text>
-          <Button onPress={() => router.back()} size="lg">
-            Done
-          </Button>
-        </View>
-      </ThemedSafeAreaView>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader title="Change Password" backButton bordered />
-
-      <KeyboardAvoidingView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <KeyboardAvoidingView
         behavior={keyboardProps.behavior}
         keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
         className="flex-1"
@@ -245,8 +252,9 @@ export function ChangePasswordScreen() {
           >
             Change Password
           </Button>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </ThemedSafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

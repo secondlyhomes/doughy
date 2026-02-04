@@ -72,7 +72,8 @@ export const useVendorsStore = create<VendorsState>()(
         set({ isLoading: true, error: null, filterPropertyId: propertyId || null });
         try {
           let query = supabase
-            .from('landlord_vendors')
+            .schema('landlord')
+            .from('vendors')
             .select('*')
             .eq('is_active', true)
             .order('is_primary', { ascending: false })
@@ -102,7 +103,8 @@ export const useVendorsStore = create<VendorsState>()(
       fetchVendorById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('landlord_vendors')
+            .schema('landlord')
+            .from('vendors')
             .select('*')
             .eq('id', id)
             .single();
@@ -128,7 +130,8 @@ export const useVendorsStore = create<VendorsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newVendor, error } = await supabase
-            .from('landlord_vendors')
+            .schema('landlord')
+            .from('vendors')
             .insert({
               ...data,
               is_active: true,
@@ -157,7 +160,8 @@ export const useVendorsStore = create<VendorsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updated, error } = await supabase
-            .from('landlord_vendors')
+            .schema('landlord')
+            .from('vendors')
             .update({
               ...data,
               updated_at: new Date().toISOString(),
@@ -187,7 +191,8 @@ export const useVendorsStore = create<VendorsState>()(
         try {
           // Soft delete by setting is_active to false
           const { error } = await supabase
-            .from('landlord_vendors')
+            .schema('landlord')
+            .from('vendors')
             .update({ is_active: false, updated_at: new Date().toISOString() })
             .eq('id', id);
 

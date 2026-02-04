@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import {
@@ -25,11 +24,13 @@ import {
   GitBranch,
   Sliders,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { BORDER_RADIUS, SPACING, FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS } from '@/constants/design-tokens';
+import { BORDER_RADIUS, SPACING, FONT_SIZES, LINE_HEIGHTS, FONT_WEIGHTS, ICON_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
-import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { TAB_BAR_SAFE_PADDING, LoadingSpinner } from '@/components/ui';
 
 import { useNextAction, NextAction, ActionCategory } from '@/features/deals/hooks/useNextAction';
 import { useDeal } from '@/features/deals/hooks/useDeals';
@@ -67,6 +68,9 @@ const ACTION_ICONS: Record<ActionId, React.ComponentType<any>> = {
   prepare_esign_envelope: PenTool,
 };
 
+// Maximum number of actions to show before "Show more" button
+const MAX_VISIBLE_ACTIONS = 6;
+
 export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabProps) {
   const colors = useThemeColors();
   const context = useAssistantContext();
@@ -75,6 +79,7 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
   const { createJob } = useAIJobs(dealId);
 
   const [loading, setLoading] = useState<ActionId | null>(null);
+  const [showAllActions, setShowAllActions] = useState(false);
 
   // Get recommended actions based on current context
   const recommendedActions = useMemo(() => {
@@ -197,7 +202,7 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
             accessibilityLabel={`Next action: ${nextAction.action}. ${nextAction.priority} priority${nextAction.isOverdue ? ', overdue' : ''}`}
           >
             <View style={styles.nbaContent}>
-              <Target size={24} color={colors.primary} />
+              <Target size={ICON_SIZES.xl} color={colors.primary} />
               <View style={styles.nbaText}>
                 <Text style={[styles.nbaAction, { color: colors.foreground }]}>
                   {nextAction.action}
@@ -208,7 +213,7 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
                 </Text>
               </View>
             </View>
-            <ChevronRight size={20} color={colors.primary} />
+            <ChevronRight size={ICON_SIZES.lg} color={colors.primary} />
           </TouchableOpacity>
         </View>
       )}
@@ -219,7 +224,11 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
           RECOMMENDED ACTIONS
         </Text>
         <View style={styles.actionGrid}>
-          {recommendedActions.map((action) => {
+          {/* Apply progressive disclosure - show limited actions by default */}
+          {(showAllActions
+            ? recommendedActions
+            : recommendedActions.slice(0, MAX_VISIBLE_ACTIONS)
+          ).map((action) => {
             const Icon = ACTION_ICONS[action.id] || Zap;
             const isLoading = loading === action.id;
 
@@ -242,9 +251,9 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
               >
                 <View style={styles.actionIconContainer}>
                   {isLoading ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
+                    <LoadingSpinner size="small" />
                   ) : (
-                    <Icon size={20} color={colors.primary} />
+                    <Icon size={ICON_SIZES.lg} color={colors.primary} />
                   )}
                 </View>
                 <Text
@@ -264,6 +273,28 @@ export function ActionsTab({ dealId, onActionSelect, onJobCreated }: ActionsTabP
             );
           })}
         </View>
+
+        {/* Show more/less button when there are more than MAX_VISIBLE_ACTIONS */}
+        {recommendedActions.length > MAX_VISIBLE_ACTIONS && (
+          <TouchableOpacity
+            style={[styles.showMoreButton, { backgroundColor: colors.muted }]}
+            onPress={() => setShowAllActions(!showAllActions)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={showAllActions ? 'Show fewer actions' : `Show ${recommendedActions.length - MAX_VISIBLE_ACTIONS} more actions`}
+          >
+            {showAllActions ? (
+              <ChevronUp size={ICON_SIZES.md} color={colors.mutedForeground} />
+            ) : (
+              <ChevronDown size={ICON_SIZES.md} color={colors.mutedForeground} />
+            )}
+            <Text style={[styles.showMoreText, { color: colors.mutedForeground }]}>
+              {showAllActions
+                ? 'Show less'
+                : `Show ${recommendedActions.length - MAX_VISIBLE_ACTIONS} more`}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Quick Actions */}
@@ -316,7 +347,7 @@ function QuickActionButton({
       accessibilityRole="button"
       accessibilityLabel={`Quick action: ${label}`}
     >
-      <Icon size={18} color={colors.foreground} />
+      <Icon size={ICON_SIZES.ml} color={colors.foreground} />
       <Text style={[styles.quickActionLabel, { color: colors.foreground }]}>
         {label}
       </Text>
@@ -434,6 +465,19 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS['10'],
   },
   quickActionLabel: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: FONT_WEIGHTS.medium,
+  },
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.xs,
+    paddingVertical: SPACING.md,
+    marginTop: SPACING.sm,
+    borderRadius: BORDER_RADIUS['10'],
+  },
+  showMoreText: {
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.medium,
   },

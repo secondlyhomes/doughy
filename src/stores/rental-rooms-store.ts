@@ -74,7 +74,8 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('landlord_rooms')
+            .schema('landlord')
+            .from('rooms')
             .select('*')
             .eq('property_id', propertyId)
             .order('name', { ascending: true });
@@ -103,7 +104,8 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
       fetchRoomById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('landlord_rooms')
+            .schema('landlord')
+            .from('rooms')
             .select('*')
             .eq('id', id)
             .single();
@@ -142,7 +144,8 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newRoom, error } = await supabase
-            .from('landlord_rooms')
+            .schema('landlord')
+            .from('rooms')
             .insert(data)
             .select()
             .single();
@@ -175,7 +178,8 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updatedRoom, error } = await supabase
-            .from('landlord_rooms')
+            .schema('landlord')
+            .from('rooms')
             .update(data)
             .eq('id', id)
             .select()
@@ -211,7 +215,8 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
           const room = get().rooms.find((r) => r.id === id);
 
           const { error } = await supabase
-            .from('landlord_rooms')
+            .schema('landlord')
+            .from('rooms')
             .delete()
             .eq('id', id);
 
@@ -242,7 +247,8 @@ export const useRentalRoomsStore = create<RentalRoomsState>()(
         set({ isSaving: true, error: null });
         try {
           const { error } = await supabase
-            .from('landlord_rooms')
+            .schema('landlord')
+            .from('rooms')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id);
 

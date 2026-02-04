@@ -18,7 +18,9 @@ import {
   Button,
   ListEmptyState,
   TAB_BAR_SAFE_PADDING,
+  Badge,
 } from '@/components/ui';
+import { getStatusBadgeVariant } from '@/lib/formatters';
 import { SkeletonList, DealCardSkeleton } from '@/components/ui/CardSkeletons';
 import { useRouter } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -75,20 +77,6 @@ const CampaignCard = memo(function CampaignCard({ campaign, onPress }: CampaignC
     ? ((campaign.converted_count / campaign.enrolled_count) * 100).toFixed(1)
     : '0.0';
 
-  // Get status color
-  const getStatusColor = () => {
-    switch (campaign.status) {
-      case 'active':
-        return colors.success;
-      case 'paused':
-        return colors.warning;
-      case 'completed':
-        return colors.info;
-      default:
-        return colors.mutedForeground;
-    }
-  };
-
   // Format date relative
   const formatRelativeDate = (dateStr: string | undefined) => {
     if (!dateStr) return '';
@@ -112,14 +100,9 @@ const CampaignCard = memo(function CampaignCard({ campaign, onPress }: CampaignC
       {/* Header: Status Badge + Name */}
       <View className="flex-row items-center justify-between mb-2">
         <View className="flex-row items-center flex-1">
-          <View
-            className="px-2 py-1 rounded-full mr-2"
-            style={{ backgroundColor: withOpacity(getStatusColor(), 'light') }}
-          >
-            <Text className="text-xs font-medium capitalize" style={{ color: getStatusColor() }}>
-              {campaign.status}
-            </Text>
-          </View>
+          <Badge variant={getStatusBadgeVariant(campaign.status)} size="sm" className="mr-2">
+            {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+          </Badge>
           <Text
             className="text-base font-semibold flex-1 flex-shrink"
             style={{ color: colors.foreground }}
@@ -296,6 +279,7 @@ export function CampaignsListScreen() {
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews={true}
+            keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl
                 refreshing={isLoading}

@@ -100,7 +100,7 @@ serve(async (req: Request) => {
     // If using template, fetch it
     if (step.template_id) {
       const { data: template, error: templateError } = await supabase
-        .from('investor_outreach_templates')
+        .schema('investor').from('outreach_templates')
         .select('subject, body')
         .eq('id', step.template_id)
         .single();
@@ -240,7 +240,7 @@ serve(async (req: Request) => {
       case 'meta_dm': {
         // For Meta DM, we need the contact's Facebook PSID or Instagram ID
         const { data: contactMeta, error: contactMetaError } = await supabase
-          .from('crm_contacts')
+          .schema('crm').from('contacts')
           .select('metadata')
           .eq('id', contact.id)
           .single();

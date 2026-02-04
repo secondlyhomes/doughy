@@ -33,6 +33,9 @@ import { ICON_SIZES } from '@/constants/design-tokens';
 // Platform selection is now first step
 const STEPS: SurveyStep[] = ['platformSelection', 'referralSource', 'primaryUseCase', 'experienceLevel', 'companySize'];
 
+// Human-readable step labels for progress indicator
+const STEP_LABELS = ['Your Role', 'Discovery', 'Use Case', 'Experience', 'Team Size'];
+
 export function OnboardingScreen() {
   const router = useRouter();
   const colors = useThemeColors();
@@ -146,7 +149,11 @@ export function OnboardingScreen() {
               <Text style={{ color: colors.mutedForeground }}>Skip</Text>
             </TouchableOpacity>
           </View>
-          <OnboardingProgress currentStep={currentStep} totalSteps={STEPS.length} />
+          <OnboardingProgress
+              currentStep={currentStep}
+              totalSteps={STEPS.length}
+              stepLabels={STEP_LABELS}
+            />
         </View>
 
         <ScrollView

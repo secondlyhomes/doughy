@@ -13,7 +13,9 @@ export const STEP_UP_REQUIRED_ACTIONS = [
   'pattern_bulk_disable',
   'threat_score_reset',
   'threat_score_bulk_reset',
+  'user_block',
   'user_unblock',
+  'user_delete',
   'circuit_breaker_global_reset',
 ] as const;
 
@@ -93,6 +95,12 @@ export function useStepUpAuth(): UseStepUpAuthReturn {
         // If recently verified, return true immediately
         if (isRecentlyVerified()) {
           return true;
+        }
+
+        // Prevent race condition: reject if a step-up is already in progress
+        if (resolveStepUp.current) {
+          console.warn('[StepUpAuth] Step-up already in progress, rejecting new request');
+          return false;
         }
 
         // Check if MFA is available
@@ -244,8 +252,9 @@ export function useStepUpAuth(): UseStepUpAuthReturn {
         if (newChallengeResult.success && newChallengeResult.challengeId) {
           challengeIdRef.current = newChallengeResult.challengeId;
         } else {
-          // Challenge refresh failed - update error to prompt retry
+          // Challenge refresh failed - clear invalid challenge ID and update error
           console.error('[StepUpAuth] Failed to create new challenge after failed verification');
+          challengeIdRef.current = null; // Clear invalid challenge to prevent stale retries
           setState((prev) => {
             if (prev.status === 'idle' || prev.status === 'mfa_not_configured') {
               return prev;

@@ -18,7 +18,7 @@ import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, GLASS_INTENSITY } from '@/constants/design-tokens';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop, GlassView } from './GlassView';
 import { getBackdropColor } from '@/lib/design-utils';
@@ -160,7 +160,7 @@ export function BottomSheet({
       return (
         <TouchableWithoutFeedback>
           <GlassView
-            intensity={80}
+            intensity={GLASS_INTENSITY.opaque}
             style={[
               bottomSheetStyles.sheet,
               sheetStyle,
@@ -204,7 +204,7 @@ export function BottomSheet({
 
     if (useGlassBackdrop) {
       return (
-        <GlassBackdrop intensity={20} style={bottomSheetStyles.backdrop}>
+        <GlassBackdrop intensity={GLASS_INTENSITY.subtle} style={bottomSheetStyles.backdrop}>
           {content}
         </GlassBackdrop>
       );

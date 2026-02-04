@@ -3,12 +3,12 @@
 // Part of Zone 2: AI Enhancement for the Doughy architecture refactor
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { View, ScrollView, Alert } from 'react-native';
+import { Stack } from 'expo-router';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import { useLandlordSettingsStore } from '@/stores/landlord-settings-store';
 import {
   AIModeSelector,
@@ -21,8 +21,12 @@ import {
 } from './landlord-ai-settings';
 
 export function LandlordAISettingsScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
+
+  const { headerOptions } = useNativeHeader({
+    title: 'AI Communication',
+    fallbackRoute: '/(tabs)/settings',
+  });
 
   const {
     landlordSettings,
@@ -62,34 +66,20 @@ export function LandlordAISettingsScreen() {
 
   if (isLoading && !landlordSettings) {
     return (
-      <ThemedView className="flex-1 items-center justify-center">
-        <LoadingSpinner />
-      </ThemedView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedView className="flex-1 items-center justify-center">
+          <LoadingSpinner />
+        </ThemedView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <View
-        className="flex-row items-center px-4 py-3 border-b"
-        style={{ borderColor: colors.border }}
-      >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={colors.foreground} />
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
-            AI Communication Settings
-          </Text>
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-            Configure how AI handles guest messages
-          </Text>
-        </View>
-        {isSaving && <LoadingSpinner size="small" />}
-      </View>
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
       >
@@ -155,7 +145,8 @@ export function LandlordAISettingsScreen() {
           enabled={landlordSettings.learning.enabled}
           onToggle={(value) => updateNestedSetting('learning', { enabled: value })}
         />
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

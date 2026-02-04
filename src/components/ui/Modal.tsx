@@ -15,6 +15,7 @@ import {
 import { X } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { GLASS_INTENSITY } from '@/constants/design-tokens';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop } from './GlassView';
 
@@ -46,7 +47,7 @@ export function Modal({
     if (useGlassBackdrop) {
       return (
         <GlassBackdrop
-          intensity={30}
+          intensity={GLASS_INTENSITY.subtle}
           style={styles.backdrop}
         >
           <TouchableWithoutFeedback

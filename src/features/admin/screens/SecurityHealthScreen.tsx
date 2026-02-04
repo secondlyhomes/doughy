@@ -27,7 +27,7 @@ import {
   getSecurityHealthSummary,
   getKeysNeedingAttention,
 } from '../services/securityHealthService';
-import { batchHealthCheck } from '../services/apiKeyHealthService';
+import { batchHealthCheck } from '../services/api-key-health';
 import { INTEGRATIONS } from '../data/integrationData';
 import type { IntegrationHealth, ApiKeyRecord } from '../types/integrations';
 import type { SecurityHealthSummary as Summary, ApiKeyWithAge } from '../types/security';

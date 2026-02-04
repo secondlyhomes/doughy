@@ -57,7 +57,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
 
   const handleAddProperty = () => {
     onClose();
-    router.push('/(tabs)/properties/new');
+    router.push('/(tabs)/properties/add');
   };
 
   const renderPropertyItem = ({ item }: { item: any }) => (

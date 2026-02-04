@@ -190,7 +190,7 @@ async function getValidAccessToken(
   if (!refreshResult) {
     // Mark connection as having an error
     await supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .update({
         sync_error: 'Failed to refresh access token. Please reconnect Gmail.',
         is_active: false,
@@ -204,7 +204,7 @@ async function getValidAccessToken(
   // Note: In production, you'd encrypt the new access token before storing
   // For now, we'll call an edge function that handles encryption
   await supabase
-    .from('rental_email_connections')
+    .schema('integrations').from('email_connections')
     .update({
       token_expires_at: refreshResult.expiresAt.toISOString(),
       sync_error: null,
@@ -375,7 +375,7 @@ async function syncConnection(
   if (listError) {
     errors.push(listError);
     await supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .update({ sync_error: listError })
       .eq('id', connection.id);
     return { success: false, errors };
@@ -384,7 +384,7 @@ async function syncConnection(
   if (messages.length === 0) {
     console.log(`${LOG_PREFIX} No new platform messages`);
     await supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .update({
         last_sync_at: new Date().toISOString(),
         sync_error: null,
@@ -395,7 +395,8 @@ async function syncConnection(
 
   // Get existing message IDs to avoid duplicates
   const { data: existingConvs } = await supabase
-    .from('landlord_conversations')
+    .schema('landlord')
+    .from('conversations')
     .select('external_message_id')
     .eq('workspace_id', connection.workspace_id)
     .not('external_message_id', 'is', null);
@@ -476,7 +477,8 @@ async function syncConnection(
     if (parsed.contact.email) {
       // Check if contact exists
       const { data: existingContact } = await supabase
-        .from('crm_contacts')
+        .schema('crm')
+        .from('contacts')
         .select('id')
         .eq('email', parsed.contact.email)
         .eq('workspace_id', connection.workspace_id)
@@ -487,7 +489,8 @@ async function syncConnection(
       } else {
         // Create new contact
         const { data: newContact, error: contactError } = await supabase
-          .from('crm_contacts')
+          .schema('crm')
+          .from('contacts')
           .insert({
             workspace_id: connection.workspace_id,
             user_id: connection.user_id,
@@ -519,7 +522,8 @@ async function syncConnection(
 
     // Create conversation
     const { data: conversation, error: convError } = await supabase
-      .from('landlord_conversations')
+      .schema('landlord')
+      .from('conversations')
       .insert({
         workspace_id: connection.workspace_id,
         user_id: connection.user_id,
@@ -544,7 +548,8 @@ async function syncConnection(
 
     // Create inbound message
     const { error: msgError } = await supabase
-      .from('landlord_messages')
+      .schema('landlord')
+      .from('messages')
       .insert({
         workspace_id: connection.workspace_id,
         conversation_id: conversation.id,
@@ -594,7 +599,7 @@ async function syncConnection(
 
   // Update connection with sync results
   await supabase
-    .from('rental_email_connections')
+    .schema('integrations').from('email_connections')
     .update({
       last_sync_at: new Date().toISOString(),
       last_message_id: newestMessageId,
@@ -676,7 +681,7 @@ serve(async (req: Request) => {
 
     // Get connections to sync
     let query = supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .select('*')
       .eq('provider', 'gmail')
       .eq('is_active', true);

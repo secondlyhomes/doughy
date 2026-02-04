@@ -43,34 +43,16 @@ export const useSkipTracingStore = create<SkipTracingState>((set, get) => ({
   fetchResults: async (options) => {
     set({ isLoading: true, error: null });
     try {
-      // Note: Table name is crm_skip_trace_results per DBA conventions
-      // Type assertions used until migration is applied and types regenerated
-      let query = (supabase as any)
-        .from('crm_skip_trace_results')
-        .select(`
-          *,
-          contact:crm_contacts!crm_skip_trace_results_contact_id_fkey(id, first_name, last_name),
-          lead:crm_leads!crm_skip_trace_results_lead_id_fkey(id, name),
-          property:rental_properties!crm_skip_trace_results_property_id_fkey(id, address, city, state),
-          matched_property:rental_properties!crm_skip_trace_results_matched_property_id_fkey(id, address, city, state)
-        `)
-        .order('created_at', { ascending: false });
+      // Use RPC function for cross-schema join
+      const { getSkipTraceResults, mapSkipTraceResultRPC } = await import('@/lib/rpc');
 
-      if (options?.contactId) {
-        query = query.eq('contact_id', options.contactId);
-      }
-      if (options?.leadId) {
-        query = query.eq('lead_id', options.leadId);
-      }
-      if (options?.propertyId) {
-        query = query.eq('property_id', options.propertyId);
-      }
+      const data = await getSkipTraceResults({
+        contactId: options?.contactId,
+        leadId: options?.leadId,
+        propertyId: options?.propertyId,
+      });
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      const results = (data || []) as SkipTraceResultWithRelations[];
+      const results = data.map(mapSkipTraceResultRPC) as SkipTraceResultWithRelations[];
       set({ results, isLoading: false });
       return results;
     } catch (error) {
@@ -83,22 +65,15 @@ export const useSkipTracingStore = create<SkipTracingState>((set, get) => ({
   fetchResultById: async (resultId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Note: Table name is crm_skip_trace_results per DBA conventions
-      const { data, error } = await (supabase as any)
-        .from('crm_skip_trace_results')
-        .select(`
-          *,
-          contact:crm_contacts!crm_skip_trace_results_contact_id_fkey(id, first_name, last_name),
-          lead:crm_leads!crm_skip_trace_results_lead_id_fkey(id, name),
-          property:rental_properties!crm_skip_trace_results_property_id_fkey(id, address, city, state),
-          matched_property:rental_properties!crm_skip_trace_results_matched_property_id_fkey(id, address, city, state)
-        `)
-        .eq('id', resultId)
-        .single();
+      // Use RPC function for cross-schema join
+      const { getSkipTraceResultById, mapSkipTraceResultRPC } = await import('@/lib/rpc');
 
-      if (error) throw error;
+      const data = await getSkipTraceResultById(resultId);
+      if (!data) {
+        throw new Error('Skip trace result not found');
+      }
 
-      const result = data as SkipTraceResultWithRelations;
+      const result = mapSkipTraceResultRPC(data) as SkipTraceResultWithRelations;
       set({ currentResult: result, isLoading: false });
       return result;
     } catch (error) {
@@ -114,9 +89,10 @@ export const useSkipTracingStore = create<SkipTracingState>((set, get) => ({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
 
-      // Create pending record (crm_skip_trace_results per DBA conventions)
+      // Create pending record (crm.skip_trace_results per DBA conventions)
       const { data: record, error: insertError } = await (supabase as any)
-        .from('crm_skip_trace_results')
+        .schema('crm')
+        .from('skip_trace_results')
         .insert({
           user_id: userData.user.id,
           contact_id: input.contact_id || null,
@@ -162,7 +138,8 @@ export const useSkipTracingStore = create<SkipTracingState>((set, get) => ({
       if (traceError) {
         // Update record with error
         await (supabase as any)
-          .from('crm_skip_trace_results')
+          .schema('crm')
+          .from('skip_trace_results')
           .update({
             status: 'failed',
             error_message: traceError.message,
@@ -200,7 +177,8 @@ export const useSkipTracingStore = create<SkipTracingState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { error } = await (supabase as any)
-        .from('crm_skip_trace_results')
+        .schema('crm')
+        .from('skip_trace_results')
         .update({
           matched_property_id: propertyId,
           match_confidence: 100, // Manual match = 100% confidence
@@ -234,7 +212,8 @@ export const useSkipTracingStore = create<SkipTracingState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { error } = await (supabase as any)
-        .from('crm_skip_trace_results')
+        .schema('crm')
+        .from('skip_trace_results')
         .delete()
         .eq('id', resultId);
 
@@ -255,9 +234,10 @@ export const useSkipTracingStore = create<SkipTracingState>((set, get) => ({
   autoTraceNewLead: async (leadId: string) => {
     try {
       // Get lead details including existing contact info in single query
-      // Note: crm_leads uses 'name' (full name) and 'address_line_1' (not first/last name or street_address)
+      // Note: crm.leads uses 'name' (full name) and 'address_line_1' (not first/last name or street_address)
       const { data: lead, error: leadError } = await supabase
-        .from('crm_leads')
+        .schema('crm')
+        .from('leads')
         .select('id, name, address_line_1, city, state, zip, phone, email')
         .eq('id', leadId)
         .single();

@@ -1,11 +1,14 @@
 // src/features/deals/components/OfferTermsForm.tsx
 // Form component for entering offer terms by strategy
+// Uses progressive disclosure for advanced fields to reduce cognitive load
 
-import React from 'react';
-import { View, Text } from 'react-native';
-import { useThemeColors } from '@/contexts/ThemeContext';
-import { Input } from '@/components/ui/Input';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { FormField } from '@/components/ui';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { useThemeColors } from '@/contexts/ThemeContext';
+import { ICON_SIZES, SPACING } from '@/constants/design-tokens';
 import { DealStrategy, OfferTerms } from '../types';
 
 interface OfferTermsFormProps {
@@ -22,6 +25,10 @@ export function OfferTermsForm({
   disabled = false,
 }: OfferTermsFormProps) {
   const colors = useThemeColors();
+  const [showAdvancedFinancing, setShowAdvancedFinancing] = useState(
+    // Auto-expand if balloon values exist
+    !!(terms.balloon_payment || terms.balloon_due_years)
+  );
 
   // Update a single field
   const updateField = (field: keyof OfferTerms, value: string | number | boolean) => {
@@ -48,44 +55,32 @@ export function OfferTermsForm({
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Basic Terms</CardTitle>
         </CardHeader>
-        <CardContent className="gap-3">
-          <View>
-            <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-              Purchase Price
-            </Text>
-            <Input
-              value={terms.purchase_price?.toString() || ''}
-              onChangeText={(text) => updateField('purchase_price', parseCurrency(text))}
-              placeholder="$0"
-              keyboardType="numeric"
-              editable={!disabled}
-            />
-          </View>
-
-          <View>
-            <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-              Earnest Money
-            </Text>
-            <Input
-              value={terms.earnest_money?.toString() || ''}
-              onChangeText={(text) => updateField('earnest_money', parseCurrency(text))}
-              placeholder="$0"
-              keyboardType="numeric"
-              editable={!disabled}
-            />
-          </View>
-
-          <View>
-            <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-              Closing Date
-            </Text>
-            <Input
-              value={terms.closing_date || ''}
-              onChangeText={(text) => updateField('closing_date', text)}
-              placeholder="YYYY-MM-DD"
-              editable={!disabled}
-            />
-          </View>
+        <CardContent className="gap-1">
+          <FormField
+            label="Purchase Price"
+            value={terms.purchase_price?.toString() || ''}
+            onChangeText={(text) => updateField('purchase_price', parseCurrency(text))}
+            prefix="$"
+            placeholder="0"
+            keyboardType="numeric"
+            editable={!disabled}
+          />
+          <FormField
+            label="Earnest Money"
+            value={terms.earnest_money?.toString() || ''}
+            onChangeText={(text) => updateField('earnest_money', parseCurrency(text))}
+            prefix="$"
+            placeholder="0"
+            keyboardType="numeric"
+            editable={!disabled}
+          />
+          <FormField
+            label="Closing Date"
+            value={terms.closing_date || ''}
+            onChangeText={(text) => updateField('closing_date', text)}
+            placeholder="YYYY-MM-DD"
+            editable={!disabled}
+          />
         </CardContent>
       </Card>
 
@@ -95,84 +90,86 @@ export function OfferTermsForm({
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Seller Financing Terms</CardTitle>
           </CardHeader>
-          <CardContent className="gap-3">
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Down Payment
-              </Text>
-              <Input
-                value={terms.down_payment?.toString() || ''}
-                onChangeText={(text) => updateField('down_payment', parseCurrency(text))}
-                placeholder="$0"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
+          <CardContent className="gap-1">
+            <FormField
+              label="Down Payment"
+              value={terms.down_payment?.toString() || ''}
+              onChangeText={(text) => updateField('down_payment', parseCurrency(text))}
+              prefix="$"
+              placeholder="0"
+              keyboardType="numeric"
+              editable={!disabled}
+            />
+            <FormField
+              label="Interest Rate"
+              value={terms.interest_rate?.toString() || ''}
+              onChangeText={(text) => updateField('interest_rate', parsePercent(text))}
+              suffix="%"
+              placeholder="0.00"
+              keyboardType="decimal-pad"
+              editable={!disabled}
+            />
+            <FormField
+              label="Term (Years)"
+              value={terms.term_years?.toString() || ''}
+              onChangeText={(text) => updateField('term_years', parseInt(text, 10) || 0)}
+              placeholder="0"
+              keyboardType="numeric"
+              editable={!disabled}
+            />
+            <FormField
+              label="Monthly Payment"
+              value={terms.monthly_payment?.toString() || ''}
+              onChangeText={(text) => updateField('monthly_payment', parseCurrency(text))}
+              prefix="$"
+              placeholder="0"
+              keyboardType="numeric"
+              editable={!disabled}
+            />
 
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Interest Rate (%)
+            {/* Advanced: Balloon Payment (progressive disclosure) */}
+            <TouchableOpacity
+              onPress={() => setShowAdvancedFinancing(!showAdvancedFinancing)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingVertical: SPACING.sm,
+                marginTop: SPACING.xs,
+              }}
+              disabled={disabled}
+            >
+              <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '500' }}>
+                Balloon Payment Options
               </Text>
-              <Input
-                value={terms.interest_rate?.toString() || ''}
-                onChangeText={(text) => updateField('interest_rate', parsePercent(text))}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                editable={!disabled}
-              />
-            </View>
+              {showAdvancedFinancing ? (
+                <ChevronUp size={ICON_SIZES.md} color={colors.primary} />
+              ) : (
+                <ChevronDown size={ICON_SIZES.md} color={colors.primary} />
+              )}
+            </TouchableOpacity>
 
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Term (Years)
-              </Text>
-              <Input
-                value={terms.term_years?.toString() || ''}
-                onChangeText={(text) => updateField('term_years', parseInt(text, 10) || 0)}
-                placeholder="0"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
-
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Monthly Payment
-              </Text>
-              <Input
-                value={terms.monthly_payment?.toString() || ''}
-                onChangeText={(text) => updateField('monthly_payment', parseCurrency(text))}
-                placeholder="$0"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
-
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Balloon Payment
-              </Text>
-              <Input
-                value={terms.balloon_payment?.toString() || ''}
-                onChangeText={(text) => updateField('balloon_payment', parseCurrency(text))}
-                placeholder="$0 (optional)"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
-
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Balloon Due (Years)
-              </Text>
-              <Input
-                value={terms.balloon_due_years?.toString() || ''}
-                onChangeText={(text) => updateField('balloon_due_years', parseInt(text, 10) || 0)}
-                placeholder="0"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
+            {showAdvancedFinancing && (
+              <View style={{ gap: 4 }}>
+                <FormField
+                  label="Balloon Payment"
+                  value={terms.balloon_payment?.toString() || ''}
+                  onChangeText={(text) => updateField('balloon_payment', parseCurrency(text))}
+                  prefix="$"
+                  placeholder="0 (optional)"
+                  keyboardType="numeric"
+                  editable={!disabled}
+                />
+                <FormField
+                  label="Balloon Due (Years)"
+                  value={terms.balloon_due_years?.toString() || ''}
+                  onChangeText={(text) => updateField('balloon_due_years', parseInt(text, 10) || 0)}
+                  placeholder="0"
+                  keyboardType="numeric"
+                  editable={!disabled}
+                />
+              </View>
+            )}
           </CardContent>
         </Card>
       )}
@@ -183,58 +180,43 @@ export function OfferTermsForm({
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Existing Loan Details</CardTitle>
           </CardHeader>
-          <CardContent className="gap-3">
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Existing Loan Balance
-              </Text>
-              <Input
-                value={terms.existing_loan_balance?.toString() || ''}
-                onChangeText={(text) => updateField('existing_loan_balance', parseCurrency(text))}
-                placeholder="$0"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
-
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Current Monthly Payment
-              </Text>
-              <Input
-                value={terms.existing_monthly_payment?.toString() || ''}
-                onChangeText={(text) => updateField('existing_monthly_payment', parseCurrency(text))}
-                placeholder="$0"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
-
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Existing Interest Rate (%)
-              </Text>
-              <Input
-                value={terms.existing_interest_rate?.toString() || ''}
-                onChangeText={(text) => updateField('existing_interest_rate', parsePercent(text))}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                editable={!disabled}
-              />
-            </View>
-
-            <View>
-              <Text className="text-sm font-medium mb-1" style={{ color: colors.foreground }}>
-                Arrears to Catch Up
-              </Text>
-              <Input
-                value={terms.catch_up_amount?.toString() || ''}
-                onChangeText={(text) => updateField('catch_up_amount', parseCurrency(text))}
-                placeholder="$0 (if any)"
-                keyboardType="numeric"
-                editable={!disabled}
-              />
-            </View>
+          <CardContent className="gap-1">
+            <FormField
+              label="Existing Loan Balance"
+              value={terms.existing_loan_balance?.toString() || ''}
+              onChangeText={(text) => updateField('existing_loan_balance', parseCurrency(text))}
+              prefix="$"
+              placeholder="0"
+              keyboardType="numeric"
+              editable={!disabled}
+            />
+            <FormField
+              label="Current Monthly Payment"
+              value={terms.existing_monthly_payment?.toString() || ''}
+              onChangeText={(text) => updateField('existing_monthly_payment', parseCurrency(text))}
+              prefix="$"
+              placeholder="0"
+              keyboardType="numeric"
+              editable={!disabled}
+            />
+            <FormField
+              label="Existing Interest Rate"
+              value={terms.existing_interest_rate?.toString() || ''}
+              onChangeText={(text) => updateField('existing_interest_rate', parsePercent(text))}
+              suffix="%"
+              placeholder="0.00"
+              keyboardType="decimal-pad"
+              editable={!disabled}
+            />
+            <FormField
+              label="Arrears to Catch Up"
+              value={terms.catch_up_amount?.toString() || ''}
+              onChangeText={(text) => updateField('catch_up_amount', parseCurrency(text))}
+              prefix="$"
+              placeholder="0 (if any)"
+              keyboardType="numeric"
+              editable={!disabled}
+            />
           </CardContent>
         </Card>
       )}

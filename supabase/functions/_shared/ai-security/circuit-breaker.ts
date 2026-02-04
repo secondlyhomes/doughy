@@ -55,9 +55,15 @@ export async function isCircuitBreakerOpen(
     });
 
     if (error) {
-      console.error('[CircuitBreaker] Error checking state:', error.message);
-      // On error, assume closed (fail open for availability)
-      return { isOpen: false, scope: null, reason: null, openedAt: null };
+      console.error('[CircuitBreaker] CRITICAL: Error checking state:', error.message);
+      // SECURITY: Fail closed - assume breaker is OPEN when state cannot be verified
+      // This is an emergency stop mechanism - when uncertain, stop operations
+      return {
+        isOpen: true,
+        scope: 'error',
+        reason: 'Circuit breaker state check failed - operations halted for safety',
+        openedAt: new Date()
+      };
     }
 
     // Parse result
@@ -84,8 +90,14 @@ export async function isCircuitBreakerOpen(
 
     return state;
   } catch (err) {
-    console.error('[CircuitBreaker] Exception checking state:', err);
-    return { isOpen: false, scope: null, reason: null, openedAt: null };
+    console.error('[CircuitBreaker] CRITICAL: Exception checking state:', err);
+    // SECURITY: Fail closed - assume breaker is OPEN when state cannot be verified
+    return {
+      isOpen: true,
+      scope: 'error',
+      reason: 'Circuit breaker state check failed - operations halted for safety',
+      openedAt: new Date()
+    };
   }
 }
 

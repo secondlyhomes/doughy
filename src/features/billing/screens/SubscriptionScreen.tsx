@@ -24,9 +24,10 @@ import {
 } from 'lucide-react-native';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner } from '@/components/ui';
+import { Button, LoadingSpinner, Badge } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
+import { getStatusBadgeVariant } from '@/lib/formatters';
 
 interface Plan {
   id: string;
@@ -153,19 +154,6 @@ export function SubscriptionScreen() {
     );
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-      case 'trialing':
-        return colors.success;
-      case 'canceled':
-        return colors.mutedForeground;
-      case 'past_due':
-        return colors.destructive;
-      default:
-        return colors.mutedForeground;
-    }
-  };
 
   if (isLoading) {
     return (
@@ -215,17 +203,9 @@ export function SubscriptionScreen() {
                     {subscription.planName}
                   </Text>
                 </View>
-                <View
-                  className="px-3 py-1 rounded-full"
-                  style={{ backgroundColor: withOpacity(getStatusColor(subscription.status), 'light') }}
-                >
-                  <Text
-                    className="text-sm font-medium capitalize"
-                    style={{ color: getStatusColor(subscription.status) }}
-                  >
-                    {subscription.status}
-                  </Text>
-                </View>
+                <Badge variant={getStatusBadgeVariant(subscription.status)} size="sm">
+                  {subscription.status}
+                </Badge>
               </View>
 
               {/* Credits Usage */}

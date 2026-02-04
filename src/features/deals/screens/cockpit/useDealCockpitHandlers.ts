@@ -8,7 +8,7 @@ import type { Deal } from '../../types';
 import { getNextStages, DEAL_STAGE_CONFIG } from '../../types';
 import { useUpdateDealStage } from '../../hooks/useDeals';
 import { useNextAction, type NextAction } from '../../hooks/useNextAction';
-import type { AISuggestion } from '../../services/aiSuggestions';
+import type { AISuggestion } from '../../services/ai-suggestions';
 
 interface UseDealCockpitHandlersProps {
   deal: Deal | null | undefined;

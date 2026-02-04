@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import { useToast } from '@/components/ui/Toast';
 import { validateApiKeyFormat } from '../../utils/serviceHelpers';
-import { clearHealthCache, checkIntegrationHealth, testApiKeyWithoutSaving } from '../../services/apiKeyHealthService';
+import { clearHealthCache, checkIntegrationHealth, testApiKeyWithoutSaving } from '../../services/api-key-health';
 import { triggerHaptic } from './utils';
 import type { UseApiKeyFormHandlersOptions, IntegrationHealth } from './types';
 

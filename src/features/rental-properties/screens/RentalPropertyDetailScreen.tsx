@@ -1,5 +1,6 @@
 // src/features/rental-properties/screens/RentalPropertyDetailScreen.tsx
 // Detail screen for viewing and editing rental property information
+// Redesigned to match DealCockpitScreen with tab-based navigation
 
 import React, { useState, useCallback, useMemo } from 'react';
 import {
@@ -10,7 +11,6 @@ import {
   Alert,
   Linking,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack, Redirect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
+import { DetailTabBar, type TabConfig } from '@/components/navigation';
 import {
   LoadingSpinner,
   Button,
@@ -34,10 +35,11 @@ import {
   SimpleFAB,
   TAB_BAR_SAFE_PADDING,
   Separator,
+  Card,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES, ICON_SIZES, BORDER_RADIUS, PRESS_OPACITY } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
-import { PropertyStatsRow } from '../components/PropertyStatsRow';
+import { RentalPropertyHeader } from '../components/RentalPropertyHeader';
 import { PropertyHubGrid } from '../components/PropertyHubGrid';
 import { RoomsList } from '../components/RoomsList';
 import {
@@ -45,7 +47,11 @@ import {
   useRentalPropertyMutations,
 } from '../hooks/useRentalPropertyDetail';
 import { PropertyStatus } from '../types';
-import { useInventoryCount } from '@/features/property-inventory';
+import {
+  usePropertyInventory,
+  useInventoryCount,
+  InventoryPreview,
+} from '@/features/property-inventory';
 import { useOpenMaintenanceCount } from '@/features/property-maintenance';
 import { useVendorCount } from '@/features/vendors';
 import { useNextTurnover } from '@/features/turnovers';
@@ -56,26 +62,36 @@ import {
   formatCurrency,
   formatRateType,
   getStatusInfo,
-  Section,
-  PropertyImagePlaceholder,
   FinancialRow,
   AmenityChip,
 } from './rental-property-detail';
+
+// Tab types
+type TabKey = 'overview' | 'financials' | 'rooms' | 'inventory' | 'listings';
+
+const TAB_LABELS: Record<TabKey, string> = {
+  overview: 'Overview',
+  financials: 'Financials',
+  rooms: 'Rooms',
+  inventory: 'Inventory',
+  listings: 'Listings',
+};
 
 export function RentalPropertyDetailScreen() {
   const params = useLocalSearchParams();
   const propertyId = params.id as string;
 
-  // Call all hooks unconditionally (before any early returns) to follow React's rules of hooks
+  // Check if propertyId is a valid UUID
+  const isValidUUID = Boolean(propertyId && UUID_REGEX.test(propertyId));
+
+  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY - before any early returns
   const router = useRouter();
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
 
   const [showStatusSheet, setShowStatusSheet] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  // Check if propertyId is a valid UUID (hooks must be called before any returns)
-  const isValidUUID = Boolean(propertyId && UUID_REGEX.test(propertyId));
+  const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
   const {
     property,
@@ -91,18 +107,25 @@ export function RentalPropertyDetailScreen() {
     useRentalPropertyMutations(isValidUUID ? propertyId : '');
 
   // Hub counts for the property management grid
+  const { data: inventoryItems = [], isLoading: isLoadingInventoryItems } = usePropertyInventory(isValidUUID ? propertyId : '');
   const { data: inventoryCount = 0, isLoading: isLoadingInventory } = useInventoryCount(isValidUUID ? propertyId : '');
   const { data: maintenanceCount = 0, isLoading: isLoadingMaintenance } = useOpenMaintenanceCount(isValidUUID ? propertyId : '');
   const { data: vendorCount = 0, isLoading: isLoadingVendors } = useVendorCount(isValidUUID ? propertyId : '');
   const { data: nextTurnover, isLoading: isLoadingTurnover } = useNextTurnover(isValidUUID ? propertyId : '');
 
-  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
-  // Must come AFTER all hook calls to follow React's rules of hooks
-  if (!isValidUUID) {
-    return <Redirect href="/(tabs)/rental-properties" />;
-  }
-
   const isLoadingHubCounts = isLoadingInventory || isLoadingMaintenance || isLoadingVendors || isLoadingTurnover;
+
+  // Calculate tab visibility
+  const hasListingUrls = property?.listing_urls && Object.values(property.listing_urls).some(url => url);
+
+  // Build tabs config with visibility
+  const tabs: TabConfig<TabKey>[] = useMemo(() => [
+    { key: 'overview', label: TAB_LABELS.overview },
+    { key: 'financials', label: TAB_LABELS.financials },
+    { key: 'rooms', label: TAB_LABELS.rooms, visible: property?.is_room_by_room_enabled },
+    { key: 'inventory', label: TAB_LABELS.inventory },
+    { key: 'listings', label: TAB_LABELS.listings, visible: hasListingUrls },
+  ], [property?.is_room_by_room_enabled, hasListingUrls]);
 
   // Safe back navigation with fallback
   const handleBack = useCallback(() => {
@@ -133,9 +156,9 @@ export function RentalPropertyDetailScreen() {
         await updateStatus(newStatus);
         setShowStatusSheet(false);
         refetch();
-      } catch (error) {
-        console.error('[RentalPropertyDetailScreen] Failed to update status:', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
+      } catch (err) {
+        console.error('[RentalPropertyDetailScreen] Failed to update status:', err);
+        const message = err instanceof Error ? err.message : 'Unknown error';
         Alert.alert('Error', `Failed to update property status: ${message}`);
       }
     },
@@ -147,9 +170,9 @@ export function RentalPropertyDetailScreen() {
       await deleteProperty();
       setShowDeleteConfirm(false);
       router.back();
-    } catch (error) {
-      console.error('[RentalPropertyDetailScreen] Failed to delete property:', error);
-      const message = error instanceof Error ? error.message : 'Unknown error';
+    } catch (err) {
+      console.error('[RentalPropertyDetailScreen] Failed to delete property:', err);
+      const message = err instanceof Error ? err.message : 'Unknown error';
       Alert.alert('Error', `Failed to delete property: ${message}`);
     }
   }, [deleteProperty, router]);
@@ -161,6 +184,17 @@ export function RentalPropertyDetailScreen() {
   const handleRoomPress = useCallback(
     (room: { id: string }) => {
       router.push(`/(tabs)/rental-properties/${propertyId}/rooms/${room.id}` as never);
+    },
+    [router, propertyId]
+  );
+
+  const handleInventorySeeAll = useCallback(() => {
+    router.push(`/(tabs)/rental-properties/${propertyId}/inventory` as never);
+  }, [router, propertyId]);
+
+  const handleInventoryItemPress = useCallback(
+    (item: { id: string }) => {
+      router.push(`/(tabs)/rental-properties/${propertyId}/inventory/${item.id}` as never);
     },
     [router, propertyId]
   );
@@ -191,6 +225,12 @@ export function RentalPropertyDetailScreen() {
         )
       : undefined,
   }), [colors, insets.top, property, handleBack]);
+
+  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
+  // Must come AFTER all hook calls to follow React's rules of hooks
+  if (!isValidUUID) {
+    return <Redirect href="/(tabs)/rental-properties" />;
+  }
 
   // Loading state
   if (isLoading && !property) {
@@ -231,94 +271,79 @@ export function RentalPropertyDetailScreen() {
     );
   }
 
-  return (
-    <>
-      <Stack.Screen options={headerOptions} />
-      <ThemedSafeAreaView className="flex-1" edges={[]}>
+  // Render tab content
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <>
+            {/* Property Management Hub Grid (2x2) */}
+            <PropertyHubGrid
+              propertyId={propertyId}
+              maintenanceCount={maintenanceCount}
+              vendorCount={vendorCount}
+              nextTurnover={nextTurnover ?? undefined}
+              bookingsCount={upcomingBookings.length}
+              isLoading={isLoadingHubCounts}
+            />
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: SPACING.md,
-          paddingBottom: TAB_BAR_SAFE_PADDING,
-        }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={refetch}
-            tintColor={colors.primary}
-          />
-        }
-      >
-        {/* Property Image */}
-        {property?.primary_image_url ? (
-          <Image
-            source={{ uri: property.primary_image_url }}
-            style={{ width: '100%', height: 192, borderRadius: BORDER_RADIUS.lg, marginBottom: 16 }}
-            resizeMode="cover"
-          />
-        ) : (
-          <PropertyImagePlaceholder />
-        )}
+            {/* Address Card (always visible) */}
+            <TouchableOpacity
+              onPress={handleOpenMap}
+              className="p-4 rounded-xl flex-row items-center justify-between mb-4"
+              style={{ backgroundColor: colors.card }}
+              activeOpacity={PRESS_OPACITY.DEFAULT}
+            >
+              <View className="flex-row items-center flex-1">
+                <MapPin size={ICON_SIZES.lg} color={colors.primary} />
+                <View className="ml-3 flex-1">
+                  <Text
+                    style={{
+                      color: colors.foreground,
+                      fontSize: FONT_SIZES.base,
+                      fontWeight: '500',
+                    }}
+                    numberOfLines={1}
+                  >
+                    {property.address}
+                  </Text>
+                  <Text
+                    style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}
+                    numberOfLines={1}
+                  >
+                    {property.city}, {property.state} {property.zip || ''}
+                  </Text>
+                </View>
+              </View>
+              <ExternalLink size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            </TouchableOpacity>
 
-        {/* Property Stats Row */}
-        <PropertyStatsRow
-          bedrooms={property.bedrooms}
-          bathrooms={property.bathrooms}
-          sqft={property.square_feet}
-          rentalType={property.rental_type}
-        />
-
-        {/* Property Management Hub Grid */}
-        <PropertyHubGrid
-          propertyId={propertyId}
-          inventoryCount={inventoryCount}
-          maintenanceCount={maintenanceCount}
-          vendorCount={vendorCount}
-          nextTurnover={nextTurnover ?? undefined}
-          bookingsCount={upcomingBookings.length}
-          isLoading={isLoadingHubCounts}
-        />
-
-        {/* Address Section (Collapsible) */}
-        <Section title="Address" collapsible defaultCollapsed>
-          <TouchableOpacity
-            onPress={handleOpenMap}
-            className="p-4 rounded-xl flex-row items-center justify-between"
-            style={{ backgroundColor: colors.card }}
-            activeOpacity={PRESS_OPACITY.DEFAULT}
-          >
-            <View className="flex-row items-center flex-1">
-              <MapPin size={ICON_SIZES.lg} color={colors.primary} />
-              <View className="ml-3 flex-1">
+            {/* Amenities (always visible) */}
+            {property.amenities && property.amenities.length > 0 && (
+              <View className="mb-4">
                 <Text
                   style={{
                     color: colors.foreground,
-                    fontSize: FONT_SIZES.base,
-                    fontWeight: '500',
+                    fontSize: FONT_SIZES.lg,
+                    fontWeight: '600',
+                    marginBottom: SPACING.sm,
                   }}
-                  numberOfLines={1}
                 >
-                  {property.address}
+                  Amenities
                 </Text>
-                <Text
-                  style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}
-                  numberOfLines={1}
-                >
-                  {property.city}, {property.state} {property.zip || ''}
-                </Text>
+                <View className="flex-row flex-wrap">
+                  {property.amenities.map((amenity, index) => (
+                    <AmenityChip key={index} amenity={amenity} />
+                  ))}
+                </View>
               </View>
-            </View>
-            <ExternalLink size={ICON_SIZES.ml} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        </Section>
+            )}
+          </>
+        );
 
-        {/* Financial Section (Collapsible) */}
-        <Section title="Financials" collapsible defaultCollapsed>
-          <View
-            className="p-4 rounded-xl"
-            style={{ backgroundColor: colors.card }}
-          >
+      case 'financials':
+        return (
+          <Card className="p-4">
             <FinancialRow
               label="Base Rate"
               value={`${formatCurrency(property.base_rate)}${formatRateType(property.rate_type)}`}
@@ -334,205 +359,239 @@ export function RentalPropertyDetailScreen() {
               label="Security Deposit"
               value={formatCurrency(property.security_deposit)}
             />
-          </View>
-        </Section>
+          </Card>
+        );
 
-        {/* Amenities Section */}
-        {property.amenities && property.amenities.length > 0 && (
-          <Section title="Amenities">
-            <View className="flex-row flex-wrap">
-              {property.amenities.map((amenity, index) => (
-                <AmenityChip key={index} amenity={amenity} />
-              ))}
-            </View>
-          </Section>
-        )}
+      case 'rooms':
+        return (
+          <RoomsList
+            rooms={rooms}
+            isLoading={isLoadingRooms}
+            onRoomPress={handleRoomPress}
+            onAddRoom={handleAddRoom}
+          />
+        );
 
-        {/* Rooms Section (if room_by_room enabled) */}
-        {property.is_room_by_room_enabled && (
-          <Section title="">
-            <RoomsList
-              rooms={rooms}
-              isLoading={isLoadingRooms}
-              onRoomPress={handleRoomPress}
-              onAddRoom={handleAddRoom}
-            />
-          </Section>
-        )}
+      case 'inventory':
+        return (
+          <InventoryPreview
+            items={inventoryItems}
+            totalCount={inventoryCount}
+            isLoading={isLoadingInventoryItems}
+            onSeeAll={handleInventorySeeAll}
+            onItemPress={handleInventoryItemPress}
+          />
+        );
 
-        {/* Listing URLs Section */}
-        {property.listing_urls &&
-          Object.keys(property.listing_urls).length > 0 && (
-            <Section title="Listings">
-              <View
-                className="p-4 rounded-xl"
-                style={{ backgroundColor: colors.card }}
-              >
-                {Object.entries(property.listing_urls).map(
-                  ([platform, url]) =>
-                    url && (
-                      <TouchableOpacity
-                        key={platform}
-                        onPress={() => Linking.openURL(url)}
-                        className="flex-row items-center justify-between py-2"
-                      >
-                        <Text
-                          style={{
-                            color: colors.foreground,
-                            fontSize: FONT_SIZES.sm,
-                            textTransform: 'capitalize',
-                          }}
-                        >
-                          {platform}
-                        </Text>
-                        <ExternalLink size={ICON_SIZES.md} color={colors.primary} />
-                      </TouchableOpacity>
-                    )
-                )}
-              </View>
-            </Section>
-          )}
-      </ScrollView>
-
-      {/* Edit FAB */}
-      <SimpleFAB
-        icon={<Edit2 size={ICON_SIZES.xl} color={colors.primaryForeground} />}
-        onPress={handleEdit}
-        accessibilityLabel="Edit property"
-      />
-
-      {/* Status Change Sheet */}
-      <BottomSheet
-        visible={showStatusSheet}
-        onClose={() => setShowStatusSheet(false)}
-        title="Property Options"
-      >
-        <BottomSheetSection title="Status">
-          <View className="gap-2">
-            {(['active', 'inactive', 'maintenance'] as PropertyStatus[]).map(
-              (status) => {
-                const info = getStatusInfo(status);
-                const isActive = property.status === status;
-                const StatusIcon = info.icon;
-
-                return (
-                  <TouchableOpacity
-                    key={status}
-                    onPress={() => handleStatusChange(status)}
-                    className="flex-row items-center p-4 rounded-xl"
-                    style={{
-                      backgroundColor: isActive
-                        ? withOpacity(colors.primary, 'light')
-                        : colors.muted,
-                      borderWidth: isActive ? 1 : 0,
-                      borderColor: colors.primary,
-                    }}
-                    disabled={isSaving}
-                  >
-                    <StatusIcon
-                      size={ICON_SIZES.lg}
-                      color={isActive ? colors.primary : colors.foreground}
-                    />
-                    <Text
-                      style={{
-                        color: isActive ? colors.primary : colors.foreground,
-                        fontSize: FONT_SIZES.base,
-                        fontWeight: '500',
-                        marginLeft: 12,
-                      }}
+      case 'listings':
+        return (
+          <Card className="p-4">
+            {property.listing_urls &&
+              Object.entries(property.listing_urls).map(
+                ([platform, url]) =>
+                  url && (
+                    <TouchableOpacity
+                      key={platform}
+                      onPress={() => Linking.openURL(url)}
+                      className="flex-row items-center justify-between py-3"
+                      activeOpacity={PRESS_OPACITY.DEFAULT}
                     >
-                      {info.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              }
-            )}
-          </View>
-        </BottomSheetSection>
+                      <Text
+                        style={{
+                          color: colors.foreground,
+                          fontSize: FONT_SIZES.base,
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {platform}
+                      </Text>
+                      <ExternalLink size={ICON_SIZES.md} color={colors.primary} />
+                    </TouchableOpacity>
+                  )
+              )}
+          </Card>
+        );
 
-        {/* Danger Zone in sheet */}
-        <Separator className="my-4" />
-        <TouchableOpacity
-          onPress={() => {
-            setShowStatusSheet(false);
-            setTimeout(() => setShowDeleteConfirm(true), 300);
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
-          className="flex-row items-center p-4 rounded-xl"
-          style={{ backgroundColor: withOpacity(colors.destructive, 'light') }}
-          disabled={isSaving}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refetch}
+              tintColor={colors.primary}
+            />
+          }
+          stickyHeaderIndices={[1]}
         >
-          <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />
-          <Text
-            style={{
-              color: colors.destructive,
-              fontSize: FONT_SIZES.base,
-              fontWeight: '500',
-              marginLeft: 12,
-            }}
-          >
-            Delete Property
-          </Text>
-        </TouchableOpacity>
+          {/* Hero Image Header */}
+          <RentalPropertyHeader property={property} />
 
-        <View className="pt-4 pb-6">
-          <Button
-            variant="outline"
-            onPress={() => setShowStatusSheet(false)}
-            className="w-full"
-          >
-            Cancel
-          </Button>
-        </View>
-      </BottomSheet>
+          {/* Sticky Tab Bar */}
+          <View style={{ backgroundColor: colors.background }}>
+            <DetailTabBar
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </View>
 
-      {/* Delete Confirmation Sheet */}
-      <BottomSheet
-        visible={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        title="Delete Property"
-      >
-        <View className="py-4">
-          <Text
-            style={{
-              color: colors.foreground,
-              fontSize: FONT_SIZES.base,
-              textAlign: 'center',
-            }}
-          >
-            Are you sure you want to delete{' '}
-            <Text style={{ fontWeight: '700' }}>{property.name}</Text>?
-          </Text>
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              fontSize: FONT_SIZES.sm,
-              textAlign: 'center',
-              marginTop: 8,
-            }}
-          >
-            This action cannot be undone. All associated rooms and bookings will
-            also be affected.
-          </Text>
-        </View>
+          {/* Tab Content */}
+          <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm }}>
+            {renderTabContent()}
+          </View>
+        </ScrollView>
 
-        <View className="flex-row gap-3 pt-4 pb-6">
-          <Button
-            variant="outline"
-            onPress={() => setShowDeleteConfirm(false)}
-            className="flex-1"
+        {/* Edit FAB */}
+        <SimpleFAB
+          icon={<Edit2 size={ICON_SIZES.xl} color={colors.primaryForeground} />}
+          onPress={handleEdit}
+          accessibilityLabel="Edit property"
+        />
+
+        {/* Status Change Sheet */}
+        <BottomSheet
+          visible={showStatusSheet}
+          onClose={() => setShowStatusSheet(false)}
+          title="Property Options"
+        >
+          <BottomSheetSection title="Status">
+            <View className="gap-2">
+              {(['active', 'inactive', 'maintenance'] as PropertyStatus[]).map(
+                (status) => {
+                  const info = getStatusInfo(status);
+                  const isActive = property.status === status;
+                  const StatusIcon = info.icon;
+
+                  return (
+                    <TouchableOpacity
+                      key={status}
+                      onPress={() => handleStatusChange(status)}
+                      className="flex-row items-center p-4 rounded-xl"
+                      style={{
+                        backgroundColor: isActive
+                          ? withOpacity(colors.primary, 'light')
+                          : colors.muted,
+                        borderWidth: isActive ? 1 : 0,
+                        borderColor: colors.primary,
+                      }}
+                      disabled={isSaving}
+                    >
+                      <StatusIcon
+                        size={ICON_SIZES.lg}
+                        color={isActive ? colors.primary : colors.foreground}
+                      />
+                      <Text
+                        style={{
+                          color: isActive ? colors.primary : colors.foreground,
+                          fontSize: FONT_SIZES.base,
+                          fontWeight: '500',
+                          marginLeft: 12,
+                        }}
+                      >
+                        {info.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }
+              )}
+            </View>
+          </BottomSheetSection>
+
+          {/* Danger Zone in sheet */}
+          <Separator className="my-4" />
+          <TouchableOpacity
+            onPress={() => {
+              setShowStatusSheet(false);
+              setTimeout(() => setShowDeleteConfirm(true), 300);
+            }}
+            className="flex-row items-center p-4 rounded-xl"
+            style={{ backgroundColor: withOpacity(colors.destructive, 'light') }}
             disabled={isSaving}
           >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onPress={handleDelete}
-            className="flex-1"
-            disabled={isSaving}
-          >
-            {isSaving ? 'Deleting...' : 'Delete'}
-          </Button>
-        </View>
+            <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />
+            <Text
+              style={{
+                color: colors.destructive,
+                fontSize: FONT_SIZES.base,
+                fontWeight: '500',
+                marginLeft: 12,
+              }}
+            >
+              Delete Property
+            </Text>
+          </TouchableOpacity>
+
+          <View className="pt-4 pb-6">
+            <Button
+              variant="outline"
+              onPress={() => setShowStatusSheet(false)}
+              className="w-full"
+            >
+              Cancel
+            </Button>
+          </View>
+        </BottomSheet>
+
+        {/* Delete Confirmation Sheet */}
+        <BottomSheet
+          visible={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          title="Delete Property"
+        >
+          <View className="py-4">
+            <Text
+              style={{
+                color: colors.foreground,
+                fontSize: FONT_SIZES.base,
+                textAlign: 'center',
+              }}
+            >
+              Are you sure you want to delete{' '}
+              <Text style={{ fontWeight: '700' }}>{property.name}</Text>?
+            </Text>
+            <Text
+              style={{
+                color: colors.mutedForeground,
+                fontSize: FONT_SIZES.sm,
+                textAlign: 'center',
+                marginTop: 8,
+              }}
+            >
+              This action cannot be undone. All associated rooms and bookings will
+              also be affected.
+            </Text>
+          </View>
+
+          <View className="flex-row gap-3 pt-4 pb-6">
+            <Button
+              variant="outline"
+              onPress={() => setShowDeleteConfirm(false)}
+              className="flex-1"
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onPress={handleDelete}
+              className="flex-1"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Deleting...' : 'Delete'}
+            </Button>
+          </View>
         </BottomSheet>
       </ThemedSafeAreaView>
     </>

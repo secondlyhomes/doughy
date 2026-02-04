@@ -16,7 +16,7 @@ import {
   getDealAddress,
   getDealLeadName,
 } from '../../../types';
-import type { AISuggestion } from '../../../services/aiSuggestions';
+import type { AISuggestion } from '../../../services/ai-suggestions';
 
 interface OverviewTabProps {
   deal: Deal;

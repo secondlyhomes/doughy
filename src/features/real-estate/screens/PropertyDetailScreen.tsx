@@ -4,7 +4,7 @@
  * Detailed view of a single property with tabbed navigation for different sections:
  * Overview, Analysis, Comps, Financing, Repairs, and Documents.
  *
- * Features context switching to Deal via EntityHeader for seamless navigation.
+ * Uses native Stack.Screen header for consistent iOS styling (matches RentalPropertyDetailScreen).
  */
 
 import React, { useCallback, useState, useMemo } from 'react';
@@ -15,15 +15,18 @@ import {
   RefreshControl,
   Alert,
   Pressable,
+  TouchableOpacity,
 } from 'react-native';
-import { useRouter, useLocalSearchParams, usePathname } from 'expo-router';
-import { Edit2 } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams, usePathname, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
+import { Edit2, ArrowLeft, MoreVertical } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner, SimpleFAB, BottomSheet } from '@/components/ui';
 import { FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
-import { EntityHeader } from '@/components/navigation';
+import { SPACING, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
 import {
   PropertyHeader,
   PropertyOverviewTab,
@@ -50,35 +53,28 @@ export function PropertyDetailScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const propertyId = params.id as string;
-  const fromDeal = params.fromDeal as string | undefined;
   const initialTab = params.initialTab as string | undefined;
 
   const { property, isLoading, error, refetch } = useProperty(propertyId);
-  const { deleteProperty, isLoading: isDeleting } = usePropertyMutations();
+  const { deleteProperty } = usePropertyMutations();
 
-  // Fetch deals linked to this property for context switching
+  // Fetch deals linked to this property for deal selector
   const { data: propertyDeals = [] } = usePropertyDeals(propertyId);
 
   const [activeTab, setActiveTab] = useState<string>(initialTab || TAB_IDS.OVERVIEW);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [showDealSelector, setShowDealSelector] = useState(false);
 
-  // Determine linked deal info for EntityHeader
-  const linkedDealInfo = useMemo(() => {
-    const dealCount = propertyDeals.length;
-    // If we came from a specific deal, use that as the primary deal
-    const primaryDealId = fromDeal || (dealCount === 1 ? propertyDeals[0]?.id : undefined);
-    return {
-      hasLinkedDeal: dealCount > 0,
-      dealCount,
-      primaryDealId,
-    };
-  }, [propertyDeals, fromDeal]);
-
+  // Safe back navigation with fallback for deep-linking scenarios
   const handleBack = useCallback(() => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/properties');
+    }
   }, [router]);
 
   const handleEdit = useCallback(() => {
@@ -115,36 +111,9 @@ export function PropertyDetailScreen() {
     );
   }, [deleteProperty, propertyId, router]);
 
-  const handleShare = useCallback(() => {
-    setShowActionsSheet(true);
-  }, []);
-
-  const handleMore = useCallback(() => {
-    setShowActionsSheet(true);
-  }, []);
-
   const handleStatusChange = useCallback(() => {
     refetch();
   }, [refetch]);
-
-  // Handle creating a new deal for this property
-  const handleCreateDeal = useCallback(() => {
-    router.push({
-      pathname: '/(tabs)/deals/new' as any,
-      params: { propertyId },
-    });
-  }, [router, propertyId]);
-
-  // Handle selecting a deal when multiple deals exist
-  const handleSelectDeal = useCallback(() => {
-    if (propertyDeals.length === 1) {
-      // Navigate directly to the only deal
-      router.push(`/(tabs)/deals/${propertyDeals[0].id}` as any);
-    } else {
-      // Show deal selector
-      setShowDealSelector(true);
-    }
-  }, [propertyDeals, router]);
 
   // Handle deal selection from the selector sheet
   const handleDealSelected = useCallback((dealId: string) => {
@@ -155,41 +124,63 @@ export function PropertyDetailScreen() {
     });
   }, [router, propertyId]);
 
+  // Native header options for consistent iOS styling (matches RentalPropertyDetailScreen)
+  const headerOptions = useMemo((): NativeStackNavigationOptions => ({
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.background },
+    headerShadowVisible: false,
+    headerStatusBarHeight: insets.top,
+    headerTitle: () => (
+      <View style={{ alignItems: 'center' }}>
+        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
+          {property?.address || 'Property Details'}
+        </Text>
+      </View>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
+        <ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+    headerRight: property
+      ? () => (
+          <TouchableOpacity onPress={() => setShowActionsSheet(true)} style={{ padding: SPACING.sm }}>
+            <MoreVertical size={ICON_SIZES.xl} color={colors.foreground} />
+          </TouchableOpacity>
+        )
+      : undefined,
+  }), [colors, insets.top, property, handleBack]);
+
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading property..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading property..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   if (error || !property) {
     return (
-      <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
-        <Text className="text-center mb-4" style={{ color: colors.destructive }}>
-          {error?.message || 'Property not found'}
-        </Text>
-        <Button onPress={handleBack}>Go Back</Button>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={[]}>
+          <Text className="text-center mb-4" style={{ color: colors.destructive }}>
+            {error?.message || 'Property not found'}
+          </Text>
+          <Button onPress={handleBack}>Go Back</Button>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Entity Header with Context Switcher */}
-      <EntityHeader
-        context="property"
-        propertyId={propertyId}
-        dealId={linkedDealInfo.primaryDealId}
-        hasLinkedDeal={linkedDealInfo.hasLinkedDeal}
-        linkedDealCount={linkedDealInfo.dealCount}
-        onMore={handleMore}
-        onShare={handleShare}
-        onCreateDeal={handleCreateDeal}
-        onSelectDeal={handleSelectDeal}
-      />
-
-      <View style={{ flex: 1 }}>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <View style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
@@ -292,6 +283,7 @@ export function PropertyDetailScreen() {
           )}
         </View>
       </BottomSheet>
-    </ThemedSafeAreaView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

@@ -3,12 +3,12 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { CalendarClock, Trash2 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button, Badge, Card, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { LoadingSpinner, Button, Badge, Card, TAB_BAR_SAFE_PADDING, DestructiveActionSheet } from '@/components/ui';
+import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { useTurnover, useTurnoverMutations } from '../hooks/useTurnovers';
 import { TurnoverTimeline } from '../components/TurnoverTimeline';
@@ -28,16 +28,28 @@ export function TurnoverDetailScreen() {
   const turnoverId = params.turnoverId as string;
 
   const [showScheduleSheet, setShowScheduleSheet] = useState(false);
+  const [showDeleteSheet, setShowDeleteSheet] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [inspectionNotes, setInspectionNotes] = useState('');
 
   const { data: turnover, isLoading, refetch, error } = useTurnover(turnoverId);
   const { scheduleCleaning, markCleaningDone, markInspected, markReady, deleteTurnover, isSaving } =
     useTurnoverMutations();
 
-  // Handlers
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
+  // Get status config for header badge (use default if turnover not loaded yet)
+  const statusConfig = turnover ? TURNOVER_STATUS_CONFIG[turnover.status] : null;
+
+  const { headerOptions, handleBack } = useNativeHeader({
+    title: 'Turnover',
+    fallbackRoute: turnover?.property_id
+      ? `/(tabs)/rental-properties/${turnover.property_id}/turnovers`
+      : '/(tabs)/turnovers',
+    rightAction: statusConfig ? (
+      <Badge variant={statusConfig.color} size="sm">
+        {statusConfig.emoji} {statusConfig.label}
+      </Badge>
+    ) : undefined,
+  });
 
   const handleScheduleCleaning = useCallback(
     async (vendorId: string, scheduledAt: string) => {
@@ -75,127 +87,84 @@ export function TurnoverDetailScreen() {
   }, [turnoverId, markReady, refetch]);
 
   const handleDelete = useCallback(() => {
-    Alert.alert('Delete Turnover', 'Are you sure you want to delete this turnover?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteTurnover(turnoverId);
-            router.back();
-          } catch {
-            Alert.alert('Error', 'Failed to delete turnover');
-          }
-        },
-      },
-    ]);
+    setShowDeleteSheet(true);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      await deleteTurnover(turnoverId);
+      setShowDeleteSheet(false);
+      router.back();
+    } catch {
+      Alert.alert('Error', 'Failed to delete turnover');
+      setIsDeleting(false);
+    }
   }, [turnoverId, deleteTurnover, router]);
 
   // Loading state
   if (isLoading && !turnover) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading turnover..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading turnover..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   // Error state
   if (error || !turnover) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <ScreenHeader title="Turnover" backButton onBack={handleBack} />
-        <View className="flex-1 items-center justify-center p-4">
-          <CalendarClock size={48} color={colors.mutedForeground} />
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              fontSize: FONT_SIZES.base,
-              textAlign: 'center',
-              marginTop: 12,
-            }}
-          >
-            {error?.message || 'Turnover not found'}
-          </Text>
-          <Button variant="outline" onPress={handleBack} className="mt-4">
-            Go Back
-          </Button>
-        </View>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <View className="flex-1 items-center justify-center p-4">
+            <CalendarClock size={48} color={colors.mutedForeground} />
+            <Text
+              style={{
+                color: colors.mutedForeground,
+                fontSize: FONT_SIZES.base,
+                textAlign: 'center',
+                marginTop: 12,
+              }}
+            >
+              {error?.message || 'Turnover not found'}
+            </Text>
+            <Button variant="outline" onPress={handleBack} className="mt-4">
+              Go Back
+            </Button>
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
-  const statusConfig = TURNOVER_STATUS_CONFIG[turnover.status];
   const guestName = turnover.booking?.contact
     ? `${turnover.booking.contact.first_name || ''} ${turnover.booking.contact.last_name || ''}`.trim()
     : null;
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader
-        title="Turnover"
-        backButton
-        onBack={handleBack}
-        rightAction={
-          <Badge variant={statusConfig.color} size="sm">
-            {statusConfig.emoji} {statusConfig.label}
-          </Badge>
-        }
-      />
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingHorizontal: SPACING.md,
+            paddingBottom: TAB_BAR_SAFE_PADDING,
+          }}
+          refreshControl={
+            <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
+          }
+        >
+          {/* Property Info */}
+          {turnover.property && (
+            <PropertyInfoCard name={turnover.property.name} address={turnover.property.address} />
+          )}
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: SPACING.md,
-          paddingBottom: TAB_BAR_SAFE_PADDING,
-        }}
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
-        }
-      >
-        {/* Property Info */}
-        {turnover.property && (
-          <PropertyInfoCard name={turnover.property.name} address={turnover.property.address} />
-        )}
-
-        {/* Timeline */}
-        <Card className="mb-4">
-          <Text
-            style={{
-              color: colors.foreground,
-              fontSize: FONT_SIZES.lg,
-              fontWeight: '600',
-              marginBottom: SPACING.sm,
-            }}
-          >
-            Progress
-          </Text>
-          <TurnoverTimeline
-            currentStatus={turnover.status}
-            cleaningScheduledAt={turnover.cleaning_scheduled_at}
-            cleaningCompletedAt={turnover.cleaning_completed_at}
-            inspectionCompletedAt={turnover.inspection_completed_at}
-          />
-        </Card>
-
-        {/* Schedule */}
-        <ScheduleCard
-          checkoutAt={turnover.checkout_at}
-          checkinAt={turnover.checkin_at}
-          guestName={guestName}
-        />
-
-        {/* Cleaner Info */}
-        {turnover.cleaner && (
-          <CleanerInfoCard
-            cleaner={turnover.cleaner}
-            scheduledAt={turnover.cleaning_scheduled_at}
-          />
-        )}
-
-        {/* Inspection Notes */}
-        {turnover.inspection_notes && (
+          {/* Timeline */}
           <Card className="mb-4">
             <Text
               style={{
@@ -205,50 +174,98 @@ export function TurnoverDetailScreen() {
                 marginBottom: SPACING.sm,
               }}
             >
-              Inspection Notes
+              Progress
             </Text>
-            <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.base }}>
-              {turnover.inspection_notes}
-            </Text>
+            <TurnoverTimeline
+              currentStatus={turnover.status}
+              cleaningScheduledAt={turnover.cleaning_scheduled_at}
+              cleaningCompletedAt={turnover.cleaning_completed_at}
+              inspectionCompletedAt={turnover.inspection_completed_at}
+            />
           </Card>
-        )}
 
-        {/* Next Action */}
-        <NextActionPanel
-          status={turnover.status}
-          isSaving={isSaving}
-          inspectionNotes={inspectionNotes}
-          onInspectionNotesChange={setInspectionNotes}
-          onScheduleCleaning={() => setShowScheduleSheet(true)}
-          onMarkCleaningDone={handleMarkCleaningDone}
-          onMarkInspected={handleMarkInspected}
-          onMarkReady={handleMarkReady}
+          {/* Schedule */}
+          <ScheduleCard
+            checkoutAt={turnover.checkout_at}
+            checkinAt={turnover.checkin_at}
+            guestName={guestName}
+          />
+
+          {/* Cleaner Info */}
+          {turnover.cleaner && (
+            <CleanerInfoCard
+              cleaner={turnover.cleaner}
+              scheduledAt={turnover.cleaning_scheduled_at}
+            />
+          )}
+
+          {/* Inspection Notes */}
+          {turnover.inspection_notes && (
+            <Card className="mb-4">
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontSize: FONT_SIZES.lg,
+                  fontWeight: '600',
+                  marginBottom: SPACING.sm,
+                }}
+              >
+                Inspection Notes
+              </Text>
+              <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.base }}>
+                {turnover.inspection_notes}
+              </Text>
+            </Card>
+          )}
+
+          {/* Next Action */}
+          <NextActionPanel
+            status={turnover.status}
+            isSaving={isSaving}
+            inspectionNotes={inspectionNotes}
+            onInspectionNotesChange={setInspectionNotes}
+            onScheduleCleaning={() => setShowScheduleSheet(true)}
+            onMarkCleaningDone={handleMarkCleaningDone}
+            onMarkInspected={handleMarkInspected}
+            onMarkReady={handleMarkReady}
+          />
+
+          {/* Delete */}
+          {turnover.status !== 'ready' && (
+            <Button
+              variant="destructive"
+              onPress={handleDelete}
+              className="flex-row items-center justify-center gap-2"
+            >
+              <Trash2 size={16} color="white" />
+              <Text style={{ color: 'white', fontWeight: '600' }}>Delete Turnover</Text>
+            </Button>
+          )}
+        </ScrollView>
+
+        {/* Schedule Cleaning Sheet */}
+        <ScheduleCleaningSheet
+          visible={showScheduleSheet}
+          onClose={() => setShowScheduleSheet(false)}
+          propertyId={turnover.property_id}
+          propertyAddress={turnover.property?.address}
+          checkoutAt={turnover.checkout_at}
+          checkinAt={turnover.checkin_at}
+          onSchedule={handleScheduleCleaning}
         />
 
-        {/* Delete */}
-        {turnover.status !== 'ready' && (
-          <Button
-            variant="destructive"
-            onPress={handleDelete}
-            className="flex-row items-center justify-center gap-2"
-          >
-            <Trash2 size={16} color="white" />
-            <Text style={{ color: 'white', fontWeight: '600' }}>Delete Turnover</Text>
-          </Button>
-        )}
-      </ScrollView>
-
-      {/* Schedule Cleaning Sheet */}
-      <ScheduleCleaningSheet
-        visible={showScheduleSheet}
-        onClose={() => setShowScheduleSheet(false)}
-        propertyId={turnover.property_id}
-        propertyAddress={turnover.property?.address}
-        checkoutAt={turnover.checkout_at}
-        checkinAt={turnover.checkin_at}
-        onSchedule={handleScheduleCleaning}
-      />
-    </ThemedSafeAreaView>
+        {/* Delete Confirmation Sheet */}
+        <DestructiveActionSheet
+          isOpen={showDeleteSheet}
+          onClose={() => setShowDeleteSheet(false)}
+          title="Delete Turnover"
+          description="Are you sure you want to delete this turnover? All associated cleaning schedules and inspection records will be removed."
+          confirmLabel="Delete"
+          onConfirm={handleConfirmDelete}
+          isLoading={isDeleting}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

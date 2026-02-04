@@ -7,8 +7,8 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 
-type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'danger' | 'info' | 'inactive';
-type BadgeSize = 'default' | 'sm' | 'lg';
+export type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'danger' | 'info' | 'inactive';
+export type BadgeSize = 'default' | 'sm' | 'lg';
 
 export interface BadgeProps extends ViewProps {
   className?: string;

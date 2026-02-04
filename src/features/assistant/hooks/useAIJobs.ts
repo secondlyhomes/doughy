@@ -47,7 +47,7 @@ async function fetchJobs(dealId?: string): Promise<AIJob[]> {
   // TODO: Regenerate types after assistant_jobs migration is applied
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('ai_jobs')
+    .schema('ai').from('jobs')
     .select('*')
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false });
@@ -78,7 +78,7 @@ async function createJobRequest(input: CreateJobInput): Promise<AIJob> {
   // TODO: Regenerate types after assistant_jobs migration is applied
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('ai_jobs')
+    .schema('ai').from('jobs')
     .insert({
       deal_id: input.deal_id,
       job_type: input.job_type,
@@ -113,7 +113,7 @@ async function cancelJobRequest(jobId: string): Promise<AIJob> {
   // TODO: Regenerate types after assistant_jobs migration is applied
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
-    .from('ai_jobs')
+    .schema('ai').from('jobs')
     .update({ status: 'cancelled' })
     .eq('id', jobId)
     .select()
@@ -272,7 +272,7 @@ export function useJobStatus(jobId?: string): {
       // TODO: Regenerate types after assistant_jobs migration is applied
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
-        .from('ai_jobs')
+        .schema('ai').from('jobs')
         .select('*')
         .eq('id', jobId)
         .single();
@@ -293,7 +293,7 @@ export function useJobStatus(jobId?: string): {
       .channel(`job-${jobId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'ai_jobs', filter: `id=eq.${jobId}` },
+        { event: 'UPDATE', schema: 'ai', table: 'jobs', filter: `id=eq.${jobId}` },
         (payload) => {
           setJob(payload.new as AIJob);
         }

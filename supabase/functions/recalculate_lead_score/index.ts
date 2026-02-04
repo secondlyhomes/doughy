@@ -54,7 +54,8 @@ serve(async (req) => {
 
     // Complex lead scoring logic
     const { data: lead, error: leadError } = await supabase
-      .from('crm_leads')
+      .schema('crm')
+      .from('leads')
       .select('*')
       .eq('id', leadId)
       .single()
@@ -72,7 +73,8 @@ serve(async (req) => {
     
     // Activity score - based on lead notes count
     const { data: notes } = await supabase
-      .from('crm_lead_notes')
+      .schema('crm')
+      .from('lead_notes')
       .select('id')
       .eq('lead_id', leadId)
 
@@ -80,7 +82,8 @@ serve(async (req) => {
 
     // Update lead score
     const { error: updateError } = await supabase
-      .from('crm_leads')
+      .schema('crm')
+      .from('leads')
       .update({ score: Math.min(score, 100) })
       .eq('id', leadId)
 

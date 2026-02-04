@@ -112,7 +112,8 @@ async function getTemplate(
   const category = categoryMap[`${contactType}_${outreachType}`] || `${contactType}_${outreachType}`;
 
   let query = supabase
-    .from('investor_outreach_templates')
+    .schema('investor')
+    .from('outreach_templates')
     .select('id, name, subject, body')
     .eq('contact_type', contactType)
     .eq('channel', channel)
@@ -302,7 +303,8 @@ serve(async (req: Request) => {
 
     // Fetch contact details
     const { data: contact, error: contactError } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .select('first_name, last_name, email, phone')
       .eq('id', contact_id)
       .eq('user_id', authenticatedUserId)
@@ -332,7 +334,8 @@ serve(async (req: Request) => {
     let propertyAddress = context?.property_address;
     if (!propertyAddress && deal_id) {
       const { data: deal } = await supabase
-        .from('investor_deals')
+        .schema('investor')
+        .from('deals')
         .select('property_address, property_city, property_state')
         .eq('id', deal_id)
         .eq('user_id', authenticatedUserId)
@@ -350,7 +353,8 @@ serve(async (req: Request) => {
     let agentName = '';
     if (contact_type === 'agent' && agent_id) {
       const { data: agent } = await supabase
-        .from('investor_agents')
+        .schema('investor')
+        .from('agents')
         .select('name')
         .eq('id', agent_id)
         .eq('user_id', authenticatedUserId)
@@ -426,7 +430,8 @@ serve(async (req: Request) => {
     // Update template use count if applicable
     if (template_id) {
       await supabase
-        .from('investor_outreach_templates')
+        .schema('investor')
+        .from('outreach_templates')
         .update({
           use_count: supabase.sql`use_count + 1`
         })

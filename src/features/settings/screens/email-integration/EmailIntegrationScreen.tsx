@@ -2,12 +2,12 @@
 // Email Integration Settings Screen - allows landlords to connect Gmail
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { View, Text, ScrollView, Alert, RefreshControl } from 'react-native';
+import { Stack } from 'expo-router';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import {
   useGmailAuth,
   handleGmailAuthCallback,
@@ -23,11 +23,15 @@ import { DetectedPlatforms } from './DetectedPlatforms';
 import { HowItWorksSection, SecurityNote } from './HowItWorksSection';
 
 export function EmailIntegrationScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
 
   // Gmail auth hook
   const { request, response, promptAsync } = useGmailAuth();
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Email Integration',
+    fallbackRoute: '/(tabs)/settings',
+  });
 
   // Local state
   const [connection, setConnection] = useState<GmailConnection | null>(null);
@@ -179,33 +183,20 @@ export function EmailIntegrationScreen() {
 
   if (isLoading) {
     return (
-      <ThemedView className="flex-1 items-center justify-center">
-        <LoadingSpinner />
-      </ThemedView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedView className="flex-1 items-center justify-center">
+          <LoadingSpinner />
+        </ThemedView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <View
-        className="flex-row items-center px-4 py-3 border-b"
-        style={{ borderColor: colors.border }}
-      >
-        <TouchableOpacity onPress={() => router.back()} className="mr-3">
-          <ChevronLeft size={24} color={colors.foreground} />
-        </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
-            Email Integration
-          </Text>
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-            Connect Gmail to receive platform inquiries
-          </Text>
-        </View>
-      </View>
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}
         refreshControl={
@@ -248,7 +239,8 @@ export function EmailIntegrationScreen() {
         <View className="p-4">
           <SecurityNote />
         </View>
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

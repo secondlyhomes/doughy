@@ -1,5 +1,5 @@
 // Tests for investorSeeder.ts
-import { investorSeeder, seedService } from '../investorSeeder';
+import { investorSeeder, seedService } from '../investor-seeder';
 import { supabase } from '@/lib/supabase';
 import Constants from 'expo-constants';
 

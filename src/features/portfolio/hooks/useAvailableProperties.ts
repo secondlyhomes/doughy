@@ -36,7 +36,7 @@ export function useAvailableProperties() {
 
       // Get all properties for the user
       const { data: allProperties, error: propertiesError } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .select('id, address_line_1, city, state, zip, purchase_price, property_type')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -52,26 +52,39 @@ export function useAvailableProperties() {
 
       // Get property IDs already in portfolio entries
       const { data: portfolioEntries, error: entriesError } = await supabase
-        .from('investor_portfolio_entries')
+        .schema('investor').from('portfolio_entries')
         .select('property_id')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
       if (entriesError) {
-        console.error('Error fetching portfolio entries:', entriesError);
-        // Continue without filtering by entries if table doesn't exist yet
+        // Only ignore if table doesn't exist (schema migration in progress)
+        // Use PostgreSQL error code 42P01 for undefined_table
+        if (entriesError.code === '42P01' || entriesError.message?.includes('does not exist')) {
+          console.debug('[useAvailableProperties] Portfolio entries table not yet created, skipping filter');
+        } else {
+          // Unexpected error - surface it so user knows data may be incomplete
+          console.error('[useAvailableProperties] Error fetching portfolio entries:', entriesError);
+          throw new Error(`Failed to check portfolio entries: ${entriesError.message}`);
+        }
       }
 
       // Get property IDs from closed_won deals
       const { data: closedDeals, error: dealsError } = await supabase
-        .from('investor_deals_pipeline')
+        .schema('investor').from('deals_pipeline')
         .select('property_id')
         .eq('user_id', user.id)
         .eq('stage', 'closed_won')
         .not('property_id', 'is', null);
 
       if (dealsError) {
-        console.error('Error fetching closed deals:', dealsError);
+        // Only ignore if table doesn't exist
+        if (dealsError.code === '42P01' || dealsError.message?.includes('does not exist')) {
+          console.debug('[useAvailableProperties] Deals table not yet created, skipping filter');
+        } else {
+          console.error('[useAvailableProperties] Error fetching closed deals:', dealsError);
+          throw new Error(`Failed to check closed deals: ${dealsError.message}`);
+        }
       }
 
       // Create set of excluded property IDs

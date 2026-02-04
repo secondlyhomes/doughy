@@ -15,7 +15,7 @@ export const seedEdgeCases: SeedScenario = {
     await ensureUserHasWorkspace(userId);
 
     // Create property for testing
-    const { data: property, error: propertyError } = await supabase.from('landlord_properties').insert({
+    const { data: property, error: propertyError } = await supabase.schema('landlord').from('properties').insert({
       user_id: userId,
       name: 'Test Property - Edge Cases <script>alert("xss")</script>',
       address: '999 Test Street; DROP TABLE users;--',
@@ -37,7 +37,7 @@ export const seedEdgeCases: SeedScenario = {
     console.log('Created edge case property');
 
     // Edge case inventory items
-    const { error: inventoryError } = await supabase.from('landlord_inventory_items').insert([
+    const { error: inventoryError } = await supabase.schema('landlord').from('inventory_items').insert([
       {
         user_id: userId,
         property_id: property.id,
@@ -81,7 +81,7 @@ export const seedEdgeCases: SeedScenario = {
     console.log('Created edge case inventory');
 
     // Edge case vendor
-    const { error: vendorError } = await supabase.from('landlord_vendors').insert({
+    const { error: vendorError } = await supabase.schema('landlord').from('vendors').insert({
       user_id: userId,
       category: 'other',
       name: "Test O'Vendor <script>",
@@ -97,7 +97,7 @@ export const seedEdgeCases: SeedScenario = {
     console.log('Created edge case vendor');
 
     // Edge case contact
-    const { data: contact, error: contactError } = await supabase.from('crm_contacts').insert({
+    const { data: contact, error: contactError } = await supabase.schema('crm').from('contacts').insert({
       user_id: userId,
       first_name: 'Test',
       last_name: "User'); DROP TABLE crm_contacts;--",
@@ -114,7 +114,7 @@ export const seedEdgeCases: SeedScenario = {
     // Edge case booking
     const today = new Date();
     const yesterday = new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000);
-    const { data: booking, error: bookingError } = await supabase.from('landlord_bookings').insert({
+    const { data: booking, error: bookingError } = await supabase.schema('landlord').from('bookings').insert({
       user_id: userId,
       property_id: property.id,
       contact_id: contact.id,
@@ -133,7 +133,7 @@ export const seedEdgeCases: SeedScenario = {
     console.log('Created edge case booking');
 
     // Edge case charges
-    const { error: chargesError } = await supabase.from('landlord_booking_charges').insert([
+    const { error: chargesError } = await supabase.schema('landlord').from('booking_charges').insert([
       {
         user_id: userId,
         booking_id: booking.id,
@@ -157,7 +157,7 @@ export const seedEdgeCases: SeedScenario = {
     console.log('Created edge case charges');
 
     // Edge case maintenance
-    const { error: maintenanceError } = await supabase.from('landlord_maintenance_records').insert({
+    const { error: maintenanceError } = await supabase.schema('landlord').from('maintenance_records').insert({
       user_id: userId,
       property_id: property.id,
       work_order_number: 'WO-TEST-001',

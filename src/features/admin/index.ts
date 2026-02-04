@@ -41,4 +41,4 @@ export {
   type SeedResult,
   type ClearResult,
   type SafetyCheckResult,
-} from './services/investorSeeder';
+} from './services/investor-seeder';

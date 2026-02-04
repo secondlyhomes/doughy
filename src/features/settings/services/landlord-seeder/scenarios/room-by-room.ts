@@ -15,7 +15,7 @@ export const seedRoomByRoom: SeedScenario = {
     await ensureUserHasWorkspace(userId);
 
     // Create a room-by-room property
-    const { data: property, error: propertyError } = await supabase.from('landlord_properties').insert({
+    const { data: property, error: propertyError } = await supabase.schema('landlord').from('properties').insert({
       user_id: userId,
       name: 'Shared House - Westside',
       address: '555 College Ave',
@@ -45,7 +45,7 @@ export const seedRoomByRoom: SeedScenario = {
     console.log('Created property:', property.id);
 
     // Create rooms
-    const { data: rooms, error: roomsError } = await supabase.from('landlord_rooms').insert([
+    const { data: rooms, error: roomsError } = await supabase.schema('landlord').from('rooms').insert([
       { property_id: property.id, name: 'Room A - Master', monthly_rate: 1200, status: 'occupied', is_private_bath: true, amenities: ['closet', 'ceiling_fan'] },
       { property_id: property.id, name: 'Room B - Corner', monthly_rate: 950, status: 'occupied', is_private_bath: false, amenities: ['closet', 'window_ac'] },
       { property_id: property.id, name: 'Room C - Garden View', monthly_rate: 900, status: 'available', is_private_bath: false, amenities: ['closet'] },
@@ -62,7 +62,7 @@ export const seedRoomByRoom: SeedScenario = {
     console.log('Created rooms:', rooms.length);
 
     // Create tenants for occupied rooms
-    const { data: contacts, error: contactsError } = await supabase.from('crm_contacts').insert([
+    const { data: contacts, error: contactsError } = await supabase.schema('crm').from('contacts').insert([
       { user_id: userId, first_name: 'Chris', last_name: 'Park', email: 'chris.p@email.com', contact_types: ['tenant'], source: 'furnishedfinder', status: 'active', score: 88 },
       { user_id: userId, first_name: 'Sam', last_name: 'Torres', email: 'sam.t@email.com', contact_types: ['tenant'], source: 'craigslist', status: 'active', score: 82 },
       { user_id: userId, first_name: 'Pat', last_name: 'Quinn', email: 'pat.q@email.com', contact_types: ['lead'], source: 'facebook', status: 'qualified', score: 75 },
@@ -79,7 +79,7 @@ export const seedRoomByRoom: SeedScenario = {
 
     // Create bookings for occupied rooms
     const today = new Date();
-    const { error: bookingsError } = await supabase.from('landlord_bookings').insert([
+    const { error: bookingsError } = await supabase.schema('landlord').from('bookings').insert([
       { user_id: userId, property_id: property.id, room_id: rooms[0].id, contact_id: contacts[0].id, booking_type: 'lease', status: 'active', start_date: new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 275 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 1200, rate_type: 'monthly', total_amount: 14400, source: 'furnishedfinder' },
       { user_id: userId, property_id: property.id, room_id: rooms[1].id, contact_id: contacts[1].id, booking_type: 'lease', status: 'active', start_date: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 150 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 950, rate_type: 'monthly', total_amount: 5700, source: 'craigslist' },
     ]);
@@ -90,7 +90,7 @@ export const seedRoomByRoom: SeedScenario = {
     console.log('Created bookings');
 
     // Create inquiry conversation for available room
-    const { data: convo, error: convoError } = await supabase.from('landlord_conversations').insert({
+    const { data: convo, error: convoError } = await supabase.schema('landlord').from('conversations').insert({
       user_id: userId,
       contact_id: contacts[2].id,
       property_id: property.id,
@@ -110,7 +110,7 @@ export const seedRoomByRoom: SeedScenario = {
     }
     console.log('Created conversation:', convo.id);
 
-    const { error: messagesError } = await supabase.from('landlord_messages').insert([
+    const { error: messagesError } = await supabase.schema('landlord').from('messages').insert([
       { conversation_id: convo.id, direction: 'inbound', content: 'Hi, I saw Room C is available. Is it still open? I\'m looking for a 6-month stay.', content_type: 'text', sent_by: 'contact' },
       { conversation_id: convo.id, direction: 'outbound', content: 'Yes, Room C is available! It\'s $900/month and has a nice garden view. When would you like to move in?', content_type: 'text', sent_by: 'ai', ai_confidence: 91 },
     ]);

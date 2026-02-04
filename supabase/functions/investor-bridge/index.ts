@@ -75,7 +75,8 @@ async function handleCreateDeal(
   };
 
   const { data, error } = await supabase
-    .from('investor_deals')
+    .schema('investor')
+    .from('deals')
     .insert(dealData)
     .select()
     .single();
@@ -119,7 +120,8 @@ async function handleUpdateDeal(
   }
 
   const { data, error } = await supabase
-    .from('investor_deals')
+    .schema('investor')
+    .from('deals')
     .update(updateData)
     .eq('id', deal_id)
     .eq('user_id', userId)
@@ -141,7 +143,8 @@ async function handleGetDeal(
   const { deal_id, property_address } = payload;
 
   let query = supabase
-    .from('investor_deals')
+    .schema('investor')
+    .from('deals')
     .select('*')
     .eq('user_id', userId);
 
@@ -176,7 +179,8 @@ async function handleListDeals(
   payload: Record<string, unknown>
 ): Promise<InvestorBridgeResponse> {
   let query = supabase
-    .from('investor_deals')
+    .schema('investor')
+    .from('deals')
     .select('*')
     .eq('user_id', userId);
 
@@ -241,7 +245,8 @@ async function handleUpdateDealStage(
   }
 
   const { data, error } = await supabase
-    .from('investor_deals')
+    .schema('investor')
+    .from('deals')
     .update(updateData)
     .eq('id', deal_id)
     .eq('user_id', userId)
@@ -280,7 +285,8 @@ async function handleCreateAgent(
   };
 
   const { data, error } = await supabase
-    .from('investor_agents')
+    .schema('investor')
+    .from('agents')
     .insert(agentData)
     .select()
     .single();
@@ -322,7 +328,8 @@ async function handleUpdateAgent(
   }
 
   const { data, error } = await supabase
-    .from('investor_agents')
+    .schema('investor')
+    .from('agents')
     .update(updateData)
     .eq('id', agent_id)
     .eq('user_id', userId)
@@ -342,7 +349,8 @@ async function handleListAgents(
   payload: Record<string, unknown>
 ): Promise<InvestorBridgeResponse> {
   let query = supabase
-    .from('investor_agents')
+    .schema('investor')
+    .from('agents')
     .select('*')
     .eq('user_id', userId);
 
@@ -386,7 +394,8 @@ async function handleCreateCampaign(
   };
 
   const { data, error } = await supabase
-    .from('investor_campaigns')
+    .schema('investor')
+    .from('campaigns')
     .insert(campaignData)
     .select()
     .single();
@@ -404,7 +413,8 @@ async function handleListCampaigns(
   payload: Record<string, unknown>
 ): Promise<InvestorBridgeResponse> {
   let query = supabase
-    .from('investor_campaigns')
+    .schema('investor')
+    .from('campaigns')
     .select('*')
     .eq('user_id', userId);
 
@@ -450,7 +460,8 @@ async function handleScheduleFollowUp(
   };
 
   const { data, error } = await supabase
-    .from('investor_follow_ups')
+    .schema('investor')
+    .from('follow_ups')
     .insert(followUpData)
     .select()
     .single();
@@ -462,13 +473,15 @@ async function handleScheduleFollowUp(
   // Update deal/agent with next follow-up date
   if (payload.deal_id) {
     await supabase
-      .from('investor_deals')
+      .schema('investor')
+      .from('deals')
       .update({ ai_follow_up_scheduled_at: scheduledAt.toISOString() })
       .eq('id', payload.deal_id);
   }
   if (payload.agent_id) {
     await supabase
-      .from('investor_agents')
+      .schema('investor')
+      .from('agents')
       .update({ next_follow_up_at: scheduledAt.toISOString() })
       .eq('id', payload.agent_id);
   }
@@ -488,7 +501,8 @@ async function handleCompleteFollowUp(
   }
 
   const { data, error } = await supabase
-    .from('investor_follow_ups')
+    .schema('investor')
+    .from('follow_ups')
     .update({
       status: status || 'completed',
       completed_at: new Date().toISOString(),
@@ -514,12 +528,13 @@ async function handleGetDueFollowUps(
   const limit = (payload.limit as number) || 20;
 
   const { data, error } = await supabase
-    .from('investor_follow_ups')
+    .schema('investor')
+    .from('follow_ups')
     .select(`
       *,
-      deal:investor_deals(id, property_address, seller_name, motivation),
-      contact:crm_contacts(id, first_name, last_name, email, phone),
-      agent:investor_agents(id, name, email)
+      deal:investor.deals(id, property_address, seller_name, motivation),
+      contact:crm.contacts(id, first_name, last_name, email, phone),
+      agent:investor.agents(id, name, email)
     `)
     .eq('user_id', userId)
     .eq('status', 'scheduled')
@@ -541,7 +556,8 @@ async function handleGetPipelineStats(
 ): Promise<InvestorBridgeResponse> {
   // Get deal counts by stage
   const { data: deals, error: dealsError } = await supabase
-    .from('investor_deals')
+    .schema('investor')
+    .from('deals')
     .select('stage, motivation')
     .eq('user_id', userId);
 
@@ -561,7 +577,8 @@ async function handleGetPipelineStats(
 
   // Get pending follow-ups count
   const { count: pendingFollowUps } = await supabase
-    .from('investor_follow_ups')
+    .schema('investor')
+    .from('follow_ups')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('status', 'scheduled')
@@ -569,7 +586,8 @@ async function handleGetPipelineStats(
 
   // Get active campaigns count
   const { count: activeCampaigns } = await supabase
-    .from('investor_campaigns')
+    .schema('investor')
+    .from('campaigns')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('status', 'active');

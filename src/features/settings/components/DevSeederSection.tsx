@@ -6,7 +6,7 @@ import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-na
 import { useRouter } from 'expo-router';
 import { Database, Trash2, Play, Home, TrendingUp, Sparkles, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { seedScenarios, runSeedScenario, clearAllLandlordData } from '../services/landlordSeeder';
+import { seedScenarios, runSeedScenario, clearAllLandlordData } from '../services/landlord-seeder';
 import { investorSeeder } from '@/features/admin/services';
 import { PORTFOLIO_DEALS_COUNT } from '@/features/admin/factories/testDataFactories';
 import { useAuth } from '@/features/auth/hooks/useAuth';

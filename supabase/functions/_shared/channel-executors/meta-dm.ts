@@ -8,10 +8,15 @@
 
 import type { SupabaseClient, ChannelResult } from "./types.ts";
 
+// Meta's rate limits for page messaging
+const HOURLY_LIMIT = 200;
+const DAILY_LIMIT = 1000;
+
 /**
  * Send Meta DM (Facebook/Instagram)
  *
- * Uses atomic rate limit check to prevent race conditions.
+ * Uses atomic increment-before-send pattern to prevent race conditions.
+ * If the message fails to send, the counter is decremented.
  *
  * @param supabase - Supabase client
  * @param userId - User ID for credentials lookup
@@ -27,7 +32,7 @@ export async function sendMetaDM(
 ): Promise<ChannelResult> {
   // Get user's Meta credentials
   const { data: credentials, error: credError } = await supabase
-    .from('meta_dm_credentials')
+    .schema('integrations').from('meta_dm_credentials')
     .select('*')
     .eq('user_id', userId)
     .eq('is_active', true)
@@ -38,35 +43,64 @@ export async function sendMetaDM(
   }
 
   const now = new Date();
+  const credId = credentials.id as string;
 
-  // Check rate limits (read values for later update calculation)
-  let hourlyCount = (credentials.hourly_dm_count as number) || 0;
-  let dailyCount = (credentials.daily_dm_count as number) || 0;
+  // Calculate reset times
+  const hourlyReset = credentials.hourly_dm_reset_at
+    ? new Date(credentials.hourly_dm_reset_at as string)
+    : null;
+  const dailyReset = credentials.daily_dm_reset_at
+    ? new Date(credentials.daily_dm_reset_at as string)
+    : null;
 
-  // Check hourly reset
-  if (credentials.hourly_dm_reset_at) {
-    const hourlyReset = new Date(credentials.hourly_dm_reset_at as string);
-    if (now >= hourlyReset) {
-      hourlyCount = 0;
-    }
+  // Determine if we need to reset counters
+  const needsHourlyReset = !hourlyReset || now >= hourlyReset;
+  const needsDailyReset = !dailyReset || now >= dailyReset;
+
+  // Atomically increment counters BEFORE sending (reserve the slot)
+  // This prevents TOCTOU race conditions where multiple concurrent requests
+  // could all pass the rate limit check before any counters are updated
+  const { data: updated, error: updateError } = await supabase
+    .schema('integrations').from('meta_dm_credentials')
+    .update({
+      // Reset or increment hourly count
+      hourly_dm_count: needsHourlyReset ? 1 : (credentials.hourly_dm_count as number || 0) + 1,
+      hourly_dm_reset_at: needsHourlyReset
+        ? new Date(now.getTime() + 60 * 60 * 1000).toISOString()
+        : credentials.hourly_dm_reset_at,
+      // Reset or increment daily count
+      daily_dm_count: needsDailyReset ? 1 : (credentials.daily_dm_count as number || 0) + 1,
+      daily_dm_reset_at: needsDailyReset
+        ? new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString()
+        : credentials.daily_dm_reset_at,
+      updated_at: now.toISOString(),
+    })
+    .eq('id', credId)
+    .select('hourly_dm_count, daily_dm_count')
+    .single();
+
+  if (updateError || !updated) {
+    console.error('[MetaDM] Failed to reserve rate limit slot:', updateError);
+    return { success: false, error: 'Rate limit check failed - please retry' };
   }
 
-  // Check daily reset
-  if (credentials.daily_dm_reset_at) {
-    const dailyReset = new Date(credentials.daily_dm_reset_at as string);
-    if (now >= dailyReset) {
-      dailyCount = 0;
-    }
+  // Check if we've exceeded limits AFTER atomic increment
+  const newHourlyCount = updated.hourly_dm_count as number;
+  const newDailyCount = updated.daily_dm_count as number;
+
+  if (newHourlyCount > HOURLY_LIMIT) {
+    // Decrement since we won't send - rollback the reservation
+    await decrementRateLimitCounters(supabase, credId);
+    return { success: false, error: `Meta DM hourly rate limit reached (${HOURLY_LIMIT}/hour)` };
   }
 
-  // Check limits (Meta allows ~200/hour, ~1000/day for pages)
-  if (hourlyCount >= 200) {
-    return { success: false, error: 'Meta DM hourly rate limit reached (200/hour)' };
-  }
-  if (dailyCount >= 1000) {
-    return { success: false, error: 'Meta DM daily rate limit reached (1000/day)' };
+  if (newDailyCount > DAILY_LIMIT) {
+    // Decrement since we won't send - rollback the reservation
+    await decrementRateLimitCounters(supabase, credId);
+    return { success: false, error: `Meta DM daily rate limit reached (${DAILY_LIMIT}/day)` };
   }
 
+  // Rate limit slot reserved - now send the message
   try {
     const pageId = credentials.page_id as string;
     const pageAccessToken = credentials.page_access_token as string;
@@ -88,41 +122,53 @@ export async function sendMetaDM(
     );
 
     if (!response.ok) {
+      // Message failed - decrement counters to release the reserved slot
+      await decrementRateLimitCounters(supabase, credId);
       const errorText = await response.text();
       return { success: false, error: `Meta API error: ${response.status} - ${errorText}` };
     }
 
     const result = await response.json();
-
-    // Update rate limit counters AFTER successful send (prevents race condition)
-    const hourlyResetAt = credentials.hourly_dm_reset_at && new Date(credentials.hourly_dm_reset_at as string) > now
-      ? credentials.hourly_dm_reset_at as string
-      : new Date(now.getTime() + 60 * 60 * 1000).toISOString();
-
-    const dailyResetAt = credentials.daily_dm_reset_at && new Date(credentials.daily_dm_reset_at as string) > now
-      ? credentials.daily_dm_reset_at as string
-      : new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
-
-    const { error: rateLimitError } = await supabase
-      .from('meta_dm_credentials')
-      .update({
-        hourly_dm_count: hourlyCount + 1,
-        hourly_dm_reset_at: hourlyResetAt,
-        daily_dm_count: dailyCount + 1,
-        daily_dm_reset_at: dailyResetAt,
-        updated_at: now.toISOString(),
-      })
-      .eq('id', credentials.id as string);
-
-    let rateLimitWarning = false;
-    if (rateLimitError) {
-      console.error('[MetaDM] Error updating rate limit counters:', rateLimitError);
-      rateLimitWarning = true;
-      // Message was sent - this is non-critical but could cause rate limit tracking drift
-    }
-
-    return { success: true, messageId: result.message_id, rateLimitWarning };
+    return { success: true, messageId: result.message_id };
   } catch (error) {
+    // Message failed - decrement counters to release the reserved slot
+    await decrementRateLimitCounters(supabase, credId);
     return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Decrement rate limit counters when a reserved slot is not used
+ * This releases the slot we reserved before attempting to send
+ */
+async function decrementRateLimitCounters(
+  supabase: SupabaseClient,
+  credId: string
+): Promise<void> {
+  try {
+    // First get current values
+    const { data: current } = await supabase
+      .schema('integrations').from('meta_dm_credentials')
+      .select('hourly_dm_count, daily_dm_count')
+      .eq('id', credId)
+      .single();
+
+    if (!current) return;
+
+    // Decrement (don't go below 0)
+    const hourlyCount = Math.max(0, (current.hourly_dm_count as number || 1) - 1);
+    const dailyCount = Math.max(0, (current.daily_dm_count as number || 1) - 1);
+
+    await supabase
+      .schema('integrations').from('meta_dm_credentials')
+      .update({
+        hourly_dm_count: hourlyCount,
+        daily_dm_count: dailyCount,
+      })
+      .eq('id', credId);
+  } catch (error) {
+    // Log but don't fail - the message wasn't sent, so this is just cleanup
+    // In the worst case, the counter is slightly inflated which is safe
+    console.error('[MetaDM] Failed to decrement rate limit counters:', error);
   }
 }

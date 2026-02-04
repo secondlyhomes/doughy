@@ -10,6 +10,8 @@ export { RentalPropertyDetailScreen } from './screens/RentalPropertyDetailScreen
 export { RentalPropertyCard } from './components/RentalPropertyCard';
 export { PropertyStatsRow } from './components/PropertyStatsRow';
 export { RoomsList } from './components/RoomsList';
+export { RentalPropertyForm } from './components/RentalPropertyForm';
+export { RentalPropertyFormWizard } from './components/RentalPropertyFormWizard';
 
 // Hooks
 export {

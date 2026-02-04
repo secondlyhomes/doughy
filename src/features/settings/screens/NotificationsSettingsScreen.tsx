@@ -12,11 +12,13 @@ import {
   Linking,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, Bell, MessageCircle, TrendingUp, AlertTriangle, Settings } from 'lucide-react-native';
+import { Stack } from 'expo-router';
+import { Bell, MessageCircle, TrendingUp, AlertTriangle, Settings } from 'lucide-react-native';
+import { ICON_SIZES } from '@/constants/design-tokens';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPermissionsAsync, requestPermissionsAsync } from '@/utils/notifications';
@@ -44,10 +46,14 @@ const defaultSettings: NotificationSettings = {
 };
 
 export function NotificationsSettingsScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Notifications',
+    fallbackRoute: '/(tabs)/settings',
+  });
 
   // Check notification permission status
   useEffect(() => {
@@ -120,11 +126,10 @@ export function NotificationsSettingsScreen() {
   }, []);
 
   return (
-    <ThemedSafeAreaView className="flex-1">
-      {/* Header */}
-      <ScreenHeader title="Notifications" backButton bordered />
-
-      <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
         {/* Permission Banner */}
         {hasPermission === false && (
           <TouchableOpacity
@@ -132,7 +137,7 @@ export function NotificationsSettingsScreen() {
             style={{ backgroundColor: withOpacity(colors.warning, 'muted'), borderWidth: 1, borderColor: withOpacity(colors.warning, 'strong') }}
             onPress={handleRequestPermission}
           >
-            <AlertTriangle size={24} color={colors.warning} />
+            <AlertTriangle size={ICON_SIZES.xl} color={colors.warning} />
             <View className="flex-1 ml-3">
               <Text className="font-medium" style={{ color: colors.warning }}>
                 Notifications Disabled
@@ -152,7 +157,7 @@ export function NotificationsSettingsScreen() {
         <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center p-4">
             <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-              <Bell size={20} color={colors.info} />
+              <Bell size={ICON_SIZES.lg} color={colors.info} />
             </View>
             <View className="flex-1 ml-4">
               <Text className="font-medium" style={{ color: colors.foreground }}>Push Notifications</Text>
@@ -176,7 +181,7 @@ export function NotificationsSettingsScreen() {
 
         <View className="rounded-lg mb-6" style={{ backgroundColor: colors.card }}>
           <NotificationToggle
-            icon={<MessageCircle size={20} color={colors.success} />}
+            icon={<MessageCircle size={ICON_SIZES.lg} color={colors.success} />}
             title="New Leads"
             description="When new leads are assigned to you"
             value={settings.newLeads}
@@ -184,7 +189,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<Bell size={20} color={colors.info} />}
+            icon={<Bell size={ICON_SIZES.lg} color={colors.info} />}
             title="Lead Updates"
             description="Status changes and activity on your leads"
             value={settings.leadUpdates}
@@ -192,7 +197,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<TrendingUp size={20} color={colors.primary} />}
+            icon={<TrendingUp size={ICON_SIZES.lg} color={colors.primary} />}
             title="Property Alerts"
             description="Price changes and new listings"
             value={settings.propertyAlerts}
@@ -200,7 +205,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<TrendingUp size={20} color={colors.warning} />}
+            icon={<TrendingUp size={ICON_SIZES.lg} color={colors.warning} />}
             title="Deal Analysis"
             description="AI insights and recommendations"
             value={settings.dealAnalysis}
@@ -217,7 +222,7 @@ export function NotificationsSettingsScreen() {
 
         <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
           <NotificationToggle
-            icon={<MessageCircle size={20} color={colors.mutedForeground} />}
+            icon={<MessageCircle size={ICON_SIZES.lg} color={colors.mutedForeground} />}
             title="Team Updates"
             description="Messages from team members"
             value={settings.teamUpdates}
@@ -225,7 +230,7 @@ export function NotificationsSettingsScreen() {
             disabled={!settings.pushEnabled}
           />
           <NotificationToggle
-            icon={<Settings size={20} color={colors.mutedForeground} />}
+            icon={<Settings size={ICON_SIZES.lg} color={colors.mutedForeground} />}
             title="Marketing Emails"
             description="Tips, updates, and promotions"
             value={settings.marketingEmails}
@@ -233,8 +238,9 @@ export function NotificationsSettingsScreen() {
             hideBorder
           />
         </View>
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

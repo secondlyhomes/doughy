@@ -26,7 +26,7 @@ export const rentalPropertyKeys = {
 
 async function fetchRentalProperties(): Promise<RentalProperty[]> {
   const { data, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -40,7 +40,7 @@ async function fetchRentalProperties(): Promise<RentalProperty[]> {
 
 async function fetchRentalPropertyById(id: string): Promise<RentalProperty | null> {
   const { data, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .select('*')
     .eq('id', id)
     .single();
@@ -66,10 +66,10 @@ async function fetchRentalPropertiesWithRooms(): Promise<RentalPropertyWithRooms
   // Fetch properties with room counts
   // Note: This uses a subquery pattern - adjust based on your rooms table structure
   const { data, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .select(`
       *,
-      rooms:landlord_rooms(count)
+      rooms:rooms(count)
     `)
     .order('created_at', { ascending: false });
 
@@ -124,7 +124,7 @@ async function createRentalProperty(
   };
 
   const { data, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .insert(insertData as never)
     .select()
     .single();
@@ -167,7 +167,7 @@ async function updateRentalProperty(
   if (updates.status !== undefined) updateData.status = updates.status;
 
   const { data, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -183,7 +183,7 @@ async function updateRentalProperty(
 
 async function deleteRentalProperty(id: string): Promise<void> {
   const { error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .delete()
     .eq('id', id);
 

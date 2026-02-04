@@ -216,7 +216,16 @@
       "Bash(do grep -q \"CREATE TABLE.*security_api_keys\" \"$f\")",
       "Bash(git branch:*)",
       "Bash(sort:*)",
-      "Bash(for file in /Users/dinosaur/Developer/doughy-ai/src/features/*/components/*Card.tsx)"
+      "Bash(for file in /Users/dinosaur/Developer/doughy-ai/src/features/*/components/*Card.tsx)",
+      "Bash(pgrep:*)",
+      "Bash(for component in \"PlatformBadge\" \"Pagination\" \"Table\" \"Breadcrumb\" \"OTPInput\" \"DestructiveActionSheet\" \"AddressSuggestionList\" \"FileUpload\" \"ImagePicker\")",
+      "Bash(__NEW_LINE_4a404c4e986c8146__ echo \"ADDITIONAL NAVIGATION ISSUES:\")",
+      "Bash(__NEW_LINE_855451ddc56925d6__ echo \"=== SUMMARY OF NON-EXISTENT ROUTES ===\")",
+      "Bash(__NEW_LINE_09fe5b9ebf35e8de__ echo \"=== ADDITIONAL ROUTING ISSUES ===\")",
+      "Bash(python3:*)",
+      "mcp__plugin_supabase_supabase__get_project",
+      "Bash(while read line)",
+      "Bash(git show:*)"
     ]
   }
 }

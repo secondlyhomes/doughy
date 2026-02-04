@@ -8,7 +8,8 @@ import { ChevronDown, MapPin } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { PropertyConstants } from '../types';
-import { AddressAutocomplete, AddressResult } from './AddressAutocomplete';
+import { AddressAutofill } from '@/components/ui';
+import type { AddressAutofillValue } from '@/components/ui';
 
 export interface Step1Data {
   address: string;
@@ -33,14 +34,14 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
   const [showPropertyTypePicker, setShowPropertyTypePicker] = useState(false);
   const [useAutocomplete, setUseAutocomplete] = useState(true);
 
-  const handleAddressSelect = useCallback((result: AddressResult) => {
+  const handleAddressSelected = useCallback((addr: AddressAutofillValue) => {
     onChange({
-      address: result.address,
-      city: result.city,
-      state: result.state,
-      zip: result.zip,
-      latitude: result.lat,
-      longitude: result.lon,
+      address: addr.street || addr.formatted,
+      city: addr.city || '',
+      state: addr.state || '',
+      zip: addr.zip || '',
+      latitude: addr.lat,
+      longitude: addr.lng,
     });
   }, [onChange]);
 
@@ -84,10 +85,16 @@ export function PropertyFormStep1({ data, onChange, errors }: PropertyFormStep1P
 
           {useAutocomplete ? (
             <View className="mb-4">
-              <AddressAutocomplete
+              <AddressAutofill
                 value={data.address || ''}
-                onChange={(value) => onChange({ address: value })}
-                onAddressSelected={handleAddressSelect}
+                onChange={(addr) => {
+                  if (typeof addr === 'object' && addr) {
+                    onChange({ address: addr.formatted });
+                  } else {
+                    onChange({ address: '' });
+                  }
+                }}
+                onAddressSelected={handleAddressSelected}
                 placeholder="Start typing an address..."
               />
               {data.address && (

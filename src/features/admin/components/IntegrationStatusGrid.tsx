@@ -4,6 +4,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { Badge, BadgeVariant } from '@/components/ui';
 import { BORDER_RADIUS } from '@/constants/design-tokens';
 import type { IntegrationStatus } from '../types/integrations';
 
@@ -39,24 +40,45 @@ interface Section {
 }
 
 /**
- * Get status color based on integration status
+ * Get badge variant based on integration status
  */
-function getStatusColor(status: IntegrationStatus, colors: ReturnType<typeof useThemeColors>) {
+function getIntegrationBadgeVariant(status: IntegrationStatus): BadgeVariant {
   switch (status) {
     case 'operational':
     case 'active':
-      return colors.success;
+      return 'success';
     case 'configured':
-      return colors.info;
+      return 'info';
     case 'error':
-      return colors.destructive;
+      return 'destructive';
     case 'checking':
-      return colors.info;
+      return 'info';
     case 'not-configured':
-      return colors.mutedForeground;
+      return 'secondary';
     default:
-      // Safety fallback - should not reach here
-      return colors.mutedForeground;
+      return 'secondary';
+  }
+}
+
+/**
+ * Get short status label for display
+ */
+function getStatusLabel(status: IntegrationStatus): string {
+  switch (status) {
+    case 'operational':
+      return 'OK';
+    case 'active':
+      return 'Active';
+    case 'configured':
+      return 'Set';
+    case 'error':
+      return 'Error';
+    case 'checking':
+      return '...';
+    case 'not-configured':
+      return 'None';
+    default:
+      return 'N/A';
   }
 }
 
@@ -84,7 +106,6 @@ const IntegrationRow = React.memo(function IntegrationRow({
   onPress?: () => void;
 }) {
   const colors = useThemeColors();
-  const statusColor = getStatusColor(item.status, colors);
   const isConfigured = item.status !== 'not-configured';
   const effectiveDate = item.updatedAt || item.createdAt;
 
@@ -95,8 +116,10 @@ const IntegrationRow = React.memo(function IntegrationRow({
       activeOpacity={0.7}
       disabled={!onPress}
     >
-      {/* Status dot */}
-      <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+      {/* Status badge */}
+      <Badge variant={getIntegrationBadgeVariant(item.status)} size="sm" style={styles.statusBadge}>
+        {getStatusLabel(item.status)}
+      </Badge>
 
       {/* Name */}
       <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
@@ -251,11 +274,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  statusBadge: {
     marginRight: 10,
+    minWidth: 44,
   },
   name: {
     flex: 1,

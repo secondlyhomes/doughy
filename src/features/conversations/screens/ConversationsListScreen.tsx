@@ -12,8 +12,8 @@ import {
   Alert,
 } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner, SimpleFAB, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useRouter } from 'expo-router';
+import { LoadingSpinner, SimpleFAB, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { useRouter, Stack } from 'expo-router';
 import {
   MessageCircle,
   Trash2,
@@ -26,6 +26,7 @@ import { ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { useConversations, useCreateConversation, useDeleteConversation } from '../hooks/useConversations';
 import { Conversation } from '../types';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 
 function formatTimeAgo(dateString: string | undefined): string {
@@ -130,6 +131,11 @@ export function ConversationsListScreen() {
   const deleteConversation = useDeleteConversation();
   const abortControllerRef = React.useRef<AbortController | null>(null);
 
+  const { headerOptions } = useNativeHeader({
+    title: 'Conversations',
+    fallbackRoute: '/(tabs)',
+  });
+
   // Cleanup on unmount
   React.useEffect(() => {
     return () => {
@@ -194,11 +200,10 @@ export function ConversationsListScreen() {
   const keyExtractor = useCallback((item: Conversation) => item.id, []);
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <ScreenHeader title="Conversations" subtitle="Your AI chat history" />
-
-      {isLoading ? (
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {isLoading ? (
         <LoadingSpinner fullScreen color={colors.info} />
       ) : (
         <FlatList
@@ -243,14 +248,15 @@ export function ConversationsListScreen() {
         />
       )}
 
-      {/* Floating Action Button */}
-      <SimpleFAB
-        testID="new-conversation-fab"
-        onPress={handleNewConversation}
-        loading={createConversation.isPending}
-        accessibilityLabel="Start new conversation"
-      />
-    </ThemedSafeAreaView>
+        {/* Floating Action Button */}
+        <SimpleFAB
+          testID="new-conversation-fab"
+          onPress={handleNewConversation}
+          loading={createConversation.isPending}
+          accessibilityLabel="Start new conversation"
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

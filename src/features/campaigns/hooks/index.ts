@@ -3,3 +3,4 @@
 
 export * from './useCampaigns';
 export * from './useMailCredits';
+export * from './useMailHistory';

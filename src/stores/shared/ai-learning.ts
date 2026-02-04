@@ -43,7 +43,7 @@ export interface InvestorAIOutcome extends AIOutcomeBase {
 
 /**
  * Log an AI response outcome for adaptive learning (Landlord platform)
- * Uses the ai_response_outcomes table
+ * Uses the ai.response_outcomes table
  *
  * @param outcome - The outcome record to log
  * @returns Promise<boolean> - true if logged successfully, false otherwise
@@ -51,8 +51,9 @@ export interface InvestorAIOutcome extends AIOutcomeBase {
 export async function logLandlordAIOutcome(outcome: LandlordAIOutcome): Promise<boolean> {
   try {
     // Type assertion needed since table may not be in generated Supabase types
-    await (supabase as unknown as { from: (table: string) => { insert: (data: LandlordAIOutcome) => Promise<void> } })
-      .from('ai_response_outcomes')
+    await (supabase as unknown as { schema: (name: string) => { from: (table: string) => { insert: (data: LandlordAIOutcome) => Promise<void> } } })
+      .schema('ai')
+      .from('response_outcomes')
       .insert(outcome);
     return true;
   } catch (error) {
@@ -72,14 +73,14 @@ export async function logLandlordAIOutcome(outcome: LandlordAIOutcome): Promise<
 
 /**
  * Log an AI response outcome for adaptive learning (Investor platform)
- * Uses the investor_ai_response_outcomes table
+ * Uses the ai.response_outcomes table
  *
  * @param outcome - The outcome record to log
  * @returns Promise<boolean> - true if logged successfully, false otherwise
  */
 export async function logInvestorAIOutcome(outcome: InvestorAIOutcome): Promise<boolean> {
   try {
-    await supabase.from('investor_ai_response_outcomes').insert(outcome);
+    await supabase.schema('ai').from('response_outcomes').insert(outcome);
     return true;
   } catch (error) {
     // CRITICAL: Adaptive learning data loss should be tracked

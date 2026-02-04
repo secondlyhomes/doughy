@@ -176,7 +176,7 @@ async function getValidAccessToken(
 
   if (!refreshResult) {
     await supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .update({
         sync_error: 'Failed to refresh access token. Please reconnect Google.',
         is_active: false,
@@ -190,7 +190,7 @@ async function getValidAccessToken(
   const newAccessTokenEncrypted = await encryptServer(refreshResult.accessToken);
 
   await supabase
-    .from('rental_email_connections')
+    .schema('integrations').from('email_connections')
     .update({
       access_token_encrypted: newAccessTokenEncrypted,
       token_expires_at: refreshResult.expiresAt.toISOString(),
@@ -456,7 +456,7 @@ serve(async (req: Request) => {
 
     // Get the Google connection
     let query = supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .select('*')
       .eq('provider', 'gmail')
       .eq('is_active', true)
@@ -530,7 +530,7 @@ serve(async (req: Request) => {
         if (syncResult.error === 'SYNC_TOKEN_EXPIRED') {
           // Clear sync token and retry without it
           await supabase
-            .from('rental_email_connections')
+            .schema('integrations').from('email_connections')
             .update({ calendar_sync_token: null })
             .eq('id', connection.id);
 
@@ -542,7 +542,7 @@ serve(async (req: Request) => {
 
           if (retryResult.nextSyncToken) {
             await supabase
-              .from('rental_email_connections')
+              .schema('integrations').from('email_connections')
               .update({
                 calendar_sync_token: retryResult.nextSyncToken,
                 last_calendar_sync_at: new Date().toISOString(),
@@ -561,7 +561,7 @@ serve(async (req: Request) => {
           // Save new sync token
           if (syncResult.nextSyncToken) {
             await supabase
-              .from('rental_email_connections')
+              .schema('integrations').from('email_connections')
               .update({
                 calendar_sync_token: syncResult.nextSyncToken,
                 last_calendar_sync_at: new Date().toISOString(),

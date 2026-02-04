@@ -53,7 +53,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       let query = supabase
-        .from('landlord_guest_templates')
+        .schema('landlord')
+        .from('guest_templates')
         .select('*')
         .order('type', { ascending: true })
         .order('name', { ascending: true });
@@ -80,7 +81,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('landlord_guest_templates')
+        .schema('landlord')
+        .from('guest_templates')
         .select('*')
         .eq('id', id)
         .single();
@@ -102,7 +104,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
       if (!user.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('landlord_guest_templates')
+        .schema('landlord')
+        .from('guest_templates')
         .insert({
           ...input,
           user_id: user.user.id,
@@ -130,7 +133,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('landlord_guest_templates')
+        .schema('landlord')
+        .from('guest_templates')
         .update(input)
         .eq('id', id)
         .select()
@@ -155,7 +159,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('landlord_guest_templates')
+        .schema('landlord')
+        .from('guest_templates')
         .delete()
         .eq('id', id);
 
@@ -175,7 +180,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('landlord_guest_templates')
+        .schema('landlord')
+        .from('guest_templates')
         .update({ is_active: isActive })
         .eq('id', id);
 
@@ -199,7 +205,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('landlord_guest_messages')
+        .schema('landlord')
+        .from('guest_messages')
         .select('*')
         .eq('booking_id', bookingId)
         .order('sent_at', { ascending: false });
@@ -223,7 +230,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
 
       // Insert message record
       const { data, error } = await supabase
-        .from('landlord_guest_messages')
+        .schema('landlord')
+        .from('guest_messages')
         .insert({
           user_id: user.user.id,
           template_id: input.template_id,
@@ -263,7 +271,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('ai_auto_send_rules')
+        .schema('ai')
+        .from('auto_send_rules')
         .select('*')
         .order('trigger', { ascending: true });
 
@@ -285,7 +294,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
       if (!user.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('ai_auto_send_rules')
+        .schema('ai')
+        .from('auto_send_rules')
         .insert({
           ...rule,
           user_id: user.user.id,
@@ -312,7 +322,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('ai_auto_send_rules')
+        .schema('ai')
+        .from('auto_send_rules')
         .update(rule)
         .eq('id', id)
         .select()
@@ -339,7 +350,8 @@ export const useGuestCommunicationStore = create<GuestCommunicationState>((set, 
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('ai_auto_send_rules')
+        .schema('ai')
+        .from('auto_send_rules')
         .delete()
         .eq('id', id);
 

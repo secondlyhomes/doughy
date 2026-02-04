@@ -1,6 +1,9 @@
 // Shared types for Doughy AI Mobile
 // All zones should import types from this file
 
+// Re-export RPC types for cross-schema queries
+export * from './rpc-types';
+
 // ============================================
 // Navigation Types
 // ============================================

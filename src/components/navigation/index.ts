@@ -6,3 +6,6 @@ export type { SmartBackButtonProps } from './SmartBackButton';
 
 export { EntityHeader } from './EntityHeader';
 export type { EntityHeaderProps, EntityContext } from './EntityHeader';
+
+export { DetailTabBar } from './DetailTabBar';
+export type { TabConfig } from './DetailTabBar';

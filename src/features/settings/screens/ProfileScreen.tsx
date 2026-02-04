@@ -12,21 +12,25 @@ import {
   Alert,
   KeyboardAvoidingView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, User, Mail, Save, Camera } from 'lucide-react-native';
+import { Stack } from 'expo-router';
+import { User, Mail, Save, Camera } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { GlassButton } from '@/components/ui';
 import { ThemedSafeAreaView } from '@/components';
 import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { useKeyboardAvoidance } from '@/hooks';
+import { useKeyboardAvoidance, useNativeHeader } from '@/hooks';
+import { formatDate } from '@/lib/formatters';
 
 export function ProfileScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
   const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: true });
   const { user, profile, refetchProfile, isLoading: authLoading } = useAuth();
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Edit Profile',
+    fallbackRoute: '/(tabs)/settings',
+  });
 
   // Form state
   const [firstName, setFirstName] = useState('');
@@ -94,36 +98,25 @@ export function ProfileScreen() {
 
   if (authLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <KeyboardAvoidingView
-        behavior={keyboardProps.behavior}
-        keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
-        className="flex-1"
-      >
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }} keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}>
-        {/* Header */}
-        <View
-          className="flex-row items-center p-4"
-          style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <KeyboardAvoidingView
+          behavior={keyboardProps.behavior}
+          keyboardVerticalOffset={keyboardProps.keyboardVerticalOffset}
+          className="flex-1"
         >
-          <GlassButton
-            icon={<ArrowLeft size={24} color={colors.foreground} />}
-            onPress={() => router.back()}
-            size={40}
-            effect="clear"
-            containerStyle={{ marginRight: 16 }}
-            accessibilityLabel="Go back"
-          />
-          <Text className="text-xl font-semibold" style={{ color: colors.foreground }}>Edit Profile</Text>
-        </View>
-
+          <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }} keyboardShouldPersistTaps={keyboardProps.keyboardShouldPersistTaps}>
         <View className="p-6">
           {/* Avatar Section */}
           <View className="items-center mb-8">
@@ -236,9 +229,7 @@ export function ProfileScreen() {
               <View className="flex-row justify-between">
                 <Text className="text-sm" style={{ color: colors.mutedForeground }}>Member Since</Text>
                 <Text className="text-sm" style={{ color: colors.foreground }}>
-                  {user?.created_at
-                    ? new Date(user.created_at).toLocaleDateString()
-                    : 'Unknown'}
+                  {formatDate(user?.created_at) || 'Unknown'}
                 </Text>
               </View>
             </View>
@@ -255,9 +246,10 @@ export function ProfileScreen() {
             {!isSaving && <Save size={20} color={colors.primaryForeground} />}
             Save Changes
           </Button>
-        </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
-    </ThemedSafeAreaView>
+          </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

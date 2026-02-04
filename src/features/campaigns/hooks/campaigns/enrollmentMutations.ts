@@ -61,7 +61,7 @@ export function usePauseEnrollment() {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('investor_drip_enrollments')
+        .schema('investor').from('drip_enrollments')
         .update({
           status: 'paused',
           paused_at: new Date().toISOString(),
@@ -95,7 +95,7 @@ export function useResumeEnrollment() {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('investor_drip_enrollments')
+        .schema('investor').from('drip_enrollments')
         .update({
           status: 'active',
           resumed_at: new Date().toISOString(),
@@ -131,13 +131,13 @@ export function useRemoveFromCampaign() {
 
       // Get campaign_id before delete
       const { data: enrollment } = (await supabase
-        .from('investor_drip_enrollments')
+        .schema('investor').from('drip_enrollments')
         .select('campaign_id')
         .eq('id', id)
         .single()) as { data: { campaign_id: string } | null };
 
       const { error } = await supabase
-        .from('investor_drip_enrollments')
+        .schema('investor').from('drip_enrollments')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);

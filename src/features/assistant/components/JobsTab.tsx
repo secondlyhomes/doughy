@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import {
@@ -24,7 +23,7 @@ import {
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { formatRelativeTime } from '@/utils/format';
 import { BORDER_RADIUS, SPACING, ICON_SIZES } from '@/constants/design-tokens';
-import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { TAB_BAR_SAFE_PADDING, LoadingSpinner } from '@/components/ui';
 
 import {
   AIJob,
@@ -84,7 +83,7 @@ export function JobsTab({ dealId, onJobPress }: JobsTabProps) {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <LoadingSpinner size="large" />
         <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>
           Loading jobs...
         </Text>
@@ -230,7 +229,7 @@ function JobCard({ job, onPress, onCancel }: JobCardProps) {
         ]}
       >
         {job.status === 'running' ? (
-          <ActivityIndicator size="small" color={colors.info} />
+          <LoadingSpinner size="small" />
         ) : (
           <StatusIcon
             size={ICON_SIZES.ml}

@@ -23,7 +23,7 @@ import { BlurView } from 'expo-blur';
 import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { ICON_SIZES } from '@/constants/design-tokens';
+import { ICON_SIZES, GLASS_INTENSITY } from '@/constants/design-tokens';
 
 // ============================================
 // Types
@@ -351,7 +351,7 @@ export function Timeline<T extends TimelineEvent>({
                 />
               ) : Platform.OS !== 'web' ? (
                 <BlurView
-                  intensity={50}
+                  intensity={GLASS_INTENSITY.medium}
                   tint={isDark ? 'dark' : 'light'}
                   style={StyleSheet.absoluteFill}
                 />

@@ -10,7 +10,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancel
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { BADGE_CONSTANTS, FONT_SIZES, ICON_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { BADGE_CONSTANTS, FONT_SIZES, ICON_SIZES, BORDER_RADIUS, GLASS_INTENSITY, SPACING } from '@/constants/design-tokens';
 
 // Safe haptics - requires native rebuild to work
 const triggerHaptic = async () => {
@@ -281,7 +281,7 @@ export function FloatingGlassTabBar({
         ]}
       >
           <BlurView
-            intensity={60}
+            intensity={GLASS_INTENSITY.strong}
             tint={isDark ? 'dark' : 'light'}
             style={[styles.pill, { overflow: 'hidden' }]}
           >
@@ -404,7 +404,7 @@ export function FloatingGlassTabBar({
                   {icon}
                   {badge != null && (
                     <View style={[styles.badge, { backgroundColor: colors.destructive }]}>
-                      <Text style={styles.badgeText}>{formatBadge(badge)}</Text>
+                      <Text style={[styles.badgeText, { color: colors.destructiveForeground }]}>{formatBadge(badge)}</Text>
                     </View>
                   )}
                 </View>
@@ -464,9 +464,9 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   label: {
-    fontSize: 11,
+    fontSize: FONT_SIZES.xs,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: SPACING.xxs,
   },
   badge: {
     position: 'absolute',

@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, RefreshControl, Alert, Pressable, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import {
   Phone,
   Mail,
@@ -21,10 +21,10 @@ import {
   Building2,
   DollarSign,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
 import { Button, Badge } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import { useSkipTraceResult, useDeleteSkipTrace } from '../hooks/useSkipTracing';
 import { PhoneCard, EmailCard, AddressCard } from '../components/ContactInfoCard';
 import { SKIP_TRACE_STATUS_CONFIG } from '../types';
@@ -180,17 +180,29 @@ export function SkipTraceDetailScreen() {
     );
   };
 
+  const { headerOptions } = useNativeHeader({
+    title: 'Skip Trace Result',
+    fallbackRoute: '/skip-tracing',
+    rightAction: (
+      <TouchableOpacity onPress={handleDelete} style={{ padding: 8 }}>
+        <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />
+      </TouchableOpacity>
+    ),
+  });
+
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
-        <ScreenHeader title="Skip Trace Result" />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ marginTop: 16, color: colors.mutedForeground }}>
-            Loading skip trace result...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView style={{ flex: 1 }} edges={[]}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{ marginTop: 16, color: colors.mutedForeground }}>
+              Loading skip trace result...
+            </Text>
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -198,38 +210,43 @@ export function SkipTraceDetailScreen() {
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to load skip trace result';
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
-        <ScreenHeader title="Skip Trace Result" />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <AlertCircle size={ICON_SIZES['3xl']} color={colors.destructive} style={{ marginBottom: 16 }} />
-          <Text style={{ fontSize: 18, fontWeight: '500', color: colors.foreground, marginBottom: 8 }}>
-            Failed to Load
-          </Text>
-          <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginBottom: 16 }}>
-            {errorMessage}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Button variant="outline" onPress={() => router.back()}>
-              <Text style={{ color: colors.foreground }}>Go Back</Text>
-            </Button>
-            <Button onPress={() => refetch()}>
-              <Text style={{ color: colors.primaryForeground }}>Try Again</Text>
-            </Button>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView style={{ flex: 1 }} edges={[]}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <AlertCircle size={ICON_SIZES['3xl']} color={colors.destructive} style={{ marginBottom: 16 }} />
+            <Text style={{ fontSize: 18, fontWeight: '500', color: colors.foreground, marginBottom: 8 }}>
+              Failed to Load
+            </Text>
+            <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginBottom: 16 }}>
+              {errorMessage}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <Button variant="outline" onPress={() => router.back()}>
+                <Text style={{ color: colors.foreground }}>Go Back</Text>
+              </Button>
+              <Button onPress={() => refetch()}>
+                <Text style={{ color: colors.primaryForeground }}>Try Again</Text>
+              </Button>
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   if (!result) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
-        <AlertCircle size={ICON_SIZES['3xl']} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
-        <Text style={{ fontSize: 18, color: colors.mutedForeground }}>Result not found</Text>
-        <Button variant="outline" onPress={() => router.back()} style={{ marginTop: 16 }}>
-          <Text style={{ color: colors.foreground }}>Go Back</Text>
-        </Button>
-      </SafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} edges={[]}>
+          <AlertCircle size={ICON_SIZES['3xl']} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
+          <Text style={{ fontSize: 18, color: colors.mutedForeground }}>Result not found</Text>
+          <Button variant="outline" onPress={() => router.back()} style={{ marginTop: 16 }}>
+            <Text style={{ color: colors.foreground }}>Go Back</Text>
+          </Button>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -256,17 +273,10 @@ export function SkipTraceDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
-      <ScreenHeader
-        title="Skip Trace Result"
-        rightAction={
-          <TouchableOpacity onPress={handleDelete}>
-            <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />
-          </TouchableOpacity>
-        }
-      />
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView style={{ flex: 1 }} edges={[]}>
+        <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
@@ -492,7 +502,8 @@ export function SkipTraceDetailScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }

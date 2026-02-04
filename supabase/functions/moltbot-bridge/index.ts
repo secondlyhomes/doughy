@@ -57,7 +57,8 @@ async function handleGetProperties(
   // TODO: If include_rooms is true, join with rental_rooms table
 
   let query = supabase
-    .from('rental_properties')
+    .schema('landlord')
+    .from('properties')
     .select('*')
     .eq('user_id', userId);
 
@@ -76,7 +77,8 @@ async function handleGetProperties(
   if (payload.include_rooms) {
     for (const property of properties || []) {
       const { data: rooms, error: roomsError } = await supabase
-        .from('rental_rooms')
+        .schema('landlord')
+        .from('rooms')
         .select('*')
         .eq('property_id', property.id);
 
@@ -109,7 +111,8 @@ async function handleGetProperty(
   // TODO: Implement fuzzy matching for address_hint
 
   let query = supabase
-    .from('rental_properties')
+    .schema('landlord')
+    .from('properties')
     .select('*')
     .eq('user_id', userId);
 
@@ -150,7 +153,8 @@ async function handleGetRooms(
 ): Promise<MoltbotBridgeResponse> {
   // Verify property belongs to user first
   const { data: property, error: propError } = await supabase
-    .from('rental_properties')
+    .schema('landlord')
+    .from('properties')
     .select('id')
     .eq('id', payload.property_id)
     .eq('user_id', userId)
@@ -161,7 +165,8 @@ async function handleGetRooms(
   }
 
   let query = supabase
-    .from('rental_rooms')
+    .schema('landlord')
+    .from('rooms')
     .select('*')
     .eq('property_id', payload.property_id);
 
@@ -188,7 +193,8 @@ async function handleGetAvailability(
 ): Promise<MoltbotBridgeResponse> {
   // Verify property belongs to user first
   const { data: property, error: propError } = await supabase
-    .from('rental_properties')
+    .schema('landlord')
+    .from('properties')
     .select('id')
     .eq('id', payload.property_id)
     .eq('user_id', userId)
@@ -202,7 +208,8 @@ async function handleGetAvailability(
   // TODO: Consider room status (maintenance, unavailable, etc.)
 
   let query = supabase
-    .from('rental_bookings')
+    .schema('landlord')
+    .from('bookings')
     .select('*')
     .eq('property_id', payload.property_id)
     .not('status', 'in', '("cancelled","completed")')
@@ -277,7 +284,8 @@ async function handleCreateContact(
   let existingContact = null;
   if (payload.email) {
     const { data } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .select('id')
       .eq('user_id', userId)
       .eq('email', payload.email)
@@ -286,7 +294,8 @@ async function handleCreateContact(
   }
   if (!existingContact && payload.phone) {
     const { data } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .select('id')
       .eq('user_id', userId)
       .eq('phone', payload.phone)
@@ -298,7 +307,8 @@ async function handleCreateContact(
   if (existingContact) {
     // Update existing contact
     const { data, error } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .update({
         ...contactData,
         created_at: undefined // Don't update created_at
@@ -310,7 +320,8 @@ async function handleCreateContact(
   } else {
     // Create new contact
     const { data, error } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .insert(contactData)
       .select()
       .single();
@@ -350,7 +361,8 @@ async function handleUpdateContact(
   if (payload.metadata) updateData.metadata = payload.metadata;
 
   const { data, error } = await supabase
-    .from('crm_contacts')
+    .schema('crm')
+    .from('contacts')
     .update(updateData)
     .eq('id', payload.contact_id)
     .eq('user_id', userId)
@@ -389,7 +401,8 @@ async function handleLogMessage(
   // Create conversation if needed
   if (!conversationId) {
     const { data: conversation, error: convError } = await supabase
-      .from('rental_conversations')
+      .schema('landlord')
+      .from('conversations')
       .insert({
         user_id: userId,
         contact_id: payload.contact_id,
@@ -413,7 +426,8 @@ async function handleLogMessage(
 
   // Insert message
   const { data: message, error: msgError } = await supabase
-    .from('rental_messages')
+    .schema('landlord')
+    .from('messages')
     .insert({
       conversation_id: conversationId,
       direction: payload.direction,
@@ -432,7 +446,8 @@ async function handleLogMessage(
 
   // Update conversation last_message_at
   const { error: updateError } = await supabase
-    .from('rental_conversations')
+    .schema('landlord')
+    .from('conversations')
     .update({ last_message_at: new Date().toISOString() })
     .eq('id', conversationId);
 
@@ -469,7 +484,8 @@ async function handleCreateBooking(
   }
 ): Promise<MoltbotBridgeResponse> {
   const { data, error } = await supabase
-    .from('rental_bookings')
+    .schema('landlord')
+    .from('bookings')
     .insert({
       user_id: userId,
       contact_id: payload.contact_id,
@@ -507,7 +523,8 @@ async function handleGetContactHistory(
 
   // Get conversations for this contact
   const { data: conversations, error: convError } = await supabase
-    .from('rental_conversations')
+    .schema('landlord')
+    .from('conversations')
     .select('id')
     .eq('contact_id', payload.contact_id)
     .eq('user_id', userId);
@@ -524,7 +541,8 @@ async function handleGetContactHistory(
 
   // Get messages from these conversations
   const { data: messages, error: msgError } = await supabase
-    .from('rental_messages')
+    .schema('landlord')
+    .from('messages')
     .select('*')
     .in('conversation_id', conversationIds)
     .order('created_at', { ascending: false })
@@ -557,7 +575,8 @@ async function handleQueueResponse(
   expiresAt.setHours(expiresAt.getHours() + 24);
 
   const { data, error } = await supabase
-    .from('rental_ai_queue')
+    .schema('ai')
+    .from('queue_items')
     .insert({
       user_id: userId,
       conversation_id: payload.conversation_id,
@@ -592,7 +611,8 @@ async function handleGetTemplates(
   // TODO: Fall back to system-wide templates if user has none
 
   const { data, error } = await supabase
-    .from('rental_templates')
+    .schema('landlord')
+    .from('templates')
     .select('*')
     .or(`user_id.eq.${userId},user_id.is.null`)
     .eq('category', payload.category)

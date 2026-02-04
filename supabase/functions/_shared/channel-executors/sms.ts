@@ -25,7 +25,8 @@ export async function sendSMS(
 ): Promise<ChannelResult> {
   // Get user's Twilio credentials
   const { data: credentials, error: credError } = await supabase
-    .from('ai_moltbot_channel_credentials')
+    .schema('ai')
+    .from('moltbot_channel_credentials')
     .select('account_sid, auth_token, phone_number')
     .eq('user_id', userId)
     .eq('channel', 'sms')
@@ -64,6 +65,7 @@ export async function sendSMS(
     const result = await response.json();
     return { success: true, messageId: result.sid };
   } catch (error) {
-    return { success: false, error: (error as Error).message };
+    const errorMessage = error instanceof Error ? error.message : 'SMS send failed';
+    return { success: false, error: errorMessage };
   }
 }

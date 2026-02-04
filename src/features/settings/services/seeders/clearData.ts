@@ -19,7 +19,8 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
 
   // Get property IDs for dependent records
   const { data: properties } = await supabase
-    .from('landlord_properties')
+    .schema('landlord')
+    .from('properties')
     .select('id')
     .eq('user_id', userId);
   const propertyIds = properties?.map((p) => p.id) || [];
@@ -34,38 +35,42 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
 
   // 3. Delete turnovers
   const { error: turnoversError } = await supabase
-    .from('landlord_turnovers')
+    .schema('landlord')
+    .from('turnovers')
     .delete()
     .eq('user_id', userId);
   if (turnoversError) {
-    errors.push({ table: 'landlord_turnovers', message: turnoversError.message });
+    errors.push({ table: 'landlord.turnovers', message: turnoversError.message });
   }
 
   // 4. Delete maintenance records
   const { error: maintenanceError } = await supabase
-    .from('landlord_maintenance_records')
+    .schema('landlord')
+    .from('maintenance_records')
     .delete()
     .eq('user_id', userId);
   if (maintenanceError) {
-    errors.push({ table: 'landlord_maintenance_records', message: maintenanceError.message });
+    errors.push({ table: 'landlord.maintenance_records', message: maintenanceError.message });
   }
 
   // 5. Delete property-related data (rooms, inventory)
   if (propertyIds.length > 0) {
     const { error: roomsError } = await supabase
-      .from('landlord_rooms')
+      .schema('landlord')
+      .from('rooms')
       .delete()
       .in('property_id', propertyIds);
     if (roomsError) {
-      errors.push({ table: 'landlord_rooms', message: roomsError.message });
+      errors.push({ table: 'landlord.rooms', message: roomsError.message });
     }
 
     const { error: inventoryError } = await supabase
-      .from('landlord_inventory_items')
+      .schema('landlord')
+      .from('inventory_items')
       .delete()
       .in('property_id', propertyIds);
     if (inventoryError) {
-      errors.push({ table: 'landlord_inventory_items', message: inventoryError.message });
+      errors.push({ table: 'landlord.inventory_items', message: inventoryError.message });
     }
   }
 
@@ -73,32 +78,34 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   try {
     await deleteUserProperties(userId);
   } catch (err) {
-    errors.push({ table: 'landlord_properties', message: err instanceof Error ? err.message : 'Unknown error' });
+    errors.push({ table: 'landlord.properties', message: err instanceof Error ? err.message : 'Unknown error' });
   }
 
   // 7. Delete vendors
   const { error: vendorsError } = await supabase
-    .from('landlord_vendors')
+    .schema('landlord')
+    .from('vendors')
     .delete()
     .eq('user_id', userId);
   if (vendorsError) {
-    errors.push({ table: 'landlord_vendors', message: vendorsError.message });
+    errors.push({ table: 'landlord.vendors', message: vendorsError.message });
   }
 
   // 8. Delete templates
   const { error: templatesError } = await supabase
-    .from('landlord_guest_templates')
+    .schema('landlord')
+    .from('guest_templates')
     .delete()
     .eq('user_id', userId);
   if (templatesError) {
-    errors.push({ table: 'landlord_guest_templates', message: templatesError.message });
+    errors.push({ table: 'landlord.guest_templates', message: templatesError.message });
   }
 
   // 9. Delete landlord contacts
   try {
     await deleteLandlordContacts(userId);
   } catch (err) {
-    errors.push({ table: 'crm_contacts', message: err instanceof Error ? err.message : 'Unknown error' });
+    errors.push({ table: 'crm.contacts', message: err instanceof Error ? err.message : 'Unknown error' });
   }
 
   // Return result

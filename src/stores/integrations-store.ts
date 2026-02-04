@@ -54,6 +54,7 @@ export const useIntegrationsStore = create<IntegrationsState>((set, get) => ({
       if (!user.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
+        .schema('integrations')
         .from('user_integrations')
         .select('*')
         .eq('user_id', user.user.id);
@@ -109,6 +110,7 @@ export const useIntegrationsStore = create<IntegrationsState>((set, get) => ({
       const newConfig: SeamConfig = { ...currentSeam, ...config };
 
       const { error } = await supabase
+        .schema('integrations')
         .from('user_integrations')
         .upsert(
           {
@@ -148,6 +150,7 @@ export const useIntegrationsStore = create<IntegrationsState>((set, get) => ({
       const newConfig: TracerfyConfig = { ...currentTracerfy, ...config };
 
       const { error } = await supabase
+        .schema('integrations')
         .from('user_integrations')
         .upsert(
           {
@@ -215,6 +218,7 @@ export const useIntegrationsStore = create<IntegrationsState>((set, get) => ({
       if (!user.user) throw new Error('Not authenticated');
 
       const { error } = await supabase
+        .schema('integrations')
         .from('user_integrations')
         .delete()
         .eq('user_id', user.user.id)

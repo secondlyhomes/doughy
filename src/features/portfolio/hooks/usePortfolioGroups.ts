@@ -30,7 +30,7 @@ export function usePortfolioGroups() {
       if (!user?.id) return [];
 
       const { data, error } = await supabase
-        .from('investor_portfolio_groups')
+        .schema('investor').from('portfolio_groups')
         .select('*')
         .eq('user_id', user.id)
         .order('sort_order', { ascending: true });
@@ -43,12 +43,20 @@ export function usePortfolioGroups() {
       // Get property counts and stats for each group
       const groupsWithStats: PortfolioGroupWithStats[] = await Promise.all(
         (data || []).map(async (group) => {
-          const { data: entries } = await supabase
-            .from('investor_portfolio_entries')
+          const { data: entries, error: entriesError } = await supabase
+            .schema('investor').from('portfolio_entries')
             .select('acquisition_price, monthly_rent, monthly_expenses')
             .eq('user_id', user.id)
             .eq('group_id', group.id)
             .eq('is_active', true);
+
+          if (entriesError) {
+            // Only ignore if table doesn't exist during schema migration
+            if (entriesError.code !== '42P01' && !entriesError.message?.includes('does not exist')) {
+              console.error(`[usePortfolioGroups] Error fetching entries for group ${group.id}:`, entriesError);
+              // Return group with zero stats but log the error so it can be debugged
+            }
+          }
 
           const propertyCount = entries?.length || 0;
           const totalValue = entries?.reduce((sum, e) => sum + (e.acquisition_price || 0), 0) || 0;
@@ -78,7 +86,7 @@ export function usePortfolioGroups() {
 
       // Get max sort_order
       const { data: existing } = await supabase
-        .from('investor_portfolio_groups')
+        .schema('investor').from('portfolio_groups')
         .select('sort_order')
         .eq('user_id', user.id)
         .order('sort_order', { ascending: false })
@@ -87,7 +95,7 @@ export function usePortfolioGroups() {
       const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
       const { data, error } = await supabase
-        .from('investor_portfolio_groups')
+        .schema('investor').from('portfolio_groups')
         .insert({
           user_id: user.id,
           name: input.name,
@@ -114,7 +122,7 @@ export function usePortfolioGroups() {
       if (input.sort_order !== undefined) updates.sort_order = input.sort_order;
 
       const { data, error } = await supabase
-        .from('investor_portfolio_groups')
+        .schema('investor').from('portfolio_groups')
         .update(updates)
         .eq('id', input.id)
         .select()
@@ -132,7 +140,7 @@ export function usePortfolioGroups() {
   const deleteGroup = useMutation({
     mutationFn: async (groupId: string): Promise<void> => {
       const { error } = await supabase
-        .from('investor_portfolio_groups')
+        .schema('investor').from('portfolio_groups')
         .delete()
         .eq('id', groupId);
 
@@ -154,7 +162,7 @@ export function usePortfolioGroups() {
       groupId: string | null;
     }): Promise<void> => {
       const { error } = await supabase
-        .from('investor_portfolio_entries')
+        .schema('investor').from('portfolio_entries')
         .update({ group_id: groupId })
         .eq('id', portfolioEntryId);
 
@@ -172,12 +180,19 @@ export function usePortfolioGroups() {
       // Update sort_order for each group
       const updates = orderedIds.map((id, index) =>
         supabase
-          .from('investor_portfolio_groups')
+          .schema('investor').from('portfolio_groups')
           .update({ sort_order: index })
           .eq('id', id)
       );
 
-      await Promise.all(updates);
+      // Use allSettled to check for partial failures
+      const results = await Promise.allSettled(updates);
+      const failures = results.filter((r) => r.status === 'rejected');
+
+      if (failures.length > 0) {
+        console.error('[usePortfolioGroups] Partial reorder failure:', failures);
+        throw new Error(`Failed to reorder ${failures.length} group(s). Please refresh and try again.`);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-groups'] });

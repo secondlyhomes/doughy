@@ -206,7 +206,8 @@ serve(async (req: Request) => {
         let campaign = campaignCache.get(enrollment.campaign_id);
         if (!campaign) {
           const { data: campaignData, error: campaignError } = await supabase
-            .from('investor_campaigns')
+            .schema('investor')
+            .from('campaigns')
             .select('id, quiet_hours_start, quiet_hours_end, quiet_hours_timezone, respect_weekends, auto_pause_on_response')
             .eq('id', enrollment.campaign_id)
             .single();
@@ -245,6 +246,7 @@ serve(async (req: Request) => {
         let step = stepCache.get(stepCacheKey);
         if (!step) {
           const { data: stepData, error: stepError } = await supabase
+            .schema('investor')
             .from('drip_campaign_steps')
             .select('*')
             .eq('campaign_id', enrollment.campaign_id)
@@ -283,6 +285,7 @@ serve(async (req: Request) => {
 
           // Mark enrollment as opted out
           const { error: optOutUpdateError } = await supabase
+            .schema('investor')
             .from('drip_enrollments')
             .update({ status: 'opted_out', paused_at: new Date().toISOString() })
             .eq('id', enrollment.enrollment_id);
@@ -300,7 +303,8 @@ serve(async (req: Request) => {
 
         // Check if contact is marked do_not_contact
         const { data: contact, error: contactError } = await supabase
-          .from('crm_contacts')
+          .schema('crm')
+          .from('contacts')
           .select('do_not_contact')
           .eq('id', enrollment.contact_id)
           .single();
@@ -373,9 +377,10 @@ serve(async (req: Request) => {
         }
 
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`[DripProcessor] Error processing enrollment ${enrollment.enrollment_id}:`, error);
         result.failed++;
-        result.errors.push(`Error processing ${enrollment.enrollment_id}: ${error.message}`);
+        result.errors.push(`Error processing ${enrollment.enrollment_id}: ${errorMessage}`);
       }
     }
 

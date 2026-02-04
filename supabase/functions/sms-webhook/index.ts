@@ -60,7 +60,8 @@ async function findLeadByPhone(
 
     // Search crm_leads for matching phone
     const { data, error } = await supabase
-      .from('crm_leads')
+      .schema('crm')
+      .from('leads')
       .select('id, user_id, workspace_id, phone')
       .or(`phone.eq.${normalizedPhone},phone.ilike.%${normalizedPhone.slice(-10)}%`)
       .limit(1)

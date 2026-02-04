@@ -19,6 +19,7 @@ import type {
 } from '@/features/lead-inbox/types/investor-conversations.types';
 
 // Type aliases for cleaner function signatures
+// Note: These use schema table names that need type regeneration to match actual DB
 type LeadInsert = TablesInsert<'crm_leads'>;
 type PropertyInsert = TablesInsert<'investor_properties'>;
 type DealInsert = TablesInsert<'investor_deals_pipeline'>;

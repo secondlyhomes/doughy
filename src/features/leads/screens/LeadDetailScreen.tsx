@@ -4,14 +4,15 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight, MoreVertical } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { formatStatus, getStatusBadgeVariant } from '@/lib/formatters';
 import { ICON_SIZES } from '@/constants/design-tokens';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button, GlassButton, Badge, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
+import { LoadingSpinner, Button, Badge, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
+import { useNativeHeader } from '@/hooks';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { useLeadDocuments } from '../hooks/useLeadDocuments';
@@ -128,54 +129,56 @@ export function LeadDetailScreen() {
     );
   };
 
+  // Header actions
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+
+  const { headerOptions } = useNativeHeader({
+    title: lead?.name || 'Lead',
+    subtitle: lead?.company || undefined,
+    fallbackRoute: '/(tabs)/leads',
+    rightAction: lead ? (
+      <View className="flex-row items-center gap-3">
+        <TouchableOpacity onPress={handleToggleStar} accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`} accessibilityRole="button">
+          <Star size={ICON_SIZES.xl} color={lead.starred ? colors.warning : colors.mutedForeground} fill={lead.starred ? colors.warning : 'transparent'} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)} accessibilityLabel={`Edit ${lead.name}`} accessibilityRole="button">
+          <Edit2 size={ICON_SIZES.lg} color={colors.mutedForeground} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleDelete} disabled={isDeleting} accessibilityLabel={`Delete ${lead.name}`} accessibilityRole="button">
+          {isDeleting ? <ActivityIndicator size="small" color={colors.destructive} /> : <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />}
+        </TouchableOpacity>
+      </View>
+    ) : undefined,
+  });
+
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   if (!lead) {
     return (
-      <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={['top']}>
-        <Text className="mb-4" style={{ color: colors.mutedForeground }}>Lead not found</Text>
-        <Button onPress={() => router.back()}>Go Back</Button>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1 items-center justify-center" edges={[]}>
+          <Text className="mb-4" style={{ color: colors.mutedForeground }}>Lead not found</Text>
+          <Button onPress={() => router.back()}>Go Back</Button>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <View
-        className="px-4 py-3"
-        style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border }}
-      >
-        <View className="flex-row items-center justify-between">
-          <GlassButton
-            icon={<ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />}
-            onPress={() => router.back()}
-            size={40}
-            effect="clear"
-            accessibilityLabel="Go back"
-          />
-
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={handleToggleStar} accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`} accessibilityRole="button">
-              <Star size={ICON_SIZES.xl} color={lead.starred ? colors.warning : colors.mutedForeground} fill={lead.starred ? colors.warning : 'transparent'} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)} accessibilityLabel={`Edit ${lead.name}`} accessibilityRole="button">
-              <Edit2 size={ICON_SIZES.lg} color={colors.mutedForeground} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleDelete} disabled={isDeleting} accessibilityLabel={`Delete ${lead.name}`} accessibilityRole="button">
-              {isDeleting ? <ActivityIndicator size="small" color={colors.destructive} /> : <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         className="flex-1"
         contentContainerStyle={{
           paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,  // Pattern 2: offset + height + breathing (172px)
@@ -286,15 +289,16 @@ export function LeadDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Add Activity Sheet */}
-      <AddActivitySheet
-        visible={showActivitySheet}
-        leadId={leadId}
-        leadName={lead.name || 'Lead'}
-        onClose={() => setShowActivitySheet(false)}
-        onSave={handleAddActivity}
-      />
-    </ThemedSafeAreaView>
+        {/* Add Activity Sheet */}
+        <AddActivitySheet
+          visible={showActivitySheet}
+          leadId={leadId}
+          leadName={lead.name || 'Lead'}
+          onClose={() => setShowActivitySheet(false)}
+          onSave={handleAddActivity}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

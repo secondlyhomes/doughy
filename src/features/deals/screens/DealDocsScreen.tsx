@@ -4,13 +4,14 @@
 
 import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, FolderOpen, User, Home, ChevronDown, ChevronRight, ExternalLink, Upload } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { FolderOpen, User, Home, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner, GlassButton, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { Button, LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui';
+import { useNativeHeader } from '@/hooks';
 import { useDeal } from '../hooks/useDeals';
 import { PropertyDocsTab } from '../../real-estate/components/PropertyDocsTab';
 import { DocumentTypeFilter, DocumentFilterType } from '../../real-estate/components/DocumentTypeFilter';
@@ -29,9 +30,11 @@ export function DealDocsScreen() {
   const [propertyDocsOpen, setPropertyDocsOpen] = useState(true);
   const [propertyDocFilter, setPropertyDocFilter] = useState<DocumentFilterType>('all');
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
+  const { headerOptions, handleBack } = useNativeHeader({
+    title: 'Documents',
+    subtitle: deal?.property ? getDealAddress(deal) : undefined,
+    fallbackRoute: deal ? `/(tabs)/deals/${dealId}` : '/(tabs)/deals',
+  });
 
   const handleViewLead = useCallback(() => {
     if (deal?.lead_id) {
@@ -42,53 +45,49 @@ export function DealDocsScreen() {
   // Loading state
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading documents..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading documents..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   // Error state
   if (error || !deal) {
     return (
-      <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={['top']}>
-        <FolderOpen size={48} color={colors.destructive} />
-        <Text className="text-center mt-4 mb-4" style={{ color: colors.destructive }}>
-          {error?.message || 'Deal not found'}
-        </Text>
-        <Button onPress={handleBack}>Go Back</Button>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1 items-center justify-center px-4" edges={[]}>
+          <FolderOpen size={48} color={colors.destructive} />
+          <Text className="text-center mt-4 mb-4" style={{ color: colors.destructive }}>
+            {error?.message || 'Deal not found'}
+          </Text>
+          <Button onPress={handleBack}>Go Back</Button>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   // No property linked
   if (!deal.property) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Header */}
-        <View className="flex-row items-center px-4 py-3 border-b" style={{ borderColor: colors.border }}>
-          <GlassButton
-            icon={<ArrowLeft size={24} color={colors.foreground} />}
-            onPress={handleBack}
-            size={40}
-            effect="clear"
-            containerStyle={{ marginRight: 8 }}
-            accessibilityLabel="Go back"
-          />
-          <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
-        </View>
-
-        {/* Empty state */}
-        <View className="flex-1 items-center justify-center px-8">
-          <FolderOpen size={64} color={colors.mutedForeground} />
-          <Text className="text-lg font-semibold mt-4 text-center" style={{ color: colors.foreground }}>
-            No Property Linked
-          </Text>
-          <Text className="text-sm mt-2 text-center" style={{ color: colors.mutedForeground }}>
-            Link a property to this deal to manage documents.
-          </Text>
-        </View>
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          {/* Empty state */}
+          <View className="flex-1 items-center justify-center px-8">
+            <FolderOpen size={64} color={colors.mutedForeground} />
+            <Text className="text-lg font-semibold mt-4 text-center" style={{ color: colors.foreground }}>
+              No Property Linked
+            </Text>
+            <Text className="text-sm mt-2 text-center" style={{ color: colors.mutedForeground }}>
+              Link a property to this deal to manage documents.
+            </Text>
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -96,28 +95,10 @@ export function DealDocsScreen() {
   const hasLead = deal.lead_id && leadName !== 'No lead linked';
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
-        <View className="flex-row items-center flex-1">
-          <GlassButton
-            icon={<ArrowLeft size={24} color={colors.foreground} />}
-            onPress={handleBack}
-            size={40}
-            effect="clear"
-            containerStyle={{ marginRight: 8 }}
-            accessibilityLabel="Go back"
-          />
-          <View className="flex-1">
-            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>Documents</Text>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }} numberOfLines={1}>
-              {getDealAddress(deal)}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 2-Tier Document Sections */}
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {/* 2-Tier Document Sections */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_SAFE_PADDING }}
@@ -216,6 +197,7 @@ export function DealDocsScreen() {
         </View>
       </ScrollView>
     </ThemedSafeAreaView>
+    </>
   );
 }
 

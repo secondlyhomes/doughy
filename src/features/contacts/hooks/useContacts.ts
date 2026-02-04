@@ -47,7 +47,7 @@ function mapRowToContact(row: CrmContactRow): Contact {
 // Fetch all contacts with landlord-relevant contact types
 async function fetchContacts(): Promise<Contact[]> {
   const { data, error } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .select('*')
     .eq('is_deleted', false)
     .overlaps('contact_types', LANDLORD_CONTACT_TYPES)
@@ -73,7 +73,7 @@ async function fetchContactsPaginated(pageParam: number = 0): Promise<PaginatedC
   const to = from + PAGE_SIZE - 1;
 
   const { data, error, count } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .select('*', { count: 'exact' })
     .eq('is_deleted', false)
     .overlaps('contact_types', LANDLORD_CONTACT_TYPES)
@@ -99,7 +99,7 @@ async function fetchContactsPaginated(pageParam: number = 0): Promise<PaginatedC
 // Fetch a single contact by ID
 async function fetchContactById(id: string): Promise<Contact | null> {
   const { data, error } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .select('*')
     .eq('id', id)
     .single();
@@ -140,7 +140,7 @@ async function createContact(formData: ContactFormData): Promise<Contact> {
   };
 
   const { data, error } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .insert(insertData)
     .select()
     .single();
@@ -174,7 +174,7 @@ async function updateContact(id: string, updates: Partial<Contact>): Promise<Con
   if (updates.tags !== undefined) updateData.tags = updates.tags;
 
   const { data, error } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -191,7 +191,7 @@ async function updateContact(id: string, updates: Partial<Contact>): Promise<Con
 // Soft delete a contact
 async function deleteContact(id: string): Promise<void> {
   const { error } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .update({ is_deleted: true, updated_at: new Date().toISOString() })
     .eq('id', id);
 

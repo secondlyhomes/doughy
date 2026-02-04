@@ -36,10 +36,10 @@ export function useProperties(options: UsePropertiesOptions = {}): UseProperties
 
       // Build query with filters - join images for display
       let query = supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .select(`
           *,
-          images:investor_property_images(id, url, is_primary, label, filename)
+          images:property_images(id, url, is_primary, label, filename)
         `, { count: 'exact', head: false });
 
       // Apply filters
@@ -134,10 +134,10 @@ export function useProperty(propertyId: string | null) {
       setError(null);
 
       const { data, error: queryError } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .select(`
           *,
-          images:investor_property_images(id, url, is_primary, label, filename)
+          images:property_images(id, url, is_primary, label, filename)
         `)
         .eq('id', propertyId)
         .single();
@@ -218,7 +218,7 @@ export function usePropertyMutations() {
       };
 
       const { data, error: insertError } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .insert(insertData)
         .select()
         .single();
@@ -279,7 +279,7 @@ export function usePropertyMutations() {
       if (updates.status !== undefined) updateData.status = updates.status;
 
       const { data, error: updateError } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .update(updateData)
         .eq('id', propertyId)
         .select()
@@ -306,7 +306,7 @@ export function usePropertyMutations() {
       setError(null);
 
       const { error: deleteError } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .delete()
         .eq('id', propertyId);
 

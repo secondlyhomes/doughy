@@ -16,21 +16,21 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
 
   // Get conversation IDs first for deleting messages
   const { data: conversations } = await supabase
-    .from('landlord_conversations')
+    .schema('landlord').from('conversations')
     .select('id')
     .eq('user_id', userId);
   const conversationIds = conversations?.map(c => c.id) || [];
 
   // Get property IDs first for deleting dependent records
   const { data: properties } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .select('id')
     .eq('user_id', userId);
   const propertyIds = properties?.map(p => p.id) || [];
 
   // Get booking IDs for deleting charges and settlements
   const { data: bookings } = await supabase
-    .from('landlord_bookings')
+    .schema('landlord').from('bookings')
     .select('id')
     .eq('user_id', userId);
   const bookingIds = bookings?.map(b => b.id) || [];
@@ -39,7 +39,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   // Collect all errors but continue to delete as much as possible
   if (conversationIds.length > 0) {
     const { error: messagesError } = await supabase
-      .from('landlord_messages')
+      .schema('landlord').from('messages')
       .delete()
       .in('conversation_id', conversationIds);
     if (messagesError) {
@@ -48,7 +48,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   }
 
   const { error: aiQueueError } = await supabase
-    .from('landlord_ai_queue_items')
+    .schema('landlord').from('ai_queue_items')
     .delete()
     .eq('user_id', userId);
   if (aiQueueError) {
@@ -56,7 +56,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   }
 
   const { error: conversationsError } = await supabase
-    .from('landlord_conversations')
+    .schema('landlord').from('conversations')
     .delete()
     .eq('user_id', userId);
   if (conversationsError) {
@@ -66,7 +66,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   // Delete booking-related data (charges, settlements)
   if (bookingIds.length > 0) {
     const { error: chargesError } = await supabase
-      .from('landlord_booking_charges')
+      .schema('landlord').from('booking_charges')
       .delete()
       .in('booking_id', bookingIds);
     if (chargesError) {
@@ -74,7 +74,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
     }
 
     const { error: settlementsError } = await supabase
-      .from('landlord_deposit_settlements')
+      .schema('landlord').from('deposit_settlements')
       .delete()
       .in('booking_id', bookingIds);
     if (settlementsError) {
@@ -84,7 +84,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
 
   // Delete turnovers (tied to properties/bookings)
   const { error: turnoversError } = await supabase
-    .from('landlord_turnovers')
+    .schema('landlord').from('turnovers')
     .delete()
     .eq('user_id', userId);
   if (turnoversError) {
@@ -93,7 +93,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
 
   // Delete maintenance records
   const { error: maintenanceError } = await supabase
-    .from('landlord_maintenance_records')
+    .schema('landlord').from('maintenance_records')
     .delete()
     .eq('user_id', userId);
   if (maintenanceError) {
@@ -101,7 +101,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   }
 
   const { error: bookingsError } = await supabase
-    .from('landlord_bookings')
+    .schema('landlord').from('bookings')
     .delete()
     .eq('user_id', userId);
   if (bookingsError) {
@@ -111,7 +111,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   // Delete property-related data
   if (propertyIds.length > 0) {
     const { error: roomsError } = await supabase
-      .from('landlord_rooms')
+      .schema('landlord').from('rooms')
       .delete()
       .in('property_id', propertyIds);
     if (roomsError) {
@@ -119,7 +119,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
     }
 
     const { error: inventoryError } = await supabase
-      .from('landlord_inventory_items')
+      .schema('landlord').from('inventory_items')
       .delete()
       .in('property_id', propertyIds);
     if (inventoryError) {
@@ -128,7 +128,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   }
 
   const { error: propertiesError } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .delete()
     .eq('user_id', userId);
   if (propertiesError) {
@@ -137,7 +137,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
 
   // Delete global data (vendors, templates)
   const { error: vendorsError } = await supabase
-    .from('landlord_vendors')
+    .schema('landlord').from('vendors')
     .delete()
     .eq('user_id', userId);
   if (vendorsError) {
@@ -145,7 +145,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   }
 
   const { error: templatesError } = await supabase
-    .from('landlord_guest_templates')
+    .schema('landlord').from('guest_templates')
     .delete()
     .eq('user_id', userId);
   if (templatesError) {
@@ -155,7 +155,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
   // Clear contacts - need to bypass soft delete trigger
   try {
     const { data: contacts, error: fetchError } = await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .select('id, contact_types')
       .eq('user_id', userId);
 
@@ -173,7 +173,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
       if (landlordContactIds.length > 0) {
         // Step 1: Mark as soft-deleted first (this bypasses the trigger on actual DELETE)
         const { error: softDeleteError } = await supabase
-          .from('crm_contacts')
+          .schema('crm').from('contacts')
           .update({ is_deleted: true })
           .in('id', landlordContactIds);
 
@@ -182,7 +182,7 @@ export async function clearAllLandlordData(): Promise<ClearDataResult> {
         } else {
           // Step 2: Now DELETE will actually remove the rows
           const { error: deleteError } = await supabase
-            .from('crm_contacts')
+            .schema('crm').from('contacts')
             .delete()
             .in('id', landlordContactIds);
 

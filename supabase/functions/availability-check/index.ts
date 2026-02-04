@@ -281,7 +281,7 @@ serve(async (req: Request) => {
 
     // Fetch property details (verify ownership)
     const { data: property, error: propError } = await supabase
-      .from('rental_properties')
+      .schema('landlord').from('properties')
       .select('id, name, room_by_room_enabled')
       .eq('id', property_id)
       .eq('user_id', authenticatedUserId)
@@ -299,7 +299,7 @@ serve(async (req: Request) => {
 
     // Build booking query
     let bookingQuery = supabase
-      .from('rental_bookings')
+      .schema('landlord').from('bookings')
       .select(`
         id,
         property_id,
@@ -307,7 +307,7 @@ serve(async (req: Request) => {
         start_date,
         end_date,
         status,
-        contact:crm_contacts(first_name, last_name)
+        contact:crm.contacts(first_name, last_name)
       `)
       .eq('property_id', property_id)
       .not('status', 'in', '("cancelled","completed")');
@@ -373,7 +373,7 @@ serve(async (req: Request) => {
     // check availability for all rooms
     if (property.room_by_room_enabled && !room_id) {
       const { data: rooms, error: roomsError } = await supabase
-        .from('rental_rooms')
+        .schema('landlord').from('rooms')
         .select('id, name')
         .eq('property_id', property_id)
         .eq('status', 'available');
@@ -383,7 +383,7 @@ serve(async (req: Request) => {
           rooms.map(async (room) => {
             // Check bookings for this specific room
             const { data: roomBookings } = await supabase
-              .from('rental_bookings')
+              .schema('landlord').from('bookings')
               .select('start_date, end_date')
               .eq('room_id', room.id)
               .not('status', 'in', '("cancelled","completed")');

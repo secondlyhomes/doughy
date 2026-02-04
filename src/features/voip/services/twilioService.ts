@@ -134,23 +134,18 @@ export async function getCallByTwilioSid(twilioSid: string): Promise<Call | null
 
 /**
  * Get recent calls for user
+ * Uses RPC function for cross-schema join with contacts
  */
 export async function getRecentCalls(limit = 20): Promise<Call[]> {
-  const { data, error } = await supabase
-    .from('calls')
-    .select(`
-      *,
-      contact:crm_contacts(id, first_name, last_name, phone, email)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const { getRecentCalls: getRecentCallsRPC, mapCallRPC } = await import('@/lib/rpc');
 
-  if (error) {
+  try {
+    const data = await getRecentCallsRPC(limit);
+    return data.map(mapCallRPC) as Call[];
+  } catch (error) {
     console.error('Failed to get recent calls:', error);
     throw error;
   }
-
-  return data || [];
 }
 
 // ============================================

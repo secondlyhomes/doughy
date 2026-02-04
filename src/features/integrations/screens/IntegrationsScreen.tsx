@@ -3,19 +3,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Alert, Switch, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import {
-  Wifi,
-  Search,
   CheckCircle2,
   XCircle,
   AlertCircle,
-  ChevronRight,
   Eye,
   EyeOff,
-  RefreshCw,
   Trash2,
-  ExternalLink,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -28,8 +23,8 @@ import {
   FormField,
   TAB_BAR_SAFE_PADDING,
 } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { SPACING, FONT_SIZES, BORDER_RADIUS } from '@/constants/design-tokens';
+import { useNativeHeader } from '@/hooks';
+import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import {
   useIntegrations,
@@ -55,6 +50,11 @@ export function IntegrationsScreen() {
   const [showSeamKey, setShowSeamKey] = useState(false);
   const [showTracerfyKey, setShowTracerfyKey] = useState(false);
 
+  const { headerOptions } = useNativeHeader({
+    title: 'Integrations',
+    fallbackRoute: '/(tabs)/settings',
+  });
+
   // Initialize local state from fetched data
   useEffect(() => {
     if (data) {
@@ -62,8 +62,6 @@ export function IntegrationsScreen() {
       setTracerfyApiKey(data.tracerfy?.apiKey || '');
     }
   }, [data]);
-
-  const handleBack = () => router.back();
 
   const handleSaveSeam = async () => {
     try {
@@ -169,9 +167,12 @@ export function IntegrationsScreen() {
 
   if (isLoading && !data) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading integrations..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading integrations..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -179,10 +180,10 @@ export function IntegrationsScreen() {
   const tracerfy = data?.tracerfy;
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader title="Integrations" backButton onBack={handleBack} />
-
-      <ScrollView
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        <ScrollView
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: SPACING.md,
@@ -504,8 +505,9 @@ export function IntegrationsScreen() {
             API keys are stored securely and encrypted. Contact support if you need help setting up integrations.
           </Text>
         </View>
-      </ScrollView>
-    </ThemedSafeAreaView>
+        </ScrollView>
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

@@ -3,13 +3,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { View, Text, FlatList, RefreshControl, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Search, Plus, AlertCircle } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedSafeAreaView } from '@/components';
 import { Button, SimpleFAB, TAB_BAR_SAFE_PADDING } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import { useSkipTraceResults, useSkipTraceSummary } from '../hooks/useSkipTracing';
 import { SkipTraceResultCard } from '../components/SkipTraceResultCard';
 import { RunSkipTraceSheet } from '../components/RunSkipTraceSheet';
@@ -47,6 +47,16 @@ export function SkipTraceResultsScreen() {
   });
 
   const summary = useSkipTraceSummary();
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Skip Tracing',
+    fallbackRoute: '/(tabs)',
+    rightAction: (
+      <TouchableOpacity onPress={() => setShowAddSheet(true)} style={{ padding: 8 }}>
+        <Plus size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+  });
 
   // Filter results
   const filteredResults = useMemo(() => {
@@ -200,15 +210,17 @@ export function SkipTraceResultsScreen() {
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
-        <ScreenHeader title="Skip Tracing" />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ marginTop: 16, color: colors.mutedForeground }}>
-            Loading skip trace results...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView style={{ flex: 1 }} edges={[]}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{ marginTop: 16, color: colors.mutedForeground }}>
+              Loading skip trace results...
+            </Text>
+          </View>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -216,35 +228,30 @@ export function SkipTraceResultsScreen() {
   if (isError) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to load skip trace results';
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
-        <ScreenHeader
-          title="Skip Tracing"
-          rightAction={
-            <TouchableOpacity onPress={() => setShowAddSheet(true)}>
-              <Plus size={24} color={colors.foreground} />
-            </TouchableOpacity>
-          }
-        />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <AlertCircle size={48} color={colors.destructive} style={{ marginBottom: 16 }} />
-          <Text style={{ fontSize: 18, fontWeight: '500', color: colors.foreground, marginBottom: 8 }}>
-            Failed to Load Results
-          </Text>
-          <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginBottom: 16 }}>
-            {errorMessage}
-          </Text>
-          <Button onPress={() => refetch()}>
-            <Text style={{ color: colors.primaryForeground }}>Try Again</Text>
-          </Button>
-        </View>
-        <RunSkipTraceSheet
-          isOpen={showAddSheet}
-          onClose={() => setShowAddSheet(false)}
-          contactId={params.contactId}
-          propertyId={params.propertyId}
-          onSuccess={handleAddSuccess}
-        />
-      </SafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView style={{ flex: 1 }} edges={[]}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <AlertCircle size={48} color={colors.destructive} style={{ marginBottom: 16 }} />
+            <Text style={{ fontSize: 18, fontWeight: '500', color: colors.foreground, marginBottom: 8 }}>
+              Failed to Load Results
+            </Text>
+            <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center', marginBottom: 16 }}>
+              {errorMessage}
+            </Text>
+            <Button onPress={() => refetch()}>
+              <Text style={{ color: colors.primaryForeground }}>Try Again</Text>
+            </Button>
+          </View>
+          <RunSkipTraceSheet
+            isOpen={showAddSheet}
+            onClose={() => setShowAddSheet(false)}
+            contactId={params.contactId}
+            propertyId={params.propertyId}
+            onSuccess={handleAddSuccess}
+          />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
@@ -252,18 +259,10 @@ export function SkipTraceResultsScreen() {
   const showEmptyAction = !searchQuery && statusFilter === 'all';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
-      <ScreenHeader
-        title="Skip Tracing"
-        subtitle={params.contactId ? 'Contact Traces' : params.propertyId ? 'Property Traces' : undefined}
-        rightAction={
-          <TouchableOpacity onPress={() => setShowAddSheet(true)}>
-            <Plus size={24} color={colors.foreground} />
-          </TouchableOpacity>
-        }
-      />
-
-      <FlatList
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView style={{ flex: 1 }} edges={[]}>
+        <FlatList
         data={filteredResults}
         renderItem={renderResult}
         keyExtractor={(item) => item.id}
@@ -289,23 +288,24 @@ export function SkipTraceResultsScreen() {
             }
           />
         }
-      />
+        />
 
-      {/* FAB */}
-      <SimpleFAB
-        icon={<Plus size={24} color="white" />}
-        onPress={() => setShowAddSheet(true)}
-        accessibilityLabel="Run skip trace"
-      />
+        {/* FAB */}
+        <SimpleFAB
+          icon={<Plus size={24} color="white" />}
+          onPress={() => setShowAddSheet(true)}
+          accessibilityLabel="Run skip trace"
+        />
 
-      {/* Add Sheet */}
-      <RunSkipTraceSheet
-        isOpen={showAddSheet}
-        onClose={() => setShowAddSheet(false)}
-        contactId={params.contactId}
-        propertyId={params.propertyId}
-        onSuccess={handleAddSuccess}
-      />
-    </SafeAreaView>
+        {/* Add Sheet */}
+        <RunSkipTraceSheet
+          isOpen={showAddSheet}
+          onClose={() => setShowAddSheet(false)}
+          contactId={params.contactId}
+          propertyId={params.propertyId}
+          onSuccess={handleAddSuccess}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }

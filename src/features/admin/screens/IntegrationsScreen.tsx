@@ -31,7 +31,7 @@ import { ApiKeyFormItem } from '../components/ApiKeyFormItem';
 import { IntegrationHealthCard } from '../components/IntegrationHealthCard';
 import { KeyAgeIndicator } from '../components/KeyAgeIndicator';
 import { EnvironmentBadge } from '../components/EnvironmentBadge';
-import { batchHealthCheck, clearHealthCache, checkCredentialsExist } from '../services/apiKeyHealthService';
+import { batchHealthCheck, clearHealthCache, checkCredentialsExist } from '../services/api-key-health';
 import { fetchAllApiKeys, getKeyAgeStatus, calculateKeyAgeDays, getEffectiveDate } from '../services/securityHealthService';
 import type { Integration, IntegrationHealth, IntegrationStatus, ApiKeyRecord } from '../types/integrations';
 

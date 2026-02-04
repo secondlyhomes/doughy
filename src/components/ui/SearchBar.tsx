@@ -5,6 +5,7 @@ import { View, TextInput, TouchableOpacity, ActivityIndicator, Text } from 'reac
 import { Search, X, SlidersHorizontal, List, LayoutGrid } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { GLASS_INTENSITY } from '@/constants/design-tokens';
 import { GlassView } from './GlassView';
 
 export interface SearchBarProps {
@@ -144,7 +145,7 @@ export function SearchBar({
   if (glass) {
     return (
       <GlassView
-        intensity={40}
+        intensity={GLASS_INTENSITY.light}
         effect="regular"
         className={cn('rounded-full', config.paddingClass)}
         style={{ borderRadius: 9999 }}

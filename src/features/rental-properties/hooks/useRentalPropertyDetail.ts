@@ -28,7 +28,7 @@ export const rentalPropertyDetailKeys = {
 
 async function fetchPropertyById(id: string): Promise<RentalProperty | null> {
   const { data, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .select('*')
     .eq('id', id)
     .single();
@@ -46,7 +46,7 @@ async function fetchPropertyById(id: string): Promise<RentalProperty | null> {
 
 async function fetchRoomsByPropertyId(propertyId: string): Promise<Room[]> {
   const { data, error } = await supabase
-    .from('landlord_rooms')
+    .schema('landlord').from('rooms')
     .select('*')
     .eq('property_id', propertyId)
     .order('name', { ascending: true });
@@ -62,38 +62,16 @@ async function fetchRoomsByPropertyId(propertyId: string): Promise<Room[]> {
 async function fetchUpcomingBookingsByPropertyId(
   propertyId: string
 ): Promise<BookingWithRelations[]> {
-  const today = new Date().toISOString().split('T')[0];
+  // Use RPC function for cross-schema join
+  const { getUpcomingBookings, mapBookingRPC } = await import('@/lib/rpc');
 
-  // Filter for upcoming/active booking statuses
-  // Note: 'hold' may be defined in app types but not yet in DB enum
-  const upcomingStatuses = [
-    'inquiry',
-    'pending',
-    'confirmed',
-    'active',
-  ] as const;
-
-  const { data, error } = await supabase
-    .from('landlord_bookings')
-    .select(
-      `
-      *,
-      contact:crm_contacts(id, first_name, last_name, email, phone),
-      room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
-    `
-    )
-    .eq('property_id', propertyId)
-    .gte('start_date', today)
-    .in('status', upcomingStatuses)
-    .order('start_date', { ascending: true })
-    .limit(10);
-
-  if (error) {
+  try {
+    const data = await getUpcomingBookings(propertyId, 10);
+    return data.map(mapBookingRPC) as unknown as BookingWithRelations[];
+  } catch (error) {
     console.error('Error fetching bookings:', error);
     throw error;
   }
-
-  return (data || []) as unknown as BookingWithRelations[];
 }
 
 // ============================================
@@ -252,7 +230,7 @@ export function useRentalPropertyMutations(
       if (data.status !== undefined) updateData.status = data.status;
 
       const { data: updated, error } = await supabase
-        .from('landlord_properties')
+        .schema('landlord').from('properties')
         .update(updateData)
         .eq('id', propertyId)
         .select()
@@ -277,7 +255,7 @@ export function useRentalPropertyMutations(
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
-        .from('landlord_properties')
+        .schema('landlord').from('properties')
         .delete()
         .eq('id', propertyId);
 

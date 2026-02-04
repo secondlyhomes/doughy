@@ -54,7 +54,7 @@ async function fetchLeadsWithTouchData(settings: NudgeSettings): Promise<LeadWit
 
   // First, get active leads
   const { data: leads, error: leadsError } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .select('id, name, status, updated_at')
     .in('status', ['active', 'new', 'follow-up'])
     .limit(50);
@@ -69,7 +69,7 @@ async function fetchLeadsWithTouchData(settings: NudgeSettings): Promise<LeadWit
   // Get touch data for these leads
   const leadIds = leads.map(l => l.id);
   const { data: touches, error: touchesError } = await supabase
-    .from('crm_contact_touches')
+    .schema('crm').from('touches')
     .select('lead_id, created_at, responded')
     .in('lead_id', leadIds);
 
@@ -110,42 +110,26 @@ async function fetchLeadsWithTouchData(settings: NudgeSettings): Promise<LeadWit
 }
 
 // Fetch deals with stalled progress or overdue actions
+// Uses RPC function to avoid cross-schema PostgREST join
 async function fetchDealNudges(settings: NudgeSettings) {
   if (!settings.enabled) return [];
 
-  const stalledDate = new Date();
-  stalledDate.setDate(stalledDate.getDate() - settings.dealStalledDays);
+  const { getNudgeDeals, mapNudgeDealRPC } = await import('@/lib/rpc');
 
-  const now = new Date();
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const { data, error } = await supabase
-    .from('investor_deals_pipeline')
-    .select(`
-      id,
-      stage,
-      next_action,
-      next_action_due,
-      updated_at,
-      lead:crm_leads(id, name),
-      property:investor_properties(id, address_line_1, city, state)
-    `)
-    .not('stage', 'in', '(closed_won,closed_lost)')
-    .limit(50);
-
-  if (error) {
+  try {
+    const data = await getNudgeDeals(50);
+    return data.map(mapNudgeDealRPC);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching deal nudges:', error);
-    throw new Error(`Failed to load deal nudges: ${error.message}`);
+    throw new Error(`Failed to load deal nudges: ${message}`);
   }
-
-  return data || [];
 }
 
 // Fetch pending capture items
 async function fetchPendingCaptures() {
   const { data, error } = await supabase
-    .from('ai_capture_items')
+    .schema('ai').from('capture_items')
     .select('id, type, title, created_at, assigned_property_id')
     .in('status', ['pending', 'ready'])
     .order('created_at', { ascending: false })

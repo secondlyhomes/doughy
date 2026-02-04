@@ -15,7 +15,7 @@ export const seedFullPropertyManager: SeedScenario = {
     await ensureUserHasWorkspace(userId);
 
     // Create Properties
-    const { data: properties, error: propertiesError } = await supabase.from('landlord_properties').insert([
+    const { data: properties, error: propertiesError } = await supabase.schema('landlord').from('properties').insert([
       {
         user_id: userId,
         name: 'Oceanview Villa',
@@ -65,7 +65,7 @@ export const seedFullPropertyManager: SeedScenario = {
     console.log('Created properties:', properties.length);
 
     // Create Vendors
-    const { data: vendors, error: vendorsError } = await supabase.from('landlord_vendors').insert([
+    const { data: vendors, error: vendorsError } = await supabase.schema('landlord').from('vendors').insert([
       { user_id: userId, category: 'plumber', name: 'Mike Rodriguez', company_name: 'Rodriguez Plumbing Co.', phone: '555-123-4567', email: 'mike@rodriguez-plumbing.example.com', is_primary: true, notes: 'Reliable, available 24/7 for emergencies', hourly_rate: 85, rating: 5 },
       { user_id: userId, category: 'electrician', name: 'Sarah Chen', company_name: 'Bright Spark Electric', phone: '555-234-5678', email: 'sarah@brightspark.example.com', is_primary: true, notes: 'Licensed and insured, specializes in older homes', hourly_rate: 95, rating: 5 },
       { user_id: userId, category: 'cleaner', name: 'Maria Santos', company_name: 'Spotless Cleaning Services', phone: '555-345-6789', email: 'maria@spotless.example.com', is_primary: true, notes: 'Turnover specialist, brings own supplies', hourly_rate: 45, rating: 5 },
@@ -95,7 +95,7 @@ export const seedFullPropertyManager: SeedScenario = {
       { property_id: properties[0].id, name: 'Hot Tub - Jacuzzi J-335', category: 'other', location: 'Back Patio', brand: 'Jacuzzi', model: 'J-335', serial_number: 'JAC-HT-2023-ABC', condition: 'good', purchase_price: 8500, replacement_cost: 9500, notes: 'Chemical balance: pH 7.2-7.6; last serviced 1/15/2026' },
     ];
 
-    const { error: inventoryError } = await supabase.from('landlord_inventory_items').insert(
+    const { error: inventoryError } = await supabase.schema('landlord').from('inventory_items').insert(
       inventoryItems.map(item => ({ user_id: userId, ...item }))
     );
 
@@ -103,7 +103,7 @@ export const seedFullPropertyManager: SeedScenario = {
     console.log('Created inventory items:', inventoryItems.length);
 
     // Create Contacts
-    const { data: contacts, error: contactsError } = await supabase.from('crm_contacts').insert([
+    const { data: contacts, error: contactsError } = await supabase.schema('crm').from('contacts').insert([
       { user_id: userId, first_name: 'Jennifer', last_name: 'Martinez', email: 'jennifer.martinez@example.com', phone: '555-111-2222', contact_types: ['guest'], source: 'airbnb', status: 'active', score: 92 },
       { user_id: userId, first_name: 'David', last_name: 'Kim', email: 'david.kim@example.com', phone: '555-222-3333', contact_types: ['guest'], source: 'vrbo', status: 'active', score: 88 },
       { user_id: userId, first_name: 'Lisa', last_name: 'Thompson', email: 'lisa.t@example.com', phone: '555-333-4444', contact_types: ['tenant'], source: 'furnishedfinder', status: 'active', score: 95 },
@@ -121,7 +121,7 @@ export const seedFullPropertyManager: SeedScenario = {
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     const inTwoWeeks = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-    const { data: bookings, error: bookingsError } = await supabase.from('landlord_bookings').insert([
+    const { data: bookings, error: bookingsError } = await supabase.schema('landlord').from('bookings').insert([
       { user_id: userId, property_id: properties[0].id, contact_id: contacts![0].id, booking_type: 'reservation', status: 'completed', start_date: lastWeek.toISOString().split('T')[0], end_date: yesterday.toISOString().split('T')[0], rate: 450, rate_type: 'nightly', total_amount: 3150, source: 'airbnb', notes: 'Family vacation, 4 adults 2 kids' },
       { user_id: userId, property_id: properties[0].id, contact_id: contacts![1].id, booking_type: 'reservation', status: 'active', start_date: today.toISOString().split('T')[0], end_date: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 450, rate_type: 'nightly', total_amount: 2500, source: 'vrbo' },
       { user_id: userId, property_id: properties[0].id, contact_id: contacts![3].id, booking_type: 'reservation', status: 'confirmed', start_date: nextWeek.toISOString().split('T')[0], end_date: inTwoWeeks.toISOString().split('T')[0], rate: 450, rate_type: 'nightly', total_amount: 3600, source: 'direct' },
@@ -132,7 +132,7 @@ export const seedFullPropertyManager: SeedScenario = {
     console.log('Created bookings:', bookings?.length || 0);
 
     // Create Maintenance Records
-    const { data: maintenance, error: maintenanceError } = await supabase.from('landlord_maintenance_records').insert([
+    const { data: maintenance, error: maintenanceError } = await supabase.schema('landlord').from('maintenance_records').insert([
       { user_id: userId, property_id: properties[0].id, work_order_number: 'WO-2026-0001', title: 'Pool Filter Replacement', description: 'Replaced clogged pool filter cartridge discovered during routine maintenance.', category: 'other', status: 'completed', priority: 'medium', vendor_name: "Patrick O'Brien", vendor_phone: '555-789-0123', scheduled_at: lastWeek.toISOString().split('T')[0], completed_at: lastWeek.toISOString().split('T')[0], estimated_cost: 150, actual_cost: 175, charge_to: 'owner' },
       { user_id: userId, property_id: properties[0].id, booking_id: bookings![0].id, work_order_number: 'WO-2026-0002', title: 'Broken Window - Guest Damage', description: 'Guest accidentally broke bedroom window. Glass replacement and labor.', category: 'structural', status: 'completed', priority: 'high', vendor_name: 'Tom Wilson', vendor_phone: '555-456-7890', scheduled_at: yesterday.toISOString().split('T')[0], completed_at: yesterday.toISOString().split('T')[0], estimated_cost: 300, actual_cost: 350, charge_to: 'guest', is_guest_chargeable: true, guest_charge_amount: 350 },
       { user_id: userId, property_id: properties[1].id, work_order_number: 'WO-2026-0003', title: 'Garbage Disposal Replacement', description: 'Current disposal making loud grinding noise. Replacing with new InSinkErator Badger 5.', category: 'plumbing', status: 'scheduled', priority: 'medium', vendor_name: 'Mike Rodriguez', vendor_phone: '555-123-4567', scheduled_at: new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], estimated_cost: 250, charge_to: 'owner' },
@@ -144,7 +144,7 @@ export const seedFullPropertyManager: SeedScenario = {
     console.log('Created maintenance records:', maintenance?.length || 0);
 
     // Create Booking Charges
-    const { data: charges, error: chargesError } = await supabase.from('landlord_booking_charges').insert([
+    const { data: charges, error: chargesError } = await supabase.schema('landlord').from('booking_charges').insert([
       { user_id: userId, booking_id: bookings![0].id, maintenance_id: maintenance![1].id, charge_type: 'damage', description: 'Broken window in master bedroom - replacement required', amount: 350, status: 'approved', notes: 'Guest acknowledged responsibility' },
       { user_id: userId, booking_id: bookings![0].id, charge_type: 'cleaning', description: 'Extended deep cleaning required - excessive mess in kitchen and bathrooms', amount: 150, status: 'pending', notes: 'Cleaner spent 3 extra hours' },
       { user_id: userId, booking_id: bookings![0].id, charge_type: 'missing_item', description: 'Pool towels (3x) not returned', amount: 75, status: 'pending' },
@@ -156,7 +156,7 @@ export const seedFullPropertyManager: SeedScenario = {
     console.log('Created booking charges:', charges?.length || 0);
 
     // Create Deposit Settlement
-    const { error: settlementError } = await supabase.from('landlord_deposit_settlements').insert({
+    const { error: settlementError } = await supabase.schema('landlord').from('deposit_settlements').insert({
       user_id: userId,
       booking_id: bookings![0].id,
       deposit_held: 1000,
@@ -171,7 +171,7 @@ export const seedFullPropertyManager: SeedScenario = {
 
     // Create Turnovers
     const cleanerVendor = vendors?.find(v => v.category === 'cleaner');
-    const { error: turnoversError } = await supabase.from('landlord_turnovers').insert([
+    const { error: turnoversError } = await supabase.schema('landlord').from('turnovers').insert([
       { user_id: userId, property_id: properties[0].id, checkout_booking_id: bookings![0].id, checkout_at: yesterday.toISOString(), checkin_at: today.toISOString(), status: 'ready', cleaner_vendor_id: cleanerVendor?.id, cleaning_scheduled_at: yesterday.toISOString(), cleaning_completed_at: yesterday.toISOString(), inspection_completed_at: yesterday.toISOString(), inspection_notes: 'All clear except for window damage noted separately. Property ready for next guest.' },
       { user_id: userId, property_id: properties[0].id, checkout_booking_id: bookings![1].id, checkout_at: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(), checkin_at: nextWeek.toISOString(), status: 'pending', cleaner_vendor_id: cleanerVendor?.id, notes: '2-day gap between bookings - schedule deep clean' },
       { user_id: userId, property_id: properties[0].id, checkout_at: new Date(today.getTime() - 4 * 60 * 60 * 1000).toISOString(), checkin_at: new Date(today.getTime() + 20 * 60 * 60 * 1000).toISOString(), status: 'cleaning_scheduled', cleaner_vendor_id: cleanerVendor?.id, cleaning_scheduled_at: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(), ai_messages: [{ to: 'maria@spotless.example.com', channel: 'email', sent_at: new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString(), response: 'Confirmed for tomorrow at 10am' }, { to: '555-345-6789', channel: 'sms', sent_at: new Date(today.getTime() - 3 * 60 * 60 * 1000).toISOString(), response: 'On my way!' }] },
@@ -181,7 +181,7 @@ export const seedFullPropertyManager: SeedScenario = {
     console.log('Created turnovers');
 
     // Create Guest Templates
-    const { error: templatesError } = await supabase.from('landlord_guest_templates').insert([
+    const { error: templatesError } = await supabase.schema('landlord').from('guest_templates').insert([
       { user_id: userId, name: 'Check-in Instructions', template_type: 'check_in_instructions', subject: 'Check-in Instructions for {{property_name}}', body: 'Hi {{guest_name}}!\n\nWelcome to {{property_name}}! Here are your check-in details:\n\nAddress: {{property_address}}\nCheck-in: {{check_in_date}} at {{check_in_time}}\nAccess Code: {{access_code}}\n\nWiFi: {{wifi_name}} / {{wifi_password}}\n\nPlease let me know if you have any questions!\n\nBest,\n{{host_name}}', channel: 'email', is_active: true },
       { user_id: userId, name: 'Checkout Reminder', template_type: 'checkout_reminder', subject: 'Checkout Reminder - {{property_name}}', body: 'Hi {{guest_name}},\n\nJust a friendly reminder that checkout is tomorrow at {{check_out_time}}.\n\nBefore you leave:\n- Please start the dishwasher\n- Leave used towels in the bathroom\n- Take out any trash\n- Lock the door (it will auto-lock)\n\nThank you for staying with us! Safe travels!\n\n{{host_name}}', channel: 'email', is_active: true },
       { user_id: userId, name: 'House Rules', template_type: 'house_rules', subject: 'House Rules - {{property_name}}', body: 'House Rules:\n\n1. No smoking inside\n2. No parties or events\n3. Quiet hours: 10pm - 8am\n4. Max occupancy: {{max_guests}} guests\n5. Pets must be approved in advance\n\nPool/Hot Tub Hours: 8am - 10pm\n\nThank you for respecting our home!', channel: 'email', is_active: true },
@@ -191,7 +191,7 @@ export const seedFullPropertyManager: SeedScenario = {
     console.log('Created guest templates');
 
     // Create Conversations
-    const { data: convos, error: convosError } = await supabase.from('landlord_conversations').insert([
+    const { data: convos, error: convosError } = await supabase.schema('landlord').from('conversations').insert([
       { user_id: userId, contact_id: contacts![0].id, property_id: properties[0].id, channel: 'email', status: 'active', is_ai_enabled: true, message_count: 4, last_message_at: yesterday.toISOString() },
       { user_id: userId, contact_id: contacts![1].id, property_id: properties[0].id, channel: 'sms', status: 'active', is_ai_enabled: true, message_count: 3, last_message_at: today.toISOString() },
     ]).select();
@@ -201,7 +201,7 @@ export const seedFullPropertyManager: SeedScenario = {
 
     // Add messages
     if (convos && convos.length > 0) {
-      const { error: messagesError } = await supabase.from('landlord_messages').insert([
+      const { error: messagesError } = await supabase.schema('landlord').from('messages').insert([
         { conversation_id: convos[0].id, direction: 'inbound', content: 'Hi, we had a great stay! Quick question about the security deposit refund.', content_type: 'text', sent_by: 'contact' },
         { conversation_id: convos[0].id, direction: 'outbound', content: 'Thank you for staying with us! I\'m reviewing the checkout inspection now and will process the deposit within 7 days.', content_type: 'text', sent_by: 'ai', ai_confidence: 92 },
         { conversation_id: convos[0].id, direction: 'inbound', content: 'About the window - that was an accident. Is there any way to work out a payment plan?', content_type: 'text', sent_by: 'contact' },

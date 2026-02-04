@@ -14,18 +14,35 @@ import {
 } from '../types/patchset';
 
 /**
- * Map entity types to Supabase table names
+ * Map entity types to schema and table names for schema-qualified queries
  */
-const ENTITY_TABLE_MAP: Record<PatchEntity, string> = {
-  Deal: 'investor_deals_pipeline',
-  DealOffer: 'investor_deal_offers',
-  DealAssumption: 'investor_deal_assumptions', // May need to be deal-level JSON field
-  DealEvidence: 'investor_deal_evidence',
-  DealWalkthrough: 'investor_deal_walkthroughs',
-  Property: 'investor_properties',
-  Lead: 'crm_leads',
-  Task: 'tasks',
+interface EntityMapping {
+  schema: 'investor' | 'crm' | 'public';
+  table: string;
+}
+
+const ENTITY_TABLE_MAP: Record<PatchEntity, EntityMapping> = {
+  Deal: { schema: 'investor', table: 'deals_pipeline' },
+  DealOffer: { schema: 'investor', table: 'deal_offers' },
+  DealAssumption: { schema: 'investor', table: 'deal_assumptions' }, // May need to be deal-level JSON field
+  DealEvidence: { schema: 'investor', table: 'deal_evidence' },
+  DealWalkthrough: { schema: 'investor', table: 'deal_walkthroughs' },
+  Property: { schema: 'investor', table: 'properties' },
+  Lead: { schema: 'crm', table: 'leads' },
+  Task: { schema: 'public', table: 'tasks' },
 };
+
+/**
+ * Get a schema-qualified query builder for the given entity
+ */
+function getQueryBuilder(mapping: EntityMapping) {
+  // Dynamic schema/table access requires any cast - entity/table mapping is validated above
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (mapping.schema === 'public') {
+    return (supabase as any).from(mapping.table);
+  }
+  return (supabase as any).schema(mapping.schema).from(mapping.table);
+}
 
 /**
  * Apply a single operation
@@ -35,8 +52,8 @@ async function applyOperation(op: PatchOperation): Promise<{
   error?: string;
   entityId?: string;
 }> {
-  const tableName = ENTITY_TABLE_MAP[op.entity];
-  if (!tableName) {
+  const mapping = ENTITY_TABLE_MAP[op.entity];
+  if (!mapping) {
     return { success: false, error: `Unknown entity type: ${op.entity}` };
   }
 
@@ -50,10 +67,7 @@ async function applyOperation(op: PatchOperation): Promise<{
   try {
     switch (op.op) {
       case 'create': {
-        // Dynamic table access requires any cast - entity/table mapping is validated above
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase as any)
-          .from(tableName)
+        const { data, error } = await getQueryBuilder(mapping)
           .insert(op.after)
           .select()
           .single();
@@ -65,10 +79,7 @@ async function applyOperation(op: PatchOperation): Promise<{
         if (!op.id) {
           return { success: false, error: 'Update operation requires entity ID' };
         }
-        // Dynamic table access requires any cast - entity/table mapping is validated above
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase as any)
-          .from(tableName)
+        const { data, error } = await getQueryBuilder(mapping)
           .update(op.after)
           .eq('id', op.id)
           .select()
@@ -81,10 +92,7 @@ async function applyOperation(op: PatchOperation): Promise<{
         if (!op.id) {
           return { success: false, error: 'Delete operation requires entity ID' };
         }
-        // Dynamic table access requires any cast - entity/table mapping is validated above
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
-          .from(tableName)
+        const { error } = await getQueryBuilder(mapping)
           .delete()
           .eq('id', op.id);
         if (error) throw error;

@@ -5,6 +5,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LucideIcon, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { withOpacity } from '@/lib/design-utils';
 import { SPACING, ICON_SIZES, FONT_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 
 export interface DetailRowProps {
@@ -20,10 +21,14 @@ export interface DetailRowProps {
   accessoryRight?: React.ReactNode;
   /** Color for the icon */
   iconColor?: string;
+  /** Color for the value text (overrides default) */
+  valueColor?: string;
   /** Layout direction: 'horizontal' puts label/value side by side, 'vertical' stacks them */
   layout?: 'horizontal' | 'vertical';
   /** Show chevron on the right when tappable (default true when onPress exists) */
   showChevron?: boolean;
+  /** Hide the row if value is null/undefined/empty */
+  hideIfEmpty?: boolean;
 }
 
 /**
@@ -68,15 +73,23 @@ export function DetailRow({
   onPress,
   accessoryRight,
   iconColor,
+  valueColor,
   layout = 'vertical',
   showChevron,
+  hideIfEmpty = false,
 }: DetailRowProps) {
   const colors = useThemeColors();
+
+  // Hide if empty when hideIfEmpty is true
+  if (hideIfEmpty && (value === null || value === undefined || value === '')) {
+    return null;
+  }
 
   // Default showChevron to true when onPress is provided and no accessoryRight
   const shouldShowChevron = showChevron ?? (!!onPress && !accessoryRight);
 
   const resolvedIconColor = iconColor ?? colors.mutedForeground;
+  const resolvedValueColor = valueColor ?? (onPress ? colors.primary : colors.foreground);
 
   const renderContent = () => {
     if (layout === 'horizontal') {
@@ -97,7 +110,7 @@ export function DetailRow({
               <Text
                 style={[
                   styles.horizontalValue,
-                  { color: onPress ? colors.primary : colors.foreground },
+                  { color: resolvedValueColor },
                 ]}
                 numberOfLines={1}
               >
@@ -137,7 +150,7 @@ export function DetailRow({
             <Text
               style={[
                 styles.verticalValue,
-                { color: onPress ? colors.primary : colors.foreground },
+                { color: resolvedValueColor },
               ]}
             >
               {value}

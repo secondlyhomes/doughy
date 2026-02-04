@@ -15,7 +15,7 @@ export const seedBusyLandlord: SeedScenario = {
     await ensureUserHasWorkspace(userId);
 
     // Create properties
-    const { data: properties, error: propertiesError } = await supabase.from('landlord_properties').insert([
+    const { data: properties, error: propertiesError } = await supabase.schema('landlord').from('properties').insert([
       {
         user_id: userId,
         name: 'Downtown Loft',
@@ -109,7 +109,7 @@ export const seedBusyLandlord: SeedScenario = {
       { firstName: 'Blake', lastName: 'Miller', email: 'blake.m@email.com', phone: '+1 555-0216', types: ['lead'], source: 'airbnb', status: 'qualified', score: 80, tags: ['str_to_mtr'], metadata: { notes: 'Loved STR stay, wants to convert to 3-month MTR.' } },
     ];
 
-    const { data: contacts, error: contactsError } = await supabase.from('crm_contacts').insert(
+    const { data: contacts, error: contactsError } = await supabase.schema('crm').from('contacts').insert(
       contactsData.map(c => ({
         user_id: userId,
         first_name: c.firstName,
@@ -136,7 +136,7 @@ export const seedBusyLandlord: SeedScenario = {
 
     // Create bookings
     const today = new Date();
-    const { error: bookingsError } = await supabase.from('landlord_bookings').insert([
+    const { error: bookingsError } = await supabase.schema('landlord').from('bookings').insert([
       // STR Bookings for Downtown Loft
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[0].id, booking_type: 'reservation', status: 'active', start_date: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 950, source: 'airbnb', notes: 'Returning guest, 3rd stay' },
       { user_id: userId, property_id: properties[0].id, contact_id: contacts[1].id, booking_type: 'reservation', status: 'confirmed', start_date: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], end_date: new Date(today.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], rate: 175, rate_type: 'nightly', total_amount: 600, source: 'airbnb' },
@@ -173,7 +173,7 @@ export const seedBusyLandlord: SeedScenario = {
       { contactIdx: 13, propertyIdx: 0, channel: 'whatsapp', status: 'active', is_ai_enabled: true },
     ];
 
-    const { data: convos, error: convosError } = await supabase.from('landlord_conversations').insert(
+    const { data: convos, error: convosError } = await supabase.schema('landlord').from('conversations').insert(
       conversationData.map((c, i) => ({
         user_id: userId,
         contact_id: contacts[c.contactIdx].id,
@@ -248,7 +248,7 @@ export const seedBusyLandlord: SeedScenario = {
 
     for (let i = 0; i < convos.length; i++) {
       const messages = messageTemplates[i] || messageTemplates[0];
-      const { error: msgError } = await supabase.from('landlord_messages').insert(
+      const { error: msgError } = await supabase.schema('landlord').from('messages').insert(
         messages.map(m => ({
           conversation_id: convos[i].id,
           direction: m.direction,
@@ -266,7 +266,7 @@ export const seedBusyLandlord: SeedScenario = {
     console.log('Created messages for all conversations');
 
     // Add pending AI responses
-    const { error: aiQueueError } = await supabase.from('landlord_ai_queue_items').insert([
+    const { error: aiQueueError } = await supabase.schema('landlord').from('ai_queue_items').insert([
       { user_id: userId, conversation_id: convos[0].id, suggested_response: 'I can offer early check-in at 1pm for a $25 fee, or complimentary at 2pm if the previous guest checks out on time. Which would you prefer?', confidence: 92, reasoning: 'Guest requested early check-in', status: 'pending', expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
       { user_id: userId, conversation_id: convos[5].id, suggested_response: 'Perfect! I\'ll see you Saturday at 2pm at 789 Oak Lane. I\'ll send you a calendar invite and directions. Please bring a valid ID for the application if you decide to move forward!', confidence: 96, reasoning: 'Lead confirmed showing time', status: 'pending', expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
       { user_id: userId, conversation_id: convos[6].id, suggested_response: 'Hi Morgan! Just checking in - were you still interested in the Downtown Loft? I have some availability coming up and wanted to give you first dibs. Let me know if you\'d like to schedule a tour!', confidence: 78, reasoning: 'Lead went quiet, time for follow-up', status: 'pending', expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },

@@ -14,13 +14,13 @@ import { Users, Plus, ChevronDown, ChevronUp, Search, Award } from 'lucide-react
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import {
-  LoadingSpinner,
   SearchBar,
   SimpleFAB,
   TAB_BAR_SAFE_PADDING,
   Badge,
   ListEmptyState,
 } from '@/components/ui';
+import { SkeletonList, ListItemSkeleton } from '@/components/ui/CardSkeletons';
 import { SPACING, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { useNativeHeader } from '@/hooks';
 import {
@@ -178,7 +178,9 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
       <>
         <Stack.Screen options={headerOptions} />
         <ThemedSafeAreaView className="flex-1" edges={[]}>
-          <LoadingSpinner fullScreen text="Loading vendors..." />
+          <View style={{ padding: SPACING.md }}>
+            <SkeletonList count={6} component={ListItemSkeleton} />
+          </View>
         </ThemedSafeAreaView>
       </>
     );

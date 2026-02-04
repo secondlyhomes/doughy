@@ -366,7 +366,8 @@ serve(async (req) => {
         // Insert lead - minimal fields only
         // Explicitly set all status fields to 'new' instead of relying on database defaults
         const { data: lead, error: leadError } = await supabase
-          .from("crm_leads")
+          .schema('crm')
+          .from("leads")
           .insert({
             name: fullName || null,
             
@@ -440,7 +441,8 @@ serve(async (req) => {
           };
 
           const { data: prop, error: propError } = await supabase
-            .from("re_properties")
+            .schema('re')
+            .from("properties")
             .insert(propertyData)
             .select("id")
             .single();
@@ -451,7 +453,8 @@ serve(async (req) => {
 
           // Link property to lead
           const { error: linkError } = await supabase
-            .from("re_lead_properties")
+            .schema('re')
+            .from("lead_properties")
             .insert({
               lead_id: lead.id,
               property_id: prop.id,

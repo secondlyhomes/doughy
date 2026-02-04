@@ -1,5 +1,6 @@
 // src/features/admin/screens/ai-security-dashboard/PatternEditorSheet.tsx
-// Bottom sheet for managing security patterns (add, edit, test, delete)
+// Sheets for managing security patterns (list as BottomSheet, add/edit as FocusedSheet)
+// Follows ADHD-friendly design: list view for quick browsing, focused sheet for editing
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, FlatList } from 'react-native';
@@ -8,7 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import {
   BottomSheet,
-  BottomSheetSection,
+  FocusedSheet,
+  FocusedSheetSection,
   Button,
   FormField,
   Select,
@@ -148,7 +150,7 @@ export function PatternEditorSheet({
       if (editingPattern) {
         // Update existing
         const { error } = await supabase
-          .from('ai_moltbot_blocked_patterns' as 'profiles')
+          .schema('ai').from('moltbot_blocked_patterns' as unknown as 'profiles')
           .update({
             pattern,
             severity,
@@ -161,7 +163,7 @@ export function PatternEditorSheet({
       } else {
         // Insert new
         const { error } = await supabase
-          .from('ai_moltbot_blocked_patterns' as 'profiles')
+          .schema('ai').from('moltbot_blocked_patterns' as unknown as 'profiles')
           .insert({
             pattern,
             severity,
@@ -191,7 +193,7 @@ export function PatternEditorSheet({
       setTogglingId(patternItem.id);
       try {
         const { error } = await supabase
-          .from('ai_moltbot_blocked_patterns' as 'profiles')
+          .schema('ai').from('moltbot_blocked_patterns' as unknown as 'profiles')
           .update({ is_active: !patternItem.isActive })
           .eq('id', patternItem.id);
 
@@ -408,19 +410,23 @@ export function PatternEditorSheet({
     );
   }
 
-  // Add/Edit view
+  // Add/Edit view - uses FocusedSheet for better concentration on complex form
   return (
     <>
-      <BottomSheet
+      <FocusedSheet
         visible={visible}
         onClose={() => {
           setMode('list');
           resetForm();
         }}
         title={mode === 'add' ? 'Add Pattern' : 'Edit Pattern'}
-        snapPoints={['85%']}
+        subtitle="Define regex pattern for threat detection"
+        doneLabel={mode === 'add' ? 'Add Pattern' : 'Save Changes'}
+        onDone={handleSave}
+        doneDisabled={!pattern.trim()}
+        isSubmitting={isSubmitting}
       >
-        <BottomSheetSection>
+        <FocusedSheetSection title="Pattern Details">
           <FormField
             label="Regex Pattern"
             required
@@ -473,9 +479,9 @@ export function PatternEditorSheet({
               placeholder="Brief description of what this pattern detects"
             />
           </View>
-        </BottomSheetSection>
+        </FocusedSheetSection>
 
-        <BottomSheetSection title="Test Pattern">
+        <FocusedSheetSection title="Test Pattern">
           <FormField
             label="Test Input"
             value={testInput}
@@ -522,35 +528,8 @@ export function PatternEditorSheet({
               )}
             </View>
           )}
-        </BottomSheetSection>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 12,
-            paddingTop: SPACING.md,
-            paddingBottom: SPACING.lg,
-          }}
-        >
-          <Button
-            variant="outline"
-            onPress={() => {
-              setMode('list');
-              resetForm();
-            }}
-            style={{ flex: 1 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onPress={handleSave}
-            disabled={!pattern.trim() || isSubmitting}
-            style={{ flex: 1 }}
-          >
-            {isSubmitting ? 'Saving...' : mode === 'add' ? 'Add Pattern' : 'Save Changes'}
-          </Button>
-        </View>
-      </BottomSheet>
+        </FocusedSheetSection>
+      </FocusedSheet>
 
       {/* Step-up verification sheet for MFA on destructive actions - rendered outside to avoid nesting issues */}
       <StepUpVerificationSheet

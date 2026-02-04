@@ -8,6 +8,7 @@ export { InventoryItemDetailScreen } from './screens/InventoryItemDetailScreen';
 // Components
 export { InventoryItemCard } from './components/InventoryItemCard';
 export { AddInventorySheet } from './components/AddInventorySheet';
+export { InventoryPreview } from './components/InventoryPreview';
 
 // Hooks
 export {

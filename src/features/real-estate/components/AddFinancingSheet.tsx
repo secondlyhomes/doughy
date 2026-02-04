@@ -1,11 +1,10 @@
 // src/features/real-estate/components/AddFinancingSheet.tsx
-// Bottom sheet for adding/editing financing scenarios
+// Focused sheet for adding/editing financing scenarios
+// Uses FocusedSheet for reduced distraction on complex financial form
 
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { X, CreditCard } from 'lucide-react-native';
-import { useThemeColors } from '@/contexts/ThemeContext';
-import { BottomSheet, Button } from '@/components/ui';
+import { View } from 'react-native';
+import { FocusedSheet, FocusedSheetSection } from '@/components/ui';
 import { FinancingScenario } from '../types';
 import { LoanType } from '../hooks/useFinancingScenarios';
 import { useFinancingForm } from '../hooks/useFinancingForm';
@@ -39,7 +38,6 @@ export function AddFinancingSheet({
   editScenario,
   defaultPurchasePrice,
 }: AddFinancingSheetProps) {
-  const colors = useThemeColors();
   const { formData, errors, calculations, updateField, validate, reset } = useFinancingForm(
     editScenario,
     defaultPurchasePrice
@@ -68,48 +66,29 @@ export function AddFinancingSheet({
   }, [reset, onClose]);
 
   return (
-    <BottomSheet visible={visible} onClose={handleClose} snapPoints={['90%']}>
-      {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-3 border-b" style={{ borderColor: colors.border }}>
-          <View>
-            <Text className="text-lg font-semibold" style={{ color: colors.foreground }}>
-              {editScenario ? 'Edit Scenario' : 'New Financing Scenario'}
-            </Text>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>Compare different loan options</Text>
-          </View>
-          <TouchableOpacity onPress={handleClose} className="p-2 rounded-full" style={{ backgroundColor: colors.muted }}>
-            <X size={20} color={colors.foreground} />
-          </TouchableOpacity>
-        </View>
+    <FocusedSheet
+      visible={visible}
+      onClose={handleClose}
+      title={editScenario ? 'Edit Scenario' : 'New Financing Scenario'}
+      subtitle="Compare different loan options"
+      doneLabel={editScenario ? 'Save Changes' : 'Create Scenario'}
+      onDone={handleSubmit}
+      isSubmitting={isLoading}
+    >
+      <FocusedSheetSection title="Loan Details">
+        <FinancingFormFields
+          formData={formData}
+          errors={errors}
+          calculations={calculations}
+          onUpdateField={updateField}
+        />
+      </FocusedSheetSection>
 
-        <ScrollView
-          className="flex-1 px-4 pt-4"
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <FinancingFormFields
-            formData={formData}
-            errors={errors}
-            calculations={calculations}
-            onUpdateField={updateField}
-          />
-          <FinancingPreview calculations={calculations} />
-          <View className="h-4" />
-        </ScrollView>
+      <FocusedSheetSection title="Payment Preview">
+        <FinancingPreview calculations={calculations} />
+      </FocusedSheetSection>
 
-      {/* Submit Button */}
-      <View className="p-4 border-t" style={{ borderColor: colors.border }}>
-        <Button
-          onPress={handleSubmit}
-          disabled={isLoading}
-          loading={isLoading}
-          size="lg"
-          className="w-full"
-        >
-          {!isLoading && <CreditCard size={18} color={colors.primaryForeground} />}
-          {editScenario ? 'Save Changes' : 'Create Scenario'}
-        </Button>
-      </View>
-    </BottomSheet>
+      <View className="h-4" />
+    </FocusedSheet>
   );
 }

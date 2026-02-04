@@ -16,35 +16,18 @@ export interface RecentPropertyEntry {
 }
 
 // Fetch full property data for display
+// Uses RPC to avoid cross-schema join
 async function fetchPropertyById(propertyId: string): Promise<FocusedProperty | null> {
-  const { data, error } = await supabase
-    .from('investor_properties')
-    .select(`
-      id,
-      address_line_1,
-      city,
-      state,
-      lead_id,
-      images:investor_property_images(url, is_primary),
-      lead:crm_leads(id, name)
-    `)
-    .eq('id', propertyId)
-    .single();
+  const { getPropertiesWithLead, mapPropertyWithLeadRPC } = await import('@/lib/rpc');
 
-  if (error || !data) return null;
-
-  const primaryImage = data.images?.find((img: any) => img.is_primary)?.url
-    || data.images?.[0]?.url;
-
-  return {
-    id: data.id,
-    address: data.address_line_1,
-    city: data.city,
-    state: data.state,
-    imageUrl: primaryImage,
-    leadName: data.lead?.name,
-    leadId: data.lead?.id,
-  };
+  try {
+    const data = await getPropertiesWithLead([propertyId]);
+    if (!data || data.length === 0) return null;
+    return mapPropertyWithLeadRPC(data[0]);
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    return null;
+  }
 }
 
 export function useRecentProperties() {

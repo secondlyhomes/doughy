@@ -12,7 +12,9 @@ import {
   Select,
   FormField,
   Switch,
+  AddressAutofill,
 } from '@/components/ui';
+import type { AddressAutofillValue } from '@/components/ui';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import {
   VendorCategory,
@@ -195,13 +197,20 @@ export function AddVendorSheet({
           />
         </FormField>
 
-        <FormField label="Address" className="mt-3">
-          <Input
+        <View className="mt-3">
+          <AddressAutofill
+            label="Address"
             value={address}
-            onChangeText={setAddress}
+            onChange={(addr) => {
+              if (typeof addr === 'object' && addr) {
+                setAddress(addr.formatted);
+              } else {
+                setAddress('');
+              }
+            }}
             placeholder="123 Main St, City, State"
           />
-        </FormField>
+        </View>
 
         <FormField label="Preferred Contact" className="mt-3">
           <Select

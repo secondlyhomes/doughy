@@ -344,6 +344,100 @@ Before submitting a PR, verify:
 
 ---
 
+## ADHD-Friendly Design Checklist
+
+Design patterns that reduce cognitive load and improve focus for all users.
+
+### Cognitive Load
+
+- [ ] Max 5 options visible in any action menu/dialog
+- [ ] Forms with 6+ fields use multi-step wizard with progress indicator
+- [ ] Progress indicators present for any flow with 3+ steps
+- [ ] Dense screens use progressive disclosure ("Show more" patterns)
+- [ ] One primary action per screen/sheet (clear call-to-action)
+
+### Destructive Actions
+
+- [ ] All delete operations use `DestructiveActionSheet`
+- [ ] "This action cannot be undone" warning present
+- [ ] Binary choice only (Cancel/Delete) - no other options
+- [ ] Red/destructive color styling for dangerous button
+
+#### Migration: Alert.alert → DestructiveActionSheet
+
+**Before (Alert.alert):**
+```tsx
+// ❌ Avoid - interrupts flow, lacks context
+const handleDelete = () => {
+  Alert.alert('Delete Item', 'Are you sure?', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+  ]);
+};
+```
+
+**After (DestructiveActionSheet):**
+```tsx
+// ✅ Better - consistent UX with visual feedback
+const [showDeleteSheet, setShowDeleteSheet] = useState(false);
+const [isDeleting, setIsDeleting] = useState(false);
+
+const handleDelete = () => setShowDeleteSheet(true);
+
+const handleConfirmDelete = async () => {
+  setIsDeleting(true);
+  try {
+    await deleteItem();
+    setShowDeleteSheet(false);
+    // Navigate or update state
+  } catch {
+    Alert.alert('Error', 'Failed to delete');
+    setIsDeleting(false);
+  }
+};
+
+// In render:
+<DestructiveActionSheet
+  isOpen={showDeleteSheet}
+  onClose={() => setShowDeleteSheet(false)}
+  title="Delete Item"
+  description="Are you sure you want to delete this item?"
+  confirmLabel="Delete"
+  onConfirm={handleConfirmDelete}
+  isLoading={isDeleting}
+/>
+```
+
+**When to keep Alert.alert:**
+- Non-critical warnings (network errors, validation messages)
+- Informational alerts with single "OK" button
+- Quick feedback that doesn't require confirmation
+
+### Form Design
+
+- [ ] Single-column layout for mobile forms
+- [ ] Smart defaults where possible (reduce required decisions)
+- [ ] Inline validation that clears on input
+- [ ] Required fields marked with asterisk (`*`)
+- [ ] Logical field grouping with section headers
+- [ ] Keyboard type matches input (number-pad, email, etc.)
+
+### Modal/Sheet Selection
+
+- [ ] Quick actions (≤4 fields, ≤5 options) use `BottomSheet`
+- [ ] Focused forms (5+ fields) use `FocusedSheet`
+- [ ] Multi-step flows (3+ views) use Stack Navigation
+- [ ] No nested modals (sheet-within-sheet)
+
+### Visual Focus
+
+- [ ] Glass effects used appropriately (not overused)
+- [ ] Clear visual hierarchy (one primary element per section)
+- [ ] Adequate whitespace between sections
+- [ ] Consistent iconography (same style, appropriate sizes)
+
+---
+
 ## Questions?
 
 If you're unsure whether something is consistent:

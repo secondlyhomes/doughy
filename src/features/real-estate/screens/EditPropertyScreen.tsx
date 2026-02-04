@@ -6,12 +6,13 @@
 
 import React, { useCallback } from 'react';
 import { View, Text, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { ThemedSafeAreaView } from '@/components';
-import { ScreenHeader, LoadingSpinner } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui';
 import { PropertyFormWizard } from '../components/PropertyFormWizard';
 import { useProperty, usePropertyMutations } from '../hooks/useProperties';
 import { useThemeColors } from '@/contexts/ThemeContext';
+import { useNativeHeader } from '@/hooks';
 import { Property } from '../types';
 
 export function EditPropertyScreen() {
@@ -22,6 +23,11 @@ export function EditPropertyScreen() {
 
   const { property, isLoading: isLoadingProperty, error: loadError } = useProperty(propertyId);
   const { updateProperty, isLoading: isUpdating, error: updateError } = usePropertyMutations();
+
+  const { headerOptions } = useNativeHeader({
+    title: 'Edit Property',
+    fallbackRoute: `/(tabs)/properties/${propertyId}`,
+  });
 
   const handleSubmit = useCallback(async (data: Partial<Property>) => {
     const updatedProperty = await updateProperty(propertyId, data);
@@ -48,38 +54,40 @@ export function EditPropertyScreen() {
 
   if (isLoadingProperty) {
     return (
-      <ThemedSafeAreaView className="flex-1">
-        <LoadingSpinner fullScreen text="Loading property..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading property..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   if (loadError || !property) {
     return (
-      <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: colors.background }}>
-        <Text className="text-center mb-4" style={{ color: colors.destructive }}>
-          {loadError?.message || 'Property not found'}
-        </Text>
-      </View>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: colors.background }}>
+          <Text className="text-center mb-4" style={{ color: colors.destructive }}>
+            {loadError?.message || 'Property not found'}
+          </Text>
+        </View>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Header */}
-      <ScreenHeader
-        title="Edit Property"
-        subtitle={property.address || 'Unknown address'}
-        bordered
-      />
-
-      <PropertyFormWizard
-        initialData={property}
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        isLoading={isUpdating}
-        submitLabel="Save Changes"
-      />
-    </ThemedSafeAreaView>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <PropertyFormWizard
+          initialData={property}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          isLoading={isUpdating}
+          submitLabel="Save Changes"
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }

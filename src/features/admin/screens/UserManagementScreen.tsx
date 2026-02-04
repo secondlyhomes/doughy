@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { User, Shield, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton } from '@/components/ui';
+import { SearchBar, TAB_BAR_SAFE_PADDING, Skeleton, Badge } from '@/components/ui';
 import { SPACING } from '@/constants/design-tokens';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getUsers, getRoleLabel, isAdminRole, type AdminUser, type UserFilters, type UserRole } from '../services/userService';
@@ -27,10 +27,6 @@ interface UserRowItemProps {
 
 const UserRowItem = React.memo(function UserRowItem({ user, onPress }: UserRowItemProps) {
   const colors = useThemeColors();
-
-  const getStatusColor = (isDeleted: boolean) => {
-    return isDeleted ? colors.destructive : colors.success;
-  };
 
   const handlePress = useCallback(() => {
     onPress(user);
@@ -55,15 +51,10 @@ const UserRowItem = React.memo(function UserRowItem({ user, onPress }: UserRowIt
           )}
         </View>
         <Text className="text-sm" style={{ color: colors.mutedForeground }}>{user.email}</Text>
-        <View className="flex-row items-center mt-1">
-          <View
-            className="w-2 h-2 rounded-full mr-1"
-            style={{ backgroundColor: getStatusColor(user.isDeleted) }}
-          />
-          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+        <View className="flex-row items-center mt-1 gap-2">
+          <Badge variant={user.isDeleted ? 'destructive' : 'success'} size="sm">
             {user.isDeleted ? 'Deleted' : 'Active'}
-          </Text>
-          <Text className="text-xs mx-2" style={{ color: colors.mutedForeground }}>•</Text>
+          </Badge>
           <Text className="text-xs" style={{ color: colors.mutedForeground }}>
             {getRoleLabel(user.role)}
           </Text>

@@ -284,7 +284,7 @@ export async function handleGmailAuthCallback(
 export async function getGoogleConnection(): Promise<GoogleConnection | null> {
   try {
     const { data, error } = await supabase
-      .from('rental_email_connections')
+      .schema('landlord').from('email_connections')
       .select('*')
       .eq('provider', 'gmail')
       .eq('is_active', true)

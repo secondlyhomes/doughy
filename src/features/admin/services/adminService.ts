@@ -59,12 +59,12 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
 
       // Get total leads
       supabase
-        .from('crm_leads')
+        .schema('crm').from('leads')
         .select('*', { count: 'exact', head: true }),
 
       // Get total properties
       supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .select('*', { count: 'exact', head: true }),
 
       // Get new users this week
@@ -76,7 +76,7 @@ export async function getAdminStats(): Promise<AdminStatsResult> {
 
       // Get new leads this week
       supabase
-        .from('crm_leads')
+        .schema('crm').from('leads')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', weekAgo.toISOString()),
     ]);

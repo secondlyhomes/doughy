@@ -30,7 +30,7 @@ export const inventoryKeys = {
 
 async function fetchInventoryByProperty(propertyId: string): Promise<InventoryItem[]> {
   const { data, error } = await supabase
-    .from('landlord_inventory_items')
+    .schema('landlord').from('inventory_items')
     .select('*')
     .eq('property_id', propertyId)
     .order('category', { ascending: true })
@@ -46,7 +46,7 @@ async function fetchInventoryByProperty(propertyId: string): Promise<InventoryIt
 
 async function fetchInventoryItem(id: string): Promise<InventoryItem | null> {
   const { data, error } = await supabase
-    .from('landlord_inventory_items')
+    .schema('landlord').from('inventory_items')
     .select('*')
     .eq('id', id)
     .single();
@@ -64,7 +64,7 @@ async function fetchInventoryItem(id: string): Promise<InventoryItem | null> {
 
 async function fetchInventoryCount(propertyId: string): Promise<number> {
   const { count, error } = await supabase
-    .from('landlord_inventory_items')
+    .schema('landlord').from('inventory_items')
     .select('*', { count: 'exact', head: true })
     .eq('property_id', propertyId);
 
@@ -124,7 +124,7 @@ export function useInventoryMutations(propertyId: string) {
   const createMutation = useMutation({
     mutationFn: async (data: CreateInventoryItemInput) => {
       const { data: newItem, error } = await supabase
-        .from('landlord_inventory_items')
+        .schema('landlord').from('inventory_items')
         .insert({
           ...data,
           photos: data.photos || [],
@@ -145,7 +145,7 @@ export function useInventoryMutations(propertyId: string) {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateInventoryItemInput }) => {
       const { data: updated, error } = await supabase
-        .from('landlord_inventory_items')
+        .schema('landlord').from('inventory_items')
         .update({
           ...data,
           updated_at: new Date().toISOString(),
@@ -167,7 +167,7 @@ export function useInventoryMutations(propertyId: string) {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('landlord_inventory_items')
+        .schema('landlord').from('inventory_items')
         .delete()
         .eq('id', id);
 

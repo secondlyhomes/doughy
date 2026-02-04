@@ -111,7 +111,7 @@ serve(async (req: Request) => {
 
     // Fetch the connection (verify user has access through workspace membership)
     const { data: connection, error: fetchError } = await supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .select('*')
       .eq('id', connectionId)
       .in('workspace_id', workspaceIds)
@@ -155,7 +155,7 @@ serve(async (req: Request) => {
 
     // Delete the connection from database
     const { error: deleteError } = await supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .delete()
       .eq('id', connectionId);
 

@@ -1,17 +1,17 @@
 // src/features/portfolio/components/MortgageSheet.tsx
-// Bottom sheet for adding/editing mortgage records
+// Focused sheet for adding/editing mortgage records
+// Uses FocusedSheet for reduced distraction on complex 10+ field form
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { BottomSheet, BottomSheetSection } from '@/components/ui/BottomSheet';
+import { FocusedSheet, FocusedSheetSection } from '@/components/ui/FocusedSheet';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import { Switch } from '@/components/ui/Switch';
 import { DatePicker } from '@/components/ui/DatePicker';
-import { SPACING } from '@/constants/design-tokens';
 import { calculateMonthlyPayment } from '@/lib/amortization';
 import type { PortfolioMortgage, MortgageInput, LoanType } from '../types';
 
@@ -146,176 +146,171 @@ export function MortgageSheet({
     isPrimary, escrowAmount, notes, onSubmit,
   ]);
 
+  const isFormValid = originalBalance && interestRate && monthlyPayment;
+
   return (
-    <BottomSheet
+    <FocusedSheet
       visible={visible}
       onClose={onClose}
       title={existingMortgage ? 'Edit Mortgage' : 'Add Mortgage'}
-      snapPoints={['90%']}
+      doneLabel={existingMortgage ? 'Update Mortgage' : 'Add Mortgage'}
+      onDone={handleSubmit}
+      doneDisabled={!isFormValid}
+      isSubmitting={isLoading}
     >
-      <View className="flex-1">
-          <BottomSheetSection title="Lender">
-            <View className="gap-4">
-              <View>
-                <Label>Lender Name</Label>
-                <Input
-                  value={lenderName}
-                  onChangeText={setLenderName}
-                  placeholder="Wells Fargo, Chase, etc."
-                />
-              </View>
-
-              <View>
-                <Label>Loan Type</Label>
-                <Select
-                  value={loanType}
-                  onValueChange={(v) => setLoanType(v as LoanType)}
-                  options={LOAN_TYPES}
-                  placeholder="Select loan type"
-                />
-              </View>
-
-              <View className="flex-row items-center justify-between">
-                <Label>Primary Mortgage</Label>
-                <Switch
-                  checked={isPrimary}
-                  onCheckedChange={setIsPrimary}
-                />
-              </View>
-            </View>
-          </BottomSheetSection>
-
-          <BottomSheetSection title="Loan Details">
-            <View className="gap-4">
-              <View className="flex-row gap-3">
-                <View className="flex-1">
-                  <Input
-                    label="Original Balance ($)"
-                    value={originalBalance}
-                    onChangeText={setOriginalBalance}
-                    placeholder="200000"
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-                <View className="flex-1">
-                  <Input
-                    label="Current Balance ($)"
-                    value={currentBalance}
-                    onChangeText={setCurrentBalance}
-                    placeholder="185000"
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-              </View>
-
-              <View className="flex-row gap-3">
-                <View className="flex-1">
-                  <Input
-                    label="Interest Rate (%)"
-                    value={interestRate}
-                    onChangeText={setInterestRate}
-                    placeholder="6.875"
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-                <View className="flex-1">
-                  <Label>Term</Label>
-                  <Select
-                    value={termMonths}
-                    onValueChange={setTermMonths}
-                    options={TERM_OPTIONS}
-                    placeholder="Select term"
-                  />
-                </View>
-              </View>
-
-              <View>
-                <View className="flex-row items-center justify-between mb-2">
-                  <Label>Monthly Payment (P&I)</Label>
-                  <View className="flex-row items-center gap-2">
-                    <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
-                      Auto-calculate
-                    </Text>
-                    <Switch
-                      checked={autoCalculatePayment}
-                      onCheckedChange={setAutoCalculatePayment}
-                    />
-                  </View>
-                </View>
-                <Input
-                  value={monthlyPayment}
-                  onChangeText={(v) => {
-                    setAutoCalculatePayment(false);
-                    setMonthlyPayment(v);
-                  }}
-                  placeholder="1050"
-                  keyboardType="decimal-pad"
-                />
-              </View>
-
-              <View>
-                <Input
-                  label="Escrow - Taxes & Insurance ($)"
-                  value={escrowAmount}
-                  onChangeText={setEscrowAmount}
-                  placeholder="Optional monthly escrow"
-                  keyboardType="decimal-pad"
-                />
-              </View>
-            </View>
-          </BottomSheetSection>
-
-          <BottomSheetSection title="Dates">
-            <View className="gap-4">
-              <DatePicker
-                label="Start Date"
-                value={startDate}
-                onChange={setStartDate}
-                mode="native"
-              />
-
-              <DatePicker
-                label="Maturity Date (Optional)"
-                value={maturityDate}
-                onChange={setMaturityDate}
-                mode="native"
-                placeholder="Select maturity date"
-              />
-            </View>
-          </BottomSheetSection>
-
-          <BottomSheetSection title="Notes">
+      <FocusedSheetSection title="Lender">
+        <View className="gap-4">
+          <View>
+            <Label>Lender Name</Label>
             <Input
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Optional notes..."
-              multiline
-              numberOfLines={3}
+              value={lenderName}
+              onChangeText={setLenderName}
+              placeholder="Wells Fargo, Chase, etc."
             />
-          </BottomSheetSection>
+          </View>
 
-          <View className="px-4 pb-6 gap-3">
-            <Button
-              onPress={handleSubmit}
-              disabled={isLoading || !originalBalance || !interestRate || !monthlyPayment}
-              className="w-full"
-            >
-              {isLoading ? 'Saving...' : existingMortgage ? 'Update Mortgage' : 'Add Mortgage'}
-            </Button>
+          <View>
+            <Label>Loan Type</Label>
+            <Select
+              value={loanType}
+              onValueChange={(v) => setLoanType(v as LoanType)}
+              options={LOAN_TYPES}
+              placeholder="Select loan type"
+            />
+          </View>
 
-            {existingMortgage && onDelete && (
-              <Button
-                variant="destructive"
-                onPress={onDelete}
-                disabled={isLoading}
-                className="w-full"
-              >
-                Delete Mortgage
-              </Button>
-            )}
+          <View className="flex-row items-center justify-between">
+            <Label>Primary Mortgage</Label>
+            <Switch
+              checked={isPrimary}
+              onCheckedChange={setIsPrimary}
+            />
           </View>
         </View>
-    </BottomSheet>
+      </FocusedSheetSection>
+
+      <FocusedSheetSection title="Loan Details">
+        <View className="gap-4">
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <Input
+                label="Original Balance ($)"
+                value={originalBalance}
+                onChangeText={setOriginalBalance}
+                placeholder="200000"
+                keyboardType="decimal-pad"
+              />
+            </View>
+            <View className="flex-1">
+              <Input
+                label="Current Balance ($)"
+                value={currentBalance}
+                onChangeText={setCurrentBalance}
+                placeholder="185000"
+                keyboardType="decimal-pad"
+              />
+            </View>
+          </View>
+
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <Input
+                label="Interest Rate (%)"
+                value={interestRate}
+                onChangeText={setInterestRate}
+                placeholder="6.875"
+                keyboardType="decimal-pad"
+              />
+            </View>
+            <View className="flex-1">
+              <Label>Term</Label>
+              <Select
+                value={termMonths}
+                onValueChange={setTermMonths}
+                options={TERM_OPTIONS}
+                placeholder="Select term"
+              />
+            </View>
+          </View>
+
+          <View>
+            <View className="flex-row items-center justify-between mb-2">
+              <Label>Monthly Payment (P&I)</Label>
+              <View className="flex-row items-center gap-2">
+                <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+                  Auto-calculate
+                </Text>
+                <Switch
+                  checked={autoCalculatePayment}
+                  onCheckedChange={setAutoCalculatePayment}
+                />
+              </View>
+            </View>
+            <Input
+              value={monthlyPayment}
+              onChangeText={(v) => {
+                setAutoCalculatePayment(false);
+                setMonthlyPayment(v);
+              }}
+              placeholder="1050"
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          <View>
+            <Input
+              label="Escrow - Taxes & Insurance ($)"
+              value={escrowAmount}
+              onChangeText={setEscrowAmount}
+              placeholder="Optional monthly escrow"
+              keyboardType="decimal-pad"
+            />
+          </View>
+        </View>
+      </FocusedSheetSection>
+
+      <FocusedSheetSection title="Dates">
+        <View className="gap-4">
+          <DatePicker
+            label="Start Date"
+            value={startDate}
+            onChange={setStartDate}
+            mode="native"
+          />
+
+          <DatePicker
+            label="Maturity Date (Optional)"
+            value={maturityDate}
+            onChange={setMaturityDate}
+            mode="native"
+            placeholder="Select maturity date"
+          />
+        </View>
+      </FocusedSheetSection>
+
+      <FocusedSheetSection title="Notes">
+        <Input
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Optional notes..."
+          multiline
+          numberOfLines={3}
+        />
+      </FocusedSheetSection>
+
+      {existingMortgage && onDelete && (
+        <View className="pt-4">
+          <Button
+            variant="destructive"
+            onPress={onDelete}
+            disabled={isLoading}
+            className="w-full"
+          >
+            Delete Mortgage
+          </Button>
+        </View>
+      )}
+    </FocusedSheet>
   );
 }
 

@@ -16,7 +16,7 @@ export const seedStarterLandlord: SeedScenario = {
 
     // Create a property
     const { data: property, error: propertyError } = await supabase
-      .from('landlord_properties')
+      .schema('landlord').from('properties')
       .insert({
         user_id: userId,
         name: 'Beach House Retreat',
@@ -48,7 +48,7 @@ export const seedStarterLandlord: SeedScenario = {
     console.log('Created property:', property.id);
 
     // Create contacts
-    const { data: contacts, error: contactsError } = await supabase.from('crm_contacts').insert([
+    const { data: contacts, error: contactsError } = await supabase.schema('crm').from('contacts').insert([
       {
         user_id: userId,
         first_name: 'Sarah',
@@ -96,7 +96,7 @@ export const seedStarterLandlord: SeedScenario = {
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const { error: bookingsError } = await supabase.from('landlord_bookings').insert([
+    const { error: bookingsError } = await supabase.schema('landlord').from('bookings').insert([
       {
         user_id: userId,
         property_id: property.id,
@@ -131,7 +131,7 @@ export const seedStarterLandlord: SeedScenario = {
     console.log('Created bookings');
 
     // Create conversations
-    const { data: convos, error: convosError } = await supabase.from('landlord_conversations').insert([
+    const { data: convos, error: convosError } = await supabase.schema('landlord').from('conversations').insert([
       {
         user_id: userId,
         contact_id: contacts[0].id,
@@ -172,7 +172,7 @@ export const seedStarterLandlord: SeedScenario = {
     console.log('Created conversations:', convos.length);
 
     // Create messages for each conversation
-    const { error: messagesError } = await supabase.from('landlord_messages').insert([
+    const { error: messagesError } = await supabase.schema('landlord').from('messages').insert([
       // Convo 1 - Airbnb guest
       { conversation_id: convos[0].id, direction: 'inbound', content: 'Hi! Is your beach house available next week?', content_type: 'text', sent_by: 'contact' },
       { conversation_id: convos[0].id, direction: 'outbound', content: 'Yes it is! Would you like me to send you the details?', content_type: 'text', sent_by: 'ai', ai_confidence: 95 },
@@ -192,7 +192,7 @@ export const seedStarterLandlord: SeedScenario = {
     console.log('Created messages');
 
     // Create a pending AI response
-    const { error: aiQueueError } = await supabase.from('landlord_ai_queue_items').insert({
+    const { error: aiQueueError } = await supabase.schema('landlord').from('ai_queue_items').insert({
       user_id: userId,
       conversation_id: convos[0].id,
       suggested_response: 'I\'d be happy to share the details! The Beach House Retreat features 3 bedrooms, 2 bathrooms, a private pool, and is just a 5-minute walk from the beach. The nightly rate is $250 with a $150 cleaning fee. Would you like to proceed with a booking?',

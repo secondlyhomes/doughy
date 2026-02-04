@@ -41,14 +41,17 @@ export async function isUserBlocked(
 
   try {
     const { data, error } = await supabase
-      .from('ai_moltbot_user_threat_scores')
+      .schema('ai')
+      .from('moltbot_user_threat_scores')
       .select('is_blocked')
       .eq('user_id', userId)
       .maybeSingle();
 
     if (error) {
-      console.error('[ThreatTracker] Error checking blocked status:', error.message);
-      return false; // Fail open
+      console.error('[ThreatTracker] CRITICAL: Error checking blocked status:', error.message);
+      // SECURITY: Fail closed - assume user IS blocked when status cannot be verified
+      // This prevents blocked users from bypassing the check by causing DB errors
+      return true;
     }
 
     const isBlocked = data?.is_blocked || false;
@@ -58,8 +61,9 @@ export async function isUserBlocked(
 
     return isBlocked;
   } catch (err) {
-    console.error('[ThreatTracker] Exception checking blocked status:', err);
-    return false;
+    console.error('[ThreatTracker] CRITICAL: Exception checking blocked status:', err);
+    // SECURITY: Fail closed - assume user IS blocked when status cannot be verified
+    return true;
   }
 }
 
@@ -133,7 +137,8 @@ export async function getUserThreatScore(
 ): Promise<ThreatScoreResult | null> {
   try {
     const { data, error } = await supabase
-      .from('ai_moltbot_user_threat_scores')
+      .schema('ai')
+      .from('moltbot_user_threat_scores')
       .select('current_score, is_flagged, is_blocked')
       .eq('user_id', userId)
       .maybeSingle();
@@ -167,7 +172,8 @@ export async function clearUserThreatScore(
 ): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('ai_moltbot_user_threat_scores')
+      .schema('ai')
+      .from('moltbot_user_threat_scores')
       .update({
         current_score: 0,
         is_flagged: false,

@@ -21,7 +21,7 @@ export async function createContact(
   data: ContactSeedData
 ): Promise<CreatedContact> {
   const { data: contact, error } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .insert({
       user_id: userId,
       first_name: data.firstName,
@@ -57,7 +57,7 @@ export async function createContacts(
   contactsData: ContactSeedData[]
 ): Promise<CreatedContact[]> {
   const { data: contacts, error } = await supabase
-    .from('crm_contacts')
+    .schema('crm').from('contacts')
     .insert(
       contactsData.map((c) => ({
         user_id: userId,
@@ -95,7 +95,7 @@ export async function createContacts(
 export async function deleteLandlordContacts(userId: string): Promise<void> {
   try {
     const { data: contacts, error: fetchError } = await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .select('id, contact_types')
       .eq('user_id', userId);
 
@@ -115,7 +115,7 @@ export async function deleteLandlordContacts(userId: string): Promise<void> {
 
     // Step 1: Mark as soft-deleted first (bypasses trigger on actual DELETE)
     const { error: softDeleteError } = await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .update({ is_deleted: true })
       .in('id', landlordContactIds);
 
@@ -125,7 +125,7 @@ export async function deleteLandlordContacts(userId: string): Promise<void> {
 
     // Step 2: DELETE actually removes the rows (trigger won't fire when is_deleted=true)
     const { error: deleteError } = await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .delete()
       .in('id', landlordContactIds);
 

@@ -8,7 +8,6 @@ import { Wrench, Plus, Filter, AlertTriangle } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import {
-  LoadingSpinner,
   SimpleFAB,
   TAB_BAR_SAFE_PADDING,
   Badge,
@@ -18,6 +17,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from '@/components/ui';
+import { SkeletonList, ListItemSkeleton } from '@/components/ui/CardSkeletons';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { useNativeHeader } from '@/hooks';
@@ -93,7 +93,9 @@ export function MaintenanceListScreen() {
       <>
         <Stack.Screen options={headerOptions} />
         <ThemedSafeAreaView className="flex-1" edges={[]}>
-          <LoadingSpinner fullScreen text="Loading maintenance..." />
+          <View style={{ padding: SPACING.md }}>
+            <SkeletonList count={5} component={ListItemSkeleton} />
+          </View>
         </ThemedSafeAreaView>
       </>
     );
@@ -196,6 +198,7 @@ export function MaintenanceListScreen() {
             />
           }
           ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
+          keyboardShouldPersistTaps="handled"
         />
       )}
 

@@ -15,7 +15,8 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { withOpacity } from '@/lib/design-utils';
+import { Badge } from '@/components/ui';
+import { getStatusBadgeVariant } from '@/lib/formatters';
 import type { DripEnrollment } from '../../types';
 
 interface EnrollmentCardProps {
@@ -54,24 +55,6 @@ export function EnrollmentCard({
     }
   };
 
-  const getStatusColor = () => {
-    switch (enrollment.status) {
-      case 'active':
-        return colors.success;
-      case 'paused':
-        return colors.warning;
-      case 'completed':
-      case 'responded':
-        return colors.info;
-      case 'converted':
-        return colors.primary;
-      case 'opted_out':
-      case 'bounced':
-        return colors.destructive;
-      default:
-        return colors.mutedForeground;
-    }
-  };
 
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return '-';
@@ -93,14 +76,9 @@ export function EnrollmentCard({
             {contactName}
           </Text>
         </View>
-        <View
-          className="px-2 py-0.5 rounded-full"
-          style={{ backgroundColor: withOpacity(getStatusColor(), 'light') }}
-        >
-          <Text className="text-xs capitalize" style={{ color: getStatusColor() }}>
-            {enrollment.status.replace('_', ' ')}
-          </Text>
-        </View>
+        <Badge variant={getStatusBadgeVariant(enrollment.status)} size="sm">
+          {enrollment.status.replace('_', ' ')}
+        </Badge>
       </View>
 
       <View className="flex-row items-center justify-between mt-2">

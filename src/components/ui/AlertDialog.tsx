@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { cn } from '@/lib/utils';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { PRESS_OPACITY } from '@/constants/design-tokens';
+import { PRESS_OPACITY, GLASS_INTENSITY } from '@/constants/design-tokens';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
 import { GlassBackdrop } from './GlassView';
 
@@ -37,7 +37,7 @@ export function AlertDialog({ open, onOpenChange, children, useGlassBackdrop = t
     if (useGlassBackdrop) {
       return (
         <GlassBackdrop
-          intensity={40}
+          intensity={GLASS_INTENSITY.light}
           style={alertDialogStyles.backdrop}
         >
           {/* No backdrop press handler - intentionally blocks outside taps */}

@@ -235,7 +235,7 @@ serve(async (req: Request) => {
 
     // Check if connection already exists for this workspace
     const { data: existing } = await supabase
-      .from('rental_email_connections')
+      .schema('integrations').from('email_connections')
       .select('id')
       .eq('workspace_id', workspaceId)
       .eq('provider', 'gmail')
@@ -246,7 +246,7 @@ serve(async (req: Request) => {
     if (existing) {
       // Update existing connection
       const { error: updateError } = await supabase
-        .from('rental_email_connections')
+        .schema('integrations').from('email_connections')
         .update({
           email_address: userInfo.email,
           access_token_encrypted: accessTokenEncrypted,
@@ -274,7 +274,7 @@ serve(async (req: Request) => {
     } else {
       // Create new connection
       const { data: newConnection, error: insertError } = await supabase
-        .from('rental_email_connections')
+        .schema('integrations').from('email_connections')
         .insert({
           workspace_id: workspaceId,
           user_id: user.id,

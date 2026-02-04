@@ -118,7 +118,7 @@ export function StepUpVerificationSheet({
                 width: 64,
                 height: 64,
                 borderRadius: 32,
-                backgroundColor: withOpacity(colors.destructive, 0.2),
+                backgroundColor: withOpacity(colors.destructive, 'medium'),
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -170,7 +170,7 @@ export function StepUpVerificationSheet({
                 width: 64,
                 height: 64,
                 borderRadius: 32,
-                backgroundColor: withOpacity(colors.warning, 0.2),
+                backgroundColor: withOpacity(colors.warning, 'medium'),
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -205,7 +205,7 @@ export function StepUpVerificationSheet({
           {/* Security note */}
           <View
             style={{
-              backgroundColor: withOpacity(colors.info, 0.1),
+              backgroundColor: withOpacity(colors.info, 'muted'),
               borderRadius: BORDER_RADIUS.md,
               padding: SPACING.md,
               marginBottom: SPACING.lg,
@@ -238,7 +238,7 @@ export function StepUpVerificationSheet({
           {error && (
             <View
               style={{
-                backgroundColor: withOpacity(colors.destructive, 0.1),
+                backgroundColor: withOpacity(colors.destructive, 'muted'),
                 borderRadius: BORDER_RADIUS.md,
                 padding: SPACING.sm,
                 marginBottom: SPACING.md,

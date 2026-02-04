@@ -487,13 +487,13 @@ serve(withAIFirewall({
   }
 
   // Fetch contact and property
-  const { data: contact } = await supabase.from('crm_contacts').select('*').eq('id', contact_id).single();
+  const { data: contact } = await supabase.schema('crm').from('contacts').select('*').eq('id', contact_id).single();
   const contactTypes = contact?.contact_types || [];
   const contactType = contactTypes.includes('tenant') ? 'tenant' : contactTypes.includes('guest') ? 'guest' : 'lead';
 
   let property = null;
   if (context?.property_id) {
-    const { data } = await supabase.from('rental_properties').select('*').eq('id', context.property_id).single();
+    const { data } = await supabase.schema('landlord').from('properties').select('*').eq('id', context.property_id).single();
     property = data;
   }
 
@@ -561,7 +561,7 @@ serve(withAIFirewall({
     expiresAt.setHours(expiresAt.getHours() + 24);
 
     const { data: queueItem } = await supabase
-      .from('rental_ai_queue')
+      .schema('ai').from('queue_items')
       .insert({
         user_id: authenticatedUserId,
         conversation_id,
@@ -583,7 +583,7 @@ serve(withAIFirewall({
 
   // Log outcome for learning
   if (settings.learning.enabled) {
-    await supabase.from('ai_response_outcomes').insert({
+    await supabase.schema('ai').from('response_outcomes').insert({
       user_id: authenticatedUserId,
       conversation_id,
       message_id,

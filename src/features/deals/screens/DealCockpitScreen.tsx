@@ -2,7 +2,7 @@
 // Deal Cockpit - The main "Apple screen" for managing a single deal
 // Components extracted to ./cockpit/ for maintainability
 
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,16 +12,22 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { haptic } from '@/lib/haptics';
-import { BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { BORDER_RADIUS, ICON_SIZES, SPACING } from '@/constants/design-tokens';
 import {
   Calculator,
   Folder,
   AlertCircle,
   Check,
   ChevronRight,
+  MoreHorizontal,
+  ArrowLeft,
+  Handshake,
+  Building2,
+  Plus,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { useFocusMode } from '@/contexts/FocusModeContext';
@@ -33,19 +39,20 @@ import {
   FAB_BOTTOM_OFFSET,
   FAB_SIZE,
 } from '@/components/ui';
+import { ContextSwitcher, type ContextOption } from '@/components/ui/ContextSwitcher';
 import { EvidenceTrailModal } from '@/components/deals';
 import { useDeal } from '../hooks/useDeals';
 import { getDealAddress, isDealClosed } from '../types';
+import { formatDate } from '@/lib/formatters';
 import {
   DealTimeline,
   AddDealEventSheet,
   StageStepper,
   DealActionsSheet,
 } from '../components';
-import { getSuggestionsForDeal, AISuggestion } from '../services/aiSuggestions';
+import { getSuggestionsForDeal, AISuggestion } from '../services/ai-suggestions';
 import { ConversationsView } from '@/features/conversations/components';
 import { useDealConversations } from '@/features/conversations/hooks';
-import { EntityHeader } from '@/components/navigation';
 import { DealAssistant } from '@/features/assistant/components';
 import { useDealCockpitHandlers, OverviewTab, OffersTab } from './cockpit';
 
@@ -64,6 +71,8 @@ export function DealCockpitScreen() {
   const params = useLocalSearchParams();
   const dealId = params.dealId as string;
   const colors = useThemeColors();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const { deal, isLoading, error, refetch } = useDeal(dealId);
 
@@ -97,6 +106,89 @@ export function DealCockpitScreen() {
   const [showAddEventSheet, setShowAddEventSheet] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+
+  // Build context options for Deal | Property switcher
+  const hasLinkedProperty = !!deal?.property_id;
+  const contextOptions = useMemo<ContextOption[]>(() => {
+    return [
+      {
+        id: 'deal',
+        label: 'Deal',
+        icon: <Handshake size={14} color={colors.foreground} />,
+      },
+      {
+        id: 'property',
+        label: 'Property',
+        icon: <Building2 size={14} color={hasLinkedProperty ? colors.mutedForeground : colors.mutedForeground} />,
+        disabled: !hasLinkedProperty,
+        disabledReason: 'No property linked',
+      },
+    ];
+  }, [hasLinkedProperty, colors]);
+
+  // Handle context switch to property
+  const handleContextSwitch = useCallback(
+    (newContextId: string) => {
+      if (newContextId === 'deal') return;
+      if (newContextId === 'property' && deal?.property_id) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.push({
+          pathname: `/(tabs)/deals/property/${deal.property_id}` as any,
+          params: { fromDeal: dealId },
+        });
+      }
+    },
+    [deal?.property_id, dealId, router]
+  );
+
+  // Native header options with context switcher
+  const headerOptions = useMemo(() => ({
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.background },
+    headerShadowVisible: false,
+    headerStatusBarHeight: insets.top,
+    headerTitle: () => (
+      <View style={{ alignItems: 'center' }}>
+        {hasLinkedProperty ? (
+          <ContextSwitcher
+            contexts={contextOptions}
+            value="deal"
+            onChange={handleContextSwitch}
+            size="sm"
+          />
+        ) : (
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert('Link Property', 'Property linking coming soon!', [{ text: 'OK' }]);
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: SPACING.xs,
+              paddingHorizontal: SPACING.md,
+              borderRadius: 20,
+              backgroundColor: colors.muted,
+            }}
+          >
+            <Plus size={14} color={colors.primary} />
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary, marginLeft: SPACING.xs }}>
+              Link Property
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    ),
+    headerLeft: () => (
+      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
+        <ArrowLeft size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+    headerRight: () => (
+      <TouchableOpacity onPress={() => setShowActionsSheet(true)} style={{ padding: SPACING.sm }}>
+        <MoreHorizontal size={ICON_SIZES.lg} color={colors.foreground} />
+      </TouchableOpacity>
+    ),
+  }), [colors, insets.top, hasLinkedProperty, contextOptions, handleContextSwitch, handleBack]);
   const [evidenceModal, setEvidenceModal] = useState<{
     visible: boolean;
     field: 'mao' | 'profit' | 'risk' | null;
@@ -106,6 +198,9 @@ export function DealCockpitScreen() {
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
 
   // Fetch AI suggestions when deal changes
+  // Using a stable serialization of deal properties to avoid stale closure issues
+  const dealKey = deal ? `${deal.id}-${deal.stage}-${deal.lead_id ?? ''}-${deal.strategy ?? ''}` : null;
+
   useEffect(() => {
     if (!deal || isDealClosed(deal)) {
       setSuggestions([]);
@@ -124,7 +219,9 @@ export function DealCockpitScreen() {
     return () => {
       mounted = false;
     };
-  }, [deal?.id, deal?.stage, deal?.lead_id, deal?.strategy]);
+    // Use dealKey which captures all relevant deal properties in a stable string
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dealKey]);
 
   // Evidence modal handlers
   const handleEvidencePress = useCallback(
@@ -145,49 +242,42 @@ export function DealCockpitScreen() {
   // Loading state
   if (isLoading) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading deal..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading deal..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   // Error state
   if (error || !deal) {
     return (
-      <ThemedSafeAreaView
-        className="flex-1 items-center justify-center px-4"
-        edges={['top']}
-      >
-        <AlertCircle size={ICON_SIZES['2xl']} color={colors.destructive} />
-        <Text
-          className="text-center mt-4 mb-4"
-          style={{ color: colors.destructive }}
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView
+          className="flex-1 items-center justify-center px-4"
+          edges={[]}
         >
-          {error?.message || 'Deal not found'}
-        </Text>
-        <Button onPress={handleBack}>Go Back</Button>
-      </ThemedSafeAreaView>
+          <AlertCircle size={ICON_SIZES['2xl']} color={colors.destructive} />
+          <Text
+            className="text-center mt-4 mb-4"
+            style={{ color: colors.destructive }}
+          >
+            {error?.message || 'Deal not found'}
+          </Text>
+          <Button onPress={handleBack}>Go Back</Button>
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Entity Header */}
-      <EntityHeader
-        context="deal"
-        dealId={deal.id}
-        propertyId={deal.property_id}
-        hasLinkedProperty={!!deal.property_id}
-        phoneNumber={deal.lead?.phone}
-        onMore={() => setShowActionsSheet(true)}
-        onLinkProperty={() => {
-          Alert.alert('Link Property', 'Property linking coming soon!', [
-            { text: 'OK' },
-          ]);
-        }}
-      />
-
-      {/* Main ScrollView */}
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {/* Main ScrollView */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
@@ -361,121 +451,122 @@ export function DealCockpitScreen() {
         </View>
       </ScrollView>
 
-      {/* Deal Closed Banner */}
-      {isDealClosed(deal) && (
-        <View
-          className="mx-4 mb-4 rounded-xl p-4 flex-row items-center"
-          style={{
-            backgroundColor:
-              deal.stage === 'closed_won'
-                ? withOpacity(colors.success, 'light')
-                : colors.muted,
-          }}
-        >
-          <Check
-            size={ICON_SIZES.xl}
-            color={
-              deal.stage === 'closed_won' ? colors.success : colors.mutedForeground
-            }
-          />
-          <View className="ml-3">
-            <Text
-              className="font-semibold"
-              style={{
-                color:
-                  deal.stage === 'closed_won'
-                    ? colors.success
-                    : colors.mutedForeground,
-              }}
-            >
-              {deal.stage === 'closed_won' ? 'Deal Closed - Won!' : 'Deal Closed'}
-            </Text>
-            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-              {deal.updated_at
-                ? `Closed on ${new Date(deal.updated_at).toLocaleDateString()}`
-                : 'Deal has been finalized'}
-            </Text>
+        {/* Deal Closed Banner */}
+        {isDealClosed(deal) && (
+          <View
+            className="mx-4 mb-4 rounded-xl p-4 flex-row items-center"
+            style={{
+              backgroundColor:
+                deal.stage === 'closed_won'
+                  ? withOpacity(colors.success, 'light')
+                  : colors.muted,
+            }}
+          >
+            <Check
+              size={ICON_SIZES.xl}
+              color={
+                deal.stage === 'closed_won' ? colors.success : colors.mutedForeground
+              }
+            />
+            <View className="ml-3">
+              <Text
+                className="font-semibold"
+                style={{
+                  color:
+                    deal.stage === 'closed_won'
+                      ? colors.success
+                      : colors.mutedForeground,
+                }}
+              >
+                {deal.stage === 'closed_won' ? 'Deal Closed - Won!' : 'Deal Closed'}
+              </Text>
+              <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+                {deal.updated_at
+                  ? `Closed on ${formatDate(deal.updated_at)}`
+                  : 'Deal has been finalized'}
+              </Text>
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* AI Assistant */}
-      <DealAssistant dealId={deal.id} />
+        {/* AI Assistant */}
+        <DealAssistant dealId={deal.id} />
 
-      {/* Add Event Sheet */}
-      <AddDealEventSheet
-        visible={showAddEventSheet}
-        dealId={deal.id}
-        dealAddress={getDealAddress(deal)}
-        onClose={() => setShowAddEventSheet(false)}
-        onSaved={refetch}
-      />
+        {/* Add Event Sheet */}
+        <AddDealEventSheet
+          visible={showAddEventSheet}
+          dealId={deal.id}
+          dealAddress={getDealAddress(deal)}
+          onClose={() => setShowAddEventSheet(false)}
+          onSaved={refetch}
+        />
 
-      {/* Deal Actions Sheet */}
-      <DealActionsSheet
-        deal={deal}
-        isOpen={showActionsSheet}
-        onClose={() => setShowActionsSheet(false)}
-        onEdit={() => {
-          Alert.alert('Edit Deal', 'Edit deal functionality coming soon!', [
-            { text: 'OK' },
-          ]);
-        }}
-        onDelete={() => {
-          Alert.alert(
-            'Delete Deal',
-            'Are you sure you want to delete this deal? This action cannot be undone.',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: () => {
-                  Alert.alert('Delete', 'Delete functionality coming soon!');
+        {/* Deal Actions Sheet */}
+        <DealActionsSheet
+          deal={deal}
+          isOpen={showActionsSheet}
+          onClose={() => setShowActionsSheet(false)}
+          onEdit={() => {
+            Alert.alert('Edit Deal', 'Edit deal functionality coming soon!', [
+              { text: 'OK' },
+            ]);
+          }}
+          onDelete={() => {
+            Alert.alert(
+              'Delete Deal',
+              'Are you sure you want to delete this deal? This action cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: () => {
+                    Alert.alert('Delete', 'Delete functionality coming soon!');
+                  },
                 },
-              },
-            ]
-          );
-        }}
-      />
+              ]
+            );
+          }}
+        />
 
-      {/* Evidence Trail Modal */}
-      <EvidenceTrailModal
-        visible={evidenceModal.visible}
-        onClose={handleCloseEvidenceModal}
-        fieldName={
-          evidenceModal.field === 'mao'
-            ? 'Maximum Allowable Offer'
-            : evidenceModal.field === 'profit'
-              ? 'Profit / Cash Flow'
-              : evidenceModal.field === 'risk'
-                ? 'Risk Score'
-                : ''
-        }
-        currentValue={
-          evidenceModal.field === 'mao'
-            ? '$0'
-            : evidenceModal.field === 'profit'
+        {/* Evidence Trail Modal */}
+        <EvidenceTrailModal
+          visible={evidenceModal.visible}
+          onClose={handleCloseEvidenceModal}
+          fieldName={
+            evidenceModal.field === 'mao'
+              ? 'Maximum Allowable Offer'
+              : evidenceModal.field === 'profit'
+                ? 'Profit / Cash Flow'
+                : evidenceModal.field === 'risk'
+                  ? 'Risk Score'
+                  : ''
+          }
+          currentValue={
+            evidenceModal.field === 'mao'
               ? '$0'
-              : '0/5'
-        }
-        confidence="medium"
-        sources={[
-          {
-            id: '1',
-            source: 'AI Estimate',
-            value: 'Calculated from property data',
-            confidence: 'medium',
-            timestamp: new Date().toISOString(),
-            isActive: true,
-          },
-        ]}
-        onOverride={(value) => {
-          Alert.alert('Override', `Would set value to: ${value}`);
-          handleCloseEvidenceModal();
-        }}
-      />
-    </ThemedSafeAreaView>
+              : evidenceModal.field === 'profit'
+                ? '$0'
+                : '0/5'
+          }
+          confidence="medium"
+          sources={[
+            {
+              id: '1',
+              source: 'AI Estimate',
+              value: 'Calculated from property data',
+              confidence: 'medium',
+              timestamp: new Date().toISOString(),
+              isActive: true,
+            },
+          ]}
+          onOverride={(value) => {
+            Alert.alert('Override', `Would set value to: ${value}`);
+            handleCloseEvidenceModal();
+          }}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

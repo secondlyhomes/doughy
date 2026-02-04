@@ -41,7 +41,7 @@ function mapRowToLead(row: CrmLeadRow): Lead {
 
 async function fetchLeads(): Promise<Lead[]> {
   const { data, error } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .select('*')
     .eq('is_deleted', false)
     .order('created_at', { ascending: false });
@@ -66,7 +66,7 @@ async function fetchLeadsPaginated(pageParam: number = 0): Promise<PaginatedLead
   const to = from + PAGE_SIZE - 1;
 
   const { data, error, count } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .select('*', { count: 'exact' })
     .eq('is_deleted', false)
     .order('created_at', { ascending: false })
@@ -90,7 +90,7 @@ async function fetchLeadsPaginated(pageParam: number = 0): Promise<PaginatedLead
 
 async function fetchLeadById(id: string): Promise<Lead | null> {
   const { data, error } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .select('*')
     .eq('id', id)
     .single();
@@ -142,7 +142,7 @@ async function createLead(formData: LeadFormData): Promise<Lead> {
   };
 
   const { data, error } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .insert(insertData)
     .select()
     .single();
@@ -183,7 +183,7 @@ async function updateLead(id: string, updates: Partial<Lead>): Promise<Lead> {
   if (updates.opt_status !== undefined) updateData.opt_status = updates.opt_status;
 
   const { data, error } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -214,7 +214,7 @@ async function updateLead(id: string, updates: Partial<Lead>): Promise<Lead> {
 async function deleteLead(id: string): Promise<void> {
   // Soft delete by setting is_deleted flag
   const { error } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .update({ is_deleted: true, updated_at: new Date().toISOString() })
     .eq('id', id);
 
@@ -228,7 +228,7 @@ async function deleteLead(id: string): Promise<void> {
 async function fetchLeadsWithProperties(): Promise<LeadWithProperties[]> {
   // First fetch all leads
   const { data: leadsData, error: leadsError } = await supabase
-    .from('crm_leads')
+    .schema('crm').from('leads')
     .select('*')
     .eq('is_deleted', false)
     .order('created_at', { ascending: false });
@@ -241,10 +241,10 @@ async function fetchLeadsWithProperties(): Promise<LeadWithProperties[]> {
   // Then fetch all properties with lead_id, including their images
   // Use * with join syntax (same pattern as useProperties.ts) to ensure images are properly fetched
   const { data: propertiesData, error: propertiesError } = await supabase
-    .from('investor_properties')
+    .schema('investor').from('properties')
     .select(`
       *,
-      images:investor_property_images(id, url, is_primary, label)
+      images:property_images(id, url, is_primary, label)
     `)
     .not('lead_id', 'is', null);
 
@@ -299,11 +299,11 @@ async function fetchLeadsWithProperties(): Promise<LeadWithProperties[]> {
 // Fetch orphan properties (no lead assigned) - for "Unknown Seller" section
 async function fetchOrphanProperties(): Promise<LeadWithProperties['properties']> {
   const { data, error } = await supabase
-    .from('investor_properties')
+    .schema('investor').from('properties')
     .select(`
       id, address_line_1, address_line_2, city, state, zip,
       bedrooms, bathrooms, square_feet, arv, purchase_price, status, property_type,
-      images:investor_property_images(id, url, is_primary, label)
+      images:property_images(id, url, is_primary, label)
     `)
     .is('lead_id', null)
     .order('created_at', { ascending: false });

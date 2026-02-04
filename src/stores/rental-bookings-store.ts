@@ -113,19 +113,11 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
       fetchBookings: async () => {
         set({ isLoading: true, error: null });
         try {
-          const { data, error } = await supabase
-            .from('landlord_bookings')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:landlord_properties(id, name, address),
-              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
-            `)
-            .order('start_date', { ascending: true });
+          // Use RPC function for cross-schema join
+          const { getBookingsWithContact, mapBookingRPC } = await import('@/lib/rpc');
+          const data = await getBookingsWithContact();
 
-          if (error) throw error;
-
-          const bookings = (data || []) as BookingWithRelations[];
+          const bookings = data.map(mapBookingRPC) as BookingWithRelations[];
 
           set({
             bookings: bookings.map(({ contact, property, room, ...b }) => b),
@@ -140,20 +132,16 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
 
       fetchBookingById: async (id: string) => {
         try {
-          const { data, error } = await supabase
-            .from('landlord_bookings')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:landlord_properties(id, name, address),
-              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
-            `)
-            .eq('id', id)
-            .single();
+          // Use RPC function for cross-schema join
+          const { getBookingById, mapBookingRPC } = await import('@/lib/rpc');
+          const data = await getBookingById(id);
 
-          if (error) throw error;
+          if (!data) {
+            set({ error: 'Booking not found' });
+            return null;
+          }
 
-          const booking = data as BookingWithRelations;
+          const booking = mapBookingRPC(data) as BookingWithRelations;
 
           // Update the booking in local state
           set((state) => ({
@@ -173,20 +161,11 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
       fetchBookingsByProperty: async (propertyId: string) => {
         set({ isLoading: true, error: null });
         try {
-          const { data, error } = await supabase
-            .from('landlord_bookings')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:landlord_properties(id, name, address),
-              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
-            `)
-            .eq('property_id', propertyId)
-            .order('start_date', { ascending: true });
+          // Use RPC function for cross-schema join
+          const { getBookingsWithContact, mapBookingRPC } = await import('@/lib/rpc');
+          const data = await getBookingsWithContact({ propertyId });
 
-          if (error) throw error;
-
-          const bookings = (data || []) as BookingWithRelations[];
+          const bookings = data.map(mapBookingRPC) as BookingWithRelations[];
 
           set({
             bookingsWithRelations: bookings,
@@ -201,24 +180,15 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
       fetchUpcomingBookings: async () => {
         set({ isLoading: true, error: null });
         try {
-          const today = new Date().toISOString().split('T')[0];
-
-          const { data, error } = await supabase
-            .from('landlord_bookings')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:landlord_properties(id, name, address),
-              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
-            `)
-            .gte('start_date', today)
-            .in('status', ['confirmed', 'pending'])
-            .order('start_date', { ascending: true });
-
-          if (error) throw error;
+          // Use RPC function for cross-schema join
+          const { getBookingsWithContact, mapBookingRPC } = await import('@/lib/rpc');
+          const data = await getBookingsWithContact({
+            status: ['confirmed', 'pending'],
+            dateFilter: 'upcoming',
+          });
 
           set({
-            bookingsWithRelations: (data || []) as BookingWithRelations[],
+            bookingsWithRelations: data.map(mapBookingRPC) as BookingWithRelations[],
             isLoading: false,
           });
         } catch (error) {
@@ -230,21 +200,15 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
       fetchActiveBookings: async () => {
         set({ isLoading: true, error: null });
         try {
-          const { data, error } = await supabase
-            .from('landlord_bookings')
-            .select(`
-              *,
-              contact:crm_contacts(id, first_name, last_name, email, phone),
-              property:landlord_properties(id, name, address),
-              room:landlord_rooms!landlord_bookings_room_id_fkey(id, name)
-            `)
-            .eq('status', 'active')
-            .order('start_date', { ascending: true });
-
-          if (error) throw error;
+          // Use RPC function for cross-schema join
+          const { getBookingsWithContact, mapBookingRPC } = await import('@/lib/rpc');
+          const data = await getBookingsWithContact({
+            status: ['active'],
+            dateFilter: 'active',
+          });
 
           set({
-            bookingsWithRelations: (data || []) as BookingWithRelations[],
+            bookingsWithRelations: data.map(mapBookingRPC) as BookingWithRelations[],
             isLoading: false,
           });
         } catch (error) {
@@ -257,7 +221,8 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newBooking, error } = await supabase
-            .from('landlord_bookings')
+            .schema('landlord')
+            .from('bookings')
             .insert(data)
             .select()
             .single();
@@ -283,7 +248,8 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updatedBooking, error } = await supabase
-            .from('landlord_bookings')
+            .schema('landlord')
+            .from('bookings')
             .update(data)
             .eq('id', id)
             .select()
@@ -328,7 +294,8 @@ export const useRentalBookingsStore = create<RentalBookingsState>()(
           }
 
           const { error } = await supabase
-            .from('landlord_bookings')
+            .schema('landlord')
+            .from('bookings')
             .update(updateData)
             .eq('id', id);
 

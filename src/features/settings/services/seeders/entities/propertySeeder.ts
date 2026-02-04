@@ -19,7 +19,7 @@ export async function createProperty(
   data: PropertySeedData
 ): Promise<CreatedProperty> {
   const { data: property, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .insert({
       user_id: userId,
       name: data.name,
@@ -62,7 +62,7 @@ export async function createProperties(
   propertiesData: PropertySeedData[]
 ): Promise<CreatedProperty[]> {
   const { data: properties, error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .insert(
       propertiesData.map((p, i) => ({
         user_id: userId,
@@ -105,7 +105,7 @@ export async function createProperties(
  */
 export async function deleteUserProperties(userId: string): Promise<void> {
   const { error } = await supabase
-    .from('landlord_properties')
+    .schema('landlord').from('properties')
     .delete()
     .eq('user_id', userId);
 

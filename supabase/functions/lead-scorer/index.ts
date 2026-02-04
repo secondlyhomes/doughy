@@ -253,7 +253,7 @@ serve(async (req: Request) => {
 
     // Fetch contact details (verify ownership)
     const { data: contact, error: contactError } = await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .select('id, first_name, last_name, email, source, contact_types, score, metadata')
       .eq('id', contact_id)
       .eq('user_id', authenticatedUserId)
@@ -272,7 +272,7 @@ serve(async (req: Request) => {
 
     // Verify conversation belongs to user (security check)
     const { data: conversation, error: convError } = await supabase
-      .from('rental_conversations')
+      .schema('landlord').from('conversations')
       .select('id')
       .eq('id', conversation_id)
       .eq('user_id', authenticatedUserId)
@@ -291,7 +291,7 @@ serve(async (req: Request) => {
 
     // Fetch conversation messages
     const { data: messages, error: messagesError } = await supabase
-      .from('rental_messages')
+      .schema('landlord').from('messages')
       .select('content, direction, sent_by')
       .eq('conversation_id', conversation_id)
       .order('created_at', { ascending: true })
@@ -367,7 +367,7 @@ serve(async (req: Request) => {
 
     // Update contact score in database
     const { error: updateError } = await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .update({
         score: totalScore,
         updated_at: new Date().toISOString()

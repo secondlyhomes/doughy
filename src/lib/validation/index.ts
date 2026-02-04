@@ -278,3 +278,4 @@ export const validators = {
 // Re-export schemas
 export * from './schemas/leadSchema';
 export * from './schemas/propertySchema';
+export * from './schemas/rentalPropertySchema';

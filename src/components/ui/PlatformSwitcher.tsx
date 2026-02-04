@@ -64,16 +64,14 @@ export function PlatformSwitcher({
   // Only show if user has both platforms enabled
   const hasBothPlatforms = enabledPlatforms.includes('investor') && enabledPlatforms.includes('landlord');
 
-  if (!hasBothPlatforms || isLoading) {
-    return null;
-  }
-
   // Filter to only show enabled platforms
   const availableOptions = platformOptions.filter((opt) => enabledPlatforms.includes(opt.id));
   const activeIndex = availableOptions.findIndex((opt) => opt.id === activePlatform);
 
   // Update animation when active index changes
+  // IMPORTANT: All hooks must be called unconditionally before any early returns
   useEffect(() => {
+    if (!hasBothPlatforms || isLoading) return;
     if (segmentWidths.length === availableOptions.length && activeIndex >= 0) {
       const targetX = segmentWidths.slice(0, activeIndex).reduce((sum, w) => sum + w, 0);
 
@@ -84,7 +82,7 @@ export function PlatformSwitcher({
         friction: 30,
       }).start();
     }
-  }, [activeIndex, segmentWidths, slideAnim, availableOptions.length]);
+  }, [activeIndex, segmentWidths, slideAnim, availableOptions.length, hasBothPlatforms, isLoading]);
 
   // Handle segment layout
   const handleSegmentLayout = useCallback(
@@ -109,6 +107,11 @@ export function PlatformSwitcher({
     },
     [activePlatform, switchPlatform]
   );
+
+  // Early return AFTER all hooks have been called
+  if (!hasBothPlatforms || isLoading) {
+    return null;
+  }
 
   // Size configuration based on mode
   const isCompact = mode === 'compact';

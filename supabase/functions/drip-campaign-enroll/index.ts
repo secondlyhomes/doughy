@@ -115,7 +115,8 @@ serve(async (req: Request) => {
 
     // Verify campaign exists and belongs to user
     const { data: campaign, error: campaignError } = await supabase
-      .from('investor_campaigns')
+      .schema('investor')
+      .from('campaigns')
       .select('id, status, is_drip_campaign')
       .eq('id', campaign_id)
       .eq('user_id', userId)
@@ -143,6 +144,7 @@ serve(async (req: Request) => {
 
     // Get first step to calculate initial touch time
     const { data: firstStep, error: stepError } = await supabase
+      .schema('crm')
       .from('drip_campaign_steps')
       .select('id, delay_days, channel')
       .eq('campaign_id', campaign_id)
@@ -169,6 +171,7 @@ serve(async (req: Request) => {
 
     // Check for existing enrollments
     const { data: existingEnrollments } = await supabase
+      .schema('crm')
       .from('drip_enrollments')
       .select('contact_id, status')
       .eq('campaign_id', campaign_id)
@@ -182,7 +185,8 @@ serve(async (req: Request) => {
     let optedOutContacts = new Set<string>();
     if (skip_opted_out) {
       const { data: optOuts } = await supabase
-        .from('contact_opt_outs')
+        .schema('crm')
+        .from('opt_outs')
         .select('contact_id')
         .in('contact_id', contact_ids)
         .eq('channel', firstStep.channel)
@@ -193,7 +197,8 @@ serve(async (req: Request) => {
 
     // Get do_not_contact flags
     const { data: contacts } = await supabase
-      .from('crm_contacts')
+      .schema('crm')
+      .from('contacts')
       .select('id, do_not_contact')
       .in('id', contact_ids)
       .eq('user_id', userId);
@@ -256,6 +261,7 @@ serve(async (req: Request) => {
           if (allow_re_enrollment) {
             // Update existing enrollment to restart
             const { error: updateError } = await supabase
+              .schema('crm')
               .from('drip_enrollments')
               .update({
                 status: 'active',
@@ -291,6 +297,7 @@ serve(async (req: Request) => {
 
         // Create new enrollment
         const { error: insertError } = await supabase
+          .schema('crm')
           .from('drip_enrollments')
           .insert({
             user_id: userId,
@@ -322,7 +329,8 @@ serve(async (req: Request) => {
 
         // Update contact's campaign status
         const { error: contactUpdateError } = await supabase
-          .from('crm_contacts')
+          .schema('crm')
+          .from('contacts')
           .update({
             campaign_status: 'enrolled',
             active_campaign_id: campaign_id

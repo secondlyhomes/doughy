@@ -44,7 +44,8 @@ export async function createPhoneReminder(
   try {
     // Create a follow-up record for the phone call
     const { data: followUp, error: followUpError } = await supabase
-      .from('investor_follow_ups')
+      .schema('investor')
+      .from('follow_ups')
       .insert({
         user_id: userId,
         contact_id: contactId,
@@ -100,6 +101,7 @@ export async function createPhoneReminder(
 
     return { success: true };
   } catch (error) {
-    return { success: false, error: (error as Error).message };
+    const errorMessage = error instanceof Error ? error.message : 'Phone reminder creation failed';
+    return { success: false, error: errorMessage };
   }
 }

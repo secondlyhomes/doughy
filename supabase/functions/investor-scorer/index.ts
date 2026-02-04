@@ -327,7 +327,7 @@ serve(async (req: Request) => {
 
     // Get messages from conversations with this contact
     const { data: conversations } = await supabase
-      .from('rental_conversations')
+      .schema('landlord').from('conversations')
       .select('id')
       .eq('contact_id', contact_id)
       .eq('user_id', authenticatedUserId);
@@ -335,7 +335,7 @@ serve(async (req: Request) => {
     if (conversations && conversations.length > 0) {
       const conversationIds = conversations.map(c => c.id);
       const { data: messages } = await supabase
-        .from('rental_messages')
+        .schema('landlord').from('messages')
         .select('content, direction')
         .in('conversation_id', conversationIds)
         .eq('direction', 'inbound')
@@ -364,7 +364,7 @@ serve(async (req: Request) => {
     // Update deal if provided
     if (deal_id) {
       await supabase
-        .from('investor_deals')
+        .schema('investor').from('deals_pipeline')
         .update({
           motivation_score: score,
           motivation: motivation,
@@ -378,7 +378,7 @@ serve(async (req: Request) => {
 
     // Update contact score
     await supabase
-      .from('crm_contacts')
+      .schema('crm').from('contacts')
       .update({
         score: score,
         updated_at: new Date().toISOString()

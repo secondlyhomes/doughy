@@ -51,19 +51,11 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
       fetchConversations: async () => {
         set({ isLoading: true, error: null });
         try {
-          const { data, error } = await supabase
-            .from('investor_conversations')
-            .select(`
-              *,
-              lead:crm_leads(id, name, phone, email, status, opt_status, tags),
-              property:investor_properties(id, address_line_1, city, state),
-              deal:investor_deals_pipeline(id, title, status)
-            `)
-            .order('last_message_at', { ascending: false, nullsFirst: false });
+          // Use RPC function for cross-schema join
+          const { getConversationsWithLead, mapInvestorConversationRPC } = await import('@/lib/rpc');
+          const data = await getConversationsWithLead();
 
-          if (error) throw error;
-
-          const conversations = (data || []) as InvestorConversationWithRelations[];
+          const conversations = data.map(mapInvestorConversationRPC) as InvestorConversationWithRelations[];
           set({
             conversations: conversations.map(({ lead, property, deal, ...c }) => c),
             conversationsWithRelations: conversations,
@@ -77,20 +69,16 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
 
       fetchConversationById: async (id: string) => {
         try {
-          const { data, error } = await supabase
-            .from('investor_conversations')
-            .select(`
-              *,
-              lead:crm_leads(id, name, phone, email, status, opt_status, tags),
-              property:investor_properties(id, address_line_1, city, state),
-              deal:investor_deals_pipeline(id, title, status)
-            `)
-            .eq('id', id)
-            .single();
+          // Use RPC function for cross-schema join
+          const { getConversationById, mapInvestorConversationRPC } = await import('@/lib/rpc');
+          const data = await getConversationById(id);
 
-          if (error) throw error;
+          if (!data) {
+            set({ error: 'Conversation not found' });
+            return null;
+          }
 
-          const conversation = data as InvestorConversationWithRelations;
+          const conversation = mapInvestorConversationRPC(data) as InvestorConversationWithRelations;
           set((state) => ({
             conversationsWithRelations: state.conversationsWithRelations.some((c) => c.id === id)
               ? state.conversationsWithRelations.map((c) => (c.id === id ? conversation : c))
@@ -109,7 +97,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         set({ isLoading: true, error: null });
         try {
           const { data: queueItems, error: queueError } = await supabase
-            .from('investor_ai_queue_items')
+            .schema('investor')
+            .from('ai_queue_items')
             .select('conversation_id')
             .eq('status', 'pending');
 
@@ -121,21 +110,12 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             return;
           }
 
-          const { data, error } = await supabase
-            .from('investor_conversations')
-            .select(`
-              *,
-              lead:crm_leads(id, name, phone, email, status, opt_status, tags),
-              property:investor_properties(id, address_line_1, city, state),
-              deal:investor_deals_pipeline(id, title, status)
-            `)
-            .in('id', conversationIds)
-            .order('last_message_at', { ascending: false, nullsFirst: false });
-
-          if (error) throw error;
+          // Use RPC function for cross-schema join
+          const { getConversationsWithLead, mapInvestorConversationRPC } = await import('@/lib/rpc');
+          const data = await getConversationsWithLead(conversationIds);
 
           set({
-            conversationsWithRelations: (data || []) as InvestorConversationWithRelations[],
+            conversationsWithRelations: data.map(mapInvestorConversationRPC) as InvestorConversationWithRelations[],
             isLoading: false,
           });
         } catch (error) {
@@ -151,7 +131,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
       updateConversationStatus: async (id: string, status: InvestorConversationStatus) => {
         try {
           const { error } = await supabase
-            .from('investor_conversations')
+            .schema('investor')
+            .from('conversations')
             .update({ status, updated_at: new Date().toISOString() })
             .eq('id', id);
 
@@ -175,7 +156,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
       toggleAI: async (id: string, enabled: boolean) => {
         try {
           const { error } = await supabase
-            .from('investor_conversations')
+            .schema('investor')
+            .from('conversations')
             .update({ is_ai_enabled: enabled, updated_at: new Date().toISOString() })
             .eq('id', id);
 
@@ -201,7 +183,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
       toggleAutoRespond: async (id: string, enabled: boolean) => {
         try {
           const { error } = await supabase
-            .from('investor_conversations')
+            .schema('investor')
+            .from('conversations')
             .update({ is_ai_auto_respond: enabled, updated_at: new Date().toISOString() })
             .eq('id', id);
 
@@ -227,7 +210,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
       markAsRead: async (id: string) => {
         try {
           const { error } = await supabase
-            .from('investor_conversations')
+            .schema('investor')
+            .from('conversations')
             .update({ unread_count: 0, updated_at: new Date().toISOString() })
             .eq('id', id);
 
@@ -256,7 +240,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('investor_messages')
+            .schema('investor')
+            .from('messages')
             .select('*')
             .eq('conversation_id', conversationId)
             .order('created_at', { ascending: false });
@@ -280,7 +265,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         set({ isSending: true, error: null });
         try {
           const { data: newMessage, error } = await supabase
-            .from('investor_messages')
+            .schema('investor')
+            .from('messages')
             .insert({
               conversation_id: conversationId,
               direction: 'outbound',
@@ -316,7 +302,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('investor_ai_queue_items')
+            .schema('investor')
+            .from('ai_queue_items')
             .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
@@ -364,7 +351,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
           }
 
           const { error, count } = await supabase
-            .from('investor_ai_queue_items')
+            .schema('investor')
+            .from('ai_queue_items')
             .update(updateData)
             .eq('id', id)
             .gt('expires_at', new Date().toISOString())
@@ -420,7 +408,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
           const reviewedAt = new Date().toISOString();
 
           const { error } = await supabase
-            .from('investor_ai_queue_items')
+            .schema('investor')
+            .from('ai_queue_items')
             .update({ status: 'rejected', reviewed_at: reviewedAt })
             .eq('id', id);
 
@@ -484,7 +473,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
             return false;
           }
 
-          await supabase.from('investor_ai_response_outcomes').insert({
+          await supabase.schema('ai').from('response_outcomes').insert({
             user_id: userData.user.id,
             conversation_id: conversationId,
             message_id: messageId,
@@ -509,7 +498,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
       fetchAIConfidence: async () => {
         try {
           const { data, error } = await supabase
-            .from('investor_ai_confidence_settings')
+            .schema('investor')
+            .from('ai_confidence_settings')
             .select('*');
 
           if (error) throw error;
@@ -535,7 +525,8 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
           }
 
           const { error } = await supabase
-            .from('investor_ai_confidence_settings')
+            .schema('investor')
+            .from('ai_confidence_settings')
             .upsert({
               user_id: userData.user.id,
               lead_situation: leadSituation,
@@ -588,13 +579,13 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
           userId,
           tables: [
             {
-              tableName: 'investor_conversations',
+              tableName: 'investor.conversations',
               onEvent: async () => {
                 await get().fetchConversations();
               },
             },
             {
-              tableName: 'investor_ai_queue_items',
+              tableName: 'investor.ai_queue_items',
               onEvent: async () => {
                 await get().fetchPendingResponses();
               },
@@ -626,7 +617,7 @@ export const useInvestorConversationsStore = create<InvestorConversationsState>(
 
         const cleanup = createMessageSubscription(
           conversationId,
-          'investor_messages',
+          'investor.messages',
           (newMessage) => {
             set((state) => ({
               messages: {

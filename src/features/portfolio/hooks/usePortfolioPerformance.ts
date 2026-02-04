@@ -33,7 +33,7 @@ export function usePortfolioPerformance(portfolioEntryId: string | undefined) {
 
       // Fetch portfolio entry
       const { data: entry, error: entryError } = await supabase
-        .from('investor_portfolio_entries')
+        .schema('investor').from('portfolio_entries')
         .select('*')
         .eq('id', portfolioEntryId)
         .single();
@@ -43,36 +43,60 @@ export function usePortfolioPerformance(portfolioEntryId: string | undefined) {
         return null;
       }
 
-      // Fetch monthly records
+      // Fetch monthly records - critical for cash flow calculations
       const { data: monthlyRecords, error: recordsError } = await supabase
-        .from('investor_portfolio_monthly_records')
+        .schema('investor').from('portfolio_monthly_records')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId)
         .order('month', { ascending: true });
 
+      // Collect errors to report which data sources failed
+      const dataErrors: string[] = [];
+
       if (recordsError) {
-        console.error('Error fetching monthly records:', recordsError);
+        // Only ignore if table doesn't exist during schema migration
+        if (recordsError.code === '42P01' || recordsError.message?.includes('does not exist')) {
+          console.debug('[usePortfolioPerformance] Monthly records table not yet created');
+        } else {
+          console.error('[usePortfolioPerformance] Error fetching monthly records:', recordsError);
+          dataErrors.push('monthly records');
+        }
       }
 
-      // Fetch mortgages
+      // Fetch mortgages - critical for equity and ROI calculations
       const { data: mortgages, error: mortgagesError } = await supabase
-        .from('investor_portfolio_mortgages')
+        .schema('investor').from('portfolio_mortgages')
         .select('*')
         .eq('portfolio_entry_id', portfolioEntryId);
 
       if (mortgagesError) {
-        console.error('Error fetching mortgages:', mortgagesError);
+        if (mortgagesError.code === '42P01' || mortgagesError.message?.includes('does not exist')) {
+          console.debug('[usePortfolioPerformance] Mortgages table not yet created');
+        } else {
+          console.error('[usePortfolioPerformance] Error fetching mortgages:', mortgagesError);
+          dataErrors.push('mortgages');
+        }
       }
 
-      // Fetch valuations
+      // Fetch valuations - important for current value estimates
       const { data: valuations, error: valuationsError } = await supabase
-        .from('investor_portfolio_valuations')
+        .schema('investor').from('portfolio_valuations')
         .select('*')
         .eq('property_id', entry.property_id)
         .order('valuation_date', { ascending: true });
 
       if (valuationsError) {
-        console.error('Error fetching valuations:', valuationsError);
+        if (valuationsError.code === '42P01' || valuationsError.message?.includes('does not exist')) {
+          console.debug('[usePortfolioPerformance] Valuations table not yet created');
+        } else {
+          console.error('[usePortfolioPerformance] Error fetching valuations:', valuationsError);
+          dataErrors.push('valuations');
+        }
+      }
+
+      // If critical data failed to load, throw to show error state instead of misleading metrics
+      if (dataErrors.length > 0) {
+        throw new Error(`Performance data incomplete: failed to load ${dataErrors.join(', ')}`);
       }
 
       return calculatePerformance(

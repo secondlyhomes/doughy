@@ -77,4 +77,4 @@ export {
   type SeedResult,
   type ClearResult,
   type SafetyCheckResult,
-} from './investorSeeder';
+} from './investor-seeder';

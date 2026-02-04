@@ -40,14 +40,15 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       let query = supabase
-        .from('landlord_turnovers')
+        .schema('landlord')
+        .from('turnovers')
         .select(`
           *,
-          property:landlord_properties(id, name, address),
-          cleaner:landlord_vendors!cleaner_vendor_id(id, name, phone, email),
-          booking:landlord_bookings(
+          property:properties(id, name, address),
+          cleaner:vendors!landlord_turnovers_cleaner_vendor_id_fkey(id, name, phone, email),
+          booking:bookings!landlord_turnovers_booking_id_fkey(
             id,
-            contact:contacts(first_name, last_name)
+            contact:contacts!contact_id(first_name, last_name)
           )
         `)
         .order('checkout_at', { ascending: false });
@@ -73,14 +74,15 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('landlord_turnovers')
+        .schema('landlord')
+        .from('turnovers')
         .select(`
           *,
-          property:landlord_properties(id, name, address),
-          cleaner:landlord_vendors!cleaner_vendor_id(id, name, phone, email),
-          booking:landlord_bookings(
+          property:properties(id, name, address),
+          cleaner:vendors!landlord_turnovers_cleaner_vendor_id_fkey(id, name, phone, email),
+          booking:bookings!landlord_turnovers_booking_id_fkey(
             id,
-            contact:contacts(first_name, last_name)
+            contact:contacts!contact_id(first_name, last_name)
           )
         `)
         .eq('id', id)
@@ -101,11 +103,12 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     try {
       const now = new Date().toISOString();
       let query = supabase
-        .from('landlord_turnovers')
+        .schema('landlord')
+        .from('turnovers')
         .select(`
           *,
-          property:landlord_properties(id, name, address),
-          cleaner:landlord_vendors!cleaner_vendor_id(id, name, phone, email)
+          property:properties(id, name, address),
+          cleaner:vendors!cleaner_vendor_id(id, name, phone, email)
         `)
         .gte('checkout_at', now)
         .neq('status', 'ready')
@@ -135,7 +138,8 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
       if (!user.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('landlord_turnovers')
+        .schema('landlord')
+        .from('turnovers')
         .insert({
           ...input,
           user_id: user.user.id,
@@ -162,7 +166,8 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-        .from('landlord_turnovers')
+        .schema('landlord')
+        .from('turnovers')
         .update(input)
         .eq('id', id)
         .select()
@@ -192,7 +197,8 @@ export const useTurnoversStore = create<TurnoversState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { error } = await supabase
-        .from('landlord_turnovers')
+        .schema('landlord')
+        .from('turnovers')
         .delete()
         .eq('id', id);
 

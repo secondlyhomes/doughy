@@ -29,7 +29,7 @@ export function useCreateCampaignStep() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
-        .from('investor_drip_campaign_steps')
+        .schema('investor').from('drip_campaign_steps')
         .insert(insertData)
         .select()
         .single();
@@ -61,7 +61,7 @@ export function useUpdateCampaignStep() {
 
       // Verify ownership by checking the campaign belongs to user
       const { data: step, error: fetchError } = await supabase
-        .from('investor_drip_campaign_steps')
+        .schema('investor').from('drip_campaign_steps')
         .select('campaign_id')
         .eq('id', id)
         .single();
@@ -69,7 +69,7 @@ export function useUpdateCampaignStep() {
       if (fetchError) throw fetchError;
 
       const { data: campaign, error: campaignError } = await supabase
-        .from('investor_campaigns')
+        .schema('investor').from('campaigns')
         .select('id')
         .eq('id', step.campaign_id)
         .eq('user_id', user.id)
@@ -80,7 +80,7 @@ export function useUpdateCampaignStep() {
       }
 
       const { data, error } = await supabase
-        .from('investor_drip_campaign_steps')
+        .schema('investor').from('drip_campaign_steps')
         .update(updates as Record<string, unknown>)
         .eq('id', id)
         .select()
@@ -113,7 +113,7 @@ export function useDeleteCampaignStep() {
 
       // Verify ownership by checking the campaign belongs to user
       const { data: campaign, error: campaignError } = await supabase
-        .from('investor_campaigns')
+        .schema('investor').from('campaigns')
         .select('id')
         .eq('id', campaignId)
         .eq('user_id', user.id)
@@ -124,7 +124,7 @@ export function useDeleteCampaignStep() {
       }
 
       const { error } = await supabase
-        .from('investor_drip_campaign_steps')
+        .schema('investor').from('drip_campaign_steps')
         .delete()
         .eq('id', id);
 

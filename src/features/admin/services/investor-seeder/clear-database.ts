@@ -71,7 +71,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete investor_ai_queue_items
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: deletedAIQueue, error: aiQueueError } = await (supabase.from('investor_ai_queue_items' as any) as any)
+    const { data: deletedAIQueue, error: aiQueueError } = await (supabase.schema('investor').from('ai_queue_items' as any) as any)
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -91,7 +91,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete investor_messages
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: userConversations, error: convQueryError } = await (supabase.from('investor_conversations' as any) as any)
+    const { data: userConversations, error: convQueryError } = await (supabase.schema('investor').from('conversations' as any) as any)
       .select('id')
       .eq('user_id', userId);
 
@@ -106,7 +106,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     } else if (userConversations && userConversations.length > 0) {
       const conversationIds = userConversations.map((c: { id: string }) => c.id);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: deletedMessages, error: messagesError } = await (supabase.from('investor_messages' as any) as any)
+      const { data: deletedMessages, error: messagesError } = await (supabase.schema('investor').from('messages' as any) as any)
         .delete()
         .in('conversation_id', conversationIds)
         .select('id');
@@ -127,7 +127,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete investor_conversations
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: deletedConversations, error: conversationsError } = await (supabase.from('investor_conversations' as any) as any)
+    const { data: deletedConversations, error: conversationsError } = await (supabase.schema('investor').from('conversations' as any) as any)
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -147,7 +147,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete capture_items
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: deletedCaptureItems, error: captureItemsError } = await (supabase.from('ai_capture_items' as any) as any)
+    const { data: deletedCaptureItems, error: captureItemsError } = await (supabase.schema('ai').from('capture_items' as any) as any)
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -162,7 +162,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete deals
     const { data: deletedDeals, error: dealsError } = await supabase
-      .from('investor_deals_pipeline')
+      .schema('investor').from('deals_pipeline')
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -177,7 +177,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete documents
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: deletedDocuments, error: documentsError } = await (supabase.from('investor_documents' as any) as any)
+    const { data: deletedDocuments, error: documentsError } = await (supabase.schema('investor').from('documents' as any) as any)
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -192,7 +192,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
 
     // Delete properties
     const { data: deletedProperties, error: propertiesError } = await supabase
-      .from('investor_properties')
+      .schema('investor').from('properties')
       .delete()
       .eq('user_id', userId)
       .select('id');
@@ -208,7 +208,7 @@ export async function clearDatabase(userId: string): Promise<ClearResult> {
     // Delete leads (last, no dependencies)
     if (workspaceIds.length > 0) {
       const { data: deletedLeads, error: leadsError } = await supabase
-        .from('crm_leads')
+        .schema('crm').from('leads')
         .delete()
         .in('workspace_id', workspaceIds)
         .select('id');

@@ -20,7 +20,7 @@ export function useCreateCampaign() {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('investor_campaigns')
+        .schema('investor').from('campaigns')
         .insert({
           user_id: user.id,
           name: input.name,
@@ -63,7 +63,7 @@ export function useUpdateCampaign() {
       const { id, ...updates } = input;
 
       const { data, error } = await supabase
-        .from('investor_campaigns')
+        .schema('investor').from('campaigns')
         .update(updates as Record<string, unknown>)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -92,7 +92,7 @@ export function useDeleteCampaign() {
       if (!user?.id) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('investor_campaigns')
+        .schema('investor').from('campaigns')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);

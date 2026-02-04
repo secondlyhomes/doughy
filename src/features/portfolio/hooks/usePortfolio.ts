@@ -107,12 +107,12 @@ export function usePortfolio() {
 
         // 1. Get properties from closed_won deals
         const { data: deals, error: dealsError } = await supabase
-          .from('investor_deals_pipeline')
+          .schema('investor').from('deals_pipeline')
           .select(`
             *,
-            property:investor_properties(
+            property:properties(
               *,
-              images:investor_property_images(id, url, is_primary, label, filename)
+              images:property_images(id, url, is_primary, label, filename)
             )
           `)
           .eq('user_id', user.id)
@@ -148,12 +148,12 @@ export function usePortfolio() {
 
         // 2. Get properties from manual portfolio entries
         const { data: entries, error: entriesError } = await supabase
-          .from('investor_portfolio_entries')
+          .schema('investor').from('portfolio_entries')
           .select(`
             *,
-            property:investor_properties(
+            property:properties(
               *,
-              images:investor_property_images(id, url, is_primary, label, filename)
+              images:property_images(id, url, is_primary, label, filename)
             )
           `)
           .eq('user_id', user.id)
@@ -224,7 +224,7 @@ export function usePortfolio() {
   const addToPortfolio = useMutation({
     mutationFn: async (dealId: string) => {
       const { error } = await supabase
-        .from('investor_deals_pipeline')
+        .schema('investor').from('deals_pipeline')
         .update({
           stage: 'closed_won',
           updated_at: new Date().toISOString(),
@@ -252,7 +252,7 @@ export function usePortfolio() {
       // If creating a new property, insert it first
       if (input.newProperty && !propertyId) {
         const { data: newProperty, error: propertyError } = await supabase
-          .from('investor_properties')
+          .schema('investor').from('properties')
           .insert({
             address_line_1: input.newProperty.address,
             city: input.newProperty.city,
@@ -284,7 +284,7 @@ export function usePortfolio() {
 
       // Create or update portfolio entry (upsert handles duplicate submissions)
       const { error: entryError } = await supabase
-        .from('investor_portfolio_entries')
+        .schema('investor').from('portfolio_entries')
         .upsert({
           user_id: user.id,
           property_id: propertyId,
@@ -303,7 +303,7 @@ export function usePortfolio() {
         console.error('[usePortfolio] Error creating portfolio entry:', entryError);
         // Cleanup: delete the orphaned property if we just created it
         if (createdNewProperty && propertyId) {
-          const { error: cleanupError } = await supabase.from('investor_properties').delete().eq('id', propertyId);
+          const { error: cleanupError } = await supabase.schema('investor').from('properties').delete().eq('id', propertyId);
           if (cleanupError) {
             console.error('[usePortfolio] Failed to cleanup orphaned property:', propertyId, cleanupError);
           }
@@ -323,7 +323,7 @@ export function usePortfolio() {
   const removeFromPortfolio = useMutation({
     mutationFn: async (dealId: string) => {
       const { error } = await supabase
-        .from('investor_deals_pipeline')
+        .schema('investor').from('deals_pipeline')
         .update({
           stage: 'negotiating', // Revert to negotiating
           updated_at: new Date().toISOString(),

@@ -292,7 +292,7 @@ export function usePropertyActions(): UsePropertyActionsReturn {
       setError(null);
 
       const { error: updateError } = await supabase
-        .from('investor_properties')
+        .schema('investor').from('properties')
         .update({ status })
         .eq('id', propertyId);
 
@@ -323,7 +323,7 @@ export function usePropertyActions(): UsePropertyActionsReturn {
       setError(null);
 
       const { error: insertError } = await supabase
-        .from('investor_property_images')
+        .schema('investor').from('property_images')
         .insert({
           property_id: propertyId,
           url,
@@ -353,7 +353,7 @@ export function usePropertyActions(): UsePropertyActionsReturn {
       setError(null);
 
       const { error: deleteError } = await supabase
-        .from('investor_property_images')
+        .schema('investor').from('property_images')
         .delete()
         .eq('id', imageId);
 

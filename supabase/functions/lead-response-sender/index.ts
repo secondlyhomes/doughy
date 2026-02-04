@@ -339,7 +339,8 @@ serve(async (req: Request) => {
     // STEP 1: Idempotency check - prevent duplicate sends
     // =======================================================================
     const { data: existingMessage, error: msgError } = await supabase
-      .from('landlord_messages')
+      .schema('landlord')
+      .from('messages')
       .select('id, send_status, conversation_id')
       .eq('id', messageId)
       .single();
@@ -392,7 +393,8 @@ serve(async (req: Request) => {
     // STEP 2: Fetch conversation and contact data
     // =======================================================================
     const { data: conversation, error: convError } = await supabase
-      .from('landlord_conversations')
+      .schema('landlord')
+      .from('conversations')
       .select(`
         id,
         platform,
@@ -400,14 +402,14 @@ serve(async (req: Request) => {
         external_message_id,
         workspace_id,
         channel,
-        crm_contacts!landlord_conversations_contact_id_fkey (
+        contact:crm.contacts!conversations_contact_id_fkey (
           id,
           first_name,
           last_name,
           email,
           phone
         ),
-        landlord_properties!landlord_conversations_property_id_fkey (
+        property:landlord.properties!conversations_property_id_fkey (
           id,
           name,
           address_line1
@@ -445,7 +447,9 @@ serve(async (req: Request) => {
 
     // For FurnishedFinder, if we have contact email, use direct_email
     let replyMethod: ReplyMethod = REPLY_METHOD_BY_PLATFORM[platform] || 'direct_email';
-    if (platform === 'furnishedfinder' && convData.crm_contacts?.email) {
+    // Access contact via renamed alias from schema-qualified join
+    const contactData = (convData as unknown as { contact: ContactData | null }).contact || convData.crm_contacts;
+    if (platform === 'furnishedfinder' && contactData?.email) {
       replyMethod = 'direct_email';
     }
 
@@ -466,8 +470,8 @@ serve(async (req: Request) => {
       );
     }
 
-    // Extract contact info
-    const contact = convData.crm_contacts;
+    // Extract contact info (use contactData from schema-qualified join)
+    const contact = contactData;
     const contactEmail = contact?.email;
     const contactName = contact
       ? [contact.first_name, contact.last_name].filter(Boolean).join(' ') || 'there'
@@ -508,7 +512,8 @@ serve(async (req: Request) => {
     // STEP 5: Update status to 'sending'
     // =======================================================================
     const { error: statusUpdateError } = await supabase
-      .from('landlord_messages')
+      .schema('landlord')
+      .from('messages')
       .update({ send_status: 'sending' })
       .eq('id', messageId);
 
@@ -526,7 +531,8 @@ serve(async (req: Request) => {
     } catch (error) {
       // Revert status on failure
       await supabase
-        .from('landlord_messages')
+        .schema('landlord')
+        .from('messages')
         .update({ send_status: 'failed', send_error: 'Resend API key not configured' })
         .eq('id', messageId);
 
@@ -561,8 +567,10 @@ serve(async (req: Request) => {
     // =======================================================================
     const resend = new Resend(resendApiKey);
 
-    const propertyName = convData.landlord_properties?.name ||
-      convData.landlord_properties?.address_line1 ||
+    // Access property via renamed alias from schema-qualified join
+    const propertyData = (convData as unknown as { property: PropertyData | null }).property || convData.landlord_properties;
+    const propertyName = propertyData?.name ||
+      propertyData?.address_line1 ||
       undefined;
 
     const emailSubject = propertyName
@@ -603,7 +611,8 @@ serve(async (req: Request) => {
       const deliveredAt = new Date().toISOString();
 
       const { error: successUpdateError } = await supabase
-        .from('landlord_messages')
+        .schema('landlord')
+        .from('messages')
         .update({
           send_status: 'sent',
           send_error: null,
@@ -644,7 +653,8 @@ serve(async (req: Request) => {
       console.error(`${LOG_PREFIX} Failed to send email:`, errorMessage);
 
       const { error: failureUpdateError } = await supabase
-        .from('landlord_messages')
+        .schema('landlord')
+        .from('messages')
         .update({
           send_status: 'failed',
           send_error: errorMessage,

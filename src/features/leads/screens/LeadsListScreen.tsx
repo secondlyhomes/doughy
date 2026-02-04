@@ -223,6 +223,7 @@ export function LeadsListScreen() {
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews={true}
+            keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl refreshing={isLoading || orphansLoading} onRefresh={handleRefresh} tintColor={colors.info} />
             }

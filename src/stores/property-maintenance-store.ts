@@ -76,7 +76,8 @@ export const usePropertyMaintenanceStore = create<PropertyMaintenanceState>()(
         set({ isLoading: true, error: null, filterPropertyId: propertyId });
         try {
           const { data, error } = await supabase
-            .from('landlord_maintenance_records')
+            .schema('landlord')
+            .from('maintenance_records')
             .select('*')
             .eq('property_id', propertyId)
             .order('reported_at', { ascending: false });
@@ -96,7 +97,8 @@ export const usePropertyMaintenanceStore = create<PropertyMaintenanceState>()(
       fetchWorkOrderById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('landlord_maintenance_records')
+            .schema('landlord')
+            .from('maintenance_records')
             .select('*')
             .eq('id', id)
             .single();
@@ -124,7 +126,8 @@ export const usePropertyMaintenanceStore = create<PropertyMaintenanceState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newWorkOrder, error } = await supabase
-            .from('landlord_maintenance_records')
+            .schema('landlord')
+            .from('maintenance_records')
             .insert({
               ...data,
               photos: data.photos || [],
@@ -155,7 +158,8 @@ export const usePropertyMaintenanceStore = create<PropertyMaintenanceState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updated, error } = await supabase
-            .from('landlord_maintenance_records')
+            .schema('landlord')
+            .from('maintenance_records')
             .update({
               ...data,
               updated_at: new Date().toISOString(),
@@ -186,7 +190,8 @@ export const usePropertyMaintenanceStore = create<PropertyMaintenanceState>()(
         set({ isSaving: true, error: null });
         try {
           const { error } = await supabase
-            .from('landlord_maintenance_records')
+            .schema('landlord')
+            .from('maintenance_records')
             .delete()
             .eq('id', id);
 

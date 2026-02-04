@@ -90,7 +90,8 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase
-            .from('landlord_properties')
+            .schema('landlord')
+            .from('properties')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -109,7 +110,8 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
       fetchPropertyById: async (id: string) => {
         try {
           const { data, error } = await supabase
-            .from('landlord_properties')
+            .schema('landlord')
+            .from('properties')
             .select('*')
             .eq('id', id)
             .single();
@@ -136,7 +138,8 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: newProperty, error } = await supabase
-            .from('landlord_properties')
+            .schema('landlord')
+            .from('properties')
             .insert(data)
             .select()
             .single();
@@ -161,7 +164,8 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isSaving: true, error: null });
         try {
           const { data: updatedProperty, error } = await supabase
-            .from('landlord_properties')
+            .schema('landlord')
+            .from('properties')
             .update(data)
             .eq('id', id)
             .select()
@@ -189,7 +193,8 @@ export const useRentalPropertiesStore = create<RentalPropertiesState>()(
         set({ isSaving: true, error: null });
         try {
           const { error } = await supabase
-            .from('landlord_properties')
+            .schema('landlord')
+            .from('properties')
             .delete()
             .eq('id', id);
 

@@ -11,15 +11,12 @@ import {
   TouchableOpacity,
   Switch,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import {
   FileText,
   Plus,
-  Mail,
-  MessageSquare,
   Trash2,
   Edit2,
-  ChevronRight,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -32,12 +29,11 @@ import {
   Card,
   Button,
   BottomSheet,
-  BottomSheetSection,
   Input,
   FormField,
   Select,
 } from '@/components/ui';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import {
   useGuestTemplates,
@@ -50,7 +46,7 @@ import {
   TEMPLATE_TYPE_CONFIG,
   CreateTemplateInput,
 } from '../types';
-import { DEFAULT_TEMPLATES, getTemplatePreview } from '../services/templateService';
+import { DEFAULT_TEMPLATES } from '../services/templateService';
 
 export function GuestTemplatesScreen() {
   const router = useRouter();
@@ -74,9 +70,11 @@ export function GuestTemplatesScreen() {
     isSaving,
   } = useTemplateMutations();
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
+  const { headerOptions } = useNativeHeader({
+    title: 'Guest Templates',
+    fallbackRoute: '/(tabs)/rental-properties',
+    rightAction: <Badge variant="default">{templates.length}</Badge>,
+  });
 
   const handleAddTemplate = useCallback(() => {
     setEditingTemplate(null);
@@ -236,22 +234,20 @@ export function GuestTemplatesScreen() {
 
   if (isLoading && templates.length === 0) {
     return (
-      <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        <LoadingSpinner fullScreen text="Loading templates..." />
-      </ThemedSafeAreaView>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <ThemedSafeAreaView className="flex-1" edges={[]}>
+          <LoadingSpinner fullScreen text="Loading templates..." />
+        </ThemedSafeAreaView>
+      </>
     );
   }
 
   return (
-    <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      <ScreenHeader
-        title="Guest Templates"
-        backButton
-        onBack={handleBack}
-        rightAction={<Badge variant="default">{templates.length}</Badge>}
-      />
-
-      {templates.length === 0 ? (
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ThemedSafeAreaView className="flex-1" edges={[]}>
+        {templates.length === 0 ? (
         <ListEmptyState
           icon={FileText}
           title="No Templates"
@@ -286,18 +282,19 @@ export function GuestTemplatesScreen() {
         accessibilityLabel="Add template"
       />
 
-      {/* Add/Edit Template Sheet */}
-      <TemplateEditorSheet
-        visible={showAddSheet}
-        onClose={() => {
-          setShowAddSheet(false);
-          setEditingTemplate(null);
-        }}
-        template={editingTemplate}
-        onSave={handleSaveTemplate}
-        isSaving={isSaving}
-      />
-    </ThemedSafeAreaView>
+        {/* Add/Edit Template Sheet */}
+        <TemplateEditorSheet
+          visible={showAddSheet}
+          onClose={() => {
+            setShowAddSheet(false);
+            setEditingTemplate(null);
+          }}
+          template={editingTemplate}
+          onSave={handleSaveTemplate}
+          isSaving={isSaving}
+        />
+      </ThemedSafeAreaView>
+    </>
   );
 }
 

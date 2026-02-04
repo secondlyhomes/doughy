@@ -24,7 +24,7 @@ export function useCampaigns(filters: CampaignFilters = {}) {
       if (!user?.id) return [];
 
       let query = supabase
-        .from('investor_campaigns')
+        .schema('investor').from('campaigns')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -66,7 +66,7 @@ export function useCampaign(id: string | undefined) {
       if (!user?.id || !id) return null;
 
       const { data, error } = await supabase
-        .from('investor_campaigns')
+        .schema('investor').from('campaigns')
         .select('*')
         .eq('id', id)
         .eq('user_id', user.id)
@@ -91,7 +91,7 @@ export function useCampaignSteps(campaignId: string | undefined) {
       if (!user?.id || !campaignId) return [];
 
       const { data, error } = await supabase
-        .from('investor_drip_campaign_steps')
+        .schema('investor').from('drip_campaign_steps')
         .select('*')
         .eq('campaign_id', campaignId)
         .order('step_number', { ascending: true });
@@ -115,7 +115,7 @@ export function useCampaignEnrollments(campaignId: string | undefined) {
       if (!user?.id || !campaignId) return [];
 
       const { data, error } = await supabase
-        .from('investor_drip_enrollments')
+        .schema('investor').from('drip_enrollments')
         .select('*')
         .eq('campaign_id', campaignId)
         .eq('user_id', user.id)

@@ -4,7 +4,7 @@
 import { supabase } from '@/lib/supabase';
 import { INTEGRATIONS } from '../data/integrationData';
 import type { Integration, IntegrationHealth, IntegrationStatus } from '../types/integrations';
-import { checkIntegrationHealth } from './apiKeyHealthService';
+import { checkIntegrationHealth } from './api-key-health';
 import { normalizeServiceName } from '../utils/serviceHelpers';
 
 // Re-export types for backward compatibility
