@@ -18,19 +18,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: yarn --frozen-lockfile
+        run: npm ci
 
       - name: Type Check
-        run: yarn type-check
+        run: npm run type-check
 
       - name: Lint
-        run: yarn lint
+        run: npm run lint
 
       - name: Test
-        run: yarn test:ci
+        run: npm run test:ci
 
   security-audit:
     runs-on: ubuntu-latest
@@ -41,13 +41,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: yarn --frozen-lockfile
+        run: npm ci
 
       - name: Run security audit
-        run: yarn audit --level high || echo "::warning::Vulnerabilities found - review yarn audit output above"
+        run: npm audit --audit-level=high || echo "::warning::Vulnerabilities found - review npm audit output above"
 
   test-migrations:
     runs-on: ubuntu-latest

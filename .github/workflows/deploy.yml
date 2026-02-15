@@ -28,9 +28,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
+          cache: 'npm'
 
-      - run: yarn --frozen-lockfile
+      - run: npm ci
 
       # ---- Supabase ----
       - uses: supabase/setup-cli@v1
@@ -58,7 +58,7 @@ jobs:
 
       # ---- Web ----
       - name: Build Web
-        run: yarn build:web
+        run: npm run build:web
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -90,9 +90,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
+          cache: 'npm'
 
-      - run: yarn --frozen-lockfile
+      - run: npm ci
 
       # ---- Supabase ----
       - uses: supabase/setup-cli@v1
@@ -125,7 +125,7 @@ jobs:
 
       # ---- Web ----
       - name: Build Web
-        run: yarn build:web
+        run: npm run build:web
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

@@ -4,16 +4,16 @@
 
 Doughy AI Mobile — React Native (Expo 54) + Supabase + TypeScript | iOS-first investor/landlord platform
 
-**Package manager:** Yarn (not npm)
+**Package manager:** npm
 
 ## Commands
 
 ```bash
-yarn validate                      # Run lint + type-check + tests (do this before PRs)
-yarn type-check                    # TypeScript only
-yarn test:ci                       # Tests optimized for CI (limited workers)
-yarn db:types:stage                # Regenerate types after schema changes
-yarn db:types:prod                 # Regenerate from production schema
+npm run validate                   # Run lint + type-check + tests (do this before PRs)
+npm run type-check                 # TypeScript only
+npm run test:ci                    # Tests optimized for CI (limited workers)
+npm run db:types:stage             # Regenerate types after schema changes
+npm run db:types:prod              # Regenerate from production schema
 ```
 
 ## Structure
@@ -41,8 +41,8 @@ app/                   # Expo Router screens (file-based routing)
 ├── (admin)/           # Admin section
 ├── (modals)/          # Modal screens
 └── (public)/          # Public screens
-moltbot-server/        # Express + Anthropic SDK + Gmail adapter
-moltbot-skills/        # 7 prompt-based AI skills
+openclaw-server/       # Express + Anthropic SDK + Gmail adapter
+openclaw-skills/       # 7 prompt-based AI skills
 supabase/              # Migrations and edge functions
 ```
 
@@ -102,7 +102,7 @@ supabase/              # Migrations and edge functions
 - NEVER commit secrets (.env, API keys, credentials)
 - ALWAYS validate AI inputs
 - ALWAYS use parameterized queries
-- Service role key is server-only (moltbot-server)
+- Service role key is server-only (openclaw-server)
 
 ## Read Before Implementing
 
@@ -121,7 +121,7 @@ supabase/              # Migrations and edge functions
 
 ## Before PR
 
-- [ ] `yarn validate` passes (runs lint + type-check + tests)
+- [ ] `npm run validate` passes (runs lint + type-check + tests)
 - [ ] Tested on physical device
 - [ ] Run `/code-review`
 
