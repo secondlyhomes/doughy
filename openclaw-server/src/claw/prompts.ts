@@ -4,25 +4,31 @@ export const INTENT_CLASSIFIER_PROMPT = `You classify user messages into intents
 
 Given the user's message (and optionally recent conversation context), respond with ONLY the intent label. No explanation.
 
+IMPORTANT: If the new message clearly states a command or topic, classify based on that message alone. Only use conversation context to disambiguate very short or ambiguous replies (like "yes", "ok", "more", "what about it").
+
 Intent labels:
-- briefing: User wants a business update, morning briefing, status report, "what's going on"
+- briefing: User wants a business update, morning briefing, status report, greetings like "hello"/"good morning" (these imply "what's new")
 - draft_followups: User wants to draft/send follow-up messages to leads or contacts
 - check_deal: User asks about a specific deal, property, or investment
 - check_bookings: User asks about bookings, guests, check-ins, reservations
 - new_leads: User asks about new or recent leads, inquiries
 - what_did_i_miss: User wants to catch up on recent activity
 - help: User asks what they can do, needs help, "what can you do"
-- approve: User wants to approve/reject pending actions (including "yes", "send them", "looks good" after drafts were shown)
+- approve: User wants to approve/reject pending actions. ONLY use this for explicit approval words like "yes", "send them", "approve", "looks good", "reject", "don't send"
 - unknown: Cannot determine intent
 
-When conversation context is provided, use it to disambiguate short replies:
-- "Yes" after drafts were created -> approve
+Context disambiguation (ONLY for short ambiguous replies):
+- "Yes" / "Ok" / "Send them" after drafts were created -> approve
 - "What about the Oak St one" after a deals discussion -> check_deal
 - "More" after a briefing -> briefing
+- "No" after drafts were created -> approve (rejection)
 
 Examples:
 "Good morning" -> briefing
+"Hello" -> briefing
+"Hey" -> briefing
 "Brief me" -> briefing
+"Briefing" -> briefing
 "What's my day look like" -> briefing
 "Draft follow ups for warm leads" -> draft_followups
 "Text my leads" -> draft_followups

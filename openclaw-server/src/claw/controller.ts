@@ -79,7 +79,7 @@ async function classifyIntent(
 function guessIntentFromKeywords(message: string): ClawIntent {
   const lower = message.toLowerCase().trim();
 
-  if (/\b(brief|morning|update|status|day look|what.?s (up|going|new))\b/.test(lower)) return 'briefing';
+  if (/\b(brief(ing)?|morning|update|status|day look|what.?s (up|going|new)|hello|hey|hi)\b/.test(lower)) return 'briefing';
   if (/\b(draft|follow.?up|text.*lead|send.*follow|reach out)\b/.test(lower)) return 'draft_followups';
   if (/\b(deal|property|investment|offer)\b/.test(lower)) return 'check_deal';
   if (/\b(booking|guest|check.?in|reservation|arrival)\b/.test(lower)) return 'check_bookings';

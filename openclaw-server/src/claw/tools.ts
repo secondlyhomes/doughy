@@ -59,7 +59,7 @@ export async function readBookings(userId: string, input: { limit?: number; upco
 export async function readFollowUps(userId: string, input: { limit?: number; overdue_only?: boolean; upcoming_days?: number } = {}): Promise<unknown> {
   const limit = input.limit || 20;
   const today = new Date().toISOString().split('T')[0];
-  let params = `user_id=eq.${userId}&status=eq.pending&select=id,contact_id,deal_id,follow_up_type,scheduled_at,notes,created_at&order=scheduled_at.asc&limit=${limit}`;
+  let params = `user_id=eq.${userId}&status=eq.scheduled&select=id,contact_id,deal_id,follow_up_type,scheduled_at,context,created_at&order=scheduled_at.asc&limit=${limit}`;
 
   if (input.overdue_only) {
     params += `&scheduled_at=lt.${today}`;

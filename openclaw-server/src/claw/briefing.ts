@@ -32,7 +32,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
     }>(
       'investor',
       'follow_ups',
-      `user_id=eq.${userId}&scheduled_at=lt.${todayStr}&status=eq.pending&select=id,contact_id,follow_up_type,scheduled_at,deal_id&order=scheduled_at.asc&limit=10`
+      `user_id=eq.${userId}&scheduled_at=lt.${todayStr}&status=eq.scheduled&select=id,contact_id,follow_up_type,scheduled_at,deal_id&order=scheduled_at.asc&limit=10`
     ),
 
     // Upcoming follow-ups (next 7 days)
@@ -45,7 +45,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
     }>(
       'investor',
       'follow_ups',
-      `user_id=eq.${userId}&scheduled_at=gte.${todayStr}&scheduled_at=lte.${nextWeekStr}&status=eq.pending&select=id,contact_id,follow_up_type,scheduled_at,deal_id&order=scheduled_at.asc&limit=10`
+      `user_id=eq.${userId}&scheduled_at=gte.${todayStr}&scheduled_at=lte.${nextWeekStr}&status=eq.scheduled&select=id,contact_id,follow_up_type,scheduled_at,deal_id&order=scheduled_at.asc&limit=10`
     ),
 
     // Upcoming bookings (next 2 weeks) from landlord schema
