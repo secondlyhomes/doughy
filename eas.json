@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 8.0.0",
+    "version": ">= 13.2.0",
     "appVersionSource": "remote"
   },
   "build": {
@@ -12,10 +12,12 @@
         "APP_VARIANT": "development"
       },
       "ios": {
-        "simulator": true
+        "simulator": true,
+        "resourceClass": "m-medium"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "resourceClass": "medium"
       }
     },
     "staging": {
@@ -25,11 +27,13 @@
         "APP_VARIANT": "staging"
       },
       "ios": {
-        "autoIncrement": true
+        "autoIncrement": true,
+        "resourceClass": "m-medium"
       },
       "android": {
         "buildType": "apk",
-        "autoIncrement": true
+        "autoIncrement": true,
+        "resourceClass": "medium"
       }
     },
     "production": {
@@ -39,11 +43,16 @@
         "APP_VARIANT": "production"
       },
       "ios": {
-        "autoIncrement": true
+        "autoIncrement": true,
+        "resourceClass": "m-large",
+        "config": {
+          "usesNonExemptEncryption": false
+        }
       },
       "android": {
         "buildType": "aab",
-        "autoIncrement": true
+        "autoIncrement": true,
+        "resourceClass": "large"
       }
     }
   },

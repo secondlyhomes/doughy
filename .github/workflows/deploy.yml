@@ -4,6 +4,10 @@ on:
   push:
     branches: [main, develop]
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # ============================================
   # STAGING DEPLOYMENT (develop branch)
@@ -17,15 +21,16 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     environment: staging
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+          cache: 'yarn'
 
-      - run: npm ci
+      - run: yarn --frozen-lockfile
 
       # ---- Supabase ----
       - uses: supabase/setup-cli@v1
@@ -53,7 +58,7 @@ jobs:
 
       # ---- Web ----
       - name: Build Web
-        run: npm run build:web
+        run: yarn build:web
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -70,7 +75,7 @@ jobs:
   # PRODUCTION DEPLOYMENT (main branch)
   # Deploys to:
   #   - Supabase (vpqglbaedcpeprnlnfxd)
-  #   - App Store (via TestFlight → manual review)
+  #   - App Store (via TestFlight -> manual review)
   #   - Google Play (production track)
   #   - Netlify (production URL)
   # ============================================
@@ -78,15 +83,16 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production # Requires approval in GitHub settings
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+          cache: 'yarn'
 
-      - run: npm ci
+      - run: yarn --frozen-lockfile
 
       # ---- Supabase ----
       - uses: supabase/setup-cli@v1
@@ -119,7 +125,7 @@ jobs:
 
       # ---- Web ----
       - name: Build Web
-        run: npm run build:web
+        run: yarn build:web
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
