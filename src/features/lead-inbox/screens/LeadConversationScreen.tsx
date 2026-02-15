@@ -367,7 +367,7 @@ export function LeadConversationScreen() {
                     AI Suggestions
                   </Text>
                   <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}>
-                    MoltBot will suggest responses
+                    OpenClaw will suggest responses
                   </Text>
                 </View>
                 <Button

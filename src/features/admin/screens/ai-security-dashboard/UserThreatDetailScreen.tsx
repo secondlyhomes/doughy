@@ -64,7 +64,7 @@ export function UserThreatDetailScreen() {
 
       // Get threat score
       const { data: scoreData } = await supabase
-        .schema('ai').from('moltbot_user_threat_scores' as unknown as 'profiles')
+        .schema('ai').from('openclaw_user_threat_scores' as unknown as 'profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -81,7 +81,7 @@ export function UserThreatDetailScreen() {
 
       // Get security events for this user
       const { data: eventsData } = await supabase
-        .schema('ai').from('moltbot_security_logs' as unknown as 'profiles')
+        .schema('ai').from('openclaw_security_logs' as unknown as 'profiles')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -132,7 +132,7 @@ export function UserThreatDetailScreen() {
       setActionLoading('reset');
       try {
         const { error } = await supabase
-          .schema('ai').from('moltbot_user_threat_scores' as unknown as 'profiles')
+          .schema('ai').from('openclaw_user_threat_scores' as unknown as 'profiles')
           .update({
             current_score: 0,
             event_count_24h: 0,
@@ -172,7 +172,7 @@ export function UserThreatDetailScreen() {
 
         // Also flag in threat scores
         const { error: threatError } = await supabase
-          .schema('ai').from('moltbot_user_threat_scores' as unknown as 'profiles')
+          .schema('ai').from('openclaw_user_threat_scores' as unknown as 'profiles')
           .update({ is_flagged: true })
           .eq('user_id', userId);
 

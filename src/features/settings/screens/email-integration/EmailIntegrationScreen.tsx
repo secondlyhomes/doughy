@@ -81,7 +81,7 @@ export function EmailIntegrationScreen() {
         if (result.success) {
           Alert.alert(
             'Gmail Connected',
-            `Successfully connected ${result.email}. MoltBot will now scan for rental platform emails.`
+            `Successfully connected ${result.email}. OpenClaw will now scan for rental platform emails.`
           );
           fetchConnection();
         } else {
@@ -147,7 +147,7 @@ export function EmailIntegrationScreen() {
 
     Alert.alert(
       'Disconnect Gmail',
-      'Are you sure you want to disconnect Gmail? MoltBot will no longer receive emails from rental platforms.',
+      'Are you sure you want to disconnect Gmail? OpenClaw will no longer receive emails from rental platforms.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -160,7 +160,7 @@ export function EmailIntegrationScreen() {
 
               if (success) {
                 setConnection(null);
-                Alert.alert('Disconnected', 'Gmail has been disconnected from MoltBot.');
+                Alert.alert('Disconnected', 'Gmail has been disconnected from OpenClaw.');
               } else {
                 Alert.alert('Error', 'Failed to disconnect Gmail');
               }

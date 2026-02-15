@@ -10,1232 +10,10 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
-      ai_auto_send_rules: {
-        Row: {
-          conditions: Json | null
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          last_triggered_at: string | null
-          name: string
-          property_id: string | null
-          template_id: string
-          trigger_count: number | null
-          trigger_event: string
-          trigger_offset_hours: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          conditions?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_triggered_at?: string | null
-          name: string
-          property_id?: string | null
-          template_id: string
-          trigger_count?: number | null
-          trigger_event: string
-          trigger_offset_hours?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          conditions?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_triggered_at?: string | null
-          name?: string
-          property_id?: string | null
-          template_id?: string
-          trigger_count?: number | null
-          trigger_event?: string
-          trigger_offset_hours?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_auto_send_rules_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_auto_send_rules_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_guest_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_capture_items: {
-        Row: {
-          ai_confidence: number | null
-          ai_extracted_data: Json | null
-          ai_summary: string | null
-          assigned_deal_id: string | null
-          assigned_lead_id: string | null
-          assigned_property_id: string | null
-          content: string | null
-          created_at: string
-          duration_seconds: number | null
-          file_name: string | null
-          file_size: number | null
-          file_url: string | null
-          id: string
-          metadata: Json | null
-          mime_type: string | null
-          source: string | null
-          status: Database["public"]["Enums"]["capture_item_status"]
-          suggested_lead_id: string | null
-          suggested_property_id: string | null
-          title: string | null
-          transcript: string | null
-          triaged_at: string | null
-          triaged_by: string | null
-          type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          ai_confidence?: number | null
-          ai_extracted_data?: Json | null
-          ai_summary?: string | null
-          assigned_deal_id?: string | null
-          assigned_lead_id?: string | null
-          assigned_property_id?: string | null
-          content?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          file_name?: string | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          mime_type?: string | null
-          source?: string | null
-          status?: Database["public"]["Enums"]["capture_item_status"]
-          suggested_lead_id?: string | null
-          suggested_property_id?: string | null
-          title?: string | null
-          transcript?: string | null
-          triaged_at?: string | null
-          triaged_by?: string | null
-          type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          ai_confidence?: number | null
-          ai_extracted_data?: Json | null
-          ai_summary?: string | null
-          assigned_deal_id?: string | null
-          assigned_lead_id?: string | null
-          assigned_property_id?: string | null
-          content?: string | null
-          created_at?: string
-          duration_seconds?: number | null
-          file_name?: string | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          mime_type?: string | null
-          source?: string | null
-          status?: Database["public"]["Enums"]["capture_item_status"]
-          suggested_lead_id?: string | null
-          suggested_property_id?: string | null
-          title?: string | null
-          transcript?: string | null
-          triaged_at?: string | null
-          triaged_by?: string | null
-          type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_capture_items_assigned_deal_id_fkey"
-            columns: ["assigned_deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_capture_items_assigned_lead_id_fkey"
-            columns: ["assigned_lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_capture_items_assigned_property_id_fkey"
-            columns: ["assigned_property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_capture_items_suggested_lead_id_fkey"
-            columns: ["suggested_lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_capture_items_suggested_property_id_fkey"
-            columns: ["suggested_property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_confidence_adjustments: {
-        Row: {
-          approval_rate: number | null
-          confidence_adjustment: number
-          contact_type: string | null
-          created_at: string | null
-          edit_rate: number | null
-          id: string
-          last_calculated_at: string | null
-          message_type: string | null
-          rejection_rate: number | null
-          sample_size: number
-          topic: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          approval_rate?: number | null
-          confidence_adjustment?: number
-          contact_type?: string | null
-          created_at?: string | null
-          edit_rate?: number | null
-          id?: string
-          last_calculated_at?: string | null
-          message_type?: string | null
-          rejection_rate?: number | null
-          sample_size?: number
-          topic?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          approval_rate?: number | null
-          confidence_adjustment?: number
-          contact_type?: string | null
-          created_at?: string | null
-          edit_rate?: number | null
-          id?: string
-          last_calculated_at?: string | null
-          message_type?: string | null
-          rejection_rate?: number | null
-          sample_size?: number
-          topic?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_jobs: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          created_by: string | null
-          deal_id: string | null
-          error_message: string | null
-          id: string
-          input_json: Json | null
-          job_type: string
-          progress: number
-          result_artifact_ids: string[] | null
-          result_json: Json | null
-          started_at: string | null
-          status: Database["public"]["Enums"]["assistant_job_status"]
-          updated_at: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          deal_id?: string | null
-          error_message?: string | null
-          id?: string
-          input_json?: Json | null
-          job_type: string
-          progress?: number
-          result_artifact_ids?: string[] | null
-          result_json?: Json | null
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["assistant_job_status"]
-          updated_at?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          deal_id?: string | null
-          error_message?: string | null
-          id?: string
-          input_json?: Json | null
-          job_type?: string
-          progress?: number
-          result_artifact_ids?: string[] | null
-          result_json?: Json | null
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["assistant_job_status"]
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_jobs_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_moltbot_blocked_ips: {
-        Row: {
-          blocked_at: string | null
-          blocked_by: string | null
-          expires_at: string | null
-          incident_count: number | null
-          ip_address: unknown
-          notes: string | null
-          reason: string
-          related_user_ids: string[] | null
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at: string | null
-        }
-        Insert: {
-          blocked_at?: string | null
-          blocked_by?: string | null
-          expires_at?: string | null
-          incident_count?: number | null
-          ip_address: unknown
-          notes?: string | null
-          reason: string
-          related_user_ids?: string[] | null
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at?: string | null
-        }
-        Update: {
-          blocked_at?: string | null
-          blocked_by?: string | null
-          expires_at?: string | null
-          incident_count?: number | null
-          ip_address?: unknown
-          notes?: string | null
-          reason?: string
-          related_user_ids?: string[] | null
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      ai_moltbot_blocked_patterns: {
-        Row: {
-          applies_to_channels: string[] | null
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          hit_count: number | null
-          id: string
-          is_active: boolean | null
-          last_hit_at: string | null
-          pattern: string
-          pattern_type: string
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          applies_to_channels?: string[] | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          hit_count?: number | null
-          id?: string
-          is_active?: boolean | null
-          last_hit_at?: string | null
-          pattern: string
-          pattern_type: string
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          applies_to_channels?: string[] | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          hit_count?: number | null
-          id?: string
-          is_active?: boolean | null
-          last_hit_at?: string | null
-          pattern?: string
-          pattern_type?: string
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      ai_moltbot_email_analyses: {
-        Row: {
-          analysis_type: string
-          confidence: number | null
-          created_at: string | null
-          date_range_end: string | null
-          date_range_start: string | null
-          emails_analyzed: number | null
-          id: string
-          is_active: boolean | null
-          results: Json
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          analysis_type: string
-          confidence?: number | null
-          created_at?: string | null
-          date_range_end?: string | null
-          date_range_start?: string | null
-          emails_analyzed?: number | null
-          id?: string
-          is_active?: boolean | null
-          results: Json
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          analysis_type?: string
-          confidence?: number | null
-          created_at?: string | null
-          date_range_end?: string | null
-          date_range_start?: string | null
-          emails_analyzed?: number | null
-          id?: string
-          is_active?: boolean | null
-          results?: Json
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_moltbot_episodic_memories: {
-        Row: {
-          contact_email: string | null
-          contact_id: string | null
-          contact_phone: string | null
-          context: Json | null
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          importance: number | null
-          is_active: boolean | null
-          key_facts: Json | null
-          memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
-          sentiment: string | null
-          source_conversation_id: string | null
-          source_message_ids: string[] | null
-          summary: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          contact_email?: string | null
-          contact_id?: string | null
-          contact_phone?: string | null
-          context?: Json | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          importance?: number | null
-          is_active?: boolean | null
-          key_facts?: Json | null
-          memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
-          sentiment?: string | null
-          source_conversation_id?: string | null
-          source_message_ids?: string[] | null
-          summary: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          contact_email?: string | null
-          contact_id?: string | null
-          contact_phone?: string | null
-          context?: Json | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          importance?: number | null
-          is_active?: boolean | null
-          key_facts?: Json | null
-          memory_type?: Database["public"]["Enums"]["moltbot_episodic_type"]
-          sentiment?: string | null
-          source_conversation_id?: string | null
-          source_message_ids?: string[] | null
-          summary?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_moltbot_global_knowledge: {
-        Row: {
-          applies_to_channels: string[] | null
-          applies_to_platforms: string[] | null
-          applies_to_regions: string[] | null
-          category: Database["public"]["Enums"]["moltbot_knowledge_category"]
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          key: string
-          last_verified_at: string | null
-          priority: number | null
-          source_url: string | null
-          updated_at: string | null
-          value: Json
-          verified_by: string | null
-          version: number | null
-        }
-        Insert: {
-          applies_to_channels?: string[] | null
-          applies_to_platforms?: string[] | null
-          applies_to_regions?: string[] | null
-          category: Database["public"]["Enums"]["moltbot_knowledge_category"]
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          key: string
-          last_verified_at?: string | null
-          priority?: number | null
-          source_url?: string | null
-          updated_at?: string | null
-          value: Json
-          verified_by?: string | null
-          version?: number | null
-        }
-        Update: {
-          applies_to_channels?: string[] | null
-          applies_to_platforms?: string[] | null
-          applies_to_regions?: string[] | null
-          category?: Database["public"]["Enums"]["moltbot_knowledge_category"]
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          key?: string
-          last_verified_at?: string | null
-          priority?: number | null
-          source_url?: string | null
-          updated_at?: string | null
-          value?: Json
-          verified_by?: string | null
-          version?: number | null
-        }
-        Relationships: []
-      }
-      ai_moltbot_knowledge_chunk_tags: {
-        Row: {
-          chunk_id: string
-          tag_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          chunk_id: string
-          tag_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          chunk_id?: string
-          tag_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_moltbot_knowledge_chunk_tags_chunk_id_fkey"
-            columns: ["chunk_id"]
-            isOneToOne: false
-            referencedRelation: "ai_moltbot_knowledge_chunks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_moltbot_knowledge_chunk_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "ai_moltbot_knowledge_tags"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_moltbot_knowledge_chunks: {
-        Row: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
-          content: string
-          content_hash: string | null
-          created_at: string | null
-          embedding: string | null
-          external_id: string | null
-          external_path: string | null
-          external_url: string | null
-          id: string
-          last_used_at: string | null
-          metadata: Json | null
-          relevance_score: number | null
-          source_id: string
-          synced_at: string | null
-          title: string | null
-          token_count: number | null
-          updated_at: string | null
-          use_count: number | null
-          user_id: string
-        }
-        Insert: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
-          content: string
-          content_hash?: string | null
-          created_at?: string | null
-          embedding?: string | null
-          external_id?: string | null
-          external_path?: string | null
-          external_url?: string | null
-          id?: string
-          last_used_at?: string | null
-          metadata?: Json | null
-          relevance_score?: number | null
-          source_id: string
-          synced_at?: string | null
-          title?: string | null
-          token_count?: number | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id: string
-        }
-        Update: {
-          chunk_type?: Database["public"]["Enums"]["moltbot_chunk_type"]
-          content?: string
-          content_hash?: string | null
-          created_at?: string | null
-          embedding?: string | null
-          external_id?: string | null
-          external_path?: string | null
-          external_url?: string | null
-          id?: string
-          last_used_at?: string | null
-          metadata?: Json | null
-          relevance_score?: number | null
-          source_id?: string
-          synced_at?: string | null
-          title?: string | null
-          token_count?: number | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_moltbot_knowledge_chunks_source_id_fkey"
-            columns: ["source_id"]
-            isOneToOne: false
-            referencedRelation: "ai_moltbot_knowledge_sources"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_moltbot_knowledge_sources: {
-        Row: {
-          config: Json
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          last_sync_at: string | null
-          last_sync_error: string | null
-          name: string
-          next_sync_at: string | null
-          source_type: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
-          sync_frequency: string | null
-          sync_status: Database["public"]["Enums"]["moltbot_sync_status"] | null
-          total_chunks: number | null
-          total_tokens: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          config?: Json
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_sync_at?: string | null
-          last_sync_error?: string | null
-          name: string
-          next_sync_at?: string | null
-          source_type: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
-          sync_frequency?: string | null
-          sync_status?:
-            | Database["public"]["Enums"]["moltbot_sync_status"]
-            | null
-          total_chunks?: number | null
-          total_tokens?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          config?: Json
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_sync_at?: string | null
-          last_sync_error?: string | null
-          name?: string
-          next_sync_at?: string | null
-          source_type?: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
-          sync_frequency?: string | null
-          sync_status?:
-            | Database["public"]["Enums"]["moltbot_sync_status"]
-            | null
-          total_chunks?: number | null
-          total_tokens?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_moltbot_knowledge_tags: {
-        Row: {
-          color: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          name: string
-          updated_at: string | null
-          use_count: number | null
-          user_id: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-          use_count?: number | null
-          user_id: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-          use_count?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_moltbot_learning_queue_items: {
-        Row: {
-          contact_id: string | null
-          conversation_id: string | null
-          created_at: string | null
-          error_message: string | null
-          extracted_learnings: Json | null
-          final_response: string | null
-          id: string
-          original_response: string
-          outcome: string
-          outcome_id: string
-          processed_at: string | null
-          status: Database["public"]["Enums"]["moltbot_learning_status"]
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          contact_id?: string | null
-          conversation_id?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          extracted_learnings?: Json | null
-          final_response?: string | null
-          id?: string
-          original_response: string
-          outcome: string
-          outcome_id: string
-          processed_at?: string | null
-          status?: Database["public"]["Enums"]["moltbot_learning_status"]
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          contact_id?: string | null
-          conversation_id?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          extracted_learnings?: Json | null
-          final_response?: string | null
-          id?: string
-          original_response?: string
-          outcome?: string
-          outcome_id?: string
-          processed_at?: string | null
-          status?: Database["public"]["Enums"]["moltbot_learning_status"]
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_moltbot_rate_limits: {
-        Row: {
-          channel: string
-          last_request_at: string | null
-          request_count: number | null
-          updated_at: string | null
-          user_id: string
-          window_start: string
-        }
-        Insert: {
-          channel: string
-          last_request_at?: string | null
-          request_count?: number | null
-          updated_at?: string | null
-          user_id: string
-          window_start: string
-        }
-        Update: {
-          channel?: string
-          last_request_at?: string | null
-          request_count?: number | null
-          updated_at?: string | null
-          user_id?: string
-          window_start?: string
-        }
-        Relationships: []
-      }
-      ai_moltbot_response_examples: {
-        Row: {
-          category: string
-          context: Json | null
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          is_verified: boolean | null
-          last_used_at: string | null
-          outcome: string | null
-          rating: number | null
-          response: string
-          source: string
-          source_conversation_id: string | null
-          subcategory: string | null
-          topic: string | null
-          trigger_message: string
-          updated_at: string | null
-          use_count: number | null
-          user_id: string
-        }
-        Insert: {
-          category: string
-          context?: Json | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_verified?: boolean | null
-          last_used_at?: string | null
-          outcome?: string | null
-          rating?: number | null
-          response: string
-          source: string
-          source_conversation_id?: string | null
-          subcategory?: string | null
-          topic?: string | null
-          trigger_message: string
-          updated_at?: string | null
-          use_count?: number | null
-          user_id: string
-        }
-        Update: {
-          category?: string
-          context?: Json | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_verified?: boolean | null
-          last_used_at?: string | null
-          outcome?: string | null
-          rating?: number | null
-          response?: string
-          source?: string
-          source_conversation_id?: string | null
-          subcategory?: string | null
-          topic?: string | null
-          trigger_message?: string
-          updated_at?: string | null
-          use_count?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_moltbot_security_logs: {
-        Row: {
-          action_taken: Database["public"]["Enums"]["moltbot_security_action"]
-          channel: string | null
-          contact_id: string | null
-          conversation_id: string | null
-          created_at: string | null
-          detected_patterns: string[] | null
-          endpoint: string | null
-          event_type: Database["public"]["Enums"]["moltbot_security_event_type"]
-          id: string
-          ip_address: unknown
-          metadata: Json | null
-          platform: string | null
-          raw_input: string | null
-          risk_score: number | null
-          sanitized_input: string | null
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action_taken: Database["public"]["Enums"]["moltbot_security_action"]
-          channel?: string | null
-          contact_id?: string | null
-          conversation_id?: string | null
-          created_at?: string | null
-          detected_patterns?: string[] | null
-          endpoint?: string | null
-          event_type: Database["public"]["Enums"]["moltbot_security_event_type"]
-          id?: string
-          ip_address?: unknown
-          metadata?: Json | null
-          platform?: string | null
-          raw_input?: string | null
-          risk_score?: number | null
-          sanitized_input?: string | null
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action_taken?: Database["public"]["Enums"]["moltbot_security_action"]
-          channel?: string | null
-          contact_id?: string | null
-          conversation_id?: string | null
-          created_at?: string | null
-          detected_patterns?: string[] | null
-          endpoint?: string | null
-          event_type?: Database["public"]["Enums"]["moltbot_security_event_type"]
-          id?: string
-          ip_address?: unknown
-          metadata?: Json | null
-          platform?: string | null
-          raw_input?: string | null
-          risk_score?: number | null
-          sanitized_input?: string | null
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      ai_moltbot_sync_records: {
-        Row: {
-          chunks_added: number | null
-          chunks_deleted: number | null
-          chunks_updated: number | null
-          completed_at: string | null
-          created_at: string | null
-          error_details: Json | null
-          error_message: string | null
-          id: string
-          source_id: string
-          started_at: string
-          status: Database["public"]["Enums"]["moltbot_sync_status"]
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          chunks_added?: number | null
-          chunks_deleted?: number | null
-          chunks_updated?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          error_details?: Json | null
-          error_message?: string | null
-          id?: string
-          source_id: string
-          started_at: string
-          status?: Database["public"]["Enums"]["moltbot_sync_status"]
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          chunks_added?: number | null
-          chunks_deleted?: number | null
-          chunks_updated?: number | null
-          completed_at?: string | null
-          created_at?: string | null
-          error_details?: Json | null
-          error_message?: string | null
-          id?: string
-          source_id?: string
-          started_at?: string
-          status?: Database["public"]["Enums"]["moltbot_sync_status"]
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_moltbot_sync_records_source_id_fkey"
-            columns: ["source_id"]
-            isOneToOne: false
-            referencedRelation: "ai_moltbot_knowledge_sources"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_moltbot_user_memories: {
-        Row: {
-          channel: string | null
-          confidence: number | null
-          contact_type: string | null
-          created_at: string | null
-          external_source_id: string | null
-          external_source_type: string | null
-          id: string
-          key: string
-          last_used_at: string | null
-          learned_from_outcome_id: string | null
-          memory_type: Database["public"]["Enums"]["moltbot_user_memory_type"]
-          property_id: string | null
-          source: Database["public"]["Enums"]["moltbot_memory_source"] | null
-          success_count: number | null
-          updated_at: string | null
-          use_count: number | null
-          user_id: string
-          value: Json
-        }
-        Insert: {
-          channel?: string | null
-          confidence?: number | null
-          contact_type?: string | null
-          created_at?: string | null
-          external_source_id?: string | null
-          external_source_type?: string | null
-          id?: string
-          key: string
-          last_used_at?: string | null
-          learned_from_outcome_id?: string | null
-          memory_type: Database["public"]["Enums"]["moltbot_user_memory_type"]
-          property_id?: string | null
-          source?: Database["public"]["Enums"]["moltbot_memory_source"] | null
-          success_count?: number | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id: string
-          value: Json
-        }
-        Update: {
-          channel?: string | null
-          confidence?: number | null
-          contact_type?: string | null
-          created_at?: string | null
-          external_source_id?: string | null
-          external_source_type?: string | null
-          id?: string
-          key?: string
-          last_used_at?: string | null
-          learned_from_outcome_id?: string | null
-          memory_type?: Database["public"]["Enums"]["moltbot_user_memory_type"]
-          property_id?: string | null
-          source?: Database["public"]["Enums"]["moltbot_memory_source"] | null
-          success_count?: number | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id?: string
-          value?: Json
-        }
-        Relationships: []
-      }
-      ai_response_outcomes: {
-        Row: {
-          actions_suggested: string[] | null
-          channel: string | null
-          contact_id: string | null
-          contact_type: string
-          conversation_id: string | null
-          created_at: string | null
-          edit_severity: Database["public"]["Enums"]["ai_edit_severity"] | null
-          final_response: string | null
-          id: string
-          initial_confidence: number
-          message_id: string | null
-          message_type: string
-          outcome: Database["public"]["Enums"]["ai_outcome"]
-          platform: string | null
-          property_id: string | null
-          response_time_seconds: number | null
-          reviewed_at: string | null
-          sensitive_topics_detected: string[] | null
-          suggested_response: string
-          topic: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          actions_suggested?: string[] | null
-          channel?: string | null
-          contact_id?: string | null
-          contact_type: string
-          conversation_id?: string | null
-          created_at?: string | null
-          edit_severity?: Database["public"]["Enums"]["ai_edit_severity"] | null
-          final_response?: string | null
-          id?: string
-          initial_confidence: number
-          message_id?: string | null
-          message_type: string
-          outcome: Database["public"]["Enums"]["ai_outcome"]
-          platform?: string | null
-          property_id?: string | null
-          response_time_seconds?: number | null
-          reviewed_at?: string | null
-          sensitive_topics_detected?: string[] | null
-          suggested_response: string
-          topic: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          actions_suggested?: string[] | null
-          channel?: string | null
-          contact_id?: string | null
-          contact_type?: string
-          conversation_id?: string | null
-          created_at?: string | null
-          edit_severity?: Database["public"]["Enums"]["ai_edit_severity"] | null
-          final_response?: string | null
-          id?: string
-          initial_confidence?: number
-          message_id?: string | null
-          message_type?: string
-          outcome?: Database["public"]["Enums"]["ai_outcome"]
-          platform?: string | null
-          property_id?: string | null
-          response_time_seconds?: number | null
-          reviewed_at?: string | null
-          sensitive_topics_detected?: string[] | null
-          suggested_response?: string
-          topic?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_response_outcomes_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_response_outcomes_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_response_outcomes_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_messages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_response_outcomes_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_sessions: {
-        Row: {
-          context: Json | null
-          created_at: string | null
-          id: string
-          tokens_used: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          context?: Json | null
-          created_at?: string | null
-          id?: string
-          tokens_used?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          context?: Json | null
-          created_at?: string | null
-          id?: string
-          tokens_used?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       analytics_feature_usage_stats: {
         Row: {
           date: string
@@ -1286,85 +64,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
-      }
-      billing_mail_credit_transactions: {
-        Row: {
-          amount: number
-          balance_after: number
-          created_at: string | null
-          description: string | null
-          id: string
-          mail_piece_type: Database["public"]["Enums"]["mail_piece_type"] | null
-          metadata: Json | null
-          original_transaction_id: string | null
-          package_name: string | null
-          package_price: number | null
-          pieces_count: number | null
-          refund_reason: string | null
-          stripe_payment_id: string | null
-          touch_log_id: string | null
-          type: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          balance_after: number
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          mail_piece_type?:
-            | Database["public"]["Enums"]["mail_piece_type"]
-            | null
-          metadata?: Json | null
-          original_transaction_id?: string | null
-          package_name?: string | null
-          package_price?: number | null
-          pieces_count?: number | null
-          refund_reason?: string | null
-          stripe_payment_id?: string | null
-          touch_log_id?: string | null
-          type: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          balance_after?: number
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          mail_piece_type?:
-            | Database["public"]["Enums"]["mail_piece_type"]
-            | null
-          metadata?: Json | null
-          original_transaction_id?: string | null
-          package_name?: string | null
-          package_price?: number | null
-          pieces_count?: number | null
-          refund_reason?: string | null
-          stripe_payment_id?: string | null
-          touch_log_id?: string | null
-          type?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "billing_mail_credit_transactions_original_transaction_id_fkey"
-            columns: ["original_transaction_id"]
-            isOneToOne: false
-            referencedRelation: "billing_mail_credit_transactions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "billing_mail_credit_transactions_touch_log_id_fkey"
-            columns: ["touch_log_id"]
-            isOneToOne: false
-            referencedRelation: "investor_drip_touch_logs"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       billing_stripe_customers: {
         Row: {
@@ -1690,7 +389,7 @@ export type Database = {
             foreignKeyName: "calls_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: "crm_contacts"
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -1727,13 +426,6 @@ export type Database = {
           workspace_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "comms_call_logs_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "comms_call_logs_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -1856,13 +548,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "comms_call_transcripts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "comms_call_transcripts_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
@@ -1945,20 +630,6 @@ export type Database = {
           workspace_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "comms_conversation_items_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comms_conversation_items_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "comms_conversation_items_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -2089,15 +760,7 @@ export type Database = {
           subject?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       comms_scheduled_messages: {
         Row: {
@@ -2138,279 +801,6 @@ export type Database = {
         }
         Relationships: []
       }
-      crm_contact_opt_outs: {
-        Row: {
-          channel: Database["public"]["Enums"]["drip_channel"]
-          contact_id: string
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          opt_in_reason: string | null
-          opt_out_message: string | null
-          opt_out_reason: string | null
-          opted_in_at: string | null
-          opted_out_at: string | null
-          source_campaign_id: string | null
-          source_touch_id: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          channel: Database["public"]["Enums"]["drip_channel"]
-          contact_id: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          opt_in_reason?: string | null
-          opt_out_message?: string | null
-          opt_out_reason?: string | null
-          opted_in_at?: string | null
-          opted_out_at?: string | null
-          source_campaign_id?: string | null
-          source_touch_id?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          channel?: Database["public"]["Enums"]["drip_channel"]
-          contact_id?: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          opt_in_reason?: string | null
-          opt_out_message?: string | null
-          opt_out_reason?: string | null
-          opted_in_at?: string | null
-          opted_out_at?: string | null
-          source_campaign_id?: string | null
-          source_touch_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_contact_opt_outs_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_contact_opt_outs_source_campaign_id_fkey"
-            columns: ["source_campaign_id"]
-            isOneToOne: false
-            referencedRelation: "investor_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_contact_opt_outs_source_touch_id_fkey"
-            columns: ["source_touch_id"]
-            isOneToOne: false
-            referencedRelation: "investor_drip_touch_logs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      crm_contact_touches: {
-        Row: {
-          callback_scheduled_at: string | null
-          created_at: string
-          deal_id: string | null
-          id: string
-          is_response_received: boolean
-          lead_id: string | null
-          metadata: Json | null
-          notes: string | null
-          outcome: string
-          property_id: string | null
-          touch_type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          callback_scheduled_at?: string | null
-          created_at?: string
-          deal_id?: string | null
-          id?: string
-          is_response_received?: boolean
-          lead_id?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          outcome: string
-          property_id?: string | null
-          touch_type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          callback_scheduled_at?: string | null
-          created_at?: string
-          deal_id?: string | null
-          id?: string
-          is_response_received?: boolean
-          lead_id?: string | null
-          metadata?: Json | null
-          notes?: string | null
-          outcome?: string
-          property_id?: string | null
-          touch_type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_contact_touches_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_contact_touches_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_contact_touches_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      crm_contacts: {
-        Row: {
-          active_campaign_id: string | null
-          address: Json | null
-          best_contact_time: string | null
-          campaign_status: Database["public"]["Enums"]["campaign_status"] | null
-          campaign_touches_received: number | null
-          city: string | null
-          company: string | null
-          contact_types:
-            | Database["public"]["Enums"]["crm_contact_type"][]
-            | null
-          created_at: string
-          email: string | null
-          emails: Json | null
-          first_name: string | null
-          id: string
-          is_deleted: boolean | null
-          is_do_not_contact: boolean | null
-          job_title: string | null
-          last_campaign_touch_at: string | null
-          last_name: string | null
-          metadata: Json | null
-          phone: string | null
-          phones: Json | null
-          preferred_channel: Database["public"]["Enums"]["drip_channel"] | null
-          score: number | null
-          sms_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          source: Database["public"]["Enums"]["crm_contact_source"] | null
-          state: string | null
-          status: Database["public"]["Enums"]["crm_contact_status"] | null
-          tags: string[] | null
-          updated_at: string
-          user_id: string | null
-          workspace_id: string | null
-          zip: string | null
-        }
-        Insert: {
-          active_campaign_id?: string | null
-          address?: Json | null
-          best_contact_time?: string | null
-          campaign_status?:
-            | Database["public"]["Enums"]["campaign_status"]
-            | null
-          campaign_touches_received?: number | null
-          city?: string | null
-          company?: string | null
-          contact_types?:
-            | Database["public"]["Enums"]["crm_contact_type"][]
-            | null
-          created_at?: string
-          email?: string | null
-          emails?: Json | null
-          first_name?: string | null
-          id?: string
-          is_deleted?: boolean | null
-          is_do_not_contact?: boolean | null
-          job_title?: string | null
-          last_campaign_touch_at?: string | null
-          last_name?: string | null
-          metadata?: Json | null
-          phone?: string | null
-          phones?: Json | null
-          preferred_channel?: Database["public"]["Enums"]["drip_channel"] | null
-          score?: number | null
-          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          source?: Database["public"]["Enums"]["crm_contact_source"] | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["crm_contact_status"] | null
-          tags?: string[] | null
-          updated_at?: string
-          user_id?: string | null
-          workspace_id?: string | null
-          zip?: string | null
-        }
-        Update: {
-          active_campaign_id?: string | null
-          address?: Json | null
-          best_contact_time?: string | null
-          campaign_status?:
-            | Database["public"]["Enums"]["campaign_status"]
-            | null
-          campaign_touches_received?: number | null
-          city?: string | null
-          company?: string | null
-          contact_types?:
-            | Database["public"]["Enums"]["crm_contact_type"][]
-            | null
-          created_at?: string
-          email?: string | null
-          emails?: Json | null
-          first_name?: string | null
-          id?: string
-          is_deleted?: boolean | null
-          is_do_not_contact?: boolean | null
-          job_title?: string | null
-          last_campaign_touch_at?: string | null
-          last_name?: string | null
-          metadata?: Json | null
-          phone?: string | null
-          phones?: Json | null
-          preferred_channel?: Database["public"]["Enums"]["drip_channel"] | null
-          score?: number | null
-          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          source?: Database["public"]["Enums"]["crm_contact_source"] | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["crm_contact_status"] | null
-          tags?: string[] | null
-          updated_at?: string
-          user_id?: string | null
-          workspace_id?: string | null
-          zip?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_contacts_active_campaign_id_fkey"
-            columns: ["active_campaign_id"]
-            isOneToOne: false
-            referencedRelation: "investor_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_contacts_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       crm_lead_contacts: {
         Row: {
           contact_id: string
@@ -2444,14 +834,7 @@ export type Database = {
             foreignKeyName: "lead_contacts_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lead_contacts_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -2481,1371 +864,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "lead_notes_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      crm_leads: {
-        Row: {
-          address_line_1: string | null
-          address_line_2: string | null
-          city: string | null
-          company: string | null
-          created_at: string | null
-          email: string | null
-          email_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          email_opt_status_updated_at: string | null
-          emails: Json | null
-          id: string
-          import_id: string | null
-          is_conversation_started: boolean | null
-          is_deleted: boolean | null
-          name: string
-          opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          opt_status_updated_at: string | null
-          phone: string | null
-          phone_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          phone_opt_status_updated_at: string | null
-          phones: Json | null
-          score: number | null
-          state: string | null
-          status: Database["public"]["Enums"]["lead_status"]
-          tags: string[] | null
-          text_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
-          text_opt_status_updated_at: string | null
-          updated_at: string
-          user_id: string | null
-          workspace_id: string | null
-          zip: string | null
-        }
-        Insert: {
-          address_line_1?: string | null
-          address_line_2?: string | null
-          city?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          email_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          email_opt_status_updated_at?: string | null
-          emails?: Json | null
-          id?: string
-          import_id?: string | null
-          is_conversation_started?: boolean | null
-          is_deleted?: boolean | null
-          name: string
-          opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          opt_status_updated_at?: string | null
-          phone?: string | null
-          phone_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          phone_opt_status_updated_at?: string | null
-          phones?: Json | null
-          score?: number | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["lead_status"]
-          tags?: string[] | null
-          text_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          text_opt_status_updated_at?: string | null
-          updated_at?: string
-          user_id?: string | null
-          workspace_id?: string | null
-          zip?: string | null
-        }
-        Update: {
-          address_line_1?: string | null
-          address_line_2?: string | null
-          city?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          email_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          email_opt_status_updated_at?: string | null
-          emails?: Json | null
-          id?: string
-          import_id?: string | null
-          is_conversation_started?: boolean | null
-          is_deleted?: boolean | null
-          name?: string
-          opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          opt_status_updated_at?: string | null
-          phone?: string | null
-          phone_opt_status?:
-            | Database["public"]["Enums"]["sms_opt_status"]
-            | null
-          phone_opt_status_updated_at?: string | null
-          phones?: Json | null
-          score?: number | null
-          state?: string | null
-          status?: Database["public"]["Enums"]["lead_status"]
-          tags?: string[] | null
-          text_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
-          text_opt_status_updated_at?: string | null
-          updated_at?: string
-          user_id?: string | null
-          workspace_id?: string | null
-          zip?: string | null
-        }
         Relationships: []
-      }
-      crm_skip_trace_results: {
-        Row: {
-          addresses: Json
-          contact_id: string | null
-          created_at: string
-          credits_used: number
-          data_points: Json
-          emails: Json
-          error_message: string | null
-          id: string
-          input_address: string | null
-          input_city: string | null
-          input_first_name: string | null
-          input_last_name: string | null
-          input_state: string | null
-          input_zip: string | null
-          lead_id: string | null
-          match_confidence: number | null
-          matched_property_id: string | null
-          phones: Json
-          properties_owned: Json
-          property_id: string | null
-          raw_response: Json | null
-          status: Database["public"]["Enums"]["crm_skip_trace_status"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          addresses?: Json
-          contact_id?: string | null
-          created_at?: string
-          credits_used?: number
-          data_points?: Json
-          emails?: Json
-          error_message?: string | null
-          id?: string
-          input_address?: string | null
-          input_city?: string | null
-          input_first_name?: string | null
-          input_last_name?: string | null
-          input_state?: string | null
-          input_zip?: string | null
-          lead_id?: string | null
-          match_confidence?: number | null
-          matched_property_id?: string | null
-          phones?: Json
-          properties_owned?: Json
-          property_id?: string | null
-          raw_response?: Json | null
-          status?: Database["public"]["Enums"]["crm_skip_trace_status"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          addresses?: Json
-          contact_id?: string | null
-          created_at?: string
-          credits_used?: number
-          data_points?: Json
-          emails?: Json
-          error_message?: string | null
-          id?: string
-          input_address?: string | null
-          input_city?: string | null
-          input_first_name?: string | null
-          input_last_name?: string | null
-          input_state?: string | null
-          input_zip?: string | null
-          lead_id?: string | null
-          match_confidence?: number | null
-          matched_property_id?: string | null
-          phones?: Json
-          properties_owned?: Json
-          property_id?: string | null
-          raw_response?: Json | null
-          status?: Database["public"]["Enums"]["crm_skip_trace_status"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_skip_trace_results_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_skip_trace_results_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_skip_trace_results_matched_property_id_fkey"
-            columns: ["matched_property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_skip_trace_results_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      integration_meta_credentials: {
-        Row: {
-          created_at: string | null
-          daily_dm_count: number | null
-          daily_dm_reset_at: string | null
-          hourly_dm_count: number | null
-          hourly_dm_reset_at: string | null
-          id: string
-          instagram_account_id: string | null
-          instagram_username: string | null
-          is_active: boolean | null
-          last_error: string | null
-          last_error_at: string | null
-          page_access_token: string
-          page_id: string
-          page_name: string | null
-          permissions: string[] | null
-          token_expires_at: string | null
-          token_refreshed_at: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          daily_dm_count?: number | null
-          daily_dm_reset_at?: string | null
-          hourly_dm_count?: number | null
-          hourly_dm_reset_at?: string | null
-          id?: string
-          instagram_account_id?: string | null
-          instagram_username?: string | null
-          is_active?: boolean | null
-          last_error?: string | null
-          last_error_at?: string | null
-          page_access_token: string
-          page_id: string
-          page_name?: string | null
-          permissions?: string[] | null
-          token_expires_at?: string | null
-          token_refreshed_at?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          daily_dm_count?: number | null
-          daily_dm_reset_at?: string | null
-          hourly_dm_count?: number | null
-          hourly_dm_reset_at?: string | null
-          id?: string
-          instagram_account_id?: string | null
-          instagram_username?: string | null
-          is_active?: boolean | null
-          last_error?: string | null
-          last_error_at?: string | null
-          page_access_token?: string
-          page_id?: string
-          page_name?: string | null
-          permissions?: string[] | null
-          token_expires_at?: string | null
-          token_refreshed_at?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      integration_postgrid_credentials: {
-        Row: {
-          created_at: string | null
-          default_mail_class: string | null
-          id: string
-          is_active: boolean | null
-          last_mail_sent_at: string | null
-          return_address_line1: string | null
-          return_address_line2: string | null
-          return_city: string | null
-          return_company: string | null
-          return_name: string | null
-          return_state: string | null
-          return_zip: string | null
-          updated_at: string | null
-          user_id: string
-          webhook_secret: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          default_mail_class?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_mail_sent_at?: string | null
-          return_address_line1?: string | null
-          return_address_line2?: string | null
-          return_city?: string | null
-          return_company?: string | null
-          return_name?: string | null
-          return_state?: string | null
-          return_zip?: string | null
-          updated_at?: string | null
-          user_id: string
-          webhook_secret?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          default_mail_class?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_mail_sent_at?: string | null
-          return_address_line1?: string | null
-          return_address_line2?: string | null
-          return_city?: string | null
-          return_company?: string | null
-          return_name?: string | null
-          return_state?: string | null
-          return_zip?: string | null
-          updated_at?: string | null
-          user_id?: string
-          webhook_secret?: string | null
-        }
-        Relationships: []
-      }
-      integration_seam_access_codes: {
-        Row: {
-          booking_id: string | null
-          code: string
-          code_type: string
-          contact_id: string | null
-          created_at: string | null
-          device_id: string
-          ends_at: string | null
-          error_message: string | null
-          id: string
-          is_sent_to_guest: boolean | null
-          last_used_at: string | null
-          name: string
-          seam_access_code_id: string | null
-          sent_at: string | null
-          starts_at: string | null
-          status: Database["public"]["Enums"]["seam_access_code_status"]
-          times_used: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          booking_id?: string | null
-          code: string
-          code_type?: string
-          contact_id?: string | null
-          created_at?: string | null
-          device_id: string
-          ends_at?: string | null
-          error_message?: string | null
-          id?: string
-          is_sent_to_guest?: boolean | null
-          last_used_at?: string | null
-          name: string
-          seam_access_code_id?: string | null
-          sent_at?: string | null
-          starts_at?: string | null
-          status?: Database["public"]["Enums"]["seam_access_code_status"]
-          times_used?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          booking_id?: string | null
-          code?: string
-          code_type?: string
-          contact_id?: string | null
-          created_at?: string | null
-          device_id?: string
-          ends_at?: string | null
-          error_message?: string | null
-          id?: string
-          is_sent_to_guest?: boolean | null
-          last_used_at?: string | null
-          name?: string
-          seam_access_code_id?: string | null
-          sent_at?: string | null
-          starts_at?: string | null
-          status?: Database["public"]["Enums"]["seam_access_code_status"]
-          times_used?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "integration_seam_access_codes_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "integration_seam_access_codes_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "integration_seam_access_codes_device_id_fkey"
-            columns: ["device_id"]
-            isOneToOne: false
-            referencedRelation: "integration_seam_devices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      integration_seam_devices: {
-        Row: {
-          battery_level: number | null
-          capabilities: Json | null
-          created_at: string | null
-          device_name: string
-          device_type: string
-          id: string
-          is_online: boolean | null
-          last_synced_at: string | null
-          manufacturer: string | null
-          model: string | null
-          property_id: string | null
-          seam_device_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          battery_level?: number | null
-          capabilities?: Json | null
-          created_at?: string | null
-          device_name: string
-          device_type: string
-          id?: string
-          is_online?: boolean | null
-          last_synced_at?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          property_id?: string | null
-          seam_device_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          battery_level?: number | null
-          capabilities?: Json | null
-          created_at?: string | null
-          device_name?: string
-          device_type?: string
-          id?: string
-          is_online?: boolean | null
-          last_synced_at?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          property_id?: string | null
-          seam_device_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "integration_seam_devices_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      integration_seam_lock_events: {
-        Row: {
-          access_code_id: string | null
-          created_at: string | null
-          details: Json | null
-          device_id: string
-          event_type: string
-          id: string
-          occurred_at: string | null
-          triggered_by: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          access_code_id?: string | null
-          created_at?: string | null
-          details?: Json | null
-          device_id: string
-          event_type: string
-          id?: string
-          occurred_at?: string | null
-          triggered_by?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          access_code_id?: string | null
-          created_at?: string | null
-          details?: Json | null
-          device_id?: string
-          event_type?: string
-          id?: string
-          occurred_at?: string | null
-          triggered_by?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "integration_seam_lock_events_access_code_id_fkey"
-            columns: ["access_code_id"]
-            isOneToOne: false
-            referencedRelation: "integration_seam_access_codes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "integration_seam_lock_events_device_id_fkey"
-            columns: ["device_id"]
-            isOneToOne: false
-            referencedRelation: "integration_seam_devices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      integration_seam_workspaces: {
-        Row: {
-          connected_at: string | null
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          last_webhook_at: string | null
-          seam_workspace_id: string
-          updated_at: string | null
-          user_id: string
-          webhook_secret: string | null
-        }
-        Insert: {
-          connected_at?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_webhook_at?: string | null
-          seam_workspace_id: string
-          updated_at?: string | null
-          user_id: string
-          webhook_secret?: string | null
-        }
-        Update: {
-          connected_at?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_webhook_at?: string | null
-          seam_workspace_id?: string
-          updated_at?: string | null
-          user_id?: string
-          webhook_secret?: string | null
-        }
-        Relationships: []
-      }
-      investor_agents: {
-        Row: {
-          brokerage: string | null
-          commission_preference:
-            | Database["public"]["Enums"]["commission_type"]
-            | null
-          contact_id: string | null
-          created_at: string | null
-          deal_types_interested: string[] | null
-          deals_sourced: number | null
-          email: string | null
-          id: string
-          last_contact_at: string | null
-          last_deal_date: string | null
-          license_number: string | null
-          metadata: Json | null
-          name: string
-          next_follow_up_at: string | null
-          notes: string | null
-          phone: string | null
-          preferred_contact_method:
-            | Database["public"]["Enums"]["contact_method"]
-            | null
-          relationship_status:
-            | Database["public"]["Enums"]["relationship_status"]
-            | null
-          specializations: string[] | null
-          target_markets: string[] | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          brokerage?: string | null
-          commission_preference?:
-            | Database["public"]["Enums"]["commission_type"]
-            | null
-          contact_id?: string | null
-          created_at?: string | null
-          deal_types_interested?: string[] | null
-          deals_sourced?: number | null
-          email?: string | null
-          id?: string
-          last_contact_at?: string | null
-          last_deal_date?: string | null
-          license_number?: string | null
-          metadata?: Json | null
-          name: string
-          next_follow_up_at?: string | null
-          notes?: string | null
-          phone?: string | null
-          preferred_contact_method?:
-            | Database["public"]["Enums"]["contact_method"]
-            | null
-          relationship_status?:
-            | Database["public"]["Enums"]["relationship_status"]
-            | null
-          specializations?: string[] | null
-          target_markets?: string[] | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          brokerage?: string | null
-          commission_preference?:
-            | Database["public"]["Enums"]["commission_type"]
-            | null
-          contact_id?: string | null
-          created_at?: string | null
-          deal_types_interested?: string[] | null
-          deals_sourced?: number | null
-          email?: string | null
-          id?: string
-          last_contact_at?: string | null
-          last_deal_date?: string | null
-          license_number?: string | null
-          metadata?: Json | null
-          name?: string
-          next_follow_up_at?: string | null
-          notes?: string | null
-          phone?: string | null
-          preferred_contact_method?:
-            | Database["public"]["Enums"]["contact_method"]
-            | null
-          relationship_status?:
-            | Database["public"]["Enums"]["relationship_status"]
-            | null
-          specializations?: string[] | null
-          target_markets?: string[] | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_agents_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_agents_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_ai_confidence_settings: {
-        Row: {
-          confidence_score: number | null
-          created_at: string | null
-          id: string
-          is_auto_send_enabled: boolean | null
-          lead_situation: string
-          total_approvals: number | null
-          total_edits: number | null
-          total_rejections: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          confidence_score?: number | null
-          created_at?: string | null
-          id?: string
-          is_auto_send_enabled?: boolean | null
-          lead_situation: string
-          total_approvals?: number | null
-          total_edits?: number | null
-          total_rejections?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          confidence_score?: number | null
-          created_at?: string | null
-          id?: string
-          is_auto_send_enabled?: boolean | null
-          lead_situation?: string
-          total_approvals?: number | null
-          total_edits?: number | null
-          total_rejections?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      investor_ai_patterns: {
-        Row: {
-          confidence_impact: number | null
-          created_at: string | null
-          id: string
-          lead_situation: string
-          pattern_type: string
-          pattern_value: string
-          times_reinforced: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          confidence_impact?: number | null
-          created_at?: string | null
-          id?: string
-          lead_situation: string
-          pattern_type: string
-          pattern_value: string
-          times_reinforced?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          confidence_impact?: number | null
-          created_at?: string | null
-          id?: string
-          lead_situation?: string
-          pattern_type?: string
-          pattern_value?: string
-          times_reinforced?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      investor_ai_queue_items: {
-        Row: {
-          confidence: number
-          conversation_id: string
-          created_at: string | null
-          detected_topics: string[] | null
-          expires_at: string
-          final_response: string | null
-          id: string
-          intent: string | null
-          reasoning: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: Database["public"]["Enums"]["ai_queue_status"]
-          suggested_response: string
-          trigger_message_id: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          confidence: number
-          conversation_id: string
-          created_at?: string | null
-          detected_topics?: string[] | null
-          expires_at?: string
-          final_response?: string | null
-          id?: string
-          intent?: string | null
-          reasoning?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: Database["public"]["Enums"]["ai_queue_status"]
-          suggested_response: string
-          trigger_message_id?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          confidence?: number
-          conversation_id?: string
-          created_at?: string | null
-          detected_topics?: string[] | null
-          expires_at?: string
-          final_response?: string | null
-          id?: string
-          intent?: string | null
-          reasoning?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: Database["public"]["Enums"]["ai_queue_status"]
-          suggested_response?: string
-          trigger_message_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_ai_queue_items_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "investor_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_ai_queue_items_trigger_message_id_fkey"
-            columns: ["trigger_message_id"]
-            isOneToOne: false
-            referencedRelation: "investor_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_ai_response_outcomes: {
-        Row: {
-          channel: Database["public"]["Enums"]["investor_channel"] | null
-          conversation_id: string
-          created_at: string | null
-          edit_severity: string | null
-          feedback_notes: string | null
-          final_response: string | null
-          id: string
-          lead_situation: string | null
-          message_id: string | null
-          original_confidence: number | null
-          original_response: string | null
-          outcome: string
-          queue_item_id: string | null
-          response_time_seconds: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          channel?: Database["public"]["Enums"]["investor_channel"] | null
-          conversation_id: string
-          created_at?: string | null
-          edit_severity?: string | null
-          feedback_notes?: string | null
-          final_response?: string | null
-          id?: string
-          lead_situation?: string | null
-          message_id?: string | null
-          original_confidence?: number | null
-          original_response?: string | null
-          outcome: string
-          queue_item_id?: string | null
-          response_time_seconds?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          channel?: Database["public"]["Enums"]["investor_channel"] | null
-          conversation_id?: string
-          created_at?: string | null
-          edit_severity?: string | null
-          feedback_notes?: string | null
-          final_response?: string | null
-          id?: string
-          lead_situation?: string | null
-          message_id?: string | null
-          original_confidence?: number | null
-          original_response?: string | null
-          outcome?: string
-          queue_item_id?: string | null
-          response_time_seconds?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_ai_response_outcomes_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "investor_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_ai_response_outcomes_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "investor_messages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_ai_response_outcomes_queue_item_id_fkey"
-            columns: ["queue_item_id"]
-            isOneToOne: false
-            referencedRelation: "investor_ai_queue_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_buying_criteria: {
-        Row: {
-          buyer_credit_pct: number
-          buyers_profit_pct: number
-          closing_expenses_pct: number
-          created_at: string
-          holding_months: number
-          id: string
-          max_interest_rate: number
-          max_ltv_pct: number
-          min_cap_rate_pct: number
-          min_coc_pct: number
-          misc_contingency_pct: number
-          monthly_holding_cost: number
-          selling_commission_pct: number
-          updated_at: string
-          user_id: string
-          your_profit_pct: number
-        }
-        Insert: {
-          buyer_credit_pct?: number
-          buyers_profit_pct?: number
-          closing_expenses_pct?: number
-          created_at?: string
-          holding_months?: number
-          id?: string
-          max_interest_rate?: number
-          max_ltv_pct?: number
-          min_cap_rate_pct?: number
-          min_coc_pct?: number
-          misc_contingency_pct?: number
-          monthly_holding_cost?: number
-          selling_commission_pct?: number
-          updated_at?: string
-          user_id: string
-          your_profit_pct?: number
-        }
-        Update: {
-          buyer_credit_pct?: number
-          buyers_profit_pct?: number
-          closing_expenses_pct?: number
-          created_at?: string
-          holding_months?: number
-          id?: string
-          max_interest_rate?: number
-          max_ltv_pct?: number
-          min_cap_rate_pct?: number
-          min_coc_pct?: number
-          misc_contingency_pct?: number
-          monthly_holding_cost?: number
-          selling_commission_pct?: number
-          updated_at?: string
-          user_id?: string
-          your_profit_pct?: number
-        }
-        Relationships: []
-      }
-      investor_campaigns: {
-        Row: {
-          budget: number | null
-          campaign_type: string
-          converted_count: number | null
-          cost_per_lead: number | null
-          created_at: string | null
-          deals_closed: number | null
-          end_date: string | null
-          enrolled_count: number | null
-          follow_up_sequence: number[] | null
-          id: string
-          is_drip_campaign: boolean | null
-          lead_type: Database["public"]["Enums"]["drip_lead_type"] | null
-          leads_generated: number | null
-          list_count: number | null
-          list_source: string | null
-          max_touches: number | null
-          metadata: Json | null
-          name: string
-          notes: string | null
-          opted_out_count: number | null
-          quiet_hours_end: string | null
-          quiet_hours_start: string | null
-          quiet_hours_timezone: string | null
-          responded_count: number | null
-          revenue: number | null
-          roi_percent: number | null
-          should_auto_convert_on_response: boolean | null
-          should_auto_pause_on_response: boolean | null
-          should_respect_weekends: boolean | null
-          spent: number | null
-          start_date: string | null
-          status: Database["public"]["Enums"]["investor_campaign_status"]
-          target_criteria: Json | null
-          target_markets: string[] | null
-          target_motivation:
-            | Database["public"]["Enums"]["seller_motivation"]
-            | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          budget?: number | null
-          campaign_type: string
-          converted_count?: number | null
-          cost_per_lead?: number | null
-          created_at?: string | null
-          deals_closed?: number | null
-          end_date?: string | null
-          enrolled_count?: number | null
-          follow_up_sequence?: number[] | null
-          id?: string
-          is_drip_campaign?: boolean | null
-          lead_type?: Database["public"]["Enums"]["drip_lead_type"] | null
-          leads_generated?: number | null
-          list_count?: number | null
-          list_source?: string | null
-          max_touches?: number | null
-          metadata?: Json | null
-          name: string
-          notes?: string | null
-          opted_out_count?: number | null
-          quiet_hours_end?: string | null
-          quiet_hours_start?: string | null
-          quiet_hours_timezone?: string | null
-          responded_count?: number | null
-          revenue?: number | null
-          roi_percent?: number | null
-          should_auto_convert_on_response?: boolean | null
-          should_auto_pause_on_response?: boolean | null
-          should_respect_weekends?: boolean | null
-          spent?: number | null
-          start_date?: string | null
-          status?: Database["public"]["Enums"]["investor_campaign_status"]
-          target_criteria?: Json | null
-          target_markets?: string[] | null
-          target_motivation?:
-            | Database["public"]["Enums"]["seller_motivation"]
-            | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          budget?: number | null
-          campaign_type?: string
-          converted_count?: number | null
-          cost_per_lead?: number | null
-          created_at?: string | null
-          deals_closed?: number | null
-          end_date?: string | null
-          enrolled_count?: number | null
-          follow_up_sequence?: number[] | null
-          id?: string
-          is_drip_campaign?: boolean | null
-          lead_type?: Database["public"]["Enums"]["drip_lead_type"] | null
-          leads_generated?: number | null
-          list_count?: number | null
-          list_source?: string | null
-          max_touches?: number | null
-          metadata?: Json | null
-          name?: string
-          notes?: string | null
-          opted_out_count?: number | null
-          quiet_hours_end?: string | null
-          quiet_hours_start?: string | null
-          quiet_hours_timezone?: string | null
-          responded_count?: number | null
-          revenue?: number | null
-          roi_percent?: number | null
-          should_auto_convert_on_response?: boolean | null
-          should_auto_pause_on_response?: boolean | null
-          should_respect_weekends?: boolean | null
-          spent?: number | null
-          start_date?: string | null
-          status?: Database["public"]["Enums"]["investor_campaign_status"]
-          target_criteria?: Json | null
-          target_markets?: string[] | null
-          target_motivation?:
-            | Database["public"]["Enums"]["seller_motivation"]
-            | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_campaigns_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_comps: {
-        Row: {
-          address: string
-          address_line_1: string | null
-          address_line_2: string | null
-          bathrooms: number | null
-          bedrooms: number | null
-          city: string
-          created_at: string | null
-          created_by: string | null
-          days_on_market: number | null
-          distance: number | null
-          features_json: Json | null
-          id: string
-          lot_size: number | null
-          price_per_sqft: number | null
-          property_id: string
-          sale_date: string | null
-          sale_price: number | null
-          source: string | null
-          special_features: string | null
-          square_feet: number | null
-          state: string
-          status: Database["public"]["Enums"]["re_comp_status"] | null
-          updated_at: string | null
-          workspace_id: string | null
-          year_built: number | null
-          zip: string
-        }
-        Insert: {
-          address: string
-          address_line_1?: string | null
-          address_line_2?: string | null
-          bathrooms?: number | null
-          bedrooms?: number | null
-          city: string
-          created_at?: string | null
-          created_by?: string | null
-          days_on_market?: number | null
-          distance?: number | null
-          features_json?: Json | null
-          id?: string
-          lot_size?: number | null
-          price_per_sqft?: number | null
-          property_id: string
-          sale_date?: string | null
-          sale_price?: number | null
-          source?: string | null
-          special_features?: string | null
-          square_feet?: number | null
-          state: string
-          status?: Database["public"]["Enums"]["re_comp_status"] | null
-          updated_at?: string | null
-          workspace_id?: string | null
-          year_built?: number | null
-          zip: string
-        }
-        Update: {
-          address?: string
-          address_line_1?: string | null
-          address_line_2?: string | null
-          bathrooms?: number | null
-          bedrooms?: number | null
-          city?: string
-          created_at?: string | null
-          created_by?: string | null
-          days_on_market?: number | null
-          distance?: number | null
-          features_json?: Json | null
-          id?: string
-          lot_size?: number | null
-          price_per_sqft?: number | null
-          property_id?: string
-          sale_date?: string | null
-          sale_price?: number | null
-          source?: string | null
-          special_features?: string | null
-          square_feet?: number | null
-          state?: string
-          status?: Database["public"]["Enums"]["re_comp_status"] | null
-          updated_at?: string | null
-          workspace_id?: string | null
-          year_built?: number | null
-          zip?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_comps_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_comps_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_conversations: {
-        Row: {
-          ai_confidence_threshold: number | null
-          channel: Database["public"]["Enums"]["investor_channel"]
-          created_at: string | null
-          deal_id: string | null
-          external_thread_id: string | null
-          id: string
-          is_ai_auto_respond: boolean | null
-          is_ai_enabled: boolean | null
-          last_message_at: string | null
-          last_message_preview: string | null
-          lead_id: string
-          message_count: number | null
-          property_id: string | null
-          status: Database["public"]["Enums"]["investor_conversation_status"]
-          unread_count: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_confidence_threshold?: number | null
-          channel: Database["public"]["Enums"]["investor_channel"]
-          created_at?: string | null
-          deal_id?: string | null
-          external_thread_id?: string | null
-          id?: string
-          is_ai_auto_respond?: boolean | null
-          is_ai_enabled?: boolean | null
-          last_message_at?: string | null
-          last_message_preview?: string | null
-          lead_id: string
-          message_count?: number | null
-          property_id?: string | null
-          status?: Database["public"]["Enums"]["investor_conversation_status"]
-          unread_count?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_confidence_threshold?: number | null
-          channel?: Database["public"]["Enums"]["investor_channel"]
-          created_at?: string | null
-          deal_id?: string | null
-          external_thread_id?: string | null
-          id?: string
-          is_ai_auto_respond?: boolean | null
-          is_ai_enabled?: boolean | null
-          last_message_at?: string | null
-          last_message_preview?: string | null
-          lead_id?: string
-          message_count?: number | null
-          property_id?: string | null
-          status?: Database["public"]["Enums"]["investor_conversation_status"]
-          unread_count?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_conversations_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_conversations_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_conversations_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_conversations_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_deal_events: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          deal_id: string
-          description: string | null
-          event_type: string
-          id: string
-          metadata: Json | null
-          source: string
-          title: string
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          deal_id: string
-          description?: string | null
-          event_type: string
-          id?: string
-          metadata?: Json | null
-          source?: string
-          title: string
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          deal_id?: string
-          description?: string | null
-          event_type?: string
-          id?: string
-          metadata?: Json | null
-          source?: string
-          title?: string
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_deal_events_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_deal_events_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       investor_deals: {
         Row: {
@@ -3973,3514 +992,7 @@ export type Database = {
             foreignKeyName: "investor_deals_seller_contact_id_fkey"
             columns: ["seller_contact_id"]
             isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_deals_pipeline: {
-        Row: {
-          created_at: string | null
-          estimated_value: number | null
-          expected_close_date: string | null
-          id: string
-          lead_id: string | null
-          next_action: string | null
-          next_action_due: string | null
-          notes: string | null
-          probability: number | null
-          property_id: string | null
-          stage: string
-          status: Database["public"]["Enums"]["deal_status"]
-          title: string
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          estimated_value?: number | null
-          expected_close_date?: string | null
-          id?: string
-          lead_id?: string | null
-          next_action?: string | null
-          next_action_due?: string | null
-          notes?: string | null
-          probability?: number | null
-          property_id?: string | null
-          stage?: string
-          status?: Database["public"]["Enums"]["deal_status"]
-          title: string
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          estimated_value?: number | null
-          expected_close_date?: string | null
-          id?: string
-          lead_id?: string | null
-          next_action?: string | null
-          next_action_due?: string | null
-          notes?: string | null
-          probability?: number | null
-          property_id?: string | null
-          stage?: string
-          status?: Database["public"]["Enums"]["deal_status"]
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_deals_pipeline_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_deals_pipeline_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_deals_pipeline_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_document_embeddings: {
-        Row: {
-          chunk_index: number
-          content_chunk: string
-          created_at: string | null
-          document_id: string
-          embedding: string | null
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          chunk_index: number
-          content_chunk: string
-          created_at?: string | null
-          document_id: string
-          embedding?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Update: {
-          chunk_index?: number
-          content_chunk?: string
-          created_at?: string | null
-          document_id?: string
-          embedding?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_document_embeddings_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "investor_property_documents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_document_queue_items: {
-        Row: {
-          created_at: string | null
-          document_id: string
-          error_message: string | null
-          id: string
-          processed_at: string | null
-          status: Database["public"]["Enums"]["document_processing_status"]
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          document_id: string
-          error_message?: string | null
-          id?: string
-          processed_at?: string | null
-          status?: Database["public"]["Enums"]["document_processing_status"]
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          document_id?: string
-          error_message?: string | null
-          id?: string
-          processed_at?: string | null
-          status?: Database["public"]["Enums"]["document_processing_status"]
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_document_queue_items_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "investor_property_documents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_documents: {
-        Row: {
-          content_type: string | null
-          created_at: string | null
-          deal_id: string | null
-          file_size: number | null
-          file_url: string
-          id: string
-          property_id: string | null
-          title: string
-          type: string
-          updated_at: string | null
-          uploaded_by: string | null
-          user_id: string
-        }
-        Insert: {
-          content_type?: string | null
-          created_at?: string | null
-          deal_id?: string | null
-          file_size?: number | null
-          file_url: string
-          id?: string
-          property_id?: string | null
-          title: string
-          type: string
-          updated_at?: string | null
-          uploaded_by?: string | null
-          user_id: string
-        }
-        Update: {
-          content_type?: string | null
-          created_at?: string | null
-          deal_id?: string | null
-          file_size?: number | null
-          file_url?: string
-          id?: string
-          property_id?: string | null
-          title?: string
-          type?: string
-          updated_at?: string | null
-          uploaded_by?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_documents_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_documents_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_drip_campaign_steps: {
-        Row: {
-          ai_tone: string | null
-          call_script: string | null
-          campaign_id: string
-          channel: Database["public"]["Enums"]["drip_channel"]
-          created_at: string | null
-          delay_days: number
-          id: string
-          is_active: boolean | null
-          is_ai_generated: boolean | null
-          is_delay_from_enrollment: boolean | null
-          mail_piece_type: Database["public"]["Enums"]["mail_piece_type"] | null
-          mail_template_id: string | null
-          message_body: string | null
-          return_address: Json | null
-          should_skip_if_converted: boolean | null
-          should_skip_if_responded: boolean | null
-          step_number: number
-          subject: string | null
-          talking_points: string[] | null
-          template_id: string | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_tone?: string | null
-          call_script?: string | null
-          campaign_id: string
-          channel: Database["public"]["Enums"]["drip_channel"]
-          created_at?: string | null
-          delay_days?: number
-          id?: string
-          is_active?: boolean | null
-          is_ai_generated?: boolean | null
-          is_delay_from_enrollment?: boolean | null
-          mail_piece_type?:
-            | Database["public"]["Enums"]["mail_piece_type"]
-            | null
-          mail_template_id?: string | null
-          message_body?: string | null
-          return_address?: Json | null
-          should_skip_if_converted?: boolean | null
-          should_skip_if_responded?: boolean | null
-          step_number: number
-          subject?: string | null
-          talking_points?: string[] | null
-          template_id?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_tone?: string | null
-          call_script?: string | null
-          campaign_id?: string
-          channel?: Database["public"]["Enums"]["drip_channel"]
-          created_at?: string | null
-          delay_days?: number
-          id?: string
-          is_active?: boolean | null
-          is_ai_generated?: boolean | null
-          is_delay_from_enrollment?: boolean | null
-          mail_piece_type?:
-            | Database["public"]["Enums"]["mail_piece_type"]
-            | null
-          mail_template_id?: string | null
-          message_body?: string | null
-          return_address?: Json | null
-          should_skip_if_converted?: boolean | null
-          should_skip_if_responded?: boolean | null
-          step_number?: number
-          subject?: string | null
-          talking_points?: string[] | null
-          template_id?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_drip_campaign_steps_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "investor_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_drip_campaign_steps_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "investor_outreach_templates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_drip_campaign_steps_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_drip_enrollments: {
-        Row: {
-          campaign_id: string
-          completed_at: string | null
-          contact_id: string
-          converted_at: string | null
-          converted_deal_id: string | null
-          created_at: string | null
-          current_step: number | null
-          deal_id: string | null
-          enrolled_at: string | null
-          enrollment_context: Json | null
-          id: string
-          last_touch_at: string | null
-          last_touch_channel: Database["public"]["Enums"]["drip_channel"] | null
-          next_touch_at: string | null
-          paused_at: string | null
-          paused_reason: string | null
-          responded_at: string | null
-          response_channel: Database["public"]["Enums"]["drip_channel"] | null
-          response_message: string | null
-          resumed_at: string | null
-          status: Database["public"]["Enums"]["drip_enrollment_status"] | null
-          touches_delivered: number | null
-          touches_failed: number | null
-          touches_sent: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          campaign_id: string
-          completed_at?: string | null
-          contact_id: string
-          converted_at?: string | null
-          converted_deal_id?: string | null
-          created_at?: string | null
-          current_step?: number | null
-          deal_id?: string | null
-          enrolled_at?: string | null
-          enrollment_context?: Json | null
-          id?: string
-          last_touch_at?: string | null
-          last_touch_channel?:
-            | Database["public"]["Enums"]["drip_channel"]
-            | null
-          next_touch_at?: string | null
-          paused_at?: string | null
-          paused_reason?: string | null
-          responded_at?: string | null
-          response_channel?: Database["public"]["Enums"]["drip_channel"] | null
-          response_message?: string | null
-          resumed_at?: string | null
-          status?: Database["public"]["Enums"]["drip_enrollment_status"] | null
-          touches_delivered?: number | null
-          touches_failed?: number | null
-          touches_sent?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          campaign_id?: string
-          completed_at?: string | null
-          contact_id?: string
-          converted_at?: string | null
-          converted_deal_id?: string | null
-          created_at?: string | null
-          current_step?: number | null
-          deal_id?: string | null
-          enrolled_at?: string | null
-          enrollment_context?: Json | null
-          id?: string
-          last_touch_at?: string | null
-          last_touch_channel?:
-            | Database["public"]["Enums"]["drip_channel"]
-            | null
-          next_touch_at?: string | null
-          paused_at?: string | null
-          paused_reason?: string | null
-          responded_at?: string | null
-          response_channel?: Database["public"]["Enums"]["drip_channel"] | null
-          response_message?: string | null
-          resumed_at?: string | null
-          status?: Database["public"]["Enums"]["drip_enrollment_status"] | null
-          touches_delivered?: number | null
-          touches_failed?: number | null
-          touches_sent?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_drip_enrollments_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "investor_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_drip_enrollments_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_drip_enrollments_converted_deal_id_fkey"
-            columns: ["converted_deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_drip_enrollments_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_drip_enrollments_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_drip_touch_logs: {
-        Row: {
-          channel: Database["public"]["Enums"]["drip_channel"]
-          created_at: string | null
-          delivered_at: string | null
-          enrollment_id: string
-          error_message: string | null
-          external_message_id: string | null
-          external_tracking_url: string | null
-          failed_at: string | null
-          has_response_received: boolean | null
-          id: string
-          last_retry_at: string | null
-          mail_cost: number | null
-          mail_piece_type: Database["public"]["Enums"]["mail_piece_type"] | null
-          mail_tracking_number: string | null
-          message_body: string | null
-          metadata: Json | null
-          recipient_address: Json | null
-          recipient_email: string | null
-          recipient_phone: string | null
-          response_at: string | null
-          response_body: string | null
-          retry_count: number | null
-          scheduled_at: string
-          sent_at: string | null
-          status: Database["public"]["Enums"]["drip_touch_status"] | null
-          step_id: string
-          subject: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          channel: Database["public"]["Enums"]["drip_channel"]
-          created_at?: string | null
-          delivered_at?: string | null
-          enrollment_id: string
-          error_message?: string | null
-          external_message_id?: string | null
-          external_tracking_url?: string | null
-          failed_at?: string | null
-          has_response_received?: boolean | null
-          id?: string
-          last_retry_at?: string | null
-          mail_cost?: number | null
-          mail_piece_type?:
-            | Database["public"]["Enums"]["mail_piece_type"]
-            | null
-          mail_tracking_number?: string | null
-          message_body?: string | null
-          metadata?: Json | null
-          recipient_address?: Json | null
-          recipient_email?: string | null
-          recipient_phone?: string | null
-          response_at?: string | null
-          response_body?: string | null
-          retry_count?: number | null
-          scheduled_at: string
-          sent_at?: string | null
-          status?: Database["public"]["Enums"]["drip_touch_status"] | null
-          step_id: string
-          subject?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          channel?: Database["public"]["Enums"]["drip_channel"]
-          created_at?: string | null
-          delivered_at?: string | null
-          enrollment_id?: string
-          error_message?: string | null
-          external_message_id?: string | null
-          external_tracking_url?: string | null
-          failed_at?: string | null
-          has_response_received?: boolean | null
-          id?: string
-          last_retry_at?: string | null
-          mail_cost?: number | null
-          mail_piece_type?:
-            | Database["public"]["Enums"]["mail_piece_type"]
-            | null
-          mail_tracking_number?: string | null
-          message_body?: string | null
-          metadata?: Json | null
-          recipient_address?: Json | null
-          recipient_email?: string | null
-          recipient_phone?: string | null
-          response_at?: string | null
-          response_body?: string | null
-          retry_count?: number | null
-          scheduled_at?: string
-          sent_at?: string | null
-          status?: Database["public"]["Enums"]["drip_touch_status"] | null
-          step_id?: string
-          subject?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_drip_touch_logs_enrollment_id_fkey"
-            columns: ["enrollment_id"]
-            isOneToOne: false
-            referencedRelation: "investor_drip_enrollments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_drip_touch_logs_step_id_fkey"
-            columns: ["step_id"]
-            isOneToOne: false
-            referencedRelation: "investor_drip_campaign_steps"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_financing_scenarios: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string
-          input_json: Json
-          is_primary: boolean | null
-          name: string
-          property_id: string
-          pros_cons: string | null
-          result_json: Json | null
-          scenario_type: string | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          input_json: Json
-          is_primary?: boolean | null
-          name: string
-          property_id: string
-          pros_cons?: string | null
-          result_json?: Json | null
-          scenario_type?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          input_json?: Json
-          is_primary?: boolean | null
-          name?: string
-          property_id?: string
-          pros_cons?: string | null
-          result_json?: Json | null
-          scenario_type?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_financing_scenarios_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_financing_scenarios_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_follow_ups: {
-        Row: {
-          actual_message: string | null
-          agent_id: string | null
-          ai_generated_message: string | null
-          campaign_id: string | null
-          channel: string | null
-          completed_at: string | null
-          contact_id: string | null
-          context: Json | null
-          created_at: string | null
-          deal_id: string | null
-          follow_up_type: string
-          id: string
-          is_final_touch: boolean | null
-          message_template: string | null
-          scheduled_at: string
-          sequence_position: number | null
-          status: Database["public"]["Enums"]["investor_follow_up_status"]
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          actual_message?: string | null
-          agent_id?: string | null
-          ai_generated_message?: string | null
-          campaign_id?: string | null
-          channel?: string | null
-          completed_at?: string | null
-          contact_id?: string | null
-          context?: Json | null
-          created_at?: string | null
-          deal_id?: string | null
-          follow_up_type: string
-          id?: string
-          is_final_touch?: boolean | null
-          message_template?: string | null
-          scheduled_at: string
-          sequence_position?: number | null
-          status?: Database["public"]["Enums"]["investor_follow_up_status"]
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          actual_message?: string | null
-          agent_id?: string | null
-          ai_generated_message?: string | null
-          campaign_id?: string | null
-          channel?: string | null
-          completed_at?: string | null
-          contact_id?: string | null
-          context?: Json | null
-          created_at?: string | null
-          deal_id?: string | null
-          follow_up_type?: string
-          id?: string
-          is_final_touch?: boolean | null
-          message_template?: string | null
-          scheduled_at?: string
-          sequence_position?: number | null
-          status?: Database["public"]["Enums"]["investor_follow_up_status"]
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_follow_ups_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "investor_agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_follow_ups_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "investor_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_follow_ups_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_follow_ups_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_follow_ups_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_lead_properties: {
-        Row: {
-          created_at: string | null
-          is_primary: boolean | null
-          lead_id: string
-          notes: string | null
-          property_id: string
-          relationship: string | null
-          updated_at: string | null
-          user_id: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          is_primary?: boolean | null
-          lead_id: string
-          notes?: string | null
-          property_id: string
-          relationship?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          is_primary?: boolean | null
-          lead_id?: string
-          notes?: string | null
-          property_id?: string
-          relationship?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_lead_properties_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_lead_properties_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_messages: {
-        Row: {
-          ai_confidence: number | null
-          ai_model: string | null
-          content: string
-          content_type: Database["public"]["Enums"]["content_type"]
-          conversation_id: string
-          created_at: string | null
-          delivered_at: string | null
-          direction: Database["public"]["Enums"]["message_direction"]
-          failed_at: string | null
-          failure_reason: string | null
-          id: string
-          metadata: Json | null
-          read_at: string | null
-          sent_by: Database["public"]["Enums"]["investor_sender"]
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_confidence?: number | null
-          ai_model?: string | null
-          content: string
-          content_type?: Database["public"]["Enums"]["content_type"]
-          conversation_id: string
-          created_at?: string | null
-          delivered_at?: string | null
-          direction: Database["public"]["Enums"]["message_direction"]
-          failed_at?: string | null
-          failure_reason?: string | null
-          id?: string
-          metadata?: Json | null
-          read_at?: string | null
-          sent_by: Database["public"]["Enums"]["investor_sender"]
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_confidence?: number | null
-          ai_model?: string | null
-          content?: string
-          content_type?: Database["public"]["Enums"]["content_type"]
-          conversation_id?: string
-          created_at?: string | null
-          delivered_at?: string | null
-          direction?: Database["public"]["Enums"]["message_direction"]
-          failed_at?: string | null
-          failure_reason?: string | null
-          id?: string
-          metadata?: Json | null
-          read_at?: string | null
-          sent_by?: Database["public"]["Enums"]["investor_sender"]
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "investor_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_messages_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_outreach_templates: {
-        Row: {
-          body: string
-          category: string
-          channel: string
-          contact_type: string
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          is_system: boolean | null
-          name: string
-          response_rate: number | null
-          subject: string | null
-          updated_at: string | null
-          use_count: number | null
-          user_id: string | null
-          variables: string[] | null
-          workspace_id: string | null
-        }
-        Insert: {
-          body: string
-          category: string
-          channel: string
-          contact_type: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_system?: boolean | null
-          name: string
-          response_rate?: number | null
-          subject?: string | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id?: string | null
-          variables?: string[] | null
-          workspace_id?: string | null
-        }
-        Update: {
-          body?: string
-          category?: string
-          channel?: string
-          contact_type?: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_system?: boolean | null
-          name?: string
-          response_rate?: number | null
-          subject?: string | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id?: string | null
-          variables?: string[] | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_outreach_templates_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_portfolio_entries: {
-        Row: {
-          acquisition_date: string
-          acquisition_price: number
-          acquisition_source: string
-          created_at: string | null
-          deal_id: string | null
-          group_id: string | null
-          id: string
-          is_active: boolean | null
-          monthly_expenses: number | null
-          monthly_rent: number | null
-          notes: string | null
-          ownership_percent: number | null
-          projected_monthly_expenses: number | null
-          projected_monthly_rent: number | null
-          property_id: string
-          property_manager_name: string | null
-          property_manager_phone: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          acquisition_date: string
-          acquisition_price: number
-          acquisition_source?: string
-          created_at?: string | null
-          deal_id?: string | null
-          group_id?: string | null
-          id?: string
-          is_active?: boolean | null
-          monthly_expenses?: number | null
-          monthly_rent?: number | null
-          notes?: string | null
-          ownership_percent?: number | null
-          projected_monthly_expenses?: number | null
-          projected_monthly_rent?: number | null
-          property_id: string
-          property_manager_name?: string | null
-          property_manager_phone?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          acquisition_date?: string
-          acquisition_price?: number
-          acquisition_source?: string
-          created_at?: string | null
-          deal_id?: string | null
-          group_id?: string | null
-          id?: string
-          is_active?: boolean | null
-          monthly_expenses?: number | null
-          monthly_rent?: number | null
-          notes?: string | null
-          ownership_percent?: number | null
-          projected_monthly_expenses?: number | null
-          projected_monthly_rent?: number | null
-          property_id?: string
-          property_manager_name?: string | null
-          property_manager_phone?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_portfolio_entries_deal_id_fkey"
-            columns: ["deal_id"]
-            isOneToOne: false
-            referencedRelation: "investor_deals_pipeline"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_portfolio_entries_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "investor_portfolio_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_portfolio_entries_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_portfolio_groups: {
-        Row: {
-          color: string | null
-          created_at: string | null
-          id: string
-          name: string
-          sort_order: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string | null
-          id?: string
-          name: string
-          sort_order?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          sort_order?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      investor_portfolio_monthly_records: {
-        Row: {
-          created_at: string | null
-          expenses: Json | null
-          id: string
-          month: string
-          notes: string | null
-          occupancy_status:
-            | Database["public"]["Enums"]["occupancy_status"]
-            | null
-          portfolio_entry_id: string
-          rent_collected: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          expenses?: Json | null
-          id?: string
-          month: string
-          notes?: string | null
-          occupancy_status?:
-            | Database["public"]["Enums"]["occupancy_status"]
-            | null
-          portfolio_entry_id: string
-          rent_collected?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          expenses?: Json | null
-          id?: string
-          month?: string
-          notes?: string | null
-          occupancy_status?:
-            | Database["public"]["Enums"]["occupancy_status"]
-            | null
-          portfolio_entry_id?: string
-          rent_collected?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_portfolio_monthly_records_portfolio_entry_id_fkey"
-            columns: ["portfolio_entry_id"]
-            isOneToOne: false
-            referencedRelation: "investor_portfolio_entries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_portfolio_mortgages: {
-        Row: {
-          created_at: string | null
-          current_balance: number
-          escrow_amount: number | null
-          id: string
-          interest_rate: number
-          is_primary: boolean | null
-          lender_name: string | null
-          loan_type: string | null
-          maturity_date: string | null
-          monthly_payment: number
-          notes: string | null
-          original_balance: number
-          portfolio_entry_id: string
-          start_date: string
-          term_months: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          current_balance: number
-          escrow_amount?: number | null
-          id?: string
-          interest_rate: number
-          is_primary?: boolean | null
-          lender_name?: string | null
-          loan_type?: string | null
-          maturity_date?: string | null
-          monthly_payment: number
-          notes?: string | null
-          original_balance: number
-          portfolio_entry_id: string
-          start_date: string
-          term_months?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          current_balance?: number
-          escrow_amount?: number | null
-          id?: string
-          interest_rate?: number
-          is_primary?: boolean | null
-          lender_name?: string | null
-          loan_type?: string | null
-          maturity_date?: string | null
-          monthly_payment?: number
-          notes?: string | null
-          original_balance?: number
-          portfolio_entry_id?: string
-          start_date?: string
-          term_months?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_portfolio_mortgages_portfolio_entry_id_fkey"
-            columns: ["portfolio_entry_id"]
-            isOneToOne: false
-            referencedRelation: "investor_portfolio_entries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_portfolio_valuations: {
-        Row: {
-          created_at: string | null
-          estimated_value: number
-          id: string
-          metadata: Json | null
-          notes: string | null
-          property_id: string
-          source: string | null
-          updated_at: string | null
-          valuation_date: string
-        }
-        Insert: {
-          created_at?: string | null
-          estimated_value: number
-          id?: string
-          metadata?: Json | null
-          notes?: string | null
-          property_id: string
-          source?: string | null
-          updated_at?: string | null
-          valuation_date: string
-        }
-        Update: {
-          created_at?: string | null
-          estimated_value?: number
-          id?: string
-          metadata?: Json | null
-          notes?: string | null
-          property_id?: string
-          source?: string | null
-          updated_at?: string | null
-          valuation_date?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_portfolio_valuations_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_properties: {
-        Row: {
-          address_line_1: string
-          address_line_2: string | null
-          arv: number | null
-          bathrooms: number | null
-          bedrooms: number | null
-          city: string
-          county: string | null
-          created_at: string | null
-          created_by: string | null
-          geo_point: unknown
-          id: string
-          import_id: string | null
-          is_hoa_present: boolean | null
-          is_owner_occupied: boolean | null
-          is_vacant: boolean | null
-          lead_id: string | null
-          lot_size: number | null
-          mls_id: string | null
-          notes: string | null
-          primary_image_url: string | null
-          profile_id: string | null
-          property_type: string | null
-          purchase_price: number | null
-          square_feet: number | null
-          state: string
-          status: Database["public"]["Enums"]["re_property_status"] | null
-          tags: string[] | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-          year_built: number | null
-          zip: string
-        }
-        Insert: {
-          address_line_1: string
-          address_line_2?: string | null
-          arv?: number | null
-          bathrooms?: number | null
-          bedrooms?: number | null
-          city: string
-          county?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          geo_point?: unknown
-          id?: string
-          import_id?: string | null
-          is_hoa_present?: boolean | null
-          is_owner_occupied?: boolean | null
-          is_vacant?: boolean | null
-          lead_id?: string | null
-          lot_size?: number | null
-          mls_id?: string | null
-          notes?: string | null
-          primary_image_url?: string | null
-          profile_id?: string | null
-          property_type?: string | null
-          purchase_price?: number | null
-          square_feet?: number | null
-          state: string
-          status?: Database["public"]["Enums"]["re_property_status"] | null
-          tags?: string[] | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-          year_built?: number | null
-          zip: string
-        }
-        Update: {
-          address_line_1?: string
-          address_line_2?: string | null
-          arv?: number | null
-          bathrooms?: number | null
-          bedrooms?: number | null
-          city?: string
-          county?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          geo_point?: unknown
-          id?: string
-          import_id?: string | null
-          is_hoa_present?: boolean | null
-          is_owner_occupied?: boolean | null
-          is_vacant?: boolean | null
-          lead_id?: string | null
-          lot_size?: number | null
-          mls_id?: string | null
-          notes?: string | null
-          primary_image_url?: string | null
-          profile_id?: string | null
-          property_type?: string | null
-          purchase_price?: number | null
-          square_feet?: number | null
-          state?: string
-          status?: Database["public"]["Enums"]["re_property_status"] | null
-          tags?: string[] | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-          year_built?: number | null
-          zip?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_properties_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_properties_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_properties_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_property_analyses: {
-        Row: {
-          analysis_type: string | null
-          created_at: string | null
-          created_by: string | null
-          id: string
-          input_json: Json
-          name: string | null
-          property_id: string
-          result_json: Json
-          token_count: number | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          analysis_type?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          input_json: Json
-          name?: string | null
-          property_id: string
-          result_json: Json
-          token_count?: number | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          analysis_type?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          input_json?: Json
-          name?: string | null
-          property_id?: string
-          result_json?: Json
-          token_count?: number | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_property_analyses_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_property_analyses_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_property_debts: {
-        Row: {
-          additional_liens: number | null
-          created_at: string | null
-          created_by: string | null
-          estimated_arv: number | null
-          id: string
-          notes: string | null
-          property_id: string
-          repair_estimate: number | null
-          total_assessed_value: number | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          additional_liens?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          estimated_arv?: number | null
-          id?: string
-          notes?: string | null
-          property_id: string
-          repair_estimate?: number | null
-          total_assessed_value?: number | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          additional_liens?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          estimated_arv?: number | null
-          id?: string
-          notes?: string | null
-          property_id?: string
-          repair_estimate?: number | null
-          total_assessed_value?: number | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_property_debts_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: true
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_property_debts_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_property_documents: {
-        Row: {
-          content_type: string
-          created_at: string | null
-          description: string | null
-          file_path: string
-          file_size: number
-          file_type: string
-          id: string
-          is_archived: boolean | null
-          name: string
-          property_id: string
-          tags: string[] | null
-          updated_at: string | null
-          uploaded_by: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          content_type: string
-          created_at?: string | null
-          description?: string | null
-          file_path: string
-          file_size: number
-          file_type: string
-          id?: string
-          is_archived?: boolean | null
-          name: string
-          property_id: string
-          tags?: string[] | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          content_type?: string
-          created_at?: string | null
-          description?: string | null
-          file_path?: string
-          file_size?: number
-          file_type?: string
-          id?: string
-          is_archived?: boolean | null
-          name?: string
-          property_id?: string
-          tags?: string[] | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_property_documents_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_property_documents_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_property_images: {
-        Row: {
-          created_at: string | null
-          filename: string | null
-          id: string
-          is_primary: boolean | null
-          label: string | null
-          property_id: string
-          updated_at: string | null
-          uploaded_by: string | null
-          url: string
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          filename?: string | null
-          id?: string
-          is_primary?: boolean | null
-          label?: string | null
-          property_id: string
-          updated_at?: string | null
-          uploaded_by?: string | null
-          url: string
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          filename?: string | null
-          id?: string
-          is_primary?: boolean | null
-          label?: string | null
-          property_id?: string
-          updated_at?: string | null
-          uploaded_by?: string | null
-          url?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_property_images_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_property_images_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_property_mortgages: {
-        Row: {
-          arrears: number | null
-          created_at: string | null
-          created_by: string | null
-          id: string
-          interest_rate: number | null
-          is_active: boolean | null
-          lender_name: string | null
-          loan_amount: number | null
-          loan_type: string | null
-          monthly_payment: number | null
-          mortgage_name: string
-          notes: string | null
-          property_id: string
-          start_date: string | null
-          term_years: number | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          arrears?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          interest_rate?: number | null
-          is_active?: boolean | null
-          lender_name?: string | null
-          loan_amount?: number | null
-          loan_type?: string | null
-          monthly_payment?: number | null
-          mortgage_name: string
-          notes?: string | null
-          property_id: string
-          start_date?: string | null
-          term_years?: number | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          arrears?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          interest_rate?: number | null
-          is_active?: boolean | null
-          lender_name?: string | null
-          loan_amount?: number | null
-          loan_type?: string | null
-          monthly_payment?: number | null
-          mortgage_name?: string
-          notes?: string | null
-          property_id?: string
-          start_date?: string | null
-          term_years?: number | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_property_mortgages_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_property_mortgages_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      investor_repair_estimates: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          created_by: string | null
-          description: string
-          estimate: number
-          id: string
-          is_completed: boolean | null
-          notes: string | null
-          priority: string | null
-          property_id: string
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description: string
-          estimate: number
-          id?: string
-          is_completed?: boolean | null
-          notes?: string | null
-          priority?: string | null
-          property_id: string
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string
-          estimate?: number
-          id?: string
-          is_completed?: boolean | null
-          notes?: string | null
-          priority?: string | null
-          property_id?: string
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "investor_repair_estimates_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "investor_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "investor_repair_estimates_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_ai_queue_items: {
-        Row: {
-          alternatives: Json | null
-          confidence: number
-          conversation_id: string
-          created_at: string | null
-          detected_topics: string[] | null
-          expires_at: string
-          final_response: string | null
-          id: string
-          intent: string | null
-          reasoning: string | null
-          review_notes: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          sent_message_id: string | null
-          status: Database["public"]["Enums"]["rental_ai_queue_status"]
-          suggested_response: string
-          trigger_message_id: string | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          alternatives?: Json | null
-          confidence: number
-          conversation_id: string
-          created_at?: string | null
-          detected_topics?: string[] | null
-          expires_at?: string
-          final_response?: string | null
-          id?: string
-          intent?: string | null
-          reasoning?: string | null
-          review_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sent_message_id?: string | null
-          status?: Database["public"]["Enums"]["rental_ai_queue_status"]
-          suggested_response: string
-          trigger_message_id?: string | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          alternatives?: Json | null
-          confidence?: number
-          conversation_id?: string
-          created_at?: string | null
-          detected_topics?: string[] | null
-          expires_at?: string
-          final_response?: string | null
-          id?: string
-          intent?: string | null
-          reasoning?: string | null
-          review_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          sent_message_id?: string | null
-          status?: Database["public"]["Enums"]["rental_ai_queue_status"]
-          suggested_response?: string
-          trigger_message_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_ai_queue_items_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_ai_queue_items_sent_message_id_fkey"
-            columns: ["sent_message_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_messages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_ai_queue_items_trigger_message_id_fkey"
-            columns: ["trigger_message_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_messages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_ai_queue_items_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_booking_charges: {
-        Row: {
-          amount: number
-          approved_at: string | null
-          approved_by: string | null
-          booking_id: string
-          charge_type: Database["public"]["Enums"]["booking_charge_type"]
-          created_at: string | null
-          description: string
-          dispute_reason: string | null
-          dispute_resolution: string | null
-          dispute_resolved_at: string | null
-          disputed_at: string | null
-          guest_notification_sent_at: string | null
-          id: string
-          is_guest_notification_sent: boolean | null
-          maintenance_id: string | null
-          notes: string | null
-          photos: Json | null
-          receipt_url: string | null
-          status: Database["public"]["Enums"]["booking_charge_status"]
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          amount: number
-          approved_at?: string | null
-          approved_by?: string | null
-          booking_id: string
-          charge_type?: Database["public"]["Enums"]["booking_charge_type"]
-          created_at?: string | null
-          description: string
-          dispute_reason?: string | null
-          dispute_resolution?: string | null
-          dispute_resolved_at?: string | null
-          disputed_at?: string | null
-          guest_notification_sent_at?: string | null
-          id?: string
-          is_guest_notification_sent?: boolean | null
-          maintenance_id?: string | null
-          notes?: string | null
-          photos?: Json | null
-          receipt_url?: string | null
-          status?: Database["public"]["Enums"]["booking_charge_status"]
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          amount?: number
-          approved_at?: string | null
-          approved_by?: string | null
-          booking_id?: string
-          charge_type?: Database["public"]["Enums"]["booking_charge_type"]
-          created_at?: string | null
-          description?: string
-          dispute_reason?: string | null
-          dispute_resolution?: string | null
-          dispute_resolved_at?: string | null
-          disputed_at?: string | null
-          guest_notification_sent_at?: string | null
-          id?: string
-          is_guest_notification_sent?: boolean | null
-          maintenance_id?: string | null
-          notes?: string | null
-          photos?: Json | null
-          receipt_url?: string | null
-          status?: Database["public"]["Enums"]["booking_charge_status"]
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_booking_charges_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_booking_charges_maintenance_id_fkey"
-            columns: ["maintenance_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_maintenance_records"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_booking_charges_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_bookings: {
-        Row: {
-          booking_type: Database["public"]["Enums"]["rental_booking_type"]
-          cancellation_reason: string | null
-          cancelled_at: string | null
-          check_in_time: string | null
-          check_out_time: string | null
-          confirmed_at: string | null
-          contact_id: string
-          created_at: string | null
-          deposit: number | null
-          deposit_status: Database["public"]["Enums"]["deposit_status"] | null
-          end_date: string | null
-          external_booking_id: string | null
-          guest_notes: string | null
-          id: string
-          internal_notes: string | null
-          notes: string | null
-          property_id: string
-          rate: number
-          rate_type: Database["public"]["Enums"]["rental_rate_type"]
-          room_id: string | null
-          source: string | null
-          start_date: string
-          status: Database["public"]["Enums"]["rental_booking_status"]
-          total_amount: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          booking_type?: Database["public"]["Enums"]["rental_booking_type"]
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          check_in_time?: string | null
-          check_out_time?: string | null
-          confirmed_at?: string | null
-          contact_id: string
-          created_at?: string | null
-          deposit?: number | null
-          deposit_status?: Database["public"]["Enums"]["deposit_status"] | null
-          end_date?: string | null
-          external_booking_id?: string | null
-          guest_notes?: string | null
-          id?: string
-          internal_notes?: string | null
-          notes?: string | null
-          property_id: string
-          rate: number
-          rate_type: Database["public"]["Enums"]["rental_rate_type"]
-          room_id?: string | null
-          source?: string | null
-          start_date: string
-          status?: Database["public"]["Enums"]["rental_booking_status"]
-          total_amount?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          booking_type?: Database["public"]["Enums"]["rental_booking_type"]
-          cancellation_reason?: string | null
-          cancelled_at?: string | null
-          check_in_time?: string | null
-          check_out_time?: string | null
-          confirmed_at?: string | null
-          contact_id?: string
-          created_at?: string | null
-          deposit?: number | null
-          deposit_status?: Database["public"]["Enums"]["deposit_status"] | null
-          end_date?: string | null
-          external_booking_id?: string | null
-          guest_notes?: string | null
-          id?: string
-          internal_notes?: string | null
-          notes?: string | null
-          property_id?: string
-          rate?: number
-          rate_type?: Database["public"]["Enums"]["rental_rate_type"]
-          room_id?: string | null
-          source?: string | null
-          start_date?: string
-          status?: Database["public"]["Enums"]["rental_booking_status"]
-          total_amount?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_bookings_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_bookings_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_bookings_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_rooms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_bookings_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_conversations: {
-        Row: {
-          ai_confidence_threshold: number | null
-          ai_personality: string | null
-          booking_id: string | null
-          channel: Database["public"]["Enums"]["rental_channel"]
-          contact_id: string
-          created_at: string | null
-          external_message_id: string | null
-          external_thread_id: string | null
-          id: string
-          is_ai_auto_respond: boolean | null
-          is_ai_enabled: boolean | null
-          last_message_at: string | null
-          last_message_preview: string | null
-          message_count: number | null
-          platform: Database["public"]["Enums"]["rental_platform"] | null
-          property_id: string | null
-          status: Database["public"]["Enums"]["rental_conversation_status"]
-          subject: string | null
-          unread_count: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_confidence_threshold?: number | null
-          ai_personality?: string | null
-          booking_id?: string | null
-          channel: Database["public"]["Enums"]["rental_channel"]
-          contact_id: string
-          created_at?: string | null
-          external_message_id?: string | null
-          external_thread_id?: string | null
-          id?: string
-          is_ai_auto_respond?: boolean | null
-          is_ai_enabled?: boolean | null
-          last_message_at?: string | null
-          last_message_preview?: string | null
-          message_count?: number | null
-          platform?: Database["public"]["Enums"]["rental_platform"] | null
-          property_id?: string | null
-          status?: Database["public"]["Enums"]["rental_conversation_status"]
-          subject?: string | null
-          unread_count?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_confidence_threshold?: number | null
-          ai_personality?: string | null
-          booking_id?: string | null
-          channel?: Database["public"]["Enums"]["rental_channel"]
-          contact_id?: string
-          created_at?: string | null
-          external_message_id?: string | null
-          external_thread_id?: string | null
-          id?: string
-          is_ai_auto_respond?: boolean | null
-          is_ai_enabled?: boolean | null
-          last_message_at?: string | null
-          last_message_preview?: string | null
-          message_count?: number | null
-          platform?: Database["public"]["Enums"]["rental_platform"] | null
-          property_id?: string | null
-          status?: Database["public"]["Enums"]["rental_conversation_status"]
-          subject?: string | null
-          unread_count?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_conversations_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_conversations_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_conversations_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_conversations_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_deposit_settlements: {
-        Row: {
-          amount_returned: number | null
-          booking_id: string
-          created_at: string | null
-          deductions_summary: Json | null
-          deposit_held: number
-          guest_acknowledged_at: string | null
-          id: string
-          is_guest_acknowledged: boolean | null
-          is_letter_generated: boolean | null
-          letter_generated_at: string | null
-          letter_url: string | null
-          notes: string | null
-          return_method: string | null
-          return_reference: string | null
-          returned_at: string | null
-          status: Database["public"]["Enums"]["deposit_settlement_status"]
-          total_deductions: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          amount_returned?: number | null
-          booking_id: string
-          created_at?: string | null
-          deductions_summary?: Json | null
-          deposit_held: number
-          guest_acknowledged_at?: string | null
-          id?: string
-          is_guest_acknowledged?: boolean | null
-          is_letter_generated?: boolean | null
-          letter_generated_at?: string | null
-          letter_url?: string | null
-          notes?: string | null
-          return_method?: string | null
-          return_reference?: string | null
-          returned_at?: string | null
-          status?: Database["public"]["Enums"]["deposit_settlement_status"]
-          total_deductions?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          amount_returned?: number | null
-          booking_id?: string
-          created_at?: string | null
-          deductions_summary?: Json | null
-          deposit_held?: number
-          guest_acknowledged_at?: string | null
-          id?: string
-          is_guest_acknowledged?: boolean | null
-          is_letter_generated?: boolean | null
-          letter_generated_at?: string | null
-          letter_url?: string | null
-          notes?: string | null
-          return_method?: string | null
-          return_reference?: string | null
-          returned_at?: string | null
-          status?: Database["public"]["Enums"]["deposit_settlement_status"]
-          total_deductions?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_deposit_settlements_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: true
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_deposit_settlements_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_guest_messages: {
-        Row: {
-          ai_prompt: string | null
-          body: string
-          booking_id: string
-          channel: Database["public"]["Enums"]["message_channel"]
-          contact_id: string | null
-          created_at: string | null
-          delivered_at: string | null
-          error_message: string | null
-          external_message_id: string | null
-          id: string
-          is_ai_composed: boolean | null
-          notes: string | null
-          read_at: string | null
-          recipient_email: string | null
-          recipient_name: string | null
-          recipient_phone: string | null
-          retry_count: number | null
-          scheduled_for: string | null
-          sent_at: string | null
-          status: Database["public"]["Enums"]["guest_message_status"]
-          subject: string | null
-          template_id: string | null
-          updated_at: string | null
-          user_id: string
-          variables_used: Json | null
-        }
-        Insert: {
-          ai_prompt?: string | null
-          body: string
-          booking_id: string
-          channel: Database["public"]["Enums"]["message_channel"]
-          contact_id?: string | null
-          created_at?: string | null
-          delivered_at?: string | null
-          error_message?: string | null
-          external_message_id?: string | null
-          id?: string
-          is_ai_composed?: boolean | null
-          notes?: string | null
-          read_at?: string | null
-          recipient_email?: string | null
-          recipient_name?: string | null
-          recipient_phone?: string | null
-          retry_count?: number | null
-          scheduled_for?: string | null
-          sent_at?: string | null
-          status?: Database["public"]["Enums"]["guest_message_status"]
-          subject?: string | null
-          template_id?: string | null
-          updated_at?: string | null
-          user_id: string
-          variables_used?: Json | null
-        }
-        Update: {
-          ai_prompt?: string | null
-          body?: string
-          booking_id?: string
-          channel?: Database["public"]["Enums"]["message_channel"]
-          contact_id?: string | null
-          created_at?: string | null
-          delivered_at?: string | null
-          error_message?: string | null
-          external_message_id?: string | null
-          id?: string
-          is_ai_composed?: boolean | null
-          notes?: string | null
-          read_at?: string | null
-          recipient_email?: string | null
-          recipient_name?: string | null
-          recipient_phone?: string | null
-          retry_count?: number | null
-          scheduled_for?: string | null
-          sent_at?: string | null
-          status?: Database["public"]["Enums"]["guest_message_status"]
-          subject?: string | null
-          template_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-          variables_used?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_guest_messages_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_guest_messages_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "crm_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_guest_messages_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_guest_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_guest_templates: {
-        Row: {
-          available_variables: Json | null
-          body: string
-          channel: Database["public"]["Enums"]["message_channel"]
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          is_auto_send: boolean | null
-          last_used_at: string | null
-          name: string
-          notes: string | null
-          property_id: string | null
-          subject: string | null
-          template_type: Database["public"]["Enums"]["guest_template_type"]
-          times_used: number | null
-          trigger_hours_offset: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          available_variables?: Json | null
-          body: string
-          channel?: Database["public"]["Enums"]["message_channel"]
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_auto_send?: boolean | null
-          last_used_at?: string | null
-          name: string
-          notes?: string | null
-          property_id?: string | null
-          subject?: string | null
-          template_type: Database["public"]["Enums"]["guest_template_type"]
-          times_used?: number | null
-          trigger_hours_offset?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          available_variables?: Json | null
-          body?: string
-          channel?: Database["public"]["Enums"]["message_channel"]
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_auto_send?: boolean | null
-          last_used_at?: string | null
-          name?: string
-          notes?: string | null
-          property_id?: string | null
-          subject?: string | null
-          template_type?: Database["public"]["Enums"]["guest_template_type"]
-          times_used?: number | null
-          trigger_hours_offset?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_guest_templates_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_guest_templates_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_integrations: {
-        Row: {
-          bookings_synced: number | null
-          connected_at: string | null
-          contacts_synced: number | null
-          created_at: string | null
-          credentials: Json | null
-          disconnected_at: string | null
-          id: string
-          is_sync_enabled: boolean | null
-          last_sync_at: string | null
-          last_sync_error: string | null
-          last_sync_status: Database["public"]["Enums"]["sync_status"] | null
-          messages_synced: number | null
-          name: string | null
-          platform: Database["public"]["Enums"]["rental_platform"]
-          settings: Json | null
-          status: Database["public"]["Enums"]["rental_integration_status"]
-          sync_frequency_minutes: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          bookings_synced?: number | null
-          connected_at?: string | null
-          contacts_synced?: number | null
-          created_at?: string | null
-          credentials?: Json | null
-          disconnected_at?: string | null
-          id?: string
-          is_sync_enabled?: boolean | null
-          last_sync_at?: string | null
-          last_sync_error?: string | null
-          last_sync_status?: Database["public"]["Enums"]["sync_status"] | null
-          messages_synced?: number | null
-          name?: string | null
-          platform: Database["public"]["Enums"]["rental_platform"]
-          settings?: Json | null
-          status?: Database["public"]["Enums"]["rental_integration_status"]
-          sync_frequency_minutes?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          bookings_synced?: number | null
-          connected_at?: string | null
-          contacts_synced?: number | null
-          created_at?: string | null
-          credentials?: Json | null
-          disconnected_at?: string | null
-          id?: string
-          is_sync_enabled?: boolean | null
-          last_sync_at?: string | null
-          last_sync_error?: string | null
-          last_sync_status?: Database["public"]["Enums"]["sync_status"] | null
-          messages_synced?: number | null
-          name?: string | null
-          platform?: Database["public"]["Enums"]["rental_platform"]
-          settings?: Json | null
-          status?: Database["public"]["Enums"]["rental_integration_status"]
-          sync_frequency_minutes?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      landlord_inventory_items: {
-        Row: {
-          brand: string | null
-          category: Database["public"]["Enums"]["inventory_category"]
-          condition: Database["public"]["Enums"]["inventory_condition"]
-          created_at: string | null
-          id: string
-          inspection_notes: string | null
-          install_date: string | null
-          last_inspected_at: string | null
-          location: string | null
-          model: string | null
-          name: string
-          notes: string | null
-          photos: Json | null
-          property_id: string
-          purchase_date: string | null
-          purchase_price: number | null
-          replacement_cost: number | null
-          serial_number: string | null
-          updated_at: string | null
-          user_id: string
-          warranty_expires: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          brand?: string | null
-          category?: Database["public"]["Enums"]["inventory_category"]
-          condition?: Database["public"]["Enums"]["inventory_condition"]
-          created_at?: string | null
-          id?: string
-          inspection_notes?: string | null
-          install_date?: string | null
-          last_inspected_at?: string | null
-          location?: string | null
-          model?: string | null
-          name: string
-          notes?: string | null
-          photos?: Json | null
-          property_id: string
-          purchase_date?: string | null
-          purchase_price?: number | null
-          replacement_cost?: number | null
-          serial_number?: string | null
-          updated_at?: string | null
-          user_id: string
-          warranty_expires?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          brand?: string | null
-          category?: Database["public"]["Enums"]["inventory_category"]
-          condition?: Database["public"]["Enums"]["inventory_condition"]
-          created_at?: string | null
-          id?: string
-          inspection_notes?: string | null
-          install_date?: string | null
-          last_inspected_at?: string | null
-          location?: string | null
-          model?: string | null
-          name?: string
-          notes?: string | null
-          photos?: Json | null
-          property_id?: string
-          purchase_date?: string | null
-          purchase_price?: number | null
-          replacement_cost?: number | null
-          serial_number?: string | null
-          updated_at?: string | null
-          user_id?: string
-          warranty_expires?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_inventory_items_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_inventory_items_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_maintenance_records: {
-        Row: {
-          actual_cost: number | null
-          booking_id: string | null
-          category: Database["public"]["Enums"]["maintenance_category"]
-          charge_to: Database["public"]["Enums"]["maintenance_charge_to"]
-          completed_at: string | null
-          created_at: string | null
-          description: string | null
-          estimated_cost: number | null
-          guest_charge_amount: number | null
-          guest_charge_approved_at: string | null
-          id: string
-          inventory_item_id: string | null
-          is_guest_charge_approved: boolean | null
-          is_guest_chargeable: boolean | null
-          location: string | null
-          notes: string | null
-          photos: Json | null
-          priority: Database["public"]["Enums"]["maintenance_priority"]
-          property_id: string
-          receipt_amount: number | null
-          receipt_url: string | null
-          reported_at: string | null
-          resolution_notes: string | null
-          scheduled_at: string | null
-          started_at: string | null
-          status: Database["public"]["Enums"]["maintenance_status"]
-          title: string
-          updated_at: string | null
-          user_id: string
-          vendor_id: string | null
-          vendor_name: string | null
-          vendor_phone: string | null
-          work_order_number: string
-          workspace_id: string | null
-        }
-        Insert: {
-          actual_cost?: number | null
-          booking_id?: string | null
-          category?: Database["public"]["Enums"]["maintenance_category"]
-          charge_to?: Database["public"]["Enums"]["maintenance_charge_to"]
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          estimated_cost?: number | null
-          guest_charge_amount?: number | null
-          guest_charge_approved_at?: string | null
-          id?: string
-          inventory_item_id?: string | null
-          is_guest_charge_approved?: boolean | null
-          is_guest_chargeable?: boolean | null
-          location?: string | null
-          notes?: string | null
-          photos?: Json | null
-          priority?: Database["public"]["Enums"]["maintenance_priority"]
-          property_id: string
-          receipt_amount?: number | null
-          receipt_url?: string | null
-          reported_at?: string | null
-          resolution_notes?: string | null
-          scheduled_at?: string | null
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["maintenance_status"]
-          title: string
-          updated_at?: string | null
-          user_id: string
-          vendor_id?: string | null
-          vendor_name?: string | null
-          vendor_phone?: string | null
-          work_order_number?: string
-          workspace_id?: string | null
-        }
-        Update: {
-          actual_cost?: number | null
-          booking_id?: string | null
-          category?: Database["public"]["Enums"]["maintenance_category"]
-          charge_to?: Database["public"]["Enums"]["maintenance_charge_to"]
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          estimated_cost?: number | null
-          guest_charge_amount?: number | null
-          guest_charge_approved_at?: string | null
-          id?: string
-          inventory_item_id?: string | null
-          is_guest_charge_approved?: boolean | null
-          is_guest_chargeable?: boolean | null
-          location?: string | null
-          notes?: string | null
-          photos?: Json | null
-          priority?: Database["public"]["Enums"]["maintenance_priority"]
-          property_id?: string
-          receipt_amount?: number | null
-          receipt_url?: string | null
-          reported_at?: string | null
-          resolution_notes?: string | null
-          scheduled_at?: string | null
-          started_at?: string | null
-          status?: Database["public"]["Enums"]["maintenance_status"]
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-          vendor_id?: string | null
-          vendor_name?: string | null
-          vendor_phone?: string | null
-          work_order_number?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_maintenance_records_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_maintenance_records_inventory_item_id_fkey"
-            columns: ["inventory_item_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_inventory_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_maintenance_records_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_maintenance_records_vendor_id_fkey"
-            columns: ["vendor_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_vendors"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_maintenance_records_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_messages: {
-        Row: {
-          ai_completion_token_count: number | null
-          ai_confidence: number | null
-          ai_model: string | null
-          ai_prompt_token_count: number | null
-          approved_at: string | null
-          approved_by: string | null
-          attachments: Json | null
-          content: string
-          content_type: Database["public"]["Enums"]["rental_message_content_type"]
-          conversation_id: string
-          created_at: string | null
-          delivered_at: string | null
-          direction: Database["public"]["Enums"]["rental_message_direction"]
-          edited_content: string | null
-          external_message_id: string | null
-          failed_at: string | null
-          failure_reason: string | null
-          id: string
-          is_requires_approval: boolean | null
-          metadata: Json | null
-          read_at: string | null
-          send_error: string | null
-          send_status: string | null
-          sent_by: Database["public"]["Enums"]["rental_message_sender"]
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_completion_token_count?: number | null
-          ai_confidence?: number | null
-          ai_model?: string | null
-          ai_prompt_token_count?: number | null
-          approved_at?: string | null
-          approved_by?: string | null
-          attachments?: Json | null
-          content: string
-          content_type?: Database["public"]["Enums"]["rental_message_content_type"]
-          conversation_id: string
-          created_at?: string | null
-          delivered_at?: string | null
-          direction: Database["public"]["Enums"]["rental_message_direction"]
-          edited_content?: string | null
-          external_message_id?: string | null
-          failed_at?: string | null
-          failure_reason?: string | null
-          id?: string
-          is_requires_approval?: boolean | null
-          metadata?: Json | null
-          read_at?: string | null
-          send_error?: string | null
-          send_status?: string | null
-          sent_by: Database["public"]["Enums"]["rental_message_sender"]
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_completion_token_count?: number | null
-          ai_confidence?: number | null
-          ai_model?: string | null
-          ai_prompt_token_count?: number | null
-          approved_at?: string | null
-          approved_by?: string | null
-          attachments?: Json | null
-          content?: string
-          content_type?: Database["public"]["Enums"]["rental_message_content_type"]
-          conversation_id?: string
-          created_at?: string | null
-          delivered_at?: string | null
-          direction?: Database["public"]["Enums"]["rental_message_direction"]
-          edited_content?: string | null
-          external_message_id?: string | null
-          failed_at?: string | null
-          failure_reason?: string | null
-          id?: string
-          is_requires_approval?: boolean | null
-          metadata?: Json | null
-          read_at?: string | null
-          send_error?: string | null
-          send_status?: string | null
-          sent_by?: Database["public"]["Enums"]["rental_message_sender"]
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_messages_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_properties: {
-        Row: {
-          address: string
-          address_line_2: string | null
-          amenities: string[] | null
-          base_rate: number
-          bathrooms: number
-          bedrooms: number
-          city: string
-          cleaning_fee: number | null
-          country: string | null
-          created_at: string | null
-          description: string | null
-          house_rules: Json | null
-          id: string
-          internal_notes: string | null
-          is_room_by_room_enabled: boolean | null
-          listing_urls: Json | null
-          name: string
-          primary_image_url: string | null
-          property_type: Database["public"]["Enums"]["rental_property_type"]
-          rate_type: Database["public"]["Enums"]["rental_rate_type"]
-          rental_type: Database["public"]["Enums"]["rental_type"]
-          security_deposit: number | null
-          square_feet: number | null
-          state: string
-          status: Database["public"]["Enums"]["rental_property_status"]
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-          zip: string
-        }
-        Insert: {
-          address: string
-          address_line_2?: string | null
-          amenities?: string[] | null
-          base_rate: number
-          bathrooms?: number
-          bedrooms?: number
-          city: string
-          cleaning_fee?: number | null
-          country?: string | null
-          created_at?: string | null
-          description?: string | null
-          house_rules?: Json | null
-          id?: string
-          internal_notes?: string | null
-          is_room_by_room_enabled?: boolean | null
-          listing_urls?: Json | null
-          name: string
-          primary_image_url?: string | null
-          property_type?: Database["public"]["Enums"]["rental_property_type"]
-          rate_type?: Database["public"]["Enums"]["rental_rate_type"]
-          rental_type?: Database["public"]["Enums"]["rental_type"]
-          security_deposit?: number | null
-          square_feet?: number | null
-          state: string
-          status?: Database["public"]["Enums"]["rental_property_status"]
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-          zip: string
-        }
-        Update: {
-          address?: string
-          address_line_2?: string | null
-          amenities?: string[] | null
-          base_rate?: number
-          bathrooms?: number
-          bedrooms?: number
-          city?: string
-          cleaning_fee?: number | null
-          country?: string | null
-          created_at?: string | null
-          description?: string | null
-          house_rules?: Json | null
-          id?: string
-          internal_notes?: string | null
-          is_room_by_room_enabled?: boolean | null
-          listing_urls?: Json | null
-          name?: string
-          primary_image_url?: string | null
-          property_type?: Database["public"]["Enums"]["rental_property_type"]
-          rate_type?: Database["public"]["Enums"]["rental_rate_type"]
-          rental_type?: Database["public"]["Enums"]["rental_type"]
-          security_deposit?: number | null
-          square_feet?: number | null
-          state?: string
-          status?: Database["public"]["Enums"]["rental_property_status"]
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-          zip?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_properties_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_rooms: {
-        Row: {
-          amenities: string[] | null
-          available_date: string | null
-          created_at: string | null
-          current_booking_id: string | null
-          description: string | null
-          id: string
-          is_private_bath: boolean | null
-          is_private_entrance: boolean | null
-          is_utilities_included: boolean | null
-          monthly_rate: number
-          name: string
-          property_id: string
-          size_sqft: number | null
-          status: Database["public"]["Enums"]["rental_room_status"]
-          updated_at: string | null
-          weekly_rate: number | null
-          workspace_id: string | null
-        }
-        Insert: {
-          amenities?: string[] | null
-          available_date?: string | null
-          created_at?: string | null
-          current_booking_id?: string | null
-          description?: string | null
-          id?: string
-          is_private_bath?: boolean | null
-          is_private_entrance?: boolean | null
-          is_utilities_included?: boolean | null
-          monthly_rate: number
-          name: string
-          property_id: string
-          size_sqft?: number | null
-          status?: Database["public"]["Enums"]["rental_room_status"]
-          updated_at?: string | null
-          weekly_rate?: number | null
-          workspace_id?: string | null
-        }
-        Update: {
-          amenities?: string[] | null
-          available_date?: string | null
-          created_at?: string | null
-          current_booking_id?: string | null
-          description?: string | null
-          id?: string
-          is_private_bath?: boolean | null
-          is_private_entrance?: boolean | null
-          is_utilities_included?: boolean | null
-          monthly_rate?: number
-          name?: string
-          property_id?: string
-          size_sqft?: number | null
-          status?: Database["public"]["Enums"]["rental_room_status"]
-          updated_at?: string | null
-          weekly_rate?: number | null
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_rooms_current_booking_id_fkey"
-            columns: ["current_booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_rooms_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_rooms_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_templates: {
-        Row: {
-          category: string
-          channel: Database["public"]["Enums"]["rental_channel"] | null
-          content: string
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          is_ai_use_as_example: boolean | null
-          is_default: boolean | null
-          last_used_at: string | null
-          name: string
-          subject: string | null
-          updated_at: string | null
-          use_count: number | null
-          user_id: string
-        }
-        Insert: {
-          category: string
-          channel?: Database["public"]["Enums"]["rental_channel"] | null
-          content: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_ai_use_as_example?: boolean | null
-          is_default?: boolean | null
-          last_used_at?: string | null
-          name: string
-          subject?: string | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id: string
-        }
-        Update: {
-          category?: string
-          channel?: Database["public"]["Enums"]["rental_channel"] | null
-          content?: string
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_ai_use_as_example?: boolean | null
-          is_default?: boolean | null
-          last_used_at?: string | null
-          name?: string
-          subject?: string | null
-          updated_at?: string | null
-          use_count?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      landlord_turnover_templates: {
-        Row: {
-          checklist_items: Json
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          is_default: boolean | null
-          name: string
-          property_id: string | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          checklist_items?: Json
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          name: string
-          property_id?: string | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          checklist_items?: Json
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          name?: string
-          property_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_turnover_templates_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_turnover_templates_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_turnovers: {
-        Row: {
-          ai_messages: Json | null
-          checkin_at: string | null
-          checkin_booking_id: string | null
-          checklist: Json | null
-          checkout_at: string
-          checkout_booking_id: string | null
-          checkout_confirmed_at: string | null
-          checkout_notes: string | null
-          cleaner_vendor_id: string | null
-          cleaning_completed_at: string | null
-          cleaning_notes: string | null
-          cleaning_photos: Json | null
-          cleaning_scheduled_at: string | null
-          cleaning_started_at: string | null
-          created_at: string | null
-          id: string
-          inspection_completed_at: string | null
-          inspection_notes: string | null
-          inspection_photos: Json | null
-          is_checkout_confirmed: boolean | null
-          is_inspection_passed: boolean | null
-          is_inspection_required: boolean | null
-          issues_description: string | null
-          issues_found: boolean | null
-          maintenance_created_id: string | null
-          notes: string | null
-          property_id: string
-          ready_at: string | null
-          ready_confirmed_by: string | null
-          status: Database["public"]["Enums"]["turnover_status"]
-          turnaround_hours: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_messages?: Json | null
-          checkin_at?: string | null
-          checkin_booking_id?: string | null
-          checklist?: Json | null
-          checkout_at: string
-          checkout_booking_id?: string | null
-          checkout_confirmed_at?: string | null
-          checkout_notes?: string | null
-          cleaner_vendor_id?: string | null
-          cleaning_completed_at?: string | null
-          cleaning_notes?: string | null
-          cleaning_photos?: Json | null
-          cleaning_scheduled_at?: string | null
-          cleaning_started_at?: string | null
-          created_at?: string | null
-          id?: string
-          inspection_completed_at?: string | null
-          inspection_notes?: string | null
-          inspection_photos?: Json | null
-          is_checkout_confirmed?: boolean | null
-          is_inspection_passed?: boolean | null
-          is_inspection_required?: boolean | null
-          issues_description?: string | null
-          issues_found?: boolean | null
-          maintenance_created_id?: string | null
-          notes?: string | null
-          property_id: string
-          ready_at?: string | null
-          ready_confirmed_by?: string | null
-          status?: Database["public"]["Enums"]["turnover_status"]
-          turnaround_hours?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_messages?: Json | null
-          checkin_at?: string | null
-          checkin_booking_id?: string | null
-          checklist?: Json | null
-          checkout_at?: string
-          checkout_booking_id?: string | null
-          checkout_confirmed_at?: string | null
-          checkout_notes?: string | null
-          cleaner_vendor_id?: string | null
-          cleaning_completed_at?: string | null
-          cleaning_notes?: string | null
-          cleaning_photos?: Json | null
-          cleaning_scheduled_at?: string | null
-          cleaning_started_at?: string | null
-          created_at?: string | null
-          id?: string
-          inspection_completed_at?: string | null
-          inspection_notes?: string | null
-          inspection_photos?: Json | null
-          is_checkout_confirmed?: boolean | null
-          is_inspection_passed?: boolean | null
-          is_inspection_required?: boolean | null
-          issues_description?: string | null
-          issues_found?: boolean | null
-          maintenance_created_id?: string | null
-          notes?: string | null
-          property_id?: string
-          ready_at?: string | null
-          ready_confirmed_by?: string | null
-          status?: Database["public"]["Enums"]["turnover_status"]
-          turnaround_hours?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_turnovers_checkin_booking_id_fkey"
-            columns: ["checkin_booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_turnovers_checkout_booking_id_fkey"
-            columns: ["checkout_booking_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_turnovers_cleaner_vendor_id_fkey"
-            columns: ["cleaner_vendor_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_vendors"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_turnovers_maintenance_created_id_fkey"
-            columns: ["maintenance_created_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_maintenance_records"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_turnovers_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_turnovers_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_vendor_messages: {
-        Row: {
-          ai_prompt: string | null
-          body: string
-          channel: string
-          created_at: string | null
-          delivered_at: string | null
-          error_message: string | null
-          id: string
-          is_ai_composed: boolean | null
-          is_response_received: boolean | null
-          maintenance_id: string | null
-          property_id: string | null
-          read_at: string | null
-          response_body: string | null
-          response_received_at: string | null
-          sent_at: string | null
-          status: Database["public"]["Enums"]["vendor_message_status"]
-          subject: string | null
-          turnover_id: string | null
-          updated_at: string | null
-          user_id: string
-          vendor_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          ai_prompt?: string | null
-          body: string
-          channel: string
-          created_at?: string | null
-          delivered_at?: string | null
-          error_message?: string | null
-          id?: string
-          is_ai_composed?: boolean | null
-          is_response_received?: boolean | null
-          maintenance_id?: string | null
-          property_id?: string | null
-          read_at?: string | null
-          response_body?: string | null
-          response_received_at?: string | null
-          sent_at?: string | null
-          status?: Database["public"]["Enums"]["vendor_message_status"]
-          subject?: string | null
-          turnover_id?: string | null
-          updated_at?: string | null
-          user_id: string
-          vendor_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          ai_prompt?: string | null
-          body?: string
-          channel?: string
-          created_at?: string | null
-          delivered_at?: string | null
-          error_message?: string | null
-          id?: string
-          is_ai_composed?: boolean | null
-          is_response_received?: boolean | null
-          maintenance_id?: string | null
-          property_id?: string | null
-          read_at?: string | null
-          response_body?: string | null
-          response_received_at?: string | null
-          sent_at?: string | null
-          status?: Database["public"]["Enums"]["vendor_message_status"]
-          subject?: string | null
-          turnover_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-          vendor_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_vendor_messages_maintenance_id_fkey"
-            columns: ["maintenance_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_maintenance_records"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_vendor_messages_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_vendor_messages_turnover_id_fkey"
-            columns: ["turnover_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_turnovers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_vendor_messages_vendor_id_fkey"
-            columns: ["vendor_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_vendors"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_vendor_messages_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      landlord_vendors: {
-        Row: {
-          address: string | null
-          availability_notes: string | null
-          category: Database["public"]["Enums"]["vendor_category"]
-          company_name: string | null
-          created_at: string | null
-          email: string | null
-          hourly_rate: number | null
-          id: string
-          insurance_expires: string | null
-          is_active: boolean | null
-          is_insurance_verified: boolean | null
-          is_primary: boolean | null
-          last_used_at: string | null
-          license_expires: string | null
-          license_number: string | null
-          name: string
-          notes: string | null
-          payment_terms: string | null
-          phone: string | null
-          preferred_contact_method: string | null
-          property_id: string | null
-          rating: number | null
-          service_fee: number | null
-          total_jobs: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
-        Insert: {
-          address?: string | null
-          availability_notes?: string | null
-          category?: Database["public"]["Enums"]["vendor_category"]
-          company_name?: string | null
-          created_at?: string | null
-          email?: string | null
-          hourly_rate?: number | null
-          id?: string
-          insurance_expires?: string | null
-          is_active?: boolean | null
-          is_insurance_verified?: boolean | null
-          is_primary?: boolean | null
-          last_used_at?: string | null
-          license_expires?: string | null
-          license_number?: string | null
-          name: string
-          notes?: string | null
-          payment_terms?: string | null
-          phone?: string | null
-          preferred_contact_method?: string | null
-          property_id?: string | null
-          rating?: number | null
-          service_fee?: number | null
-          total_jobs?: number | null
-          updated_at?: string | null
-          user_id: string
-          workspace_id?: string | null
-        }
-        Update: {
-          address?: string | null
-          availability_notes?: string | null
-          category?: Database["public"]["Enums"]["vendor_category"]
-          company_name?: string | null
-          created_at?: string | null
-          email?: string | null
-          hourly_rate?: number | null
-          id?: string
-          insurance_expires?: string | null
-          is_active?: boolean | null
-          is_insurance_verified?: boolean | null
-          is_primary?: boolean | null
-          last_used_at?: string | null
-          license_expires?: string | null
-          license_number?: string | null
-          name?: string
-          notes?: string | null
-          payment_terms?: string | null
-          phone?: string | null
-          preferred_contact_method?: string | null
-          property_id?: string | null
-          rating?: number | null
-          service_fee?: number | null
-          total_jobs?: number | null
-          updated_at?: string | null
-          user_id?: string
-          workspace_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "landlord_vendors_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "landlord_properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "landlord_vendors_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      rental_email_connections: {
-        Row: {
-          access_token_encrypted: string | null
-          created_at: string
-          detected_platforms: Json
-          email_address: string
-          id: string
-          is_active: boolean
-          last_message_id: string | null
-          last_sync_at: string | null
-          provider: Database["public"]["Enums"]["rental_email_provider"]
-          refresh_token_encrypted: string | null
-          sync_error: string | null
-          token_expires_at: string | null
-          updated_at: string
-          user_id: string
-          workspace_id: string
-        }
-        Insert: {
-          access_token_encrypted?: string | null
-          created_at?: string
-          detected_platforms?: Json
-          email_address: string
-          id?: string
-          is_active?: boolean
-          last_message_id?: string | null
-          last_sync_at?: string | null
-          provider: Database["public"]["Enums"]["rental_email_provider"]
-          refresh_token_encrypted?: string | null
-          sync_error?: string | null
-          token_expires_at?: string | null
-          updated_at?: string
-          user_id: string
-          workspace_id: string
-        }
-        Update: {
-          access_token_encrypted?: string | null
-          created_at?: string
-          detected_platforms?: Json
-          email_address?: string
-          id?: string
-          is_active?: boolean
-          last_message_id?: string | null
-          last_sync_at?: string | null
-          provider?: Database["public"]["Enums"]["rental_email_provider"]
-          refresh_token_encrypted?: string | null
-          sync_error?: string | null
-          token_expires_at?: string | null
-          updated_at?: string
-          user_id?: string
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rental_email_connections_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -8111,42 +1623,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_gmail_tokens: {
-        Row: {
-          access_token: string
-          created_at: string
-          gmail_email: string
-          history_id: string
-          refresh_token: string
-          token_expiry: string
-          updated_at: string
-          user_id: string
-          watch_expiration: string
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          gmail_email: string
-          history_id?: string
-          refresh_token: string
-          token_expiry: string
-          updated_at?: string
-          user_id: string
-          watch_expiration?: string
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          gmail_email?: string
-          history_id?: string
-          refresh_token?: string
-          token_expiry?: string
-          updated_at?: string
-          user_id?: string
-          watch_expiration?: string
-        }
-        Relationships: []
-      }
       user_import_mappings: {
         Row: {
           created_at: string
@@ -8169,48 +1645,6 @@ export type Database = {
           id?: string
           mapping?: Json
           name?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_integrations: {
-        Row: {
-          api_key: string | null
-          config: Json
-          created_at: string
-          error_message: string | null
-          id: string
-          is_enabled: boolean
-          last_checked_at: string | null
-          provider: Database["public"]["Enums"]["integration_provider"]
-          status: Database["public"]["Enums"]["integration_status"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          api_key?: string | null
-          config?: Json
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          is_enabled?: boolean
-          last_checked_at?: string | null
-          provider: Database["public"]["Enums"]["integration_provider"]
-          status?: Database["public"]["Enums"]["integration_status"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          api_key?: string | null
-          config?: Json
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          is_enabled?: boolean
-          last_checked_at?: string | null
-          provider?: Database["public"]["Enums"]["integration_provider"]
-          status?: Database["public"]["Enums"]["integration_status"]
           updated_at?: string
           user_id?: string
         }
@@ -8915,6 +2349,367 @@ export type Database = {
       }
     }
     Views: {
+      ai_auto_send_rules: {
+        Row: {
+          conditions: Json | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          last_triggered_at: string | null
+          name: string | null
+          property_id: string | null
+          template_id: string | null
+          trigger_count: number | null
+          trigger_event: string | null
+          trigger_offset_hours: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          conditions?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name?: string | null
+          property_id?: string | null
+          template_id?: string | null
+          trigger_count?: number | null
+          trigger_event?: string | null
+          trigger_offset_hours?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          conditions?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          name?: string | null
+          property_id?: string | null
+          template_id?: string | null
+          trigger_count?: number | null
+          trigger_event?: string | null
+          trigger_offset_hours?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_capture_items: {
+        Row: {
+          ai_confidence: number | null
+          ai_extracted_data: Json | null
+          ai_summary: string | null
+          assigned_deal_id: string | null
+          assigned_lead_id: string | null
+          assigned_property_id: string | null
+          content: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string | null
+          metadata: Json | null
+          mime_type: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["capture_item_status"] | null
+          suggested_lead_id: string | null
+          suggested_property_id: string | null
+          title: string | null
+          transcript: string | null
+          triaged_at: string | null
+          triaged_by: string | null
+          type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_extracted_data?: Json | null
+          ai_summary?: string | null
+          assigned_deal_id?: string | null
+          assigned_lead_id?: string | null
+          assigned_property_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["capture_item_status"] | null
+          suggested_lead_id?: string | null
+          suggested_property_id?: string | null
+          title?: string | null
+          transcript?: string | null
+          triaged_at?: string | null
+          triaged_by?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_extracted_data?: Json | null
+          ai_summary?: string | null
+          assigned_deal_id?: string | null
+          assigned_lead_id?: string | null
+          assigned_property_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["capture_item_status"] | null
+          suggested_lead_id?: string | null
+          suggested_property_id?: string | null
+          title?: string | null
+          transcript?: string | null
+          triaged_at?: string | null
+          triaged_by?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_sessions: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          id: string | null
+          tokens_used: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string | null
+          tokens_used?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string | null
+          tokens_used?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      contacts: {
+        Row: {
+          active_campaign_id: string | null
+          address: Json | null
+          best_contact_time: string | null
+          campaign_status: Database["public"]["Enums"]["campaign_status"] | null
+          campaign_touches_received: number | null
+          city: string | null
+          company: string | null
+          contact_types:
+            | Database["public"]["Enums"]["crm_contact_type"][]
+            | null
+          created_at: string | null
+          email: string | null
+          emails: Json | null
+          first_name: string | null
+          id: string | null
+          is_deleted: boolean | null
+          is_do_not_contact: boolean | null
+          job_title: string | null
+          last_campaign_touch_at: string | null
+          last_name: string | null
+          metadata: Json | null
+          phone: string | null
+          phones: Json | null
+          preferred_channel: Database["public"]["Enums"]["drip_channel"] | null
+          score: number | null
+          sms_opt_status: Database["public"]["Enums"]["sms_opt_status"] | null
+          source: Database["public"]["Enums"]["crm_contact_source"] | null
+          state: string | null
+          status: Database["public"]["Enums"]["crm_contact_status"] | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
+          workspace_id: string | null
+          zip: string | null
+        }
+        Insert: {
+          active_campaign_id?: string | null
+          address?: Json | null
+          best_contact_time?: string | null
+          campaign_status?:
+            | Database["public"]["Enums"]["campaign_status"]
+            | null
+          campaign_touches_received?: number | null
+          city?: string | null
+          company?: string | null
+          contact_types?:
+            | Database["public"]["Enums"]["crm_contact_type"][]
+            | null
+          created_at?: string | null
+          email?: string | null
+          emails?: Json | null
+          first_name?: string | null
+          id?: string | null
+          is_deleted?: boolean | null
+          is_do_not_contact?: boolean | null
+          job_title?: string | null
+          last_campaign_touch_at?: string | null
+          last_name?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          phones?: Json | null
+          preferred_channel?: Database["public"]["Enums"]["drip_channel"] | null
+          score?: number | null
+          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          source?: Database["public"]["Enums"]["crm_contact_source"] | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["crm_contact_status"] | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+          zip?: string | null
+        }
+        Update: {
+          active_campaign_id?: string | null
+          address?: Json | null
+          best_contact_time?: string | null
+          campaign_status?:
+            | Database["public"]["Enums"]["campaign_status"]
+            | null
+          campaign_touches_received?: number | null
+          city?: string | null
+          company?: string | null
+          contact_types?:
+            | Database["public"]["Enums"]["crm_contact_type"][]
+            | null
+          created_at?: string | null
+          email?: string | null
+          emails?: Json | null
+          first_name?: string | null
+          id?: string | null
+          is_deleted?: boolean | null
+          is_do_not_contact?: boolean | null
+          job_title?: string | null
+          last_campaign_touch_at?: string | null
+          last_name?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          phones?: Json | null
+          preferred_channel?: Database["public"]["Enums"]["drip_channel"] | null
+          score?: number | null
+          sms_opt_status?: Database["public"]["Enums"]["sms_opt_status"] | null
+          source?: Database["public"]["Enums"]["crm_contact_source"] | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["crm_contact_status"] | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      crm_skip_trace_results: {
+        Row: {
+          addresses: Json | null
+          contact_id: string | null
+          created_at: string | null
+          credits_used: number | null
+          data_points: Json | null
+          emails: Json | null
+          error_message: string | null
+          id: string | null
+          input_address: string | null
+          input_city: string | null
+          input_first_name: string | null
+          input_last_name: string | null
+          input_state: string | null
+          input_zip: string | null
+          lead_id: string | null
+          match_confidence: number | null
+          matched_property_id: string | null
+          phones: Json | null
+          properties_owned: Json | null
+          property_id: string | null
+          raw_response: Json | null
+          status: Database["public"]["Enums"]["crm_skip_trace_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          addresses?: Json | null
+          contact_id?: string | null
+          created_at?: string | null
+          credits_used?: number | null
+          data_points?: Json | null
+          emails?: Json | null
+          error_message?: string | null
+          id?: string | null
+          input_address?: string | null
+          input_city?: string | null
+          input_first_name?: string | null
+          input_last_name?: string | null
+          input_state?: string | null
+          input_zip?: string | null
+          lead_id?: string | null
+          match_confidence?: number | null
+          matched_property_id?: string | null
+          phones?: Json | null
+          properties_owned?: Json | null
+          property_id?: string | null
+          raw_response?: Json | null
+          status?: Database["public"]["Enums"]["crm_skip_trace_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          addresses?: Json | null
+          contact_id?: string | null
+          created_at?: string | null
+          credits_used?: number | null
+          data_points?: Json | null
+          emails?: Json | null
+          error_message?: string | null
+          id?: string | null
+          input_address?: string | null
+          input_city?: string | null
+          input_first_name?: string | null
+          input_last_name?: string | null
+          input_state?: string | null
+          input_zip?: string | null
+          lead_id?: string | null
+          match_confidence?: number | null
+          matched_property_id?: string | null
+          phones?: Json | null
+          properties_owned?: Json | null
+          property_id?: string | null
+          raw_response?: Json | null
+          status?: Database["public"]["Enums"]["crm_skip_trace_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
@@ -8954,6 +2749,376 @@ export type Database = {
           f_table_schema?: unknown
           srid?: number | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      investor_comps: {
+        Row: {
+          address: string | null
+          address_line_1: string | null
+          address_line_2: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          created_at: string | null
+          created_by: string | null
+          days_on_market: number | null
+          distance: number | null
+          features_json: Json | null
+          id: string | null
+          lot_size: number | null
+          price_per_sqft: number | null
+          property_id: string | null
+          sale_date: string | null
+          sale_price: number | null
+          source: string | null
+          special_features: string | null
+          square_feet: number | null
+          state: string | null
+          status: Database["public"]["Enums"]["re_comp_status"] | null
+          updated_at: string | null
+          workspace_id: string | null
+          year_built: number | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          days_on_market?: number | null
+          distance?: number | null
+          features_json?: Json | null
+          id?: string | null
+          lot_size?: number | null
+          price_per_sqft?: number | null
+          property_id?: string | null
+          sale_date?: string | null
+          sale_price?: number | null
+          source?: string | null
+          special_features?: string | null
+          square_feet?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["re_comp_status"] | null
+          updated_at?: string | null
+          workspace_id?: string | null
+          year_built?: number | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          days_on_market?: number | null
+          distance?: number | null
+          features_json?: Json | null
+          id?: string | null
+          lot_size?: number | null
+          price_per_sqft?: number | null
+          property_id?: string | null
+          sale_date?: string | null
+          sale_price?: number | null
+          source?: string | null
+          special_features?: string | null
+          square_feet?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["re_comp_status"] | null
+          updated_at?: string | null
+          workspace_id?: string | null
+          year_built?: number | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      investor_deal_events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          description: string | null
+          event_type: string | null
+          id: string | null
+          metadata: Json | null
+          source: string | null
+          title: string | null
+          updated_at: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          description?: string | null
+          event_type?: string | null
+          id?: string | null
+          metadata?: Json | null
+          source?: string | null
+          title?: string | null
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          description?: string | null
+          event_type?: string | null
+          id?: string | null
+          metadata?: Json | null
+          source?: string | null
+          title?: string | null
+          updated_at?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      investor_outreach_templates: {
+        Row: {
+          body: string | null
+          category: string | null
+          channel: string | null
+          contact_type: string | null
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          is_system: boolean | null
+          name: string | null
+          response_rate: number | null
+          subject: string | null
+          updated_at: string | null
+          use_count: number | null
+          user_id: string | null
+          variables: string[] | null
+          workspace_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          category?: string | null
+          channel?: string | null
+          contact_type?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name?: string | null
+          response_rate?: number | null
+          subject?: string | null
+          updated_at?: string | null
+          use_count?: number | null
+          user_id?: string | null
+          variables?: string[] | null
+          workspace_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          category?: string | null
+          channel?: string | null
+          contact_type?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name?: string | null
+          response_rate?: number | null
+          subject?: string | null
+          updated_at?: string | null
+          use_count?: number | null
+          user_id?: string | null
+          variables?: string[] | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      landlord_guest_templates: {
+        Row: {
+          available_variables: Json | null
+          body: string | null
+          channel: Database["public"]["Enums"]["message_channel"] | null
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          is_auto_send: boolean | null
+          last_used_at: string | null
+          name: string | null
+          notes: string | null
+          property_id: string | null
+          subject: string | null
+          template_type:
+            | Database["public"]["Enums"]["guest_template_type"]
+            | null
+          times_used: number | null
+          trigger_hours_offset: number | null
+          updated_at: string | null
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          available_variables?: Json | null
+          body?: string | null
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_auto_send?: boolean | null
+          last_used_at?: string | null
+          name?: string | null
+          notes?: string | null
+          property_id?: string | null
+          subject?: string | null
+          template_type?:
+            | Database["public"]["Enums"]["guest_template_type"]
+            | null
+          times_used?: number | null
+          trigger_hours_offset?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          available_variables?: Json | null
+          body?: string | null
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_auto_send?: boolean | null
+          last_used_at?: string | null
+          name?: string | null
+          notes?: string | null
+          property_id?: string | null
+          subject?: string | null
+          template_type?:
+            | Database["public"]["Enums"]["guest_template_type"]
+            | null
+          times_used?: number | null
+          trigger_hours_offset?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      landlord_maintenance_records: {
+        Row: {
+          actual_cost: number | null
+          booking_id: string | null
+          category: Database["public"]["Enums"]["maintenance_category"] | null
+          charge_to: Database["public"]["Enums"]["maintenance_charge_to"] | null
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          estimated_cost: number | null
+          guest_charge_amount: number | null
+          guest_charge_approved_at: string | null
+          id: string | null
+          inventory_item_id: string | null
+          is_guest_charge_approved: boolean | null
+          is_guest_chargeable: boolean | null
+          location: string | null
+          notes: string | null
+          photos: Json | null
+          priority: Database["public"]["Enums"]["maintenance_priority"] | null
+          property_id: string | null
+          receipt_amount: number | null
+          receipt_url: string | null
+          reported_at: string | null
+          resolution_notes: string | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["maintenance_status"] | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+          vendor_id: string | null
+          vendor_name: string | null
+          vendor_phone: string | null
+          work_order_number: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          booking_id?: string | null
+          category?: Database["public"]["Enums"]["maintenance_category"] | null
+          charge_to?:
+            | Database["public"]["Enums"]["maintenance_charge_to"]
+            | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          guest_charge_amount?: number | null
+          guest_charge_approved_at?: string | null
+          id?: string | null
+          inventory_item_id?: string | null
+          is_guest_charge_approved?: boolean | null
+          is_guest_chargeable?: boolean | null
+          location?: string | null
+          notes?: string | null
+          photos?: Json | null
+          priority?: Database["public"]["Enums"]["maintenance_priority"] | null
+          property_id?: string | null
+          receipt_amount?: number | null
+          receipt_url?: string | null
+          reported_at?: string | null
+          resolution_notes?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vendor_id?: string | null
+          vendor_name?: string | null
+          vendor_phone?: string | null
+          work_order_number?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          booking_id?: string | null
+          category?: Database["public"]["Enums"]["maintenance_category"] | null
+          charge_to?:
+            | Database["public"]["Enums"]["maintenance_charge_to"]
+            | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          guest_charge_amount?: number | null
+          guest_charge_approved_at?: string | null
+          id?: string | null
+          inventory_item_id?: string | null
+          is_guest_charge_approved?: boolean | null
+          is_guest_chargeable?: boolean | null
+          location?: string | null
+          notes?: string | null
+          photos?: Json | null
+          priority?: Database["public"]["Enums"]["maintenance_priority"] | null
+          property_id?: string | null
+          receipt_amount?: number | null
+          receipt_url?: string | null
+          reported_at?: string | null
+          resolution_notes?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vendor_id?: string | null
+          vendor_name?: string | null
+          vendor_phone?: string | null
+          work_order_number?: string | null
+          workspace_id?: string | null
         }
         Relationships: []
       }
@@ -9112,38 +3277,10 @@ export type Database = {
       }
       advance_enrollment_step: {
         Args: { p_enrollment_id: string; p_touch_log_id?: string }
-        Returns: {
-          campaign_id: string
-          completed_at: string | null
-          contact_id: string
-          converted_at: string | null
-          converted_deal_id: string | null
-          created_at: string | null
-          current_step: number | null
-          deal_id: string | null
-          enrolled_at: string | null
-          enrollment_context: Json | null
-          id: string
-          last_touch_at: string | null
-          last_touch_channel: Database["public"]["Enums"]["drip_channel"] | null
-          next_touch_at: string | null
-          paused_at: string | null
-          paused_reason: string | null
-          responded_at: string | null
-          response_channel: Database["public"]["Enums"]["drip_channel"] | null
-          response_message: string | null
-          resumed_at: string | null
-          status: Database["public"]["Enums"]["drip_enrollment_status"] | null
-          touches_delivered: number | null
-          touches_failed: number | null
-          touches_sent: number | null
-          updated_at: string | null
-          user_id: string
-          workspace_id: string | null
-        }
+        Returns: unknown
         SetofOptions: {
           from: "*"
-          to: "investor_drip_enrollments"
+          to: "drip_enrollments"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -9237,6 +3374,22 @@ export type Database = {
           query_using: string
           schema_name: string
           table_name: string
+        }[]
+      }
+      check_cross_function_rate_limit: {
+        Args: {
+          p_burst_limit?: number
+          p_channel?: string
+          p_function_hourly_limit?: number
+          p_function_name: string
+          p_global_hourly_limit?: number
+          p_user_id: string
+        }
+        Returns: {
+          allowed: boolean
+          current_count: number
+          limit_type: string
+          remaining: number
         }[]
       }
       check_duplicate_indexes: {
@@ -9335,6 +3488,7 @@ export type Database = {
         Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
+      decay_threat_scores: { Args: never; Returns: number }
       decrypt_api_key: { Args: { key_encrypted: string }; Returns: string }
       deduct_mail_credits: {
         Args: {
@@ -9394,6 +3548,24 @@ export type Database = {
           }
         | { Args: { schema_name: string; table_name: string }; Returns: string }
         | { Args: { table_name: string }; Returns: string }
+      duckdb_fdw_handler: { Args: never; Returns: unknown }
+      duckdb_fdw_meta: {
+        Args: never
+        Returns: {
+          author: string
+          name: string
+          version: string
+          website: string
+        }[]
+      }
+      duckdb_fdw_validator: {
+        Args: { catalog: unknown; options: string[] }
+        Returns: undefined
+      }
+      embd_distance: { Args: { embd: unknown }; Returns: number }
+      embd_in: { Args: { input: unknown }; Returns: unknown }
+      embd_knn: { Args: { _left: unknown; _right: unknown }; Returns: boolean }
+      embd_out: { Args: { input: unknown }; Returns: unknown }
       enablelongtransactions: { Args: never; Returns: string }
       encrypt_api_key: { Args: { key_plain: string }; Returns: string }
       ensure_user_workspace: { Args: never; Returns: string }
@@ -9517,6 +3689,18 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_active_security_patterns: {
+        Args: never
+        Returns: {
+          applies_to_channels: string[]
+          description: string
+          hit_count: number
+          id: string
+          pattern: string
+          pattern_type: string
+          severity: Database["public"]["Enums"]["openclaw_security_severity"]
+        }[]
+      }
       get_active_stripe_plans: {
         Args: never
         Returns: {
@@ -9541,6 +3725,23 @@ export type Database = {
         }
       }
       get_active_workspace: { Args: { user_uuid: string }; Returns: string }
+      get_all_patterns_including_deleted: {
+        Args: never
+        Returns: {
+          created_at: string
+          deleted_at: string
+          deleted_by: string
+          description: string
+          hit_count: number
+          id: string
+          is_active: boolean
+          is_deleted: boolean
+          last_hit_at: string
+          pattern: string
+          pattern_type: string
+          severity: Database["public"]["Enums"]["openclaw_security_severity"]
+        }[]
+      }
       get_common_journey_patterns: {
         Args: { limit_count?: number }
         Returns: {
@@ -9556,7 +3757,7 @@ export type Database = {
           created_at: string
           importance: number
           key_facts: Json
-          memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
+          memory_type: Database["public"]["Enums"]["openclaw_episodic_type"]
           sentiment: string
           summary: string
         }[]
@@ -9638,7 +3839,7 @@ export type Database = {
       }
       get_knowledge_context: {
         Args: {
-          p_chunk_types?: Database["public"]["Enums"]["moltbot_chunk_type"][]
+          p_chunk_types?: Database["public"]["Enums"]["openclaw_chunk_type"][]
           p_limit?: number
           p_max_tokens?: number
           p_query_embedding?: string
@@ -9719,6 +3920,28 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      get_recent_calls: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          contact_email: string
+          contact_first_name: string
+          contact_id: string
+          contact_last_name: string
+          contact_phone: string
+          created_at: string
+          direction: string
+          duration_seconds: number
+          ended_at: string
+          id: string
+          phone_number: string
+          recording_url: string
+          started_at: string
+          status: string
+          twilio_call_sid: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_sources_due_for_sync: {
         Args: { p_limit?: number }
         Returns: {
@@ -9726,7 +3949,7 @@ export type Database = {
           id: string
           last_sync_at: string
           name: string
-          source_type: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
+          source_type: Database["public"]["Enums"]["openclaw_knowledge_source_type"]
           user_id: string
         }[]
       }
@@ -9761,7 +3984,7 @@ export type Database = {
           critical_events: number
           high_events: number
           last_event_at: string
-          most_common_event: Database["public"]["Enums"]["moltbot_security_event_type"]
+          most_common_event: Database["public"]["Enums"]["openclaw_security_event_type"]
           total_events: number
         }[]
       }
@@ -9785,6 +4008,20 @@ export type Database = {
         }[]
       }
       hello_world_fdw_validator: {
+        Args: { catalog: unknown; options: string[] }
+        Returns: undefined
+      }
+      iceberg_fdw_handler: { Args: never; Returns: unknown }
+      iceberg_fdw_meta: {
+        Args: never
+        Returns: {
+          author: string
+          name: string
+          version: string
+          website: string
+        }[]
+      }
+      iceberg_fdw_validator: {
         Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
@@ -9818,6 +4055,15 @@ export type Database = {
         | { Args: never; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
       is_allowed_admin_domain: { Args: { email: string }; Returns: boolean }
+      is_circuit_breaker_open: {
+        Args: { p_function_name?: string; p_user_id?: string }
+        Returns: {
+          is_open: boolean
+          opened_at: string
+          reason: string
+          scope: string
+        }[]
+      }
       is_contact_opted_out: {
         Args: {
           p_channel: Database["public"]["Enums"]["drip_channel"]
@@ -9910,14 +4156,14 @@ export type Database = {
         | { Args: { step_description: string }; Returns: string }
       log_security_event: {
         Args: {
-          p_action_taken: Database["public"]["Enums"]["moltbot_security_action"]
+          p_action_taken: Database["public"]["Enums"]["openclaw_security_action"]
           p_channel?: string
           p_detected_patterns?: string[]
-          p_event_type: Database["public"]["Enums"]["moltbot_security_event_type"]
+          p_event_type: Database["public"]["Enums"]["openclaw_security_event_type"]
           p_metadata?: Json
           p_raw_input?: string
           p_risk_score?: number
-          p_severity: Database["public"]["Enums"]["moltbot_security_severity"]
+          p_severity: Database["public"]["Enums"]["openclaw_security_severity"]
           p_user_id: string
         }
         Returns: string
@@ -9973,6 +4219,7 @@ export type Database = {
         Returns: boolean
       }
       merge_landlord_settings: { Args: { existing: Json }; Returns: Json }
+      metadata_filter: { Args: { _left: Json; _right: Json }; Returns: boolean }
       mssql_fdw_handler: { Args: never; Returns: unknown }
       mssql_fdw_meta: {
         Args: never
@@ -10062,6 +4309,7 @@ export type Database = {
         }
         Returns: string
       }
+      record_pattern_hit: { Args: { p_pattern_id: string }; Returns: undefined }
       redis_fdw_handler: { Args: never; Returns: unknown }
       redis_fdw_meta: {
         Args: never
@@ -10080,11 +4328,13 @@ export type Database = {
         Args: { p_template_body: string; p_variables: Json }
         Returns: string
       }
+      reset_circuit_breaker: { Args: { p_scope: string }; Returns: boolean }
       reset_password_with_token: {
         Args: { new_password: string; reset_token: string }
         Returns: boolean
       }
       restore_deleted_user: { Args: { user_id: string }; Returns: boolean }
+      restore_pattern: { Args: { p_pattern_id: string }; Returns: boolean }
       s3_fdw_handler: { Args: never; Returns: unknown }
       s3_fdw_meta: {
         Args: never
@@ -10099,17 +4349,35 @@ export type Database = {
         Args: { catalog: unknown; options: string[] }
         Returns: undefined
       }
+      s3_vectors_fdw_handler: { Args: never; Returns: unknown }
+      s3_vectors_fdw_meta: {
+        Args: never
+        Returns: {
+          author: string
+          name: string
+          version: string
+          website: string
+        }[]
+      }
+      s3_vectors_fdw_validator: {
+        Args: { catalog: unknown; options: string[] }
+        Returns: undefined
+      }
+      s3vec_distance: { Args: { s3vec: unknown }; Returns: number }
+      s3vec_in: { Args: { input: unknown }; Returns: unknown }
+      s3vec_knn: { Args: { _left: unknown; _right: unknown }; Returns: boolean }
+      s3vec_out: { Args: { input: unknown }; Returns: unknown }
       score_contact: { Args: { p_contact_id: string }; Returns: number }
       search_knowledge_chunks: {
         Args: {
-          p_chunk_types?: Database["public"]["Enums"]["moltbot_chunk_type"][]
+          p_chunk_types?: Database["public"]["Enums"]["openclaw_chunk_type"][]
           p_limit?: number
           p_query_embedding: string
           p_similarity_threshold?: number
           p_user_id: string
         }
         Returns: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
+          chunk_type: Database["public"]["Enums"]["openclaw_chunk_type"]
           content: string
           id: string
           metadata: Json
@@ -10119,13 +4387,13 @@ export type Database = {
       }
       search_knowledge_keyword: {
         Args: {
-          p_chunk_types?: Database["public"]["Enums"]["moltbot_chunk_type"][]
+          p_chunk_types?: Database["public"]["Enums"]["openclaw_chunk_type"][]
           p_limit?: number
           p_query: string
           p_user_id: string
         }
         Returns: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
+          chunk_type: Database["public"]["Enums"]["openclaw_chunk_type"]
           content: string
           id: string
           metadata: Json
@@ -10157,6 +4425,10 @@ export type Database = {
           p_user_id: string
           p_was_auto_sent: boolean
         }
+        Returns: boolean
+      }
+      soft_delete_pattern: {
+        Args: { p_deleted_by?: string; p_pattern_id: string }
         Returns: boolean
       }
       st_3dclosestpoint: {
@@ -10747,7 +5019,7 @@ export type Database = {
           p_expires_in_days?: number
           p_importance?: number
           p_key_facts?: Json
-          p_memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
+          p_memory_type: Database["public"]["Enums"]["openclaw_episodic_type"]
           p_sentiment?: string
           p_summary: string
           p_user_id: string
@@ -10760,9 +5032,9 @@ export type Database = {
           p_confidence?: number
           p_contact_type?: string
           p_key: string
-          p_memory_type: Database["public"]["Enums"]["moltbot_user_memory_type"]
+          p_memory_type: Database["public"]["Enums"]["openclaw_user_memory_type"]
           p_property_id?: string
-          p_source?: Database["public"]["Enums"]["moltbot_memory_source"]
+          p_source?: Database["public"]["Enums"]["openclaw_memory_source"]
           p_user_id: string
           p_value: Json
         }
@@ -10849,6 +5121,15 @@ export type Database = {
         Args: { p_topic: string; p_user_id: string }
         Returns: boolean
       }
+      trip_circuit_breaker: {
+        Args: {
+          p_auto_close_minutes?: number
+          p_reason: string
+          p_scope: string
+          p_user_id?: string
+        }
+        Returns: boolean
+      }
       unlockrows: { Args: { "": string }; Returns: number }
       update_landlord_setting: {
         Args: { p_path: string[]; p_user_id: string; p_value: Json }
@@ -10896,7 +5177,7 @@ export type Database = {
           p_chunks_count?: number
           p_error?: string
           p_source_id: string
-          p_status: Database["public"]["Enums"]["moltbot_sync_status"]
+          p_status: Database["public"]["Enums"]["openclaw_sync_status"]
         }
         Returns: undefined
       }
@@ -10909,6 +5190,18 @@ export type Database = {
             Args: { setting_name: string; setting_value: number }
             Returns: boolean
           }
+      update_user_threat_score: {
+        Args: {
+          p_event_type?: string
+          p_score_delta: number
+          p_user_id: string
+        }
+        Returns: {
+          is_blocked: boolean
+          is_flagged: boolean
+          new_score: number
+        }[]
+      }
       updategeometrysrid: {
         Args: {
           catalogn_name: string
@@ -10921,6 +5214,15 @@ export type Database = {
       }
       user_owned_workspace_ids: { Args: never; Returns: string[] }
       user_workspace_ids: { Args: never; Returns: string[] }
+      verify_audit_hash_chain: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: {
+          created_at: string
+          error_message: string
+          id: string
+          is_valid: boolean
+        }[]
+      }
       verify_security_fixes: {
         Args: never
         Returns: {
@@ -11069,6 +5371,7 @@ export type Database = {
         | "failed"
         | "skipped"
         | "bounced"
+      google_service: "gmail" | "calendar"
       guest_message_status:
         | "draft"
         | "queued"
@@ -11187,7 +5490,8 @@ export type Database = {
       message_channel: "email" | "sms"
       message_direction: "outbound" | "inbound"
       message_status: "sent" | "delivered" | "read" | "error"
-      moltbot_chunk_type:
+      occupancy_status: "occupied" | "vacant" | "partial"
+      openclaw_chunk_type:
         | "property_rule"
         | "response_example"
         | "sop"
@@ -11196,20 +5500,20 @@ export type Database = {
         | "email_template"
         | "community_insight"
         | "training_material"
-      moltbot_episodic_type:
+      openclaw_episodic_type:
         | "interaction_summary"
         | "preference_learned"
         | "issue_history"
         | "booking_context"
         | "relationship_note"
-      moltbot_knowledge_category:
+      openclaw_knowledge_category:
         | "platform_rules"
         | "best_practices"
         | "legal_requirements"
         | "faq_patterns"
         | "response_templates"
         | "community_wisdom"
-      moltbot_knowledge_source_type:
+      openclaw_knowledge_source_type:
         | "fibery"
         | "notion"
         | "google_docs"
@@ -11217,15 +5521,19 @@ export type Database = {
         | "email_history"
         | "manual"
         | "uploaded"
-      moltbot_learning_status: "pending" | "processing" | "completed" | "failed"
-      moltbot_memory_source:
+      openclaw_learning_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+      openclaw_memory_source:
         | "manual"
         | "learned"
         | "imported"
         | "inferred"
         | "system"
-      moltbot_security_action: "allowed" | "sanitized" | "flagged" | "blocked"
-      moltbot_security_event_type:
+      openclaw_security_action: "allowed" | "sanitized" | "flagged" | "blocked"
+      openclaw_security_event_type:
         | "injection_attempt"
         | "exfil_attempt"
         | "rate_limit"
@@ -11234,9 +5542,14 @@ export type Database = {
         | "suspicious_pattern"
         | "auth_failure"
         | "impersonation"
-      moltbot_security_severity: "low" | "medium" | "high" | "critical"
-      moltbot_sync_status: "pending" | "syncing" | "synced" | "error" | "paused"
-      moltbot_user_memory_type:
+      openclaw_security_severity: "low" | "medium" | "high" | "critical"
+      openclaw_sync_status:
+        | "pending"
+        | "syncing"
+        | "synced"
+        | "error"
+        | "paused"
+      openclaw_user_memory_type:
         | "preference"
         | "writing_style"
         | "property_rule"
@@ -11244,7 +5557,6 @@ export type Database = {
         | "contact_rule"
         | "template_override"
         | "personality_trait"
-      occupancy_status: "occupied" | "vacant" | "partial"
       payment_status: "paid" | "unpaid" | "failed" | "pending"
       plan_tier: "free" | "pro" | "enterprise"
       plantier: "free" | "starter" | "personal" | "professional" | "enterprise"
@@ -11500,9 +5812,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       agent_relationship_status: ["new", "active", "dormant", "preferred"],
@@ -11639,6 +5948,7 @@ export const Constants = {
         "skipped",
         "bounced",
       ],
+      google_service: ["gmail", "calendar"],
       guest_message_status: [
         "draft",
         "queued",
@@ -11765,7 +6075,8 @@ export const Constants = {
       message_channel: ["email", "sms"],
       message_direction: ["outbound", "inbound"],
       message_status: ["sent", "delivered", "read", "error"],
-      moltbot_chunk_type: [
+      occupancy_status: ["occupied", "vacant", "partial"],
+      openclaw_chunk_type: [
         "property_rule",
         "response_example",
         "sop",
@@ -11775,14 +6086,14 @@ export const Constants = {
         "community_insight",
         "training_material",
       ],
-      moltbot_episodic_type: [
+      openclaw_episodic_type: [
         "interaction_summary",
         "preference_learned",
         "issue_history",
         "booking_context",
         "relationship_note",
       ],
-      moltbot_knowledge_category: [
+      openclaw_knowledge_category: [
         "platform_rules",
         "best_practices",
         "legal_requirements",
@@ -11790,7 +6101,7 @@ export const Constants = {
         "response_templates",
         "community_wisdom",
       ],
-      moltbot_knowledge_source_type: [
+      openclaw_knowledge_source_type: [
         "fibery",
         "notion",
         "google_docs",
@@ -11799,16 +6110,21 @@ export const Constants = {
         "manual",
         "uploaded",
       ],
-      moltbot_learning_status: ["pending", "processing", "completed", "failed"],
-      moltbot_memory_source: [
+      openclaw_learning_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+      ],
+      openclaw_memory_source: [
         "manual",
         "learned",
         "imported",
         "inferred",
         "system",
       ],
-      moltbot_security_action: ["allowed", "sanitized", "flagged", "blocked"],
-      moltbot_security_event_type: [
+      openclaw_security_action: ["allowed", "sanitized", "flagged", "blocked"],
+      openclaw_security_event_type: [
         "injection_attempt",
         "exfil_attempt",
         "rate_limit",
@@ -11818,9 +6134,9 @@ export const Constants = {
         "auth_failure",
         "impersonation",
       ],
-      moltbot_security_severity: ["low", "medium", "high", "critical"],
-      moltbot_sync_status: ["pending", "syncing", "synced", "error", "paused"],
-      moltbot_user_memory_type: [
+      openclaw_security_severity: ["low", "medium", "high", "critical"],
+      openclaw_sync_status: ["pending", "syncing", "synced", "error", "paused"],
+      openclaw_user_memory_type: [
         "preference",
         "writing_style",
         "property_rule",
@@ -11829,7 +6145,6 @@ export const Constants = {
         "template_override",
         "personality_trait",
       ],
-      occupancy_status: ["occupied", "vacant", "partial"],
       payment_status: ["paid", "unpaid", "failed", "pending"],
       plan_tier: ["free", "pro", "enterprise"],
       plantier: ["free", "starter", "personal", "professional", "enterprise"],

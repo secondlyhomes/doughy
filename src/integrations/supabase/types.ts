@@ -3399,7 +3399,7 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_blocked_patterns: {
+      openclaw_blocked_patterns: {
         Row: {
           applies_to_channels: string[] | null
           created_at: string | null
@@ -3411,7 +3411,7 @@ export type Database = {
           last_hit_at: string | null
           pattern: string
           pattern_type: string
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at: string | null
           user_id: string | null
         }
@@ -3426,7 +3426,7 @@ export type Database = {
           last_hit_at?: string | null
           pattern: string
           pattern_type: string
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity?: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at?: string | null
           user_id?: string | null
         }
@@ -3441,13 +3441,13 @@ export type Database = {
           last_hit_at?: string | null
           pattern?: string
           pattern_type?: string
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity?: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
       }
-      moltbot_email_analysis: {
+      openclaw_email_analysis: {
         Row: {
           analysis_type: string
           confidence: number | null
@@ -3489,7 +3489,7 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_episodic_memory: {
+      openclaw_episodic_memory: {
         Row: {
           contact_email: string | null
           contact_id: string | null
@@ -3501,7 +3501,7 @@ export type Database = {
           importance: number | null
           is_active: boolean | null
           key_facts: Json | null
-          memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
+          memory_type: Database["public"]["Enums"]["openclaw_episodic_type"]
           sentiment: string | null
           source_conversation_id: string | null
           source_message_ids: string[] | null
@@ -3520,7 +3520,7 @@ export type Database = {
           importance?: number | null
           is_active?: boolean | null
           key_facts?: Json | null
-          memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
+          memory_type: Database["public"]["Enums"]["openclaw_episodic_type"]
           sentiment?: string | null
           source_conversation_id?: string | null
           source_message_ids?: string[] | null
@@ -3539,7 +3539,7 @@ export type Database = {
           importance?: number | null
           is_active?: boolean | null
           key_facts?: Json | null
-          memory_type?: Database["public"]["Enums"]["moltbot_episodic_type"]
+          memory_type?: Database["public"]["Enums"]["openclaw_episodic_type"]
           sentiment?: string | null
           source_conversation_id?: string | null
           source_message_ids?: string[] | null
@@ -3549,12 +3549,12 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_global_knowledge: {
+      openclaw_global_knowledge: {
         Row: {
           applies_to_channels: string[] | null
           applies_to_platforms: string[] | null
           applies_to_regions: string[] | null
-          category: Database["public"]["Enums"]["moltbot_knowledge_category"]
+          category: Database["public"]["Enums"]["openclaw_knowledge_category"]
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -3571,7 +3571,7 @@ export type Database = {
           applies_to_channels?: string[] | null
           applies_to_platforms?: string[] | null
           applies_to_regions?: string[] | null
-          category: Database["public"]["Enums"]["moltbot_knowledge_category"]
+          category: Database["public"]["Enums"]["openclaw_knowledge_category"]
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -3588,7 +3588,7 @@ export type Database = {
           applies_to_channels?: string[] | null
           applies_to_platforms?: string[] | null
           applies_to_regions?: string[] | null
-          category?: Database["public"]["Enums"]["moltbot_knowledge_category"]
+          category?: Database["public"]["Enums"]["openclaw_knowledge_category"]
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -3603,7 +3603,7 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_ip_blocklist: {
+      openclaw_ip_blocklist: {
         Row: {
           blocked_at: string | null
           blocked_by: string | null
@@ -3613,7 +3613,7 @@ export type Database = {
           notes: string | null
           reason: string
           related_user_ids: string[] | null
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at: string | null
         }
         Insert: {
@@ -3625,7 +3625,7 @@ export type Database = {
           notes?: string | null
           reason: string
           related_user_ids?: string[] | null
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity?: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at?: string | null
         }
         Update: {
@@ -3637,12 +3637,12 @@ export type Database = {
           notes?: string | null
           reason?: string
           related_user_ids?: string[] | null
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity?: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at?: string | null
         }
         Relationships: []
       }
-      moltbot_knowledge_chunk_tags: {
+      openclaw_knowledge_chunk_tags: {
         Row: {
           chunk_id: string
           tag_id: string
@@ -3660,24 +3660,24 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "moltbot_knowledge_chunk_tags_chunk_id_fkey"
+            foreignKeyName: "openclaw_knowledge_chunk_tags_chunk_id_fkey"
             columns: ["chunk_id"]
             isOneToOne: false
-            referencedRelation: "moltbot_knowledge_chunks"
+            referencedRelation: "openclaw_knowledge_chunks"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "moltbot_knowledge_chunk_tags_tag_id_fkey"
+            foreignKeyName: "openclaw_knowledge_chunk_tags_tag_id_fkey"
             columns: ["tag_id"]
             isOneToOne: false
-            referencedRelation: "moltbot_knowledge_tags"
+            referencedRelation: "openclaw_knowledge_tags"
             referencedColumns: ["id"]
           },
         ]
       }
-      moltbot_knowledge_chunks: {
+      openclaw_knowledge_chunks: {
         Row: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
+          chunk_type: Database["public"]["Enums"]["openclaw_chunk_type"]
           content: string
           content_hash: string | null
           created_at: string | null
@@ -3698,7 +3698,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
+          chunk_type: Database["public"]["Enums"]["openclaw_chunk_type"]
           content: string
           content_hash?: string | null
           created_at?: string | null
@@ -3719,7 +3719,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          chunk_type?: Database["public"]["Enums"]["moltbot_chunk_type"]
+          chunk_type?: Database["public"]["Enums"]["openclaw_chunk_type"]
           content?: string
           content_hash?: string | null
           created_at?: string | null
@@ -3741,15 +3741,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "moltbot_knowledge_chunks_source_id_fkey"
+            foreignKeyName: "openclaw_knowledge_chunks_source_id_fkey"
             columns: ["source_id"]
             isOneToOne: false
-            referencedRelation: "moltbot_knowledge_sources"
+            referencedRelation: "openclaw_knowledge_sources"
             referencedColumns: ["id"]
           },
         ]
       }
-      moltbot_knowledge_sources: {
+      openclaw_knowledge_sources: {
         Row: {
           config: Json
           created_at: string | null
@@ -3760,9 +3760,9 @@ export type Database = {
           last_sync_error: string | null
           name: string
           next_sync_at: string | null
-          source_type: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
+          source_type: Database["public"]["Enums"]["openclaw_knowledge_source_type"]
           sync_frequency: string | null
-          sync_status: Database["public"]["Enums"]["moltbot_sync_status"] | null
+          sync_status: Database["public"]["Enums"]["openclaw_sync_status"] | null
           total_chunks: number | null
           total_tokens: number | null
           updated_at: string | null
@@ -3778,10 +3778,10 @@ export type Database = {
           last_sync_error?: string | null
           name: string
           next_sync_at?: string | null
-          source_type: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
+          source_type: Database["public"]["Enums"]["openclaw_knowledge_source_type"]
           sync_frequency?: string | null
           sync_status?:
-            | Database["public"]["Enums"]["moltbot_sync_status"]
+            | Database["public"]["Enums"]["openclaw_sync_status"]
             | null
           total_chunks?: number | null
           total_tokens?: number | null
@@ -3798,10 +3798,10 @@ export type Database = {
           last_sync_error?: string | null
           name?: string
           next_sync_at?: string | null
-          source_type?: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
+          source_type?: Database["public"]["Enums"]["openclaw_knowledge_source_type"]
           sync_frequency?: string | null
           sync_status?:
-            | Database["public"]["Enums"]["moltbot_sync_status"]
+            | Database["public"]["Enums"]["openclaw_sync_status"]
             | null
           total_chunks?: number | null
           total_tokens?: number | null
@@ -3810,7 +3810,7 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_knowledge_tags: {
+      openclaw_knowledge_tags: {
         Row: {
           color: string | null
           created_at: string | null
@@ -3843,7 +3843,7 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_learning_queue: {
+      openclaw_learning_queue: {
         Row: {
           contact_id: string | null
           conversation_id: string | null
@@ -3894,7 +3894,7 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_rate_limits: {
+      openclaw_rate_limits: {
         Row: {
           channel: string
           last_request_at: string | null
@@ -3921,7 +3921,7 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_response_examples: {
+      openclaw_response_examples: {
         Row: {
           category: string
           context: Json | null
@@ -3984,16 +3984,16 @@ export type Database = {
         }
         Relationships: []
       }
-      moltbot_security_log: {
+      openclaw_security_log: {
         Row: {
-          action_taken: Database["public"]["Enums"]["moltbot_security_action"]
+          action_taken: Database["public"]["Enums"]["openclaw_security_action"]
           channel: string | null
           contact_id: string | null
           conversation_id: string | null
           created_at: string | null
           detected_patterns: string[] | null
           endpoint: string | null
-          event_type: Database["public"]["Enums"]["moltbot_security_event_type"]
+          event_type: Database["public"]["Enums"]["openclaw_security_event_type"]
           id: string
           ip_address: unknown
           metadata: Json | null
@@ -4001,20 +4001,20 @@ export type Database = {
           raw_input: string | null
           risk_score: number | null
           sanitized_input: string | null
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at: string | null
           user_agent: string | null
           user_id: string | null
         }
         Insert: {
-          action_taken: Database["public"]["Enums"]["moltbot_security_action"]
+          action_taken: Database["public"]["Enums"]["openclaw_security_action"]
           channel?: string | null
           contact_id?: string | null
           conversation_id?: string | null
           created_at?: string | null
           detected_patterns?: string[] | null
           endpoint?: string | null
-          event_type: Database["public"]["Enums"]["moltbot_security_event_type"]
+          event_type: Database["public"]["Enums"]["openclaw_security_event_type"]
           id?: string
           ip_address?: unknown
           metadata?: Json | null
@@ -4022,20 +4022,20 @@ export type Database = {
           raw_input?: string | null
           risk_score?: number | null
           sanitized_input?: string | null
-          severity: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
         Update: {
-          action_taken?: Database["public"]["Enums"]["moltbot_security_action"]
+          action_taken?: Database["public"]["Enums"]["openclaw_security_action"]
           channel?: string | null
           contact_id?: string | null
           conversation_id?: string | null
           created_at?: string | null
           detected_patterns?: string[] | null
           endpoint?: string | null
-          event_type?: Database["public"]["Enums"]["moltbot_security_event_type"]
+          event_type?: Database["public"]["Enums"]["openclaw_security_event_type"]
           id?: string
           ip_address?: unknown
           metadata?: Json | null
@@ -4043,14 +4043,14 @@ export type Database = {
           raw_input?: string | null
           risk_score?: number | null
           sanitized_input?: string | null
-          severity?: Database["public"]["Enums"]["moltbot_security_severity"]
+          severity?: Database["public"]["Enums"]["openclaw_security_severity"]
           updated_at?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
         Relationships: []
       }
-      moltbot_sync_history: {
+      openclaw_sync_history: {
         Row: {
           chunks_added: number | null
           chunks_deleted: number | null
@@ -4098,15 +4098,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "moltbot_sync_history_source_id_fkey"
+            foreignKeyName: "openclaw_sync_history_source_id_fkey"
             columns: ["source_id"]
             isOneToOne: false
-            referencedRelation: "moltbot_knowledge_sources"
+            referencedRelation: "openclaw_knowledge_sources"
             referencedColumns: ["id"]
           },
         ]
       }
-      moltbot_user_memory: {
+      openclaw_user_memory: {
         Row: {
           channel: string | null
           confidence: number | null
@@ -4118,9 +4118,9 @@ export type Database = {
           key: string
           last_used_at: string | null
           learned_from_outcome_id: string | null
-          memory_type: Database["public"]["Enums"]["moltbot_user_memory_type"]
+          memory_type: Database["public"]["Enums"]["openclaw_user_memory_type"]
           property_id: string | null
-          source: Database["public"]["Enums"]["moltbot_memory_source"] | null
+          source: Database["public"]["Enums"]["openclaw_memory_source"] | null
           success_count: number | null
           updated_at: string | null
           use_count: number | null
@@ -4138,9 +4138,9 @@ export type Database = {
           key: string
           last_used_at?: string | null
           learned_from_outcome_id?: string | null
-          memory_type: Database["public"]["Enums"]["moltbot_user_memory_type"]
+          memory_type: Database["public"]["Enums"]["openclaw_user_memory_type"]
           property_id?: string | null
-          source?: Database["public"]["Enums"]["moltbot_memory_source"] | null
+          source?: Database["public"]["Enums"]["openclaw_memory_source"] | null
           success_count?: number | null
           updated_at?: string | null
           use_count?: number | null
@@ -4158,9 +4158,9 @@ export type Database = {
           key?: string
           last_used_at?: string | null
           learned_from_outcome_id?: string | null
-          memory_type?: Database["public"]["Enums"]["moltbot_user_memory_type"]
+          memory_type?: Database["public"]["Enums"]["openclaw_user_memory_type"]
           property_id?: string | null
-          source?: Database["public"]["Enums"]["moltbot_memory_source"] | null
+          source?: Database["public"]["Enums"]["openclaw_memory_source"] | null
           success_count?: number | null
           updated_at?: string | null
           use_count?: number | null
@@ -8960,7 +8960,7 @@ export type Database = {
           created_at: string
           importance: number
           key_facts: Json
-          memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
+          memory_type: Database["public"]["Enums"]["openclaw_episodic_type"]
           sentiment: string
           summary: string
         }[]
@@ -9042,7 +9042,7 @@ export type Database = {
       }
       get_knowledge_context: {
         Args: {
-          p_chunk_types?: Database["public"]["Enums"]["moltbot_chunk_type"][]
+          p_chunk_types?: Database["public"]["Enums"]["openclaw_chunk_type"][]
           p_limit?: number
           p_max_tokens?: number
           p_query_embedding?: string
@@ -9130,7 +9130,7 @@ export type Database = {
           id: string
           last_sync_at: string
           name: string
-          source_type: Database["public"]["Enums"]["moltbot_knowledge_source_type"]
+          source_type: Database["public"]["Enums"]["openclaw_knowledge_source_type"]
           user_id: string
         }[]
       }
@@ -9165,7 +9165,7 @@ export type Database = {
           critical_events: number
           high_events: number
           last_event_at: string
-          most_common_event: Database["public"]["Enums"]["moltbot_security_event_type"]
+          most_common_event: Database["public"]["Enums"]["openclaw_security_event_type"]
           total_events: number
         }[]
       }
@@ -9314,14 +9314,14 @@ export type Database = {
         | { Args: { step_description: string }; Returns: string }
       log_security_event: {
         Args: {
-          p_action_taken: Database["public"]["Enums"]["moltbot_security_action"]
+          p_action_taken: Database["public"]["Enums"]["openclaw_security_action"]
           p_channel?: string
           p_detected_patterns?: string[]
-          p_event_type: Database["public"]["Enums"]["moltbot_security_event_type"]
+          p_event_type: Database["public"]["Enums"]["openclaw_security_event_type"]
           p_metadata?: Json
           p_raw_input?: string
           p_risk_score?: number
-          p_severity: Database["public"]["Enums"]["moltbot_security_severity"]
+          p_severity: Database["public"]["Enums"]["openclaw_security_severity"]
           p_user_id: string
         }
         Returns: string
@@ -9506,14 +9506,14 @@ export type Database = {
       score_contact: { Args: { p_contact_id: string }; Returns: number }
       search_knowledge_chunks: {
         Args: {
-          p_chunk_types?: Database["public"]["Enums"]["moltbot_chunk_type"][]
+          p_chunk_types?: Database["public"]["Enums"]["openclaw_chunk_type"][]
           p_limit?: number
           p_query_embedding: string
           p_similarity_threshold?: number
           p_user_id: string
         }
         Returns: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
+          chunk_type: Database["public"]["Enums"]["openclaw_chunk_type"]
           content: string
           id: string
           metadata: Json
@@ -9523,13 +9523,13 @@ export type Database = {
       }
       search_knowledge_keyword: {
         Args: {
-          p_chunk_types?: Database["public"]["Enums"]["moltbot_chunk_type"][]
+          p_chunk_types?: Database["public"]["Enums"]["openclaw_chunk_type"][]
           p_limit?: number
           p_query: string
           p_user_id: string
         }
         Returns: {
-          chunk_type: Database["public"]["Enums"]["moltbot_chunk_type"]
+          chunk_type: Database["public"]["Enums"]["openclaw_chunk_type"]
           content: string
           id: string
           metadata: Json
@@ -10151,7 +10151,7 @@ export type Database = {
           p_expires_in_days?: number
           p_importance?: number
           p_key_facts?: Json
-          p_memory_type: Database["public"]["Enums"]["moltbot_episodic_type"]
+          p_memory_type: Database["public"]["Enums"]["openclaw_episodic_type"]
           p_sentiment?: string
           p_summary: string
           p_user_id: string
@@ -10164,9 +10164,9 @@ export type Database = {
           p_confidence?: number
           p_contact_type?: string
           p_key: string
-          p_memory_type: Database["public"]["Enums"]["moltbot_user_memory_type"]
+          p_memory_type: Database["public"]["Enums"]["openclaw_user_memory_type"]
           p_property_id?: string
-          p_source?: Database["public"]["Enums"]["moltbot_memory_source"]
+          p_source?: Database["public"]["Enums"]["openclaw_memory_source"]
           p_user_id: string
           p_value: Json
         }
@@ -10287,7 +10287,7 @@ export type Database = {
           p_chunks_count?: number
           p_error?: string
           p_source_id: string
-          p_status: Database["public"]["Enums"]["moltbot_sync_status"]
+          p_status: Database["public"]["Enums"]["openclaw_sync_status"]
         }
         Returns: undefined
       }
@@ -10526,7 +10526,7 @@ export type Database = {
       message_channel: "email" | "sms"
       message_direction: "outbound" | "inbound"
       message_status: "sent" | "delivered" | "read" | "error"
-      moltbot_chunk_type:
+      openclaw_chunk_type:
         | "property_rule"
         | "response_example"
         | "sop"
@@ -10535,20 +10535,20 @@ export type Database = {
         | "email_template"
         | "community_insight"
         | "training_material"
-      moltbot_episodic_type:
+      openclaw_episodic_type:
         | "interaction_summary"
         | "preference_learned"
         | "issue_history"
         | "booking_context"
         | "relationship_note"
-      moltbot_knowledge_category:
+      openclaw_knowledge_category:
         | "platform_rules"
         | "best_practices"
         | "legal_requirements"
         | "faq_patterns"
         | "response_templates"
         | "community_wisdom"
-      moltbot_knowledge_source_type:
+      openclaw_knowledge_source_type:
         | "fibery"
         | "notion"
         | "google_docs"
@@ -10556,14 +10556,14 @@ export type Database = {
         | "email_history"
         | "manual"
         | "uploaded"
-      moltbot_memory_source:
+      openclaw_memory_source:
         | "manual"
         | "learned"
         | "imported"
         | "inferred"
         | "system"
-      moltbot_security_action: "allowed" | "sanitized" | "flagged" | "blocked"
-      moltbot_security_event_type:
+      openclaw_security_action: "allowed" | "sanitized" | "flagged" | "blocked"
+      openclaw_security_event_type:
         | "injection_attempt"
         | "exfil_attempt"
         | "rate_limit"
@@ -10572,9 +10572,9 @@ export type Database = {
         | "suspicious_pattern"
         | "auth_failure"
         | "impersonation"
-      moltbot_security_severity: "low" | "medium" | "high" | "critical"
-      moltbot_sync_status: "pending" | "syncing" | "synced" | "error" | "paused"
-      moltbot_user_memory_type:
+      openclaw_security_severity: "low" | "medium" | "high" | "critical"
+      openclaw_sync_status: "pending" | "syncing" | "synced" | "error" | "paused"
+      openclaw_user_memory_type:
         | "preference"
         | "writing_style"
         | "property_rule"
@@ -11008,7 +11008,7 @@ export const Constants = {
       message_channel: ["email", "sms"],
       message_direction: ["outbound", "inbound"],
       message_status: ["sent", "delivered", "read", "error"],
-      moltbot_chunk_type: [
+      openclaw_chunk_type: [
         "property_rule",
         "response_example",
         "sop",
@@ -11018,14 +11018,14 @@ export const Constants = {
         "community_insight",
         "training_material",
       ],
-      moltbot_episodic_type: [
+      openclaw_episodic_type: [
         "interaction_summary",
         "preference_learned",
         "issue_history",
         "booking_context",
         "relationship_note",
       ],
-      moltbot_knowledge_category: [
+      openclaw_knowledge_category: [
         "platform_rules",
         "best_practices",
         "legal_requirements",
@@ -11033,7 +11033,7 @@ export const Constants = {
         "response_templates",
         "community_wisdom",
       ],
-      moltbot_knowledge_source_type: [
+      openclaw_knowledge_source_type: [
         "fibery",
         "notion",
         "google_docs",
@@ -11042,15 +11042,15 @@ export const Constants = {
         "manual",
         "uploaded",
       ],
-      moltbot_memory_source: [
+      openclaw_memory_source: [
         "manual",
         "learned",
         "imported",
         "inferred",
         "system",
       ],
-      moltbot_security_action: ["allowed", "sanitized", "flagged", "blocked"],
-      moltbot_security_event_type: [
+      openclaw_security_action: ["allowed", "sanitized", "flagged", "blocked"],
+      openclaw_security_event_type: [
         "injection_attempt",
         "exfil_attempt",
         "rate_limit",
@@ -11060,9 +11060,9 @@ export const Constants = {
         "auth_failure",
         "impersonation",
       ],
-      moltbot_security_severity: ["low", "medium", "high", "critical"],
-      moltbot_sync_status: ["pending", "syncing", "synced", "error", "paused"],
-      moltbot_user_memory_type: [
+      openclaw_security_severity: ["low", "medium", "high", "critical"],
+      openclaw_sync_status: ["pending", "syncing", "synced", "error", "paused"],
+      openclaw_user_memory_type: [
         "preference",
         "writing_style",
         "property_rule",

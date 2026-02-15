@@ -41,7 +41,7 @@ export function useSecurityData(): UseSecurityDataReturn {
   // Load circuit breaker states
   const loadCircuitBreakers = useCallback(async (): Promise<CircuitBreakerState[]> => {
     const { data, error: fetchError } = await supabase
-      .schema('ai').from('moltbot_circuit_breakers' as unknown as 'profiles')
+      .schema('ai').from('openclaw_circuit_breakers' as unknown as 'profiles')
       .select('*')
       .order('scope');
 
@@ -72,7 +72,7 @@ export function useSecurityData(): UseSecurityDataReturn {
   // Load threat scores
   const loadThreatScores = useCallback(async (): Promise<UserThreatScore[]> => {
     const { data, error: fetchError } = await supabase
-      .schema('ai').from('moltbot_user_threat_scores' as unknown as 'profiles')
+      .schema('ai').from('openclaw_user_threat_scores' as unknown as 'profiles')
       .select('*')
       .or('is_flagged.eq.true,current_score.gte.200')
       .order('current_score', { ascending: false })
@@ -113,7 +113,7 @@ export function useSecurityData(): UseSecurityDataReturn {
   // Load security patterns
   const loadPatterns = useCallback(async (): Promise<SecurityPattern[]> => {
     const { data, error: fetchError } = await supabase
-      .schema('ai').from('moltbot_blocked_patterns' as unknown as 'profiles')
+      .schema('ai').from('openclaw_blocked_patterns' as unknown as 'profiles')
       .select('*')
       .order('severity', { ascending: false });
 

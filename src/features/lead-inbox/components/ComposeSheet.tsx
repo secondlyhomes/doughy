@@ -141,7 +141,7 @@ export const ComposeSheet = memo(function ComposeSheet({
         <View style={styles.aiHint}>
           <Sparkles size={14} color={colors.info} />
           <Text style={[styles.aiHintText, { color: colors.mutedForeground }]}>
-            MoltBot will learn from your messages to improve future suggestions
+            OpenClaw will learn from your messages to improve future suggestions
           </Text>
         </View>
 

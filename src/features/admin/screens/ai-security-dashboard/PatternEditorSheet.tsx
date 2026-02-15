@@ -150,7 +150,7 @@ export function PatternEditorSheet({
       if (editingPattern) {
         // Update existing
         const { error } = await supabase
-          .schema('ai').from('moltbot_blocked_patterns' as unknown as 'profiles')
+          .schema('ai').from('openclaw_blocked_patterns' as unknown as 'profiles')
           .update({
             pattern,
             severity,
@@ -163,7 +163,7 @@ export function PatternEditorSheet({
       } else {
         // Insert new
         const { error } = await supabase
-          .schema('ai').from('moltbot_blocked_patterns' as unknown as 'profiles')
+          .schema('ai').from('openclaw_blocked_patterns' as unknown as 'profiles')
           .insert({
             pattern,
             severity,
@@ -193,7 +193,7 @@ export function PatternEditorSheet({
       setTogglingId(patternItem.id);
       try {
         const { error } = await supabase
-          .schema('ai').from('moltbot_blocked_patterns' as unknown as 'profiles')
+          .schema('ai').from('openclaw_blocked_patterns' as unknown as 'profiles')
           .update({ is_active: !patternItem.isActive })
           .eq('id', patternItem.id);
 

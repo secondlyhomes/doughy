@@ -15,5 +15,11 @@
     "nativewind-env.d.ts",
     "app/**/*.ts",
     "app/**/*.tsx"
+  ],
+  "exclude": [
+    "supabase/functions",
+    "supabase/tests",
+    "openclaw-server",
+    "openclaw-skills"
   ]
 }

@@ -47,7 +47,7 @@ export function DetectedPlatforms({ platforms }: DetectedPlatformsProps) {
         })}
       </View>
       <Text className="text-sm mt-3" style={{ color: colors.mutedForeground }}>
-        MoltBot found emails from these platforms in your inbox
+        OpenClaw found emails from these platforms in your inbox
       </Text>
     </View>
   );

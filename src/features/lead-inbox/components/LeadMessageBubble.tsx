@@ -32,7 +32,7 @@ function getSenderIcon(sentBy: InvestorSender) {
 function getSenderLabel(sentBy: InvestorSender, leadName?: string): string {
   switch (sentBy) {
     case 'ai':
-      return 'MoltBot AI';
+      return 'OpenClaw AI';
     case 'lead':
       return leadName || 'Lead';
     case 'user':

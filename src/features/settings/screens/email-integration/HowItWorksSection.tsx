@@ -44,7 +44,7 @@ export function HowItWorksSection() {
       <StepItem
         number={1}
         title="Connect your Gmail"
-        description="MoltBot only requests read-only access to scan for platform emails"
+        description="OpenClaw only requests read-only access to scan for platform emails"
       />
 
       <StepItem
@@ -65,7 +65,7 @@ export function HowItWorksSection() {
             Inquiries in your inbox
           </Text>
           <Text className="text-sm mt-1" style={{ color: colors.mutedForeground }}>
-            New inquiries appear in MoltBot ready for AI-assisted responses
+            New inquiries appear in OpenClaw ready for AI-assisted responses
           </Text>
         </View>
       </View>
@@ -87,7 +87,7 @@ export function SecurityNote() {
           Your data is safe
         </Text>
         <Text className="text-sm mt-1" style={{ color: colors.foreground }}>
-          MoltBot uses read-only access. We never modify, delete, or send emails from your account.
+          OpenClaw uses read-only access. We never modify, delete, or send emails from your account.
           You can revoke access anytime.
         </Text>
       </View>

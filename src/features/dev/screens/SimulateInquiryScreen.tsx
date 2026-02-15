@@ -1,5 +1,5 @@
 // src/features/dev/screens/SimulateInquiryScreen.tsx
-// Mobile-friendly screen for testing the full MoltBot email flow
+// Mobile-friendly screen for testing the full OpenClaw email flow
 // Creates test inquiries that go through the real approval flow
 
 import React, { useState, useCallback } from 'react';
@@ -115,7 +115,7 @@ export function SimulateInquiryScreen() {
               </Text>
             </View>
             <Text style={{ color: colors.mutedForeground, marginTop: SPACING.xs }}>
-              Test the full MoltBot email flow without needing Gmail API setup
+              Test the full OpenClaw email flow without needing Gmail API setup
             </Text>
           </View>
 
