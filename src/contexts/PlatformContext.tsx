@@ -87,6 +87,33 @@ export function PlatformProvider({
     loadSettings();
   }, [defaultPlatform]);
 
+  // Re-sync with database when auth state changes (e.g., after devBypassAuth completes)
+  // This fixes a race condition where PlatformProvider mounts and tries getSession()
+  // before AuthProvider has finished signing in, causing the DB sync to be skipped
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        try {
+          if (event === 'SIGNED_IN' && session?.user?.id) {
+            await syncWithDatabase(session.user.id);
+          }
+          if (event === 'SIGNED_OUT') {
+            setEnabledPlatforms(['investor']);
+            setActivePlatform(defaultPlatform);
+            await AsyncStorage.removeItem(STORAGE_KEY);
+          }
+        } catch (err) {
+          console.error('[platform] Error handling auth state change:', err);
+          setError(err instanceof Error ? err.message : 'Failed to sync platform settings');
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [defaultPlatform]);
+
   // Sync settings from database
   const syncWithDatabase = async (userId: string) => {
     try {

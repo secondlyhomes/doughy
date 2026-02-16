@@ -68,7 +68,9 @@ export function LoginScreen() {
     router.push('/(auth)/sign-up');
   };
 
-  const loading = isLoading || isSubmitting;
+  // Only use local isSubmitting — global isLoading blocks the form during
+  // background auth init (devBypassAuth, getSession) which makes the UI feel stuck
+  const loading = isSubmitting;
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
@@ -212,8 +214,12 @@ export function LoginScreen() {
                   className="flex-1 rounded-lg py-3 items-center"
                   style={{ backgroundColor: colors.primary }}
                   onPress={async () => {
-                    await devBypassAuth();
-                    router.replace('/(tabs)');
+                    try {
+                      await devBypassAuth();
+                      router.replace('/(tabs)');
+                    } catch (err) {
+                      setError(`Dev auth failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                    }
                   }}
                   disabled={loading}
                 >
@@ -225,8 +231,12 @@ export function LoginScreen() {
                   className="flex-1 rounded-lg py-3 items-center"
                   style={{ backgroundColor: colors.warning }}
                   onPress={async () => {
-                    await devBypassAuth();
-                    router.replace('/(admin)');
+                    try {
+                      await devBypassAuth();
+                      router.replace('/(admin)');
+                    } catch (err) {
+                      setError(`Dev auth failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                    }
                   }}
                   disabled={loading}
                 >

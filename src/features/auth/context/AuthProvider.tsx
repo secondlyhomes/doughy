@@ -1,7 +1,7 @@
 // src/features/auth/context/AuthProvider.tsx
 // Authentication context provider for React Native
 
-import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { DEV_MODE_CONFIG } from '@/config/devMode';
@@ -36,6 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitializedRef = useRef(false);
 
   /**
    * Fetch user profile from Supabase
@@ -253,9 +254,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (error) {
         console.error('[auth] Dev sign-in failed:', error.message);
-        console.warn('[auth] Make sure test account exists with these credentials');
         setIsLoading(false);
-        return;
+        throw new Error(`Dev sign-in failed: ${error.message}`);
       }
 
       // Don't set state here - let onAuthStateChange handle it
@@ -267,6 +267,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('[auth] Exception during dev sign-in:', error);
       setIsLoading(false);
+      throw error; // Re-throw so callers (LoginScreen) can handle the error
     }
   }, [fetchProfile]);
 
@@ -298,38 +299,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
-   * Initialize auth state and listen for changes
+   * Initialize auth state and listen for changes.
+   * Runs exactly once on mount — uses hasInitializedRef to prevent
+   * re-running devBypassAuth if the effect is re-invoked (StrictMode,
+   * dependency changes, etc.). The onAuthStateChange listener handles
+   * all subsequent auth events.
    */
   useEffect(() => {
-    // Get initial session
     const initializeAuth = async () => {
+      // Guard: only run initialization once to prevent infinite loops
+      // (devBypassAuth → SIGNED_IN → effect re-run → devBypassAuth → ...)
+      if (hasInitializedRef.current) return;
+      hasInitializedRef.current = true;
+
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
 
         if (initialSession) {
           setSession(initialSession);
           setUser(initialSession.user);
-          await fetchProfile(initialSession.user.id, initialSession.user);
-          setIsLoading(false); // Only set after profile is loaded
+          // Await profile but with a timeout so we never hang
+          const profileTimeout = new Promise<'timeout'>((resolve) =>
+            setTimeout(() => resolve('timeout'), 3000)
+          );
+          const result = await Promise.race([
+            fetchProfile(initialSession.user.id, initialSession.user).then(() => 'done' as const),
+            profileTimeout,
+          ]);
+          if (result === 'timeout') {
+            console.warn('[auth] Profile fetch timed out after 3s — continuing with null profile. Fetch continues in background.');
+          }
+          setIsLoading(false);
         } else if (__DEV__ && !DEV_MODE_CONFIG.useMockData && process.env.EXPO_PUBLIC_DEV_EMAIL) {
           // Auto-authenticate in DEV mode for easier integration testing
-          // Only if dev credentials are explicitly configured
+          // Run non-blocking so the login screen stays interactive while this happens
+          // onAuthStateChange will handle state updates when sign-in completes
           console.log('[auth] DEV mode: Auto-authenticating for testing');
-          await devBypassAuth();
-          // devBypassAuth handles setIsLoading internally
+          setIsLoading(false); // Unblock UI immediately
+          devBypassAuth().catch((err) => {
+            console.error('[auth] DEV auto-sign-in failed:', err);
+          });
         } else {
           // No session and not dev mode
           setIsLoading(false);
         }
       } catch (error) {
         console.error('[auth] Error initializing auth:', error);
-        setIsLoading(false); // Set to false on error
+        setIsLoading(false);
       }
     };
 
     initializeAuth();
 
-    // Listen for auth state changes
+    // Listen for auth state changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log('[auth] Auth state changed:', event);
@@ -357,11 +379,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     );
 
-    // Cleanup subscription on unmount
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchProfile, devBypassAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on mount; fetchProfile/devBypassAuth are stable refs
+  }, []);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<AuthContextType>(() => ({
