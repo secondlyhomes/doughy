@@ -166,6 +166,7 @@ export function mapInvestorConversationRPC(row: InvestorConversationRPC) {
     is_ai_auto_respond: row.is_ai_auto_respond,
     unread_count: row.unread_count,
     last_message_at: row.last_message_at,
+    last_message_preview: row.last_message_preview,
     created_at: row.created_at,
     updated_at: row.updated_at,
     lead: row.lead_id

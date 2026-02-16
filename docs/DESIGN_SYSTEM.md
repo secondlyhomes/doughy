@@ -1145,12 +1145,28 @@ This app prioritizes iOS design patterns and uses iOS 26 Liquid Glass as the for
 
 ### Platform Detection Pattern
 
+**Important:** `@callstack/liquid-glass` uses TurboModules that crash in Expo Go. Always use a safe `require()` import with try/catch — never a static `import`.
+
 ```typescript
 import { Platform } from 'react-native';
-import { isLiquidGlassSupported } from '@callstack/liquid-glass';
+
+// Safe import: native TurboModule not available in Expo Go
+let LiquidGlassView: React.ComponentType<any> | null = null;
+let isLiquidGlassSupported = false;
+try {
+  const lg = require('@callstack/liquid-glass');
+  if (typeof lg.LiquidGlassView === 'function') {
+    LiquidGlassView = lg.LiquidGlassView;
+  }
+  isLiquidGlassSupported = lg.isLiquidGlassSupported ?? false;
+} catch (err) {
+  if (__DEV__) {
+    console.info('[Component] liquid-glass not available, using blur fallback:', (err as Error)?.message);
+  }
+}
 
 // iOS 26+ specific features
-if (Platform.OS === 'ios' && isLiquidGlassSupported) {
+if (Platform.OS === 'ios' && isLiquidGlassSupported && LiquidGlassView) {
   // Use LiquidGlassView
 }
 
