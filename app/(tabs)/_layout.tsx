@@ -38,6 +38,7 @@ export default function TabLayout() {
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
     <NativeTabs
       backgroundColor="transparent"
       blurEffect={isDark ? "systemUltraThinMaterialDark" : "systemUltraThinMaterialLight"}
@@ -95,5 +96,6 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="properties" hidden />
       <NativeTabs.Trigger name="conversations" hidden />
     </NativeTabs>
+    </View>
   );
 }

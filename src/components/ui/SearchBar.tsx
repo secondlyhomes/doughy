@@ -4,7 +4,7 @@ import React from 'react';
 import { View, TextInput, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { Search, X, SlidersHorizontal, List, LayoutGrid } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
-import { useThemeColors } from '@/contexts/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { GLASS_INTENSITY } from '@/constants/design-tokens';
 import { GlassView } from './GlassView';
 
@@ -61,6 +61,7 @@ export function SearchBar({
   onViewToggle,
   viewMode,
 }: SearchBarProps) {
+  const { isDark } = useTheme();
   const colors = useThemeColors();
   const config = sizeConfig[size];
 
@@ -94,6 +95,7 @@ export function SearchBar({
         onChangeText={onChangeText}
         onSubmitEditing={onSubmit}
         returnKeyType={onSubmit ? 'search' : 'default'}
+        keyboardAppearance={isDark ? 'dark' : 'light'}
         autoCapitalize="none"
         autoCorrect={false}
         autoFocus={autoFocus}

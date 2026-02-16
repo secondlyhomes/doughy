@@ -91,7 +91,10 @@ export function FloatingGlassTabBar({
       try {
         const result = options.tabBarButton({} as any);
         if (result === null) return false;
-      } catch {
+      } catch (err) {
+        if (__DEV__) {
+          console.warn(`[FloatingGlassTabBar] tabBarButton() threw for route "${route.name}":`, (err as Error)?.message);
+        }
         return false;
       }
     }
@@ -264,14 +267,6 @@ export function FloatingGlassTabBar({
   // ─────────────────────────────────────────────────────────────
   // FALLBACK: Non-iOS 26 devices get blurred pill tab bar
   // ─────────────────────────────────────────────────────────────
-  // Debug logging - remove after confirming liquid glass works
-  if (__DEV__) {
-    console.log('LiquidGlass Debug:', {
-      platform: Platform.OS,
-      isSupported: isLiquidGlassSupported,
-    });
-  }
-
   if (Platform.OS !== 'ios' || !isLiquidGlassSupported) {
     return (
       <View

@@ -57,7 +57,7 @@ export function GlassView({
       <BlurView
         intensity={intensity}
         tint={effectiveTint}
-        style={style}
+        style={[style, { overflow: 'hidden' }]}
         {...props}
       >
         {children}

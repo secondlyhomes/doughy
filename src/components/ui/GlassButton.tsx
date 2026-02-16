@@ -39,7 +39,7 @@ export function GlassButton({
   activeOpacity = PRESS_OPACITY.DEFAULT,
   enableHaptics = true,
 }: GlassButtonProps) {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
   const borderRadius = size / 2;
 
   const handlePress = useCallback(() => {
@@ -112,10 +112,9 @@ export function GlassButton({
         containerStyle,
         styles.webGlass,
         {
-          // Use 'medium' (20%) for better visibility on all backgrounds
           backgroundColor: isDark
-            ? withOpacity('#FFFFFF', 'medium')  // 20% white on dark
-            : withOpacity('#000000', 'light'),  // 12.5% black on light
+            ? withOpacity(colors.foreground, 'medium')
+            : withOpacity(colors.foreground, 'light'),
         },
       ]}
     >

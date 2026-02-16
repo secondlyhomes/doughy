@@ -143,17 +143,19 @@ export function ThemeProvider({
     loadTheme();
   }, [storageKey]);
 
-  // Save theme preference
+  // Save theme preference (optimistic update with revert on failure)
   const setMode = useCallback(
     async (newMode: ThemeMode) => {
+      const previousMode = mode;
       setModeState(newMode);
       try {
         await AsyncStorage.setItem(storageKey, newMode);
       } catch (err) {
-        console.error('Error saving theme:', err);
+        console.error('[ThemeContext] Failed to persist theme, reverting:', err);
+        setModeState(previousMode);
       }
     },
-    [storageKey]
+    [storageKey, mode]
   );
 
   // Toggle between light and dark (skipping system)
@@ -183,11 +185,13 @@ export function ThemeProvider({
   // Get current colors
   const colors = isDark ? darkColors : lightColors;
 
-  // Render children with default light theme while loading to maintain component tree structure
+  // Render children with system-aware theme while loading to maintain component tree structure
   // This prevents navigation context issues that can occur when returning null
+  // Uses system color scheme to minimize flash (covers the most common "system" mode case)
   if (!isLoaded) {
+    const systemIsDark = systemColorScheme === 'dark';
     return (
-      <ThemeContext.Provider value={{ mode: 'light', setMode: () => {}, isDark: false, colors: lightColors, toggleTheme: () => {} }}>
+      <ThemeContext.Provider value={{ mode: 'system', setMode: () => {}, isDark: systemIsDark, colors: systemIsDark ? darkColors : lightColors, toggleTheme: () => {} }}>
         {children}
       </ThemeContext.Provider>
     );
