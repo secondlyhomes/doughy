@@ -33,6 +33,7 @@ import {
 import type { GmailPubSubMessage, GmailNotification, UserGmailTokens } from './types.js';
 import { handleClawSms, handleClawMessage } from './claw/controller.js';
 import { lookupUserByChannel } from './claw/db.js';
+import { sendTwilioMessage } from './claw/twilio.js';
 import clawRoutes from './claw/routes.js';
 import callpilotRoutes from './callpilot/routes.js';
 import { initDiscordBot } from './claw/discord.js';
@@ -589,7 +590,7 @@ app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'
         console.error(`[${channel.toUpperCase()}] Reply generated but cannot send — missing Twilio credentials`);
       }
 
-      if (reply && config.twilioAccountSid && config.twilioAuthToken) {
+      if (reply) {
         // WhatsApp supports longer messages; SMS needs truncation
         const body = isWhatsApp
           ? reply
@@ -597,48 +598,16 @@ app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'
             ? reply.slice(0, 1450) + '\n\n[Open the app for full details.]'
             : reply);
 
-        // Set From/To with whatsapp: prefix for WhatsApp, plain numbers for SMS
         const fromNumber = isWhatsApp
           ? config.twilioWhatsAppNumber
           : config.twilioPhoneNumber;
         const toNumber = message.from; // whatsapp: prefix preserved for WhatsApp, plain for SMS
 
-        if (!fromNumber) {
-          console.error(`[${channel.toUpperCase()}] No From number configured`);
-          return;
-        }
-
-        // Send via Twilio REST API (10s timeout to prevent hung connections)
-        try {
-          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
-          const auth = Buffer.from(`${config.twilioAccountSid}:${config.twilioAuthToken}`).toString('base64');
-          const abortController = new AbortController();
-          const timeout = setTimeout(() => abortController.abort(), 10_000);
-
-          const sendResponse = await fetch(twilioUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Basic ${auth}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              From: fromNumber,
-              To: toNumber,
-              Body: body,
-            }).toString(),
-            signal: abortController.signal,
-          });
-          clearTimeout(timeout);
-
-          const result = await sendResponse.json() as Record<string, unknown>;
-
-          if (!sendResponse.ok) {
-            console.error(`[${channel.toUpperCase()}] Twilio send failed: ${sendResponse.status} code=${result.code} message=${result.message}`);
-          } else {
-            console.log(`[${channel.toUpperCase()}] Reply sent to ${phoneNumber}, SID: ${result.sid}`);
-          }
-        } catch (sendError) {
-          console.error(`[${channel.toUpperCase()}] Failed to send reply:`, sendError);
+        const result = await sendTwilioMessage({ from: fromNumber, to: toNumber, body });
+        if (result.success) {
+          console.log(`[${channel.toUpperCase()}] Reply sent to ${phoneNumber}, SID: ${result.sid}`);
+        } else {
+          console.error(`[${channel.toUpperCase()}] Twilio send failed: ${result.error}`);
         }
       }
     }

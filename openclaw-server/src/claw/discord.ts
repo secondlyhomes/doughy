@@ -6,6 +6,7 @@ import { config } from '../config.js';
 import { handleClawMessage } from './controller.js';
 import { clawQuery, clawUpdate } from './db.js';
 import { registerDiscordSender } from './broadcast.js';
+import { callEdgeFunction } from './edge.js';
 
 // Discord.js types — dynamic import to avoid crash if not installed
 let Client: any;
@@ -461,25 +462,14 @@ async function saveDiscordConfig(userId: string, discordUserId: string, channelI
  * Execute SMS from Discord approval
  */
 async function executeSmsFromDiscord(recipientPhone: string, content: string): Promise<boolean> {
-  try {
-    const response = await fetch(
-      `${config.supabaseUrl}/functions/v1/twilio-sms`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${config.supabaseServiceKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: recipientPhone,
-          body: content,
-        }),
-      }
-    );
-    return response.ok;
-  } catch {
-    return false;
+  const result = await callEdgeFunction('twilio-sms', {
+    to: recipientPhone,
+    body: content,
+  });
+  if (!result.ok) {
+    console.error(`[Discord] SMS send failed: ${result.error}`);
   }
+  return result.ok;
 }
 
 /**

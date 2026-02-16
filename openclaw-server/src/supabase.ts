@@ -6,7 +6,7 @@ import type { UserGmailTokens, UserSettings } from './types.js';
 const DEFAULT_CONFIDENCE_THRESHOLD = 85;
 
 /**
- * Call a Supabase Edge Function
+ * Call a Supabase Edge Function (with 15s timeout)
  */
 export async function callEdgeFunction<T>(
   functionName: string,
@@ -18,23 +18,36 @@ export async function callEdgeFunction<T>(
     Authorization: `Bearer ${userToken || config.supabaseServiceKey}`,
   };
 
-  const response = await fetch(
-    `${config.supabaseUrl}/functions/v1/${functionName}`,
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-    }
-  );
+  const abortController = new AbortController();
+  const timeout = setTimeout(() => abortController.abort(), 15_000);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Edge function ${functionName} failed: ${response.status} - ${errorText}`
+  try {
+    const response = await fetch(
+      `${config.supabaseUrl}/functions/v1/${functionName}`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal: abortController.signal,
+      }
     );
-  }
+    clearTimeout(timeout);
 
-  return response.json() as Promise<T>;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Edge function ${functionName} failed: ${response.status} - ${errorText}`
+      );
+    }
+
+    return response.json() as Promise<T>;
+  } catch (error) {
+    clearTimeout(timeout);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Edge function ${functionName} timed out after 15s`);
+    }
+    throw error;
+  }
 }
 
 /**

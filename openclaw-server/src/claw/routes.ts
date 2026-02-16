@@ -6,6 +6,7 @@ import { config } from '../config.js';
 import { handleClawMessage } from './controller.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
 import { clawQuery, clawUpdate, publicInsert } from './db.js';
+import { callEdgeFunction } from './edge.js';
 import type { ApprovalDecision } from './types.js';
 
 const router = Router();
@@ -442,26 +443,14 @@ async function executeSmsApproval(
   content: string
 ): Promise<boolean> {
   try {
-    // Call the twilio-sms edge function to send the message
-    const response = await fetch(
-      `${config.supabaseUrl}/functions/v1/twilio-sms`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${config.supabaseServiceKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          to: recipientPhone,
-          body: content,
-        }),
-      }
-    );
+    const result = await callEdgeFunction('twilio-sms', {
+      user_id: userId,
+      to: recipientPhone,
+      body: content,
+    });
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      console.error(`[ClawAPI] SMS send failed: ${response.status} - ${text}`);
+    if (!result.ok) {
+      console.error(`[ClawAPI] SMS send failed: ${result.error}`);
       return false;
     }
 

@@ -2,8 +2,8 @@
 // Generate a response ONCE, deliver to all user-enabled channels
 // Saves tokens and ensures consistent messaging
 
-import { config } from '../config.js';
 import { clawQuery } from './db.js';
+import { sendWhatsApp, sendSms } from './twilio.js';
 
 export interface ChannelPreference {
   id: string;
@@ -127,36 +127,15 @@ async function sendToChannel(
  * Send via WhatsApp (Twilio)
  */
 async function sendViaWhatsApp(content: string, channelConfig: Record<string, unknown>): Promise<boolean> {
-  if (!config.twilioAccountSid || !config.twilioAuthToken) {
-    console.error('[Broadcast] Missing Twilio credentials for WhatsApp');
-    return false;
-  }
-
   const phone = channelConfig.phone as string;
   if (!phone) {
     console.error('[Broadcast] No phone number in WhatsApp channel config');
     return false;
   }
 
-  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
-  const auth = Buffer.from(`${config.twilioAccountSid}:${config.twilioAuthToken}`).toString('base64');
-
-  const response = await fetch(twilioUrl, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      From: config.twilioWhatsAppNumber,
-      To: `whatsapp:${phone}`,
-      Body: content,
-    }).toString(),
-  });
-
-  if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    console.error('[Broadcast] WhatsApp send failed:', JSON.stringify(result));
+  const result = await sendWhatsApp(phone, content);
+  if (!result.success) {
+    console.error(`[Broadcast] WhatsApp send failed: ${result.error}`);
     return false;
   }
 
@@ -168,41 +147,15 @@ async function sendViaWhatsApp(content: string, channelConfig: Record<string, un
  * Send via SMS (Twilio) — expensive, only when explicitly requested
  */
 async function sendViaSms(content: string, channelConfig: Record<string, unknown>): Promise<boolean> {
-  if (!config.twilioAccountSid || !config.twilioAuthToken || !config.twilioPhoneNumber) {
-    console.error('[Broadcast] Missing Twilio credentials for SMS');
-    return false;
-  }
-
   const phone = channelConfig.phone as string;
   if (!phone) {
     console.error('[Broadcast] No phone number in SMS channel config');
     return false;
   }
 
-  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
-  const auth = Buffer.from(`${config.twilioAccountSid}:${config.twilioAuthToken}`).toString('base64');
-
-  // SMS: truncate to 1500 chars
-  const body = content.length > 1500
-    ? content.slice(0, 1450) + '\n\n[Open the app for full details.]'
-    : content;
-
-  const response = await fetch(twilioUrl, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      From: config.twilioPhoneNumber,
-      To: phone,
-      Body: body,
-    }).toString(),
-  });
-
-  if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    console.error('[Broadcast] SMS send failed:', JSON.stringify(result));
+  const result = await sendSms(phone, content);
+  if (!result.success) {
+    console.error(`[Broadcast] SMS send failed: ${result.error}`);
     return false;
   }
 

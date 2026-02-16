@@ -7,6 +7,8 @@ import { generateBriefingData, formatBriefing } from './briefing.js';
 import { runAgent } from './agents.js';
 import { clawInsert, clawUpdate, clawQuery } from './db.js';
 import { broadcastMessage } from './broadcast.js';
+import { sendWhatsApp } from './twilio.js';
+import { callEdgeFunction } from './edge.js';
 import type { ClawIntent, ClawChannel, ClawResponse, ClawSmsInbound } from './types.js';
 
 /**
@@ -326,27 +328,15 @@ async function handleDraftFollowups(
     });
 
     if (approvalCount > 0) {
-      // Send push notification
-      try {
-        const pushRes = await fetch(`${config.supabaseUrl}/functions/v1/notification-push`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${config.supabaseServiceKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            title: `${approvalCount} follow-up${approvalCount > 1 ? 's' : ''} ready to review`,
-            body: 'Open The Claw to approve or edit before sending.',
-            data: { type: 'claw_approvals', task_id: task.id },
-          }),
-        });
-        if (!pushRes.ok) {
-          console.error(`[Controller] Push notification failed: ${pushRes.status}`);
-        }
-      } catch (err) {
-        console.error('[Controller] Push notification error:', err);
-      }
+      // Send push notification (non-blocking, 15s timeout)
+      callEdgeFunction('notification-push', {
+        user_id: userId,
+        title: `${approvalCount} follow-up${approvalCount > 1 ? 's' : ''} ready to review`,
+        body: 'Open The Claw to approve or edit before sending.',
+        data: { type: 'claw_approvals', task_id: task.id },
+      }).then((result) => {
+        if (!result.ok) console.error(`[Controller] Push notification failed: ${result.error}`);
+      });
 
       return {
         message: `I've drafted ${approvalCount} follow-up message${approvalCount > 1 ? 's' : ''}. Open The Claw app to review and approve them before they're sent.`,
@@ -644,29 +634,9 @@ async function executeApprovedAction(
   if (approval.action_type !== 'send_sms' || !approval.recipient_phone) return false;
 
   try {
-    // Default to WhatsApp (cheaper)
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
-    const auth = Buffer.from(`${config.twilioAccountSid}:${config.twilioAuthToken}`).toString('base64');
+    const result = await sendWhatsApp(approval.recipient_phone, approval.draft_content);
 
-    const abortController = new AbortController();
-    const timeout = setTimeout(() => abortController.abort(), 10_000);
-
-    const response = await fetch(twilioUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        From: config.twilioWhatsAppNumber,
-        To: `whatsapp:${approval.recipient_phone}`,
-        Body: approval.draft_content,
-      }).toString(),
-      signal: abortController.signal,
-    });
-    clearTimeout(timeout);
-
-    if (response.ok) {
+    if (result.success) {
       await clawUpdate('approvals', approval.id, {
         status: 'executed',
         executed_at: new Date().toISOString(),
@@ -674,7 +644,7 @@ async function executeApprovedAction(
       return true;
     }
 
-    console.error('[Controller] WhatsApp send failed:', await response.text().catch(() => ''));
+    console.error(`[Controller] WhatsApp send failed: ${result.error}`);
     return false;
   } catch (error) {
     console.error('[Controller] Execute approval failed:', error);
