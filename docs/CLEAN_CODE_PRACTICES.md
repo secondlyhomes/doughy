@@ -3,7 +3,7 @@
 **Last Updated**: 2026-01-30
 **Status**: Active Standard
 
-This document provides practical examples and patterns for writing clean, maintainable code in the doughy-ai codebase.
+This document provides practical examples and patterns for writing clean, maintainable code in the doughy-app codebase.
 
 ---
 

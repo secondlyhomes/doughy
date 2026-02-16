@@ -3,7 +3,7 @@
 **Last Updated**: 2026-01-30
 **Status**: Active Standard
 
-This guide defines how to identify, categorize, and address technical debt in the doughy-ai codebase.
+This guide defines how to identify, categorize, and address technical debt in the doughy-app codebase.
 
 ---
 

@@ -7,20 +7,21 @@
 
 | Schema | Tables | Purpose | RLS |
 |--------|--------|---------|-----|
-| `claw` | 5 | Agent orchestration: profiles, tasks, runs, approvals, messages | All enabled |
+| `claw` | 11 | Agent orchestration: profiles, tasks, runs, approvals, messages, notifications, budgets | All enabled |
+| `callpilot` | 10 | Call coaching: calls, transcripts, coaching cards, summaries, action items, scripts | All enabled |
 | `ai` | 25 | AI infrastructure: security, memory, knowledge, circuit breakers | All enabled |
 | `investor` | 34 | Real estate investing: deals, properties, campaigns, portfolio | All enabled |
 | `landlord` | 19 | Rental management: properties, rooms, bookings, vendors | All enabled |
 | `crm` | 5 | Customer relationships: contacts, leads, skip trace, opt-outs | All enabled |
 | `integrations` | 9 | Third-party: Gmail, Seam locks, Meta DMs, Postgrid mail | All enabled |
 | `public` | 57 | Shared: users, workspaces, billing, comms, system, analytics | 55/57 enabled |
-| **Total** | **154** | | **152/154 RLS** |
+| **Total** | **170** | | **168/170 RLS** |
 
 **RLS exceptions:** `public.spatial_ref_sys` (PostGIS system table), `public.wrappers_fdw_stats` (Supabase FDW stats).
 
 ## Custom Enums (107 total)
 
-### claw schema (7 enums)
+### claw schema (11 enums)
 | Enum | Values |
 |------|--------|
 | `task_type` | pending, running, awaiting_approval, done, failed, cancelled |
@@ -28,8 +29,12 @@
 | `run_status` | running, completed, failed, cancelled |
 | `approval_status` | pending, approved, rejected, expired, executed |
 | `approval_action_type` | send_sms, send_email, create_task, update_record, custom |
-| `message_channel` | sms, app, push, system |
+| `message_channel` | sms, app, push, system, whatsapp, discord, email |
 | `message_role` | user, assistant, system |
+| `notification_event_type` | approval_needed, agent_error, daily_summary, budget_alert, kill_switch_activated, task_completed |
+| `notification_channel` | push, sms, email, discord |
+| `budget_limit_type` | daily_cost, daily_tokens, monthly_cost, monthly_tokens |
+| `kill_switch_action` | activate_global, deactivate_global, activate_agent, deactivate_agent, auto_pause_budget, auto_pause_error_rate, auto_pause_stuck, auto_pause_connection, auto_pause_api_errors |
 
 ### public schema (100 enums)
 Key enums used across the system — see full list in generated types. Notable ones:
@@ -44,7 +49,7 @@ Key enums used across the system — see full list in generated types. Notable o
 
 ---
 
-## `claw` Schema (5 tables) — Agent Orchestration
+## `claw` Schema (11 tables) — Agent Orchestration
 
 ### claw.agent_profiles (16 cols)
 Agent templates defining model, tools, and behavior.
@@ -168,6 +173,288 @@ Conversation history between user and The Claw.
 
 **FKs:** task_id → claw.tasks(id)
 **RLS (3 policies):** Service role (ALL), Users insert own (INSERT), Users view own (SELECT)
+
+### claw.channel_preferences (8 cols)
+Per-user channel configuration for multi-channel messaging.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | FK → auth.users |
+| channel | text | NO | |
+| is_enabled | bool | YES | false |
+| is_primary | bool | YES | false |
+| channel_config | jsonb | YES | '{}' |
+| created_at | timestamptz | YES | now() |
+| updated_at | timestamptz | YES | now() |
+
+**RLS:** Service role + user CRUD
+
+### claw.notification_preferences (7 cols)
+Per-user notification routing (which events go to which channels).
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | FK → auth.users |
+| event_type | notification_event_type | NO | |
+| channel | notification_channel | NO | |
+| is_enabled | bool | NO | true |
+| created_at | timestamptz | NO | now() |
+| updated_at | timestamptz | NO | now() |
+
+### claw.notification_settings (10 cols)
+Global notification settings per user (quiet hours, budget thresholds).
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | UNIQUE, FK → auth.users |
+| budget_alert_threshold_cents | int4 | YES | 500 |
+| quiet_hours_enabled | bool | NO | false |
+| quiet_hours_start | time | YES | 22:00:00 |
+| quiet_hours_end | time | YES | 07:00:00 |
+| quiet_hours_timezone | text | YES | 'America/New_York' |
+| quiet_hours_allow_approvals | bool | NO | true |
+| created_at | timestamptz | NO | now() |
+| updated_at | timestamptz | NO | now() |
+
+### claw.notification_log (13 cols)
+Delivery log for all notifications sent.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | FK → auth.users |
+| event_type | notification_event_type | NO | |
+| channel | notification_channel | NO | |
+| subject | text | YES | |
+| body | text | NO | |
+| related_task_id | uuid | YES | FK → tasks.id |
+| related_approval_id | uuid | YES | FK → approvals.id |
+| related_agent_run_id | uuid | YES | FK → agent_runs.id |
+| delivered | bool | YES | false |
+| delivery_error | text | YES | |
+| metadata | jsonb | YES | '{}' |
+| created_at | timestamptz | NO | now() |
+
+### claw.budget_limits (11 cols)
+Per-user or per-agent cost/token limits with auto-pause.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | FK → auth.users |
+| agent_profile_id | uuid | YES | FK → agent_profiles.id |
+| limit_type | budget_limit_type | NO | |
+| limit_value | numeric | NO | |
+| current_value | numeric | NO | 0 |
+| period_start | timestamptz | NO | date_trunc('day', now()) |
+| is_exceeded | bool | NO | false |
+| last_reset_at | timestamptz | YES | now() |
+| created_at | timestamptz | NO | now() |
+| updated_at | timestamptz | NO | now() |
+
+### claw.kill_switch_log (9 cols)
+Audit trail for agent kill switch activations.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | FK → auth.users |
+| action | kill_switch_action | NO | |
+| agent_profile_id | uuid | YES | FK → agent_profiles.id |
+| reason | text | NO | |
+| agents_affected | int4 | YES | 0 |
+| tasks_paused | int4 | YES | 0 |
+| metadata | jsonb | YES | '{}' |
+| created_at | timestamptz | NO | now() |
+
+---
+
+## `callpilot` Schema (10 tables) — Call Coaching
+
+### callpilot.calls (19 cols)
+Call records with Twilio integration and status tracking.
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|----------|---------|-------|
+| id | uuid | NO | gen_random_uuid() | PK |
+| user_id | uuid | NO | | FK → auth.users |
+| lead_id | uuid | YES | | Convention FK → crm |
+| contact_id | uuid | YES | | Convention FK → crm |
+| deal_id | uuid | YES | | Convention FK → investor |
+| direction | text | NO | | CHECK: inbound, outbound |
+| phone_number | text | NO | | |
+| twilio_call_sid | text | YES | | |
+| status | text | NO | 'initiated' | CHECK: initiated, ringing, in_progress, completed, failed, missed, voicemail |
+| started_at | timestamptz | YES | | |
+| ended_at | timestamptz | YES | | |
+| duration_seconds | int4 | YES | | |
+| recording_url | text | YES | | |
+| recording_sid | text | YES | | |
+| script_template_id | uuid | YES | | FK → script_templates.id |
+| metadata | jsonb | NO | '{}' | |
+| created_at | timestamptz | NO | now() | |
+| updated_at | timestamptz | NO | now() | |
+| deleted_at | timestamptz | YES | | Soft delete |
+
+**RLS:** All enabled, user-scoped
+
+### callpilot.transcript_chunks (7 cols)
+Real-time speech-to-text chunks during a call.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| call_id | uuid | NO | FK → calls.id |
+| speaker | text | NO | |
+| content | text | NO | |
+| confidence | numeric | YES | |
+| timestamp_ms | int4 | NO | |
+| created_at | timestamptz | NO | now() |
+
+### callpilot.coaching_cards (10 cols)
+AI-generated coaching tips shown during active calls.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| call_id | uuid | NO | FK → calls.id |
+| card_type | text | NO | |
+| content | text | NO | |
+| priority | text | NO | 'normal' (CHECK: low, normal, high, urgent) |
+| phase | text | YES | |
+| context | text | YES | |
+| was_dismissed | bool | NO | false |
+| timestamp_ms | int4 | YES | |
+| created_at | timestamptz | NO | now() |
+
+### callpilot.question_tracking (11 cols)
+Required questions from script templates, tracks if answered.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| call_id | uuid | NO | FK → calls.id |
+| question | text | NO | |
+| category | text | YES | |
+| is_answered | bool | NO | false |
+| answered_at | timestamptz | YES | |
+| answer_summary | text | YES | |
+| source_hint | text | YES | |
+| display_order | int4 | YES | |
+| created_at | timestamptz | NO | now() |
+| updated_at | timestamptz | NO | now() |
+
+### callpilot.call_summaries (10 cols)
+AI-generated post-call summaries with sentiment and recommendations.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| call_id | uuid | NO | UNIQUE, FK → calls.id |
+| user_id | uuid | NO | FK → auth.users |
+| summary | text | YES | |
+| sentiment | text | YES | CHECK: positive, neutral, negative, mixed |
+| key_points | jsonb | NO | '[]' |
+| lead_temperature | text | YES | CHECK: hot, warm, cold, dead |
+| closing_recommendation | text | YES | |
+| unanswered_questions | jsonb | NO | '[]' |
+| created_at | timestamptz | NO | now() |
+
+### callpilot.action_items (13 cols)
+Post-call action items generated by AI, requiring user approval.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| call_id | uuid | NO | FK → calls.id |
+| user_id | uuid | NO | FK → auth.users |
+| description | text | NO | |
+| category | text | YES | |
+| due_date | date | YES | |
+| status | text | NO | 'pending' (CHECK: pending, approved, completed, dismissed) |
+| approved_at | timestamptz | YES | |
+| completed_at | timestamptz | YES | |
+| metadata | jsonb | NO | '{}' |
+| created_at | timestamptz | NO | now() |
+| updated_at | timestamptz | NO | now() |
+| deleted_at | timestamptz | YES | |
+
+### callpilot.pre_call_briefings (8 cols)
+AI-generated pre-call context from CRM data.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| call_id | uuid | NO | FK → calls.id |
+| user_id | uuid | NO | FK → auth.users |
+| lead_id | uuid | YES | |
+| briefing_content | jsonb | NO | '{}' |
+| was_viewed | bool | NO | false |
+| was_skipped | bool | NO | false |
+| created_at | timestamptz | NO | now() |
+
+### callpilot.user_profiles (12 cols)
+CallPilot-specific user preferences (talk tracks, buying criteria).
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | UNIQUE, FK → auth.users |
+| display_name | text | YES | |
+| company_name | text | YES | |
+| role | text | YES | |
+| bio | text | YES | |
+| interests | jsonb | NO | '[]' |
+| location | text | YES | |
+| buying_criteria | jsonb | NO | '{}' |
+| talk_tracks | jsonb | NO | '[]' |
+| created_at | timestamptz | NO | now() |
+| updated_at | timestamptz | NO | now() |
+
+### callpilot.script_templates (14 cols)
+Customizable call scripts with questions and sections.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| user_id | uuid | NO | FK → auth.users |
+| name | text | NO | |
+| description | text | YES | |
+| category | text | YES | |
+| opening_script | text | YES | |
+| starter_questions | jsonb | NO | '[]' |
+| required_questions | jsonb | NO | '[]' |
+| closing_scripts | jsonb | NO | '{}' |
+| script_sections | jsonb | NO | '[]' |
+| is_default | bool | NO | false |
+| created_at | timestamptz | NO | now() |
+| updated_at | timestamptz | NO | now() |
+| deleted_at | timestamptz | YES | |
+
+**Seeded templates:** Cold Call, Follow-up, Motivated Seller, Default
+
+### callpilot.suggested_updates (14 cols)
+AI-suggested CRM updates from call analysis (e.g., update deal stage).
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| id | uuid | NO | gen_random_uuid() |
+| call_id | uuid | NO | FK → calls.id |
+| user_id | uuid | NO | FK → auth.users |
+| target_table | text | NO | |
+| target_record_id | uuid | NO | |
+| field_name | text | NO | |
+| current_value | text | YES | |
+| suggested_value | text | NO | |
+| confidence | text | YES | CHECK: low, medium, high |
+| source_quote | text | YES | |
+| status | text | NO | 'pending' (CHECK: pending, approved, rejected, applied) |
+| approved_at | timestamptz | YES | |
+| created_at | timestamptz | NO | now() |
+| deleted_at | timestamptz | YES | |
 
 ---
 
@@ -508,6 +795,19 @@ Contact interaction log (calls, texts, mail).
 | claw.approvals | agent_run_id | claw.agent_runs |
 | claw.messages | task_id | claw.tasks |
 | claw.tasks | parent_task_id | claw.tasks |
+| claw.notification_log | related_task_id | claw.tasks |
+| claw.notification_log | related_approval_id | claw.approvals |
+| claw.notification_log | related_agent_run_id | claw.agent_runs |
+| claw.budget_limits | agent_profile_id | claw.agent_profiles |
+| claw.kill_switch_log | agent_profile_id | claw.agent_profiles |
+| callpilot.calls | script_template_id | callpilot.script_templates |
+| callpilot.transcript_chunks | call_id | callpilot.calls |
+| callpilot.coaching_cards | call_id | callpilot.calls |
+| callpilot.question_tracking | call_id | callpilot.calls |
+| callpilot.call_summaries | call_id | callpilot.calls |
+| callpilot.action_items | call_id | callpilot.calls |
+| callpilot.pre_call_briefings | call_id | callpilot.calls |
+| callpilot.suggested_updates | call_id | callpilot.calls |
 | investor.conversations | deal_id | investor.deals_pipeline |
 | investor.conversations | property_id | investor.properties |
 | investor.deals_pipeline | property_id | investor.properties |
@@ -543,8 +843,9 @@ supabase.schema('ai').from('table')       # ai schema
 ```
 
 Active helpers in `src/lib/supabase.ts`:
-- `db.investor.*` (26 tables) — actively used via stores + RPC layer
-- `db.landlord.*` (18 tables) — actively used via stores
+- `db.investor.*` — via schema accessor, used through `src/lib/rpc/` layer
+- `db.landlord.*` — via schema accessor, used through stores
+- **Note:** 93 dead `db.getDeals()`-style helpers were removed in Feb 2026
 
 ### Server (openclaw-server)
 ```
@@ -587,17 +888,9 @@ Two schemas have `ai_queue_items` tables:
 
 ---
 
-## Dead Code: db.* Helpers
+## Dead Code: db.* Helpers (REMOVED)
 
-`src/lib/supabase.ts` contains **93 helper functions** (lines ~16-140) that are **never imported anywhere**:
-```
-db.getDeals(), db.getDealById(), db.createDeal(), db.updateDeal(), db.deleteDeal(),
-db.getLeads(), db.getLeadById(), db.createLead(), ...
-db.getProperties(), db.getPropertyById(), ...
-(93 total functions)
-```
-
-**Zero imports** found via grep. All code uses `db.investor.*`, `db.landlord.*`, or direct `supabase.schema().from()` calls instead. These are safe to delete.
+The 93 dead `db.getDeals()`-style helper functions were removed from `src/lib/supabase.ts` in Feb 2026 (commit `27b32c3`). All DB access now goes through `src/lib/rpc/` domain-specific query functions or direct `supabase.schema().from()` calls.
 
 ---
 

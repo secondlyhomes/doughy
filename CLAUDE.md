@@ -2,7 +2,7 @@
 
 ## Project
 
-Doughy AI Mobile — React Native (Expo 54) + Supabase + TypeScript | iOS-first investor/landlord platform
+Doughy App Mobile — React Native (Expo 54) + Supabase + TypeScript | iOS-first investor/landlord platform
 
 **Package manager:** npm
 
@@ -12,9 +12,9 @@ This repo is 1 of 3 apps sharing the same Supabase backend:
 
 | App | Repo | Purpose | Status |
 |-----|------|---------|--------|
-| **Doughy** | `doughy-ai-mobile` (this repo) | Investor/landlord platform | Active, iOS |
-| **The Claw** | `the-claw-app` | AI agent control app (SMS briefings, approvals) | UI complete, wiring in progress |
-| **CallPilot** | `callpilot` | Insurance call coaching | UI complete, no backend |
+| **Doughy** | `doughy-app-mobile` (this repo) | Investor/landlord platform | Active, iOS |
+| **The Claw** | `the-claw-app` | AI agent control app (SMS briefings, approvals, chat) | Chat screen wired to live API |
+| **CallPilot** | `callpilot` | Call coaching + CRM integration | API client wired to server |
 
 All 3 share the same Supabase project and auth system. The OpenClaw server (in `openclaw-server/`) is the AI gateway that powers The Claw.
 
@@ -117,7 +117,7 @@ supabase/              # Migrations and edge functions
 | Staging (dev) | `lqmbyobweeaigrwmvizo` | us-east-1 |
 | Production | `vpqglbaedcpeprnlnfxd` | us-west-2 |
 
-**Schemas (staging):** `claw` (5 tables), `ai` (25), `investor` (34), `landlord` (19), `crm` (5), `integrations` (9), `public` (57) = 154 tables
+**Schemas (staging):** `claw` (11 tables), `callpilot` (10), `ai` (25), `investor` (34), `landlord` (19), `crm` (5), `integrations` (9), `public` (57) = 170 tables
 
 **Generated types:** `src/integrations/supabase/types/generated.ts`
 
@@ -188,7 +188,7 @@ supabase/              # Migrations and edge functions
 
 ## GitHub
 
-**Repo:** `doughy-ai/doughy-ai-mobile`
+**Repo:** `doughy-ai/doughy-app-mobile`
 **Main branch:** `main`
 **Dev branch:** `develop`
 **CI:** Runs type-check, lint, tests, security audit, and migration tests on PRs to main/develop

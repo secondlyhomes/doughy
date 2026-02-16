@@ -3,7 +3,7 @@
 **Last Updated**: 2026-01-30
 **Status**: Active Standard
 
-This document defines the naming conventions for the doughy-ai codebase, based on 2025 industry best practices from React/React Native, TypeScript, and Expo communities.
+This document defines the naming conventions for the doughy-app codebase, based on 2025 industry best practices from React/React Native, TypeScript, and Expo communities.
 
 ---
 

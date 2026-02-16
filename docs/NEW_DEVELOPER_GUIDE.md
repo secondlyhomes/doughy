@@ -26,7 +26,7 @@ Welcome to Doughy! This guide will help you get up to speed quickly.
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd doughy-ai
+cd doughy-app-mobile
 
 # Install dependencies
 npm install

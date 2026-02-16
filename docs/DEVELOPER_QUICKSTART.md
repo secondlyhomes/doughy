@@ -17,7 +17,7 @@ Both coexist in the same app. Users select platforms during onboarding and switc
 ```bash
 # Clone and install
 git clone <repo>
-cd doughy-ai
+cd doughy-app-mobile
 npm install
 
 # Start dev server

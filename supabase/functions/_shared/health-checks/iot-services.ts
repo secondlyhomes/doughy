@@ -37,7 +37,7 @@ export async function checkSeam(
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'seam-sdk-name': 'doughy-ai',
+        'seam-sdk-name': 'doughy-app',
         'seam-sdk-version': '1.0.0',
       },
       body: JSON.stringify({}),

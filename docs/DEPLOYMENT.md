@@ -273,8 +273,8 @@ crontab -e
 ### Local Development
 
 ```bash
-cd doughy-ai-mobile
-yarn install
+cd doughy-app-mobile
+npm install
 npx expo start
 # Scan QR with Expo Go or Dev Client
 ```

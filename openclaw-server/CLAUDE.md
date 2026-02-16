@@ -22,7 +22,7 @@ npm test             # jest
 | `controller.ts` | Entry point — intent classification → routing | `handleClawSms()`, `handleClawMessage()` |
 | `agents.ts` | Generic agent runner with tool-use loop | `runAgent()` |
 | `briefing.ts` | Cross-schema data → natural language briefing | `generateBriefing()` |
-| `tools.ts` | 6 agent tools (read deals/leads/bookings/follow-ups, draft SMS, create approval) | `AGENT_TOOLS` |
+| `tools.ts` | 7 agent tools (read deals/leads/bookings/follow-ups/email timeline, draft SMS, create approval) | `TOOL_REGISTRY` |
 | `routes.ts` | Express router at `/api/claw` (8 endpoints) | `clawRouter` |
 | `prompts.ts` | 4 system prompts (intent classifier, master controller, lead ops, draft specialist) | `INTENT_CLASSIFIER_PROMPT`, etc. |
 | `db.ts` | Schema-aware Supabase queries via REST | `schemaQuery()`, `schemaInsert()` |
@@ -33,7 +33,7 @@ npm test             # jest
 | Profile | Model | Tools | Approval | Purpose |
 |---------|-------|-------|----------|---------|
 | `master-controller` | Haiku 4.5 | None (orchestrator) | No | Intent classification, routing |
-| `lead-ops` | Sonnet 4.5 | `read_deals`, `read_leads`, `read_bookings`, `read_follow_ups` | No | Data analysis (read-only) |
+| `lead-ops` | Sonnet 4.5 | `read_deals`, `read_leads`, `read_bookings`, `read_follow_ups`, `read_email_timeline` | No | Data analysis (read-only) |
 | `draft-specialist` | Sonnet 4.5 | `draft_sms`, `create_approval` | **Yes** | SMS drafting → approval creation |
 
 ## "Brief Me" Flow (end-to-end)

@@ -26,16 +26,16 @@
     "build:android:prod": "APP_VARIANT=production eas build --platform android --profile production",
     "submit:ios": "eas submit --platform ios --profile production --latest",
     "submit:android": "eas submit --platform android --profile production --latest",
-    "deploy:functions:stage": "supabase functions deploy --project-ref lqmbyobweeaigrwmvizo",
-    "deploy:functions:prod": "supabase functions deploy --project-ref vpqglbaedcpeprnlnfxd",
+    "deploy:functions:stage": "supabase functions deploy --project-id lqmbyobweeaigrwmvizo",
+    "deploy:functions:prod": "supabase functions deploy --project-id vpqglbaedcpeprnlnfxd",
     "db:types": "npx supabase gen types typescript --project-id lqmbyobweeaigrwmvizo --schema public > src/integrations/supabase/types/generated.ts",
-    "db:types:stage": "supabase gen types typescript --project-ref lqmbyobweeaigrwmvizo > src/integrations/supabase/types/generated.ts",
-    "db:types:prod": "supabase gen types typescript --project-ref vpqglbaedcpeprnlnfxd > src/integrations/supabase/types/generated.ts",
+    "db:types:stage": "supabase gen types typescript --project-id lqmbyobweeaigrwmvizo > src/integrations/supabase/types/generated.ts",
+    "db:types:prod": "supabase gen types typescript --project-id vpqglbaedcpeprnlnfxd > src/integrations/supabase/types/generated.ts",
     "db:lint": "npx supabase db lint",
     "db:diff": "npx supabase db diff --schema public",
     "db:push": "npx supabase db push",
-    "db:push:stage": "supabase db push --project-ref lqmbyobweeaigrwmvizo",
-    "db:push:prod": "supabase db push --project-ref vpqglbaedcpeprnlnfxd"
+    "db:push:stage": "supabase db push --project-id lqmbyobweeaigrwmvizo",
+    "db:push:prod": "supabase db push --project-id vpqglbaedcpeprnlnfxd"
   },
   "dependencies": {
     "@callstack/liquid-glass": "^0.7.0",

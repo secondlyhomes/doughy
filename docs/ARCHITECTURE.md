@@ -1,15 +1,15 @@
 # Architecture Overview
 
-> Last verified: 2026-02-16 by querying Supabase staging (`lqmbyobweeaigrwmvizo`) directly.
+> Last updated: 2026-02-16 by querying Supabase staging (`lqmbyobweeaigrwmvizo`) directly.
 
 ## Three-App Ecosystem
 
 | App | Stack | Repo | Status |
 |-----|-------|------|--------|
-| **Doughy** | Expo 54 + React Native + Supabase + TypeScript | `doughy-ai-mobile` | Active, iOS-first |
-| **OpenClaw Server** | Express + Anthropic SDK + Twilio | `doughy-ai-mobile/openclaw-server/` | Code complete, not deployed |
-| **The Claw** | Expo + React Native + Zustand + custom theme | `the-claw-app` | UI complete, mock data |
-| **CallPilot** | Expo + React Native + hooks+Context | `callpilot` | UI complete, mock data |
+| **Doughy** | Expo 54 + React Native + Supabase + TypeScript | `doughy-app-mobile` | Active, iOS-first |
+| **OpenClaw Server** | Express + Anthropic SDK + Twilio | `doughy-app-mobile/openclaw-server/` | Deployed at `openclaw.doughy.app` |
+| **The Claw** | Expo + React Native + Zustand + custom theme | `the-claw-app` | Chat screen wired to live API |
+| **CallPilot** | Expo + React Native + hooks+Context | `callpilot` | API client wired to server |
 
 All apps share **one Supabase instance** (staging: `lqmbyobweeaigrwmvizo`). Auth is shared via Supabase Auth. Schemas are separated by data ownership.
 
@@ -18,7 +18,7 @@ All apps share **one Supabase instance** (staging: `lqmbyobweeaigrwmvizo`). Auth
 ```
 ┌──────────────────────────────────┐
 │       SUPABASE (us-east-1)       │
-│  PostgreSQL: 7 schemas, 154 tbl  │
+│  PostgreSQL: 8 schemas, 170 tbl  │
 │  Edge Functions: 62 deployed     │
 │  Auth: shared across all apps    │
 │  Realtime: WebSocket subs        │
@@ -35,7 +35,7 @@ All apps share **one Supabase instance** (staging: `lqmbyobweeaigrwmvizo`). Auth
 │         │  │  Nginx reverse proxy          │
 │ Doughy  │  │  SSL via Let's Encrypt        │
 │ The Claw│  │  Domain: openclaw.doughy.app  │
-│ CallPilot│ │  Status: NOT YET DEPLOYED     │
+│ CallPilot│ │  Status: DEPLOYED (Feb 2026)  │
 └─────────┘  └──────────────────────────────┘
 ```
 
@@ -43,8 +43,8 @@ All apps share **one Supabase instance** (staging: `lqmbyobweeaigrwmvizo`). Auth
 
 All three apps authenticate against the **same Supabase Auth** instance:
 - **Doughy (mobile):** Supabase JS client with anon key + SecureStore for tokens + RLS
-- **The Claw (mobile):** Same pattern (planned, currently mock auth)
-- **CallPilot (mobile):** Same pattern (planned, currently mock auth)
+- **The Claw (mobile):** Supabase Auth via `clawFetch` wrapper + SupabaseGatewayAdapter
+- **CallPilot (mobile):** Supabase Auth via `callsFetch` wrapper + mock mode fallback
 - **OpenClaw Server:** Service role key via REST API (bypasses RLS for server-side operations)
 - **Edge Functions:** Service role key via Supabase client
 
@@ -90,7 +90,8 @@ Auth flow:
                   │             SUPABASE                              │
                   │                                                   │
                   │  Schemas:                                         │
-                  │    claw (5)     - agent orchestration             │
+                  │    claw (11)    - agent orchestration, notifs     │
+                  │    callpilot (10) - calls, coaching, summaries   │
                   │    ai (25)     - security, memory, knowledge     │
                   │    investor (34) - deals, properties, pipeline   │
                   │    landlord (19) - rentals, bookings, vendors    │
@@ -111,12 +112,12 @@ Auth flow:
                   │    - Zustand (client state) + React Query (server)│
                   │    - NativeWind + useThemeColors()                │
                   │                                                   │
-                  │  The Claw: Agent monitoring + approval UI         │
-                  │    - Currently mock data                          │
-                  │    - Will subscribe to claw.approvals/tasks       │
+                  │  The Claw: Agent monitoring + approval + chat UI  │
+                  │    - Live API via clawFetch → openclaw server     │
+                  │    - Chat, activity, approvals, control tabs      │
                   │                                                   │
-                  │  CallPilot: Communication/coaching                │
-                  │    - Currently mock data                          │
+                  │  CallPilot: Call coaching + CRM integration       │
+                  │    - API client via callsFetch + mock fallback    │
                   └──────────────────────────────────────────────────┘
 ```
 
@@ -131,7 +132,7 @@ The Claw uses a **multi-agent architecture** where specialized agents handle dif
 | Slug | Name | Model | Tools | Requires Approval |
 |------|------|-------|-------|-------------------|
 | `master-controller` | Master Controller | claude-haiku-4-5-20251001 | None | No |
-| `lead-ops` | Lead Operations Agent | claude-sonnet-4-5-20250929 | `read_deals`, `read_leads`, `read_bookings`, `read_follow_ups` | No |
+| `lead-ops` | Lead Operations Agent | claude-sonnet-4-5-20250929 | `read_deals`, `read_leads`, `read_bookings`, `read_follow_ups`, `read_email_timeline` | No |
 | `draft-specialist` | Draft Specialist | claude-sonnet-4-5-20250929 | `draft_sms`, `create_approval` | Yes |
 
 ### Intent Classification
@@ -157,14 +158,15 @@ Entry point: `agents.ts:runAgent()`
 8. Calculate cost (Haiku: $0.80/$4 per MTok, Sonnet: $3/$15 per MTok)
 9. Update run record with tokens, cost, duration, tool_calls, result
 
-### Tool Registry (6 tools in `tools.ts`)
+### Tool Registry (7 tools in `tools.ts`)
 
 | Tool | Schema | Table | Description |
 |------|--------|-------|-------------|
 | `read_deals` | investor | deals_pipeline | Active deals with stage, value, lead info |
-| `read_leads` | crm | leads | Contacts with score filtering |
+| `read_leads` | crm | contacts | Contacts with score filtering |
 | `read_bookings` | landlord | bookings | Upcoming bookings with property info |
 | `read_follow_ups` | investor | follow_ups | Overdue and upcoming follow-ups |
+| `read_email_timeline` | crm | touches | Email interaction history for a CRM contact |
 | `draft_sms` | — | — | Pure function: returns draft object (no DB) |
 | `create_approval` | claw | approvals | Inserts pending approval entry |
 
@@ -237,11 +239,12 @@ Entry point: `agents.ts:runAgent()`
 
 All system prompts use `cache_control: { type: 'ephemeral' }` for prompt caching (reduces cost on repeated calls within 5-minute window).
 
-## Database: 7 Schemas, 154 Tables
+## Database: 8 Schemas, 170 Tables
 
 | Schema | Tables | Purpose |
 |--------|--------|---------|
-| `claw` | 5 | Agent orchestration: profiles, tasks, runs, approvals, messages |
+| `claw` | 11 | Agent orchestration: profiles, tasks, runs, approvals, messages, notifications, budgets, kill switch |
+| `callpilot` | 10 | Call coaching: calls, transcripts, coaching cards, summaries, action items, scripts, briefings |
 | `ai` | 25 | AI infrastructure: security, memory, knowledge, circuit breakers |
 | `investor` | 34 | Real estate investment: deals, properties, campaigns, portfolio |
 | `landlord` | 19 | Rental management: properties, rooms, bookings, vendors |
@@ -253,7 +256,7 @@ See `docs/SCHEMA_MAP.md` for complete table-by-table breakdown.
 
 ## Security
 
-- **RLS on every table** — all 154 tables have RLS enabled
+- **RLS on every table** — all 170 tables have RLS enabled
 - **Service role key server-only** — only in openclaw-server, never in client code
 - **Threat scanning** on all inbound webhook messages (prompt injection, SQL injection, XSS, etc.)
 - **Rate limiting** per user per channel (10/min burst, 100/hr channel)

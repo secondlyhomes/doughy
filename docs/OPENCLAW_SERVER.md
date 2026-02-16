@@ -6,11 +6,11 @@
 
 Express.js multi-channel AI gateway that handles inbound webhooks (Gmail, SMS, WhatsApp, Telegram), routes them through security scanning, and either processes them via the legacy email pipeline or The Claw intelligence layer.
 
-**Location:** `doughy-ai-mobile/openclaw-server/`
+**Location:** `doughy-app-mobile/openclaw-server/`
 **Runtime:** Node.js >= 20, TypeScript, compiled to `dist/`
 **Process Manager:** PM2 (`ecosystem.config.cjs`)
 **Deployment Target:** DigitalOcean droplet at `openclaw.doughy.app`
-**Status:** Code complete, NOT yet deployed
+**Status:** Deployed at `openclaw.doughy.app` (Feb 2026)
 
 ---
 
@@ -26,18 +26,21 @@ Express.js multi-channel AI gateway that handles inbound webhooks (Gmail, SMS, W
 | `src/supabase.ts` | 227 | Edge function caller + Gmail token CRUD | `callEdgeFunction`, `getUserSettings`, `getUserGmailTokens`, `saveUserGmailTokens`, `updateUserHistoryId`, `getUsersNeedingWatchRenewal`, `getUserByGmailEmail` |
 | `src/types.ts` | 141 | Gmail, email, contact, lead score, AI response types | 11 interfaces |
 
-### The Claw Intelligence Layer (8 files, ~1,400 lines)
+### The Claw Intelligence Layer (11 files, ~2,900 lines)
 
 | File | Lines | Purpose | Key Exports |
 |------|-------|---------|-------------|
 | `src/claw/controller.ts` | 398 | Master controller: intent classification, routing, conversation | `handleClawMessage`, `handleClawSms` |
 | `src/claw/agents.ts` | 294 | Agent execution engine: load profile, Claude loop, tool calls | `runAgent`, `getAgentProfile` |
 | `src/claw/briefing.ts` | 278 | Cross-schema briefing generator + Claude/text formatting | `generateBriefingData`, `formatBriefing` |
-| `src/claw/tools.ts` | 157 | 6 agent tools: read data + draft + approve | `TOOL_REGISTRY`, `readDeals`, `readLeads`, `readBookings`, `readFollowUps`, `draftSms`, `createApproval` |
+| `src/claw/tools.ts` | ~170 | 7 agent tools: read data + draft + approve | `TOOL_REGISTRY` |
 | `src/claw/routes.ts` | 478 | Express router at `/api/claw` with JWT auth | `default` (Router) |
 | `src/claw/prompts.ts` | 99 | System prompts for 4 AI roles | `INTENT_CLASSIFIER_PROMPT`, `MASTER_CONTROLLER_PROMPT`, `LEAD_OPS_PROMPT`, `DRAFT_SPECIALIST_PROMPT` |
 | `src/claw/db.ts` | 104 | Supabase REST helpers (Accept-Profile/Content-Profile headers) | `schemaQuery`, `schemaInsert`, `schemaUpdate`, `publicInsert`, `clawQuery`, `clawInsert`, `clawUpdate` |
 | `src/claw/types.ts` | 114 | Claw-specific TypeScript types | `ClawIntent`, `BriefingData`, `AgentProfile`, `ClawResponse`, `ApprovalDecision`, etc. |
+| `src/claw/broadcast.ts` | 304 | Multi-channel broadcast: SMS, WhatsApp, Discord, email, app | `broadcastMessage`, `sendProactiveMessage`, `getUserEnabledChannels`, `registerDiscordSender` |
+| `src/claw/discord.ts` | 491 | Discord bot: rich embeds, button approvals, batch approve | `initDiscordBot`, `getDiscordClient` |
+| `src/claw/scheduler.ts` | 147 | Scheduled briefings + follow-up nudges (cron-triggered) | `runMorningBriefings`, `runFollowUpNudges` |
 
 ### Channel Adapters (8 files, ~1,750 lines)
 
@@ -52,12 +55,21 @@ Express.js multi-channel AI gateway that handles inbound webhooks (Gmail, SMS, W
 | `src/channels/postgrid.ts` | 351 | PostGrid direct mail adapter (postcards, letters) | `postgridAdapter`, `PostGridAdapter` |
 | `src/channels/meta.ts` | 366 | Facebook/Instagram DM adapter via Meta Graph API | `metaAdapter`, `MetaAdapter` |
 
-### Services (2 files, ~900 lines)
+### Services (3 files, ~1,150 lines)
 
 | File | Lines | Purpose | Key Exports |
 |------|-------|---------|-------------|
 | `src/services/security.ts` | 352 | Threat scanning (regex patterns) + rate limiting (in-memory) + security event logging | `scanForThreats`, `quickThreatCheck`, `checkRateLimit`, `logSecurityEvent` |
 | `src/services/router.ts` | 550 | Platform router: domain detection, context classification, skill selection | `PlatformRouter`, `routeMessage`, `getSkillsForContext` |
+| `src/services/email-capture.ts` | 256 | Inbound email → CRM capture: match/create contact, log touch, AI sentiment | `captureInboundEmail`, `getContactEmailTimeline` |
+
+### CallPilot Module (3 files, ~700 lines)
+
+| File | Lines | Purpose | Key Exports |
+|------|-------|---------|-------------|
+| `src/callpilot/routes.ts` | 343 | Express router at `/api/calls` with JWT auth (9 endpoints) | `default` (Router) |
+| `src/callpilot/engines.ts` | 346 | 3 AI engines: pre-call briefing (Sonnet), live coaching (Haiku), post-call summary (Sonnet) | `generatePreCallBriefing`, `generateCoachingCard`, `generatePostCallSummary` |
+| `src/callpilot/db.ts` | 14 | Schema-aware DB helpers for callpilot schema | `cpQuery`, `cpInsert`, `cpUpdate` |
 
 ### Connectors (4 files, ~2,000 lines)
 
@@ -150,6 +162,24 @@ All routes require JWT auth via `requireAuth` middleware (validates token with S
 | GET | `/api/claw/activity` | Combined task + approval activity feed |
 | GET | `/api/claw/messages` | Conversation history (optional `?channel=` filter) |
 
+### CallPilot API (`/api/calls/*`)
+
+All routes require JWT auth via `requireAuth` middleware.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/calls` | Call history (paginated, `?limit=` up to 100) |
+| GET | `/api/calls/templates` | List script templates |
+| POST | `/api/calls/pre-call` | Create call record + generate AI pre-call briefing |
+| POST | `/api/calls/:id/start` | Mark call as in-progress |
+| POST | `/api/calls/:id/end` | End call + generate AI summary |
+| GET | `/api/calls/:id/coaching` | Get coaching cards (`?since_ms=` for polling) |
+| POST | `/api/calls/:id/coaching` | Generate new coaching card (elapsed, phase, context) |
+| POST | `/api/calls/:id/coaching/:cardId/dismiss` | Dismiss a coaching card |
+| GET | `/api/calls/:id/summary` | Get post-call summary + action items |
+| POST | `/api/calls/:id/actions/:actionId/approve` | Approve action item |
+| POST | `/api/calls/:id/actions/:actionId/dismiss` | Dismiss action item |
+
 ---
 
 ## The Claw Intelligence Layer
@@ -175,7 +205,7 @@ Returns one of 9 intent labels:
 | Slug | Name | Model | Tools | Requires Approval | Temperature | Max Tokens |
 |------|------|-------|-------|-------------------|-------------|------------|
 | `master-controller` | Master Controller | claude-haiku-4-5-20251001 | None | No | 0 | 20 |
-| `lead-ops` | Lead Operations Agent | claude-sonnet-4-5-20250929 | `read_deals`, `read_leads`, `read_bookings`, `read_follow_ups` | No | — | — |
+| `lead-ops` | Lead Operations Agent | claude-sonnet-4-5-20250929 | `read_deals`, `read_leads`, `read_bookings`, `read_follow_ups`, `read_email_timeline` | No | — | — |
 | `draft-specialist` | Draft Specialist | claude-sonnet-4-5-20250929 | `draft_sms`, `create_approval` | Yes | — | — |
 
 ### Agent Execution Loop
@@ -195,7 +225,7 @@ Returns one of 9 intent labels:
 
 **Tool error handling:** Tool execution failures return `"Tool execution failed. Try a different approach."` — sanitized to not leak schema/table names to the AI.
 
-### Tool Registry (6 tools)
+### Tool Registry (7 tools)
 
 | Tool | Schema.Table | Description | Parameters |
 |------|-------------|-------------|------------|
@@ -203,6 +233,7 @@ Returns one of 9 intent labels:
 | `read_leads` | `crm.contacts` | Contacts with score, status, source | `limit?`, `min_score?`, `recent_days?` |
 | `read_bookings` | `landlord.bookings` | Upcoming bookings with dates, rates | `limit?`, `upcoming_only?` |
 | `read_follow_ups` | `investor.follow_ups` | Scheduled follow-ups (overdue/upcoming) | `limit?`, `overdue_only?`, `upcoming_days?` |
+| `read_email_timeline` | `crm.touches` | Email interaction history for a CRM contact | `contact_id`, `limit?` |
 | `draft_sms` | (pure function) | Returns draft object, doesn't send | `recipient_name`, `recipient_phone`, `message`, `context?` |
 | `create_approval` | `claw.approvals` | Insert pending approval entry (24h expiry) | `action_type`, `title`, `draft_content`, `recipient_*`, `task_id` (auto-injected) |
 
@@ -524,9 +555,10 @@ Google Cloud Pub/Sub setup for Gmail push notifications.
 
 ## Known Issues
 
-1. **Deploy scripts reference `moltbot`** — setup.sh, nginx.conf still use `moltbot.doughy.app` and `/var/www/moltbot/`
+1. **Deploy scripts up to date** — setup.sh, nginx.conf, gcloud-setup.sh all use `openclaw` naming (actual deploy uses manual scp/pm2)
 2. **Rate limiter is in-memory** — resets on server restart, doesn't share across instances (fine for single-instance PM2)
 3. **Platform router not wired** — `services/router.ts` is complete but not called from main flow (future multi-platform support)
-4. **Connectors are scaffolded** — Discord, Fibery, Notion connectors exist but aren't integrated into server routes
-5. **WhatsApp/Telegram handlers are stubs** — Webhook routes exist but user lookup is TODO (only Gmail fully implemented)
+4. **Discord bot needs token** — `DISCORD_BOT_TOKEN` must be set in droplet's `.env` for Discord integration to activate
+5. **WhatsApp/Telegram handlers are stubs** — Webhook routes exist but user lookup is TODO
 6. **No CORS package** — Manual CORS middleware, works but less standard
+7. **Scheduler needs cron trigger** — `runMorningBriefings` / `runFollowUpNudges` exist but need a cron endpoint or external trigger

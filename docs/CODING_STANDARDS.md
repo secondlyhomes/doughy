@@ -3,7 +3,7 @@
 **Last Updated**: 2026-01-30
 **Status**: Active Standard
 
-This document defines the coding standards for the doughy-ai codebase. These standards ensure consistency, maintainability, and efficient collaboration for both human developers and AI assistants.
+This document defines the coding standards for the doughy-app codebase. These standards ensure consistency, maintainability, and efficient collaboration for both human developers and AI assistants.
 
 ---
 

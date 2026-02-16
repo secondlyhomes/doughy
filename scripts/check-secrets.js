@@ -3,7 +3,7 @@
 /**
  * Secret Scanner
  * Scans staged files for common secret patterns before allowing commit.
- * Adapted from mobile-app-blueprint for doughy-ai-mobile.
+ * Adapted from mobile-app-blueprint for doughy-app-mobile.
  */
 
 const { execSync } = require('child_process')

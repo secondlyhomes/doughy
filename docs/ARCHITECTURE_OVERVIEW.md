@@ -3,7 +3,7 @@
 **Last Updated**: 2026-01-30
 **Status**: Active Reference
 
-This document provides a high-level overview of the doughy-ai system architecture for developers and AI assistants.
+This document provides a high-level overview of the doughy-app system architecture for developers and AI assistants.
 
 ---
 
@@ -44,7 +44,7 @@ Users select their platform during onboarding and can switch via the header togg
 ## Directory Structure
 
 ```
-doughy-ai/
+doughy-app-mobile/
 ├── app/                          # Expo Router screens (file-based routing)
 │   ├── (tabs)/                   # Main tab navigation
 │   │   ├── _layout.tsx           # Tab bar configuration
