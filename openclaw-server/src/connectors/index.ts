@@ -9,7 +9,7 @@
  * - Notion: Pages and databases
  * - Discord: Community channels (Q&A, insights)
  *
- * @see /docs/moltbot-ecosystem-expansion.md
+ * @see /docs/OPENCLAW_SERVER.md
  */
 
 export * from './fibery.js';

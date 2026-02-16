@@ -4,7 +4,7 @@
  * This module contains all shared type definitions used across
  * the knowledge connector system (Fibery, Notion, Discord).
  *
- * @see /docs/moltbot-ecosystem-expansion.md
+ * @see /docs/OPENCLAW_SERVER.md
  */
 
 // =============================================================================

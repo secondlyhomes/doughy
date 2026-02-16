@@ -1,4 +1,4 @@
-# MoltBot Gateway
+# OpenClaw Gateway
 
 **Your AI Property Manager Employee** - Multi-channel communication gateway that automatically handles rental inquiries across Email, WhatsApp, Telegram, SMS, and more.
 
@@ -6,7 +6,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           MOLTBOT GATEWAY                                   │
+│                           OPENCLAW GATEWAY                                  │
 │                     (DigitalOcean Droplet - $6-12/mo)                       │
 │                                                                             │
 │  CHANNELS:          HOOKS:              MEMORY:           SKILLS:           │
@@ -27,7 +27,7 @@
 │                           SUPABASE BACKEND                                  │
 │                                                                             │
 │  TABLES:                              EDGE FUNCTIONS:                       │
-│  ├─ crm_contacts (unified)            ├─ /moltbot-bridge                    │
+│  ├─ crm_contacts (unified)            ├─ /openclaw-bridge                   │
 │  ├─ rental_properties                 ├─ /ai-responder                      │
 │  ├─ rental_rooms                      ├─ /availability-check                │
 │  ├─ rental_bookings                   ├─ /lead-scorer                       │
@@ -37,9 +37,9 @@
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## MoltBot is the CORE
+## OpenClaw is the CORE
 
-MoltBot is the brain of the landlord platform. It:
+OpenClaw is the brain of the landlord platform. It:
 
 1. **Receives messages** from any channel (email, WhatsApp, Telegram, SMS)
 2. **Parses & understands** the platform (Airbnb, FurnishedFinder, etc.)
@@ -48,22 +48,22 @@ MoltBot is the brain of the landlord platform. It:
 5. **Auto-sends or queues** based on confidence and your settings
 6. **Learns** from your approvals and edits
 
-### Without MoltBot:
+### Without OpenClaw:
 ```
 Email arrives → Check phone → Open Gmail → Read → Think → Type → Send
 → Repeat 20x/day → Miss leads → Lose bookings → Burnout
 ```
 
-### With MoltBot:
+### With OpenClaw:
 ```
-Message arrives (any channel) → MoltBot handles it → You get notified
+Message arrives (any channel) → OpenClaw handles it → You get notified
 → Review if you want → AI learns → You focus on what matters
 ```
 
 ## Directory Structure
 
 ```
-moltbot-server/
+openclaw-server/
 ├── src/
 │   ├── server.ts          # Express server with all webhook endpoints
 │   ├── handler.ts         # 8-step AI pipeline (parse → score → respond)
@@ -92,7 +92,7 @@ moltbot-server/
 ### Local Development
 
 ```bash
-cd moltbot-server
+cd openclaw-server
 
 # Install dependencies
 npm install
@@ -114,7 +114,7 @@ npm run dev
 See the full deployment guide in `deploy/setup.sh`. Summary:
 
 1. Create DigitalOcean droplet ($6/mo Ubuntu 24.04)
-2. Point `moltbot.doughy.app` DNS to droplet
+2. Point `openclaw.doughy.app` DNS to droplet
 3. Run setup script, upload code, configure `.env`
 4. Start with PM2, setup SSL with certbot
 
@@ -143,13 +143,13 @@ Every message goes through this pipeline (in `handler.ts`):
 1. PARSE         → platform-email-parser edge function
                    Detect Airbnb/FurnishedFinder/etc, extract contact
 
-2. CONTACT       → moltbot-bridge UPSERT_CONTACT
+2. CONTACT       → openclaw-bridge UPSERT_CONTACT
                    Create or update in crm_contacts
 
-3. PROPERTY      → moltbot-bridge GET_PROPERTY
+3. PROPERTY      → openclaw-bridge GET_PROPERTY
                    Fuzzy match address hints to your listings
 
-4. CONVERSATION  → moltbot-bridge CREATE_CONVERSATION
+4. CONVERSATION  → openclaw-bridge CREATE_CONVERSATION
                    Start thread, log inbound message
 
 5. SCORE         → lead-scorer edge function
@@ -213,7 +213,7 @@ interface ChannelAdapter {
 # Server
 PORT=3000
 NODE_ENV=production
-SERVER_URL=https://moltbot.doughy.app
+SERVER_URL=https://openclaw.doughy.app
 
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
@@ -222,12 +222,12 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-key
 # Google OAuth (Gmail)
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=https://moltbot.doughy.app/oauth/gmail/callback
+GOOGLE_REDIRECT_URI=https://openclaw.doughy.app/oauth/gmail/callback
 GOOGLE_CLOUD_PROJECT_ID=your-project-id
 GMAIL_PUBSUB_TOPIC=gmail-notifications
 
 # WhatsApp (optional)
-WHATSAPP_VERIFY_TOKEN=moltbot-verify
+WHATSAPP_VERIFY_TOKEN=openclaw-verify
 
 # Cron Security
 CRON_SECRET=your-random-secret
@@ -235,7 +235,7 @@ CRON_SECRET=your-random-secret
 
 ## Database Tables
 
-MoltBot uses these Supabase tables:
+OpenClaw uses these Supabase tables:
 
 | Table | Purpose |
 |-------|---------|
@@ -267,21 +267,21 @@ MoltBot uses these Supabase tables:
 npx ts-node scripts/test-landlord-functions.ts parser
 
 # Test full webhook flow with simulated emails
-TEST_USER_ID=your-uuid npx ts-node moltbot-skills/doughy-webhook/test-harness.ts all
+TEST_USER_ID=your-uuid npx ts-node openclaw-skills/doughy-webhook/test-harness.ts all
 ```
 
 ## Related Files
 
 | File | Purpose |
 |------|---------|
-| `moltbot-skills/doughy-webhook/handler.ts` | Original handler (reference) |
-| `moltbot-skills/doughy-webhook/test-harness.ts` | Test scenarios |
-| `supabase/functions/moltbot-bridge/` | Database operations |
+| `openclaw-skills/doughy-webhook/handler.ts` | Original handler (reference) |
+| `openclaw-skills/doughy-webhook/test-harness.ts` | Test scenarios |
+| `supabase/functions/openclaw-bridge/` | Database operations |
 | `supabase/functions/ai-responder/` | AI response generation |
 | `supabase/functions/lead-scorer/` | Lead scoring |
 | `supabase/functions/platform-email-parser/` | Email parsing |
-| `docs/MOLTBOT_LANDLORD_INTEGRATION.md` | Full integration docs |
+| `docs/OPENCLAW_SERVER.md` | Full integration docs |
 
 ---
 
-**MoltBot: Your AI Superhost** 🤖🏠
+**OpenClaw: Your AI Superhost**

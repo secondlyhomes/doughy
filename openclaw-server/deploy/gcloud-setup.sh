@@ -1,5 +1,5 @@
 #!/bin/bash
-# Google Cloud Setup Script for MoltBot Gmail Pub/Sub
+# Google Cloud Setup Script for OpenClaw Gmail Pub/Sub
 #
 # Prerequisites:
 # 1. gcloud CLI installed: https://cloud.google.com/sdk/docs/install
@@ -12,17 +12,17 @@ set -e
 
 if [ -z "$1" ]; then
   echo "Usage: ./gcloud-setup.sh YOUR_PROJECT_ID"
-  echo "Example: ./gcloud-setup.sh doughy-moltbot"
+  echo "Example: ./gcloud-setup.sh doughy-openclaw"
   exit 1
 fi
 
 PROJECT_ID=$1
 TOPIC_NAME="gmail-notifications"
 SUBSCRIPTION_NAME="gmail-push"
-WEBHOOK_URL="https://moltbot.doughy.app/webhooks/gmail"
+WEBHOOK_URL="https://openclaw.doughy.app/webhooks/gmail"
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║           Google Cloud Pub/Sub Setup for MoltBot             ║"
+echo "║           Google Cloud Pub/Sub Setup for OpenClaw             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "Project: $PROJECT_ID"
@@ -97,7 +97,7 @@ echo "1. Create OAuth 2.0 credentials in Google Cloud Console:"
 echo "   https://console.cloud.google.com/apis/credentials"
 echo ""
 echo "2. Set authorized redirect URI to:"
-echo "   https://moltbot.doughy.app/oauth/callback"
+echo "   https://openclaw.doughy.app/oauth/callback"
 echo ""
 echo "3. Add to your .env file:"
 echo "   GOOGLE_CLIENT_ID=<your-client-id>"
@@ -106,5 +106,5 @@ echo "   GOOGLE_CLOUD_PROJECT_ID=$PROJECT_ID"
 echo "   GMAIL_PUBSUB_TOPIC=$TOPIC_NAME"
 echo ""
 echo "4. In the Doughy app, users can connect Gmail via:"
-echo "   https://moltbot.doughy.app/oauth/start?user_id=USER_ID"
+echo "   https://openclaw.doughy.app/oauth/start?user_id=USER_ID"
 echo ""

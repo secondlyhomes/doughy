@@ -10,7 +10,7 @@
  * - Identify expert responses and best practices
  * - Store insights in openclaw_knowledge_chunks
  *
- * @see /docs/moltbot-ecosystem-expansion.md for knowledge integration
+ * @see /docs/OPENCLAW_SERVER.md for knowledge integration
  */
 
 import { config } from '../config.js';

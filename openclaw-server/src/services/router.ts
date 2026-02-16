@@ -10,7 +10,7 @@
  * - Investor: Seller outreach, agent relationships, deal management
  * - Personal: Contact management, relationship nurturing
  *
- * @see /docs/moltbot-ecosystem-expansion.md for platform architecture
+ * @see /docs/OPENCLAW_SERVER.md for platform architecture
  */
 
 import { config } from '../config.js';
