@@ -45,6 +45,7 @@ export const config = {
   twilioAccountSid: optionalEnv('TWILIO_ACCOUNT_SID', ''),
   twilioAuthToken: optionalEnv('TWILIO_AUTH_TOKEN', ''),
   twilioPhoneNumber: optionalEnv('TWILIO_PHONE_NUMBER', ''),
+  twilioWhatsAppNumber: optionalEnv('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886'), // Sandbox default
 
   // The Claw
   clawEnabled: optionalEnv('CLAW_ENABLED', 'true') === 'true',
@@ -59,7 +60,8 @@ export const config = {
   get phoneUserMap(): Record<string, string> {
     try {
       return JSON.parse(this.clawPhoneUserMap);
-    } catch {
+    } catch (e) {
+      console.error('[Config] Failed to parse CLAW_PHONE_USER_MAP — no phone mappings will work:', e);
       return {};
     }
   },

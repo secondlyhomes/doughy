@@ -3,6 +3,7 @@
 // Enhanced with security scanning and rate limiting
 
 import express, { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { config } from './config.js';
 import { handleIncomingEmail } from './handler.js';
 import {
@@ -185,6 +186,74 @@ function rateLimitMiddleware(channel: string) {
       console.error(`[RateLimit] Middleware error:`, error);
       next();
     }
+  };
+}
+
+// ============================================================================
+// Twilio Webhook Signature Validation
+// ============================================================================
+
+/**
+ * Validate that an inbound request actually came from Twilio.
+ * Uses HMAC-SHA1 of (URL + sorted POST params) with the auth token as key.
+ * See: https://www.twilio.com/docs/usage/webhooks/webhooks-security
+ */
+function validateTwilioSignature(
+  authToken: string,
+  signature: string,
+  url: string,
+  params: Record<string, string>
+): boolean {
+  // Sort POST params by key, append key+value to URL
+  const data = Object.keys(params)
+    .sort()
+    .reduce((acc, key) => acc + key + params[key], url);
+
+  const expected = crypto
+    .createHmac('sha1', authToken)
+    .update(data)
+    .digest('base64');
+
+  // Constant-time comparison to prevent timing attacks
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expected)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Express middleware to reject requests without valid Twilio signatures.
+ * Skips validation if no auth token is configured (dev mode).
+ */
+function twilioSignatureMiddleware() {
+  return (req: Request, res: Response, next: NextFunction) => {
+    // Skip validation if no auth token configured (local dev)
+    if (!config.twilioAuthToken) {
+      return next();
+    }
+
+    const signature = req.headers['x-twilio-signature'] as string;
+    if (!signature) {
+      console.warn('[Security] Missing X-Twilio-Signature header — rejecting webhook');
+      return res.type('text/xml').status(403).send('<Response></Response>');
+    }
+
+    // Reconstruct the full public URL that Twilio signed against.
+    // Behind nginx SSL termination, Express sees http:// but Twilio used https://
+    const publicUrl = config.serverUrl + req.originalUrl;
+    const params = req.body as Record<string, string>;
+
+    if (!validateTwilioSignature(config.twilioAuthToken, signature, publicUrl, params)) {
+      console.warn('[Security] Invalid Twilio signature — rejecting webhook');
+      console.warn(`[Security] Validated against URL: ${publicUrl} — ensure SERVER_URL matches public URL`);
+      return res.type('text/xml').status(403).send('<Response></Response>');
+    }
+
+    next();
   };
 }
 
@@ -418,7 +487,7 @@ app.post('/webhooks/telegram', rateLimitMiddleware('telegram'), securityMiddlewa
 // SMS Webhook (Twilio)
 // ============================================================================
 
-app.post('/webhooks/sms', rateLimitMiddleware('sms'), securityMiddleware('sms'), async (req: Request, res: Response) => {
+app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'), securityMiddleware('sms'), async (req: Request, res: Response) => {
   try {
     const message = smsAdapter.normalizeMessage(req.body);
 
@@ -426,34 +495,90 @@ app.post('/webhooks/sms', rateLimitMiddleware('sms'), securityMiddleware('sms'),
       return res.type('text/xml').send('<Response></Response>');
     }
 
-    console.log(`[SMS] Message from ${message.from}: ${message.body}`);
+    // Detect WhatsApp messages (From field has "whatsapp:" prefix)
+    const isWhatsApp = message.from.startsWith('whatsapp:');
+    const channel = isWhatsApp ? 'whatsapp' : 'sms';
+    // Strip whatsapp: prefix for phone→user lookup and logging
+    const phoneNumber = isWhatsApp ? message.from.replace('whatsapp:', '') : message.from;
 
-    // Route to The Claw controller if enabled
+    console.log(`[${channel.toUpperCase()}] Message from ${phoneNumber}: ${message.body}`);
+
+    // Respond immediately with empty TwiML so Twilio doesn't timeout
+    res.type('text/xml').send('<Response></Response>');
+
+    // Route to The Claw controller if enabled — send reply via REST API
     if (config.clawEnabled) {
       const reply = await handleClawSms({
-        from: message.from,
-        to: message.to,
+        from: phoneNumber,
+        to: message.to.replace('whatsapp:', ''),
         body: message.body,
         messageSid: message.channelMessageId,
       });
 
-      if (reply) {
-        // Truncate for SMS limit
-        const truncated = reply.length > 1500
-          ? reply.slice(0, 1450) + '\n\n[Open the app for full details.]'
-          : reply;
+      if (!reply) {
+        console.log(`[${channel.toUpperCase()}] No reply generated for message from ${phoneNumber}`);
+      } else if (!config.twilioAccountSid || !config.twilioAuthToken) {
+        console.error(`[${channel.toUpperCase()}] Reply generated but cannot send — missing Twilio credentials`);
+      }
 
-        return res.type('text/xml').send(
-          `<Response><Message>${escapeXml(truncated)}</Message></Response>`
-        );
+      if (reply && config.twilioAccountSid && config.twilioAuthToken) {
+        // WhatsApp supports longer messages; SMS needs truncation
+        const body = isWhatsApp
+          ? reply
+          : (reply.length > 1500
+            ? reply.slice(0, 1450) + '\n\n[Open the app for full details.]'
+            : reply);
+
+        // Set From/To with whatsapp: prefix for WhatsApp, plain numbers for SMS
+        const fromNumber = isWhatsApp
+          ? config.twilioWhatsAppNumber
+          : config.twilioPhoneNumber;
+        const toNumber = message.from; // whatsapp: prefix preserved for WhatsApp, plain for SMS
+
+        if (!fromNumber) {
+          console.error(`[${channel.toUpperCase()}] No From number configured`);
+          return;
+        }
+
+        // Send via Twilio REST API (10s timeout to prevent hung connections)
+        try {
+          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
+          const auth = Buffer.from(`${config.twilioAccountSid}:${config.twilioAuthToken}`).toString('base64');
+          const abortController = new AbortController();
+          const timeout = setTimeout(() => abortController.abort(), 10_000);
+
+          const sendResponse = await fetch(twilioUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${auth}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              From: fromNumber,
+              To: toNumber,
+              Body: body,
+            }).toString(),
+            signal: abortController.signal,
+          });
+          clearTimeout(timeout);
+
+          const result = await sendResponse.json() as Record<string, unknown>;
+
+          if (!sendResponse.ok) {
+            console.error(`[${channel.toUpperCase()}] Twilio send failed:`, JSON.stringify(result));
+          } else {
+            console.log(`[${channel.toUpperCase()}] Reply sent to ${phoneNumber}, SID: ${result.sid}`);
+          }
+        } catch (sendError) {
+          console.error(`[${channel.toUpperCase()}] Failed to send reply:`, sendError);
+        }
       }
     }
-
-    // Twilio expects TwiML response
-    res.type('text/xml').send('<Response></Response>');
   } catch (error) {
     console.error('[SMS] Webhook error:', error);
-    res.type('text/xml').send('<Response></Response>');
+    if (!res.headersSent) {
+      res.type('text/xml').send('<Response></Response>');
+    }
   }
 });
 

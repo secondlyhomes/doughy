@@ -54,7 +54,13 @@ async function classifyIntent(
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 20,
       temperature: 0,
-      system: INTENT_CLASSIFIER_PROMPT,
+      system: [
+        {
+          type: 'text' as const,
+          text: INTENT_CLASSIFIER_PROMPT,
+          cache_control: { type: 'ephemeral' as const },
+        },
+      ],
       messages: [{ role: 'user', content: classifierInput }],
     });
 

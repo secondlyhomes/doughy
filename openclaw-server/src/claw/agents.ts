@@ -159,7 +159,13 @@ export async function runAgent(options: {
       model: profile.model,
       max_tokens: profile.max_tokens,
       temperature: profile.temperature,
-      system: profile.system_prompt,
+      system: [
+        {
+          type: 'text' as const,
+          text: profile.system_prompt,
+          cache_control: { type: 'ephemeral' as const },
+        },
+      ],
       messages,
       ...(tools.length > 0 ? { tools: tools as any } : {}),
     });
@@ -224,7 +230,13 @@ export async function runAgent(options: {
         model: profile.model,
         max_tokens: profile.max_tokens,
         temperature: profile.temperature,
-        system: profile.system_prompt,
+        system: [
+          {
+            type: 'text' as const,
+            text: profile.system_prompt,
+            cache_control: { type: 'ephemeral' as const },
+          },
+        ],
         messages,
         ...(tools.length > 0 ? { tools: tools as any } : {}),
       });

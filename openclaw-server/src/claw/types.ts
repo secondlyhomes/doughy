@@ -12,43 +12,41 @@ export type ClawIntent =
   | 'approve'
   | 'unknown';
 
-// Briefing data collected from cross-schema reads
+// Briefing data — mirrors exactly what the mobile app shows
+// Pipeline: Leads | Deals | Portfolio + Investor Inbox
 export interface BriefingData {
-  overdueTasks: Array<{
-    id: string;
-    contact_name: string;
-    type: string;
-    due_date: string;
-    deal_name?: string;
-  }>;
-  upcomingFollowUps: Array<{
-    id: string;
-    contact_name: string;
-    type: string;
-    due_date: string;
-    deal_name?: string;
-  }>;
-  upcomingBookings: Array<{
-    id: string;
-    guest_name: string;
-    property_name: string;
-    start_date: string;
-    end_date: string;
-    status: string;
-  }>;
-  recentLeads: Array<{
+  leads: Array<{
     id: string;
     name: string;
-    source: string;
+    status: string;
     score: number | null;
-    created_at: string;
   }>;
+  leadsSummary: {
+    total: number;
+    new: number;
+    contacted: number;
+    qualified: number;
+  };
   dealsSummary: {
     total_active: number;
     total_value: number;
     stages: Record<string, number>;
+    needsAction: Array<{
+      id: string;
+      title: string;
+      lead_name: string | null;
+      next_action: string | null;
+      next_action_due: string | null;
+    }>;
   };
-  unreadMessages: number;
+  portfolio: {
+    totalProperties: number;
+    totalValue: number;
+  };
+  inbox: {
+    unreadConversations: number;
+    pendingAiResponses: number;
+  };
 }
 
 // Task input/output shapes
