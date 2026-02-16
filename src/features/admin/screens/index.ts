@@ -8,3 +8,4 @@ export { SystemLogsScreen } from './SystemLogsScreen';
 export { IntegrationsScreen } from './IntegrationsScreen';
 export { SecurityHealthScreen } from './SecurityHealthScreen';
 export { AISecurityDashboardScreen } from './AISecurityDashboardScreen';
+export { ClawDashboardScreen } from './claw-dashboard';

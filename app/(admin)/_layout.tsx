@@ -62,6 +62,11 @@ export default function AdminLayout() {
         <Icon sf={{ default: 'shield', selected: 'shield.fill' }} />
         <Label>Security</Label>
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="claw">
+        <Icon sf={{ default: 'cpu', selected: 'cpu.fill' }} />
+        <Label>Claw</Label>
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

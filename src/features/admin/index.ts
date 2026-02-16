@@ -8,6 +8,7 @@ export {
   UserDetailScreen,
   SystemLogsScreen,
   IntegrationsScreen,
+  ClawDashboardScreen,
 } from './screens';
 
 // Services
