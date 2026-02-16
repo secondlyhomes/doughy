@@ -87,7 +87,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
     }>(
       'investor',
       'ai_queue_items',
-      `status=eq.pending&select=id,conversation_id`
+      `user_id=eq.${userId}&status=eq.pending&select=id,conversation_id`
     ),
   ]);
 
@@ -182,7 +182,7 @@ export async function formatBriefing(
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: anthropicApiKey });
+    const client = new Anthropic({ apiKey: anthropicApiKey, timeout: 30_000 });
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',

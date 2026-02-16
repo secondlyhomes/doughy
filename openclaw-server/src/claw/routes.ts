@@ -165,6 +165,10 @@ router.post('/approvals/:id/decide', requireAuth, async (req: Request, res: Resp
       return res.status(400).json({ error: 'Invalid action. Must be "approve" or "reject".' });
     }
 
+    if (edited_content && (typeof edited_content !== 'string' || edited_content.length > 2000)) {
+      return res.status(400).json({ error: 'edited_content must be a string of 2000 characters or less.' });
+    }
+
     // Verify the approval belongs to this user and is pending
     const approvals = await clawQuery<{
       id: string;
@@ -249,6 +253,12 @@ router.post('/approvals/batch', requireAuth, async (req: Request, res: Response)
     const invalidIds = decisions.filter((d) => !UUID_RE.test(d.approval_id || ''));
     if (invalidIds.length > 0) {
       return res.status(400).json({ error: 'Invalid approval ID format in batch' });
+    }
+
+    // Validate edited_content lengths
+    const tooLong = decisions.filter((d) => d.edited_content && d.edited_content.length > 2000);
+    if (tooLong.length > 0) {
+      return res.status(400).json({ error: 'edited_content must be 2000 characters or less.' });
     }
 
     const results: Array<{ approval_id: string; success: boolean; status?: string; error?: string }> = [];

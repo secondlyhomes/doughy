@@ -21,58 +21,212 @@ export async function getAgentProfile(slug: string): Promise<AgentProfile | null
  * Per-tool input schemas so agents know exactly what parameters to pass
  */
 const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<string, unknown>; required?: string[] }> = {
+  // Read tools
   read_deals: {
     type: 'object',
     properties: {
-      limit: { type: 'number', description: 'Max number of deals to return (default 20)' },
-      stage: { type: 'string', description: 'Filter by deal stage (e.g. "negotiation", "due_diligence")' },
+      limit: { type: 'number', description: 'Max results (default 20)' },
+      stage: { type: 'string', description: 'Filter by stage (e.g. "negotiation", "due_diligence")' },
     },
   },
   read_leads: {
     type: 'object',
     properties: {
-      limit: { type: 'number', description: 'Max number of leads to return (default 20)' },
-      min_score: { type: 'number', description: 'Minimum lead score filter' },
-      recent_days: { type: 'number', description: 'Only leads created in the last N days' },
+      limit: { type: 'number', description: 'Max results (default 20)' },
+      min_score: { type: 'number', description: 'Minimum lead score' },
+      recent_days: { type: 'number', description: 'Only leads from last N days' },
     },
   },
   read_bookings: {
     type: 'object',
     properties: {
-      limit: { type: 'number', description: 'Max number of bookings to return (default 20)' },
-      upcoming_only: { type: 'boolean', description: 'Only return future bookings (default true)' },
+      limit: { type: 'number', description: 'Max results (default 20)' },
+      upcoming_only: { type: 'boolean', description: 'Only future bookings (default true)' },
     },
   },
   read_follow_ups: {
     type: 'object',
     properties: {
-      limit: { type: 'number', description: 'Max number of follow-ups to return (default 20)' },
-      overdue_only: { type: 'boolean', description: 'Only return overdue follow-ups' },
-      upcoming_days: { type: 'number', description: 'Return follow-ups in the next N days' },
+      limit: { type: 'number', description: 'Max results (default 20)' },
+      overdue_only: { type: 'boolean', description: 'Only overdue follow-ups' },
+      upcoming_days: { type: 'number', description: 'Follow-ups in next N days' },
     },
   },
+  read_maintenance: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 20)' },
+      status: { type: 'string', description: 'Filter by status (reported, in_progress, completed)' },
+    },
+  },
+  read_vendors: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 20)' },
+      category: { type: 'string', description: 'Filter by vendor category' },
+    },
+  },
+  read_contacts_detail: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 10)' },
+      search: { type: 'string', description: 'Search by name' },
+      contact_id: { type: 'string', description: 'Get specific contact by UUID' },
+    },
+  },
+  read_portfolio: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 20)' },
+    },
+  },
+  read_documents: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 20)' },
+      deal_id: { type: 'string', description: 'Filter by deal UUID' },
+      property_id: { type: 'string', description: 'Filter by property UUID' },
+    },
+  },
+  read_comps: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 10)' },
+      property_id: { type: 'string', description: 'Filter by property UUID' },
+    },
+  },
+  read_campaigns: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 10)' },
+      status: { type: 'string', description: 'Filter by campaign status' },
+    },
+  },
+  read_conversations: {
+    type: 'object',
+    properties: {
+      limit: { type: 'number', description: 'Max results (default 20)' },
+    },
+  },
+
+  // Write tools
   draft_sms: {
     type: 'object',
     properties: {
       recipient_name: { type: 'string', description: 'Name of the recipient' },
-      recipient_phone: { type: 'string', description: 'Phone number of the recipient' },
-      message: { type: 'string', description: 'The SMS message content to draft' },
-      context: { type: 'string', description: 'Context about the conversation or deal' },
+      recipient_phone: { type: 'string', description: 'Phone number' },
+      message: { type: 'string', description: 'The message content' },
+      context: { type: 'string', description: 'Context about the conversation' },
     },
     required: ['recipient_name', 'recipient_phone', 'message'],
   },
   create_approval: {
     type: 'object',
     properties: {
-      action_type: { type: 'string', description: 'Type of action (e.g. "send_sms")' },
-      title: { type: 'string', description: 'Short title for the approval' },
-      description: { type: 'string', description: 'Why this action is being proposed' },
-      draft_content: { type: 'string', description: 'The message or content to approve' },
-      recipient_name: { type: 'string', description: 'Name of the recipient' },
-      recipient_phone: { type: 'string', description: 'Phone number of the recipient' },
-      recipient_email: { type: 'string', description: 'Email of the recipient' },
+      action_type: { type: 'string', description: 'Type: "send_sms", "send_whatsapp", "send_email"' },
+      title: { type: 'string', description: 'Short title' },
+      description: { type: 'string', description: 'Why this action is proposed' },
+      draft_content: { type: 'string', description: 'Message or content to approve' },
+      recipient_name: { type: 'string', description: 'Recipient name' },
+      recipient_phone: { type: 'string', description: 'Recipient phone' },
+      recipient_email: { type: 'string', description: 'Recipient email' },
     },
     required: ['action_type', 'title', 'draft_content'],
+  },
+  create_lead: {
+    type: 'object',
+    properties: {
+      first_name: { type: 'string', description: 'First name (required)' },
+      last_name: { type: 'string', description: 'Last name' },
+      phone: { type: 'string', description: 'Phone number' },
+      email: { type: 'string', description: 'Email address' },
+      source: { type: 'string', description: 'Lead source (cold_call, referral, driving_for_dollars, etc.)' },
+      status: { type: 'string', description: 'Status (new, contacted, qualified, etc.)' },
+      score: { type: 'number', description: 'Lead score 0-100' },
+      city: { type: 'string', description: 'City' },
+      state: { type: 'string', description: 'State' },
+      tags: { type: 'array', description: 'Tags like ["motivated", "inherited"]', items: { type: 'string' } },
+    },
+    required: ['first_name'],
+  },
+  update_lead: {
+    type: 'object',
+    properties: {
+      contact_id: { type: 'string', description: 'Contact UUID to update' },
+      status: { type: 'string', description: 'New status' },
+      score: { type: 'number', description: 'New score' },
+      phone: { type: 'string', description: 'Updated phone' },
+      email: { type: 'string', description: 'Updated email' },
+      tags: { type: 'array', description: 'Updated tags', items: { type: 'string' } },
+    },
+    required: ['contact_id'],
+  },
+  update_deal_stage: {
+    type: 'object',
+    properties: {
+      deal_id: { type: 'string', description: 'Deal UUID to update' },
+      stage: { type: 'string', description: 'New stage (e.g. "due_diligence", "under_contract")' },
+      next_action: { type: 'string', description: 'Next action to take' },
+      next_action_due: { type: 'string', description: 'Due date (ISO format)' },
+    },
+    required: ['deal_id', 'stage'],
+  },
+  mark_followup_complete: {
+    type: 'object',
+    properties: {
+      followup_id: { type: 'string', description: 'Follow-up UUID to mark complete' },
+    },
+    required: ['followup_id'],
+  },
+  send_whatsapp: {
+    type: 'object',
+    properties: {
+      recipient_name: { type: 'string', description: 'Recipient name' },
+      recipient_phone: { type: 'string', description: 'Phone number' },
+      message: { type: 'string', description: 'Message content' },
+      context: { type: 'string', description: 'Context' },
+    },
+    required: ['recipient_name', 'recipient_phone', 'message'],
+  },
+  send_email: {
+    type: 'object',
+    properties: {
+      recipient_name: { type: 'string', description: 'Recipient name' },
+      recipient_email: { type: 'string', description: 'Email address' },
+      subject: { type: 'string', description: 'Email subject' },
+      body: { type: 'string', description: 'Email body' },
+      context: { type: 'string', description: 'Context' },
+    },
+    required: ['recipient_name', 'recipient_email', 'subject', 'body'],
+  },
+  add_note: {
+    type: 'object',
+    properties: {
+      target_type: { type: 'string', description: 'Type: "deal", "lead", "property", or "maintenance"' },
+      target_id: { type: 'string', description: 'UUID of the record' },
+      note: { type: 'string', description: 'Note text to add' },
+    },
+    required: ['target_type', 'target_id', 'note'],
+  },
+  create_maintenance_request: {
+    type: 'object',
+    properties: {
+      property_id: { type: 'string', description: 'Property UUID' },
+      title: { type: 'string', description: 'Short title of the issue' },
+      description: { type: 'string', description: 'Detailed description' },
+      priority: { type: 'string', description: 'Priority: low, medium, high, urgent' },
+      category: { type: 'string', description: 'Category: plumbing, electrical, hvac, general, etc.' },
+      location: { type: 'string', description: 'Location in property (e.g. "Kitchen", "Unit 3")' },
+    },
+    required: ['property_id', 'title'],
+  },
+  read_email_timeline: {
+    type: 'object',
+    properties: {
+      contact_id: { type: 'string', description: 'CRM contact UUID to get email history for' },
+      limit: { type: 'number', description: 'Max results (default 10)' },
+    },
+    required: ['contact_id'],
   },
 };
 
@@ -136,7 +290,7 @@ export async function runAgent(options: {
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: config.anthropicApiKey });
+    const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
 
     // Build messages — uses `any` because Anthropic SDK message types are complex
     // and we dynamically push tool_result blocks into the conversation

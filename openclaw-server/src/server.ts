@@ -31,8 +31,13 @@ import {
   type SecurityScanResult,
 } from './services/security.js';
 import type { GmailPubSubMessage, GmailNotification, UserGmailTokens } from './types.js';
-import { handleClawSms } from './claw/controller.js';
+import { handleClawSms, handleClawMessage } from './claw/controller.js';
+import { lookupUserByChannel } from './claw/db.js';
 import clawRoutes from './claw/routes.js';
+import callpilotRoutes from './callpilot/routes.js';
+import { initDiscordBot } from './claw/discord.js';
+import { runMorningBriefings, runFollowUpNudges } from './claw/scheduler.js';
+import { captureInboundEmail } from './services/email-capture.js';
 
 const app = express();
 
@@ -49,8 +54,8 @@ function escapeXml(text: string): string {
 }
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For Twilio webhooks
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' })); // For Twilio webhooks
 
 // CORS — restrict to known origins
 const ALLOWED_ORIGINS = [
@@ -62,7 +67,7 @@ const ALLOWED_ORIGINS = [
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   const origin = req.headers.origin;
-  if (origin && ALLOWED_ORIGINS.some((allowed) => origin.startsWith(allowed))) {
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
@@ -150,9 +155,27 @@ function securityMiddleware(channel: string) {
 function rateLimitMiddleware(channel: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // For webhooks, we need to extract user ID from the message context
-      // This is a simplified version - full implementation would look up user from email/phone
-      const userId = 'webhook'; // Placeholder - actual implementation needs user lookup
+      // Extract sender identifier from the request body per channel
+      let userId = 'unknown';
+      if (channel === 'sms') {
+        userId = req.body?.From || 'unknown-sms';
+      } else if (channel === 'whatsapp') {
+        const entry = req.body?.entry?.[0];
+        const msg = entry?.changes?.[0]?.value?.messages?.[0];
+        userId = msg?.from || 'unknown-whatsapp';
+      } else if (channel === 'telegram') {
+        userId = String(req.body?.message?.from?.id || 'unknown-telegram');
+      } else if (channel === 'gmail') {
+        // Gmail Pub/Sub doesn't carry sender info in the webhook — use email address from decoded data
+        try {
+          const data = req.body?.message?.data
+            ? JSON.parse(Buffer.from(req.body.message.data, 'base64').toString())
+            : null;
+          userId = data?.emailAddress || 'unknown-gmail';
+        } catch {
+          userId = 'unknown-gmail';
+        }
+      }
 
       // Check burst limit first
       const burstCheck = checkRateLimit(userId, channel, 'burst');
@@ -401,6 +424,20 @@ app.post('/webhooks/gmail', rateLimitMiddleware('gmail'), securityMiddleware('gm
       if (message.from.includes(data.emailAddress)) continue;
 
       await processMessage(message, user.user_id);
+
+      // Capture inbound email in CRM (async, non-blocking)
+      captureInboundEmail(user.user_id, {
+        from: message.from,
+        fromName: message.fromName || message.from,
+        to: data.emailAddress,
+        subject: message.subject || '',
+        body: message.body,
+        receivedAt: new Date().toISOString(),
+        messageId: message.channelMessageId,
+        threadId: message.channelThreadId,
+      }).catch((err) => {
+        console.error('[Gmail] Email capture failed:', err);
+      });
     }
 
     res.sendStatus(200);
@@ -431,7 +468,7 @@ app.get('/webhooks/whatsapp', (req: Request, res: Response) => {
   }
 });
 
-// Message webhook
+// Message webhook (direct Meta WhatsApp Business API — not via Twilio)
 app.post('/webhooks/whatsapp', rateLimitMiddleware('whatsapp'), securityMiddleware('whatsapp'), async (req: Request, res: Response) => {
   try {
     const message = whatsappAdapter.normalizeMessage(req.body);
@@ -440,19 +477,34 @@ app.post('/webhooks/whatsapp', rateLimitMiddleware('whatsapp'), securityMiddlewa
       return res.sendStatus(200); // Acknowledge non-message events
     }
 
-    // TODO: Look up user by WhatsApp phone number
-    // For now, this is a placeholder
     console.log(`[WhatsApp] Message from ${message.from}: ${message.body}`);
 
-    // const user = await getUserByWhatsAppNumber(message.to);
-    // if (user) {
-    //   await processMessage(message, user.user_id);
-    // }
-
+    // Respond immediately so Meta doesn't retry
     res.sendStatus(200);
+
+    if (!config.clawEnabled) return;
+
+    // Look up user by WhatsApp phone number in claw.channel_preferences
+    const match = await lookupUserByChannel('whatsapp', 'phone_number', message.from);
+
+    if (!match) {
+      console.log(`[WhatsApp] No registered user for phone ${message.from}`);
+      return;
+    }
+
+    const response = await handleClawMessage(match.user_id, message.body, 'whatsapp');
+    console.log(`[WhatsApp] Reply to ${message.from}: ${response.message.slice(0, 100)}...`);
+
+    // Reply via Meta WhatsApp API if configured and credentials available
+    if (whatsappAdapter.isConfigured() && match.channel_config) {
+      await whatsappAdapter.sendMessage(
+        { channel: 'whatsapp', to: message.from, body: response.message },
+        match.channel_config as unknown as import('./channels/whatsapp.js').WhatsAppCredentials
+      );
+    }
   } catch (error) {
     console.error('[WhatsApp] Webhook error:', error);
-    res.sendStatus(200);
+    if (!res.headersSent) res.sendStatus(200);
   }
 });
 
@@ -470,16 +522,32 @@ app.post('/webhooks/telegram', rateLimitMiddleware('telegram'), securityMiddlewa
 
     console.log(`[Telegram] Message from ${message.fromName}: ${message.body}`);
 
-    // TODO: Look up user by Telegram bot/chat configuration
-    // const user = await getUserByTelegramChat(message.to);
-    // if (user) {
-    //   await processMessage(message, user.user_id);
-    // }
-
+    // Respond immediately so Telegram doesn't retry
     res.sendStatus(200);
+
+    if (!config.clawEnabled) return;
+
+    // Look up user by Telegram chat_id in claw.channel_preferences
+    const match = await lookupUserByChannel('telegram', 'chat_id', message.from);
+
+    if (!match) {
+      console.log(`[Telegram] No registered user for chat ${message.from}`);
+      return;
+    }
+
+    const response = await handleClawMessage(match.user_id, message.body, 'telegram');
+    console.log(`[Telegram] Reply to ${message.fromName}: ${response.message.slice(0, 100)}...`);
+
+    // Reply via Telegram Bot API if configured and credentials available
+    if (telegramAdapter.isConfigured() && match.channel_config) {
+      await telegramAdapter.sendMessage(
+        { channel: 'telegram', to: message.from, body: response.message },
+        match.channel_config as unknown as import('./channels/telegram.js').TelegramCredentials
+      );
+    }
   } catch (error) {
     console.error('[Telegram] Webhook error:', error);
-    res.sendStatus(200);
+    if (!res.headersSent) res.sendStatus(200);
   }
 });
 
@@ -565,7 +633,7 @@ app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'
           const result = await sendResponse.json() as Record<string, unknown>;
 
           if (!sendResponse.ok) {
-            console.error(`[${channel.toUpperCase()}] Twilio send failed:`, JSON.stringify(result));
+            console.error(`[${channel.toUpperCase()}] Twilio send failed: ${sendResponse.status} code=${result.code} message=${result.message}`);
           } else {
             console.log(`[${channel.toUpperCase()}] Reply sent to ${phoneNumber}, SID: ${result.sid}`);
           }
@@ -587,10 +655,12 @@ app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'
 // ============================================================================
 
 // Gmail OAuth
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 app.get('/oauth/gmail/start', (req: Request, res: Response) => {
   const userId = req.query.user_id as string;
-  if (!userId) {
-    return res.status(400).json({ error: 'Missing user_id' });
+  if (!userId || !UUID_RE.test(userId)) {
+    return res.status(400).json({ error: 'Invalid or missing user_id' });
   }
   res.redirect(gmailAdapter.getAuthUrl(userId));
 });
@@ -605,8 +675,8 @@ app.get('/oauth/gmail/callback', async (req: Request, res: Response) => {
       return res.redirect(`doughy://settings/openclaw?error=${encodeURIComponent(error)}`);
     }
 
-    if (!code || !userId) {
-      return res.status(400).json({ error: 'Missing code or state' });
+    if (!code || !userId || !UUID_RE.test(userId)) {
+      return res.status(400).json({ error: 'Missing or invalid code/state' });
     }
 
     const tokens = await gmailAdapter.exchangeCodeForTokens(code);
@@ -635,9 +705,10 @@ app.get('/oauth/gmail/callback', async (req: Request, res: Response) => {
 
 // Legacy route (backwards compatibility)
 app.get('/oauth/start', (req: Request, res: Response) => {
-  req.query.user_id
-    ? res.redirect(`/oauth/gmail/start?user_id=${req.query.user_id}`)
-    : res.status(400).json({ error: 'Missing user_id' });
+  const userId = req.query.user_id as string;
+  userId && UUID_RE.test(userId)
+    ? res.redirect(`/oauth/gmail/start?user_id=${userId}`)
+    : res.status(400).json({ error: 'Invalid or missing user_id' });
 });
 
 app.get('/oauth/callback', (req: Request, res: Response) => {
@@ -651,8 +722,8 @@ app.post('/oauth/disconnect', async (req: Request, res: Response) => {
   try {
     const { user_id, channel = 'gmail' } = req.body;
 
-    if (!user_id) {
-      return res.status(400).json({ error: 'Missing user_id' });
+    if (!user_id || !UUID_RE.test(user_id)) {
+      return res.status(400).json({ error: 'Invalid or missing user_id' });
     }
 
     if (channel === 'gmail') {
@@ -664,7 +735,7 @@ app.post('/oauth/disconnect', async (req: Request, res: Response) => {
           console.log('[OAuth] Could not stop watch');
         }
 
-        await fetch(
+        const delRes = await fetch(
           `${config.supabaseUrl}/rest/v1/user_gmail_tokens?user_id=eq.${user_id}`,
           {
             method: 'DELETE',
@@ -674,6 +745,10 @@ app.post('/oauth/disconnect', async (req: Request, res: Response) => {
             },
           }
         );
+        if (!delRes.ok) {
+          console.error(`[OAuth] Failed to delete Gmail tokens: ${delRes.status}`);
+          return res.status(500).json({ error: 'Failed to disconnect channel' });
+        }
       }
     }
 
@@ -689,10 +764,44 @@ app.post('/oauth/disconnect', async (req: Request, res: Response) => {
 // Cron Endpoints
 // ============================================================================
 
+app.post('/cron/morning-briefing', async (req: Request, res: Response) => {
+  try {
+    const cronSecret = req.headers['x-cron-secret'];
+    if (config.nodeEnv === 'production' && (!config.cronSecret || cronSecret !== config.cronSecret)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const result = await runMorningBriefings();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('[Cron] Morning briefing error:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+app.post('/cron/follow-up-nudges', async (req: Request, res: Response) => {
+  try {
+    const cronSecret = req.headers['x-cron-secret'];
+    if (config.nodeEnv === 'production' && (!config.cronSecret || cronSecret !== config.cronSecret)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const result = await runFollowUpNudges();
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('[Cron] Follow-up nudges error:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 app.post('/cron/renew-watches', async (req: Request, res: Response) => {
   try {
     const cronSecret = req.headers['x-cron-secret'];
-    if (config.nodeEnv === 'production' && cronSecret !== process.env.CRON_SECRET) {
+    if (config.nodeEnv === 'production' && (!config.cronSecret || cronSecret !== config.cronSecret)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -758,6 +867,7 @@ if (config.nodeEnv !== 'production') {
 // ============================================================================
 
 app.use('/api/claw', clawRoutes);
+app.use('/api/calls', callpilotRoutes);
 
 // ============================================================================
 // Error Handling
@@ -783,6 +893,11 @@ async function start() {
   registerAllChannels();
   await initializeChannels();
 
+  // Initialize Discord bot (non-blocking)
+  initDiscordBot().catch((err) => {
+    console.error('[Server] Discord bot init failed:', err);
+  });
+
   app.listen(config.port, () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════════╗
@@ -800,6 +915,8 @@ async function start() {
 ║                                                              ║
 ║   The Claw: ${config.clawEnabled ? 'ENABLED ' : 'DISABLED'}                                         ║
 ║   └─ API: /api/claw/*                                        ║
+║   CallPilot: ENABLED                                          ║
+║   └─ API: /api/calls/*                                        ║
 ║                                                              ║
 ║   OAuth:                                                     ║
 ║   └─ Gmail: /oauth/gmail/start?user_id=...                   ║

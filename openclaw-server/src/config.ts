@@ -47,6 +47,13 @@ export const config = {
   twilioPhoneNumber: optionalEnv('TWILIO_PHONE_NUMBER', ''),
   twilioWhatsAppNumber: optionalEnv('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886'), // Sandbox default
 
+  // Discord
+  discordBotToken: optionalEnv('DISCORD_BOT_TOKEN', ''),
+  discordChannelId: optionalEnv('DISCORD_CHANNEL_ID', ''),
+
+  // Cron
+  cronSecret: optionalEnv('CRON_SECRET', ''),
+
   // The Claw
   clawEnabled: optionalEnv('CLAW_ENABLED', 'true') === 'true',
   clawDefaultModel: optionalEnv('CLAW_DEFAULT_MODEL', 'claude-sonnet-4-5-20250929'),
@@ -66,5 +73,16 @@ export const config = {
     }
   },
 } as const;
+
+// Production environment validation — fail fast at startup
+if (config.nodeEnv === 'production') {
+  const missing: string[] = [];
+  if (!config.supabaseAnonKey) missing.push('SUPABASE_ANON_KEY');
+  if (!config.cronSecret) missing.push('CRON_SECRET');
+  if (!config.anthropicApiKey) missing.push('ANTHROPIC_API_KEY');
+  if (missing.length > 0) {
+    throw new Error(`FATAL: Missing required production env vars: ${missing.join(', ')}`);
+  }
+}
 
 export default config;

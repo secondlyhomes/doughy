@@ -50,7 +50,13 @@ export async function schemaInsert<T>(schema: string, table: string, data: Recor
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(`Insert ${schema}.${table} failed: ${response.status} - ${text}`);
+    // Log full details internally, throw sanitized error for callers
+    console.error(`[DB] Insert ${schema}.${table} failed: ${response.status} - ${text}`);
+    throw new Error(
+      response.status === 409 ? 'Duplicate entry' :
+      response.status === 422 ? 'Invalid data' :
+      'Database operation failed'
+    );
   }
 
   const result = await response.json();
@@ -74,6 +80,10 @@ export async function schemaUpdate(schema: string, table: string, id: string, da
       body: JSON.stringify(data),
     }
   );
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error(`[DB] Update ${schema}.${table} id=${id} failed: ${response.status} - ${text}`);
+  }
   return response.ok;
 }
 
@@ -94,6 +104,10 @@ export async function publicInsert(table: string, data: Record<string, unknown>)
       body: JSON.stringify(data),
     }
   );
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error(`[DB] Insert public.${table} failed: ${response.status} - ${text}`);
+  }
   return response.ok;
 }
 
@@ -101,3 +115,17 @@ export async function publicInsert(table: string, data: Record<string, unknown>)
 export const clawQuery = <T>(table: string, params: string) => schemaQuery<T>('claw', table, params);
 export const clawInsert = <T>(table: string, data: Record<string, unknown>) => schemaInsert<T>('claw', table, data);
 export const clawUpdate = (table: string, id: string, data: Record<string, unknown>) => schemaUpdate('claw', table, id, data);
+
+/**
+ * Look up a user_id and channel_config by their channel identifier.
+ * Queries claw.channel_preferences where channel_config contains the identifier.
+ */
+export async function lookupUserByChannel(
+  channel: string,
+  identifierKey: string,
+  identifierValue: string
+): Promise<{ user_id: string; channel_config: Record<string, unknown> } | null> {
+  const params = `channel=eq.${encodeURIComponent(channel)}&is_enabled=eq.true&channel_config->>${encodeURIComponent(identifierKey)}=eq.${encodeURIComponent(identifierValue)}&select=user_id,channel_config&limit=1`;
+  const rows = await clawQuery<{ user_id: string; channel_config: Record<string, unknown> }>('channel_preferences', params);
+  return rows.length > 0 ? rows[0] : null;
+}

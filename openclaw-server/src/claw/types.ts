@@ -1,5 +1,8 @@
 // The Claw — Types for the intelligence layer
 
+// Channel types
+export type ClawChannel = 'sms' | 'app' | 'whatsapp' | 'telegram' | 'discord' | 'email';
+
 // Intent classification
 export type ClawIntent =
   | 'briefing'
@@ -10,6 +13,9 @@ export type ClawIntent =
   | 'what_did_i_miss'
   | 'help'
   | 'approve'
+  | 'query'
+  | 'action'
+  | 'chat'
   | 'unknown';
 
 // Briefing data — mirrors exactly what the mobile app shows
@@ -64,12 +70,31 @@ export interface TaskOutput {
 
 // Agent tool definitions
 export type AgentToolName =
+  // Read tools
   | 'read_deals'
   | 'read_leads'
   | 'read_bookings'
   | 'read_follow_ups'
+  | 'read_maintenance'
+  | 'read_vendors'
+  | 'read_contacts_detail'
+  | 'read_portfolio'
+  | 'read_documents'
+  | 'read_comps'
+  | 'read_campaigns'
+  | 'read_conversations'
+  | 'read_email_timeline'
+  // Write tools
   | 'draft_sms'
-  | 'create_approval';
+  | 'create_approval'
+  | 'create_lead'
+  | 'update_lead'
+  | 'update_deal_stage'
+  | 'mark_followup_complete'
+  | 'send_whatsapp'
+  | 'send_email'
+  | 'add_note'
+  | 'create_maintenance_request';
 
 export interface AgentToolCall {
   tool: AgentToolName;

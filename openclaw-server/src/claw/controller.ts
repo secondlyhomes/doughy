@@ -6,14 +6,15 @@ import { INTENT_CLASSIFIER_PROMPT } from './prompts.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
 import { runAgent } from './agents.js';
 import { clawInsert, clawUpdate, clawQuery } from './db.js';
-import type { ClawIntent, ClawResponse, ClawSmsInbound } from './types.js';
+import { broadcastMessage } from './broadcast.js';
+import type { ClawIntent, ClawChannel, ClawResponse, ClawSmsInbound } from './types.js';
 
 /**
  * Load recent conversation messages for context
  */
 async function loadRecentMessages(
   userId: string,
-  channel: 'sms' | 'app',
+  channel: ClawChannel,
   limit = 10
 ): Promise<Array<{ role: string; content: string }>> {
   const messages = await clawQuery<{ role: string; content: string; created_at: string }>(
@@ -38,7 +39,7 @@ async function classifyIntent(
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: config.anthropicApiKey });
+    const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
 
     // Build messages with conversation context
     let classifierInput = message;
@@ -68,11 +69,19 @@ async function classifyIntent(
     const intent = (textBlock && 'text' in textBlock ? textBlock.text : '').trim().toLowerCase() as ClawIntent;
 
     const validIntents: ClawIntent[] = [
-      'briefing', 'draft_followups', 'check_deal', 'check_bookings',
-      'new_leads', 'what_did_i_miss', 'help', 'approve', 'unknown',
+      'briefing', 'draft_followups', 'query', 'action', 'chat',
+      'help', 'approve', 'unknown',
+      // Legacy intents map to 'query'
+      'check_deal', 'check_bookings', 'new_leads', 'what_did_i_miss',
     ];
 
-    return validIntents.includes(intent) ? intent : 'unknown';
+    if (!validIntents.includes(intent)) return 'unknown';
+
+    // Map legacy intents to new categories
+    if (['check_deal', 'check_bookings', 'new_leads'].includes(intent)) return 'query';
+    if (intent === 'what_did_i_miss') return 'briefing';
+
+    return intent;
   } catch (error) {
     console.error('[Controller] Intent classification failed:', error);
     return guessIntentFromKeywords(message);
@@ -85,14 +94,15 @@ async function classifyIntent(
 function guessIntentFromKeywords(message: string): ClawIntent {
   const lower = message.toLowerCase().trim();
 
-  if (/\b(brief(ing)?|morning|update|status|day look|what.?s (up|going|new)|hello|hey|hi)\b/.test(lower)) return 'briefing';
+  if (/\b(brief(ing)?|morning|update|status|day look|what.?s (up|going|new)|hello|hey|hi|miss|catch up)\b/.test(lower)) return 'briefing';
   if (/\b(draft|follow.?up|text.*lead|send.*follow|reach out)\b/.test(lower)) return 'draft_followups';
-  if (/\b(deal|property|investment|offer)\b/.test(lower)) return 'check_deal';
-  if (/\b(booking|guest|check.?in|reservation|arrival)\b/.test(lower)) return 'check_bookings';
-  if (/\b(new lead|recent lead|inquir)\b/.test(lower)) return 'new_leads';
-  if (/\b(miss|catch up|since|away)\b/.test(lower)) return 'what_did_i_miss';
+  if (/\b(move|create|add|assign|schedule|new lead)\b/.test(lower)) return 'action';
+  if (/\b(text|email|send.*to|whatsapp)\b/.test(lower)) return 'action';
+  if (/\b(deal|property|investment|booking|guest|check.?in|lead|contact|maintenance|vendor|document|campaign|portfolio)\b/.test(lower)) return 'query';
+  if (/\b(what should|how should|advice|strategy|approach|recommend)\b/.test(lower)) return 'chat';
   if (/\b(help|command|can you|what do)\b/.test(lower)) return 'help';
-  if (/\b(approve|yes|send|confirm|reject|no don.?t)\b/.test(lower)) return 'approve';
+  if (/\b(approve|confirm|reject|no don.?t|looks good|skip\s*(all|them|\d))\b/.test(lower)) return 'approve';
+  if (/^(yes|send\s*(them|all|it)|just\s+\d)$/i.test(lower.trim())) return 'approve';
 
   return 'unknown';
 }
@@ -104,7 +114,7 @@ async function saveMessage(
   userId: string,
   role: 'user' | 'assistant' | 'system',
   content: string,
-  channel: 'sms' | 'app' = 'sms',
+  channel: ClawChannel = 'sms',
   taskId?: string
 ): Promise<string> {
   const msg = await clawInsert<{ id: string }>('messages', {
@@ -141,15 +151,19 @@ async function createTask(
 export async function handleClawMessage(
   userId: string,
   message: string,
-  channel: 'sms' | 'app' = 'sms'
+  channel: ClawChannel = 'sms'
 ): Promise<ClawResponse> {
   console.log(`[Controller] Message from ${userId} via ${channel}: "${message.slice(0, 100)}"`);
 
   // Load conversation history before saving the new message
   const conversationHistory = await loadRecentMessages(userId, channel);
 
-  // Save inbound message
-  await saveMessage(userId, 'user', message, channel);
+  // Save inbound message (non-fatal — don't block processing if DB write fails)
+  try {
+    await saveMessage(userId, 'user', message, channel);
+  } catch (err) {
+    console.error('[Controller] Failed to save inbound message:', err);
+  }
 
   // Classify intent with conversation context
   const intent = await classifyIntent(message, conversationHistory);
@@ -159,7 +173,6 @@ export async function handleClawMessage(
 
   switch (intent) {
     case 'briefing':
-    case 'what_did_i_miss':
       response = await handleBriefing(userId);
       break;
 
@@ -167,45 +180,56 @@ export async function handleClawMessage(
       response = await handleDraftFollowups(userId, message, conversationHistory);
       break;
 
-    case 'check_deal':
-      response = await handleQuery(userId, message, 'check_deal', conversationHistory);
+    case 'query':
+      response = await handleQuery(userId, message, 'query', conversationHistory);
       break;
 
-    case 'check_bookings':
-      response = await handleQuery(userId, message, 'check_bookings', conversationHistory);
+    case 'action':
+      response = await handleAction(userId, message, conversationHistory);
       break;
 
-    case 'new_leads':
-      response = await handleQuery(userId, message, 'new_leads', conversationHistory);
+    case 'chat':
+      response = await handleChat(userId, message, conversationHistory);
+      break;
+
+    case 'approve':
+      response = await handleApproval(userId, message, conversationHistory);
       break;
 
     case 'help':
       response = {
         message: `Here's what I can do:\n\n` +
-          `- "Brief me" — Get your morning business update\n` +
-          `- "Draft follow ups" — I'll draft SMS to warm leads for your approval\n` +
-          `- "Check [deal name]" — Status on a specific deal\n` +
-          `- "Bookings this week" — Upcoming guest arrivals\n` +
-          `- "New leads" — Recent inquiries\n` +
-          `- "What did I miss" — Activity since you last checked\n\n` +
-          `All drafted messages need your approval before sending.`,
-      };
-      break;
-
-    case 'approve':
-      response = {
-        message: 'Open The Claw app to review and approve pending messages. Tap each one to approve, edit, or reject.',
+          `Ask me anything:\n` +
+          `- "Brief me" — Morning business update\n` +
+          `- "How's the Oak St deal?" — Check any deal, lead, or property\n` +
+          `- "Any maintenance issues?" — Check bookings, maintenance, vendors\n` +
+          `- "Draft follow ups" — I'll write personalized messages for your approval\n\n` +
+          `Tell me to do things:\n` +
+          `- "Move Oak St to DD" — Update deals, leads, records\n` +
+          `- "Text John about the walkthrough" — Draft messages via WhatsApp\n` +
+          `- "New lead: Sarah, 321 Elm, inherited" — Add new leads\n\n` +
+          `Or just chat:\n` +
+          `- "What should I offer on Oak St?" — Business advice\n\n` +
+          `All outbound messages need your approval before sending.`,
       };
       break;
 
     default:
-      response = {
-        message: `I'm not sure what you need. Try "brief me" for an update, "draft follow ups" to reach out to leads, or "help" to see all commands.`,
-      };
+      // For unknown intents, try to handle as a query
+      response = await handleQuery(userId, message, 'unknown', conversationHistory);
   }
 
-  // Save outbound message
-  await saveMessage(userId, 'assistant', response.message, channel, response.task_id);
+  // Save outbound message (non-fatal — still return the response to the user)
+  try {
+    await saveMessage(userId, 'assistant', response.message, channel, response.task_id);
+  } catch (err) {
+    console.error('[Controller] Failed to save outbound message:', err);
+  }
+
+  // Broadcast to all other enabled channels (async, don't block response)
+  broadcastMessage(userId, { content: response.message }, channel).catch((err) => {
+    console.error('[Controller] Broadcast failed:', err);
+  });
 
   return response;
 }
@@ -288,7 +312,7 @@ async function handleDraftFollowups(
     if (approvalCount > 0) {
       // Send push notification
       try {
-        await fetch(`${config.supabaseUrl}/functions/v1/notification-push`, {
+        const pushRes = await fetch(`${config.supabaseUrl}/functions/v1/notification-push`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${config.supabaseServiceKey}`,
@@ -301,8 +325,11 @@ async function handleDraftFollowups(
             data: { type: 'claw_approvals', task_id: task.id },
           }),
         });
+        if (!pushRes.ok) {
+          console.error(`[Controller] Push notification failed: ${pushRes.status}`);
+        }
       } catch (err) {
-        console.error('[Controller] Push notification failed:', err);
+        console.error('[Controller] Push notification error:', err);
       }
 
       return {
@@ -364,6 +391,290 @@ async function handleQuery(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
     return { message: `Sorry, I couldn't look that up right now. Try again in a moment.` };
+  }
+}
+
+/**
+ * Handle action requests (create lead, move deal, send message, etc.)
+ */
+async function handleAction(
+  userId: string,
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }> = []
+): Promise<ClawResponse> {
+  const task = await createTask(userId, 'action', `Action: ${message.slice(0, 50)}`, { message });
+
+  try {
+    const recentContext = conversationHistory.length > 0
+      ? conversationHistory.slice(-4).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
+      : undefined;
+
+    // Use lead-ops first for context, then action agent for execution
+    // For simple actions, go straight to action agent
+    const result = await runAgent({
+      userId,
+      taskId: task.id,
+      agentSlug: 'lead-ops', // Uses data tools + write tools
+      userMessage: message,
+      context: recentContext ? { recent_conversation: recentContext } : undefined,
+    });
+
+    await clawUpdate('tasks', task.id, {
+      status: 'done',
+      output: { response: result.response },
+      completed_at: new Date().toISOString(),
+    });
+
+    return { message: result.response, task_id: task.id };
+  } catch (error) {
+    console.error('[Controller] Action failed:', error);
+    await clawUpdate('tasks', task.id, {
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return { message: 'Sorry, I couldn\'t complete that action. Try again in a moment.' };
+  }
+}
+
+/**
+ * Handle chat/advice requests
+ */
+async function handleChat(
+  userId: string,
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }> = []
+): Promise<ClawResponse> {
+  const task = await createTask(userId, 'chat', `Chat: ${message.slice(0, 50)}`, { message });
+
+  try {
+    const recentContext = conversationHistory.length > 0
+      ? conversationHistory.slice(-6).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
+      : undefined;
+
+    // Chat agent with read-only tools for data context
+    const result = await runAgent({
+      userId,
+      taskId: task.id,
+      agentSlug: 'lead-ops', // Uses data tools for context
+      userMessage: `The user wants business advice: ${message}`,
+      context: recentContext ? { recent_conversation: recentContext } : undefined,
+    });
+
+    await clawUpdate('tasks', task.id, {
+      status: 'done',
+      output: { response: result.response },
+      completed_at: new Date().toISOString(),
+    });
+
+    return { message: result.response, task_id: task.id };
+  } catch (error) {
+    console.error('[Controller] Chat failed:', error);
+    await clawUpdate('tasks', task.id, {
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return { message: 'Sorry, I\'m having trouble thinking through that. Try again.' };
+  }
+}
+
+/**
+ * Handle approval requests (natural language approve/reject/edit)
+ */
+async function handleApproval(
+  userId: string,
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }> = []
+): Promise<ClawResponse> {
+  const lower = message.toLowerCase().trim();
+
+  // Check for pending approvals
+  const pendingApprovals = await clawQuery<{
+    id: string;
+    title: string;
+    draft_content: string;
+    recipient_name: string | null;
+    recipient_phone: string | null;
+    action_type: string;
+    task_id: string;
+  }>('approvals', `user_id=eq.${userId}&status=eq.pending&order=created_at.asc&limit=20`);
+
+  if (pendingApprovals.length === 0) {
+    return { message: 'No pending approvals right now. Everything\'s been handled!' };
+  }
+
+  // Parse the approval command
+  const now = new Date().toISOString();
+
+  // "approve all" / "send them" / "yes" / "looks good" / "go ahead"
+  if (/\b(approve\s*all|send\s*(them|all)|yes|looks?\s*good|go\s*ahead|do\s*it)\b/.test(lower)) {
+    const results: string[] = [];
+
+    for (const approval of pendingApprovals) {
+      await clawUpdate('approvals', approval.id, {
+        status: 'approved',
+        decided_at: now,
+      });
+
+      // Execute if it's a send action
+      if (approval.action_type === 'send_sms' && approval.recipient_phone) {
+        const sent = await executeApprovedAction(userId, approval);
+        results.push(sent
+          ? `WhatsApp sent to ${approval.recipient_name || approval.recipient_phone}`
+          : `Approved: ${approval.recipient_name || 'Unknown'} (send failed — retry from the app)`
+        );
+      } else {
+        results.push(`Approved: ${approval.title}`);
+      }
+    }
+
+    return {
+      message: `Great! Done!\n${results.map((r) => `- ${r}`).join('\n')}`,
+    };
+  }
+
+  // "reject" / "no" (standalone only) / "don't send" / "skip all"
+  if (/\b(reject|don.?t\s*send|skip\s*all|cancel)\b/.test(lower) || /^no\.?$/i.test(lower.trim())) {
+    for (const approval of pendingApprovals) {
+      await clawUpdate('approvals', approval.id, {
+        status: 'rejected',
+        decided_at: now,
+      });
+    }
+    return { message: `Skipped all ${pendingApprovals.length} pending approval${pendingApprovals.length > 1 ? 's' : ''}.` };
+  }
+
+  // "approve 1" / "just John" / "skip Maria"
+  const numberMatch = lower.match(/\b(?:approve|just|only|send)\s*(?:#?\s*)?(\d+)\b/);
+  if (numberMatch) {
+    const index = parseInt(numberMatch[1]) - 1;
+    if (index >= 0 && index < pendingApprovals.length) {
+      const approval = pendingApprovals[index];
+      await clawUpdate('approvals', approval.id, {
+        status: 'approved',
+        decided_at: now,
+      });
+      const sent = await executeApprovedAction(userId, approval);
+      return {
+        message: sent
+          ? `Sent to ${approval.recipient_name || approval.recipient_phone}! ✅`
+          : `Approved: ${approval.title} ✅`,
+      };
+    }
+  }
+
+  // "just [name]" / "skip [name]"
+  const nameMatch = lower.match(/\b(?:just|only|send to)\s+(\w+)/);
+  const skipMatch = lower.match(/\b(?:skip|not)\s+(\w+)/);
+
+  if (nameMatch) {
+    const name = nameMatch[1].toLowerCase();
+    const matched = pendingApprovals.filter((a) =>
+      a.recipient_name?.toLowerCase().includes(name)
+    );
+    if (matched.length > 0) {
+      const results: string[] = [];
+      for (const approval of matched) {
+        await clawUpdate('approvals', approval.id, {
+          status: 'approved',
+          decided_at: now,
+        });
+        const sent = await executeApprovedAction(userId, approval);
+        results.push(sent
+          ? `Sent to ${approval.recipient_name}`
+          : `Approved: ${approval.recipient_name}`
+        );
+      }
+      return { message: `Done! ${results.join(', ')} ✅` };
+    }
+  }
+
+  if (skipMatch) {
+    const name = skipMatch[1].toLowerCase();
+    const matched = pendingApprovals.filter((a) =>
+      a.recipient_name?.toLowerCase().includes(name)
+    );
+    if (matched.length > 0) {
+      for (const approval of matched) {
+        await clawUpdate('approvals', approval.id, {
+          status: 'rejected',
+          decided_at: now,
+        });
+      }
+      return { message: `Skipped ${matched.map((a) => a.recipient_name).join(', ')}.` };
+    }
+  }
+
+  // "edit 1: ..." / "change 1 to ..."
+  const editMatch = lower.match(/\b(?:edit|change)\s*(?:#?\s*)?(\d+)\s*[:\-]?\s*(.*)/);
+  if (editMatch) {
+    const index = parseInt(editMatch[1]) - 1;
+    const newContent = message.slice(message.indexOf(editMatch[2]));
+    if (index >= 0 && index < pendingApprovals.length && newContent.trim()) {
+      const approval = pendingApprovals[index];
+      await clawUpdate('approvals', approval.id, {
+        draft_content: newContent.trim(),
+      });
+      return {
+        message: `Updated draft for ${approval.recipient_name || '#' + (index + 1)}:\n"${newContent.trim()}"\n\nSay "approve ${index + 1}" to send it.`,
+      };
+    }
+  }
+
+  // If we can't parse the approval command, list them
+  const list = pendingApprovals.map((a, i) =>
+    `${i + 1}. ${a.recipient_name || a.title}: "${a.draft_content.slice(0, 80)}..."`
+  ).join('\n');
+
+  return {
+    message: `You have ${pendingApprovals.length} pending:\n${list}\n\nSay "approve all", "approve 1", "just [name]", "skip [name]", or "edit 1: new text"`,
+  };
+}
+
+/**
+ * Execute an approved action (send WhatsApp/SMS)
+ */
+async function executeApprovedAction(
+  userId: string,
+  approval: { id: string; action_type: string; draft_content: string; recipient_phone: string | null }
+): Promise<boolean> {
+  if (approval.action_type !== 'send_sms' || !approval.recipient_phone) return false;
+
+  try {
+    // Default to WhatsApp (cheaper)
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
+    const auth = Buffer.from(`${config.twilioAccountSid}:${config.twilioAuthToken}`).toString('base64');
+
+    const abortController = new AbortController();
+    const timeout = setTimeout(() => abortController.abort(), 10_000);
+
+    const response = await fetch(twilioUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        From: config.twilioWhatsAppNumber,
+        To: `whatsapp:${approval.recipient_phone}`,
+        Body: approval.draft_content,
+      }).toString(),
+      signal: abortController.signal,
+    });
+    clearTimeout(timeout);
+
+    if (response.ok) {
+      await clawUpdate('approvals', approval.id, {
+        status: 'executed',
+        executed_at: new Date().toISOString(),
+      });
+      return true;
+    }
+
+    console.error('[Controller] WhatsApp send failed:', await response.text().catch(() => ''));
+    return false;
+  } catch (error) {
+    console.error('[Controller] Execute approval failed:', error);
+    return false;
   }
 }
 
