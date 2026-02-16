@@ -20,7 +20,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { LucideIcon, Calendar, Clock, Plus } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
-import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
+import { LiquidGlassView, isLiquidGlassSupported } from '@/lib/liquid-glass';
 import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { ICON_SIZES, GLASS_INTENSITY } from '@/constants/design-tokens';

@@ -234,6 +234,7 @@ export function InventoryListScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search items..."
+          glass
         />
       </View>
 

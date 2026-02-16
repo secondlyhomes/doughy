@@ -154,6 +154,7 @@ export function PropertySelector({ visible, onClose, onSelect }: PropertySelecto
             onChangeText={setSearchQuery}
             placeholder="Search properties..."
             size="md"
+            glass
           />
         </View>
 

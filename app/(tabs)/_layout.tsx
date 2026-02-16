@@ -44,6 +44,7 @@ export default function TabLayout() {
       blurEffect={isDark ? "systemUltraThinMaterialDark" : "systemUltraThinMaterialLight"}
       tintColor={colors.primary}
       shadowColor="transparent"
+      disableTransparentOnScrollEdge
     >
       {/* ========== RE INVESTOR TABS (3 tabs) ========== */}
       {/* Tab Order: Inbox → Pipeline → Settings */}

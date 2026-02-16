@@ -4,7 +4,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Platform, LayoutChangeEvent } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
+import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@/lib/liquid-glass';
 import { BlurView } from 'expo-blur';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, cancelAnimation, withTiming, interpolate } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';

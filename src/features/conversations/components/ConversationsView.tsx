@@ -430,6 +430,7 @@ export function ConversationsView({
           placeholder="Search conversations..."
           value={searchQuery}
           onChangeText={setSearchQuery}
+          glass
         />
       </View>
 

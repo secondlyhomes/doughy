@@ -228,9 +228,9 @@ export function TeamSettingsScreen() {
       >
         <View className="flex-row items-center">
           <GlassButton
-            icon={<ArrowLeft size={24} color={colors.foreground} />}
+            icon={<ArrowLeft size={18} color={colors.foreground} />}
             onPress={() => router.back()}
-            size={40}
+            size={32}
             effect="clear"
             containerStyle={{ marginRight: 16 }}
             accessibilityLabel="Go back"

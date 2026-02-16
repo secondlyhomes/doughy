@@ -79,9 +79,9 @@ export function ScreenHeader({
       <View className="flex-row items-center flex-1">
         {backButton && (
           <GlassButton
-            icon={<ArrowLeft size={24} color={colors.foreground} />}
+            icon={<ArrowLeft size={18} color={colors.foreground} />}
             onPress={handleBack}
-            size={40}
+            size={32}
             effect="clear"
             containerStyle={{ marginRight: 12 }}
             accessibilityLabel="Go back"

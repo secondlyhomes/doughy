@@ -3,19 +3,22 @@
 
 import React, { useCallback } from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle, Platform } from 'react-native';
-import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@callstack/liquid-glass';
+import { LiquidGlassView, LiquidGlassContainerView, isLiquidGlassSupported } from '@/lib/liquid-glass';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { GLASS_BLUR, PRESS_OPACITY } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';
 
+/** Default hit slop to extend touch target to 44pt minimum (Apple HIG) */
+const DEFAULT_HIT_SLOP = 6;
+
 export interface GlassButtonProps {
   /** Icon component to display */
   icon: React.ReactNode;
   /** Touch handler */
   onPress: () => void;
-  /** Button diameter in pixels. Default: 40 */
+  /** Button diameter in pixels. Default: 32 (native iOS back button size) */
   size?: number;
   /** Glass blur effect type. Default: 'clear' (minimal blur for small buttons) */
   effect?: 'clear' | 'regular';
@@ -32,7 +35,7 @@ export interface GlassButtonProps {
 export function GlassButton({
   icon,
   onPress,
-  size = 40,
+  size = 32,
   effect = 'clear',
   containerStyle,
   accessibilityLabel,
@@ -57,6 +60,10 @@ export function GlassButton({
     justifyContent: 'center',
   };
 
+  // Ensure 44pt minimum touch target (Apple HIG)
+  const hitSlopPx = Math.max(0, Math.ceil((44 - size) / 2));
+  const hitSlop = hitSlopPx > 0 ? { top: hitSlopPx, bottom: hitSlopPx, left: hitSlopPx, right: hitSlopPx } : undefined;
+
   // iOS 26+ with Liquid Glass support
   if (Platform.OS === 'ios' && isLiquidGlassSupported) {
     return (
@@ -66,12 +73,13 @@ export function GlassButton({
           activeOpacity={activeOpacity}
           accessibilityLabel={accessibilityLabel}
           accessibilityRole="button"
+          hitSlop={hitSlop}
           style={[buttonStyle, { overflow: 'hidden' }]}
         >
           <LiquidGlassView
             style={[StyleSheet.absoluteFill, { borderRadius }]}
             effect={effect}
-            interactive={true} // Native touch feedback on iOS 26+
+            interactive={true}
             colorScheme={isDark ? 'dark' : 'light'}
           />
           {icon}
@@ -88,6 +96,7 @@ export function GlassButton({
         activeOpacity={activeOpacity}
         accessibilityLabel={accessibilityLabel}
         accessibilityRole="button"
+        hitSlop={hitSlop}
         style={[buttonStyle, containerStyle, { overflow: 'hidden' }]}
       >
         <BlurView
@@ -107,6 +116,7 @@ export function GlassButton({
       activeOpacity={activeOpacity}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      hitSlop={hitSlop}
       style={[
         buttonStyle,
         containerStyle,

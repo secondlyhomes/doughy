@@ -197,6 +197,7 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search vendors..."
+          glass
         />
       </View>
 
