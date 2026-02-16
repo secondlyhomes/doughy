@@ -20,10 +20,16 @@ export async function runMorningBriefings(): Promise<{
   console.log('[Scheduler] Starting morning briefings...');
 
   // Get all users with enabled channel preferences (i.e., active users)
-  const activeUsers = await clawQuery<{ user_id: string }>(
-    'channel_preferences',
-    `is_enabled=eq.true&select=user_id&order=user_id`
-  );
+  let activeUsers: { user_id: string }[];
+  try {
+    activeUsers = await clawQuery<{ user_id: string }>(
+      'channel_preferences',
+      `is_enabled=eq.true&select=user_id&order=user_id`
+    );
+  } catch (err) {
+    console.error('[Scheduler] Failed to load active users:', err);
+    return { sent: 0, failed: 0, results: [] };
+  }
 
   // Deduplicate user IDs
   const userIds = [...new Set(activeUsers.map((u) => u.user_id))];
@@ -96,27 +102,38 @@ export async function runFollowUpNudges(): Promise<{
   // Find executed approvals that are 48+ hours old without a response
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
-  const expiredApprovals = await clawQuery<{
+  let expiredApprovals: {
     id: string;
     user_id: string;
     recipient_name: string;
     recipient_phone: string;
     draft_content: string;
     executed_at: string;
-  }>(
-    'approvals',
-    `status=eq.executed&executed_at=lt.${cutoff}&select=id,user_id,recipient_name,recipient_phone,draft_content,executed_at&order=executed_at.asc&limit=50`
-  );
+  }[];
+  try {
+    expiredApprovals = await clawQuery(
+      'approvals',
+      `status=eq.executed&executed_at=lt.${cutoff}&select=id,user_id,recipient_name,recipient_phone,draft_content,executed_at&order=executed_at.asc&limit=50`
+    );
+  } catch (err) {
+    console.error('[Scheduler] Failed to load expired approvals:', err);
+    return { nudges_sent: 0, results: [] };
+  }
 
   // Filter out already-nudged ones (check metadata)
   const results: Array<{ userId: string; contactName: string; sent: boolean }> = [];
 
   for (const approval of expiredApprovals) {
     // Check if we already sent a nudge for this approval
-    const existingNudges = await clawQuery<{ id: string }>(
-      'messages',
-      `user_id=eq.${approval.user_id}&metadata->>nudge_for_approval=eq.${approval.id}&limit=1`
-    );
+    let existingNudges: { id: string }[];
+    try {
+      existingNudges = await clawQuery<{ id: string }>(
+        'messages',
+        `user_id=eq.${approval.user_id}&metadata->>nudge_for_approval=eq.${approval.id}&limit=1`
+      );
+    } catch {
+      continue; // Skip on DB error — safer than double-nudging
+    }
 
     if (existingNudges.length > 0) continue; // Already nudged
 

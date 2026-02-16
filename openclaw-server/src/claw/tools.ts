@@ -309,8 +309,8 @@ export async function updateLead(userId: string, input: {
   if (input.tags !== undefined) data.tags = input.tags;
   if (input.metadata !== undefined) data.metadata = input.metadata;
 
-  const success = await schemaUpdate('crm', 'contacts', input.contact_id, data);
-  return { success, contact_id: input.contact_id };
+  await schemaUpdate('crm', 'contacts', input.contact_id, data);
+  return { success: true, contact_id: input.contact_id };
 }
 
 /**
@@ -330,8 +330,8 @@ export async function updateDealStage(userId: string, input: {
   if (input.next_action) data.next_action = input.next_action;
   if (input.next_action_due) data.next_action_due = input.next_action_due;
 
-  const success = await schemaUpdate('investor', 'deals_pipeline', input.deal_id, data);
-  return { success, deal_id: input.deal_id, new_stage: input.stage };
+  await schemaUpdate('investor', 'deals_pipeline', input.deal_id, data);
+  return { success: true, deal_id: input.deal_id, new_stage: input.stage };
 }
 
 /**
@@ -341,11 +341,11 @@ export async function markFollowupComplete(userId: string, input: {
   followup_id: string;
 }): Promise<unknown> {
   assertUuid(input.followup_id, 'followup_id');
-  const success = await schemaUpdate('investor', 'follow_ups', input.followup_id, {
+  await schemaUpdate('investor', 'follow_ups', input.followup_id, {
     status: 'completed',
     updated_at: new Date().toISOString(),
   });
-  return { success, followup_id: input.followup_id };
+  return { success: true, followup_id: input.followup_id };
 }
 
 /**

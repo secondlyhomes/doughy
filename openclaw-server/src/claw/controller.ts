@@ -17,12 +17,17 @@ async function loadRecentMessages(
   channel: ClawChannel,
   limit = 10
 ): Promise<Array<{ role: string; content: string }>> {
-  const messages = await clawQuery<{ role: string; content: string; created_at: string }>(
-    'messages',
-    `user_id=eq.${userId}&channel=eq.${channel}&select=role,content,created_at&order=created_at.desc&limit=${limit}`
-  );
-  // Reverse so oldest is first (DB returns newest first)
-  return messages.reverse();
+  try {
+    const messages = await clawQuery<{ role: string; content: string; created_at: string }>(
+      'messages',
+      `user_id=eq.${userId}&channel=eq.${channel}&select=role,content,created_at&order=created_at.desc&limit=${limit}`
+    );
+    // Reverse so oldest is first (DB returns newest first)
+    return messages.reverse();
+  } catch {
+    // Non-critical: process message without conversation context
+    return [];
+  }
 }
 
 /**

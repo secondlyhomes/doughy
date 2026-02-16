@@ -7,19 +7,20 @@ import { config } from '../config.js';
 import { schemaQuery } from './db.js';
 import type { BriefingData } from './types.js';
 
+/** Extract value from a settled promise, returning fallback on rejection */
+function settled<T>(result: PromiseSettledResult<T>, fallback: T): T {
+  if (result.status === 'fulfilled') return result.value;
+  console.warn('[Briefing] Query failed, using fallback:', result.reason);
+  return fallback;
+}
+
 /**
- * Generate a briefing from the same data the app displays
+ * Generate a briefing from the same data the app displays.
+ * Uses Promise.allSettled so partial DB failures produce partial briefings.
  */
 export async function generateBriefingData(userId: string): Promise<BriefingData> {
-  // Run all queries in parallel — same tables as the mobile app
-  const [
-    leads,
-    activeDeals,
-    portfolioEntries,
-    closedWonDeals,
-    conversations,
-    pendingAiItems,
-  ] = await Promise.all([
+  // Run all queries in parallel — partial failures are OK
+  const results = await Promise.allSettled([
     // crm.leads — same as Pipeline > Leads (useLeads hook)
     schemaQuery<{
       id: string;
@@ -91,6 +92,13 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
     ),
   ]);
 
+  const leads = settled(results[0], []);
+  const activeDeals = settled(results[1], []);
+  const portfolioEntries = settled(results[2], []);
+  const closedWonDeals = settled(results[3], []);
+  const conversations = settled(results[4], []);
+  const pendingAiItems = settled(results[5], []);
+
   // Resolve lead names for deals that need action
   const dealsNeedingAction = activeDeals
     .filter((d) => d.next_action)
@@ -100,13 +108,17 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
   const leadNames: Record<string, string> = {};
 
   if (leadIds.length > 0) {
-    const leadResults = await schemaQuery<{ id: string; name: string }>(
-      'crm',
-      'leads',
-      `id=in.(${leadIds.join(',')})&select=id,name`
-    );
-    for (const l of leadResults) {
-      leadNames[l.id] = l.name || 'Unknown';
+    try {
+      const leadResults = await schemaQuery<{ id: string; name: string }>(
+        'crm',
+        'leads',
+        `id=in.(${leadIds.join(',')})&select=id,name`
+      );
+      for (const l of leadResults) {
+        leadNames[l.id] = l.name || 'Unknown';
+      }
+    } catch {
+      // Non-critical: deals still show without lead names
     }
   }
 

@@ -4,7 +4,8 @@
 import { config } from '../config.js';
 
 /**
- * Query any schema's table via Supabase REST
+ * Query any schema's table via Supabase REST.
+ * Throws on error so callers can distinguish "no results" from "query failed".
  */
 export async function schemaQuery<T>(schema: string, table: string, params: string): Promise<T[]> {
   const response = await fetch(
@@ -22,7 +23,7 @@ export async function schemaQuery<T>(schema: string, table: string, params: stri
   if (!response.ok) {
     const text = await response.text().catch(() => '');
     console.error(`[DB] Query ${schema}.${table} failed: ${response.status} - ${text}`);
-    return [];
+    throw new Error(`Query ${schema}.${table} failed: ${response.status}`);
   }
 
   return (await response.json()) as T[];
@@ -64,9 +65,10 @@ export async function schemaInsert<T>(schema: string, table: string, data: Recor
 }
 
 /**
- * Update a row in any schema's table by id
+ * Update a row in any schema's table by id.
+ * Throws on error (consistent with schemaInsert).
  */
-export async function schemaUpdate(schema: string, table: string, id: string, data: Record<string, unknown>): Promise<boolean> {
+export async function schemaUpdate(schema: string, table: string, id: string, data: Record<string, unknown>): Promise<void> {
   const response = await fetch(
     `${config.supabaseUrl}/rest/v1/${table}?id=eq.${id}`,
     {
@@ -83,8 +85,8 @@ export async function schemaUpdate(schema: string, table: string, id: string, da
   if (!response.ok) {
     const text = await response.text().catch(() => '');
     console.error(`[DB] Update ${schema}.${table} id=${id} failed: ${response.status} - ${text}`);
+    throw new Error(`Update ${schema}.${table} id=${id} failed: ${response.status}`);
   }
-  return response.ok;
 }
 
 /**
