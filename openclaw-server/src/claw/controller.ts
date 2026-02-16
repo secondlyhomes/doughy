@@ -146,6 +146,20 @@ async function createTask(
 }
 
 /**
+ * Safely mark a task as failed — never throws (safe for use inside catch blocks)
+ */
+async function failTask(taskId: string, error: unknown): Promise<void> {
+  try {
+    await clawUpdate('tasks', taskId, {
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  } catch (updateErr) {
+    console.error(`[Controller] Failed to mark task ${taskId} as failed:`, updateErr);
+  }
+}
+
+/**
  * Main entry point: handle an incoming message from any channel
  */
 export async function handleClawMessage(
@@ -253,10 +267,7 @@ async function handleBriefing(userId: string): Promise<ClawResponse> {
     return { message: briefingText, task_id: task.id };
   } catch (error) {
     console.error('[Controller] Briefing failed:', error);
-    await clawUpdate('tasks', task.id, {
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    await failTask(task.id, error);
     return { message: 'Sorry, I had trouble generating your briefing. Try again in a moment.' };
   }
 }
@@ -345,10 +356,7 @@ async function handleDraftFollowups(
     };
   } catch (error) {
     console.error('[Controller] Draft follow-ups failed:', error);
-    await clawUpdate('tasks', task.id, {
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    await failTask(task.id, error);
     return { message: 'Sorry, I had trouble analyzing your leads. Try again in a moment.' };
   }
 }
@@ -386,10 +394,7 @@ async function handleQuery(
     return { message: result.response, task_id: task.id };
   } catch (error) {
     console.error(`[Controller] Query ${type} failed:`, error);
-    await clawUpdate('tasks', task.id, {
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    await failTask(task.id, error);
     return { message: `Sorry, I couldn't look that up right now. Try again in a moment.` };
   }
 }
@@ -428,10 +433,7 @@ async function handleAction(
     return { message: result.response, task_id: task.id };
   } catch (error) {
     console.error('[Controller] Action failed:', error);
-    await clawUpdate('tasks', task.id, {
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    await failTask(task.id, error);
     return { message: 'Sorry, I couldn\'t complete that action. Try again in a moment.' };
   }
 }
@@ -469,10 +471,7 @@ async function handleChat(
     return { message: result.response, task_id: task.id };
   } catch (error) {
     console.error('[Controller] Chat failed:', error);
-    await clawUpdate('tasks', task.id, {
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    await failTask(task.id, error);
     return { message: 'Sorry, I\'m having trouble thinking through that. Try again.' };
   }
 }
