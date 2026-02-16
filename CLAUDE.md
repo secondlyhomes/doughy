@@ -6,6 +6,40 @@ Doughy AI Mobile — React Native (Expo 54) + Supabase + TypeScript | iOS-first 
 
 **Package manager:** npm
 
+## Ecosystem
+
+This repo is 1 of 3 apps sharing the same Supabase backend:
+
+| App | Repo | Purpose | Status |
+|-----|------|---------|--------|
+| **Doughy** | `doughy-ai-mobile` (this repo) | Investor/landlord platform | Active, iOS |
+| **The Claw** | `the-claw-app` | AI agent control app (SMS briefings, approvals) | UI complete, wiring in progress |
+| **CallPilot** | `callpilot` | Insurance call coaching | UI complete, no backend |
+
+All 3 share the same Supabase project and auth system. The OpenClaw server (in `openclaw-server/`) is the AI gateway that powers The Claw.
+
+## Before You Start
+
+Read the relevant doc before making changes in these areas:
+
+| Area | Doc |
+|------|-----|
+| System architecture (3 apps, data flow) | `docs/ARCHITECTURE.md` |
+| Database schemas (7 schemas, 154 tables) | `docs/SCHEMA_MAP.md` |
+| Edge functions (62 deployed) | `docs/EDGE_FUNCTIONS.md` |
+| OpenClaw server (agent system, tools) | `docs/OPENCLAW_SERVER.md` |
+| Deployment state + blockers | `docs/DEPLOYMENT.md` |
+| Architectural decisions + rationale | `docs/DECISIONS.md` |
+| Known cleanup items (prioritized) | `docs/CLEANUP_NEEDED.md` |
+
+## Critical Facts
+
+- The `claw` schema EXISTS in staging with 5 tables: `agent_profiles`, `tasks`, `agent_runs`, `approvals`, `messages`
+- 3 seeded agent profiles: master-controller (Haiku), lead-ops (Sonnet, read-only), draft-specialist (Sonnet, requires approval)
+- The 93 `db.investor.*` / `db.landlord.*` helpers in `supabase.ts` are **dead code** (0 imports) — use `src/lib/rpc/` instead
+- OpenClaw server uses raw `fetch()` with service role key, NOT `@supabase/supabase-js` — see `docs/DECISIONS.md` #3
+- ALWAYS query the actual Supabase database via MCP tools to verify table/column existence — NEVER rely on grepping local files alone
+
 ## Commands
 
 ```bash
@@ -26,8 +60,8 @@ src/
 ├── hooks/             # Global custom hooks
 ├── services/          # Business logic & API calls
 ├── lib/               # Supabase client, RPC layer, utilities
-│   ├── rpc/           # Domain-specific query functions + mappers
-│   ├── supabase.ts    # DB client with db.investor.*, db.landlord.*
+│   ├── rpc/           # Domain-specific query functions + mappers (USE THESE for DB access)
+│   ├── supabase.ts    # DB client — db.investor.*/db.landlord.* are DEAD CODE, ignore them
 │   └── ai/            # AI assistant, PatchSets, job system
 ├── integrations/      # Supabase generated types
 ├── contexts/          # React Context providers (Theme, Auth, Error, etc.)
@@ -41,8 +75,12 @@ app/                   # Expo Router screens (file-based routing)
 ├── (admin)/           # Admin section
 ├── (modals)/          # Modal screens
 └── (public)/          # Public screens
-openclaw-server/       # Express + Anthropic SDK + Gmail adapter
-openclaw-skills/       # 7 prompt-based AI skills
+openclaw-server/       # Express AI gateway — see openclaw-server/CLAUDE.md
+├── src/claw/          # The Claw intelligence layer (8 files)
+├── src/channels/      # Channel adapters (SMS, Gmail, WhatsApp, etc.)
+├── src/services/      # Security, platform routing
+└── deploy/            # DO droplet setup scripts
+openclaw-skills/       # 9 prompt-based AI skills (doughy-*.md)
 supabase/              # Migrations and edge functions
 ```
 
@@ -79,11 +117,22 @@ supabase/              # Migrations and edge functions
 | Staging (dev) | `lqmbyobweeaigrwmvizo` | us-east-1 |
 | Production | `vpqglbaedcpeprnlnfxd` | us-west-2 |
 
-**Schemas:** `ai` (25 tables), `investor` (32), `landlord` (19), `crm` (5), `integrations` (9), `public` (~50)
+**Schemas (staging):** `claw` (5 tables), `ai` (25), `investor` (34), `landlord` (19), `crm` (5), `integrations` (9), `public` (57) = 154 tables
 
 **Generated types:** `src/integrations/supabase/types/generated.ts`
 
 **Env vars:** Use `EXPO_PUBLIC_` prefix for client-side variables.
+
+## DB Access Patterns
+
+| Context | Method | Auth |
+|---------|--------|------|
+| Mobile app (this repo) | `@supabase/supabase-js` with anon key + RLS | `auth.uid()` via JWT |
+| OpenClaw server | Raw `fetch()` with service role key + `Accept-Profile` header | Service role bypasses RLS, filters by user_id manually |
+| Edge functions | `@supabase/supabase-js` with service role | Varies per function |
+| Mobile DB queries | `src/lib/rpc/` functions (e.g., `getDealsWithLead()`) | Via RLS |
+
+**DO NOT** use `db.investor.*` or `db.landlord.*` from `supabase.ts` — they are dead code with 0 imports.
 
 ## Project Rules
 
@@ -108,7 +157,11 @@ supabase/              # Migrations and edge functions
 
 | Task | Doc |
 |------|-----|
-| Architecture principles | `docs/02-coding-standards/ARCHITECTURE-PRINCIPLES.md` |
+| System architecture (start here) | `docs/ARCHITECTURE.md` |
+| Database schema map | `docs/SCHEMA_MAP.md` |
+| OpenClaw server / AI agents | `docs/OPENCLAW_SERVER.md` |
+| Edge functions catalog | `docs/EDGE_FUNCTIONS.md` |
+| Design system | `docs/DESIGN_SYSTEM.md` |
 | New feature | `docs/patterns/NEW-FEATURE.md` |
 | New screen | `docs/patterns/NEW-SCREEN.md` |
 | Database changes | `docs/patterns/SUPABASE-TABLE.md` |
@@ -116,7 +169,6 @@ supabase/              # Migrations and edge functions
 | Forms | `docs/patterns/FORM-PATTERNS.md` |
 | Security checklist | `docs/09-security/SECURITY-CHECKLIST.md` |
 | Anti-patterns | `docs/anti-patterns/WHAT-NOT-TO-DO.md` |
-| Design system | `docs/DESIGN_SYSTEM.md` |
 | Supabase reference | `docs/SUPABASE_REFERENCE.md` |
 
 ## Before PR
