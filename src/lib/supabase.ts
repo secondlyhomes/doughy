@@ -51,12 +51,14 @@ if (__DEV__) {
 const ExpoSecureStoreAdapter = {
   getItem: async (key: string): Promise<string | null> => {
     try {
-      // SecureStore has a 2KB limit, so we use it only for auth tokens
       if (Platform.OS === 'web') {
-        // Use localStorage on web
         return localStorage.getItem(key);
       }
-      return await SecureStore.getItemAsync(key);
+      // Try SecureStore first (for values ≤2KB)
+      const secureValue = await SecureStore.getItemAsync(key);
+      if (secureValue !== null) return secureValue;
+      // Fall back to AsyncStorage (for values >2KB that setItem stored there)
+      return await AsyncStorage.getItem(key);
     } catch (error) {
       console.warn('SecureStore getItem error, falling back to AsyncStorage:', error);
       return await AsyncStorage.getItem(key);
@@ -71,8 +73,16 @@ const ExpoSecureStoreAdapter = {
       // SecureStore has a 2KB limit
       if (value.length > 2000) {
         await AsyncStorage.setItem(key, value);
+        // Clean up SecureStore to prevent stale reads
+        await SecureStore.deleteItemAsync(key).catch((e) => {
+          console.warn(`[Storage] SecureStore cleanup failed for "${key}":`, e);
+        });
       } else {
         await SecureStore.setItemAsync(key, value);
+        // Clean up AsyncStorage to prevent stale reads
+        await AsyncStorage.removeItem(key).catch((e) => {
+          console.warn(`[Storage] AsyncStorage cleanup failed for "${key}":`, e);
+        });
       }
     } catch (error) {
       console.warn('SecureStore setItem error, falling back to AsyncStorage:', error);
@@ -136,156 +146,6 @@ function getMockClient() {
 export const supabase = (USE_MOCK_DATA
   ? getMockClient()
   : realSupabase!) as ReturnType<typeof createClient<Database>>;
-
-// ============================================================================
-// Schema-specific query builders
-// ============================================================================
-// These helpers provide typed access to tables in domain-specific schemas.
-// Usage: db.investor.dealsPipeline().select('*')
-// ============================================================================
-
-/**
- * Database helper for schema-qualified table access.
- * Provides typed query builders for each domain schema.
- */
-export const db = {
-  // ---------------------------------------------------------------------------
-  // Investor schema (26 tables) - Real estate investment
-  // ---------------------------------------------------------------------------
-  investor: {
-    dealsPipeline: () => supabase.schema('investor').from('deals_pipeline'),
-    dealEvents: () => supabase.schema('investor').from('deal_events'),
-    campaigns: () => supabase.schema('investor').from('campaigns'),
-    dripCampaignSteps: () => supabase.schema('investor').from('drip_campaign_steps'),
-    dripEnrollments: () => supabase.schema('investor').from('drip_enrollments'),
-    dripTouchLogs: () => supabase.schema('investor').from('drip_touch_logs'),
-    agents: () => supabase.schema('investor').from('agents'),
-    followUps: () => supabase.schema('investor').from('follow_ups'),
-    outreachTemplates: () => supabase.schema('investor').from('outreach_templates'),
-    conversations: () => supabase.schema('investor').from('conversations'),
-    messages: () => supabase.schema('investor').from('messages'),
-    properties: () => supabase.schema('investor').from('properties'),
-    propertyAnalyses: () => supabase.schema('investor').from('property_analyses'),
-    propertyDocuments: () => supabase.schema('investor').from('property_documents'),
-    propertyImages: () => supabase.schema('investor').from('property_images'),
-    propertyMortgages: () => supabase.schema('investor').from('property_mortgages'),
-    propertyDebts: () => supabase.schema('investor').from('property_debts'),
-    comps: () => supabase.schema('investor').from('comps'),
-    repairEstimates: () => supabase.schema('investor').from('repair_estimates'),
-    financingScenarios: () => supabase.schema('investor').from('financing_scenarios'),
-    buyingCriteria: () => supabase.schema('investor').from('buying_criteria'),
-    portfolioEntries: () => supabase.schema('investor').from('portfolio_entries'),
-    portfolioGroups: () => supabase.schema('investor').from('portfolio_groups'),
-    portfolioMonthlyRecords: () => supabase.schema('investor').from('portfolio_monthly_records'),
-    portfolioMortgages: () => supabase.schema('investor').from('portfolio_mortgages'),
-    portfolioValuations: () => supabase.schema('investor').from('portfolio_valuations'),
-  },
-
-  // ---------------------------------------------------------------------------
-  // Landlord schema (19 tables) - Rental property management
-  // ---------------------------------------------------------------------------
-  landlord: {
-    properties: () => supabase.schema('landlord').from('properties'),
-    rooms: () => supabase.schema('landlord').from('rooms'),
-    bookings: () => supabase.schema('landlord').from('bookings'),
-    bookingCharges: () => supabase.schema('landlord').from('booking_charges'),
-    depositSettlements: () => supabase.schema('landlord').from('deposit_settlements'),
-    conversations: () => supabase.schema('landlord').from('conversations'),
-    messages: () => supabase.schema('landlord').from('messages'),
-    aiQueueItems: () => supabase.schema('landlord').from('ai_queue_items'),
-    templates: () => supabase.schema('landlord').from('templates'),
-    guestMessages: () => supabase.schema('landlord').from('guest_messages'),
-    guestTemplates: () => supabase.schema('landlord').from('guest_templates'),
-    inventoryItems: () => supabase.schema('landlord').from('inventory_items'),
-    maintenanceRecords: () => supabase.schema('landlord').from('maintenance_records'),
-    turnovers: () => supabase.schema('landlord').from('turnovers'),
-    turnoverTemplates: () => supabase.schema('landlord').from('turnover_templates'),
-    vendors: () => supabase.schema('landlord').from('vendors'),
-    vendorMessages: () => supabase.schema('landlord').from('vendor_messages'),
-    integrations: () => supabase.schema('landlord').from('integrations'),
-    emailConnections: () => supabase.schema('landlord').from('email_connections'),
-  },
-
-  // ---------------------------------------------------------------------------
-  // AI schema (23 tables) - AI/ML related
-  // ---------------------------------------------------------------------------
-  ai: {
-    jobs: () => supabase.schema('ai').from('jobs'),
-    sessions: () => supabase.schema('ai').from('sessions'),
-    responseOutcomes: () => supabase.schema('ai').from('response_outcomes'),
-    autoSendRules: () => supabase.schema('ai').from('auto_send_rules'),
-    captureItems: () => supabase.schema('ai').from('capture_items'),
-    confidenceAdjustments: () => supabase.schema('ai').from('confidence_adjustments'),
-    openclawSecurityLogs: () => supabase.schema('ai').from('openclaw_security_logs'),
-    openclawRateLimits: () => supabase.schema('ai').from('openclaw_rate_limits'),
-    openclawBlockedPatterns: () => supabase.schema('ai').from('openclaw_blocked_patterns'),
-    openclawBlockedIps: () => supabase.schema('ai').from('openclaw_blocked_ips'),
-    openclawUserThreatScores: () => supabase.schema('ai').from('openclaw_user_threat_scores'),
-    openclawUserMemories: () => supabase.schema('ai').from('openclaw_user_memories'),
-    openclawEpisodicMemories: () => supabase.schema('ai').from('openclaw_episodic_memories'),
-    openclawKnowledgeSources: () => supabase.schema('ai').from('openclaw_knowledge_sources'),
-    openclawKnowledgeChunks: () => supabase.schema('ai').from('openclaw_knowledge_chunks'),
-    openclawKnowledgeTags: () => supabase.schema('ai').from('openclaw_knowledge_tags'),
-    openclawKnowledgeChunkTags: () => supabase.schema('ai').from('openclaw_knowledge_chunk_tags'),
-    openclawGlobalKnowledge: () => supabase.schema('ai').from('openclaw_global_knowledge'),
-    openclawLearningQueueItems: () => supabase.schema('ai').from('openclaw_learning_queue_items'),
-    openclawSyncRecords: () => supabase.schema('ai').from('openclaw_sync_records'),
-    openclawResponseExamples: () => supabase.schema('ai').from('openclaw_response_examples'),
-    openclawEmailAnalyses: () => supabase.schema('ai').from('openclaw_email_analyses'),
-    openclawCircuitBreakers: () => supabase.schema('ai').from('openclaw_circuit_breakers'),
-  },
-
-  // ---------------------------------------------------------------------------
-  // CRM schema (5 tables) - Customer relationship management
-  // ---------------------------------------------------------------------------
-  crm: {
-    contacts: () => supabase.schema('crm').from('contacts'),
-    leads: () => supabase.schema('crm').from('leads'),
-    skipTraceResults: () => supabase.schema('crm').from('skip_trace_results'),
-    optOuts: () => supabase.schema('crm').from('opt_outs'),
-    touches: () => supabase.schema('crm').from('touches'),
-  },
-
-  // ---------------------------------------------------------------------------
-  // Integrations schema (9 tables) - Third-party integrations
-  // ---------------------------------------------------------------------------
-  integrations: {
-    seamConnectedDevices: () => supabase.schema('integrations').from('seam_connected_devices'),
-    seamAccessCodes: () => supabase.schema('integrations').from('seam_access_codes'),
-    seamLockEvents: () => supabase.schema('integrations').from('seam_lock_events'),
-    seamWorkspaces: () => supabase.schema('integrations').from('seam_workspaces'),
-    userIntegrations: () => supabase.schema('integrations').from('user_integrations'),
-    gmailTokens: () => supabase.schema('integrations').from('gmail_tokens'),
-    metaDmCredentials: () => supabase.schema('integrations').from('meta_dm_credentials'),
-    postgridCredentials: () => supabase.schema('integrations').from('postgrid_credentials'),
-    mailCreditTransactions: () => supabase.schema('integrations').from('mail_credit_transactions'),
-  },
-
-  // ---------------------------------------------------------------------------
-  // Public schema - Shared infrastructure (no .schema() needed)
-  // ---------------------------------------------------------------------------
-  public: {
-    userProfiles: () => supabase.from('user_profiles'),
-    workspaces: () => supabase.from('workspaces'),
-    workspaceMembers: () => supabase.from('workspace_members'),
-    userPlatformSettings: () => supabase.from('user_platform_settings'),
-    userMailCredits: () => supabase.from('user_mail_credits'),
-    calls: () => supabase.from('calls'),
-    callSummaries: () => supabase.from('call_summaries'),
-    callTranscriptSegments: () => supabase.from('call_transcript_segments'),
-    callAiSuggestions: () => supabase.from('call_ai_suggestions'),
-    systemLogs: () => supabase.from('system_logs'),
-    billingStripeCustomers: () => supabase.from('billing_stripe_customers'),
-    billingSubscriptionEvents: () => supabase.from('billing_subscription_events'),
-  },
-};
-
-// Legacy alias for backward compatibility - will be removed in future version
-/** @deprecated Use db.investor instead */
-export const realEstateDB = {
-  properties: () => supabase.schema('investor').from('properties'),
-  comps: () => supabase.schema('investor').from('comps'),
-};
 
 // Export URL for deep linking configuration
 export { SUPABASE_URL };

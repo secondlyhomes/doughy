@@ -2,7 +2,7 @@
 // API functions for deal CRUD operations
 // Uses RPC functions for cross-schema queries
 
-import { supabase, db } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { getDealsWithLead, getDealById as getDealByIdRPC } from '@/lib/rpc/investor';
 import { mapDealRPC } from '@/lib/rpc/mappers';
 import type { Deal } from '../types';
