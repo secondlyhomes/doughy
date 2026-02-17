@@ -6,7 +6,7 @@ import { View, Text, ScrollView, Linking, TouchableOpacity, RefreshControl, Plat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { Phone, Mail, Building2, MapPin, Star, Tag, Clock, ArrowLeft } from 'lucide-react-native';
+import { Phone, Mail, Building2, MapPin, Tag, Clock, ArrowLeft } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, ListEmptyState, Badge, Section, DetailRow } from '@/components/ui';
@@ -23,7 +23,6 @@ import {
   ProfileSection,
   QuickActions,
   formatSource,
-  getScoreColor,
 } from './contact-detail';
 
 interface ContactDetailScreenProps {
@@ -173,15 +172,6 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
           <Section title="Details">
             {contact!.source && (
               <DetailRow icon={Tag} label="Source" value={formatSource(contact!.source)} iconBackground />
-            )}
-            {contact!.score !== null && contact!.score !== undefined && (
-              <DetailRow
-                icon={Star}
-                label="Score"
-                value={`${contact!.score} pts`}
-                valueColor={getScoreColor(contact!.score, colors)}
-                iconBackground
-              />
             )}
             {contact!.created_at && (
               <DetailRow icon={Clock} label="Added" value={formatDate(contact!.created_at)} iconBackground />

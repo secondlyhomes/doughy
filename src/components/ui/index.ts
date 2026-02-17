@@ -69,6 +69,15 @@ export type { FormFieldProps } from './FormField';
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
 
+export { FilterSearchBar } from './FilterSearchBar';
+export type { FilterSearchBarProps, FilterPill } from './FilterSearchBar';
+
+export { CallPilotActions } from './CallPilotActions';
+export type { CallPilotActionsProps } from './CallPilotActions';
+
+export { CommunicationHistory } from './CommunicationHistory';
+export type { CommunicationHistoryProps, CommunicationEntry } from './CommunicationHistory';
+
 export { TextArea } from './TextArea';
 export type { TextAreaProps } from './TextArea';
 

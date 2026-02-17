@@ -315,6 +315,16 @@ export async function updateLead(userId: string, input: {
   metadata?: Record<string, unknown>;
 }): Promise<unknown> {
   assertUuid(input.contact_id, 'contact_id');
+
+  // Verify ownership before update
+  const existing = await schemaQuery<{ id: string; user_id: string }>(
+    'crm', 'contacts',
+    `id=eq.${input.contact_id}&user_id=eq.${userId}&select=id,user_id&limit=1`
+  );
+  if (existing.length === 0) {
+    throw new Error('Contact not found or access denied');
+  }
+
   const data: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (input.status !== undefined) data.status = input.status;
   if (input.score !== undefined) data.score = input.score;
@@ -337,6 +347,16 @@ export async function updateDealStage(userId: string, input: {
   next_action_due?: string;
 }): Promise<unknown> {
   assertUuid(input.deal_id, 'deal_id');
+
+  // Verify ownership before update
+  const existing = await schemaQuery<{ id: string }>(
+    'investor', 'deals_pipeline',
+    `id=eq.${input.deal_id}&user_id=eq.${userId}&select=id&limit=1`
+  );
+  if (existing.length === 0) {
+    throw new Error('Deal not found or access denied');
+  }
+
   const data: Record<string, unknown> = {
     stage: input.stage,
     updated_at: new Date().toISOString(),

@@ -54,10 +54,9 @@ const STARRED_OPTIONS: { label: string; value: boolean | null }[] = [
   { label: 'Not Starred', value: false },
 ];
 
-const SORT_OPTIONS: { label: string; value: 'name' | 'created_at' | 'score' }[] = [
+const SORT_OPTIONS: { label: string; value: 'name' | 'created_at' }[] = [
   { label: 'Date Added', value: 'created_at' },
   { label: 'Name', value: 'name' },
-  { label: 'Lead Score', value: 'score' },
 ];
 
 interface FilterSectionProps {

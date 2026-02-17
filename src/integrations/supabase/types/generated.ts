@@ -148,7 +148,7 @@ export type Database = {
           id: string
           subscription_id: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -157,7 +157,7 @@ export type Database = {
           id?: string
           subscription_id?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -166,7 +166,7 @@ export type Database = {
           id?: string
           subscription_id?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2283,7 +2283,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
-          owner_id: string
+          owner_id: string | null
           settings: Json | null
           updated_at: string | null
         }
@@ -2294,7 +2294,7 @@ export type Database = {
           id?: string
           is_active: boolean
           name: string
-          owner_id: string
+          owner_id?: string | null
           settings?: Json | null
           updated_at?: string | null
         }
@@ -2305,7 +2305,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
-          owner_id?: string
+          owner_id?: string | null
           settings?: Json | null
           updated_at?: string | null
         }
@@ -5309,6 +5309,12 @@ export type Database = {
         | "referral"
         | "craigslist"
         | "other"
+        | "driving_for_dollars"
+        | "direct_mail"
+        | "cold_call"
+        | "probate"
+        | "wholesaler"
+        | "mls"
       crm_contact_status:
         | "new"
         | "contacted"
@@ -5877,6 +5883,12 @@ export const Constants = {
         "referral",
         "craigslist",
         "other",
+        "driving_for_dollars",
+        "direct_mail",
+        "cold_call",
+        "probate",
+        "wholesaler",
+        "mls",
       ],
       crm_contact_status: [
         "new",

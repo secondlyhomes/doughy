@@ -41,8 +41,7 @@ export const SOURCE_OPTIONS: { label: string; value: string }[] = [
   { label: 'Other', value: 'other' },
 ];
 
-export const SORT_OPTIONS: { label: string; value: 'name' | 'created_at' | 'score' }[] = [
+export const SORT_OPTIONS: { label: string; value: 'name' | 'created_at' }[] = [
   { label: 'Date Added', value: 'created_at' },
   { label: 'Name', value: 'name' },
-  { label: 'Lead Score', value: 'score' },
 ];

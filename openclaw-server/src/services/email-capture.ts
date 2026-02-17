@@ -161,6 +161,7 @@ async function createContactFromEmail(userId: string, email: CapturedEmail): Pro
 
   const contact = await schemaInsert<CrmContact>('crm', 'contacts', {
     user_id: userId,
+    module: 'investor',
     email: email.from,
     emails: [email.from],
     first_name: firstName,

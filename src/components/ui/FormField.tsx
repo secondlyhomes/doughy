@@ -12,7 +12,7 @@ import {
   LayoutChangeEvent,
 } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useThemeColors } from '@/contexts/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
 
 export interface FormFieldProps extends Omit<TextInputProps, 'style'> {
@@ -72,6 +72,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
   },
   ref
 ) {
+  const { isDark } = useTheme();
   const colors = useThemeColors();
 
   return (
@@ -122,6 +123,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
           placeholder={placeholder}
           placeholderTextColor={colors.mutedForeground}
           keyboardType={keyboardType}
+          keyboardAppearance={isDark ? 'dark' : 'light'}
           autoCapitalize={autoCapitalize}
           multiline={multiline}
           numberOfLines={multiline ? numberOfLines : 1}

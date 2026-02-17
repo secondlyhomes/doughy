@@ -93,9 +93,6 @@ export function ContactsListScreen() {
         const bName = getContactDisplayName(b);
         const comparison = aName.localeCompare(bName);
         return sortOrder === 'asc' ? comparison : -comparison;
-      } else if (sortBy === 'score') {
-        const comparison = (a.score || 0) - (b.score || 0);
-        return sortOrder === 'asc' ? comparison : -comparison;
       }
       return 0;
     });

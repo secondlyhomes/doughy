@@ -5,11 +5,11 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import {
-  Star,
   Phone,
   Mail,
   ChevronRight,
-  MapPin
+  MapPin,
+  Star,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ICON_SIZES } from '@/constants/design-tokens';
@@ -18,7 +18,7 @@ import { ICON_SIZES } from '@/constants/design-tokens';
 import { DataCard, DataCardField } from '@/components/ui';
 
 // Shared formatters
-import { formatStatus, getStatusBadgeVariant, getScoreColor } from '@/lib/formatters';
+import { formatStatus, getStatusBadgeVariant } from '@/lib/formatters';
 
 import { Lead } from '../types';
 
@@ -70,25 +70,13 @@ export function LeadCard({ lead, onPress, variant = 'default', glassIntensity = 
       fields={fields}
       badges={cardBadges}
       footerContent={
-        <View className="flex-row items-center justify-between mb-2">
-          {/* Score */}
-          {lead.score !== undefined && (
-            <View className="flex-row items-center">
-              <Text className="text-sm font-medium" style={{ color: getScoreColor(lead.score, colors) }}>
-                {lead.score}
-              </Text>
-              <Text className="text-xs ml-0.5" style={{ color: colors.mutedForeground }}>
-                pts
-              </Text>
-            </View>
-          )}
-          {/* Tag overflow indicator */}
-          {lead.tags && lead.tags.length > 2 && (
+        lead.tags && lead.tags.length > 2 ? (
+          <View className="flex-row items-center justify-end mb-2">
             <Text className="text-xs" style={{ color: colors.mutedForeground }}>
               +{lead.tags.length - 2} more tags
             </Text>
-          )}
-        </View>
+          </View>
+        ) : undefined
       }
     />
   );

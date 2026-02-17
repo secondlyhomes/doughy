@@ -197,12 +197,12 @@ export async function approveDraft(
     let leadPhone: string | null = null;
     let lookupFailed = false;
     try {
-      const leads = await schemaQuery<{ phone: string }>('crm', 'leads', `id=eq.${draft.lead_id}&select=phone&limit=1`);
+      const leads = await schemaQuery<{ phone: string }>('crm', 'leads', `id=eq.${draft.lead_id}&user_id=eq.${userId}&select=phone&limit=1`);
       if (leads.length > 0) leadPhone = leads[0].phone;
     } catch (err) {
       console.warn('[Drafts] Lead phone lookup failed, trying contacts:', err);
       try {
-        const contacts = await schemaQuery<{ phone: string }>('crm', 'contacts', `id=eq.${draft.lead_id}&select=phone&limit=1`);
+        const contacts = await schemaQuery<{ phone: string }>('crm', 'contacts', `id=eq.${draft.lead_id}&user_id=eq.${userId}&select=phone&limit=1`);
         if (contacts.length > 0) leadPhone = contacts[0].phone;
       } catch (err2) {
         console.error('[Drafts] Contact phone lookup also failed:', err2);

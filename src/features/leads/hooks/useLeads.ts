@@ -44,6 +44,7 @@ async function fetchLeads(): Promise<Lead[]> {
     .schema('crm').from('leads')
     .select('*')
     .eq('is_deleted', false)
+    .eq('module', 'investor')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -69,6 +70,7 @@ async function fetchLeadsPaginated(pageParam: number = 0): Promise<PaginatedLead
     .schema('crm').from('leads')
     .select('*', { count: 'exact' })
     .eq('is_deleted', false)
+    .eq('module', 'investor')
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -132,6 +134,7 @@ async function createLead(formData: LeadFormData): Promise<Lead> {
 
   const insertData = {
     user_id: userData.user.id,
+    module: 'investor' as const,
     name: formData.name,
     email: formData.email || null,
     phone: formData.phone || null,
@@ -231,6 +234,7 @@ async function fetchLeadsWithProperties(): Promise<LeadWithProperties[]> {
     .schema('crm').from('leads')
     .select('*')
     .eq('is_deleted', false)
+    .eq('module', 'investor')
     .order('created_at', { ascending: false });
 
   if (leadsError) {
@@ -347,7 +351,7 @@ export function useLeads() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['leads'],
+    queryKey: ['leads', 'investor'],
     queryFn: fetchLeads,
   });
 
@@ -373,7 +377,7 @@ export function useLeadsPaginated() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['leads', 'paginated'],
+    queryKey: ['leads', 'investor', 'paginated'],
     queryFn: ({ pageParam = 0 }) => fetchLeadsPaginated(pageParam),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: 0,
@@ -460,7 +464,7 @@ export function useLeadsWithProperties() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['leads', 'with-properties'],
+    queryKey: ['leads', 'investor', 'with-properties'],
     queryFn: fetchLeadsWithProperties,
   });
 

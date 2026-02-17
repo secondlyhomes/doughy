@@ -15,6 +15,7 @@ export const LANDLORD_CONTACT_TYPES: CrmContactType[] = ['lead', 'guest', 'tenan
 // Contact interface matching crm_contacts table
 export interface Contact {
   id: string;
+  module: 'investor' | 'landlord';
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -55,7 +56,7 @@ export interface ContactFilters {
   contact_type: CrmContactType | 'all';
   status: CrmContactStatus | 'all';
   source: CrmContactSource | 'all';
-  sortBy: 'name' | 'created_at' | 'score';
+  sortBy: 'name' | 'created_at';
   sortOrder: 'asc' | 'desc';
 }
 

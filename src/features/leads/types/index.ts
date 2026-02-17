@@ -61,6 +61,7 @@ export interface Note {
  */
 export interface InvestorLead {
   id: string;
+  module?: 'investor' | 'landlord';
   name: string;
   status: LeadStatus;
   phone?: string;

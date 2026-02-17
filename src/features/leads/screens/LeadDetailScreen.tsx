@@ -201,16 +201,6 @@ export function LeadDetailScreen() {
             </Badge>
           </View>
 
-          {/* Score */}
-          {lead.score !== undefined && (
-            <View className="flex-row items-center mb-3">
-              <Text className="text-sm" style={{ color: colors.mutedForeground }}>Lead Score:</Text>
-              <View className="ml-2 px-2 py-0.5 rounded" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-                <Text className="font-semibold" style={{ color: colors.primary }}>{lead.score}</Text>
-              </View>
-            </View>
-          )}
-
           {/* Quick Actions - Call uses VoIP for pro/premium users */}
           <LeadQuickActions leadId={lead.id} name={lead.name || 'Lead'} phone={lead.phone} email={lead.email} />
         </View>

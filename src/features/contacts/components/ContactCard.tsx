@@ -4,10 +4,10 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Phone, Mail, ChevronRight, Building2, Star } from 'lucide-react-native';
+import { Phone, Mail, ChevronRight, Building2 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { DataCard, DataCardField, Badge } from '@/components/ui';
-import { formatStatus, getStatusBadgeVariant, getScoreColor } from '@/lib/formatters';
+import { formatStatus, getStatusBadgeVariant } from '@/lib/formatters';
 import { ICON_SIZES } from '@/constants/design-tokens';
 import { Contact, getContactDisplayName, CrmContactType, CrmContactSource } from '../types';
 
@@ -112,31 +112,12 @@ export function ContactCard({
             </View>
           )}
 
-          {/* Score and Source Row */}
-          <View className="flex-row items-center justify-between">
-            {/* Score */}
-            {contact.score !== null && contact.score !== undefined && (
-              <View className="flex-row items-center">
-                <Star size={ICON_SIZES.xs} color={getScoreColor(contact.score, colors)} />
-                <Text
-                  className="text-sm font-medium ml-1"
-                  style={{ color: getScoreColor(contact.score, colors) }}
-                >
-                  {contact.score}
-                </Text>
-                <Text className="text-xs ml-0.5" style={{ color: colors.mutedForeground }}>
-                  pts
-                </Text>
-              </View>
-            )}
-
-            {/* Source */}
-            {contact.source && (
-              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                via {formatSource(contact.source)}
-              </Text>
-            )}
-          </View>
+          {/* Source */}
+          {contact.source && (
+            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+              via {formatSource(contact.source)}
+            </Text>
+          )}
         </View>
       }
     />

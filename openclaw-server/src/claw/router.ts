@@ -163,7 +163,8 @@ async function notifyLeadReply(
 async function createDraftLead(
   userId: string,
   phone: string,
-  messageBody: string
+  messageBody: string,
+  module: 'investor' | 'landlord' = 'investor'
 ): Promise<string | null> {
   try {
     const lead = await schemaInsert<{ id: string }>('crm', 'leads', {
@@ -172,7 +173,7 @@ async function createDraftLead(
       phone,
       status: 'new',
       source: 'inbound_sms',
-      module: 'investor',
+      module,
       auto_created: true,
       review_status: 'pending_review',
       metadata: { first_message: messageBody.slice(0, 500) },

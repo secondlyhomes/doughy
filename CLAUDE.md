@@ -242,8 +242,54 @@ supabase/              # Migrations and edge functions
 - `src/features/pipeline/components/InvestorNeedsAttention.tsx`
 - `src/features/pipeline/hooks/useInvestorAttention.ts`
 
+### 2026-02-17 — Restructure & Module Isolation
+
+**DB Migrations (staging):**
+- CHECK constraints on `crm.contacts.module` and `crm.leads.module` (investor/landlord only)
+- `crm.lead_links` — junction table for linking related leads (spouse, co-owner, etc.)
+- `investor.deal_leads` — many-to-many deals-to-leads junction table
+- `claw.transcript_extractions` — CallPilot→Claw→Doughy extraction flow
+- `callpilot.calls` — added `transcript_retention` and `transcript_expires_at` columns
+- `public.crm_contact_source` enum — added investor sources: driving_for_dollars, direct_mail, cold_call, probate, wholesaler, mls
+- Types regenerated from staging
+
+**Module Data Isolation:**
+- Contacts queries now filter by `module='landlord'`, leads filter by `module='investor'`
+- `createContact()` sets `module: 'landlord'`, `createLead()` sets `module: 'investor'`
+- Query keys updated to include module for proper cache isolation
+- `module` field added to Contact and InvestorLead type interfaces
+
+**Points/Score Removal:**
+- Removed score display from ContactCard, LeadCard, ContactDetailScreen, LeadDetailScreen
+- Removed 'Score' / 'Lead Score' from sort options in both contacts and leads list screens
+- Removed 'score' from sortBy union types in filter types
+- Score field kept in DB and types (valid data, just hidden from UI)
+
+**The Claw Security Fixes (openclaw-server):**
+- `drafts.ts`: Added `user_id` filter to phone lookups (IDOR fix)
+- `briefing.ts`: Added `user_id` filter to contact/lead name lookups
+- `router.ts`: `createDraftLead()` now accepts `module` parameter (default: 'investor')
+- `tools.ts`: Added ownership verification to `updateLead()` and `updateDealStage()`
+- `email-capture.ts`: `createContactFromEmail()` now sets `module: 'investor'`
+
+**Tab Restructure:**
+- Investor Mode: Leads → Properties → Deals → Settings (was Inbox → Pipeline → Contacts → Settings)
+- Landlord Mode: People → Properties → Bookings → Settings (was Inbox → Properties → Contacts → Settings)
+- Inbox tabs hidden (moving to CallPilot), Pipeline/Portfolio hidden
+- Default route: Leads (investor) or People (landlord)
+
+**New UI Components:**
+- `FilterSearchBar` — SearchBar wrapper with dismissible active filter pills
+- `CallPilotActions` — Call/Message buttons with deep linking to CallPilot app
+- `CommunicationHistory` — Read-only communication timeline for detail screens
+
+**Dark Mode Fixes:**
+- `FormField` — added `keyboardAppearance` tied to theme (affects ALL form fields app-wide)
+- `LoginScreen` — added `keyboardAppearance` to both email and password inputs
+
 **Next Session:**
-- Test on physical device (all screens, both modes, light + dark)
+- Deploy openclaw-server fixes to droplet
+- Test tab restructure on device (both modes)
+- Add CallPilot actions to lead/contact detail screens
+- Implement transcript extraction flow (server + mobile review screen)
 - Run full `npm run validate` before PR
-- Consider adding glass to auth screens (login, signup)
-- Email ingestion implementation (Phase 1.5 from ROADMAP.md)

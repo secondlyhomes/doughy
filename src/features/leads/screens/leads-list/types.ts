@@ -7,6 +7,6 @@ export interface LeadFilters {
   status: LeadStatus | 'all';
   source: string | 'all';
   starred: boolean | null;
-  sortBy: 'name' | 'created_at' | 'score';
+  sortBy: 'name' | 'created_at';
   sortOrder: 'asc' | 'desc';
 }

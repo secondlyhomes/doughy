@@ -4,8 +4,8 @@
 // Supports platform switching between RE Investor and Landlord modes
 //
 // Tab Design (4 tabs per platform):
-// - Investor: Inbox → Pipeline → Contacts → Settings
-// - Landlord: Inbox → Properties → Contacts → Settings
+// - Investor: Leads → Properties → Deals → Settings
+// - Landlord: People → Properties → Bookings → Settings
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import { NativeTabs, Icon, Label, Badge } from 'expo-router/unstable-native-tabs';
@@ -47,28 +47,33 @@ export default function TabLayout() {
       disableTransparentOnScrollEdge
     >
       {/* ========== RE INVESTOR TABS (4 tabs) ========== */}
-      {/* Tab Order: Inbox → Pipeline → Contacts → Settings */}
-      <NativeTabs.Trigger name="investor-inbox" hidden={isLandlord}>
-        <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
-        <Label>Inbox</Label>
-        {counts.investorInbox > 0 && (
-          <Badge>{String(counts.investorInbox)}</Badge>
+      {/* Tab Order: Leads → Properties → Deals → Settings */}
+      <NativeTabs.Trigger name="leads" hidden={isLandlord}>
+        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
+        <Label>Leads</Label>
+        {counts.leads > 0 && (
+          <Badge>{String(counts.leads)}</Badge>
         )}
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="pipeline" hidden={isLandlord}>
-        <Icon sf={{ default: 'chart.line.uptrend.xyaxis', selected: 'chart.line.uptrend.xyaxis' }} />
-        <Label>Pipeline</Label>
-        {(counts.leads > 0 || counts.overdueDeals > 0) && (
-          <Badge>{String(counts.leads + counts.overdueDeals)}</Badge>
+      <NativeTabs.Trigger name="properties" hidden={isLandlord}>
+        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
+        <Label>Properties</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="deals" hidden={isLandlord}>
+        <Icon sf={{ default: 'handshake', selected: 'handshake.fill' }} />
+        <Label>Deals</Label>
+        {counts.overdueDeals > 0 && (
+          <Badge>{String(counts.overdueDeals)}</Badge>
         )}
       </NativeTabs.Trigger>
 
       {/* ========== LANDLORD TABS (4 tabs) ========== */}
-      {/* Tab Order: Inbox → Properties → Contacts → Settings */}
-      <NativeTabs.Trigger name="landlord-inbox" hidden={!isLandlord}>
-        <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
-        <Label>Inbox</Label>
+      {/* Tab Order: People → Properties → Bookings → Settings */}
+      <NativeTabs.Trigger name="contacts" hidden={!isLandlord}>
+        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
+        <Label>People</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="rental-properties" hidden={!isLandlord}>
@@ -76,28 +81,28 @@ export default function TabLayout() {
         <Label>Properties</Label>
       </NativeTabs.Trigger>
 
-      {/* ========== SHARED TABS ========== */}
-      <NativeTabs.Trigger name="contacts">
-        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
-        <Label>Contacts</Label>
+      <NativeTabs.Trigger name="bookings" hidden={!isLandlord}>
+        <Icon sf={{ default: 'calendar', selected: 'calendar' }} />
+        <Label>Bookings</Label>
       </NativeTabs.Trigger>
 
+      {/* ========== SHARED TABS ========== */}
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
         <Label>Settings</Label>
       </NativeTabs.Trigger>
 
       {/* ========== HIDDEN TABS (accessible via navigation but not in tab bar) ========== */}
-      {/* Old investor tabs - now consolidated into Pipeline */}
-      <NativeTabs.Trigger name="leads" hidden />
-      <NativeTabs.Trigger name="deals" hidden />
-      <NativeTabs.Trigger name="portfolio" hidden />
+      {/* Inbox tabs - moved to CallPilot, keep routes for deep links */}
+      <NativeTabs.Trigger name="investor-inbox" hidden />
+      <NativeTabs.Trigger name="landlord-inbox" hidden />
 
-      {/* Old landlord tabs - Bookings moved to Properties */}
-      <NativeTabs.Trigger name="bookings" hidden />
+      {/* Pipeline - now split into Leads/Properties/Deals */}
+      <NativeTabs.Trigger name="pipeline" hidden />
+      <NativeTabs.Trigger name="portfolio" hidden />
+      <NativeTabs.Trigger name="campaigns" hidden />
 
       {/* Other hidden tabs */}
-      <NativeTabs.Trigger name="properties" hidden />
       <NativeTabs.Trigger name="conversations" hidden />
     </NativeTabs>
     </View>

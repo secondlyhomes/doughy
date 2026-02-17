@@ -22,6 +22,7 @@ const PAGE_SIZE = 20;
 function mapRowToContact(row: CrmContactRow): Contact {
   return {
     id: row.id,
+    module: (row as unknown as { module: string }).module as 'investor' | 'landlord',
     first_name: row.first_name,
     last_name: row.last_name,
     email: row.email,
@@ -50,6 +51,7 @@ async function fetchContacts(): Promise<Contact[]> {
     .schema('crm').from('contacts')
     .select('*')
     .eq('is_deleted', false)
+    .eq('module', 'landlord')
     .overlaps('contact_types', LANDLORD_CONTACT_TYPES)
     .order('created_at', { ascending: false });
 
@@ -76,6 +78,7 @@ async function fetchContactsPaginated(pageParam: number = 0): Promise<PaginatedC
     .schema('crm').from('contacts')
     .select('*', { count: 'exact' })
     .eq('is_deleted', false)
+    .eq('module', 'landlord')
     .overlaps('contact_types', LANDLORD_CONTACT_TYPES)
     .order('created_at', { ascending: false })
     .range(from, to);
@@ -127,6 +130,7 @@ async function createContact(formData: ContactFormData): Promise<Contact> {
 
   const insertData = {
     user_id: userData.user.id,
+    module: 'landlord' as const,
     first_name: formData.first_name,
     last_name: formData.last_name || null,
     email: formData.email || null,

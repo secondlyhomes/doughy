@@ -101,9 +101,6 @@ export function LeadsListScreen() {
       } else if (sortBy === 'name') {
         const comparison = (a.name || '').localeCompare(b.name || '');
         return sortOrder === 'asc' ? comparison : -comparison;
-      } else if (sortBy === 'score') {
-        const comparison = (a.score || 0) - (b.score || 0);
-        return sortOrder === 'asc' ? comparison : -comparison;
       }
       return 0;
     });

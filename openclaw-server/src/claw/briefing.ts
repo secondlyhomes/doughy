@@ -173,7 +173,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
     try {
       const contactResults = await schemaQuery<{ id: string; first_name: string; last_name: string | null }>(
         'crm', 'contacts',
-        `id=in.(${contactIds.join(',')})&select=id,first_name,last_name`
+        `id=in.(${contactIds.join(',')})&user_id=eq.${userId}&select=id,first_name,last_name`
       );
       for (const c of contactResults) {
         contactNames[c.id] = [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown';
@@ -196,7 +196,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       const leadResults = await schemaQuery<{ id: string; name: string }>(
         'crm',
         'leads',
-        `id=in.(${leadIds.join(',')})&select=id,name`
+        `id=in.(${leadIds.join(',')})&user_id=eq.${userId}&select=id,name`
       );
       for (const l of leadResults) {
         leadNames[l.id] = l.name || 'Unknown';
