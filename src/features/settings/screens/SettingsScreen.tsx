@@ -35,7 +35,7 @@ import {
   MessageSquare,
 } from 'lucide-react-native';
 import { ThemedSafeAreaView, ThemedView } from '@/components';
-import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
+import { LoadingSpinner, TAB_BAR_SAFE_PADDING, Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useThemeColors } from '@/contexts/ThemeContext';
@@ -168,7 +168,7 @@ export function SettingsScreen() {
               LANDLORD AI
             </Text>
 
-            <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+            <Card variant="glass">
               <SettingsItem
                 icon={<Bot size={20} color={colors.primary} />}
                 title="AI Communication"
@@ -182,7 +182,7 @@ export function SettingsScreen() {
                 onPress={() => router.push('/(tabs)/settings/guest-templates')}
                 hideBorder
               />
-            </View>
+            </Card>
           </View>
         )}
 
@@ -193,7 +193,7 @@ export function SettingsScreen() {
               INTEGRATIONS & VENDORS
             </Text>
 
-            <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+            <Card variant="glass">
               <SettingsItem
                 icon={<Mail size={20} color={colors.primary} />}
                 title="Email Integration"
@@ -213,7 +213,7 @@ export function SettingsScreen() {
                 onPress={() => router.push('/(tabs)/settings/vendors')}
                 hideBorder
               />
-            </View>
+            </Card>
           </View>
         )}
 
@@ -223,7 +223,7 @@ export function SettingsScreen() {
             ACCOUNT
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <SettingsItem
               icon={<User size={20} color={colors.mutedForeground} />}
               title="Edit Profile"
@@ -235,7 +235,7 @@ export function SettingsScreen() {
               onPress={() => router.push('/(tabs)/settings/change-password')}
               hideBorder
             />
-          </View>
+          </Card>
         </View>
 
         {/* Security */}
@@ -244,7 +244,7 @@ export function SettingsScreen() {
             SECURITY
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <SettingsItem
               icon={<Shield size={20} color={colors.mutedForeground} />}
               title="Security Settings"
@@ -252,7 +252,7 @@ export function SettingsScreen() {
               onPress={() => router.push('/(tabs)/settings/security')}
               hideBorder
             />
-          </View>
+          </Card>
         </View>
 
         {/* Preferences */}
@@ -261,7 +261,7 @@ export function SettingsScreen() {
             PREFERENCES
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <SettingsItem
               icon={<Bell size={20} color={colors.mutedForeground} />}
               title="Notifications"
@@ -281,7 +281,7 @@ export function SettingsScreen() {
               onPress={() => router.push('/(tabs)/settings/analytics')}
               hideBorder
             />
-          </View>
+          </Card>
         </View>
 
         {/* Deal Preferences - Zone B */}
@@ -290,7 +290,7 @@ export function SettingsScreen() {
             DEAL PREFERENCES
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <View className="flex-row items-center p-4">
               <Focus size={20} color={colors.mutedForeground} />
               <View className="flex-1 ml-3">
@@ -306,7 +306,7 @@ export function SettingsScreen() {
                 thumbColor={colors.card}
               />
             </View>
-          </View>
+          </Card>
         </View>
 
         {/* Campaign & Outreach Settings */}
@@ -315,7 +315,7 @@ export function SettingsScreen() {
             CAMPAIGNS & OUTREACH
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <SettingsItem
               icon={<Megaphone size={20} color={colors.primary} />}
               title="Drip Campaigns"
@@ -329,7 +329,7 @@ export function SettingsScreen() {
               onPress={() => router.push('/(tabs)/settings/campaign-settings')}
               hideBorder
             />
-          </View>
+          </Card>
         </View>
 
         {/* Nudge Settings */}
@@ -338,7 +338,7 @@ export function SettingsScreen() {
             NUDGE SETTINGS
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <SettingsItem
               icon={<Clock size={20} color={colors.mutedForeground} />}
               title="Smart Nudges"
@@ -346,7 +346,7 @@ export function SettingsScreen() {
               onPress={() => router.push('/(tabs)/settings/nudges')}
               hideBorder
             />
-          </View>
+          </Card>
         </View>
 
         {/* Admin Panel - Only visible to admin/support users */}
@@ -356,7 +356,7 @@ export function SettingsScreen() {
               ADMINISTRATION
             </Text>
 
-            <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+            <Card variant="glass">
               <SettingsItem
                 icon={<Settings size={20} color={colors.info} />}
                 title="Admin Dashboard"
@@ -364,7 +364,7 @@ export function SettingsScreen() {
                 onPress={() => router.push('/(admin)')}
                 hideBorder
               />
-            </View>
+            </Card>
           </View>
         )}
 
@@ -377,7 +377,7 @@ export function SettingsScreen() {
             ABOUT
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <SettingsItem
               icon={<Info size={20} color={colors.mutedForeground} />}
               title="About Doughy AI"
@@ -385,7 +385,7 @@ export function SettingsScreen() {
               onPress={() => router.push('/(tabs)/settings/about')}
               hideBorder
             />
-          </View>
+          </Card>
         </View>
 
         {/* Danger Zone */}
@@ -394,7 +394,7 @@ export function SettingsScreen() {
             ACCOUNT ACTIONS
           </Text>
 
-          <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
+          <Card variant="glass">
             <TouchableOpacity
               className="flex-row items-center p-4"
               style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
@@ -417,7 +417,7 @@ export function SettingsScreen() {
                 Delete Account
               </Text>
             </TouchableOpacity>
-          </View>
+          </Card>
         </View>
 
       </ScrollView>

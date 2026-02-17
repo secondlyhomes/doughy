@@ -16,6 +16,10 @@ export type ClawIntent =
   | 'query'
   | 'action'
   | 'chat'
+  | 'call_list'
+  | 'cost_summary'
+  | 'trust_control'
+  | 'dispatch'
   | 'unknown';
 
 // Briefing data — mirrors exactly what the mobile app shows
@@ -58,6 +62,14 @@ export interface BriefingData {
     end_date: string;
     booking_type: string;
     status: string;
+  }>;
+  maintenance: Array<{
+    id: string;
+    title: string;
+    status: string;
+    priority: string | null;
+    category: string | null;
+    property_id: string | null;
   }>;
   portfolio: {
     totalProperties: number;

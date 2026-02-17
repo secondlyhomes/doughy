@@ -1,5 +1,8 @@
 // src/features/voip/screens/in-call/styles.ts
 // Styles for InCallScreen components
+// Note: In-call screen always uses a dark gradient background,
+// so light text colors are intentional (not a dark mode violation).
+// Dynamic colors are applied via inline styles in the component.
 
 import { StyleSheet } from 'react-native';
 import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
@@ -36,12 +39,10 @@ export const styles = StyleSheet.create({
   avatarText: {
     fontSize: 36,
     fontWeight: '600',
-    color: '#FFFFFF',
   },
   contactName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: SPACING.sm,
   },
   statusContainer: {
@@ -57,7 +58,6 @@ export const styles = StyleSheet.create({
   durationText: {
     fontSize: 48,
     fontWeight: '200',
-    color: '#FFFFFF',
     fontVariant: ['tabular-nums'],
     minHeight: 58,
   },
@@ -107,6 +107,5 @@ export const styles = StyleSheet.create({
   },
   disclosureText: {
     fontSize: FONT_SIZES.xs,
-    color: 'rgba(255, 255, 255, 0.4)',
   },
 });

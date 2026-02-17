@@ -193,3 +193,57 @@ supabase/              # Migrations and edge functions
 **Dev branch:** `develop`
 **CI:** Runs type-check, lint, tests, security audit, and migration tests on PRs to main/develop
 **Pre-commit:** Husky runs secret scanning + type checking before every commit
+
+## Session Changelog
+
+### 2026-02-17 — UI Reorganization & Polish
+
+**Tab Structure:**
+- Changed from 3 to 4 tabs per mode: Investor (Inbox | Pipeline | Contacts | Settings), Landlord (Inbox | Properties | Contacts | Settings)
+- Removed `conversations` hidden tab from navigation
+- Elevated Contacts to a visible shared tab
+
+**ADHD-Friendly UX:**
+- Added `InvestorNeedsAttention` component + `useInvestorAttention` hook to Pipeline screen
+- Added `LandlordNeedsAttention` component + `useLandlordAttention` hook to Properties screen
+- Color-coded urgency (red/yellow/blue), max 3 items, "+N more" overflow
+
+**Liquid Glass Design:**
+- `useNativeHeader` now defaults to `glass: true` — adds `headerBlurEffect: 'systemChromeMaterial'` on iOS
+- All detail screens (Property, Contact, SmartHome) use native glass headers
+- Settings screen converted to `Card variant="glass"` for all sections
+- PropertyHubGrid expanded to 6 hubs (added Inventory, Smart Home) with glass variant
+- Financials and Listings cards on property detail use glass variant
+
+**Dark Mode Fixes:**
+- VoIP in-call styles: removed hardcoded colors from stylesheet, applied via inline styles
+- Vendors FAB: fixed hardcoded `"white"` → `colors.primaryForeground`
+- ContactAvatar: fixed hardcoded `"#FFFFFF"` → `colors.primaryForeground`
+
+**DB Migrations (staging):**
+- `landlord.vendor_jobs` — new table for job dispatch tracking
+- `landlord.inventory_items` — added manufacturer support fields
+- `crm.leads` — added source, auto_created, review_status columns
+- `investor.properties` — added mortgage_info JSONB
+
+**Documentation:**
+- Created README.md at project root
+- Created `docs/CHAT_UI_REFERENCE.md` (CallPilot reference for chat patterns)
+- Updated ARCHITECTURE.md with cross-system dependencies
+- Updated ROADMAP.md with completed UI items
+- Updated DECISIONS.md with decisions #13-15
+- Updated docs/ROADMAP.md with Phase 1.5 (Email Ingestion) and Phase 1.6 (Smart Home)
+
+**Files Created:**
+- `README.md`
+- `docs/CHAT_UI_REFERENCE.md`
+- `src/features/rental-properties/components/LandlordNeedsAttention.tsx`
+- `src/features/rental-properties/hooks/useLandlordAttention.ts`
+- `src/features/pipeline/components/InvestorNeedsAttention.tsx`
+- `src/features/pipeline/hooks/useInvestorAttention.ts`
+
+**Next Session:**
+- Test on physical device (all screens, both modes, light + dark)
+- Run full `npm run validate` before PR
+- Consider adding glass to auth screens (login, signup)
+- Email ingestion implementation (Phase 1.5 from ROADMAP.md)

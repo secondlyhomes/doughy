@@ -100,7 +100,11 @@ export function ContactAvatar({ name, isConnected }: ContactAvatarProps) {
           },
         ]}
       >
-        <Text style={styles.avatarText}>{initials || <User size={40} color="#FFFFFF" />}</Text>
+        {initials ? (
+          <Text style={[styles.avatarText, { color: colors.primaryForeground }]}>{initials}</Text>
+        ) : (
+          <User size={40} color={colors.primaryForeground} />
+        )}
       </Animated.View>
     </View>
   );

@@ -118,6 +118,72 @@ router.post('/pre-call', requireAuth, async (req: Request, res: Response) => {
 });
 
 // ============================================================================
+// GET /api/calls/history/:leadId — Call history for a specific lead
+// (registered BEFORE /:id routes to avoid Express param matching conflicts)
+// ============================================================================
+
+router.get('/history/:leadId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const leadId = param(req, 'leadId');
+    if (!UUID_RE.test(leadId)) {
+      return res.status(400).json({ error: 'Invalid lead ID' });
+    }
+
+    const calls = await cpQuery(
+      'calls',
+      `user_id=eq.${userId}&lead_id=eq.${leadId}&deleted_at=is.null&select=*&order=created_at.desc&limit=50`
+    );
+
+    // Also fetch summaries for completed calls
+    const callIds = (calls as any[]).map((c: any) => c.id);
+    let summaries: any[] = [];
+    if (callIds.length > 0) {
+      summaries = await cpQuery(
+        'call_summaries',
+        `call_id=in.(${callIds.join(',')})&select=call_id,summary,key_points,sentiment,next_steps`
+      );
+    }
+
+    res.json({ calls, summaries });
+  } catch (error) {
+    console.error('[CallPilot] Call history error:', error);
+    res.status(500).json({ error: 'Failed to fetch call history' });
+  }
+});
+
+// ============================================================================
+// GET /api/calls/messages/:leadId — Message history for a lead (from crm.messages)
+// ============================================================================
+
+router.get('/messages/:leadId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const leadId = param(req, 'leadId');
+    if (!UUID_RE.test(leadId)) {
+      return res.status(400).json({ error: 'Invalid lead ID' });
+    }
+
+    const limitParam = parseInt(req.query.limit as string);
+    const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 200) : 50;
+
+    // Import schemaQuery for cross-schema access
+    const { schemaQuery } = await import('../claw/db.js');
+
+    const messages = await schemaQuery(
+      'crm',
+      'messages',
+      `user_id=eq.${userId}&lead_id=eq.${leadId}&select=*&order=created_at.desc&limit=${limit}`
+    );
+
+    res.json({ messages });
+  } catch (error) {
+    console.error('[CallPilot] Message history error:', error);
+    res.status(500).json({ error: 'Failed to fetch message history' });
+  }
+});
+
+// ============================================================================
 // POST /api/calls/:id/start — Mark call as in-progress
 // ============================================================================
 
@@ -179,11 +245,18 @@ router.post('/:id/end', requireAuth, async (req: Request, res: Response) => {
 
 router.get('/:id/coaching', requireAuth, async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).userId;
     const callId = param(req, 'id');
     const sinceMs = parseInt(req.query.since_ms as string) || 0;
 
     if (!UUID_RE.test(callId)) {
       return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify ownership
+    const calls = await cpQuery('calls', `id=eq.${callId}&user_id=eq.${userId}&select=id&limit=1`);
+    if (calls.length === 0) {
+      return res.status(404).json({ error: 'Call not found' });
     }
 
     let params = `call_id=eq.${callId}&select=*&order=created_at.asc`;
@@ -260,9 +333,16 @@ router.post('/:id/coaching/:cardId/dismiss', requireAuth, async (req: Request, r
 
 router.get('/:id/summary', requireAuth, async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).userId;
     const callId = param(req, 'id');
     if (!UUID_RE.test(callId)) {
       return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify ownership
+    const calls = await cpQuery('calls', `id=eq.${callId}&user_id=eq.${userId}&select=id&limit=1`);
+    if (calls.length === 0) {
+      return res.status(404).json({ error: 'Call not found' });
     }
 
     const [summaries, items] = await Promise.all([
@@ -484,6 +564,105 @@ router.post('/:id/transcribe', requireAuth, async (req: Request, res: Response) 
   } catch (error) {
     console.error('[CallPilot] Transcribe error:', error);
     res.status(500).json({ error: 'Failed to transcribe recording' });
+  }
+});
+
+// ============================================================================
+// Bland AI Endpoints (stubs — gracefully skip if BLAND_API_KEY not configured)
+// ============================================================================
+
+router.post('/bland/call', requireAuth, async (req: Request, res: Response) => {
+  if (!config.blandApiKey) {
+    return res.status(501).json({
+      error: 'Bland AI not configured',
+      message: 'Add BLAND_API_KEY to enable AI calling',
+    });
+  }
+
+  try {
+    const userId = (req as any).userId;
+    const { lead_id, call_type, objective } = req.body;
+
+    if (!lead_id || !UUID_RE.test(lead_id)) {
+      return res.status(400).json({ error: 'Invalid lead_id' });
+    }
+
+    // TODO: Implement Bland API call when key is configured
+    // 1. Load lead data
+    // 2. Check daily limits via enforceAction()
+    // 3. Call Bland API with lead context
+    // 4. Return Bland call_id
+
+    res.status(501).json({
+      error: 'Bland AI call initiation not yet implemented',
+      message: 'API key is configured but call logic is pending',
+    });
+  } catch (error) {
+    console.error('[CallPilot] Bland call error:', error);
+    res.status(500).json({ error: 'Failed to initiate Bland call' });
+  }
+});
+
+router.post('/bland/webhook', async (req: Request, res: Response) => {
+  // Bland calls this endpoint after every AI call completes
+  // No auth required — Bland sends the webhook directly
+  try {
+    const {
+      call_id: blandCallId,
+      transcript,
+      summary,
+      duration,
+      status,
+      recording_url,
+      from,
+      to,
+    } = req.body;
+
+    console.log(`[Bland] Webhook received: call=${blandCallId} status=${status} duration=${duration}`);
+
+    if (!blandCallId) {
+      return res.status(400).json({ error: 'Missing call_id' });
+    }
+
+    // TODO: When Bland is fully configured:
+    // 1. Match to lead via phone number
+    // 2. Create callpilot.calls record (caller_type='ai_bland')
+    // 3. Generate enriched summary via Sonnet
+    // 4. Log cost to cost_log
+    // 5. Broadcast result to user via Discord + push notification
+    // 6. Create draft follow-up suggestion
+
+    res.json({ received: true });
+  } catch (error) {
+    console.error('[Bland] Webhook error:', error);
+    res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
+router.post('/bland/missed', requireAuth, async (req: Request, res: Response) => {
+  if (!config.blandApiKey) {
+    return res.status(501).json({
+      error: 'Bland AI not configured',
+      message: 'Add BLAND_API_KEY to enable AI calling',
+    });
+  }
+
+  try {
+    const userId = (req as any).userId;
+    const { from_number } = req.body;
+
+    // TODO: When Bland is configured:
+    // 1. Check trust config for auto-answer setting
+    // 2. If enabled: trigger Bland callback
+    // 3. If disabled: notify user "Missed call from X, want Bland to call back?"
+
+    res.status(501).json({
+      error: 'Missed call handling not yet implemented',
+      message: 'Bland AI auto-callback is pending implementation',
+    });
+  } catch (error) {
+    console.error('[CallPilot] Bland missed call error:', error);
+    res.status(500).json({ error: 'Failed to handle missed call' });
   }
 });
 

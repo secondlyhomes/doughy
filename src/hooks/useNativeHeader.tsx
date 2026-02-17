@@ -3,7 +3,7 @@
 // Follows the pattern documented in docs/ui-conventions.md
 
 import { useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
@@ -26,6 +26,8 @@ export interface UseNativeHeaderOptions {
   hideBackButton?: boolean;
   /** Custom back button press handler */
   onBack?: () => void;
+  /** Enable glass/blur effect on the header (iOS native blur). Default: true */
+  glass?: boolean;
 }
 
 export interface UseNativeHeaderReturn {
@@ -71,6 +73,7 @@ export function useNativeHeader({
   leftAction,
   hideBackButton = false,
   onBack,
+  glass = true,
 }: UseNativeHeaderOptions): UseNativeHeaderReturn {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -94,11 +97,19 @@ export function useNativeHeader({
   }, [router, fallbackRoute, onBack]);
 
   // Memoize header options to prevent infinite re-render loops
-  const headerOptions = useMemo((): NativeStackNavigationOptions => ({
+  const headerOptions = useMemo((): NativeStackNavigationOptions => {
+    // iOS glass header: transparent background + native blur effect
+    const shouldUseGlass = glass && Platform.OS === 'ios';
+
+    return {
     headerShown: true,
-    headerStyle: { backgroundColor: colors.background },
+    headerStyle: { backgroundColor: shouldUseGlass ? 'transparent' : colors.background },
     headerShadowVisible: false,
     headerStatusBarHeight: insets.top,
+    ...(shouldUseGlass ? {
+      headerTransparent: true,
+      headerBlurEffect: 'systemChromeMaterial',
+    } : {}),
     headerTitle: () => (
       <View style={styles.titleContainer}>
         <Text
@@ -127,7 +138,8 @@ export function useNativeHeader({
           </TouchableOpacity>
         ),
     headerRight: rightAction ? () => rightAction : undefined,
-  }), [colors, insets.top, title, subtitle, handleBack, rightAction, leftAction, hideBackButton]);
+    };
+  }, [colors, insets.top, title, subtitle, handleBack, rightAction, leftAction, hideBackButton, glass]);
 
   return {
     headerOptions,

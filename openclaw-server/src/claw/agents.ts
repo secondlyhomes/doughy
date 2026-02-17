@@ -4,6 +4,7 @@
 import { config } from '../config.js';
 import { TOOL_REGISTRY } from './tools.js';
 import { clawQuery, clawInsert, clawUpdate } from './db.js';
+import { logClaudeCost } from './costs.js';
 import type { AgentProfile, AgentToolCall } from './types.js';
 
 /**
@@ -425,6 +426,10 @@ export async function runAgent(options: {
       result: { response: responseText },
       completed_at: new Date().toISOString(),
     });
+
+    // Log cost to claw.cost_log (non-blocking)
+    logClaudeCost(userId, profile.model, `agent_${agentSlug}`, totalInputTokens, totalOutputTokens)
+      .catch((err) => console.error('[Agent] Cost logging failed:', err));
 
     return {
       runId: run.id,

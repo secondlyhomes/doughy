@@ -7,6 +7,7 @@
 
 import { config } from '../config.js';
 import { schemaQuery } from './db.js';
+import { logClaudeCost } from './costs.js';
 import type { BriefingData } from './types.js';
 
 /** Extract value from a settled promise, returning fallback on rejection */
@@ -134,6 +135,20 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       'bookings',
       `user_id=eq.${userId}&start_date=gte.${today}&start_date=lte.${nextWeek}&select=id,property_id,start_date,end_date,booking_type,status&order=start_date.asc&limit=10`
     ),
+
+    // 9: landlord.maintenance_records — open issues
+    schemaQuery<{
+      id: string;
+      title: string;
+      status: string;
+      priority: string | null;
+      category: string | null;
+      property_id: string | null;
+    }>(
+      'landlord',
+      'maintenance_records',
+      `user_id=eq.${userId}&status=neq.completed&select=id,title,status,priority,category,property_id&order=created_at.desc&limit=10`
+    ),
   ]);
 
   const leads = settled(results[0], []);
@@ -145,6 +160,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
   const overdueFollowUps = settled(results[6], []);
   const upcomingFollowUps = settled(results[7], []);
   const upcomingBookings = settled(results[8], []);
+  const openMaintenance = settled(results[9], []);
 
   // Combine follow-ups (overdue first, then upcoming)
   const allFollowUps = [...overdueFollowUps, ...upcomingFollowUps];
@@ -251,6 +267,14 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       booking_type: b.booking_type,
       status: b.status,
     })),
+    maintenance: openMaintenance.map((m) => ({
+      id: m.id,
+      title: m.title,
+      status: m.status,
+      priority: m.priority,
+      category: m.category,
+      property_id: m.property_id,
+    })),
     portfolio: {
       totalProperties,
       totalValue: portfolioValue,
@@ -267,7 +291,8 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
  */
 export async function formatBriefing(
   data: BriefingData,
-  anthropicApiKey: string
+  anthropicApiKey: string,
+  userId?: string
 ): Promise<string> {
   // If no API key, return a formatted text version
   if (!anthropicApiKey) {
@@ -302,6 +327,13 @@ Keep it under 200 words. No emojis. Use plain language, no markdown. Use line br
         },
       ],
     });
+
+    // Log cost (non-blocking)
+    if (userId) {
+      logClaudeCost(userId, 'claude-haiku-4-5-20251001', 'briefing_format',
+        response.usage.input_tokens, response.usage.output_tokens)
+        .catch((err) => console.error('[Briefing] Failed to log cost:', err));
+    }
 
     const textBlock = response.content.find((b) => b.type === 'text');
     return textBlock?.text || formatBriefingText(data);
@@ -371,13 +403,29 @@ function formatBriefingText(data: BriefingData): string {
   }
 
   // LANDLORD OPERATIONS
-  if (data.bookings.length > 0) {
+  const hasLandlordData = data.bookings.length > 0 || data.maintenance.length > 0;
+  if (hasLandlordData) {
     lines.push('LANDLORD OPERATIONS:');
-    for (const b of data.bookings.slice(0, 3)) {
-      lines.push(`- ${b.booking_type} booking: ${b.start_date} to ${b.end_date} (${b.status})`);
+
+    // Maintenance issues
+    if (data.maintenance.length > 0) {
+      for (const m of data.maintenance.slice(0, 3)) {
+        const priority = m.priority ? ` [${m.priority}]` : '';
+        lines.push(`- ${m.title}${priority} (${m.status})`);
+      }
+      if (data.maintenance.length > 3) {
+        lines.push(`  ...and ${data.maintenance.length - 3} more maintenance items`);
+      }
     }
-    if (data.bookings.length > 3) {
-      lines.push(`  ...and ${data.bookings.length - 3} more bookings`);
+
+    // Bookings
+    if (data.bookings.length > 0) {
+      for (const b of data.bookings.slice(0, 3)) {
+        lines.push(`- ${b.booking_type} booking: ${b.start_date} to ${b.end_date} (${b.status})`);
+      }
+      if (data.bookings.length > 3) {
+        lines.push(`  ...and ${data.bookings.length - 3} more bookings`);
+      }
     }
     lines.push('');
   }

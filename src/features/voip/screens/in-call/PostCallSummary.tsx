@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   summaryCardTitle: {
-    fontSize: FONT_SIZES.md,
+    fontSize: FONT_SIZES.base,
     fontWeight: '600',
     color: '#FFFFFF',
   },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   applyButton: {},
   summaryButtonText: {
-    fontSize: FONT_SIZES.md,
+    fontSize: FONT_SIZES.base,
     fontWeight: '600',
     color: '#FFFFFF',
   },

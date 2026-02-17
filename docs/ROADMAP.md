@@ -37,9 +37,15 @@ Three complementary products sharing one Supabase backend:
 - Bland AI autonomous calling
 - Cost tracking dashboard
 - Lead temperature auto-prioritization
-- UI standardization across all 3 apps (liquid glass)
-- Admin module in Doughy Settings
 - Web admin panel
+
+### Recently Completed (Feb 17 2026)
+- UI standardization: liquid glass across all screens, iOS 26 headerBlurEffect on native stack headers
+- Tab reorganization: 4 tabs per mode (Inbox, Pipeline/Properties, Contacts, Settings)
+- ADHD-friendly "Needs Attention" cards on Pipeline and Properties screens
+- PropertyHubGrid expanded (6 hubs: Maintenance, Vendors, Turnovers, Bookings, Inventory, Smart Home)
+- Settings screen glass cards
+- Dark mode fixes (VoIP styles, vendor FAB)
 
 ---
 
@@ -215,6 +221,26 @@ Full management panel for desktop:
 - [ ] Seed compelling demo data (hot/warm/cold leads, active deal, maintenance request)
 - [ ] Test end-to-end: SMS "brief me" / "help" / "draft follow ups"
 - [ ] Test CallPilot: contacts -> pre-call briefing -> active call -> post-call summary
+
+### Phase 1.5: Email Ingestion (Feb-Mar 2026)
+- [ ] Gmail API / IMAP integration — connect email account
+- [ ] Email webhook or polling for new emails
+- [ ] Platform detection: Furnished Finder, Airbnb, Zillow, direct email
+- [ ] AI extraction: sender name, email, phone, property mentioned, inquiry type
+- [ ] Auto-create draft lead in `crm.leads` with `source` tagged, `auto_created = true`, `review_status = 'pending_review'`
+- [ ] Push notification: "New lead from Furnished Finder: Jane Doe asking about 123 Main St"
+- [ ] User review queue: confirm/reject auto-created leads in Inbox
+- [ ] The Claw auto-draft response based on inquiry type
+- **Schema ready:** `crm.leads` now has `source`, `source_email`, `auto_created`, `review_status` columns (applied Feb 17 2026)
+- **Email connections ready:** `landlord.email_connections` table already exists with Gmail/Outlook OAuth support
+
+### Phase 1.6: Smart Home Integrations (Future)
+- [ ] Nest thermostat control via Nest API
+- [ ] Smart lock management via Seam API (schema: `integrations.seam_connected_devices`, `integrations.seam_access_codes` already exist)
+- [ ] Auto lock code generation tied to booking calendar
+- [ ] Scheduled automations: adjust thermostat on check-in/check-out
+- [ ] Seam webhook for lock/unlock events
+- [ ] Smart home hub screen already exists at `app/(tabs)/rental-properties/[id]/smart-home/`
 
 ### Phase 2: Autonomous Calling + Cost Control (Mar 2026)
 - [ ] Bland AI integration (REST API client + webhook handler)

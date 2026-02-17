@@ -1,6 +1,6 @@
 // src/features/rental-properties/components/PropertyHubGrid.tsx
 // Grid of navigation hubs for property management features
-// Displays 4 hubs in 2×2 layout: Maintenance, Vendors, Turnovers, Bookings
+// Displays 6 hubs in 3×2 layout: Maintenance, Vendors, Turnovers, Bookings, Inventory, Smart Home
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -10,24 +10,21 @@ import {
   Users,
   CalendarClock,
   Calendar,
+  Package,
+  Wifi,
 } from 'lucide-react-native';
 import { HubCard } from '@/components/ui/HubCard';
 import { SPACING } from '@/constants/design-tokens';
 
 export interface PropertyHubGridProps {
-  /** Property ID for navigation */
   propertyId: string;
-  /** Open maintenance work orders count */
   maintenanceCount?: number;
-  /** Vendor count */
   vendorCount?: number;
-  /** Upcoming turnover info - 'None' or date string */
   nextTurnover?: string;
-  /** Upcoming bookings count */
   bookingsCount?: number;
-  /** Whether features are loading */
+  inventoryCount?: number;
+  smartHomeDevices?: number;
   isLoading?: boolean;
-  /** Card variant */
   variant?: 'default' | 'glass';
 }
 
@@ -37,6 +34,8 @@ export function PropertyHubGrid({
   vendorCount = 0,
   nextTurnover,
   bookingsCount = 0,
+  inventoryCount = 0,
+  smartHomeDevices = 0,
   isLoading = false,
   variant = 'default',
 }: PropertyHubGridProps) {
@@ -96,6 +95,30 @@ export function PropertyHubGrid({
           badge={bookingsCount}
           badgeVariant={bookingsCount > 0 ? 'default' : 'muted'}
           onPress={() => handleNavigate(`/(tabs)/bookings?propertyId=${propertyId}`)}
+          disabled={isLoading}
+          variant={variant}
+          style={styles.hubCard}
+        />
+      </View>
+
+      {/* Row 3: Inventory & Smart Home */}
+      <View style={styles.row}>
+        <HubCard
+          icon={Package}
+          title="Inventory"
+          badge={inventoryCount}
+          badgeVariant={inventoryCount > 0 ? 'default' : 'muted'}
+          onPress={() => handleNavigate(`/(tabs)/rental-properties/${propertyId}/inventory`)}
+          disabled={isLoading}
+          variant={variant}
+          style={styles.hubCard}
+        />
+        <HubCard
+          icon={Wifi}
+          title="Smart Home"
+          badge={smartHomeDevices}
+          badgeVariant={smartHomeDevices > 0 ? 'info' : 'muted'}
+          onPress={() => handleNavigate(`/(tabs)/rental-properties/${propertyId}/smart-home`)}
           disabled={isLoading}
           variant={variant}
           style={styles.hubCard}

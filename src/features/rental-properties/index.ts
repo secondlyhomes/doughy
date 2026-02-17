@@ -13,6 +13,10 @@ export { RoomsList } from './components/RoomsList';
 export { RentalPropertyForm } from './components/RentalPropertyForm';
 export { RentalPropertyFormWizard } from './components/RentalPropertyFormWizard';
 
+// Landlord attention
+export { LandlordNeedsAttention } from './components/LandlordNeedsAttention';
+export { useLandlordAttention } from './hooks/useLandlordAttention';
+
 // Hooks
 export {
   useRentalProperties,

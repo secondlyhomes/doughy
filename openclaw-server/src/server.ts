@@ -32,12 +32,16 @@ import {
 } from './services/security.js';
 import type { GmailPubSubMessage, GmailNotification, UserGmailTokens } from './types.js';
 import { handleClawSms, handleClawMessage } from './claw/controller.js';
+import { routeInboundMessage } from './claw/router.js';
 import { lookupUserByChannel } from './claw/db.js';
 import { sendTwilioMessage } from './claw/twilio.js';
+import { logCost } from './claw/costs.js';
 import clawRoutes from './claw/routes.js';
 import callpilotRoutes from './callpilot/routes.js';
 import { voiceWebhookRouter } from './callpilot/voice.js';
 import { initDiscordBot } from './claw/discord.js';
+import { startQueueProcessor, stopQueueProcessor } from './claw/queue.js';
+import { hasAudioMedia, processVoiceNote } from './claw/voicenotes.js';
 import { runMorningBriefings, runFollowUpNudges } from './claw/scheduler.js';
 import { captureInboundEmail } from './services/email-capture.js';
 
@@ -576,40 +580,64 @@ app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'
     // Respond immediately with empty TwiML so Twilio doesn't timeout
     res.type('text/xml').send('<Response></Response>');
 
-    // Route to The Claw controller if enabled — send reply via REST API
+    // Smart message routing — handles Claw users, lead replies, and unknown senders
     if (config.clawEnabled) {
-      const reply = await handleClawSms({
-        from: phoneNumber,
-        to: message.to.replace('whatsapp:', ''),
-        body: message.body,
-        messageSid: message.channelMessageId,
-      });
-
-      if (!reply) {
-        console.log(`[${channel.toUpperCase()}] No reply generated for message from ${phoneNumber}`);
-      } else if (!config.twilioAccountSid || !config.twilioAuthToken) {
-        console.error(`[${channel.toUpperCase()}] Reply generated but cannot send — missing Twilio credentials`);
+      // Check for voice notes (WhatsApp/SMS audio attachments)
+      let messageBody = message.body;
+      if (hasAudioMedia(req.body)) {
+        const clawUserId = config.phoneUserMap[phoneNumber];
+        const transcription = await processVoiceNote(req.body, clawUserId);
+        if (transcription) {
+          // Use transcribed text instead of (or alongside) the body
+          messageBody = messageBody
+            ? `${messageBody}\n\n[Voice note]: ${transcription.text}`
+            : transcription.text;
+          console.log(`[${channel.toUpperCase()}] Voice note transcribed for ${phoneNumber}`);
+        } else {
+          console.log(`[${channel.toUpperCase()}] Voice note from ${phoneNumber} could not be transcribed`);
+        }
       }
 
-      if (reply) {
-        // WhatsApp supports longer messages; SMS needs truncation
-        const body = isWhatsApp
-          ? reply
-          : (reply.length > 1500
-            ? reply.slice(0, 1450) + '\n\n[Open the app for full details.]'
-            : reply);
+      const routingResult = await routeInboundMessage(
+        phoneNumber,
+        message.to.replace('whatsapp:', ''),
+        messageBody,
+        channel as any,
+        message.channelMessageId
+      );
 
-        const fromNumber = isWhatsApp
-          ? config.twilioWhatsAppNumber
-          : config.twilioPhoneNumber;
-        const toNumber = message.from; // whatsapp: prefix preserved for WhatsApp, plain for SMS
+      // Only send a reply for Claw responses (lead replies get notifications, not auto-replies)
+      if (routingResult.type === 'claw_response' && routingResult.reply) {
+        const reply = routingResult.reply;
 
-        const result = await sendTwilioMessage({ from: fromNumber, to: toNumber, body });
-        if (result.success) {
-          console.log(`[${channel.toUpperCase()}] Reply sent to ${phoneNumber}, SID: ${result.sid}`);
+        if (!config.twilioAccountSid || !config.twilioAuthToken) {
+          console.error(`[${channel.toUpperCase()}] Reply generated but cannot send — missing Twilio credentials`);
         } else {
-          console.error(`[${channel.toUpperCase()}] Twilio send failed: ${result.error}`);
+          // WhatsApp supports longer messages; SMS needs truncation
+          const body = isWhatsApp
+            ? reply
+            : (reply.length > 1500
+              ? reply.slice(0, 1450) + '\n\n[Open the app for full details.]'
+              : reply);
+
+          const fromNumber = isWhatsApp
+            ? config.twilioWhatsAppNumber
+            : config.twilioPhoneNumber;
+          const toNumber = message.from; // whatsapp: prefix preserved for WhatsApp, plain for SMS
+
+          const result = await sendTwilioMessage({ from: fromNumber, to: toNumber, body });
+          if (result.success) {
+            console.log(`[${channel.toUpperCase()}] Reply sent to ${phoneNumber}, SID: ${result.sid}`);
+            // Log Twilio cost
+            const costCents = isWhatsApp ? 1 : 1; // ~$0.005-0.008 per msg
+            logCost(routingResult.userId || 'system', 'twilio', channel, costCents)
+              .catch(() => {});
+          } else {
+            console.error(`[${channel.toUpperCase()}] Twilio send failed: ${result.error}`);
+          }
         }
+      } else if (routingResult.type !== 'claw_response') {
+        console.log(`[${channel.toUpperCase()}] Routed as ${routingResult.type} for ${phoneNumber}`);
       }
     }
   } catch (error) {
@@ -869,6 +897,9 @@ async function start() {
     console.error('[Server] Discord bot init failed:', err);
   });
 
+  // Start the action queue processor (5s interval)
+  startQueueProcessor();
+
   app.listen(config.port, () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════════╗
@@ -898,5 +929,15 @@ async function start() {
 }
 
 start().catch(console.error);
+
+// Graceful shutdown
+function shutdown(signal: string) {
+  console.log(`\n[Server] ${signal} received — shutting down gracefully...`);
+  stopQueueProcessor();
+  process.exit(0);
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 export default app;

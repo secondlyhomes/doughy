@@ -2,7 +2,7 @@
 // Smart home hub screen showing all devices for a property
 
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Alert, TouchableOpacity, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Lock, RefreshCw, Wifi, WifiOff, Settings } from 'lucide-react-native';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
@@ -90,12 +90,13 @@ export function SmartHomeHubScreen() {
   const offlineCount = devices?.filter((d) => d.connection_status === 'offline').length || 0;
   const lockedCount = devices?.filter((d) => d.lock_state === 'locked').length || 0;
 
-  // Native header configuration
+  // Native header configuration with glass blur
   const headerOptions = useMemo((): NativeStackNavigationOptions => ({
     headerShown: true,
-    headerStyle: { backgroundColor: colors.background },
+    headerStyle: { backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.background },
     headerShadowVisible: false,
     headerStatusBarHeight: insets.top,
+    ...(Platform.OS === 'ios' ? { headerTransparent: true, headerBlurEffect: 'systemChromeMaterial' } : {}),
     headerTitle: () => (
       <View style={{ alignItems: 'center' }}>
         <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>

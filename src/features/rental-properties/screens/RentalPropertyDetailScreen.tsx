@@ -11,6 +11,7 @@ import {
   Alert,
   Linking,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack, Redirect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -199,12 +200,13 @@ export function RentalPropertyDetailScreen() {
     [router, propertyId]
   );
 
-  // Native header options for consistent iOS styling
+  // Native header options for consistent iOS styling with glass blur
   const headerOptions = useMemo((): NativeStackNavigationOptions => ({
     headerShown: true,
-    headerStyle: { backgroundColor: colors.background },
+    headerStyle: { backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.background },
     headerShadowVisible: false,
     headerStatusBarHeight: insets.top,
+    ...(Platform.OS === 'ios' ? { headerTransparent: true, headerBlurEffect: 'systemChromeMaterial' } : {}),
     headerTitle: () => (
       <View style={{ alignItems: 'center' }}>
         <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
@@ -285,13 +287,14 @@ export function RentalPropertyDetailScreen() {
               nextTurnover={nextTurnover ?? undefined}
               bookingsCount={upcomingBookings.length}
               isLoading={isLoadingHubCounts}
+              variant="glass"
             />
 
             {/* Address Card (always visible) */}
             <TouchableOpacity
               onPress={handleOpenMap}
               className="p-4 rounded-xl flex-row items-center justify-between mb-4"
-              style={{ backgroundColor: colors.card }}
+              style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
               activeOpacity={PRESS_OPACITY.DEFAULT}
             >
               <View className="flex-row items-center flex-1">
@@ -343,7 +346,7 @@ export function RentalPropertyDetailScreen() {
 
       case 'financials':
         return (
-          <Card className="p-4">
+          <Card variant="glass" className="p-4">
             <FinancialRow
               label="Base Rate"
               value={`${formatCurrency(property.base_rate)}${formatRateType(property.rate_type)}`}
@@ -385,7 +388,7 @@ export function RentalPropertyDetailScreen() {
 
       case 'listings':
         return (
-          <Card className="p-4">
+          <Card variant="glass" className="p-4">
             {property.listing_urls &&
               Object.entries(property.listing_urls).map(
                 ([platform, url]) =>

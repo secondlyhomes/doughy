@@ -270,7 +270,7 @@ export function VendorsListScreen({ isGlobal = false }: VendorsListScreenProps) 
 
       {/* Add FAB */}
       <SimpleFAB
-        icon={<Plus size={ICON_SIZES.xl} color="white" />}
+        icon={<Plus size={ICON_SIZES.xl} color={colors.primaryForeground} />}
         onPress={() => setShowAddSheet(true)}
         accessibilityLabel="Add vendor"
       />

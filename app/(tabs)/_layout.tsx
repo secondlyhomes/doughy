@@ -3,9 +3,9 @@
 // Uses native UITabBarController on iOS for automatic liquid glass appearance
 // Supports platform switching between RE Investor and Landlord modes
 //
-// Tab Design (Apple-like simplicity, 3 tabs per platform):
-// - Investor: Inbox → Pipeline → Settings
-// - Landlord: Inbox → Properties → Settings
+// Tab Design (4 tabs per platform):
+// - Investor: Inbox → Pipeline → Contacts → Settings
+// - Landlord: Inbox → Properties → Contacts → Settings
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import { NativeTabs, Icon, Label, Badge } from 'expo-router/unstable-native-tabs';
@@ -46,8 +46,8 @@ export default function TabLayout() {
       shadowColor="transparent"
       disableTransparentOnScrollEdge
     >
-      {/* ========== RE INVESTOR TABS (3 tabs) ========== */}
-      {/* Tab Order: Inbox → Pipeline → Settings */}
+      {/* ========== RE INVESTOR TABS (4 tabs) ========== */}
+      {/* Tab Order: Inbox → Pipeline → Contacts → Settings */}
       <NativeTabs.Trigger name="investor-inbox" hidden={isLandlord}>
         <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
         <Label>Inbox</Label>
@@ -64,12 +64,11 @@ export default function TabLayout() {
         )}
       </NativeTabs.Trigger>
 
-      {/* ========== LANDLORD TABS (3 tabs) ========== */}
-      {/* Tab Order: Inbox → Properties → Settings */}
+      {/* ========== LANDLORD TABS (4 tabs) ========== */}
+      {/* Tab Order: Inbox → Properties → Contacts → Settings */}
       <NativeTabs.Trigger name="landlord-inbox" hidden={!isLandlord}>
         <Icon sf={{ default: 'tray', selected: 'tray.fill' }} />
         <Label>Inbox</Label>
-        {/* TODO: Add unread message count badge */}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="rental-properties" hidden={!isLandlord}>
@@ -78,6 +77,11 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
 
       {/* ========== SHARED TABS ========== */}
+      <NativeTabs.Trigger name="contacts">
+        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
+        <Label>Contacts</Label>
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
         <Label>Settings</Label>
@@ -89,13 +93,11 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="deals" hidden />
       <NativeTabs.Trigger name="portfolio" hidden />
 
-      {/* Old landlord tabs - Bookings moved to Properties, Contacts contextual */}
+      {/* Old landlord tabs - Bookings moved to Properties */}
       <NativeTabs.Trigger name="bookings" hidden />
-      <NativeTabs.Trigger name="contacts" hidden />
 
       {/* Other hidden tabs */}
       <NativeTabs.Trigger name="properties" hidden />
-      <NativeTabs.Trigger name="conversations" hidden />
     </NativeTabs>
     </View>
   );

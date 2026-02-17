@@ -2,7 +2,7 @@
 // Contact detail screen showing contact info with focused view (no tab bar)
 
 import React, { useMemo, useCallback, useState } from 'react';
-import { View, Text, ScrollView, Linking, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Linking, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
@@ -75,9 +75,10 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
   const headerOptions = useMemo(
     (): NativeStackNavigationOptions => ({
       headerShown: true,
-      headerStyle: { backgroundColor: colors.background },
+      headerStyle: { backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.background },
       headerShadowVisible: false,
       headerStatusBarHeight: insets.top,
+      ...(Platform.OS === 'ios' ? { headerTransparent: true, headerBlurEffect: 'systemChromeMaterial' } : {}),
       headerTitle: () => (
         <View style={{ alignItems: 'center' }}>
           <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>

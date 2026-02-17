@@ -1,6 +1,6 @@
 # Architectural Decisions
 
-> Last verified: 2026-02-16 by reading source code and querying Supabase staging.
+> Last verified: 2026-02-17 by reading source code and querying Supabase staging.
 
 ## Decision Log
 
@@ -170,3 +170,23 @@
 | Autonomous | autonomous | Auto-send everything |
 
 **Why:** The Claw uses a 5-tier "guard level" metaphor (fortress → autonomous) that maps to the existing `ai_mode` field in `user_platform_settings`. This reuses existing infrastructure without adding new database columns.
+
+### 13. iOS 26 Liquid Glass as Default Design Language
+
+**Decision:** Every screen, header, card, and modal uses iOS 26 liquid glass design. `useNativeHeader` defaults to `glass: true` using `headerBlurEffect: 'systemChromeMaterial'` on iOS. Cards use `variant="glass"` where appropriate.
+
+**Why:** iOS 26 introduced liquid glass as the system-wide design language. Matching native OS conventions reduces cognitive friction and makes the app feel native. The `headerBlurEffect` on `NativeStackNavigationOptions` provides zero-cost native blur without custom components.
+
+**Consequences:** Android falls back to opaque headers (no native blur equivalent). The `GlassView` component provides a fallback chain: `LiquidGlassView` (iOS 26+) → `BlurView` (expo-blur) → CSS `backdrop-filter` (web).
+
+### 14. Four Tabs Per Platform Mode
+
+**Decision:** Changed from 3 tabs to 4 tabs per mode: Investor (Inbox | Pipeline | Contacts | Settings), Landlord (Inbox | Properties | Contacts | Settings).
+
+**Why:** Contacts was a frequently-used but hidden tab requiring navigation through other screens. Elevating it to a visible tab follows Apple's max-5-tabs guideline while keeping the most-used features one tap away. Chat was removed from Doughy navigation (users interact with The Claw via SMS/WhatsApp/Discord, not through Doughy).
+
+### 15. ADHD-Friendly "Needs Attention" Pattern
+
+**Decision:** Both Pipeline and Properties screens show a "Needs Attention" card section at the top, before any other content. Items are color-coded by urgency (red=high, yellow=medium, blue=low) with a maximum of 3 visible items and "+N more" overflow.
+
+**Why:** ADHD-friendly design requires: urgent items first (not buried in lists), visual urgency encoding (color = meaning), and progressive disclosure (show 3, reveal more on demand). This pattern is used consistently across both investor and landlord modules.

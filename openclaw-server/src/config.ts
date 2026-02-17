@@ -54,6 +54,12 @@ export const config = {
   discordBotToken: optionalEnv('DISCORD_BOT_TOKEN', ''),
   discordChannelId: optionalEnv('DISCORD_CHANNEL_ID', ''),
 
+  // Bland AI (for AI calling)
+  blandApiKey: optionalEnv('BLAND_API_KEY', ''),
+
+  // WhatsApp (Meta)
+  whatsappVerifyToken: optionalEnv('WHATSAPP_VERIFY_TOKEN', 'openclaw-verify'),
+
   // Cron
   cronSecret: optionalEnv('CRON_SECRET', ''),
 

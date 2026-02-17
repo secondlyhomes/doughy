@@ -1,6 +1,6 @@
 # Architecture Overview
 
-> Last updated: 2026-02-16 by querying Supabase staging (`lqmbyobweeaigrwmvizo`) directly.
+> Last updated: 2026-02-17 by querying Supabase staging (`lqmbyobweeaigrwmvizo`) directly.
 
 ## Three-Product Ecosystem
 
@@ -353,3 +353,29 @@ Budget enforcement via `claw.budget_limits` (per-user, per-service). See `docs/R
 - **Prompt injection delimiters** — agent context wrapped in `<user_message>` tags
 - **Tool error sanitization** — don't leak schema/table names to AI on tool failure
 - **UUID validation** on phone→user mapping (defense against config injection)
+
+## Cross-System Dependencies
+
+### What Each Piece Owns
+
+| App | Reads | Writes |
+|-----|-------|--------|
+| **Doughy** | auth.*, crm.*, investor.*, landlord.*, claw.tasks | auth.*, crm.*, investor.*, landlord.* |
+| **CallPilot** | crm.*, investor.*, landlord.*, callpilot.* | callpilot.* |
+| **The Claw** | claw.*, callpilot.calls | claw.trust_config, claw.connections |
+| **Server** | Everything (service_role) | Everything (service_role) |
+
+### Data Flow for Key Operations
+
+- **Morning briefing:** Server reads crm + investor + landlord + callpilot -> generates briefing -> broadcasts to SMS/Discord
+- **Draft follow-up:** Server reads lead data -> Claude generates draft -> stored in claw.approvals -> user reviews in Claw app
+- **Incoming SMS:** Twilio -> Server classifies intent -> routes to handler -> stores in claw.messages
+- **AI call:** Server -> Bland API -> call happens -> webhook -> Server stores in callpilot.calls -> broadcasts result
+- **Pre-call briefing:** CallPilot -> Server /api/calls/pre-brief -> reads lead data -> Claude generates -> returns to CallPilot
+- **Vendor dispatch:** Maintenance request -> Server matches contractor -> drafts message -> trust check -> sends
+
+### Doughy's Responsibilities
+- Source of truth for CRM data (crm.contacts, crm.leads)
+- Source of truth for investor data (deals_pipeline, properties, follow_ups)
+- Source of truth for landlord data (bookings, maintenance, vendors)
+- Design system source of truth (tokens, colors, components) — CallPilot and The Claw match these

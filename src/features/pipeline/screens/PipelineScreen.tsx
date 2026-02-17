@@ -34,6 +34,10 @@ import type { PortfolioProperty, AddToPortfolioInput } from '@/features/portfoli
 import { getInvestorPropertyMetrics, getPropertyImageUrl, getPropertyLocation } from '@/lib/property-card-utils';
 import { formatPropertyType } from '@/features/real-estate/utils/formatters';
 
+// Investor attention system
+import { InvestorNeedsAttention } from '../components/InvestorNeedsAttention';
+import { useInvestorAttention } from '../hooks/useInvestorAttention';
+
 // Extracted components
 import {
   type PipelineSegment,
@@ -45,6 +49,9 @@ import {
 export function PipelineScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+
+  // Investor attention items
+  const { items: attentionItems, isLoading: attentionLoading } = useInvestorAttention();
 
   // State
   const [activeSegment, setActiveSegment] = useState<PipelineSegment>('leads');
@@ -258,6 +265,13 @@ export function PipelineScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
+        {/* Needs Attention */}
+        {(attentionItems.length > 0 || attentionLoading) && (
+          <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm }}>
+            <InvestorNeedsAttention items={attentionItems} isLoading={attentionLoading} />
+          </View>
+        )}
+
         {/* Header - in normal flow */}
         <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.sm }}>
           <SearchBar

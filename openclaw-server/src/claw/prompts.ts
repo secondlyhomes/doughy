@@ -13,6 +13,10 @@ Intent labels:
 - action: User wants to DO something — move a deal, create a lead, send a message, update a record, assign a vendor, schedule something. Keywords: "move", "create", "add", "update", "send", "text", "email", "assign", "schedule"
 - chat: Business advice, strategy, "what should I offer", "how should I approach this", general conversation about their business. No specific data request or action.
 - approve: Approve/reject pending actions. "yes", "send them", "approve", "looks good", "reject", "don't send", "skip", "just the first one", "edit 1"
+- call_list: User wants a prioritized list of who to call today. "who should I call", "call list", "who's priority"
+- cost_summary: User asks about spending. "how much have I spent", "costs", "budget", "what's my spend"
+- trust_control: User wants to change trust level or control The Claw. "set to manual", "set to guarded", "set to autonomous", "pause", "kill", "resume", "turn off", "stop"
+- dispatch: User wants to dispatch a contractor/vendor. "dispatch plumber to unit 3", "send Mike to fix the leak"
 - help: Asks what they can do, needs help
 - unknown: Cannot determine intent
 
@@ -23,6 +27,8 @@ Context disambiguation (for short ambiguous replies):
 - "More" / "details" after any response → query
 - "No" after drafts → approve (rejection)
 - "What should I offer" → chat
+- "Turn off" / "Kill" / "Pause" → trust_control
+- "Manual" / "Guarded" / "Autonomous" → trust_control
 
 Examples:
 "Brief me" → briefing
@@ -47,6 +53,18 @@ Examples:
 "Just John" → approve
 "Edit 1: change the ending" → approve
 "Skip Maria" → approve
+"Who should I call today" → call_list
+"What did Bland do" → query
+"AI call results" → query
+"Status of Oak St" → query
+"How much have I spent" → cost_summary
+"What's my budget look like" → cost_summary
+"Turn off" → trust_control
+"Set to manual" → trust_control
+"Pause everything" → trust_control
+"Resume" → trust_control
+"Dispatch Mike's Plumbing to unit 3" → dispatch
+"Send a plumber" → dispatch
 "Help" → help`;
 
 export const MASTER_CONTROLLER_PROMPT = `You are The Claw, an AI business assistant for real estate investors and landlords. You communicate primarily via SMS, so keep responses concise and actionable.
@@ -153,3 +171,71 @@ For each lead, output:
 }
 
 NEVER send messages directly. Always create drafts for approval.`;
+
+/**
+ * Help text — structured as a config object so it can become dynamic later.
+ */
+export const HELP_CAPABILITIES = {
+  sections: [
+    {
+      title: 'BRIEFINGS',
+      commands: [
+        { trigger: '"brief me"', description: "what needs your attention today" },
+        { trigger: '"who should I call"', description: "prioritized call list" },
+      ],
+    },
+    {
+      title: 'QUERIES',
+      commands: [
+        { trigger: '"how\'s [deal]?"', description: "deal status" },
+        { trigger: '"tell me about [lead]"', description: "lead info" },
+        { trigger: '"any maintenance issues?"', description: "open requests" },
+        { trigger: '"how much have I spent?"', description: "cost summary" },
+      ],
+    },
+    {
+      title: 'DRAFTS',
+      commands: [
+        { trigger: '"draft follow ups"', description: "AI-written messages for your approval" },
+        { trigger: '"text [name] about [topic]"', description: "specific message drafting" },
+      ],
+    },
+    {
+      title: 'ACTIONS',
+      commands: [
+        { trigger: '"move [deal] to [stage]"', description: "update deal pipeline" },
+        { trigger: '"new lead: [details]"', description: "create a lead" },
+        { trigger: '"dispatch [vendor] to [property]"', description: "send a contractor" },
+        { trigger: '"mark follow-up done for [name]"', description: "complete a task" },
+      ],
+    },
+    {
+      title: 'CONTROL',
+      commands: [
+        { trigger: '"set to manual/guarded/autonomous"', description: "change trust level" },
+        { trigger: '"pause" / "kill"', description: "stop all actions" },
+        { trigger: '"resume"', description: "start again" },
+      ],
+    },
+  ],
+  footer: 'Or just ask me anything about your business.',
+};
+
+/**
+ * Format help text for SMS/Discord.
+ */
+export function formatHelpText(): string {
+  const lines: string[] = ["Here's what I can do:\n"];
+
+  for (const section of HELP_CAPABILITIES.sections) {
+    lines.push(section.title);
+    for (const cmd of section.commands) {
+      lines.push(`  ${cmd.trigger} -- ${cmd.description}`);
+    }
+    lines.push('');
+  }
+
+  lines.push(HELP_CAPABILITIES.footer);
+  lines.push('\nAll outbound messages need your approval first.');
+  return lines.join('\n');
+}

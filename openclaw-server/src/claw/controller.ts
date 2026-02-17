@@ -2,13 +2,15 @@
 // Entry point for all Claw interactions: classify intent, route, respond
 
 import { config } from '../config.js';
-import { INTENT_CLASSIFIER_PROMPT } from './prompts.js';
+import { INTENT_CLASSIFIER_PROMPT, formatHelpText } from './prompts.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
 import { runAgent } from './agents.js';
-import { clawInsert, clawUpdate, clawQuery } from './db.js';
+import { clawInsert, clawUpdate, clawQuery, schemaQuery, schemaInsert } from './db.js';
 import { broadcastMessage } from './broadcast.js';
 import { sendWhatsApp } from './twilio.js';
 import { callEdgeFunction } from './edge.js';
+import { logClaudeCost, logCost, getTodayCosts, getMonthlyCosts } from './costs.js';
+import { enforceAction, getTrustConfig, type TrustLevel } from './trust.js';
 import type { ClawIntent, ClawChannel, ClawResponse, ClawSmsInbound } from './types.js';
 
 /**
@@ -49,13 +51,15 @@ async function classifyIntent(
     const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
 
     // Build messages with conversation context
-    let classifierInput = message;
+    let classifierInput: string;
     if (conversationHistory.length > 0) {
       const historyText = conversationHistory
         .slice(-6) // Last 3 exchanges max for the classifier
         .map((m) => `${m.role}: ${m.content.slice(0, 200)}`)
         .join('\n');
-      classifierInput = `Recent conversation:\n${historyText}\n\nNew message: ${message}`;
+      classifierInput = `Recent conversation:\n${historyText}\n\n<user_message>\n${message}\n</user_message>`;
+    } else {
+      classifierInput = `<user_message>\n${message}\n</user_message>`;
     }
 
     const response = await client.messages.create({
@@ -77,7 +81,8 @@ async function classifyIntent(
 
     const validIntents: ClawIntent[] = [
       'briefing', 'draft_followups', 'query', 'action', 'chat',
-      'help', 'approve', 'unknown',
+      'help', 'approve', 'call_list', 'cost_summary', 'trust_control',
+      'dispatch', 'unknown',
       // Legacy intents map to 'query'
       'check_deal', 'check_bookings', 'new_leads', 'what_did_i_miss',
     ];
@@ -101,6 +106,15 @@ async function classifyIntent(
 function guessIntentFromKeywords(message: string): ClawIntent {
   const lower = message.toLowerCase().trim();
 
+  // Trust control — check first since "pause" could match other patterns
+  if (/\b(kill|turn off|pause|stop|set to (manual|guarded|autonomous|locked)|resume|unpause)\b/.test(lower)) return 'trust_control';
+  // Cost summary
+  if (/\b(cost|spent|spend|budget|how much.*spent|billing)\b/.test(lower)) return 'cost_summary';
+  // Call list
+  if (/\b(who should i call|call list|priority calls|who.?s priority)\b/.test(lower)) return 'call_list';
+  // Dispatch
+  if (/\b(dispatch|send.*plumber|send.*electrician|send.*contractor|send.*vendor|send.*to fix)\b/.test(lower)) return 'dispatch';
+  // Standard intents
   if (/\b(brief(ing)?|morning|update|status|day look|what.?s (up|going|new)|hello|hey|hi|miss|catch up)\b/.test(lower)) return 'briefing';
   if (/\b(draft|follow.?up|text.*lead|send.*follow|reach out)\b/.test(lower)) return 'draft_followups';
   if (/\b(move|create|add|assign|schedule|new lead)\b/.test(lower)) return 'action';
@@ -182,7 +196,7 @@ export async function handleClawMessage(
       'kill_switch_log',
       `select=action&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`
     );
-    if (killLogs.length > 0 && killLogs[0].action === 'deactivate_global') {
+    if (killLogs.length > 0 && killLogs[0].action === 'activate_global') {
       return {
         message: 'The Claw is currently paused. All agents have been disabled. Re-enable from the Control tab in the app.',
       };
@@ -210,54 +224,59 @@ export async function handleClawMessage(
 
   let response: ClawResponse;
 
-  switch (intent) {
-    case 'briefing':
-      response = await handleBriefing(userId);
-      break;
+  try {
+    switch (intent) {
+      case 'briefing':
+        response = await handleBriefing(userId);
+        break;
 
-    case 'draft_followups':
-      response = await handleDraftFollowups(userId, message, conversationHistory);
-      break;
+      case 'draft_followups':
+        response = await handleDraftFollowups(userId, message, conversationHistory);
+        break;
 
-    case 'query':
-      response = await handleQuery(userId, message, 'query', conversationHistory);
-      break;
+      case 'query':
+        response = await handleQuery(userId, message, 'query', conversationHistory);
+        break;
 
-    case 'action':
-      response = await handleAction(userId, message, conversationHistory);
-      break;
+      case 'action':
+        response = await handleAction(userId, message, conversationHistory);
+        break;
 
-    case 'chat':
-      response = await handleChat(userId, message, conversationHistory);
-      break;
+      case 'chat':
+        response = await handleChat(userId, message, conversationHistory);
+        break;
 
-    case 'approve':
-      response = await handleApproval(userId, message, conversationHistory);
-      break;
+      case 'approve':
+        response = await handleApproval(userId, message, conversationHistory);
+        break;
 
-    case 'help':
-      response = {
-        message:
-          `BRIEFING\n` +
-          `- "Brief me" — Today's action items, overdue follow-ups, deals\n\n` +
-          `DATA\n` +
-          `- "How's [deal name]?" — Check any deal, lead, booking, property\n` +
-          `- "Check my leads" / "Any new bookings?" / "Maintenance issues?"\n` +
-          `- "Show me [contact name]" — Full contact details + history\n\n` +
-          `ACTIONS\n` +
-          `- "Draft follow ups" — AI writes personalized texts for your approval\n` +
-          `- "Text [name] about [topic]" — Draft a WhatsApp message\n` +
-          `- "New lead: [name], [details]" — Add to CRM\n` +
-          `- "Move [deal] to [stage]" — Update pipeline\n\n` +
-          `ADVICE\n` +
-          `- "What should I offer on [property]?" — Investment strategy help\n\n` +
-          `All outbound messages need your approval first.`,
-      };
-      break;
+      case 'call_list':
+        response = await handleCallList(userId);
+        break;
 
-    default:
-      // For unknown intents, try to handle as a query
-      response = await handleQuery(userId, message, 'unknown', conversationHistory);
+      case 'cost_summary':
+        response = await handleCostSummary(userId);
+        break;
+
+      case 'trust_control':
+        response = await handleTrustControl(userId, message);
+        break;
+
+      case 'dispatch':
+        response = await handleDispatch(userId, message, conversationHistory);
+        break;
+
+      case 'help':
+        response = { message: formatHelpText() };
+        break;
+
+      default:
+        // For unknown intents, try to handle as a query
+        response = await handleQuery(userId, message, 'unknown', conversationHistory);
+    }
+  } catch (error) {
+    console.error(`[Controller] Handler for "${intent}" failed:`, error);
+    response = { message: 'Sorry, something went wrong. Please try again in a moment.' };
   }
 
   // Save outbound message (non-fatal — still return the response to the user)
@@ -283,7 +302,7 @@ async function handleBriefing(userId: string): Promise<ClawResponse> {
 
   try {
     const data = await generateBriefingData(userId);
-    const briefingText = await formatBriefing(data, config.anthropicApiKey);
+    const briefingText = await formatBriefing(data, config.anthropicApiKey, userId);
 
     await clawUpdate('tasks', task.id, {
       status: 'done',
@@ -670,6 +689,173 @@ async function executeApprovedAction(
     console.error('[Controller] Execute approval failed:', error);
     return false;
   }
+}
+
+/**
+ * Handle call list request — prioritized list of who to call today
+ */
+async function handleCallList(userId: string): Promise<ClawResponse> {
+  const task = await createTask(userId, 'query', 'Prioritized call list');
+
+  try {
+    const result = await runAgent({
+      userId,
+      taskId: task.id,
+      agentSlug: 'lead-ops',
+      userMessage: 'Generate a prioritized call list for today. Look at overdue follow-ups first, then contacts with recent activity but no follow-up scheduled. Include the contact name, reason for calling, and last interaction date. Do NOT mention scores. Rank by urgency.',
+    });
+
+    await clawUpdate('tasks', task.id, {
+      status: 'done',
+      output: { response: result.response },
+      completed_at: new Date().toISOString(),
+    });
+
+    return { message: result.response, task_id: task.id };
+  } catch (error) {
+    console.error('[Controller] Call list failed:', error);
+    await failTask(task.id, error);
+    return { message: 'Sorry, I had trouble generating your call list. Try again.' };
+  }
+}
+
+/**
+ * Handle cost summary request
+ */
+async function handleCostSummary(userId: string): Promise<ClawResponse> {
+  try {
+    const today = await getTodayCosts(userId);
+    const monthly = await getMonthlyCosts(userId);
+
+    const lines: string[] = ['COST SUMMARY\n'];
+
+    // Today
+    lines.push(`Today: $${(today.total_cents / 100).toFixed(2)} (${today.count} operations)`);
+    if (Object.keys(today.by_service).length > 0) {
+      for (const [service, cents] of Object.entries(today.by_service)) {
+        lines.push(`  ${service}: $${(cents / 100).toFixed(2)}`);
+      }
+    }
+    lines.push('');
+
+    // This month
+    lines.push(`This month: $${(monthly.total_cents / 100).toFixed(2)}`);
+    if (Object.keys(monthly.by_service).length > 0) {
+      for (const [service, cents] of Object.entries(monthly.by_service)) {
+        lines.push(`  ${service}: $${(cents / 100).toFixed(2)}`);
+      }
+    }
+
+    // Trust config limits
+    const trustConfig = await getTrustConfig(userId);
+    lines.push('');
+    lines.push(`Daily limit: $${(trustConfig.daily_spend_limit_cents / 100).toFixed(2)}`);
+    lines.push(`Daily SMS limit: ${trustConfig.daily_sms_limit}`);
+    lines.push(`Daily call limit: ${trustConfig.daily_call_limit}`);
+
+    return { message: lines.join('\n') };
+  } catch (error) {
+    console.error('[Controller] Cost summary failed:', error);
+    return { message: 'Sorry, I had trouble pulling cost data. Try again.' };
+  }
+}
+
+/**
+ * Handle trust control commands (pause, kill, resume, set level)
+ */
+async function handleTrustControl(userId: string, message: string): Promise<ClawResponse> {
+  const lower = message.toLowerCase().trim();
+
+  // Kill / Pause
+  if (/\b(kill|turn off|pause|stop)\b/.test(lower)) {
+    try {
+      // Activate kill switch
+      await clawInsert('kill_switch_log', {
+        user_id: userId,
+        action: 'activate_global',
+        reason: `User requested via message: "${message.slice(0, 100)}"`,
+      });
+
+      // Disable all agent profiles
+      const profiles = await clawQuery<{ id: string }>('agent_profiles', `select=id`);
+      for (const profile of profiles) {
+        await clawUpdate('agent_profiles', profile.id, { is_active: false });
+      }
+
+      return { message: 'Done. All agents paused. Nothing will send without your explicit approval.\n\nSay "resume" to start again.' };
+    } catch (error) {
+      console.error('[Controller] Kill switch failed:', error);
+      return { message: 'Failed to activate kill switch. Try again or use the app.' };
+    }
+  }
+
+  // Resume
+  if (/\b(resume|unpause|start again|turn on)\b/.test(lower)) {
+    try {
+      await clawInsert('kill_switch_log', {
+        user_id: userId,
+        action: 'deactivate_global',
+        reason: `User requested via message: "${message.slice(0, 100)}"`,
+      });
+
+      const profiles = await clawQuery<{ id: string }>('agent_profiles', `select=id`);
+      for (const profile of profiles) {
+        await clawUpdate('agent_profiles', profile.id, { is_active: true });
+      }
+
+      return { message: 'The Claw is back online. All agents re-enabled.\n\nSay "brief me" for an update.' };
+    } catch (error) {
+      console.error('[Controller] Resume failed:', error);
+      return { message: 'Failed to resume. Try again or use the app.' };
+    }
+  }
+
+  // Set trust level
+  const levelMatch = lower.match(/\bset to (manual|guarded|autonomous|locked)\b/);
+  if (levelMatch) {
+    const newLevel = levelMatch[1] as TrustLevel;
+    try {
+      // Upsert trust config
+      const existing = await clawQuery<{ id: string }>('trust_config', `user_id=eq.${userId}&limit=1`);
+      if (existing.length > 0) {
+        await clawUpdate('trust_config', existing[0].id, {
+          global_level: newLevel,
+          updated_at: new Date().toISOString(),
+        });
+      } else {
+        await clawInsert('trust_config', {
+          user_id: userId,
+          global_level: newLevel,
+        });
+      }
+
+      const descriptions: Record<string, string> = {
+        locked: 'All actions blocked. Nothing will execute.',
+        manual: 'Every action requires your explicit approval before executing.',
+        guarded: 'Actions are queued with a 30-second countdown. Cancel in the app or say "cancel".',
+        autonomous: 'Actions execute automatically within daily limits. You\'ll get notifications.',
+      };
+
+      return { message: `Trust level set to ${newLevel.toUpperCase()}.\n\n${descriptions[newLevel]}` };
+    } catch (error) {
+      console.error('[Controller] Trust level change failed:', error);
+      return { message: 'Failed to change trust level. Try again.' };
+    }
+  }
+
+  return { message: 'I can set your trust level. Try:\n- "set to manual" — approve everything\n- "set to guarded" — 30s countdown\n- "set to autonomous" — auto-execute within limits\n- "pause" / "resume" — stop/start all actions' };
+}
+
+/**
+ * Handle contractor dispatch request
+ */
+async function handleDispatch(
+  userId: string,
+  message: string,
+  conversationHistory: Array<{ role: string; content: string }> = []
+): Promise<ClawResponse> {
+  // Route to action handler — the agent has create_maintenance_request + read_vendors tools
+  return handleAction(userId, message, conversationHistory);
 }
 
 /**

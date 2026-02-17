@@ -243,7 +243,7 @@ export function InCallScreen({ subscriptionTier = 'pro' }: InCallScreenProps) {
       <View style={styles.topSection}>
         <ContactAvatar name={contactName} isConnected={callStatus === 'connected'} />
 
-        <Text style={styles.contactName}>{contactName}</Text>
+        <Text style={[styles.contactName, { color: '#FFFFFF' }]}>{contactName}</Text>
 
         <View style={styles.statusContainer}>
           <Circle size={8} color={statusColor} fill={statusColor} />
@@ -254,6 +254,7 @@ export function InCallScreen({ subscriptionTier = 'pro' }: InCallScreenProps) {
 
         <Text style={[
           styles.durationText,
+          { color: '#FFFFFF' },
           !isInCall && styles.durationPlaceholder
         ]}>
           {isInCall ? formatDuration(duration) : '0:00'}
@@ -303,7 +304,7 @@ export function InCallScreen({ subscriptionTier = 'pro' }: InCallScreenProps) {
       {/* Recording disclosure */}
       {features.recording && (
         <View style={styles.disclosureContainer}>
-          <Text style={styles.disclosureText}>
+          <Text style={[styles.disclosureText, { color: 'rgba(255, 255, 255, 0.4)' }]}>
             This call may be recorded for quality purposes
           </Text>
         </View>
