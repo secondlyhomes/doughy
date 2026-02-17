@@ -14,13 +14,14 @@ import {
 import { useRouter } from 'expo-router';
 import { Mail, AlertCircle, Check, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
-import { useThemeColors } from '@/contexts/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 export function ForgotPasswordScreen() {
   const router = useRouter();
+  const { isDark } = useTheme();
   const colors = useThemeColors();
   const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { resetPassword, isLoading } = useAuth();
@@ -144,6 +145,7 @@ export function ForgotPasswordScreen() {
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
+                keyboardAppearance={isDark ? 'dark' : 'light'}
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="email"

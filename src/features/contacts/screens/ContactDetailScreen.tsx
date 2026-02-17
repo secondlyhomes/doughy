@@ -9,7 +9,7 @@ import type { NativeStackNavigationOptions } from '@react-navigation/native-stac
 import { Phone, Mail, Building2, MapPin, Tag, Clock, ArrowLeft } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, ListEmptyState, Badge, Section, DetailRow } from '@/components/ui';
+import { LoadingSpinner, ListEmptyState, Badge, Section, DetailRow, CallPilotActions } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
 import { haptic } from '@/lib/haptics';
@@ -148,6 +148,14 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
             onEmail={handleEmail}
             onSMS={handleSMS}
           />
+
+          <Section title="CallPilot">
+            <CallPilotActions
+              contactId={contact!.id}
+              contactName={getContactDisplayName(contact!)}
+              phone={contact!.phone}
+            />
+          </Section>
 
           <Section title="Contact Information">
             {contact!.email && (

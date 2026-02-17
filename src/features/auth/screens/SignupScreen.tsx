@@ -15,13 +15,14 @@ import type { TextInput as TextInputType } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Check } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
-import { useThemeColors } from '@/contexts/ThemeContext';
+import { useTheme, useThemeColors } from '@/contexts/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks';
 import { withOpacity } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
 
 export function SignupScreen() {
   const router = useRouter();
+  const { isDark } = useTheme();
   const colors = useThemeColors();
   const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
   const { signUp, isLoading } = useAuth();
@@ -165,6 +166,7 @@ export function SignupScreen() {
                 placeholderTextColor={colors.mutedForeground}
                 value={fullName}
                 onChangeText={setFullName}
+                keyboardAppearance={isDark ? 'dark' : 'light'}
                 autoCapitalize="words"
                 autoComplete="name"
                 editable={!loading}
@@ -191,6 +193,7 @@ export function SignupScreen() {
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
+                keyboardAppearance={isDark ? 'dark' : 'light'}
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoComplete="email"
@@ -218,6 +221,7 @@ export function SignupScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
+                keyboardAppearance={isDark ? 'dark' : 'light'}
                 autoCapitalize="none"
                 autoComplete="new-password"
                 editable={!loading}
@@ -277,6 +281,7 @@ export function SignupScreen() {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
+                keyboardAppearance={isDark ? 'dark' : 'light'}
                 autoCapitalize="none"
                 autoComplete="new-password"
                 editable={!loading}

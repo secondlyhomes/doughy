@@ -62,7 +62,7 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="deals" hidden={isLandlord}>
-        <Icon sf={{ default: 'handshake', selected: 'handshake.fill' }} />
+        <Icon sf={{ default: 'briefcase', selected: 'briefcase.fill' }} />
         <Label>Deals</Label>
         {counts.overdueDeals > 0 && (
           <Badge>{String(counts.overdueDeals)}</Badge>

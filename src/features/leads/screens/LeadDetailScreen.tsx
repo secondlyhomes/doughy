@@ -5,13 +5,13 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight, MoreVertical } from 'lucide-react-native';
+import { Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight, MoreVertical, Headphones } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { formatStatus, getStatusBadgeVariant } from '@/lib/formatters';
 import { ICON_SIZES } from '@/constants/design-tokens';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button, Badge, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui';
+import { LoadingSpinner, Button, Badge, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE, CallPilotActions } from '@/components/ui';
 import { useNativeHeader } from '@/hooks';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
@@ -226,6 +226,19 @@ export function LeadDetailScreen() {
               </>
             )}
           </TouchableOpacity>
+        </View>
+
+        {/* CallPilot Actions */}
+        <View className="px-4 mb-4 p-4" style={{ backgroundColor: colors.card }}>
+          <View className="flex-row items-center mb-3">
+            <Headphones size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>CallPilot</Text>
+          </View>
+          <CallPilotActions
+            contactId={lead.id}
+            contactName={lead.name || 'Lead'}
+            phone={lead.phone}
+          />
         </View>
 
         {/* Contact Information */}
