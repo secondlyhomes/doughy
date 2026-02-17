@@ -3,9 +3,9 @@
 // Uses native UITabBarController on iOS for automatic liquid glass appearance
 // Supports platform switching between RE Investor and Landlord modes
 //
-// Tab Design (5 tabs per platform):
-// - Investor: Inbox → Pipeline → AI → Calls → Settings
-// - Landlord: Inbox → Properties → AI → Calls → Settings
+// Tab Design (Apple-like simplicity, 3 tabs per platform):
+// - Investor: Inbox → Pipeline → Settings
+// - Landlord: Inbox → Properties → Settings
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import { NativeTabs, Icon, Label, Badge } from 'expo-router/unstable-native-tabs';
@@ -78,16 +78,6 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
 
       {/* ========== SHARED TABS ========== */}
-      <NativeTabs.Trigger name="ai-assistant">
-        <Icon sf={{ default: 'brain', selected: 'brain.fill' }} />
-        <Label>AI</Label>
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="calls">
-        <Icon sf={{ default: 'phone', selected: 'phone.fill' }} />
-        <Label>Calls</Label>
-      </NativeTabs.Trigger>
-
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
         <Label>Settings</Label>
@@ -104,7 +94,6 @@ export default function TabLayout() {
       <NativeTabs.Trigger name="contacts" hidden />
 
       {/* Other hidden tabs */}
-      <NativeTabs.Trigger name="assistant" hidden />
       <NativeTabs.Trigger name="properties" hidden />
       <NativeTabs.Trigger name="conversations" hidden />
     </NativeTabs>
