@@ -49,6 +49,7 @@ import { FocusModeProvider } from '@/contexts/FocusModeContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ErrorProvider } from '@/contexts/ErrorContext';
 import { PlatformProvider } from '@/contexts/PlatformContext';
+import { useAuthDeepLink } from '@/hooks';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -78,6 +79,12 @@ function ThemedStatusBar() {
   return <StatusBar style={isDark ? 'light' : 'dark'} />;
 }
 
+// Handles Supabase auth deep links (password reset, email confirm, magic link)
+function AuthDeepLinkHandler() {
+  useAuthDeepLink();
+  return null;
+}
+
 // Root layout with all providers
 export default function RootLayout() {
   // Load fonts in background - don't block render
@@ -105,6 +112,7 @@ export default function RootLayout() {
                       <ErrorProvider>
                         <UnreadCountsProvider>
                           <SafeAreaProvider>
+                            <AuthDeepLinkHandler />
                             <ThemedStatusBar />
                             <Stack screenOptions={{ headerShown: false }}>
                               <Stack.Screen name="(tabs)" />

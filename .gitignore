@@ -50,3 +50,6 @@ coverage/
 .env.dev
 .env.stage
 .env.example
+
+# Local Netlify folder
+.netlify

@@ -98,6 +98,7 @@ export default function TabLayout() {
 
       {/* Other hidden tabs */}
       <NativeTabs.Trigger name="properties" hidden />
+      <NativeTabs.Trigger name="conversations" hidden />
     </NativeTabs>
     </View>
   );

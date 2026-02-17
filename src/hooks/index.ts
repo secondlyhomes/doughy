@@ -20,6 +20,9 @@ export type {
 export { useFieldRef } from './useFieldRef';
 export type { UseFieldRefOptions, UseFieldRefReturn } from './useFieldRef';
 
+// Auth deep link handler
+export { useAuthDeepLink } from './useAuthDeepLink';
+
 // Native header hook
 export { useNativeHeader } from './useNativeHeader';
 export type { UseNativeHeaderOptions, UseNativeHeaderReturn } from './useNativeHeader';

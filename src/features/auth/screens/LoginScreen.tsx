@@ -2,7 +2,7 @@
 // Login screen converted from web SignInForm
 // Uses useThemeColors() for reliable dark mode support
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ export function LoginScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const keyboardProps = useKeyboardAvoidance({ hasNavigationHeader: false });
-  const { signIn, isLoading, devBypassAuth } = useAuth();
+  const { signIn, isLoading, isAuthenticated, devBypassAuth } = useAuth();
 
   // Input refs for form navigation
   const passwordInputRef = useRef<TextInputType>(null);
@@ -36,6 +36,17 @@ export function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
+
+  // Reactive navigation — waits for React state to propagate before navigating.
+  // This prevents the race condition where router.replace fires before
+  // isAuthenticated has updated, causing the tab layout's auth guard to
+  // redirect back to login.
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.replace((pendingRedirect || '/(tabs)') as any);
+    }
+  }, [isAuthenticated, isLoading, pendingRedirect, router]);
 
   const handleLogin = async () => {
     if (!email.trim()) {
@@ -215,9 +226,10 @@ export function LoginScreen() {
                   style={{ backgroundColor: colors.primary }}
                   onPress={async () => {
                     try {
+                      setPendingRedirect('/(tabs)');
                       await devBypassAuth();
-                      router.replace('/(tabs)');
                     } catch (err) {
+                      setPendingRedirect(null);
                       setError(`Dev auth failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
                     }
                   }}
@@ -232,9 +244,10 @@ export function LoginScreen() {
                   style={{ backgroundColor: colors.warning }}
                   onPress={async () => {
                     try {
+                      setPendingRedirect('/(admin)');
                       await devBypassAuth();
-                      router.replace('/(admin)');
                     } catch (err) {
+                      setPendingRedirect(null);
                       setError(`Dev auth failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
                     }
                   }}

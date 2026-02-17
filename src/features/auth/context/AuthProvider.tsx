@@ -242,7 +242,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    // Real Supabase: Actually sign in to create valid JWT token for RLS
+    // Real Supabase: Actually sign in to create valid JWT token for RLS.
+    // NOTE: We call signInWithPassword directly (not getSession first) because
+    // getSession blocks on the Supabase client's initializePromise lock, which
+    // can hang if token refresh is in progress. signInWithPassword makes a direct
+    // HTTP POST and does not wait for the lock.
+    setIsLoading(true);
     try {
       const devEmail = process.env.EXPO_PUBLIC_DEV_EMAIL || 'dev@example.com';
       const devPassword = process.env.EXPO_PUBLIC_DEV_PASSWORD || 'devpassword123';
@@ -258,12 +263,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(`Dev sign-in failed: ${error.message}`);
       }
 
-      // Don't set state here - let onAuthStateChange handle it
-      // This prevents double fetchProfile calls and race conditions
+      // Don't set state or isLoading here — onAuthStateChange handles it.
+      // isLoading stays true until onAuthStateChange's finally block,
+      // which ensures the tab layout shows a loading spinner (not a redirect)
+      // until session/user state has fully propagated.
       console.log('[auth] Dev sign-in successful, waiting for auth state change...');
-      // Set loading false here as well - onAuthStateChange will also set it,
-      // but this ensures we don't get stuck if the event doesn't fire on cold start
-      setIsLoading(false);
     } catch (error) {
       console.error('[auth] Exception during dev sign-in:', error);
       setIsLoading(false);
@@ -273,11 +277,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Send password reset email
+   * After clicking the link, Supabase redirects to doughy://reset-password
+   * with auth tokens in the URL fragment. useAuthDeepLink handles the rest.
    */
   const resetPassword = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      // For mobile, we'll need to handle this via deep linking
-      redirectTo: undefined,
+      redirectTo: 'doughy://reset-password',
     });
 
     if (error) {
@@ -300,10 +305,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Initialize auth state and listen for changes.
-   * Runs exactly once on mount — uses hasInitializedRef to prevent
-   * re-running devBypassAuth if the effect is re-invoked (StrictMode,
-   * dependency changes, etc.). The onAuthStateChange listener handles
-   * all subsequent auth events.
+   * Runs exactly once on mount. The onAuthStateChange listener handles
+   * all subsequent auth events (sign-in, sign-out, token refresh).
+   * Dev authentication is triggered by LoginScreen's dev buttons,
+   * NOT auto-initiated here, to avoid race conditions with manual presses.
    */
   useEffect(() => {
     const initializeAuth = async () => {
@@ -330,17 +335,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.warn('[auth] Profile fetch timed out after 3s — continuing with null profile. Fetch continues in background.');
           }
           setIsLoading(false);
-        } else if (__DEV__ && !DEV_MODE_CONFIG.useMockData && process.env.EXPO_PUBLIC_DEV_EMAIL) {
-          // Auto-authenticate in DEV mode for easier integration testing
-          // Run non-blocking so the login screen stays interactive while this happens
-          // onAuthStateChange will handle state updates when sign-in completes
-          console.log('[auth] DEV mode: Auto-authenticating for testing');
-          setIsLoading(false); // Unblock UI immediately
-          devBypassAuth().catch((err) => {
-            console.error('[auth] DEV auto-sign-in failed:', err);
-          });
         } else {
-          // No session and not dev mode
+          // No session — show login screen. Dev auth is handled by LoginScreen buttons.
           setIsLoading(false);
         }
       } catch (error) {
