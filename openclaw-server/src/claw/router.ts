@@ -96,12 +96,12 @@ async function matchSender(phone: string): Promise<{
   const normalized = normalizePhone(phone);
   if (!normalized || normalized.length < 7) return null;
 
-  // Search crm.contacts by phone field
+  // Search crm.contacts by normalized phone (digits only — safe for PostgREST)
   try {
     const contacts = await schemaQuery<ContactMatch>(
       'crm',
       'contacts',
-      `or=(phone.ilike.%${normalized}%,phones.cs.[{"number":"${phone}"}])&select=id,first_name,last_name,phone,user_id,module&limit=1`
+      `or=(phone.ilike.%${normalized}%)&select=id,first_name,last_name,phone,user_id,module&limit=1`
     );
     if (contacts.length > 0) {
       return { contact: contacts[0], userId: contacts[0].user_id || undefined };
@@ -278,11 +278,11 @@ export async function routeInboundMessage(
       title: `New message from unknown number`,
       body: `${phoneFrom}: ${body.slice(0, 80)}`,
       data: { type: 'unknown_sender', phone: phoneFrom, lead_id: leadId },
-    }).catch(() => {});
+    }).catch((err) => console.error('[Router] Push notification failed for unknown sender:', err));
 
     broadcastMessage(defaultUserId, {
       content: `New message from unknown number ${phoneFrom}:\n"${body.slice(0, 100)}"\n\nDraft lead created — review in the app.`,
-    }, 'sms').catch(() => {});
+    }, 'sms').catch((err) => console.error('[Router] Broadcast failed for unknown sender:', err));
 
     console.log(`[Router] Unknown sender ${phoneFrom} — draft lead created, user notified`);
     return { type: 'unknown_sender', userId: defaultUserId };

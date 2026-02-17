@@ -24,6 +24,36 @@ interface QueueItem {
 let intervalId: ReturnType<typeof setInterval> | null = null;
 let isProcessing = false;
 
+/** Max age (ms) before an 'executing' item is considered stale and reset to error. */
+const STALE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
+
+/**
+ * Recover stale items stuck in 'executing' state (e.g., server crashed mid-execution).
+ */
+async function recoverStaleItems(): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - STALE_THRESHOLD_MS).toISOString();
+    const staleItems = await clawQuery<QueueItem>(
+      'action_queue',
+      `status=eq.executing&execute_at=lte.${cutoff}&limit=10`
+    );
+
+    for (const item of staleItems) {
+      console.warn(`[Queue] Recovering stale item ${item.id} (${item.action_type})`);
+      await clawUpdate('action_queue', item.id, {
+        status: 'error',
+        error_message: 'Stale: server may have restarted during execution',
+      });
+    }
+
+    if (staleItems.length > 0) {
+      console.log(`[Queue] Recovered ${staleItems.length} stale items`);
+    }
+  } catch (err) {
+    console.error('[Queue] Stale item recovery failed:', err);
+  }
+}
+
 /**
  * Process all ready queue items (execute_at <= now, status = 'pending').
  */
@@ -32,6 +62,9 @@ async function processQueue(): Promise<void> {
   isProcessing = true;
 
   try {
+    // Recover any stale items first
+    await recoverStaleItems();
+
     const now = new Date().toISOString();
     const readyItems = await clawQuery<QueueItem>(
       'action_queue',
@@ -57,7 +90,7 @@ async function processQueue(): Promise<void> {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         await clawUpdate('action_queue', item.id, {
           status: 'error',
-          action_payload: { ...item.action_payload, error: errorMsg },
+          error_message: errorMsg,
         });
         console.error(`[Queue] Failed: ${item.action_type} (${item.id}):`, error);
       }
@@ -98,7 +131,6 @@ async function executeQueueItem(item: QueueItem): Promise<void> {
     }
 
     case 'dispatch_vendor': {
-      // Dispatch vendor via WhatsApp
       const vendorPhone = (payload.vendor_phone as string) || '';
       const dispatchMsg = item.preview || (payload.message as string) || '';
       if (!vendorPhone || !dispatchMsg) throw new Error('Missing vendor phone or message');
@@ -119,7 +151,7 @@ async function executeQueueItem(item: QueueItem): Promise<void> {
     }
 
     default:
-      console.warn(`[Queue] Unknown action_type: ${item.action_type} — skipping`);
+      throw new Error(`Unknown action_type: ${item.action_type}`);
   }
 }
 

@@ -136,7 +136,7 @@ async function pushDraftSuggestion(
     title: `Draft for ${lead.name}`,
     body: draftPreview,
     data: { type: 'draft', draftId: draft.id, leadId: lead.id },
-  }).catch(() => {});
+  }).catch((err) => console.error('[Drafts] Push notification failed:', err));
 
   // Discord broadcast (free, always)
   try {
@@ -144,8 +144,8 @@ async function pushDraftSuggestion(
       content: `Draft for ${lead.name}:\n"${draft.draft_text}"\n\nApprove in the app or reply "send" here.`,
     }, 'app'); // 'app' as origin so it sends to discord + other channels
     pushedTo.push('discord');
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.warn('[Drafts] Broadcast failed:', err);
   }
 
   // WhatsApp push — only if opted in
@@ -166,8 +166,8 @@ async function pushDraftSuggestion(
   // Update draft with push destinations
   try {
     await clawUpdate('draft_suggestions', draft.id, { pushed_to: pushedTo });
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.warn('[Drafts] Failed to update pushed_to:', err);
   }
 }
 
@@ -176,6 +176,7 @@ async function pushDraftSuggestion(
  * Returns the action taken.
  */
 export async function approveDraft(
+  userId: string,
   draftId: string,
   approvedFrom: string,
   editedText?: string
@@ -183,7 +184,7 @@ export async function approveDraft(
   try {
     const drafts = await clawQuery<DraftSuggestion>(
       'draft_suggestions',
-      `id=eq.${draftId}&limit=1`
+      `id=eq.${draftId}&user_id=eq.${userId}&limit=1`
     );
     if (drafts.length === 0) {
       return { sent: false, message: 'Draft not found' };
@@ -192,21 +193,30 @@ export async function approveDraft(
     const draft = drafts[0];
     const textToSend = editedText || draft.draft_text;
 
-    // Look up lead phone
+    // Look up lead phone — try leads first, then contacts
     let leadPhone: string | null = null;
+    let lookupFailed = false;
     try {
       const leads = await schemaQuery<{ phone: string }>('crm', 'leads', `id=eq.${draft.lead_id}&select=phone&limit=1`);
       if (leads.length > 0) leadPhone = leads[0].phone;
-    } catch {
-      // Try contacts
+    } catch (err) {
+      console.warn('[Drafts] Lead phone lookup failed, trying contacts:', err);
       try {
         const contacts = await schemaQuery<{ phone: string }>('crm', 'contacts', `id=eq.${draft.lead_id}&select=phone&limit=1`);
         if (contacts.length > 0) leadPhone = contacts[0].phone;
-      } catch { /* no phone found */ }
+      } catch (err2) {
+        console.error('[Drafts] Contact phone lookup also failed:', err2);
+        lookupFailed = true;
+      }
     }
 
     if (!leadPhone) {
-      return { sent: false, message: 'No phone number found for this lead' };
+      return {
+        sent: false,
+        message: lookupFailed
+          ? 'Could not look up phone number — database may be temporarily unavailable'
+          : 'No phone number found for this lead',
+      };
     }
 
     // Send via WhatsApp (default channel)
@@ -231,12 +241,16 @@ export async function approveDraft(
 /**
  * Dismiss a draft suggestion.
  */
-export async function dismissDraft(draftId: string): Promise<void> {
-  try {
-    await clawUpdate('draft_suggestions', draftId, { status: 'dismissed' });
-  } catch (err) {
-    console.error('[Drafts] Dismiss failed:', err);
+export async function dismissDraft(userId: string, draftId: string): Promise<void> {
+  // Verify ownership before dismissing
+  const drafts = await clawQuery<DraftSuggestion>(
+    'draft_suggestions',
+    `id=eq.${draftId}&user_id=eq.${userId}&limit=1`
+  );
+  if (drafts.length === 0) {
+    throw new Error('Draft not found or access denied');
   }
+  await clawUpdate('draft_suggestions', draftId, { status: 'dismissed' });
 }
 
 /**

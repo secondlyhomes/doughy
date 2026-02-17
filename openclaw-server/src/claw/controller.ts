@@ -194,7 +194,7 @@ export async function handleClawMessage(
   try {
     const killLogs = await clawQuery<{ action: string }>(
       'kill_switch_log',
-      `select=action&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`
+      `user_id=eq.${userId}&select=action&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`
     );
     if (killLogs.length > 0 && killLogs[0].action === 'activate_global') {
       return {
@@ -375,7 +375,7 @@ async function handleDraftFollowups(
         data: { type: 'claw_approvals', task_id: task.id },
       }).then((result) => {
         if (!result.ok) console.error(`[Controller] Push notification failed: ${result.error}`);
-      });
+      }).catch((err) => console.error('[Controller] Push notification error:', err));
 
       return {
         message: `I've drafted ${approvalCount} follow-up message${approvalCount > 1 ? 's' : ''}. Open The Claw app to review and approve them before they're sent.`,

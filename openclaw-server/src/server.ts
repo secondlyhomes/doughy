@@ -631,7 +631,7 @@ app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'
             // Log Twilio cost
             const costCents = isWhatsApp ? 1 : 1; // ~$0.005-0.008 per msg
             logCost(routingResult.userId || 'system', 'twilio', channel, costCents)
-              .catch(() => {});
+              .catch((err) => console.error('[SMS] Cost logging failed:', err));
           } else {
             console.error(`[${channel.toUpperCase()}] Twilio send failed: ${result.error}`);
           }

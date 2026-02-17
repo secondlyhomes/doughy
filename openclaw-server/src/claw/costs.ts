@@ -20,7 +20,7 @@ export async function logCost(
       user_id: userId,
       service,
       action,
-      cost_cents: Math.max(1, Math.round(costCents)), // Minimum 1 cent
+      cost_cents: Math.round(costCents * 100) / 100, // Fractional cents allowed
       input_tokens: metadata?.input_tokens || 0,
       output_tokens: metadata?.output_tokens || 0,
       duration_seconds: metadata?.duration_seconds || 0,
@@ -63,7 +63,7 @@ export function estimateClaudeCost(
 
   // (tokens × rate_per_MTok / 1_000_000) × 100 cents/dollar
   const costCents = ((inputTokens * inputRate + outputTokens * outputRate) / 1_000_000) * 100;
-  return Math.max(1, Math.round(costCents * 100) / 100); // At least 0.01 cents, rounded to 2 decimals
+  return Math.round(costCents * 100) / 100; // Rounded to hundredths of a cent, no artificial floor
 }
 
 /**

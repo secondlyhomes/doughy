@@ -60,15 +60,14 @@ export async function getTrustConfig(userId: string): Promise<TrustConfig> {
 }
 
 /**
- * Check if kill switch is active (all agents disabled)
+ * Check if kill switch is active for a specific user.
  */
-async function isKillSwitchActive(): Promise<boolean> {
+async function isKillSwitchActive(userId: string): Promise<boolean> {
   try {
     const logs = await clawQuery<{ action: string }>(
       'kill_switch_log',
-      `action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`
+      `user_id=eq.${userId}&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`
     );
-    // activate_global = kill switch ON (agents paused); deactivate_global = kill switch OFF (agents resumed)
     return logs.length > 0 && logs[0].action === 'activate_global';
   } catch (err) {
     console.error('[Trust] Kill switch check failed — assuming active for safety:', err);
@@ -201,8 +200,8 @@ export async function enforceAction(
   actionType: string,
   details: ActionDetails
 ): Promise<{ result: EnforcementResult; queueId?: string; approvalId?: string }> {
-  // 1. Check kill switch
-  if (await isKillSwitchActive()) {
+  // 1. Check kill switch (user-scoped)
+  if (await isKillSwitchActive(userId)) {
     console.log(`[Trust] Kill switch active — blocking ${actionType} for ${userId}`);
     return { result: 'blocked' };
   }

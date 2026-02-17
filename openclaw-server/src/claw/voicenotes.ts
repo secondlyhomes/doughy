@@ -27,13 +27,24 @@ export function hasAudioMedia(reqBody: Record<string, string>): boolean {
 async function downloadTwilioMedia(mediaUrl: string): Promise<ArrayBuffer | null> {
   if (!config.twilioAccountSid || !config.twilioAuthToken) return null;
 
+  // Validate URL is from Twilio to prevent SSRF
+  if (!mediaUrl.startsWith('https://api.twilio.com/')) {
+    console.warn(`[VoiceNotes] Rejected non-Twilio media URL: ${mediaUrl}`);
+    return null;
+  }
+
   const auth = Buffer.from(`${config.twilioAccountSid}:${config.twilioAuthToken}`).toString('base64');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
 
   try {
     const response = await fetch(mediaUrl, {
       headers: { Authorization: `Basic ${auth}` },
       redirect: 'follow',
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       console.error(`[VoiceNotes] Failed to download media: ${response.status}`);
@@ -42,6 +53,7 @@ async function downloadTwilioMedia(mediaUrl: string): Promise<ArrayBuffer | null
 
     return await response.arrayBuffer();
   } catch (err) {
+    clearTimeout(timeout);
     console.error('[VoiceNotes] Download error:', err);
     return null;
   }
@@ -57,6 +69,9 @@ async function transcribeWithDeepgram(
 ): Promise<{ text: string; confidence: number } | null> {
   if (!config.deepgramApiKey) return null;
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
   try {
     const response = await fetch('https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true', {
       method: 'POST',
@@ -65,7 +80,10 @@ async function transcribeWithDeepgram(
         'Content-Type': contentType,
       },
       body: audioBuffer,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errText = await response.text().catch(() => '');
@@ -95,6 +113,7 @@ async function transcribeWithDeepgram(
       confidence: alternative.confidence || 0,
     };
   } catch (err) {
+    clearTimeout(timeout);
     console.error('[VoiceNotes] Transcription error:', err);
     return null;
   }
@@ -142,7 +161,7 @@ export async function processVoiceNote(
   if (userId) {
     logCost(userId, 'deepgram', 'voice_note_transcription', 1, {
       confidence: result.confidence,
-    }).catch(() => {});
+    }).catch((err) => console.error('[VoiceNotes] Cost logging failed:', err));
   }
 
   // Check confidence
