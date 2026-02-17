@@ -4,9 +4,8 @@
 
 import { config } from '../config.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
-import { clawInsert, clawQuery } from './db.js';
+import { clawInsert, clawQuery, schemaQuery } from './db.js';
 import { sendProactiveMessage } from './broadcast.js';
-import { schemaQuery } from './db.js';
 
 /**
  * Generate and send morning briefings to all active users

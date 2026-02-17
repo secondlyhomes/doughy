@@ -4,7 +4,7 @@
 import { config } from '../config.js';
 import { TOOL_REGISTRY } from './tools.js';
 import { clawQuery, clawInsert, clawUpdate } from './db.js';
-import { logClaudeCost } from './costs.js';
+import { logClaudeCost, estimateClaudeCost } from './costs.js';
 import type { AgentProfile, AgentToolCall } from './types.js';
 
 /**
@@ -408,12 +408,8 @@ export async function runAgent(options: {
 
     const durationMs = Date.now() - startTime;
 
-    // Estimate cost (Sonnet: $3/$15 per MTok, Haiku: $0.80/$4 per MTok)
-    // Rates are per-token, so divide by 1M (rates are $/token already in dollars)
-    const isHaiku = profile.model.includes('haiku');
-    const inputRate = isHaiku ? 0.80 : 3.0;   // $ per million tokens
-    const outputRate = isHaiku ? 4.0 : 15.0;   // $ per million tokens
-    const costCents = ((totalInputTokens * inputRate + totalOutputTokens * outputRate) / 1_000_000) * 100;
+    // Use shared cost estimator (single source of truth for token rates)
+    const costCents = estimateClaudeCost(profile.model, totalInputTokens, totalOutputTokens);
 
     // Update agent run
     await clawUpdate('agent_runs', run.id, {

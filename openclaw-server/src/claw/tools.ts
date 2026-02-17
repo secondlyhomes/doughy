@@ -16,6 +16,12 @@ function assertUuid(value: unknown, label: string): string {
   return value;
 }
 
+/** Clamp AI-supplied limit to a safe range */
+function clampLimit(value: number | undefined, defaultVal: number, max: number = 50): number {
+  if (!value || value < 1) return defaultVal;
+  return Math.min(value, max);
+}
+
 const VALID_MODULES = new Set(['investor', 'landlord']);
 
 /** Validate module from AI tool input — prevents PostgREST query injection */
@@ -32,7 +38,7 @@ function assertModule(value: unknown): string {
  * Read active deals from investor.deals_pipeline
  */
 export async function readDeals(userId: string, input: { limit?: number; stage?: string } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   let params = `user_id=eq.${userId}&status=eq.active&select=id,title,stage,estimated_value,probability,expected_close_date,next_action,next_action_due,created_at&order=updated_at.desc&limit=${limit}`;
   if (input.stage) {
     params += `&stage=eq.${encodeURIComponent(input.stage)}`;
@@ -44,7 +50,7 @@ export async function readDeals(userId: string, input: { limit?: number; stage?:
  * Read leads/contacts from crm.contacts
  */
 export async function readLeads(userId: string, input: { limit?: number; recent_days?: number; module?: string } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   const module = assertModule(input.module);
   let params = `user_id=eq.${userId}&module=eq.${module}&select=id,first_name,last_name,email,phone,source,status,created_at&order=created_at.desc&limit=${limit}`;
 
@@ -60,7 +66,7 @@ export async function readLeads(userId: string, input: { limit?: number; recent_
  * Read bookings from landlord.bookings
  */
 export async function readBookings(userId: string, input: { limit?: number; upcoming_only?: boolean } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   let params = `user_id=eq.${userId}&select=id,contact_id,property_id,room_id,booking_type,start_date,end_date,check_in_time,check_out_time,rate,rate_type,total_amount,status,source,notes&order=start_date.asc&limit=${limit}`;
 
   if (input.upcoming_only !== false) {
@@ -75,7 +81,7 @@ export async function readBookings(userId: string, input: { limit?: number; upco
  * Read follow-ups from investor.follow_ups
  */
 export async function readFollowUps(userId: string, input: { limit?: number; overdue_only?: boolean; upcoming_days?: number } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   const today = new Date().toISOString().split('T')[0];
   let params = `user_id=eq.${userId}&status=eq.scheduled&select=id,contact_id,deal_id,follow_up_type,scheduled_at,context,created_at&order=scheduled_at.asc&limit=${limit}`;
 
@@ -93,7 +99,7 @@ export async function readFollowUps(userId: string, input: { limit?: number; ove
  * Read maintenance records from landlord.maintenance_records
  */
 export async function readMaintenance(userId: string, input: { limit?: number; status?: string } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   let params = `user_id=eq.${userId}&select=id,property_id,title,description,category,location,status,priority,reported_at,scheduled_at,vendor_name,vendor_phone,estimated_cost,actual_cost,notes&order=reported_at.desc&limit=${limit}`;
 
   if (input.status) {
@@ -107,7 +113,7 @@ export async function readMaintenance(userId: string, input: { limit?: number; s
  * Read vendors from landlord.vendors
  */
 export async function readVendors(userId: string, input: { limit?: number; category?: string } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   let params = `user_id=eq.${userId}&is_active=eq.true&select=id,name,company_name,category,phone,email,hourly_rate,rating,total_jobs,last_used_at,availability_notes&order=rating.desc.nullslast&limit=${limit}`;
 
   if (input.category) {
@@ -121,7 +127,7 @@ export async function readVendors(userId: string, input: { limit?: number; categ
  * Read full contact details from crm.contacts
  */
 export async function readContactsDetail(userId: string, input: { limit?: number; search?: string; contact_id?: string; module?: string } = {}): Promise<unknown> {
-  const limit = input.limit || 10;
+  const limit = clampLimit(input.limit, 10);
   const module = assertModule(input.module);
 
   if (input.contact_id) {
@@ -145,7 +151,7 @@ export async function readContactsDetail(userId: string, input: { limit?: number
  * Read investment portfolio from investor.properties
  */
 export async function readPortfolio(userId: string, input: { limit?: number } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   return schemaQuery('investor', 'properties',
     `user_id=eq.${userId}&select=id,address_line_1,city,state,zip,property_type,bedrooms,bathrooms,square_feet,purchase_price,arv,status,notes,created_at&order=created_at.desc&limit=${limit}`
   );
@@ -155,7 +161,7 @@ export async function readPortfolio(userId: string, input: { limit?: number } = 
  * Read documents from investor.documents
  */
 export async function readDocuments(userId: string, input: { limit?: number; deal_id?: string; property_id?: string } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   let params = `user_id=eq.${userId}&select=id,title,type,property_id,deal_id,file_url,content_type,created_at&order=created_at.desc&limit=${limit}`;
 
   if (input.deal_id) {
@@ -174,7 +180,7 @@ export async function readDocuments(userId: string, input: { limit?: number; dea
  * Read comparable properties from investor.comps
  */
 export async function readComps(userId: string, input: { property_id?: string; limit?: number } = {}): Promise<unknown> {
-  const limit = input.limit || 10;
+  const limit = clampLimit(input.limit, 10);
   let params = `created_by=eq.${userId}&select=id,property_id,address,city,state,bedrooms,bathrooms,square_feet,sale_price,sale_date,price_per_sqft,days_on_market,distance&order=sale_date.desc&limit=${limit}`;
 
   if (input.property_id) {
@@ -189,7 +195,7 @@ export async function readComps(userId: string, input: { property_id?: string; l
  * Read campaigns from investor.campaigns
  */
 export async function readCampaigns(userId: string, input: { limit?: number; status?: string } = {}): Promise<unknown> {
-  const limit = input.limit || 10;
+  const limit = clampLimit(input.limit, 10);
   let params = `user_id=eq.${userId}&select=id,name,campaign_type,status,budget,spent,cost_per_lead,leads_generated,deals_closed,enrolled_count,responded_count,start_date,end_date&order=created_at.desc&limit=${limit}`;
 
   if (input.status) {
@@ -203,7 +209,7 @@ export async function readCampaigns(userId: string, input: { limit?: number; sta
  * Read recent conversations
  */
 export async function readConversations(userId: string, input: { limit?: number } = {}): Promise<unknown> {
-  const limit = input.limit || 20;
+  const limit = clampLimit(input.limit, 20);
   return schemaQuery('investor', 'conversations',
     `user_id=eq.${userId}&select=id,contact_id,channel,last_message,last_message_at,status,unread_count&order=last_message_at.desc&limit=${limit}`
   );

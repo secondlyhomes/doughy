@@ -394,7 +394,7 @@ router.get('/activity', requireAuth, async (req: Request, res: Response) => {
         type: a.action_type,
         status: a.status,
         title: a.title,
-        summary: a.draft_content.slice(0, 200),
+        summary: (a.draft_content || '').slice(0, 200),
         recipient_name: a.recipient_name,
         recipient_phone: a.recipient_phone,
         created_at: a.created_at,
@@ -474,6 +474,12 @@ router.patch('/agent-profiles/:id', requireAuth, async (req: Request, res: Respo
       return res.status(400).json({ error: 'is_active must be a boolean' });
     }
 
+    // Verify profile exists before updating (agent_profiles are system-wide, not per-user)
+    const profiles = await clawQuery<{ id: string }>('agent_profiles', `id=eq.${profileId}&deleted_at=is.null&select=id&limit=1`);
+    if (profiles.length === 0) {
+      return res.status(404).json({ error: 'Agent profile not found' });
+    }
+
     await clawUpdate('agent_profiles', profileId, { is_active });
     res.json({ success: true, is_active });
   } catch (error) {
@@ -496,9 +502,9 @@ router.get('/kill-switch', requireAuth, async (req: Request, res: Response) => {
       action: string;
       reason: string;
       created_at: string;
-    }>('kill_switch_log', `select=id,action,reason,created_at&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`);
+    }>('kill_switch_log', `user_id=eq.${userId}&select=id,action,reason,created_at&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`);
 
-    const active = logs.length > 0 && logs[0].action === 'deactivate_global';
+    const active = logs.length > 0 && logs[0].action === 'activate_global';
 
     res.json({
       active,
@@ -532,7 +538,7 @@ router.post('/kill-switch', requireAuth, async (req: Request, res: Response) => 
     // Log the kill switch activation
     await clawInsert('kill_switch_log', {
       user_id: userId,
-      action: 'deactivate_global',
+      action: 'activate_global',
       reason: reason.slice(0, 500),
       agents_affected: profiles.length,
       tasks_paused: 0,
@@ -567,7 +573,7 @@ router.delete('/kill-switch', requireAuth, async (req: Request, res: Response) =
     // Log the deactivation
     await clawInsert('kill_switch_log', {
       user_id: userId,
-      action: 'activate_global',
+      action: 'deactivate_global',
       reason: 'Kill switch deactivated — agents restored',
       agents_affected: profiles.length,
     });

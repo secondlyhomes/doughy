@@ -35,7 +35,7 @@ async function recoverStaleItems(): Promise<void> {
     const cutoff = new Date(Date.now() - STALE_THRESHOLD_MS).toISOString();
     const staleItems = await clawQuery<QueueItem>(
       'action_queue',
-      `status=eq.executing&execute_at=lte.${cutoff}&limit=10`
+      `status=eq.executing&updated_at=lte.${cutoff}&limit=10`
     );
 
     for (const item of staleItems) {

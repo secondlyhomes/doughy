@@ -629,7 +629,7 @@ app.post('/webhooks/sms', twilioSignatureMiddleware(), rateLimitMiddleware('sms'
           if (result.success) {
             console.log(`[${channel.toUpperCase()}] Reply sent to ${phoneNumber}, SID: ${result.sid}`);
             // Log Twilio cost
-            const costCents = isWhatsApp ? 1 : 1; // ~$0.005-0.008 per msg
+            const costCents = isWhatsApp ? 0.5 : 0.75; // WhatsApp ~$0.005/msg, SMS ~$0.0075/segment
             logCost(routingResult.userId || 'system', 'twilio', channel, costCents)
               .catch((err) => console.error('[SMS] Cost logging failed:', err));
           } else {

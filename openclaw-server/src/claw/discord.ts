@@ -159,6 +159,21 @@ async function handleSingleApproval(interaction: any, approvalId: string, action
   await interaction.deferReply({ ephemeral: true });
 
   try {
+    // Fetch the approval first to verify it exists and is still pending
+    const approvals = await clawQuery<{
+      user_id: string;
+      status: string;
+      action_type: string;
+      draft_content: string;
+      recipient_phone: string | null;
+    }>('approvals', `id=eq.${approvalId}&status=eq.pending&limit=1`);
+
+    if (approvals.length === 0) {
+      await interaction.editReply('Approval not found or already decided.');
+      return;
+    }
+
+    const approval = approvals[0];
     const now = new Date().toISOString();
     await clawUpdate('approvals', approvalId, {
       status: action === 'approve' ? 'approved' : 'rejected',
@@ -166,16 +181,9 @@ async function handleSingleApproval(interaction: any, approvalId: string, action
     });
 
     if (action === 'approve') {
-      // Execute the approval (send the message)
-      const approvals = await clawQuery<{
-        action_type: string;
-        draft_content: string;
-        recipient_phone: string | null;
-      }>('approvals', `id=eq.${approvalId}&limit=1`);
-
-      if (approvals[0]?.action_type === 'send_sms' && approvals[0]?.recipient_phone) {
+      if (approval.action_type === 'send_sms' && approval.recipient_phone) {
         // Execute via edge function
-        await executeSmsFromDiscord(approvals[0].recipient_phone, approvals[0].draft_content);
+        await executeSmsFromDiscord(approval.recipient_phone, approval.draft_content);
         await clawUpdate('approvals', approvalId, {
           status: 'executed',
           executed_at: new Date().toISOString(),

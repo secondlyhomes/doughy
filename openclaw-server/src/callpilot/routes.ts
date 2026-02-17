@@ -4,6 +4,7 @@
 import { Router, Request, Response } from 'express';
 import { config } from '../config.js';
 import { cpQuery, cpInsert, cpUpdate } from './db.js';
+import { schemaQuery } from '../claw/db.js';
 import { generatePreCallBriefing, generateCoachingCard, generatePostCallSummary } from './engines.js';
 import { initiateOutboundCall } from './voice.js';
 import { startCallSession, stopCallSession, endCallSession, getSessionInfo } from './session.js';
@@ -166,9 +167,6 @@ router.get('/messages/:leadId', requireAuth, async (req: Request, res: Response)
 
     const limitParam = parseInt(req.query.limit as string);
     const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 200) : 50;
-
-    // Import schemaQuery for cross-schema access
-    const { schemaQuery } = await import('../claw/db.js');
 
     const messages = await schemaQuery(
       'crm',

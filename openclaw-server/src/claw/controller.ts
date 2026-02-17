@@ -543,20 +543,25 @@ async function handleApproval(
     const results: string[] = [];
 
     for (const approval of pendingApprovals) {
-      await clawUpdate('approvals', approval.id, {
-        status: 'approved',
-        decided_at: now,
-      });
+      try {
+        await clawUpdate('approvals', approval.id, {
+          status: 'approved',
+          decided_at: now,
+        });
 
-      // Execute if it's a send action
-      if (approval.action_type === 'send_sms' && approval.recipient_phone) {
-        const sent = await executeApprovedAction(userId, approval);
-        results.push(sent
-          ? `WhatsApp sent to ${approval.recipient_name || approval.recipient_phone}`
-          : `Approved: ${approval.recipient_name || 'Unknown'} (send failed — retry from the app)`
-        );
-      } else {
-        results.push(`Approved: ${approval.title}`);
+        // Execute if it's a send action
+        if (approval.action_type === 'send_sms' && approval.recipient_phone) {
+          const sent = await executeApprovedAction(userId, approval);
+          results.push(sent
+            ? `WhatsApp sent to ${approval.recipient_name || approval.recipient_phone}`
+            : `Approved: ${approval.recipient_name || 'Unknown'} (send failed — retry from the app)`
+          );
+        } else {
+          results.push(`Approved: ${approval.title}`);
+        }
+      } catch (err) {
+        console.error(`[Controller] Approval ${approval.id} failed:`, err);
+        results.push(`Failed: ${approval.recipient_name || approval.title} (try again)`);
       }
     }
 
@@ -567,13 +572,19 @@ async function handleApproval(
 
   // "reject" / "no" (standalone only) / "don't send" / "skip all"
   if (/\b(reject|don.?t\s*send|skip\s*all|cancel)\b/.test(lower) || /^no\.?$/i.test(lower.trim())) {
+    let rejected = 0;
     for (const approval of pendingApprovals) {
-      await clawUpdate('approvals', approval.id, {
-        status: 'rejected',
-        decided_at: now,
-      });
+      try {
+        await clawUpdate('approvals', approval.id, {
+          status: 'rejected',
+          decided_at: now,
+        });
+        rejected++;
+      } catch (err) {
+        console.error(`[Controller] Reject approval ${approval.id} failed:`, err);
+      }
     }
-    return { message: `Skipped all ${pendingApprovals.length} pending approval${pendingApprovals.length > 1 ? 's' : ''}.` };
+    return { message: `Skipped ${rejected} of ${pendingApprovals.length} pending approval${pendingApprovals.length > 1 ? 's' : ''}.` };
   }
 
   // "approve 1" / "just John" / "skip Maria"
@@ -607,15 +618,20 @@ async function handleApproval(
     if (matched.length > 0) {
       const results: string[] = [];
       for (const approval of matched) {
-        await clawUpdate('approvals', approval.id, {
-          status: 'approved',
-          decided_at: now,
-        });
-        const sent = await executeApprovedAction(userId, approval);
-        results.push(sent
-          ? `Sent to ${approval.recipient_name}`
-          : `Approved: ${approval.recipient_name}`
-        );
+        try {
+          await clawUpdate('approvals', approval.id, {
+            status: 'approved',
+            decided_at: now,
+          });
+          const sent = await executeApprovedAction(userId, approval);
+          results.push(sent
+            ? `Sent to ${approval.recipient_name}`
+            : `Approved: ${approval.recipient_name}`
+          );
+        } catch (err) {
+          console.error(`[Controller] Approve ${approval.id} (by name) failed:`, err);
+          results.push(`Failed: ${approval.recipient_name || 'Unknown'}`);
+        }
       }
       return { message: `Done! ${results.join(', ')} ✅` };
     }
@@ -627,13 +643,19 @@ async function handleApproval(
       a.recipient_name?.toLowerCase().includes(name)
     );
     if (matched.length > 0) {
+      const skipped: string[] = [];
       for (const approval of matched) {
-        await clawUpdate('approvals', approval.id, {
-          status: 'rejected',
-          decided_at: now,
-        });
+        try {
+          await clawUpdate('approvals', approval.id, {
+            status: 'rejected',
+            decided_at: now,
+          });
+          skipped.push(approval.recipient_name || 'Unknown');
+        } catch (err) {
+          console.error(`[Controller] Skip ${approval.id} (by name) failed:`, err);
+        }
       }
-      return { message: `Skipped ${matched.map((a) => a.recipient_name).join(', ')}.` };
+      return { message: `Skipped ${skipped.join(', ')}.` };
     }
   }
 
@@ -654,9 +676,11 @@ async function handleApproval(
   }
 
   // If we can't parse the approval command, list them
-  const list = pendingApprovals.map((a, i) =>
-    `${i + 1}. ${a.recipient_name || a.title}: "${a.draft_content.slice(0, 80)}..."`
-  ).join('\n');
+  const list = pendingApprovals.map((a, i) => {
+    const content = a.draft_content || '';
+    const preview = content.length > 80 ? content.slice(0, 80) + '...' : content;
+    return `${i + 1}. ${a.recipient_name || a.title}: "${preview}"`;
+  }).join('\n');
 
   return {
     message: `You have ${pendingApprovals.length} pending:\n${list}\n\nSay "approve all", "approve 1", "just [name]", "skip [name]", or "edit 1: new text"`,
