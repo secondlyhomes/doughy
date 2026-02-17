@@ -375,6 +375,16 @@ export async function markFollowupComplete(userId: string, input: {
   followup_id: string;
 }): Promise<unknown> {
   assertUuid(input.followup_id, 'followup_id');
+
+  // Verify ownership before update
+  const existing = await schemaQuery<{ id: string }>(
+    'investor', 'follow_ups',
+    `id=eq.${input.followup_id}&user_id=eq.${userId}&select=id&limit=1`
+  );
+  if (existing.length === 0) {
+    throw new Error('Follow-up not found or access denied');
+  }
+
   await schemaUpdate('investor', 'follow_ups', input.followup_id, {
     status: 'completed',
     updated_at: new Date().toISOString(),
@@ -450,7 +460,10 @@ export async function addNote(userId: string, input: {
       target.schema, target.table,
       `id=eq.${input.target_id}&user_id=eq.${userId}&select=metadata&limit=1`
     );
-    const existing = contacts[0]?.metadata || {};
+    if (contacts.length === 0) {
+      throw new Error(`${input.target_type} not found or access denied`);
+    }
+    const existing = contacts[0].metadata || {};
     const notes = Array.isArray(existing.notes) ? existing.notes : [];
     notes.push({ text: input.note, created_at: new Date().toISOString() });
     await schemaUpdate(target.schema, target.table, input.target_id, {
@@ -463,7 +476,10 @@ export async function addNote(userId: string, input: {
       target.schema, target.table,
       `id=eq.${input.target_id}&user_id=eq.${userId}&select=notes&limit=1`
     );
-    const existingNotes = records[0]?.notes || '';
+    if (records.length === 0) {
+      throw new Error(`${input.target_type} not found or access denied`);
+    }
+    const existingNotes = records[0].notes || '';
     const separator = existingNotes ? '\n\n' : '';
     const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
     await schemaUpdate(target.schema, target.table, input.target_id, {
@@ -487,6 +503,16 @@ export async function createMaintenanceRequest(userId: string, input: {
   location?: string;
 }): Promise<unknown> {
   assertUuid(input.property_id, 'property_id');
+
+  // Verify property ownership before creating maintenance request
+  const property = await schemaQuery<{ id: string }>(
+    'landlord', 'properties',
+    `id=eq.${input.property_id}&user_id=eq.${userId}&select=id&limit=1`
+  );
+  if (property.length === 0) {
+    throw new Error('Property not found or access denied');
+  }
+
   return schemaInsert('landlord', 'maintenance_records', {
     user_id: userId,
     property_id: input.property_id,

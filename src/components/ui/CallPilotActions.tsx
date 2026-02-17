@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
 import { Phone, MessageSquare } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES, ICON_CONTAINER_SIZES } from '@/constants/design-tokens';
 
 export interface CallPilotActionsProps {
   /** Contact/lead ID to pass to CallPilot */
@@ -32,22 +32,31 @@ export function CallPilotActions({
 
   const openInCallPilot = useCallback(async (action: 'call' | 'message') => {
     const deepLink = `callpilot://${action}/${contactId}`;
-    const canOpen = await Linking.canOpenURL(deepLink);
+    try {
+      const canOpen = await Linking.canOpenURL(deepLink);
 
-    if (canOpen) {
-      Linking.openURL(deepLink);
-    } else {
+      if (canOpen) {
+        await Linking.openURL(deepLink);
+      } else {
+        Alert.alert(
+          'CallPilot Not Installed',
+          `Install CallPilot to ${action === 'call' ? 'call' : 'message'} ${contactName}.`,
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (err) {
+      console.error('[CallPilotActions] Failed to open deep link:', err);
       Alert.alert(
-        'CallPilot Not Installed',
-        `Install CallPilot to ${action === 'call' ? 'call' : 'message'} ${contactName}.`,
+        'Unable to Open CallPilot',
+        'Something went wrong. Please try again.',
         [{ text: 'OK' }]
       );
     }
   }, [contactId, contactName]);
 
-  const buttonHeight = compact ? 32 : 40;
+  const buttonHeight = compact ? ICON_CONTAINER_SIZES.sm : ICON_CONTAINER_SIZES.md;
   const iconSize = compact ? ICON_SIZES.sm : ICON_SIZES.md;
-  const fontSize = compact ? 12 : 14;
+  const fontSize = compact ? FONT_SIZES.xs : FONT_SIZES.sm;
 
   return (
     <View style={{ flexDirection: direction, gap: SPACING.sm }}>

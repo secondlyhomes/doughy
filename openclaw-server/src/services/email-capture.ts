@@ -222,7 +222,8 @@ Be concise. Max 3 key points.`,
   try {
     return JSON.parse(text);
   } catch {
-    return { sentiment: 'neutral', intent: 'information' };
+    console.warn('[EmailCapture] Failed to parse AI analysis response, using defaults. Raw:', text.slice(0, 200));
+    return { sentiment: 'neutral', intent: 'information', key_points: [], urgency: 'low' };
   }
 }
 

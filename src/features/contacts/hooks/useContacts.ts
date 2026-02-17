@@ -20,9 +20,11 @@ const PAGE_SIZE = 20;
 
 // Map a database row to a Contact object
 function mapRowToContact(row: CrmContactRow): Contact {
+  // module exists in DB (NOT NULL, CHECK) but not in generated types yet — safe runtime access
+  const rawModule = (row as Record<string, unknown>).module;
   return {
     id: row.id,
-    module: (row as unknown as { module: string }).module as 'investor' | 'landlord',
+    module: rawModule === 'investor' || rawModule === 'landlord' ? rawModule : 'landlord',
     first_name: row.first_name,
     last_name: row.last_name,
     email: row.email,

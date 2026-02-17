@@ -21,8 +21,11 @@ const PAGE_SIZE = 20;
 
 // Map a database row to a Lead object
 function mapRowToLead(row: CrmLeadRow): Lead {
+  // module exists in DB (NOT NULL, CHECK) but not in generated types yet — safe runtime access
+  const rawModule = (row as Record<string, unknown>).module;
   const lead: Lead = {
     id: row.id,
+    module: rawModule === 'investor' || rawModule === 'landlord' ? rawModule : 'investor',
     user_id: row.user_id ?? undefined,
     workspace_id: row.workspace_id ?? undefined,
     name: row.name || '',
@@ -108,22 +111,7 @@ async function fetchLeadById(id: string): Promise<Lead | null> {
 
   if (!data) return null;
 
-  const lead: Lead = {
-    id: data.id,
-    user_id: data.user_id ?? undefined,
-    workspace_id: data.workspace_id ?? undefined,
-    name: data.name || '',
-    phone: data.phone ?? undefined,
-    email: data.email ?? undefined,
-    company: data.company ?? undefined,
-    status: (data.status as Lead['status']) || 'new',
-    score: data.score ?? undefined,
-    tags: data.tags || [],
-    opt_status: (data.opt_status ?? undefined) as Lead['opt_status'],
-    created_at: data.created_at ?? undefined,
-    updated_at: data.updated_at ?? undefined,
-  };
-  return lead;
+  return mapRowToLead(data);
 }
 
 async function createLead(formData: LeadFormData): Promise<Lead> {
@@ -155,19 +143,7 @@ async function createLead(formData: LeadFormData): Promise<Lead> {
     throw error;
   }
 
-  const lead: Lead = {
-    id: data.id,
-    user_id: data.user_id ?? undefined,
-    name: data.name || '',
-    status: (data.status as Lead['status']) || 'new',
-    email: data.email ?? undefined,
-    phone: data.phone ?? undefined,
-    company: data.company ?? undefined,
-    tags: data.tags || [],
-    created_at: data.created_at ?? undefined,
-    updated_at: data.updated_at ?? undefined,
-  };
-  return lead;
+  return mapRowToLead(data);
 }
 
 async function updateLead(id: string, updates: Partial<Lead>): Promise<Lead> {
@@ -197,21 +173,7 @@ async function updateLead(id: string, updates: Partial<Lead>): Promise<Lead> {
     throw error;
   }
 
-  const lead: Lead = {
-    id: data.id,
-    user_id: data.user_id ?? undefined,
-    name: data.name || '',
-    status: (data.status as Lead['status']) || 'new',
-    email: data.email ?? undefined,
-    phone: data.phone ?? undefined,
-    company: data.company ?? undefined,
-    tags: data.tags || [],
-    score: data.score ?? undefined,
-    opt_status: (data.opt_status ?? undefined) as Lead['opt_status'],
-    created_at: data.created_at ?? undefined,
-    updated_at: data.updated_at ?? undefined,
-  };
-  return lead;
+  return mapRowToLead(data);
 }
 
 async function deleteLead(id: string): Promise<void> {

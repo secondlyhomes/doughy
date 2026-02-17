@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Phone, Mail, MessageSquare, Clock, ExternalLink } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, ICON_SIZES, ICON_CONTAINER_SIZES } from '@/constants/design-tokens';
 import { formatDate } from '@/lib/formatters';
 
 export interface CommunicationEntry {
@@ -27,7 +27,7 @@ export interface CommunicationHistoryProps {
   maxEntries?: number;
 }
 
-const typeIcons = {
+const typeIcons: Record<CommunicationEntry['type'], typeof Phone> = {
   call: Phone,
   sms: MessageSquare,
   email: Mail,
@@ -35,7 +35,7 @@ const typeIcons = {
   note: Clock,
 };
 
-const typeLabels = {
+const typeLabels: Record<CommunicationEntry['type'], string> = {
   call: 'Call',
   sms: 'SMS',
   email: 'Email',
@@ -86,9 +86,9 @@ export function CommunicationHistory({
           >
             <View
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
+                width: ICON_CONTAINER_SIZES.sm,
+                height: ICON_CONTAINER_SIZES.sm,
+                borderRadius: ICON_CONTAINER_SIZES.sm / 2,
                 backgroundColor: colors.muted,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -151,7 +151,7 @@ export function CommunicationHistory({
           <Text style={{ color: colors.primary, fontSize: FONT_SIZES.sm, fontWeight: '600' }}>
             Continue in CallPilot
           </Text>
-          <ExternalLink size={14} color={colors.primary} />
+          <ExternalLink size={ICON_SIZES.sm} color={colors.primary} />
         </TouchableOpacity>
       )}
     </View>

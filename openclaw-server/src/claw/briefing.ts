@@ -178,6 +178,10 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       for (const c of contactResults) {
         contactNames[c.id] = [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown';
       }
+      const unresolvedCount = contactIds.length - contactResults.length;
+      if (unresolvedCount > 0) {
+        console.warn(`[Briefing] ${unresolvedCount}/${contactIds.length} contact IDs could not be resolved for user ${userId}`);
+      }
     } catch (err) {
       console.warn('[Briefing] Failed to resolve contact names:', err);
     }
@@ -200,6 +204,10 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       );
       for (const l of leadResults) {
         leadNames[l.id] = l.name || 'Unknown';
+      }
+      const unresolvedLeads = leadIds.length - leadResults.length;
+      if (unresolvedLeads > 0) {
+        console.warn(`[Briefing] ${unresolvedLeads}/${leadIds.length} lead IDs could not be resolved for user ${userId}`);
       }
     } catch (err) {
       console.warn('[Briefing] Failed to resolve lead names:', err);

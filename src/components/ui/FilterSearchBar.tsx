@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
 import { SearchBar, type SearchBarProps } from './SearchBar';
 
 export interface FilterPill {
@@ -52,15 +52,15 @@ export function FilterSearchBar({
                 borderRadius: BORDER_RADIUS.xl,
                 paddingHorizontal: SPACING.sm,
                 paddingVertical: SPACING.xxs,
-                gap: 4,
+                gap: SPACING.xxs,
               }}
               accessibilityLabel={`Remove ${filter.label} filter`}
               accessibilityRole="button"
             >
-              <Text style={{ color: colors.primaryForeground, fontSize: 12, fontWeight: '500' }}>
+              <Text style={{ color: colors.primaryForeground, fontSize: FONT_SIZES.xs, fontWeight: '500' }}>
                 {filter.label}
               </Text>
-              <X size={12} color={colors.primaryForeground} />
+              <X size={ICON_SIZES.xs} color={colors.primaryForeground} />
             </TouchableOpacity>
           ))}
         </ScrollView>
