@@ -36,6 +36,7 @@ import { lookupUserByChannel } from './claw/db.js';
 import { sendTwilioMessage } from './claw/twilio.js';
 import clawRoutes from './claw/routes.js';
 import callpilotRoutes from './callpilot/routes.js';
+import { voiceWebhookRouter } from './callpilot/voice.js';
 import { initDiscordBot } from './claw/discord.js';
 import { runMorningBriefings, runFollowUpNudges } from './claw/scheduler.js';
 import { captureInboundEmail } from './services/email-capture.js';
@@ -837,6 +838,7 @@ if (config.nodeEnv !== 'production') {
 
 app.use('/api/claw', clawRoutes);
 app.use('/api/calls', callpilotRoutes);
+app.use('/webhooks/voice', voiceWebhookRouter);
 
 // ============================================================================
 // Error Handling

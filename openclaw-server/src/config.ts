@@ -47,6 +47,9 @@ export const config = {
   twilioPhoneNumber: optionalEnv('TWILIO_PHONE_NUMBER', ''),
   twilioWhatsAppNumber: optionalEnv('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886'), // Sandbox default
 
+  // Deepgram (for CallPilot transcription)
+  deepgramApiKey: optionalEnv('DEEPGRAM_API_KEY', ''),
+
   // Discord
   discordBotToken: optionalEnv('DISCORD_BOT_TOKEN', ''),
   discordChannelId: optionalEnv('DISCORD_CHANNEL_ID', ''),

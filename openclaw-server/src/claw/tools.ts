@@ -16,6 +16,14 @@ function assertUuid(value: unknown, label: string): string {
   return value;
 }
 
+const VALID_MODULES = new Set(['investor', 'landlord']);
+
+/** Validate module from AI tool input — prevents PostgREST query injection */
+function assertModule(value: unknown): string {
+  if (typeof value === 'string' && VALID_MODULES.has(value)) return value;
+  return 'investor';
+}
+
 // ============================================================================
 // READ Tool Implementations
 // ============================================================================
@@ -35,13 +43,11 @@ export async function readDeals(userId: string, input: { limit?: number; stage?:
 /**
  * Read leads/contacts from crm.contacts
  */
-export async function readLeads(userId: string, input: { limit?: number; min_score?: number; recent_days?: number } = {}): Promise<unknown> {
+export async function readLeads(userId: string, input: { limit?: number; recent_days?: number; module?: string } = {}): Promise<unknown> {
   const limit = input.limit || 20;
-  let params = `user_id=eq.${userId}&select=id,first_name,last_name,email,phone,source,score,status,created_at&order=created_at.desc&limit=${limit}`;
+  const module = assertModule(input.module);
+  let params = `user_id=eq.${userId}&module=eq.${module}&select=id,first_name,last_name,email,phone,source,status,created_at&order=created_at.desc&limit=${limit}`;
 
-  if (input.min_score) {
-    params += `&score=gte.${input.min_score}`;
-  }
   if (input.recent_days) {
     const since = new Date(Date.now() - input.recent_days * 86400000).toISOString();
     params += `&created_at=gte.${since}`;
@@ -114,20 +120,20 @@ export async function readVendors(userId: string, input: { limit?: number; categ
 /**
  * Read full contact details from crm.contacts
  */
-export async function readContactsDetail(userId: string, input: { limit?: number; search?: string; contact_id?: string } = {}): Promise<unknown> {
+export async function readContactsDetail(userId: string, input: { limit?: number; search?: string; contact_id?: string; module?: string } = {}): Promise<unknown> {
   const limit = input.limit || 10;
+  const module = assertModule(input.module);
 
   if (input.contact_id) {
     assertUuid(input.contact_id, 'contact_id');
     return schemaQuery('crm', 'contacts',
-      `id=eq.${input.contact_id}&user_id=eq.${userId}&select=id,first_name,last_name,email,phone,company,source,score,status,tags,city,state,zip,preferred_channel,best_contact_time,is_do_not_contact,metadata,created_at,updated_at`
+      `id=eq.${input.contact_id}&user_id=eq.${userId}&select=id,first_name,last_name,email,phone,company,source,status,tags,city,state,zip,preferred_channel,best_contact_time,is_do_not_contact,module,metadata,created_at,updated_at`
     );
   }
 
-  let params = `user_id=eq.${userId}&select=id,first_name,last_name,email,phone,company,source,score,status,tags,city,state,preferred_channel,is_do_not_contact,created_at&order=score.desc.nullslast&limit=${limit}`;
+  let params = `user_id=eq.${userId}&module=eq.${module}&select=id,first_name,last_name,email,phone,company,source,status,tags,city,state,preferred_channel,is_do_not_contact,module,created_at&order=created_at.desc&limit=${limit}`;
 
   if (input.search) {
-    // Search by name (first or last)
     const search = encodeURIComponent(input.search);
     params += `&or=(first_name.ilike.*${search}*,last_name.ilike.*${search}*,company.ilike.*${search}*)`;
   }
@@ -271,6 +277,7 @@ export async function createLead(userId: string, input: {
   state?: string;
   tags?: string[];
   metadata?: Record<string, unknown>;
+  module?: string;
 }): Promise<unknown> {
   return schemaInsert('crm', 'contacts', {
     user_id: userId,
@@ -285,6 +292,7 @@ export async function createLead(userId: string, input: {
     state: input.state || null,
     tags: input.tags || [],
     metadata: input.metadata || {},
+    module: assertModule(input.module),
   });
 }
 
@@ -480,7 +488,7 @@ export const TOOL_REGISTRY: Record<string, {
     execute: (userId, input) => readDeals(userId, input as any),
   },
   read_leads: {
-    description: 'Read leads and contacts from CRM. Filter by score or recency.',
+    description: 'Read leads and contacts from CRM. Filter by recency or module (investor/landlord).',
     execute: (userId, input) => readLeads(userId, input as any),
   },
   read_bookings: {

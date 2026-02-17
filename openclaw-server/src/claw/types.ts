@@ -19,13 +19,12 @@ export type ClawIntent =
   | 'unknown';
 
 // Briefing data — mirrors exactly what the mobile app shows
-// Pipeline: Leads | Deals | Portfolio + Investor Inbox
+// Pipeline: Leads | Deals | Portfolio + Investor Inbox + Follow-ups + Bookings
 export interface BriefingData {
   leads: Array<{
     id: string;
     name: string;
     status: string;
-    score: number | null;
   }>;
   leadsSummary: {
     total: number;
@@ -45,6 +44,21 @@ export interface BriefingData {
       next_action_due: string | null;
     }>;
   };
+  followUps: Array<{
+    id: string;
+    contact_name: string;
+    follow_up_type: string;
+    scheduled_at: string;
+    context: Record<string, unknown> | null;
+  }>;
+  bookings: Array<{
+    id: string;
+    property_id: string;
+    start_date: string;
+    end_date: string;
+    booking_type: string;
+    status: string;
+  }>;
   portfolio: {
     totalProperties: number;
     totalValue: number;

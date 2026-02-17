@@ -2,16 +2,18 @@
 
 > Last updated: 2026-02-16 by querying Supabase staging (`lqmbyobweeaigrwmvizo`) directly.
 
-## Three-App Ecosystem
+## Three-Product Ecosystem
 
-| App | Stack | Repo | Status |
-|-----|-------|------|--------|
-| **Doughy** | Expo 54 + React Native + Supabase + TypeScript | `doughy-app-mobile` | Active, iOS-first |
-| **OpenClaw Server** | Express + Anthropic SDK + Twilio | `doughy-app-mobile/openclaw-server/` | Deployed at `openclaw.doughy.app` |
-| **The Claw** | Expo + React Native + Zustand + custom theme | `the-claw-app` | Chat screen wired to live API |
-| **CallPilot** | Expo + React Native + hooks+Context | `callpilot` | API client wired to server |
+| Product | Role | Analogy | Stack | Repo |
+|---------|------|---------|-------|------|
+| **Doughy** | Source of truth — all data lives here | The brain | Expo 54 + RN + Supabase + TypeScript | `doughy-app-mobile` |
+| **The Claw** | Nervous system — AI control plane | The nervous system | Expo + RN + Zustand + custom theme | `the-claw-app` |
+| **CallPilot** | Communication companion — calling | The voice | Expo + RN + hooks+Context | `callpilot` |
+| **OpenClaw Server** | AI gateway for all 3 apps | The spine | Express + Anthropic SDK + Twilio | `doughy-app-mobile/openclaw-server/` |
 
 All apps share **one Supabase instance** (staging: `lqmbyobweeaigrwmvizo`). Auth is shared via Supabase Auth. Schemas are separated by data ownership.
+
+**Design philosophy:** ADHD-friendly. One screen, three answers. Three taps or less. Cards over tables. Progressive disclosure.
 
 ## What Runs Where
 
@@ -158,17 +160,40 @@ Entry point: `agents.ts:runAgent()`
 8. Calculate cost (Haiku: $0.80/$4 per MTok, Sonnet: $3/$15 per MTok)
 9. Update run record with tokens, cost, duration, tool_calls, result
 
-### Tool Registry (7 tools in `tools.ts`)
+### Tool Registry (21 tools in `tools.ts`)
+
+**Read Tools (12):**
 
 | Tool | Schema | Table | Description |
 |------|--------|-------|-------------|
 | `read_deals` | investor | deals_pipeline | Active deals with stage, value, lead info |
-| `read_leads` | crm | contacts | Contacts with score filtering |
+| `read_leads` | crm | contacts | Contacts filtered by module (investor/landlord) |
 | `read_bookings` | landlord | bookings | Upcoming bookings with property info |
 | `read_follow_ups` | investor | follow_ups | Overdue and upcoming follow-ups |
 | `read_email_timeline` | crm | touches | Email interaction history for a CRM contact |
+| `read_properties` | investor | properties | Investment properties with details |
+| `read_maintenance` | landlord | maintenance_requests | Open maintenance requests |
+| `read_vendors` | landlord | vendors | Vendor list with ratings |
+| `read_campaigns` | investor | campaigns | Marketing campaigns status |
+| `read_comps` | investor | comps | Comparable property data |
+| `read_conversations` | investor | conversations | Active deal conversations |
+| `read_portfolio` | investor | portfolio_entries | Portfolio summary |
+
+**Write Tools (9):**
+
+| Tool | Schema | Table | Description |
+|------|--------|-------|-------------|
 | `draft_sms` | — | — | Pure function: returns draft object (no DB) |
 | `create_approval` | claw | approvals | Inserts pending approval entry |
+| `create_lead` | crm | leads | Create new CRM lead (module-tagged) |
+| `update_lead` | crm | leads | Update lead status/details |
+| `create_follow_up` | investor | follow_ups | Schedule a follow-up |
+| `update_deal_stage` | investor | deals_pipeline | Move deal to new pipeline stage |
+| `create_task` | claw | tasks | Create a Claw task |
+| `create_booking` | landlord | bookings | Create a booking |
+| `create_maintenance` | landlord | maintenance_requests | Create a maintenance request |
+
+All CRM queries filter by `module` parameter (defaults to `investor`). The `assertModule()` validator prevents PostgREST injection.
 
 ### Approval Flow
 
@@ -191,14 +216,20 @@ Entry point: `agents.ts:runAgent()`
 7. saveMessage() → INSERT claw.messages (role: user)
 8. classifyIntent() → Haiku returns "briefing"
 9. handleBriefing() → createTask() → INSERT claw.tasks
-10. generateBriefingData() → 6 parallel queries:
-    - crm.leads (last 50)
+10. generateBriefingData() → 9 parallel queries:
+    - crm.leads (last 50, module=investor)
     - investor.deals_pipeline (active)
     - investor.portfolio_entries (active)
     - investor.deals_pipeline (closed_won)
     - investor.conversations (active)
     - investor.ai_queue_items (pending)
-11. formatBriefing() → Haiku formats to natural language (or plaintext fallback)
+    - investor.follow_ups (overdue — scheduled before today)
+    - investor.follow_ups (upcoming — next 7 days)
+    - landlord.bookings (upcoming — next 7 days)
+11. Resolve contact names for follow-ups (crm.contacts lookup)
+12. formatBriefing() → Haiku formats to natural language (or plaintext fallback)
+    - Leads with overdue follow-ups first, then deals, then bookings
+    - Investor pipeline and landlord operations separated
 12. clawUpdate() → UPDATE claw.tasks (status: done)
 13. saveMessage() → INSERT claw.messages (role: assistant)
 14. SMS reply sent via Twilio REST API (truncated to 1500 chars for SMS)
@@ -243,7 +274,7 @@ All system prompts use `cache_control: { type: 'ephemeral' }` for prompt caching
 
 | Schema | Tables | Purpose |
 |--------|--------|---------|
-| `claw` | 11 | Agent orchestration: profiles, tasks, runs, approvals, messages, notifications, budgets, kill switch |
+| `claw` | 12 | Agent orchestration: profiles, tasks, runs, approvals, messages, notifications, budgets, kill switch, cost_log |
 | `callpilot` | 10 | Call coaching: calls, transcripts, coaching cards, summaries, action items, scripts, briefings |
 | `ai` | 25 | AI infrastructure: security, memory, knowledge, circuit breakers |
 | `investor` | 34 | Real estate investment: deals, properties, campaigns, portfolio |
@@ -253,6 +284,63 @@ All system prompts use `cache_control: { type: 'ephemeral' }` for prompt caching
 | `public` | 57 | Shared: users, workspaces, billing, calls, system logs |
 
 See `docs/SCHEMA_MAP.md` for complete table-by-table breakdown.
+
+## Module Separation (Feb 2026)
+
+The system manages two distinct business modes that must never be mixed:
+
+| Module | Role | Contacts Are | Data Sources |
+|--------|------|-------------|--------------|
+| `investor` | Dino as **BUYER** | Property sellers, deal leads | deals_pipeline, follow_ups, campaigns |
+| `landlord` | Dino as **OWNER** | Tenants, guests, rental contacts | bookings, maintenance, vendors |
+
+Module tag is on: `crm.contacts.module`, `crm.leads.module`, `callpilot.script_templates.module`
+
+All CRM queries in The Claw tools and briefings filter by module. CallPilot script templates are module-aware. The briefing engine separates output into "INVESTOR PIPELINE" and "LANDLORD OPERATIONS" sections.
+
+## CallPilot Architecture
+
+Call coaching platform with 3 AI engines and 6 server modules. See `docs/CALLPILOT.md` for full details.
+
+```
+User → CallPilot App → Supabase (crm.contacts) → Select contact
+                     → POST /api/calls/pre-call → AI briefing (Sonnet)
+                     → POST /:id/start → coaching session starts (25s intervals)
+                     → [Optional] POST /:id/connect → Twilio outbound call
+                     → During call: GET /:id/coaching → live coaching cards (Haiku)
+                     → POST /:id/end → transcription (Deepgram) + summary (Sonnet) + Claw task
+```
+
+### Server Modules (`openclaw-server/src/callpilot/`)
+
+| File | Purpose | Key Exports |
+|------|---------|-------------|
+| `routes.ts` | 16 API endpoints at `/api/calls/*` | `default` (Express Router) |
+| `engines.ts` | 3 AI engines (pre-call, coaching, post-call) | `generatePreCallBriefing()`, `generateCoachingCard()`, `generatePostCallSummary()` |
+| `voice.ts` | Twilio outbound calls + webhooks | `initiateOutboundCall()`, `voiceWebhookRouter` |
+| `session.ts` | Active call manager + post-call pipeline | `startCallSession()`, `endCallSession()`, `getSessionInfo()` |
+| `transcription.ts` | Deepgram speech-to-text | `transcribeRecording()`, `getCallTranscript()` |
+| `db.ts` | Schema-aware Supabase queries | `cpQuery()`, `cpInsert()`, `cpUpdate()` |
+
+### Integration Loop
+When a call ends, `session.ts:endCallSession()` creates a `claw.tasks` entry (type: `call_completed`), closing the loop between CallPilot and The Claw. The next briefing includes call outcomes and pending action items.
+
+Key integration: CallPilot reads from `crm.contacts` (same contacts The Claw uses), so data from either app is immediately available in the other.
+
+## Cost Tracking
+
+All AI and telephony costs tracked in `claw.cost_log`:
+
+| Service | Actions | Cost Calculation |
+|---------|---------|------------------|
+| `claude_haiku` | intent classification, coaching cards, briefing format | $0.80/$4 per MTok |
+| `claude_sonnet` | agent runs, pre-call briefings, post-call summaries | $3/$15 per MTok |
+| `twilio_sms` | SMS send/receive | ~$0.0079/segment |
+| `twilio_voice` | outbound calls | ~$0.014/min |
+| `deepgram` | transcription | ~$0.0043/min |
+| `bland_ai` | autonomous AI calls (Phase 2) | ~$0.09/min |
+
+Budget enforcement via `claw.budget_limits` (per-user, per-service). See `docs/ROADMAP.md` for full cost tracking architecture.
 
 ## Security
 

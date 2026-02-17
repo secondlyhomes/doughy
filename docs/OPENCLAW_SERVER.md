@@ -33,7 +33,7 @@ Express.js multi-channel AI gateway that handles inbound webhooks (Gmail, SMS, W
 | `src/claw/controller.ts` | 398 | Master controller: intent classification, routing, conversation | `handleClawMessage`, `handleClawSms` |
 | `src/claw/agents.ts` | 294 | Agent execution engine: load profile, Claude loop, tool calls | `runAgent`, `getAgentProfile` |
 | `src/claw/briefing.ts` | 278 | Cross-schema briefing generator + Claude/text formatting | `generateBriefingData`, `formatBriefing` |
-| `src/claw/tools.ts` | ~170 | 7 agent tools: read data + draft + approve | `TOOL_REGISTRY` |
+| `src/claw/tools.ts` | ~570 | 21 agent tools: 12 read + 9 write, module-aware CRM queries | `TOOL_REGISTRY` |
 | `src/claw/routes.ts` | 478 | Express router at `/api/claw` with JWT auth | `default` (Router) |
 | `src/claw/prompts.ts` | 99 | System prompts for 4 AI roles | `INTENT_CLASSIFIER_PROMPT`, `MASTER_CONTROLLER_PROMPT`, `LEAD_OPS_PROMPT`, `DRAFT_SPECIALIST_PROMPT` |
 | `src/claw/db.ts` | 104 | Supabase REST helpers (Accept-Profile/Content-Profile headers) | `schemaQuery`, `schemaInsert`, `schemaUpdate`, `publicInsert`, `clawQuery`, `clawInsert`, `clawUpdate` |
@@ -63,13 +63,16 @@ Express.js multi-channel AI gateway that handles inbound webhooks (Gmail, SMS, W
 | `src/services/router.ts` | 550 | Platform router: domain detection, context classification, skill selection | `PlatformRouter`, `routeMessage`, `getSkillsForContext` |
 | `src/services/email-capture.ts` | 256 | Inbound email → CRM capture: match/create contact, log touch, AI sentiment | `captureInboundEmail`, `getContactEmailTimeline` |
 
-### CallPilot Module (3 files, ~700 lines)
+### CallPilot Module (6 files, ~1,400 lines)
 
 | File | Lines | Purpose | Key Exports |
 |------|-------|---------|-------------|
-| `src/callpilot/routes.ts` | 343 | Express router at `/api/calls` with JWT auth (9 endpoints) | `default` (Router) |
-| `src/callpilot/engines.ts` | 346 | 3 AI engines: pre-call briefing (Sonnet), live coaching (Haiku), post-call summary (Sonnet) | `generatePreCallBriefing`, `generateCoachingCard`, `generatePostCallSummary` |
+| `src/callpilot/routes.ts` | ~470 | Express router at `/api/calls` with JWT auth (16 endpoints) | `default` (Router) |
+| `src/callpilot/engines.ts` | ~380 | 3 AI engines: pre-call briefing (Sonnet, module-aware), live coaching (Haiku), post-call summary (Sonnet) | `generatePreCallBriefing`, `generateCoachingCard`, `generatePostCallSummary` |
 | `src/callpilot/db.ts` | 14 | Schema-aware DB helpers for callpilot schema | `cpQuery`, `cpInsert`, `cpUpdate` |
+| `src/callpilot/voice.ts` | ~120 | Twilio Voice: outbound call initiation, TwiML, status/recording webhooks | `initiateOutboundCall`, `handleVoiceStatus`, `handleVoiceRecording`, `voiceWebhookRouter` |
+| `src/callpilot/session.ts` | ~180 | Active call session manager: coaching interval (25s), phase detection, post-call pipeline (transcribe → summarize → create Claw task) | `startCallSession`, `stopCallSession`, `endCallSession`, `getSessionInfo` |
+| `src/callpilot/transcription.ts` | ~130 | Deepgram REST transcription: audio → speaker-diarized chunks → `callpilot.transcript_chunks` | `transcribeRecording`, `getCallTranscript` |
 
 ### Connectors (4 files, ~2,000 lines)
 
@@ -161,6 +164,11 @@ All routes require JWT auth via `requireAuth` middleware (validates token with S
 | POST | `/api/claw/approvals/batch` | Batch approve/reject (max 20 per batch) |
 | GET | `/api/claw/activity` | Combined task + approval activity feed |
 | GET | `/api/claw/messages` | Conversation history (optional `?channel=` filter) |
+| GET | `/api/claw/agent-profiles` | List agent profiles and capabilities |
+| PATCH | `/api/claw/agent-profiles/:id` | Enable/disable an agent (`{ is_active: bool }`) |
+| GET | `/api/claw/kill-switch` | Check kill switch status (`{ active, log? }`) |
+| POST | `/api/claw/kill-switch` | Activate kill switch (`{ reason }`) |
+| DELETE | `/api/claw/kill-switch` | Deactivate kill switch |
 
 ### CallPilot API (`/api/calls/*`)
 
@@ -179,6 +187,10 @@ All routes require JWT auth via `requireAuth` middleware.
 | GET | `/api/calls/:id/summary` | Get post-call summary + action items |
 | POST | `/api/calls/:id/actions/:actionId/approve` | Approve action item |
 | POST | `/api/calls/:id/actions/:actionId/dismiss` | Dismiss action item |
+| POST | `/api/calls/:id/connect` | Initiate outbound Twilio Voice call |
+| GET | `/api/calls/:id/session` | Get active coaching session info |
+| POST | `/api/calls/:id/transcribe` | Transcribe call recording via Deepgram |
+| GET | `/api/calls/:id/transcript` | Get transcript chunks for a call |
 
 ---
 
@@ -193,9 +205,10 @@ User message + conversation history (last 6 messages)
   ↓
 Claude Haiku (max 20 tokens, temperature 0, cached system prompt)
   ↓
-Returns one of 9 intent labels:
-  briefing | draft_followups | check_deal | check_bookings |
-  new_leads | what_did_i_miss | help | approve | unknown
+Returns one of 8 intent labels:
+  briefing | draft_followups | query | action |
+  chat | help | approve | unknown
+(Legacy: check_deal/check_bookings/new_leads → query, what_did_i_miss → briefing)
 ```
 
 **Fallback:** If no Anthropic API key, uses keyword regex matching (`guessIntentFromKeywords()`). Patterns cover greetings (→briefing), "draft"/"follow up" (→draft_followups), "deal"/"property" (→check_deal), etc.
@@ -225,40 +238,70 @@ Returns one of 9 intent labels:
 
 **Tool error handling:** Tool execution failures return `"Tool execution failed. Try a different approach."` — sanitized to not leak schema/table names to the AI.
 
-### Tool Registry (7 tools)
+### Tool Registry (21 tools: 12 read + 9 write)
+
+**Read Tools:**
 
 | Tool | Schema.Table | Description | Parameters |
 |------|-------------|-------------|------------|
 | `read_deals` | `investor.deals_pipeline` | Active deals with stage, value, next action | `limit?`, `stage?` |
-| `read_leads` | `crm.contacts` | Contacts with score, status, source | `limit?`, `min_score?`, `recent_days?` |
+| `read_leads` | `crm.contacts` | Contacts by module (no scores) | `limit?`, `recent_days?`, `module?` |
 | `read_bookings` | `landlord.bookings` | Upcoming bookings with dates, rates | `limit?`, `upcoming_only?` |
 | `read_follow_ups` | `investor.follow_ups` | Scheduled follow-ups (overdue/upcoming) | `limit?`, `overdue_only?`, `upcoming_days?` |
+| `read_maintenance` | `landlord.maintenance_records` | Open maintenance requests | `limit?`, `status?` |
+| `read_vendors` | `landlord.vendors` | Active vendors/service providers | `limit?`, `category?` |
+| `read_contacts_detail` | `crm.contacts` | Full contact records with module filter | `limit?`, `search?`, `contact_id?`, `module?` |
+| `read_portfolio` | `investor.properties` | Investment properties with financials | `limit?` |
+| `read_documents` | `investor.documents` | Deal/property documents | `limit?`, `deal_id?`, `property_id?` |
+| `read_comps` | `investor.comps` | Comparable property sales | `limit?`, `property_id?` |
+| `read_campaigns` | `investor.campaigns` | Marketing campaigns with metrics | `limit?`, `status?` |
+| `read_conversations` | `investor.conversations` | Recent conversation history | `limit?` |
 | `read_email_timeline` | `crm.touches` | Email interaction history for a CRM contact | `contact_id`, `limit?` |
+
+**Write Tools:**
+
+| Tool | Schema.Table | Description | Parameters |
+|------|-------------|-------------|------------|
 | `draft_sms` | (pure function) | Returns draft object, doesn't send | `recipient_name`, `recipient_phone`, `message`, `context?` |
 | `create_approval` | `claw.approvals` | Insert pending approval entry (24h expiry) | `action_type`, `title`, `draft_content`, `recipient_*`, `task_id` (auto-injected) |
+| `create_lead` | `crm.contacts` | Create new CRM contact with module tag | `first_name`, `last_name?`, `phone?`, `email?`, `source?`, `module?` |
+| `update_lead` | `crm.contacts` | Update contact status, details | `contact_id`, `status?`, `phone?`, `email?`, `tags?` |
+| `update_deal_stage` | `investor.deals_pipeline` | Move deal to new pipeline stage | `deal_id`, `stage`, `next_action?`, `next_action_due?` |
+| `mark_followup_complete` | `investor.follow_ups` | Mark follow-up as completed | `followup_id` |
+| `send_whatsapp` | (draft function) | Draft WhatsApp message (requires approval) | `recipient_name`, `recipient_phone`, `message`, `context?` |
+| `send_email` | (draft function) | Draft email (requires approval) | `recipient_name`, `recipient_email`, `subject`, `body`, `context?` |
+| `add_note` | various | Add note to deal, lead, property, or maintenance | `target_type`, `target_id`, `note` |
+| `create_maintenance_request` | `landlord.maintenance_records` | Create maintenance request | `property_id`, `title`, `description?`, `priority?`, `category?` |
 
 ### Briefing Engine
 
 **Entry point:** `briefing.ts:generateBriefingData()`
 
-Runs 6 parallel cross-schema queries:
+Runs 9 parallel cross-schema queries (module-aware):
 
 | # | Schema.Table | What | Filter |
 |---|-------------|------|--------|
-| 1 | `crm.leads` | Top 50 leads | `user_id, is_deleted=false` |
-| 2 | `investor.deals_pipeline` | Active deals | `user_id, status=active` |
-| 3 | `investor.portfolio_entries` | Active portfolio | `user_id, is_active=true` |
-| 4 | `investor.deals_pipeline` | Closed-won deals | `user_id, stage=closed_won, status=active` |
-| 5 | `investor.conversations` | Active conversations | `user_id, status=active` |
-| 6 | `investor.ai_queue_items` | Pending AI items | `status=pending` |
+| 0 | `crm.leads` | Top 50 investor leads | `user_id, is_deleted=false, module=investor` |
+| 1 | `investor.deals_pipeline` | Active deals | `user_id, status=active` |
+| 2 | `investor.portfolio_entries` | Active portfolio | `user_id, is_active=true` |
+| 3 | `investor.deals_pipeline` | Closed-won deals | `user_id, stage=closed_won, status=active` |
+| 4 | `investor.conversations` | Active conversations | `user_id, status=active` |
+| 5 | `investor.ai_queue_items` | Pending AI items | `status=pending` |
+| 6 | `investor.follow_ups` | **Overdue follow-ups** | `status=scheduled, scheduled_at < today` |
+| 7 | `investor.follow_ups` | **Upcoming follow-ups (7 days)** | `status=scheduled, scheduled_at >= today` |
+| 8 | `landlord.bookings` | **Upcoming bookings (7 days)** | `start_date >= today` |
 
-Then resolves lead names for deals needing action (up to 5), computes:
+Then resolves contact names for follow-ups + lead names for deals needing action, computes:
+- Overdue follow-ups (with contact names, days overdue)
+- Deals needing action (with lead names)
+- Upcoming bookings
 - Leads by status (new, contacted, qualified)
 - Deals by stage + total value
-- Portfolio value (acquisition price + closed-won estimated value)
 - Inbox: unread conversations + pending AI responses
 
-**Formatting:** `formatBriefing()` calls Claude Haiku (400 max_tokens) to generate natural language SMS-friendly briefing. Falls back to `formatBriefingText()` plain text formatter if no API key or API error.
+**Formatting:** `formatBriefing()` calls Claude Haiku (500 max_tokens) with instructions to lead with OVERDUE follow-ups, separate INVESTOR PIPELINE from LANDLORD OPERATIONS sections, and suppress raw portfolio stats. Falls back to `formatBriefingText()` plain text formatter.
+
+**Text fallback section order:** OVERDUE FOLLOW-UPS → INVESTOR PIPELINE → LANDLORD OPERATIONS → UPCOMING → INBOX
 
 ### System Prompts
 

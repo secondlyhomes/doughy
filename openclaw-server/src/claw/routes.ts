@@ -5,7 +5,7 @@ import { Router, Request, Response } from 'express';
 import { config } from '../config.js';
 import { handleClawMessage } from './controller.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
-import { clawQuery, clawUpdate, publicInsert } from './db.js';
+import { clawQuery, clawUpdate, clawInsert, publicInsert } from './db.js';
 import { callEdgeFunction } from './edge.js';
 import type { ApprovalDecision } from './types.js';
 
@@ -430,6 +430,157 @@ router.get('/messages', requireAuth, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('[ClawAPI] Messages error:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// ============================================================================
+// GET /api/claw/agent-profiles — List agent profiles and capabilities
+// ============================================================================
+
+router.get('/agent-profiles', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const profiles = await clawQuery<{
+      id: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      model: string;
+      tools: string[] | null;
+      requires_approval: boolean;
+      is_active: boolean;
+      created_at: string;
+    }>('agent_profiles', 'deleted_at=is.null&select=id,name,slug,description,model,tools,requires_approval,is_active,created_at&order=name.asc');
+
+    res.json({ profiles });
+  } catch (error) {
+    console.error('[ClawAPI] Agent profiles error:', error);
+    res.status(500).json({ error: 'Failed to fetch agent profiles' });
+  }
+});
+
+// ============================================================================
+// PATCH /api/claw/agent-profiles/:id — Enable/disable an agent
+// ============================================================================
+
+router.patch('/agent-profiles/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const profileId = req.params.id as string;
+    if (!UUID_RE.test(profileId)) {
+      return res.status(400).json({ error: 'Invalid profile ID' });
+    }
+
+    const { is_active } = req.body;
+    if (typeof is_active !== 'boolean') {
+      return res.status(400).json({ error: 'is_active must be a boolean' });
+    }
+
+    await clawUpdate('agent_profiles', profileId, { is_active });
+    res.json({ success: true, is_active });
+  } catch (error) {
+    console.error('[ClawAPI] Update agent profile error:', error);
+    res.status(500).json({ error: 'Failed to update agent profile' });
+  }
+});
+
+// ============================================================================
+// GET /api/claw/kill-switch — Check kill switch status
+// ============================================================================
+
+router.get('/kill-switch', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+
+    // Check for most recent global activate/deactivate
+    const logs = await clawQuery<{
+      id: string;
+      action: string;
+      reason: string;
+      created_at: string;
+    }>('kill_switch_log', `select=id,action,reason,created_at&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`);
+
+    const active = logs.length > 0 && logs[0].action === 'deactivate_global';
+
+    res.json({
+      active,
+      last_event: logs[0] || null,
+    });
+  } catch (error) {
+    console.error('[ClawAPI] Kill switch status error:', error);
+    res.status(500).json({ error: 'Failed to check kill switch' });
+  }
+});
+
+// ============================================================================
+// POST /api/claw/kill-switch — Activate kill switch
+// ============================================================================
+
+router.post('/kill-switch', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const { reason } = req.body;
+
+    if (!reason || typeof reason !== 'string') {
+      return res.status(400).json({ error: 'reason is required' });
+    }
+
+    // Deactivate all agent profiles
+    const profiles = await clawQuery<{ id: string }>('agent_profiles', 'is_active=eq.true&select=id');
+    for (const p of profiles) {
+      await clawUpdate('agent_profiles', p.id, { is_active: false });
+    }
+
+    // Log the kill switch activation
+    await clawInsert('kill_switch_log', {
+      user_id: userId,
+      action: 'deactivate_global',
+      reason: reason.slice(0, 500),
+      agents_affected: profiles.length,
+      tasks_paused: 0,
+    });
+
+    console.log(`[ClawAPI] Kill switch ACTIVATED by ${userId}: ${reason}`);
+
+    res.json({
+      success: true,
+      agents_disabled: profiles.length,
+    });
+  } catch (error) {
+    console.error('[ClawAPI] Kill switch activate error:', error);
+    res.status(500).json({ error: 'Failed to activate kill switch' });
+  }
+});
+
+// ============================================================================
+// DELETE /api/claw/kill-switch — Deactivate kill switch (restore agents)
+// ============================================================================
+
+router.delete('/kill-switch', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+
+    // Re-activate all agent profiles (except deleted ones)
+    const profiles = await clawQuery<{ id: string }>('agent_profiles', 'deleted_at=is.null&is_active=eq.false&select=id');
+    for (const p of profiles) {
+      await clawUpdate('agent_profiles', p.id, { is_active: true });
+    }
+
+    // Log the deactivation
+    await clawInsert('kill_switch_log', {
+      user_id: userId,
+      action: 'activate_global',
+      reason: 'Kill switch deactivated — agents restored',
+      agents_affected: profiles.length,
+    });
+
+    console.log(`[ClawAPI] Kill switch DEACTIVATED by ${userId}, ${profiles.length} agents restored`);
+
+    res.json({
+      success: true,
+      agents_restored: profiles.length,
+    });
+  } catch (error) {
+    console.error('[ClawAPI] Kill switch deactivate error:', error);
+    res.status(500).json({ error: 'Failed to deactivate kill switch' });
   }
 });
 

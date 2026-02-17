@@ -61,6 +61,9 @@ export interface ClawDashboardData {
   pendingApprovalsList: ApprovalItem[];
   budgetLimits: BudgetLimit[];
 
+  // Kill switch
+  isKillSwitchActive: boolean;
+
   // State
   isLoading: boolean;
   isRefreshing: boolean;
@@ -68,4 +71,6 @@ export interface ClawDashboardData {
 
   // Actions
   handleRefresh: () => Promise<void>;
+  toggleAgent: (agentId: string, newActive: boolean) => Promise<void>;
+  toggleKillSwitch: (activate: boolean, reason?: string) => Promise<void>;
 }

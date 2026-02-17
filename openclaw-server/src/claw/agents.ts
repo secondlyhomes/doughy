@@ -33,8 +33,8 @@ const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<stri
     type: 'object',
     properties: {
       limit: { type: 'number', description: 'Max results (default 20)' },
-      min_score: { type: 'number', description: 'Minimum lead score' },
       recent_days: { type: 'number', description: 'Only leads from last N days' },
+      module: { type: 'string', description: "Module filter: 'investor' or 'landlord' (default: investor)" },
     },
   },
   read_bookings: {
@@ -72,6 +72,7 @@ const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<stri
       limit: { type: 'number', description: 'Max results (default 10)' },
       search: { type: 'string', description: 'Search by name' },
       contact_id: { type: 'string', description: 'Get specific contact by UUID' },
+      module: { type: 'string', description: "Module filter: 'investor' or 'landlord' (default: investor)" },
     },
   },
   read_portfolio: {
@@ -146,6 +147,7 @@ const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<stri
       city: { type: 'string', description: 'City' },
       state: { type: 'string', description: 'State' },
       tags: { type: 'array', description: 'Tags like ["motivated", "inherited"]', items: { type: 'string' } },
+      module: { type: 'string', description: "Module: 'investor' or 'landlord' (default: investor)" },
     },
     required: ['first_name'],
   },

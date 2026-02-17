@@ -2,8 +2,8 @@
 // Agent status card showing model, runs, tokens, cost
 
 import React from 'react';
-import { View, Text } from 'react-native';
-import { Bot, Pause, CheckCircle, XCircle, Clock } from 'lucide-react-native';
+import { View, Text, Switch } from 'react-native';
+import { Bot, Pause, CheckCircle } from 'lucide-react-native';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import type { useThemeColors } from '@/contexts/ThemeContext';
 
@@ -12,9 +12,10 @@ import type { AgentWithStats } from './types';
 interface AgentCardProps {
   agent: AgentWithStats;
   colors: ReturnType<typeof useThemeColors>;
+  onToggle?: (agentId: string, newActive: boolean) => void;
 }
 
-export function AgentCard({ agent, colors }: AgentCardProps) {
+export function AgentCard({ agent, colors, onToggle }: AgentCardProps) {
   const statusColor = agent.isActive ? colors.success : colors.mutedForeground;
   const StatusIcon = agent.isActive ? CheckCircle : Pause;
 
@@ -46,11 +47,20 @@ export function AgentCard({ agent, colors }: AgentCardProps) {
             {agent.name}
           </Text>
         </View>
-        <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
+        <View className="flex-row items-center" style={{ gap: SPACING.sm }}>
           <StatusIcon size={14} color={statusColor} />
           <Text className="text-xs" style={{ color: statusColor }}>
             {agent.isActive ? 'Active' : 'Paused'}
           </Text>
+          {onToggle && (
+            <Switch
+              value={agent.isActive}
+              onValueChange={(val) => onToggle(agent.id, val)}
+              trackColor={{ false: colors.muted, true: colors.primary + '60' }}
+              thumbColor={agent.isActive ? colors.primary : colors.mutedForeground}
+              style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+            />
+          )}
         </View>
       </View>
 

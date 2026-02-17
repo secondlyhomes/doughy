@@ -1,6 +1,8 @@
 // The Claw — Briefing Engine
 // Pulls from the SAME data sources as the mobile app:
 //   Pipeline: crm.leads | investor.deals_pipeline | investor.portfolio_entries
+//   Follow-ups: investor.follow_ups (overdue + upcoming)
+//   Bookings: landlord.bookings (today + upcoming)
 //   Inbox: investor.conversations + investor.ai_queue_items
 
 import { config } from '../config.js';
@@ -19,21 +21,23 @@ function settled<T>(result: PromiseSettledResult<T>, fallback: T): T {
  * Uses Promise.allSettled so partial DB failures produce partial briefings.
  */
 export async function generateBriefingData(userId: string): Promise<BriefingData> {
+  const today = new Date().toISOString().split('T')[0];
+  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+
   // Run all queries in parallel — partial failures are OK
   const results = await Promise.allSettled([
-    // crm.leads — same as Pipeline > Leads (useLeads hook)
+    // 0: crm.leads — investor module only
     schemaQuery<{
       id: string;
       name: string;
       status: string;
-      score: number | null;
     }>(
       'crm',
       'leads',
-      `user_id=eq.${userId}&is_deleted=eq.false&select=id,name,status,score&order=created_at.desc&limit=50`
+      `user_id=eq.${userId}&is_deleted=eq.false&module=eq.investor&select=id,name,status&order=created_at.desc&limit=50`
     ),
 
-    // investor.deals_pipeline — same as Pipeline > Deals (getDealsWithLead RPC)
+    // 1: investor.deals_pipeline — active deals
     schemaQuery<{
       id: string;
       title: string;
@@ -49,7 +53,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       `user_id=eq.${userId}&status=eq.active&select=id,title,stage,status,estimated_value,lead_id,next_action,next_action_due&order=created_at.desc`
     ),
 
-    // investor.portfolio_entries — same as Pipeline > Portfolio (usePortfolio hook)
+    // 2: investor.portfolio_entries
     schemaQuery<{
       id: string;
       property_id: string;
@@ -60,7 +64,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       `user_id=eq.${userId}&is_active=eq.true&select=id,property_id,acquisition_price`
     ),
 
-    // investor.deals_pipeline closed_won — also part of Portfolio
+    // 3: investor.deals_pipeline closed_won
     schemaQuery<{
       id: string;
       estimated_value: number | null;
@@ -70,7 +74,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       `user_id=eq.${userId}&stage=eq.closed_won&status=eq.active&select=id,estimated_value`
     ),
 
-    // investor.conversations — same as Investor Inbox (useLeadInbox hook)
+    // 4: investor.conversations
     schemaQuery<{
       id: string;
       unread_count: number;
@@ -81,7 +85,7 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       `user_id=eq.${userId}&status=eq.active&select=id,unread_count,status`
     ),
 
-    // investor.ai_queue_items — pending AI responses (useLeadInbox hook)
+    // 5: investor.ai_queue_items
     schemaQuery<{
       id: string;
       conversation_id: string;
@@ -89,6 +93,46 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       'investor',
       'ai_queue_items',
       `user_id=eq.${userId}&status=eq.pending&select=id,conversation_id`
+    ),
+
+    // 6: investor.follow_ups — overdue (scheduled before today, still 'scheduled')
+    schemaQuery<{
+      id: string;
+      contact_id: string;
+      follow_up_type: string;
+      scheduled_at: string;
+      context: Record<string, unknown> | null;
+    }>(
+      'investor',
+      'follow_ups',
+      `user_id=eq.${userId}&status=eq.scheduled&scheduled_at=lt.${today}&select=id,contact_id,follow_up_type,scheduled_at,context&order=scheduled_at.asc&limit=10`
+    ),
+
+    // 7: investor.follow_ups — upcoming (next 7 days)
+    schemaQuery<{
+      id: string;
+      contact_id: string;
+      follow_up_type: string;
+      scheduled_at: string;
+      context: Record<string, unknown> | null;
+    }>(
+      'investor',
+      'follow_ups',
+      `user_id=eq.${userId}&status=eq.scheduled&scheduled_at=gte.${today}&scheduled_at=lte.${nextWeek}&select=id,contact_id,follow_up_type,scheduled_at,context&order=scheduled_at.asc&limit=10`
+    ),
+
+    // 8: landlord.bookings — today + upcoming (next 7 days)
+    schemaQuery<{
+      id: string;
+      property_id: string;
+      start_date: string;
+      end_date: string;
+      booking_type: string;
+      status: string;
+    }>(
+      'landlord',
+      'bookings',
+      `user_id=eq.${userId}&start_date=gte.${today}&start_date=lte.${nextWeek}&select=id,property_id,start_date,end_date,booking_type,status&order=start_date.asc&limit=10`
     ),
   ]);
 
@@ -98,6 +142,30 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
   const closedWonDeals = settled(results[3], []);
   const conversations = settled(results[4], []);
   const pendingAiItems = settled(results[5], []);
+  const overdueFollowUps = settled(results[6], []);
+  const upcomingFollowUps = settled(results[7], []);
+  const upcomingBookings = settled(results[8], []);
+
+  // Combine follow-ups (overdue first, then upcoming)
+  const allFollowUps = [...overdueFollowUps, ...upcomingFollowUps];
+
+  // Resolve contact names for follow-ups
+  const contactIds = [...new Set(allFollowUps.map((f) => f.contact_id).filter(Boolean))];
+  const contactNames: Record<string, string> = {};
+
+  if (contactIds.length > 0) {
+    try {
+      const contactResults = await schemaQuery<{ id: string; first_name: string; last_name: string | null }>(
+        'crm', 'contacts',
+        `id=in.(${contactIds.join(',')})&select=id,first_name,last_name`
+      );
+      for (const c of contactResults) {
+        contactNames[c.id] = [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown';
+      }
+    } catch (err) {
+      console.warn('[Briefing] Failed to resolve contact names:', err);
+    }
+  }
 
   // Resolve lead names for deals that need action
   const dealsNeedingAction = activeDeals
@@ -117,8 +185,8 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       for (const l of leadResults) {
         leadNames[l.id] = l.name || 'Unknown';
       }
-    } catch {
-      // Non-critical: deals still show without lead names
+    } catch (err) {
+      console.warn('[Briefing] Failed to resolve lead names:', err);
     }
   }
 
@@ -149,7 +217,6 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
       id: l.id,
       name: l.name || 'Unknown',
       status: l.status,
-      score: l.score,
     })),
     leadsSummary: {
       total: leads.length,
@@ -169,6 +236,21 @@ export async function generateBriefingData(userId: string): Promise<BriefingData
         next_action_due: d.next_action_due,
       })),
     },
+    followUps: allFollowUps.map((f) => ({
+      id: f.id,
+      contact_name: contactNames[f.contact_id] || 'Unknown',
+      follow_up_type: f.follow_up_type,
+      scheduled_at: f.scheduled_at,
+      context: f.context,
+    })),
+    bookings: upcomingBookings.map((b) => ({
+      id: b.id,
+      property_id: b.property_id,
+      start_date: b.start_date,
+      end_date: b.end_date,
+      booking_type: b.booking_type,
+      status: b.status,
+    })),
     portfolio: {
       totalProperties,
       totalValue: portfolioValue,
@@ -198,11 +280,18 @@ export async function formatBriefing(
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 400,
+      max_tokens: 500,
       system: [
         {
           type: 'text' as const,
-          text: `You are The Claw, a concise business briefing assistant for a real estate investor. Format the data into a natural, SMS-friendly briefing. Lead with the most actionable items — deals needing action, unread messages, new leads. Use line breaks between sections. Keep it under 150 words. No emojis. Use plain language, no markdown.`,
+          text: `You are The Claw, a concise business briefing assistant for a real estate investor/landlord. Format the data into a natural, SMS-friendly briefing.
+
+Lead with OVERDUE follow-ups and today's action items first — these are the most urgent.
+Then deals needing action, then upcoming bookings.
+Suppress raw portfolio stats and lead scores. Focus on what needs attention TODAY.
+Separate investor pipeline items from landlord operations items. Use clear section headers.
+
+Keep it under 200 words. No emojis. Use plain language, no markdown. Use line breaks between sections.`,
           cache_control: { type: 'ephemeral' as const },
         },
       ],
@@ -232,53 +321,88 @@ function formatBriefingText(data: BriefingData): string {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   lines.push(`${greeting}. Here's your briefing:\n`);
 
-  // Inbox (most actionable first)
+  // Overdue follow-ups (most urgent — first)
+  const overdueFollowUps = data.followUps.filter((f) => new Date(f.scheduled_at) < new Date());
+  if (overdueFollowUps.length > 0) {
+    lines.push('OVERDUE FOLLOW-UPS:');
+    for (const f of overdueFollowUps.slice(0, 5)) {
+      const daysOverdue = Math.floor((Date.now() - new Date(f.scheduled_at).getTime()) / 86400000);
+      lines.push(`- ${f.contact_name} (${f.follow_up_type}) — ${daysOverdue}d overdue`);
+    }
+    if (overdueFollowUps.length > 5) {
+      lines.push(`  ...and ${overdueFollowUps.length - 5} more`);
+    }
+    lines.push('');
+  }
+
+  // INVESTOR PIPELINE
+  const hasInvestorData = data.dealsSummary.needsAction.length > 0 || data.leadsSummary.total > 0;
+  if (hasInvestorData) {
+    lines.push('INVESTOR PIPELINE:');
+
+    // Deals needing action
+    if (data.dealsSummary.needsAction.length > 0) {
+      for (const d of data.dealsSummary.needsAction.slice(0, 3)) {
+        const who = d.lead_name ? ` (${d.lead_name})` : '';
+        lines.push(`- ${d.title}${who}: ${d.next_action}`);
+      }
+      if (data.dealsSummary.needsAction.length > 3) {
+        lines.push(`  ...and ${data.dealsSummary.needsAction.length - 3} more`);
+      }
+    }
+
+    // Pipeline summary line
+    if (data.dealsSummary.total_active > 0) {
+      const value = data.dealsSummary.total_value > 0
+        ? ` ($${(data.dealsSummary.total_value / 1000).toFixed(0)}k)`
+        : '';
+      lines.push(`${data.dealsSummary.total_active} active deals${value}`);
+    }
+
+    // Leads summary line
+    if (data.leadsSummary.total > 0) {
+      const parts: string[] = [];
+      if (data.leadsSummary.new > 0) parts.push(`${data.leadsSummary.new} new`);
+      if (data.leadsSummary.qualified > 0) parts.push(`${data.leadsSummary.qualified} qualified`);
+      if (parts.length > 0) lines.push(`Leads: ${parts.join(', ')}`);
+    }
+
+    lines.push('');
+  }
+
+  // LANDLORD OPERATIONS
+  if (data.bookings.length > 0) {
+    lines.push('LANDLORD OPERATIONS:');
+    for (const b of data.bookings.slice(0, 3)) {
+      lines.push(`- ${b.booking_type} booking: ${b.start_date} to ${b.end_date} (${b.status})`);
+    }
+    if (data.bookings.length > 3) {
+      lines.push(`  ...and ${data.bookings.length - 3} more bookings`);
+    }
+    lines.push('');
+  }
+
+  // Upcoming follow-ups
+  const upcomingFollowUps = data.followUps.filter((f) => new Date(f.scheduled_at) >= new Date());
+  if (upcomingFollowUps.length > 0) {
+    lines.push('UPCOMING:');
+    for (const f of upcomingFollowUps.slice(0, 3)) {
+      const date = new Date(f.scheduled_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      lines.push(`- ${f.contact_name} (${f.follow_up_type}) — ${date}`);
+    }
+    lines.push('');
+  }
+
+  // Inbox
   if (data.inbox.unreadConversations > 0 || data.inbox.pendingAiResponses > 0) {
     lines.push('INBOX:');
     if (data.inbox.unreadConversations > 0) {
       lines.push(`- ${data.inbox.unreadConversations} unread conversation${data.inbox.unreadConversations > 1 ? 's' : ''}`);
     }
     if (data.inbox.pendingAiResponses > 0) {
-      lines.push(`- ${data.inbox.pendingAiResponses} AI response${data.inbox.pendingAiResponses > 1 ? 's' : ''} waiting for your approval`);
+      lines.push(`- ${data.inbox.pendingAiResponses} AI response${data.inbox.pendingAiResponses > 1 ? 's' : ''} waiting`);
     }
     lines.push('');
-  }
-
-  // Deals needing action
-  if (data.dealsSummary.needsAction.length > 0) {
-    lines.push('DEALS - ACTION NEEDED:');
-    for (const d of data.dealsSummary.needsAction.slice(0, 3)) {
-      const who = d.lead_name ? ` (${d.lead_name})` : '';
-      lines.push(`- ${d.title}${who}: ${d.next_action}`);
-    }
-    if (data.dealsSummary.needsAction.length > 3) {
-      lines.push(`  ...and ${data.dealsSummary.needsAction.length - 3} more`);
-    }
-    lines.push('');
-  }
-
-  // Leads summary
-  if (data.leadsSummary.total > 0) {
-    const parts: string[] = [`${data.leadsSummary.total} total`];
-    if (data.leadsSummary.new > 0) parts.push(`${data.leadsSummary.new} new`);
-    if (data.leadsSummary.qualified > 0) parts.push(`${data.leadsSummary.qualified} qualified`);
-    lines.push(`LEADS: ${parts.join(', ')}`);
-  }
-
-  // Pipeline summary
-  if (data.dealsSummary.total_active > 0) {
-    const value = data.dealsSummary.total_value > 0
-      ? ` ($${(data.dealsSummary.total_value / 1000).toFixed(0)}k)`
-      : '';
-    lines.push(`PIPELINE: ${data.dealsSummary.total_active} active deals${value}`);
-  }
-
-  // Portfolio
-  if (data.portfolio.totalProperties > 0) {
-    const value = data.portfolio.totalValue > 0
-      ? ` ($${(data.portfolio.totalValue / 1000).toFixed(0)}k)`
-      : '';
-    lines.push(`PORTFOLIO: ${data.portfolio.totalProperties} properties${value}`);
   }
 
   if (lines.length <= 1) {

@@ -26,8 +26,8 @@ async function loadRecentMessages(
     );
     // Reverse so oldest is first (DB returns newest first)
     return messages.reverse();
-  } catch {
-    // Non-critical: process message without conversation context
+  } catch (err) {
+    console.warn('[Controller] Failed to load conversation history:', err);
     return [];
   }
 }
@@ -176,6 +176,24 @@ export async function handleClawMessage(
 ): Promise<ClawResponse> {
   console.log(`[Controller] Message from ${userId} via ${channel}: "${message.slice(0, 100)}"`);
 
+  // Kill switch check — if activated, respond with a brief message
+  try {
+    const killLogs = await clawQuery<{ action: string }>(
+      'kill_switch_log',
+      `select=action&action=in.(activate_global,deactivate_global)&order=created_at.desc&limit=1`
+    );
+    if (killLogs.length > 0 && killLogs[0].action === 'deactivate_global') {
+      return {
+        message: 'The Claw is currently paused. All agents have been disabled. Re-enable from the Control tab in the app.',
+      };
+    }
+  } catch (err) {
+    console.error('[Controller] Kill switch check failed — refusing to process:', err);
+    return {
+      message: 'The Claw could not verify safety status. Please try again in a moment.',
+    };
+  }
+
   // Load conversation history before saving the new message
   const conversationHistory = await loadRecentMessages(userId, channel);
 
@@ -219,19 +237,21 @@ export async function handleClawMessage(
 
     case 'help':
       response = {
-        message: `Here's what I can do:\n\n` +
-          `Ask me anything:\n` +
-          `- "Brief me" — Morning business update\n` +
-          `- "How's the Oak St deal?" — Check any deal, lead, or property\n` +
-          `- "Any maintenance issues?" — Check bookings, maintenance, vendors\n` +
-          `- "Draft follow ups" — I'll write personalized messages for your approval\n\n` +
-          `Tell me to do things:\n` +
-          `- "Move Oak St to DD" — Update deals, leads, records\n` +
-          `- "Text John about the walkthrough" — Draft messages via WhatsApp\n` +
-          `- "New lead: Sarah, 321 Elm, inherited" — Add new leads\n\n` +
-          `Or just chat:\n` +
-          `- "What should I offer on Oak St?" — Business advice\n\n` +
-          `All outbound messages need your approval before sending.`,
+        message:
+          `BRIEFING\n` +
+          `- "Brief me" — Today's action items, overdue follow-ups, deals\n\n` +
+          `DATA\n` +
+          `- "How's [deal name]?" — Check any deal, lead, booking, property\n` +
+          `- "Check my leads" / "Any new bookings?" / "Maintenance issues?"\n` +
+          `- "Show me [contact name]" — Full contact details + history\n\n` +
+          `ACTIONS\n` +
+          `- "Draft follow ups" — AI writes personalized texts for your approval\n` +
+          `- "Text [name] about [topic]" — Draft a WhatsApp message\n` +
+          `- "New lead: [name], [details]" — Add to CRM\n` +
+          `- "Move [deal] to [stage]" — Update pipeline\n\n` +
+          `ADVICE\n` +
+          `- "What should I offer on [property]?" — Investment strategy help\n\n` +
+          `All outbound messages need your approval first.`,
       };
       break;
 

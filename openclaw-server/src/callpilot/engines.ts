@@ -35,27 +35,38 @@ export async function generatePreCallBriefing(userId: string, params: {
 
   // Deal info
   if (params.deal_id) {
-    const deals = await schemaQuery<Record<string, unknown>>(
-      'investor', 'deals_pipeline',
-      `id=eq.${params.deal_id}&select=*&limit=1`
-    );
-    if (deals[0]) context.deal = deals[0];
+    try {
+      const deals = await schemaQuery<Record<string, unknown>>(
+        'investor', 'deals_pipeline',
+        `id=eq.${params.deal_id}&select=*&limit=1`
+      );
+      if (deals[0]) context.deal = deals[0];
+    } catch {
+      // Non-critical: briefing works without deal context
+    }
   }
 
   // Follow-up history
   if (params.contact_id || params.lead_id) {
     const contactId = params.contact_id || params.lead_id;
-    const followUps = await schemaQuery<Record<string, unknown>>(
-      'investor', 'follow_ups',
-      `contact_id=eq.${contactId}&select=*&order=scheduled_at.desc&limit=5`
-    );
-    context.recent_follow_ups = followUps;
+    try {
+      const followUps = await schemaQuery<Record<string, unknown>>(
+        'investor', 'follow_ups',
+        `contact_id=eq.${contactId}&select=*&order=scheduled_at.desc&limit=5`
+      );
+      context.recent_follow_ups = followUps;
+    } catch {
+      // Non-critical: briefing works without follow-up history
+      context.recent_follow_ups = [];
+    }
   }
 
-  // User's script templates
+  // User's script templates — filter by module if contact has one
+  const rawModule = (context.contact as any)?.module;
+  const contactModule = (rawModule === 'investor' || rawModule === 'landlord') ? rawModule : 'investor';
   const templates = await cpQuery<Record<string, unknown>>(
     'script_templates',
-    `user_id=eq.${userId}&is_default=eq.true&limit=1`
+    `user_id=eq.${userId}&is_default=eq.true&module=eq.${contactModule}&limit=1`
   );
   if (templates[0]) context.default_script = templates[0];
 

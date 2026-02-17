@@ -1,10 +1,13 @@
 // CallPilot — API Routes
-// Express router for /api/calls: history, pre-call, active call, post-call
+// Express router for /api/calls: history, pre-call, active call, post-call, voice, session
 
 import { Router, Request, Response } from 'express';
 import { config } from '../config.js';
 import { cpQuery, cpInsert, cpUpdate } from './db.js';
 import { generatePreCallBriefing, generateCoachingCard, generatePostCallSummary } from './engines.js';
+import { initiateOutboundCall } from './voice.js';
+import { startCallSession, stopCallSession, endCallSession, getSessionInfo } from './session.js';
+import { transcribeRecording, getCallTranscript } from './transcription.js';
 
 const router = Router();
 
@@ -54,7 +57,8 @@ async function requireAuth(req: Request, res: Response, next: () => void): Promi
 
     (req as any).userId = user.id;
     next();
-  } catch {
+  } catch (err) {
+    console.error('[CallPilot] Auth error:', err);
     res.status(401).json({ error: 'Authentication failed' });
   }
 }
@@ -137,6 +141,9 @@ router.post('/:id/start', requireAuth, async (req: Request, res: Response) => {
       started_at: new Date().toISOString(),
     });
 
+    // Start coaching session for manual calls (non-Twilio)
+    startCallSession(callId, userId);
+
     res.json({ success: true });
   } catch (error) {
     console.error('[CallPilot] Start call error:', error);
@@ -157,7 +164,8 @@ router.post('/:id/end', requireAuth, async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid call ID' });
     }
 
-    const result = await generatePostCallSummary(userId, callId);
+    // Full post-call pipeline: stop coaching, transcribe, summarize, create Claw task
+    const result = await endCallSession(callId, userId);
     res.json(result);
   } catch (error) {
     console.error('[CallPilot] End call error:', error);
@@ -241,6 +249,7 @@ router.post('/:id/coaching/:cardId/dismiss', requireAuth, async (req: Request, r
     await cpUpdate('coaching_cards', cardId, { was_dismissed: true });
     res.json({ success: true });
   } catch (error) {
+    console.error('[CallPilot] Dismiss card error:', error);
     res.status(500).json({ error: 'Failed to dismiss card' });
   }
 });
@@ -296,6 +305,7 @@ router.post('/:id/actions/:actionId/approve', requireAuth, async (req: Request, 
     });
     res.json({ success: true });
   } catch (error) {
+    console.error('[CallPilot] Approve action error:', error);
     res.status(500).json({ error: 'Failed to approve action' });
   }
 });
@@ -322,6 +332,7 @@ router.post('/:id/actions/:actionId/dismiss', requireAuth, async (req: Request, 
     await cpUpdate('action_items', actionId, { status: 'dismissed' });
     res.json({ success: true });
   } catch (error) {
+    console.error('[CallPilot] Dismiss action error:', error);
     res.status(500).json({ error: 'Failed to dismiss action' });
   }
 });
@@ -336,7 +347,143 @@ router.get('/templates', requireAuth, async (req: Request, res: Response) => {
     const templates = await cpQuery('script_templates', `user_id=eq.${userId}&deleted_at=is.null&select=id,name,description,category,opening_script,starter_questions,required_questions,is_default&order=is_default.desc,name.asc`);
     res.json({ templates });
   } catch (error) {
+    console.error('[CallPilot] Fetch templates error:', error);
     res.status(500).json({ error: 'Failed to fetch templates' });
+  }
+});
+
+// ============================================================================
+// POST /api/calls/:id/connect — Initiate outbound voice call via Twilio
+// ============================================================================
+
+router.post('/:id/connect', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const callId = param(req, 'id');
+
+    if (!UUID_RE.test(callId)) {
+      return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify ownership and get phone number
+    const calls = await cpQuery<{ id: string; phone_number: string; status: string }>(
+      'calls',
+      `id=eq.${callId}&user_id=eq.${userId}&select=id,phone_number,status&limit=1`
+    );
+    if (calls.length === 0) {
+      return res.status(404).json({ error: 'Call not found' });
+    }
+
+    const call = calls[0];
+    if (call.status !== 'initiated') {
+      return res.status(400).json({ error: `Cannot connect call in "${call.status}" status` });
+    }
+
+    const phoneNumber = req.body.phone_number || call.phone_number;
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'No phone number available' });
+    }
+
+    const result = await initiateOutboundCall(callId, phoneNumber);
+
+    if (!result.success) {
+      return res.status(502).json({ error: result.error });
+    }
+
+    // Start coaching session
+    startCallSession(callId, userId);
+
+    res.json({ success: true, twilio_call_sid: result.twilioCallSid });
+  } catch (error) {
+    console.error('[CallPilot] Connect call error:', error);
+    res.status(500).json({ error: 'Failed to connect call' });
+  }
+});
+
+// ============================================================================
+// GET /api/calls/:id/session — Get active session info
+// ============================================================================
+
+router.get('/:id/session', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const callId = param(req, 'id');
+    if (!UUID_RE.test(callId)) {
+      return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify ownership
+    const calls = await cpQuery<{ id: string }>('calls', `id=eq.${callId}&user_id=eq.${userId}&select=id&limit=1`);
+    if (calls.length === 0) return res.status(404).json({ error: 'Call not found' });
+
+    const info = getSessionInfo(callId);
+    res.json({ session: info });
+  } catch (error) {
+    console.error('[CallPilot] Get session error:', error);
+    res.status(500).json({ error: 'Failed to get session info' });
+  }
+});
+
+// ============================================================================
+// GET /api/calls/:id/transcript — Get call transcript
+// ============================================================================
+
+router.get('/:id/transcript', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const callId = param(req, 'id');
+    if (!UUID_RE.test(callId)) {
+      return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify ownership
+    const calls = await cpQuery<{ id: string }>('calls', `id=eq.${callId}&user_id=eq.${userId}&select=id&limit=1`);
+    if (calls.length === 0) return res.status(404).json({ error: 'Call not found' });
+
+    const chunks = await cpQuery(
+      'transcript_chunks',
+      `call_id=eq.${callId}&select=id,speaker,content,timestamp_ms,duration_ms,confidence&order=timestamp_ms.asc`
+    );
+    const fullText = await getCallTranscript(callId);
+
+    res.json({ chunks, full_text: fullText });
+  } catch (error) {
+    console.error('[CallPilot] Get transcript error:', error);
+    res.status(500).json({ error: 'Failed to fetch transcript' });
+  }
+});
+
+// ============================================================================
+// POST /api/calls/:id/transcribe — Trigger transcription for a completed call
+// ============================================================================
+
+router.post('/:id/transcribe', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const callId = param(req, 'id');
+
+    if (!UUID_RE.test(callId)) {
+      return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify ownership and get recording URL
+    const calls = await cpQuery<{ id: string; recording_url: string | null }>(
+      'calls',
+      `id=eq.${callId}&user_id=eq.${userId}&select=id,recording_url&limit=1`
+    );
+    if (calls.length === 0) {
+      return res.status(404).json({ error: 'Call not found' });
+    }
+
+    if (!calls[0].recording_url) {
+      return res.status(400).json({ error: 'No recording available for this call' });
+    }
+
+    const chunks = await transcribeRecording(callId, calls[0].recording_url);
+    res.json({ success: true, chunk_count: chunks.length });
+  } catch (error) {
+    console.error('[CallPilot] Transcribe error:', error);
+    res.status(500).json({ error: 'Failed to transcribe recording' });
   }
 });
 

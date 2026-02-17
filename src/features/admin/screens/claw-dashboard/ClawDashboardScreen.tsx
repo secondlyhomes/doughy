@@ -2,8 +2,8 @@
 // Claw Control Panel — Agent dashboard for monitoring AI agents, approvals, costs
 
 import React from 'react';
-import { View, Text, ScrollView, RefreshControl } from 'react-native';
-import { Bot, Shield, Clock, DollarSign, Zap, CheckCircle } from 'lucide-react-native';
+import { View, Text, ScrollView, RefreshControl, Switch, Alert } from 'react-native';
+import { Bot, Shield, DollarSign, Zap, OctagonX } from 'lucide-react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { SPACING, BORDER_RADIUS } from '@/constants/design-tokens';
@@ -28,10 +28,13 @@ export function ClawDashboardScreen() {
     recentActivity,
     pendingApprovalsList,
     budgetLimits,
+    isKillSwitchActive,
     isLoading,
     isRefreshing,
     error,
     handleRefresh,
+    toggleAgent,
+    toggleKillSwitch,
   } = useClawDashboard();
 
   if (isLoading) {
@@ -115,6 +118,73 @@ export function ClawDashboardScreen() {
           />
         </View>
 
+        {/* Kill Switch */}
+        <View
+          style={{
+            marginHorizontal: SPACING.lg,
+            marginTop: SPACING.lg,
+            padding: SPACING.md,
+            backgroundColor: isKillSwitchActive
+              ? colors.destructive + '15'
+              : colors.card,
+            borderRadius: BORDER_RADIUS.lg,
+            borderWidth: isKillSwitchActive ? 1 : 0,
+            borderColor: colors.destructive + '40',
+          }}
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1" style={{ gap: SPACING.sm }}>
+              <OctagonX
+                size={20}
+                color={isKillSwitchActive ? colors.destructive : colors.mutedForeground}
+              />
+              <View className="flex-1">
+                <Text
+                  className="font-semibold"
+                  style={{
+                    color: isKillSwitchActive
+                      ? colors.destructive
+                      : colors.foreground,
+                  }}
+                >
+                  Kill Switch
+                </Text>
+                <Text
+                  className="text-xs"
+                  style={{ color: colors.mutedForeground }}
+                >
+                  {isKillSwitchActive
+                    ? 'All agents stopped'
+                    : 'Stop all agent execution'}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={isKillSwitchActive}
+              onValueChange={(val) => {
+                if (val) {
+                  Alert.alert(
+                    'Activate Kill Switch?',
+                    'This will immediately disable ALL agents. They will not process any messages until reactivated.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Stop All Agents',
+                        style: 'destructive',
+                        onPress: () => toggleKillSwitch(true),
+                      },
+                    ],
+                  );
+                } else {
+                  toggleKillSwitch(false);
+                }
+              }}
+              trackColor={{ false: colors.muted, true: colors.destructive + '60' }}
+              thumbColor={isKillSwitchActive ? colors.destructive : colors.mutedForeground}
+            />
+          </View>
+        </View>
+
         {/* Approval Queue */}
         {pendingApprovalsList.length > 0 && (
           <ApprovalQueue
@@ -126,7 +196,12 @@ export function ClawDashboardScreen() {
         {/* Agents */}
         <SectionHeader title="Agents" count={agents.length} colors={colors} />
         {agents.map((agent) => (
-          <AgentCard key={agent.id} agent={agent} colors={colors} />
+          <AgentCard
+            key={agent.id}
+            agent={agent}
+            colors={colors}
+            onToggle={toggleAgent}
+          />
         ))}
 
         {/* Activity Feed */}
