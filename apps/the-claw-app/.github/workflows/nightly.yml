@@ -1,0 +1,586 @@
+name: Nightly Build
+
+# Automated nightly builds and maintenance tasks
+# Runs daily at 2 AM UTC
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC daily
+  workflow_dispatch:
+    inputs:
+      run_performance_tests:
+        description: 'Run performance tests'
+        required: false
+        type: boolean
+        default: true
+      check_dependencies:
+        description: 'Check for dependency updates'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: nightly-build
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  EXPO_VERSION: 'latest'
+  EAS_VERSION: 'latest'
+
+jobs:
+  # ====================
+  # Code Health Check
+  # ====================
+
+  code-health:
+    name: Code Health Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full test suite
+        run: npm run test:ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run type checking
+        run: npx tsc --noEmit
+
+      - name: Code complexity analysis
+        run: |
+          echo "# Code Complexity Report" > complexity-report.md
+          echo "" >> complexity-report.md
+          echo "Generated: $(date)" >> complexity-report.md
+          echo "" >> complexity-report.md
+
+          # Find large files
+          echo "## Large Files (>500 lines)" >> complexity-report.md
+          find src -name "*.ts" -o -name "*.tsx" | while read file; do
+            lines=$(wc -l < "$file")
+            if [ $lines -gt 500 ]; then
+              echo "- $file: $lines lines" >> complexity-report.md
+            fi
+          done
+
+      - name: Check code duplication
+        continue-on-error: true
+        run: |
+          npx jscpd src/ --min-lines 10 --min-tokens 50 --reporters json > jscpd-report.json || true
+
+      - name: Generate dependency graph
+        run: |
+          echo "Analyzing dependency structure..."
+          npm list --all --json > dependency-tree.json || true
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-health-reports
+          path: |
+            complexity-report.md
+            jscpd-report.json
+            dependency-tree.json
+            coverage/
+          retention-days: 30
+
+  # ====================
+  # Dependency Updates
+  # ====================
+
+  check-dependencies:
+    name: Check Dependency Updates
+    runs-on: ubuntu-latest
+    if: ${{ inputs.check_dependencies != false }}
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Check for outdated packages
+        run: |
+          npm outdated --json > outdated-packages.json || true
+
+      - name: Analyze outdated packages
+        run: |
+          echo "# Outdated Packages Report" > outdated-report.md
+          echo "" >> outdated-report.md
+          echo "Generated: $(date)" >> outdated-report.md
+          echo "" >> outdated-report.md
+
+          if [ -f outdated-packages.json ]; then
+            node -e "
+              const outdated = require('./outdated-packages.json');
+              console.log('## Summary\n');
+              console.log('Total outdated packages:', Object.keys(outdated).length);
+              console.log('\n## Details\n');
+              for (const [pkg, info] of Object.entries(outdated)) {
+                console.log(\`- **\${pkg}**\`);
+                console.log(\`  - Current: \${info.current}\`);
+                console.log(\`  - Wanted: \${info.wanted}\`);
+                console.log(\`  - Latest: \${info.latest}\`);
+              }
+            " >> outdated-report.md
+          fi
+
+      - name: Check for security updates
+        run: npm audit --json > security-audit.json || true
+
+      - name: Upload dependency reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-reports
+          path: |
+            outdated-packages.json
+            outdated-report.md
+            security-audit.json
+          retention-days: 30
+
+      - name: Create PR for safe updates
+        if: success()
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('outdated-packages.json')) return;
+
+            const outdated = JSON.parse(fs.readFileSync('outdated-packages.json', 'utf8'));
+            const safeUpdates = Object.entries(outdated)
+              .filter(([_, info]) => info.wanted !== info.current)
+              .map(([pkg, info]) => `- ${pkg}: ${info.current} → ${info.wanted}`);
+
+            if (safeUpdates.length === 0) {
+              console.log('No safe updates available');
+              return;
+            }
+
+            const body = `## Automated Dependency Updates
+
+            This PR contains safe dependency updates (patch/minor versions).
+
+            ### Updates:
+            ${safeUpdates.join('\n')}
+
+            **Note:** This PR was automatically generated by the nightly workflow.
+
+            Please review and test before merging.`;
+
+            // Create branch and PR would go here
+            console.log(body);
+
+  # ====================
+  # Performance Testing
+  # ====================
+
+  performance-tests:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    if: ${{ inputs.run_performance_tests != false }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run performance tests
+        run: npm run test:performance
+        continue-on-error: true
+
+      - name: Measure bundle size
+        run: |
+          echo "# Bundle Size Report" > bundle-report.md
+          echo "" >> bundle-report.md
+          echo "Generated: $(date)" >> bundle-report.md
+          echo "" >> bundle-report.md
+
+          # Measure node_modules size
+          NODE_MODULES_SIZE=$(du -sh node_modules/ | cut -f1)
+          echo "- node_modules: $NODE_MODULES_SIZE" >> bundle-report.md
+
+          # Top 20 largest dependencies
+          echo "" >> bundle-report.md
+          echo "## Largest Dependencies" >> bundle-report.md
+          du -sh node_modules/* | sort -rh | head -20 >> bundle-report.md
+
+      - name: Analyze startup time
+        run: |
+          echo "Measuring app startup time..."
+          # Add startup time measurement logic here
+
+      - name: Memory profiling
+        run: |
+          echo "Running memory profiling..."
+          # Add memory profiling logic here
+
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports
+          path: |
+            bundle-report.md
+          retention-days: 30
+
+  # ====================
+  # Build Nightly Apps
+  # ====================
+
+  build-nightly-ios:
+    name: Build iOS (Nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_VERSION }}
+          eas-version: ${{ env.EAS_VERSION }}
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Create nightly version
+        run: |
+          NIGHTLY_VERSION="nightly-$(date +%Y%m%d-%H%M)"
+          echo "NIGHTLY_VERSION=$NIGHTLY_VERSION" >> $GITHUB_ENV
+          echo "Building nightly version: $NIGHTLY_VERSION"
+
+      - name: Build iOS nightly
+        run: |
+          eas build \
+            --platform ios \
+            --profile preview \
+            --non-interactive \
+            --no-wait \
+            --message "Nightly build ${{ env.NIGHTLY_VERSION }}"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  build-nightly-android:
+    name: Build Android (Nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_VERSION }}
+          eas-version: ${{ env.EAS_VERSION }}
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Create nightly version
+        run: |
+          NIGHTLY_VERSION="nightly-$(date +%Y%m%d-%H%M)"
+          echo "NIGHTLY_VERSION=$NIGHTLY_VERSION" >> $GITHUB_ENV
+          echo "Building nightly version: $NIGHTLY_VERSION"
+
+      - name: Build Android nightly
+        run: |
+          eas build \
+            --platform android \
+            --profile preview \
+            --non-interactive \
+            --no-wait \
+            --message "Nightly build ${{ env.NIGHTLY_VERSION }}"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  # ====================
+  # Documentation Check
+  # ====================
+
+  documentation-check:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for broken links
+        run: |
+          echo "Checking for broken markdown links..."
+          find docs -name "*.md" | while read file; do
+            echo "Checking: $file"
+            # Basic link checking
+            grep -oE '\[.*\]\(.*\)' "$file" || true
+          done
+
+      - name: Validate documentation structure
+        run: |
+          echo "# Documentation Structure Report" > docs-report.md
+          echo "" >> docs-report.md
+          echo "Generated: $(date)" >> docs-report.md
+          echo "" >> docs-report.md
+
+          # Count documentation files
+          MD_FILES=$(find docs -name "*.md" | wc -l)
+          echo "- Total markdown files: $MD_FILES" >> docs-report.md
+
+          # List documentation by category
+          echo "" >> docs-report.md
+          echo "## Files by Directory" >> docs-report.md
+          find docs -type d | while read dir; do
+            count=$(find "$dir" -maxdepth 1 -name "*.md" | wc -l)
+            if [ $count -gt 0 ]; then
+              echo "- $dir: $count files" >> docs-report.md
+            fi
+          done
+
+      - name: Check for outdated documentation
+        run: |
+          echo "Checking for documentation last updated more than 6 months ago..."
+          find docs -name "*.md" -mtime +180 | while read file; do
+            echo "⚠️ Potentially outdated: $file"
+          done
+
+      - name: Upload documentation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-report
+          path: docs-report.md
+          retention-days: 30
+
+  # ====================
+  # Database Health Check
+  # ====================
+
+  database-health:
+    name: Database Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check migration status
+        run: |
+          echo "Checking migration status for all environments..."
+          node scripts/db/migrate.js status
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+
+      - name: Validate RLS policies
+        run: |
+          echo "Validating RLS policies..."
+          # Add RLS validation logic here
+
+      - name: Check database size
+        run: |
+          echo "Checking database size and performance..."
+          # Add database size check logic here
+
+  # ====================
+  # Cleanup Old Builds
+  # ====================
+
+  cleanup:
+    name: Cleanup Old Builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_VERSION }}
+          eas-version: ${{ env.EAS_VERSION }}
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: List old builds
+        run: |
+          echo "Listing builds older than 30 days..."
+          # Get builds and check dates
+          eas build:list --limit 100 --json > builds.json
+
+      - name: Cleanup old workflow runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - 90);
+
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+
+            for (const run of runs.data.workflow_runs) {
+              const runDate = new Date(run.created_at);
+              if (runDate < cutoffDate) {
+                console.log(`Deleting old run: ${run.id} from ${run.created_at}`);
+                // Uncomment to actually delete:
+                // await github.rest.actions.deleteWorkflowRun({
+                //   owner: context.repo.owner,
+                //   repo: context.repo.repo,
+                //   run_id: run.id
+                // });
+              }
+            }
+
+  # ====================
+  # Summary Report
+  # ====================
+
+  nightly-summary:
+    name: Nightly Build Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - code-health
+      - check-dependencies
+      - performance-tests
+      - build-nightly-ios
+      - build-nightly-android
+      - documentation-check
+      - database-health
+      - cleanup
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: nightly-reports/
+
+      - name: Generate summary report
+        run: |
+          echo "# Nightly Build Summary" > nightly-summary.md
+          echo "" >> nightly-summary.md
+          echo "Generated: $(date)" >> nightly-summary.md
+          echo "" >> nightly-summary.md
+
+          echo "## Job Results" >> nightly-summary.md
+          echo "" >> nightly-summary.md
+          echo "| Job | Status |" >> nightly-summary.md
+          echo "|-----|--------|" >> nightly-summary.md
+          echo "| Code Health | ${{ needs.code-health.result }} |" >> nightly-summary.md
+          echo "| Dependencies | ${{ needs.check-dependencies.result }} |" >> nightly-summary.md
+          echo "| Performance | ${{ needs.performance-tests.result }} |" >> nightly-summary.md
+          echo "| iOS Build | ${{ needs.build-nightly-ios.result }} |" >> nightly-summary.md
+          echo "| Android Build | ${{ needs.build-nightly-android.result }} |" >> nightly-summary.md
+          echo "| Documentation | ${{ needs.documentation-check.result }} |" >> nightly-summary.md
+          echo "| Database | ${{ needs.database-health.result }} |" >> nightly-summary.md
+          echo "| Cleanup | ${{ needs.cleanup.result }} |" >> nightly-summary.md
+
+      - name: Upload summary report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-summary
+          path: nightly-summary.md
+          retention-days: 90
+
+      - name: Send notification
+        run: node scripts/ci/notify.js
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          NOTIFICATION_TYPE: nightly_summary
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Create issue if failures
+        if: |
+          needs.code-health.result == 'failure' ||
+          needs.build-nightly-ios.result == 'failure' ||
+          needs.build-nightly-android.result == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Nightly build failure - ${new Date().toISOString().split('T')[0]}`,
+              body: `The nightly build has failed. Please check the workflow run for details.\n\n[View workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})`,
+              labels: ['automated', 'nightly', 'build-failure']
+            });

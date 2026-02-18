@@ -42,6 +42,7 @@ module.exports = {
       statements: 80,
     },
   },
+  testPathIgnorePatterns: ['<rootDir>/apps/'],
   testMatch: ['**/__tests__/**/*.test.{ts,tsx}'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   globals: {

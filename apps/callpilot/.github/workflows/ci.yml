@@ -1,0 +1,593 @@
+name: CI
+
+# Comprehensive continuous integration pipeline
+# Runs on every PR and push to main branches
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  EXPO_VERSION: 'latest'
+  EAS_VERSION: 'latest'
+
+jobs:
+  # ====================
+  # Code Quality Checks
+  # ====================
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint -- --format json --output-file eslint-report.json
+        continue-on-error: true
+
+      - name: Run ESLint (console)
+        run: npm run lint
+
+      - name: Upload ESLint results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eslint-results
+          path: eslint-report.json
+          retention-days: 7
+
+  type-check:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript compiler
+        run: npx tsc --noEmit --pretty
+
+      - name: Generate type report
+        if: always()
+        run: |
+          npx tsc --noEmit --pretty > typescript-report.txt 2>&1 || true
+
+      - name: Upload TypeScript results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: typescript-results
+          path: typescript-report.txt
+          retention-days: 7
+
+  # ====================
+  # Testing
+  # ====================
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        node-version: [20, 22]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:ci
+
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "# Test Results" > test-summary.md
+          echo "" >> test-summary.md
+          cat coverage/coverage-summary.json | jq -r '.total | "- Lines: \(.lines.pct)%\n- Statements: \(.statements.pct)%\n- Functions: \(.functions.pct)%\n- Branches: \(.branches.pct)%"' >> test-summary.md
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: matrix.node-version == 20
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unit-tests
+          name: unit-tests-node-${{ matrix.node-version }}
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-node-${{ matrix.node-version }}
+          path: |
+            coverage/
+            test-summary.md
+          retention-days: 7
+
+      - name: Comment PR with coverage
+        if: github.event_name == 'pull_request' && matrix.node-version == 20
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const fs = require('fs');
+            const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const total = coverage.total;
+
+            const comment = `## Test Coverage Report
+
+            | Metric | Coverage |
+            |--------|----------|
+            | Lines | ${total.lines.pct}% |
+            | Statements | ${total.statements.pct}% |
+            | Functions | ${total.functions.pct}% |
+            | Branches | ${total.branches.pct}% |
+
+            <details>
+            <summary>View detailed coverage</summary>
+
+            \`\`\`
+            ${fs.readFileSync('coverage/coverage-summary.json', 'utf8')}
+            \`\`\`
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: coverage/
+          retention-days: 7
+
+  # ====================
+  # Security Scanning
+  # ====================
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Run npm audit
+        run: npm audit --json > npm-audit.json
+        continue-on-error: true
+
+      - name: Check for critical vulnerabilities
+        run: |
+          if [ -f npm-audit.json ]; then
+            CRITICAL=$(cat npm-audit.json | jq '.metadata.vulnerabilities.critical // 0')
+            HIGH=$(cat npm-audit.json | jq '.metadata.vulnerabilities.high // 0')
+
+            echo "Critical vulnerabilities: $CRITICAL"
+            echo "High vulnerabilities: $HIGH"
+
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "::error::Found $CRITICAL critical vulnerabilities"
+              exit 1
+            fi
+          fi
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-results
+          path: npm-audit.json
+          retention-days: 30
+
+  secrets-scan:
+    name: Secrets Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run secrets check
+        run: node scripts/check-secrets.js
+
+      - name: TruffleHog secrets scan
+        uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  # ====================
+  # Code Analysis
+  # ====================
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check component sizes
+        run: node scripts/check-component-sizes.js
+
+      - name: Analyze bundle size
+        run: |
+          echo "# Bundle Size Analysis" > bundle-report.md
+          echo "" >> bundle-report.md
+          du -sh node_modules/ >> bundle-report.md
+          echo "" >> bundle-report.md
+          echo "## Largest dependencies:" >> bundle-report.md
+          du -sh node_modules/* | sort -rh | head -20 >> bundle-report.md
+
+      - name: Upload analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-results
+          path: bundle-report.md
+          retention-days: 7
+
+  # ====================
+  # Expo Validation
+  # ====================
+
+  expo-doctor:
+    name: Expo Doctor
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_VERSION }}
+          eas-version: ${{ env.EAS_VERSION }}
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Run expo-doctor
+        run: npx expo-doctor
+
+      - name: Validate app.json
+        run: |
+          if [ ! -f app.json ]; then
+            echo "::warning::app.json not found, checking templates/"
+            if [ -f templates/app.json ]; then
+              echo "Found in templates/"
+            else
+              echo "::error::app.json not found"
+              exit 1
+            fi
+          fi
+
+  # ====================
+  # Build Validation
+  # ====================
+
+  build-preview:
+    name: Preview Build Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_VERSION }}
+          eas-version: ${{ env.EAS_VERSION }}
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Validate EAS configuration
+        run: |
+          if [ -f eas.json ]; then
+            echo "✓ eas.json found"
+            cat eas.json | jq '.'
+          else
+            echo "::warning::eas.json not found"
+          fi
+
+      - name: Check build configuration
+        run: |
+          echo "Checking build profiles..."
+          if [ -f eas.json ]; then
+            jq -r '.build | keys[]' eas.json
+          fi
+
+  # ====================
+  # PR Automation
+  # ====================
+
+  pr-size-check:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            let additions = 0;
+            let deletions = 0;
+            let changedFiles = files.length;
+
+            files.forEach(file => {
+              additions += file.additions;
+              deletions += file.deletions;
+            });
+
+            const totalChanges = additions + deletions;
+
+            let size = 'small';
+            let emoji = '🟢';
+
+            if (totalChanges > 1000) {
+              size = 'extra large';
+              emoji = '🔴';
+            } else if (totalChanges > 500) {
+              size = 'large';
+              emoji = '🟠';
+            } else if (totalChanges > 200) {
+              size = 'medium';
+              emoji = '🟡';
+            }
+
+            const comment = `## ${emoji} PR Size: ${size}
+
+            | Metric | Value |
+            |--------|-------|
+            | Files changed | ${changedFiles} |
+            | Additions | +${additions} |
+            | Deletions | -${deletions} |
+            | Total changes | ${totalChanges} |
+
+            ${totalChanges > 500 ? '⚠️ Consider breaking this PR into smaller chunks for easier review.' : '✅ PR size looks good!'}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run PR validation script
+        run: node scripts/ci/validate-pr.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+
+  # ====================
+  # Summary
+  # ====================
+
+  ci-summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - lint
+      - type-check
+      - unit-tests
+      - integration-tests
+      - security-audit
+      - secrets-scan
+      - code-quality
+      - expo-doctor
+    timeout-minutes: 5
+
+    steps:
+      - name: Generate summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              lint: '${{ needs.lint.result }}',
+              typeCheck: '${{ needs.type-check.result }}',
+              unitTests: '${{ needs.unit-tests.result }}',
+              integrationTests: '${{ needs.integration-tests.result }}',
+              securityAudit: '${{ needs.security-audit.result }}',
+              secretsScan: '${{ needs.secrets-scan.result }}',
+              codeQuality: '${{ needs.code-quality.result }}',
+              expoDoctor: '${{ needs.expo-doctor.result }}'
+            };
+
+            const passed = Object.values(results).filter(r => r === 'success').length;
+            const failed = Object.values(results).filter(r => r === 'failure').length;
+            const total = Object.keys(results).length;
+
+            const summary = `## CI Pipeline Results
+
+            ${passed === total ? '✅' : '❌'} **${passed}/${total}** checks passed
+
+            | Check | Status |
+            |-------|--------|
+            ${Object.entries(results).map(([name, status]) => {
+              const emoji = status === 'success' ? '✅' : status === 'failure' ? '❌' : '⚠️';
+              return `| ${name} | ${emoji} ${status} |`;
+            }).join('\n')}
+            `;
+
+            console.log(summary);
+
+            if (context.eventName === 'pull_request') {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            }
+
+      - name: Check overall status
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.type-check.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ]; then
+            echo "::error::CI pipeline failed"
+            exit 1
+          fi
+          echo "✅ All critical checks passed"

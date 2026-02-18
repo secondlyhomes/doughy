@@ -1,0 +1,193 @@
+{
+  "cli": {
+    "version": ">= 13.2.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Debug",
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug",
+        "resourceClass": "medium"
+      },
+      "env": {
+        "ENVIRONMENT": "development"
+      },
+      "channel": "development"
+    },
+    "development-device": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Debug",
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug",
+        "resourceClass": "medium"
+      },
+      "env": {
+        "ENVIRONMENT": "development"
+      },
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "resourceClass": "m-medium",
+        "bundleIdentifier": "com.yourcompany.yourapp.preview"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "resourceClass": "medium"
+      },
+      "env": {
+        "ENVIRONMENT": "preview"
+      },
+      "channel": "preview"
+    },
+    "staging": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "resourceClass": "m-large",
+        "bundleIdentifier": "com.yourcompany.yourapp.staging",
+        "autoIncrement": "buildNumber"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "resourceClass": "large",
+        "autoIncrement": "versionCode"
+      },
+      "env": {
+        "ENVIRONMENT": "staging",
+        "EXPO_PUBLIC_ENVIRONMENT": "staging"
+      },
+      "channel": "staging"
+    },
+    "production": {
+      "distribution": "store",
+      "releaseChannel": "production",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "resourceClass": "m-large",
+        "bundleIdentifier": "com.yourcompany.yourapp",
+        "autoIncrement": "buildNumber",
+        "config": {
+          "usesNonExemptEncryption": false
+        }
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease",
+        "resourceClass": "large",
+        "autoIncrement": "versionCode"
+      },
+      "env": {
+        "ENVIRONMENT": "production",
+        "EXPO_PUBLIC_ENVIRONMENT": "production"
+      },
+      "channel": "production"
+    },
+    "production-apk": {
+      "extends": "production",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "XXXXXXXXXX",
+        "sku": "your-app-sku",
+        "language": "en-US",
+        "companyName": "Your Company Name",
+        "appName": "Your App Name"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "production",
+        "releaseStatus": "completed"
+      }
+    },
+    "staging": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "XXXXXXXXXX"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    },
+    "beta": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "XXXXXXXXXX"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "beta",
+        "releaseStatus": "completed"
+      }
+    }
+  },
+  "credentials": {
+    "production": {
+      "ios": {
+        "provisioningProfilePath": "ios/certs/production.mobileprovision",
+        "distributionCertificate": {
+          "path": "ios/certs/distribution-cert.p12",
+          "password": "DISTRIBUTION_CERT_PASSWORD"
+        }
+      },
+      "android": {
+        "keystore": {
+          "keystorePath": "android/keystore.jks",
+          "keystorePassword": "ANDROID_KEYSTORE_PASSWORD",
+          "keyAlias": "release",
+          "keyPassword": "ANDROID_KEY_PASSWORD"
+        }
+      }
+    },
+    "staging": {
+      "ios": {
+        "provisioningProfilePath": "ios/certs/staging.mobileprovision",
+        "distributionCertificate": {
+          "path": "ios/certs/distribution-cert.p12",
+          "password": "DISTRIBUTION_CERT_PASSWORD"
+        }
+      },
+      "android": {
+        "keystore": {
+          "keystorePath": "android/keystore.jks",
+          "keystorePassword": "ANDROID_KEYSTORE_PASSWORD",
+          "keyAlias": "staging",
+          "keyPassword": "ANDROID_KEY_PASSWORD"
+        }
+      }
+    }
+  }
+}

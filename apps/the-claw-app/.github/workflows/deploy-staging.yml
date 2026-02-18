@@ -1,0 +1,502 @@
+name: Deploy to Staging
+
+# Automatic deployment to staging environment
+# Triggered on merge to develop branch
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip E2E tests'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false  # Don't cancel staging deployments
+
+env:
+  NODE_VERSION: '20'
+  EXPO_VERSION: 'latest'
+  EAS_VERSION: 'latest'
+  ENVIRONMENT: 'staging'
+
+jobs:
+  # ====================
+  # Pre-deployment checks
+  # ====================
+
+  pre-deploy-checks:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run pre-deployment validation
+        run: node scripts/ci/pre-deploy-check.js
+        env:
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+
+      - name: Validate environment variables
+        run: |
+          echo "Checking required environment variables..."
+          required_vars=(
+            "EXPO_TOKEN"
+            "SUPABASE_STAGING_URL"
+            "SUPABASE_STAGING_ANON_KEY"
+          )
+
+          missing_vars=()
+          for var in "${required_vars[@]}"; do
+            if [ -z "${!var}" ]; then
+              missing_vars+=("$var")
+            fi
+          done
+
+          if [ ${#missing_vars[@]} -ne 0 ]; then
+            echo "::error::Missing required environment variables: ${missing_vars[*]}"
+            exit 1
+          fi
+
+          echo "✓ All required environment variables are set"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_ANON_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run type checking
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test -- --ci --coverage --maxWorkers=2
+
+  # ====================
+  # Build for Staging
+  # ====================
+
+  build-staging:
+    name: Build Staging
+    needs: pre-deploy-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      matrix:
+        platform: [ios, android]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_VERSION }}
+          eas-version: ${{ env.EAS_VERSION }}
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Create staging app.json
+        run: |
+          echo "Preparing staging configuration..."
+          node scripts/ci/prepare-staging-config.js
+        env:
+          ENVIRONMENT: staging
+          SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_STAGING }}
+
+      - name: Build ${{ matrix.platform }} (staging)
+        run: |
+          eas build \
+            --platform ${{ matrix.platform }} \
+            --profile staging \
+            --non-interactive \
+            --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Get build URL
+        id: build
+        run: |
+          # Wait a bit for build to register
+          sleep 10
+
+          # Get latest build for this platform
+          BUILD_URL=$(eas build:list \
+            --platform ${{ matrix.platform }} \
+            --limit 1 \
+            --json | jq -r '.[0].url')
+
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          echo "Build URL: $BUILD_URL"
+
+      - name: Save build info
+        run: |
+          mkdir -p build-info
+          echo "${{ steps.build.outputs.build_url }}" > build-info/${{ matrix.platform }}-url.txt
+
+      - name: Upload build info
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-info-${{ matrix.platform }}
+          path: build-info/
+          retention-days: 30
+
+  # ====================
+  # Deploy Backend
+  # ====================
+
+  deploy-backend:
+    name: Deploy Backend (Staging)
+    needs: pre-deploy-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations for staging..."
+          node scripts/db/migrate.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+          ENVIRONMENT: staging
+
+      - name: Deploy edge functions
+        run: |
+          echo "Deploying edge functions to staging..."
+          # Add your edge function deployment logic here
+          # supabase functions deploy --project-ref $PROJECT_REF
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_STAGING_PROJECT_REF }}
+
+      - name: Verify deployment
+        run: |
+          echo "Verifying backend deployment..."
+          node scripts/ci/verify-backend.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+
+  # ====================
+  # E2E Tests
+  # ====================
+
+  e2e-tests:
+    name: E2E Tests (Staging)
+    needs: [build-staging, deploy-backend]
+    runs-on: macos-latest
+    if: ${{ !inputs.skip_tests }}
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        platform: [ios]  # Android E2E on macOS can be added if needed
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build info
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info-${{ matrix.platform }}
+          path: build-info/
+
+      - name: Setup iOS Simulator
+        if: matrix.platform == 'ios'
+        run: |
+          xcrun simctl boot "iPhone 15 Pro" || true
+          xcrun simctl install booted path/to/app.app
+
+      - name: Run E2E tests
+        run: npm run e2e:test:${{ matrix.platform }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-results-${{ matrix.platform }}
+          path: e2e/artifacts/
+          retention-days: 14
+
+      - name: Upload E2E screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots-${{ matrix.platform }}
+          path: e2e/screenshots/
+          retention-days: 14
+
+  # ====================
+  # Update OTA
+  # ====================
+
+  publish-ota-update:
+    name: Publish OTA Update
+    needs: [build-staging, deploy-backend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_VERSION }}
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish update to staging channel
+        run: |
+          npx expo publish \
+            --release-channel staging \
+            --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Get update info
+        id: update
+        run: |
+          UPDATE_ID=$(npx expo publish:history --release-channel staging --limit 1 --json | jq -r '.[0].id')
+          echo "update_id=$UPDATE_ID" >> $GITHUB_OUTPUT
+
+  # ====================
+  # Smoke Tests
+  # ====================
+
+  smoke-tests:
+    name: Smoke Tests
+    needs: [deploy-backend, publish-ota-update]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run smoke tests
+        run: node scripts/ci/smoke-tests.js
+        env:
+          ENVIRONMENT: staging
+          API_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          API_KEY: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+
+      - name: Test critical paths
+        run: |
+          echo "Testing critical user paths..."
+          # Add your smoke test commands here
+          curl -f ${{ secrets.SUPABASE_STAGING_URL }}/rest/v1/ \
+            -H "apikey: ${{ secrets.SUPABASE_STAGING_ANON_KEY }}" || exit 1
+
+  # ====================
+  # Notifications
+  # ====================
+
+  notify-deployment:
+    name: Send Notifications
+    needs: [build-staging, deploy-backend, publish-ota-update, smoke-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine deployment status
+        id: status
+        run: |
+          if [ "${{ needs.build-staging.result }}" == "success" ] && \
+             [ "${{ needs.deploy-backend.result }}" == "success" ] && \
+             [ "${{ needs.publish-ota-update.result }}" == "success" ] && \
+             [ "${{ needs.smoke-tests.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: always()
+        run: node scripts/ci/notify.js
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DEPLOYMENT_STATUS: ${{ steps.status.outputs.status }}
+          ENVIRONMENT: staging
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          AUTHOR: ${{ github.actor }}
+
+      - name: Create deployment record
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'staging',
+              required_contexts: [],
+              auto_merge: false
+            });
+
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.data.id,
+              state: '${{ steps.status.outputs.status }}',
+              environment_url: 'https://staging.yourapp.com',
+              description: 'Staging deployment ${{ steps.status.outputs.status }}'
+            });
+
+      - name: Comment on commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `${{ steps.status.outputs.emoji }} **Staging Deployment ${{ steps.status.outputs.status }}**
+
+            **Environment:** staging
+            **Commit:** ${context.sha.substring(0, 7)}
+            **Author:** @${context.actor}
+
+            **Results:**
+            - Build: ${{ needs.build-staging.result }}
+            - Backend: ${{ needs.deploy-backend.result }}
+            - OTA Update: ${{ needs.publish-ota-update.result }}
+            - Smoke Tests: ${{ needs.smoke-tests.result }}
+
+            [View deployment logs](${context.payload.repository.html_url}/actions/runs/${context.runId})`;
+
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            });
+
+  # ====================
+  # Rollback on Failure
+  # ====================
+
+  rollback:
+    name: Rollback on Failure
+    needs: [build-staging, deploy-backend, publish-ota-update, smoke-tests]
+    runs-on: ubuntu-latest
+    if: failure()
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rollback deployment
+        run: node scripts/ci/rollback.js
+        env:
+          ENVIRONMENT: staging
+          SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+
+      - name: Notify rollback
+        run: node scripts/ci/notify.js
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DEPLOYMENT_STATUS: rolled_back
+          ENVIRONMENT: staging
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

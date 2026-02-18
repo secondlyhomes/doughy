@@ -1,0 +1,71 @@
+# Database Seeds
+
+This folder contains SQL files that populate your local development database with test data.
+
+## Files
+
+- **01-users.sql** - Test user accounts (password: `Test1234!`)
+- **02-profiles.sql** - User profile data (update based on your schema)
+- **03-example-data.sql** - Your application-specific data (customize)
+
+## Test Users
+
+| Email | Password | Purpose |
+|-------|----------|---------|
+| test@example.com | Test1234! | Primary test user |
+| test2@example.com | Test1234! | Secondary user (multi-user testing) |
+| test3@example.com | Test1234! | Edge case testing |
+
+## Usage
+
+```bash
+# Reset database with seeds
+npm run db:reset
+
+# Run seeds only (no migrations)
+npm run db:seed
+
+# Create new seed file
+touch supabase/seeds/04-your-data.sql
+# Then update supabase/config.toml to include it
+```
+
+## Adding New Seed Files
+
+1. Create file: `04-your-data.sql`
+2. Add to `supabase/config.toml`:
+   ```toml
+   [db]
+   seed_sql_paths = [
+     "seed.sql",
+     "seeds/01-users.sql",
+     "seeds/02-profiles.sql",
+     "seeds/03-example-data.sql",
+     "seeds/04-your-data.sql"
+   ]
+   ```
+3. Run `npm run db:reset`
+
+## Best Practices
+
+- ✅ Use consistent UUIDs (easier to reference across files)
+- ✅ Add comments explaining data purpose
+- ✅ Keep minimal (only what's needed for dev)
+- ✅ Use fake but realistic data
+- ❌ Never include production data
+- ❌ Don't create thousands of records (slow)
+
+## Example Seed File
+
+```sql
+-- supabase/seeds/04-tasks.sql
+DO $$
+BEGIN
+  IF current_database() = 'postgres' THEN
+    TRUNCATE tasks CASCADE;
+  END IF;
+END $$;
+
+INSERT INTO tasks (id, title, user_id, status) VALUES
+  ('550e8400-e29b-41d4-a716-446655440300', 'Example Task', '550e8400-e29b-41d4-a716-446655440000', 'pending');
+```

@@ -1,0 +1,52 @@
+/**
+ * {{BASE_NAME}} Types
+ *
+ * Generated: {{DATE}}
+ */
+
+/**
+ * {{BASE_NAME}} interface
+ */
+export interface {{BASE_NAME}} {
+  id: string
+  name: string
+  description?: string
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * {{BASE_NAME}} creation input
+ */
+export interface {{BASE_NAME}}CreateInput {
+  name: string
+  description?: string
+}
+
+/**
+ * {{BASE_NAME}} update input
+ */
+export interface {{BASE_NAME}}UpdateInput {
+  name?: string
+  description?: string
+}
+
+/**
+ * {{BASE_NAME}} filter options
+ */
+export interface {{BASE_NAME}}FilterOptions {
+  search?: string
+  sortBy?: '{{KEBAB_NAME}}' | 'created_at' | 'updated_at'
+  sortOrder?: 'asc' | 'desc'
+  limit?: number
+  offset?: number
+}
+
+/**
+ * {{BASE_NAME}} list result
+ */
+export interface {{BASE_NAME}}ListResult {
+  items: {{BASE_NAME}}[]
+  total: number
+  hasMore: boolean
+}

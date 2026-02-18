@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.log
+.DS_Store
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.vscode/
+.idea/
+
+# Misc
+*.swp
+*.swo
+*~
+.env
+.env.local
+
+# Maintenance reports (keep README and config)
+.maintenance/*.html
+.maintenance/*.md
+.maintenance/*.json
+!.maintenance/README.md
+
+# Artifacts
+nul

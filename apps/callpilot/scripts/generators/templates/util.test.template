@@ -1,0 +1,45 @@
+/**
+ * {{CAMEL_NAME}} Utility Tests
+ *
+ * Generated: {{DATE}}
+ */
+
+import { {{CAMEL_NAME}}, validate{{NAME}}, format{{NAME}} } from '../{{CAMEL_NAME}}'
+
+describe('{{CAMEL_NAME}}', () => {
+  it('processes input correctly', () => {
+    const result = {{CAMEL_NAME}}('test')
+    expect(result).toBeDefined()
+  })
+
+  it('handles empty input', () => {
+    const result = {{CAMEL_NAME}}('')
+    expect(result).toBe('')
+  })
+})
+
+describe('validate{{NAME}}', () => {
+  it('validates correct input', () => {
+    expect(validate{{NAME}}('valid')).toBe(true)
+  })
+
+  it('rejects invalid input', () => {
+    expect(validate{{NAME}}('')).toBe(false)
+  })
+
+  it('rejects non-string input', () => {
+    expect(validate{{NAME}}(null as any)).toBe(false)
+    expect(validate{{NAME}}(undefined as any)).toBe(false)
+  })
+})
+
+describe('format{{NAME}}', () => {
+  it('formats input correctly', () => {
+    const result = format{{NAME}}('  test  ')
+    expect(result).toBe('test')
+  })
+
+  it('throws on invalid input', () => {
+    expect(() => format{{NAME}}('')).toThrow('Invalid input')
+  })
+})

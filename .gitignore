@@ -53,3 +53,17 @@ coverage/
 
 # Local Netlify folder
 .netlify
+
+# Monorepo apps
+apps/*/node_modules/
+apps/*/.expo/
+apps/*/dist/
+apps/*/web-build/
+apps/*/expo-env.d.ts
+apps/*/.env
+apps/*/.env.local
+apps/*/ios/
+apps/*/android/
+apps/*/.metro-health-check*
+apps/*/coverage/
+apps/*/*.tsbuildinfo

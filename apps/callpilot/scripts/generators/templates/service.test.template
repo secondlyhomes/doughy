@@ -1,0 +1,51 @@
+/**
+ * {{BASE_NAME}} Service Tests
+ *
+ * Generated: {{DATE}}
+ */
+
+import { {{CAMEL_NAME}}Service } from '../{{CAMEL_NAME}}Service'
+
+describe('{{CAMEL_NAME}}Service', () => {
+  describe('getAll', () => {
+    it('returns array of items', async () => {
+      const items = await {{CAMEL_NAME}}Service.getAll()
+      expect(Array.isArray(items)).toBe(true)
+    })
+  })
+
+  describe('getById', () => {
+    it('returns null for non-existent item', async () => {
+      const item = await {{CAMEL_NAME}}Service.getById('non-existent')
+      expect(item).toBe(null)
+    })
+  })
+
+  describe('create', () => {
+    it('creates new item', async () => {
+      const data = { name: 'Test Item' }
+      const item = await {{CAMEL_NAME}}Service.create(data)
+
+      expect(item).toBeDefined()
+      expect(item.id).toBeDefined()
+      expect(item.name).toBe(data.name)
+    })
+  })
+
+  describe('update', () => {
+    it('updates existing item', async () => {
+      const created = await {{CAMEL_NAME}}Service.create({ name: 'Original' })
+      const updated = await {{CAMEL_NAME}}Service.update(created.id, { name: 'Updated' })
+
+      expect(updated.id).toBe(created.id)
+      expect(updated.name).toBe('Updated')
+    })
+  })
+
+  describe('remove', () => {
+    it('deletes item', async () => {
+      const created = await {{CAMEL_NAME}}Service.create({ name: 'To Delete' })
+      await expect({{CAMEL_NAME}}Service.remove(created.id)).resolves.toBeUndefined()
+    })
+  })
+})

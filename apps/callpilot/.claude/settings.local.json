@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -c:*)",
+      "Bash(git push:*)",
+      "Bash(tree:*)",
+      "Read(//c/Users/Dino/.claude/projects/**)",
+      "Bash(wc:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(find:*)",
+      "WebSearch",
+      "Bash(test:*)",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e:*)",
+      "Bash(npx expo install --check)",
+      "Bash(if not exist \"C:\\\\Users\\\\Dino\\\\projects\\\\callpilot\\\\assets\" mkdir \"C:\\\\Users\\\\Dino\\\\projects\\\\callpilot\\\\assets\")",
+      "Bash(npm install:*)",
+      "Bash(npm view:*)",
+      "Bash(npx expo install:*)",
+      "Bash(xcrun simctl:*)",
+      "Bash(open:*)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs"
+    ]
+  }
+}
