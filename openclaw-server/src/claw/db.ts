@@ -113,6 +113,61 @@ export async function publicInsert(table: string, data: Record<string, unknown>)
   return response.ok;
 }
 
+/**
+ * Delete rows from any schema's table by ID list.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function schemaDelete(schema: string, table: string, ids: string[]): Promise<boolean> {
+  if (ids.length === 0) return true;
+  const invalid = ids.filter(id => !UUID_RE.test(id));
+  if (invalid.length > 0) {
+    console.error(`[DB] schemaDelete called with non-UUID ids:`, invalid);
+    throw new Error('Invalid ID format in schemaDelete');
+  }
+  const inList = ids.join(',');
+  const url = `${config.supabaseUrl}/rest/v1/${table}?id=in.(${inList})`;
+  const headers: Record<string, string> = {
+    apikey: config.supabaseServiceKey,
+    Authorization: `Bearer ${config.supabaseServiceKey}`,
+    'Content-Type': 'application/json',
+  };
+  if (schema !== 'public') {
+    headers['Content-Profile'] = schema;
+  }
+  const response = await fetch(url, { method: 'DELETE', headers });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error(`[DB] Delete ${schema}.${table} failed: ${response.status} - ${text}`);
+  }
+  return response.ok;
+}
+
+/**
+ * Call a Supabase RPC function.
+ */
+export async function rpcCall(functionName: string, params: Record<string, unknown>): Promise<unknown> {
+  const response = await fetch(
+    `${config.supabaseUrl}/rest/v1/rpc/${functionName}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: config.supabaseServiceKey,
+        Authorization: `Bearer ${config.supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    }
+  );
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error(`[DB] RPC ${functionName} failed: ${response.status} - ${text}`);
+    throw new Error(`RPC ${functionName} failed: ${response.status}`);
+  }
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+}
+
 // Convenience wrappers for the claw schema (most common)
 export const clawQuery = <T>(table: string, params: string) => schemaQuery<T>('claw', table, params);
 export const clawInsert = <T>(table: string, data: Record<string, unknown>) => schemaInsert<T>('claw', table, data);

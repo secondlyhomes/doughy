@@ -44,6 +44,7 @@ import { startQueueProcessor, stopQueueProcessor } from './claw/queue.js';
 import { hasAudioMedia, processVoiceNote } from './claw/voicenotes.js';
 import { runMorningBriefings, runFollowUpNudges } from './claw/scheduler.js';
 import { captureInboundEmail } from './services/email-capture.js';
+import { demoDataRouter } from './demo-data.js';
 
 const app = express();
 
@@ -859,6 +860,77 @@ if (config.nodeEnv !== 'production') {
     });
   });
 }
+
+// ============================================================================
+// Demo Endpoints (simulate external integrations for demos)
+// ============================================================================
+
+app.post('/api/demo/simulate-email', async (req: Request, res: Response) => {
+  try {
+    const { from, from_name, subject, body, user_id } = req.body;
+
+    if (!from || !subject || !body) {
+      return res.status(400).json({ error: 'Missing required fields: from, subject, body' });
+    }
+
+    // Use provided user_id or default demo user
+    const userId = user_id || '3aa71532-c4df-4b1a-aabf-6ed1d5efc7ce';
+
+    const result = await captureInboundEmail(userId, {
+      from,
+      fromName: from_name || from.split('@')[0],
+      to: 'admin@doughy.app',
+      subject,
+      body,
+      receivedAt: new Date().toISOString(),
+      messageId: `demo-${Date.now()}`,
+    });
+
+    res.json({
+      success: true,
+      ...result,
+      message: `Email from ${from_name || from} captured. Contact ${result.is_new_contact ? 'created' : 'matched'}. Sentiment: ${result.sentiment || 'unknown'}.`,
+    });
+  } catch (error) {
+    console.error('[Demo] Simulate email error:', error);
+    res.status(500).json({ error: 'Failed to process simulated email' });
+  }
+});
+
+app.post('/api/demo/simulate-sms', async (req: Request, res: Response) => {
+  try {
+    const { message, user_id, channel } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Missing required field: message' });
+    }
+
+    const userId = user_id || '3aa71532-c4df-4b1a-aabf-6ed1d5efc7ce';
+    const result = await handleClawMessage(userId, message, channel || 'app');
+
+    res.json({
+      success: true,
+      response: result.message,
+      task_id: result.task_id,
+      approvals_created: result.approvals_created,
+    });
+  } catch (error) {
+    console.error('[Demo] Simulate SMS error:', error);
+    res.status(500).json({ error: 'Failed to process simulated message' });
+  }
+});
+
+// ============================================================================
+// Demo Data Management (dev only — seed/reset/delete/verify)
+// ============================================================================
+
+app.use('/api/demo/seed-data', (req: Request, res: Response, next: NextFunction) => {
+  // Require DEMO_SEED_ENABLED=true on the server to allow seed operations
+  if (process.env.DEMO_SEED_ENABLED !== 'true') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  next();
+}, demoDataRouter);
 
 // ============================================================================
 // The Claw API Routes

@@ -5,7 +5,8 @@ import { config } from '../config.js';
 import { INTENT_CLASSIFIER_PROMPT, formatHelpText } from './prompts.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
 import { runAgent } from './agents.js';
-import { clawInsert, clawUpdate, clawQuery, schemaQuery, schemaInsert } from './db.js';
+import { clawInsert, clawUpdate, clawQuery, schemaQuery, schemaInsert, schemaUpdate } from './db.js';
+import { createApproval } from './tools.js';
 import { broadcastMessage } from './broadcast.js';
 import { sendWhatsApp } from './twilio.js';
 import { callEdgeFunction } from './edge.js';
@@ -872,14 +873,204 @@ async function handleTrustControl(userId: string, message: string): Promise<Claw
 
 /**
  * Handle contractor dispatch request
+ * Creates maintenance record, finds matching vendor, generates two draft approvals
  */
 async function handleDispatch(
   userId: string,
   message: string,
-  conversationHistory: Array<{ role: string; content: string }> = []
+  _conversationHistory: Array<{ role: string; content: string }> = []
 ): Promise<ClawResponse> {
-  // Route to action handler — the agent has create_maintenance_request + read_vendors tools
-  return handleAction(userId, message, conversationHistory);
+  const task = await createTask(userId, 'dispatch', `Dispatch: ${message.slice(0, 50)}`, { message });
+
+  try {
+    // Step 1: Use Claude Haiku to extract structured info from the message
+    let parsed: {
+      property_hint: string;
+      issue: string;
+      category: string;
+      tenant_name: string | null;
+      priority: string;
+      location: string | null;
+    };
+
+    if (config.anthropicApiKey) {
+      const { default: Anthropic } = await import('@anthropic-ai/sdk');
+      const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 15_000 });
+
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        temperature: 0,
+        system: 'Extract maintenance dispatch info from the user message. Return ONLY valid JSON:\n{"property_hint":"address fragment or name","issue":"what is broken","category":"plumber|electrician|hvac|cleaner|handyman|locksmith|pest_control|landscaper|appliance_repair|other","tenant_name":"name or null","priority":"low|medium|high|urgent","location":"unit/room or null"}',
+        messages: [{ role: 'user', content: `<user_message>\n${message}\n</user_message>` }],
+      });
+
+      const textBlock = response.content.find((b) => b.type === 'text');
+      const raw = textBlock && 'text' in textBlock ? textBlock.text : '{}';
+      parsed = JSON.parse(raw);
+    } else {
+      // Keyword fallback
+      const lower = message.toLowerCase();
+      parsed = {
+        property_hint: '',
+        issue: message,
+        category: /dishwasher|sink|toilet|leak|pipe|drain|faucet/.test(lower) ? 'plumber'
+          : /outlet|wire|switch|light|electric/.test(lower) ? 'electrician'
+          : /ac|heat|furnace|hvac|thermostat/.test(lower) ? 'hvac'
+          : /appliance|washer|dryer|fridge|oven|stove/.test(lower) ? 'appliance_repair'
+          : 'handyman',
+        tenant_name: null,
+        priority: /urgent|emergency|flood|fire|gas/.test(lower) ? 'urgent' : 'medium',
+        location: null,
+      };
+    }
+
+    // Step 2: Find matching property
+    const properties = await schemaQuery<{
+      id: string; name: string; address: string; city: string;
+    }>(
+      'landlord', 'properties',
+      `user_id=eq.${userId}&select=id,name,address,city&limit=20`
+    );
+
+    let matchedProperty = properties[0]; // default to first
+    if (parsed.property_hint && properties.length > 1) {
+      const hint = parsed.property_hint.toLowerCase();
+      const found = properties.find((p) =>
+        p.name?.toLowerCase().includes(hint) ||
+        p.address?.toLowerCase().includes(hint) ||
+        p.city?.toLowerCase().includes(hint)
+      );
+      if (found) matchedProperty = found;
+    }
+
+    if (!matchedProperty) {
+      await failTask(task.id, 'No properties found');
+      return { message: 'I couldn\'t find any properties in your portfolio. Add a property first.' };
+    }
+
+    // Step 3: Create maintenance record
+    const maintenanceRecord = await schemaInsert<{ id: string }>('landlord', 'maintenance_records', {
+      user_id: userId,
+      property_id: matchedProperty.id,
+      title: parsed.issue.slice(0, 100),
+      description: `Reported via The Claw: "${message}"`,
+      category: parsed.category || 'other',
+      location: parsed.location || null,
+      status: 'reported',
+      priority: parsed.priority || 'medium',
+      reported_at: new Date().toISOString(),
+    });
+
+    // Step 4: Find matching vendor by category
+    const vendors = await schemaQuery<{
+      id: string; name: string; company_name: string; phone: string; category: string;
+    }>(
+      'landlord', 'vendors',
+      `user_id=eq.${userId}&is_active=eq.true&category=eq.${parsed.category}&select=id,name,company_name,phone,category&order=rating.desc.nullslast&limit=1`
+    );
+
+    const vendor = vendors[0];
+
+    // Step 5: Create approval entries
+    const approvals: string[] = [];
+
+    if (vendor && vendor.phone) {
+      // Draft message to contractor
+      const contractorDraft = `Hi ${vendor.name}, I have a maintenance request at ${matchedProperty.address || matchedProperty.name}. Issue: ${parsed.issue}. ${parsed.priority === 'urgent' ? 'This is urgent. ' : ''}Can you take a look today or tomorrow? Let me know your availability.`;
+
+      await createApproval(userId, {
+        task_id: task.id,
+        action_type: 'send_sms',
+        title: `Dispatch ${vendor.name} to ${matchedProperty.name}`,
+        description: `${parsed.category} issue: ${parsed.issue}`,
+        draft_content: contractorDraft,
+        recipient_name: vendor.name,
+        recipient_phone: vendor.phone,
+        action_payload: {
+          maintenance_id: maintenanceRecord.id,
+          vendor_id: vendor.id,
+          property_id: matchedProperty.id,
+        },
+      });
+      approvals.push(`dispatch to ${vendor.name}`);
+
+      // Update maintenance record with vendor info
+      await schemaUpdate('landlord', 'maintenance_records', maintenanceRecord.id, {
+        vendor_id: vendor.id,
+        vendor_name: vendor.company_name || vendor.name,
+        vendor_phone: vendor.phone,
+      });
+    }
+
+    // Draft confirmation to tenant (if name was mentioned)
+    if (parsed.tenant_name) {
+      // Look up tenant contact
+      const contacts = await schemaQuery<{
+        id: string; first_name: string; last_name: string; phone: string;
+      }>(
+        'crm', 'contacts',
+        `user_id=eq.${userId}&module=eq.landlord&or=(first_name.ilike.*${encodeURIComponent(parsed.tenant_name)}*,last_name.ilike.*${encodeURIComponent(parsed.tenant_name)}*)&select=id,first_name,last_name,phone&limit=1`
+      );
+
+      const tenant = contacts[0];
+      if (tenant && tenant.phone) {
+        const tenantDraft = `Hi ${tenant.first_name}, thanks for letting me know about the ${parsed.issue}. I've contacted ${vendor ? vendor.name : 'a contractor'} and they'll be reaching out to schedule a time. I'll keep you updated.`;
+
+        await createApproval(userId, {
+          task_id: task.id,
+          action_type: 'send_sms',
+          title: `Confirm to ${tenant.first_name} re: ${parsed.issue}`,
+          description: `Tenant confirmation for maintenance at ${matchedProperty.name}`,
+          draft_content: tenantDraft,
+          recipient_name: `${tenant.first_name} ${tenant.last_name || ''}`.trim(),
+          recipient_phone: tenant.phone,
+          action_payload: {
+            maintenance_id: maintenanceRecord.id,
+            property_id: matchedProperty.id,
+          },
+        });
+        approvals.push(`confirm to ${tenant.first_name}`);
+      }
+    }
+
+    await clawUpdate('tasks', task.id, {
+      status: approvals.length > 0 ? 'awaiting_approval' : 'done',
+      output: {
+        maintenance_id: maintenanceRecord.id,
+        property: matchedProperty.name,
+        vendor: vendor?.name || 'none found',
+        approvals_created: approvals.length,
+      },
+      completed_at: new Date().toISOString(),
+    });
+
+    // Build response
+    const lines: string[] = [];
+    lines.push(`Maintenance request created for ${matchedProperty.name || matchedProperty.address}:`);
+    lines.push(`Issue: ${parsed.issue}`);
+    lines.push(`Priority: ${parsed.priority}`);
+    if (vendor) {
+      lines.push(`Vendor: ${vendor.company_name || vendor.name} (${parsed.category})`);
+    } else {
+      lines.push(`No ${parsed.category} vendor found — add one in Settings.`);
+    }
+    if (approvals.length > 0) {
+      lines.push(`\n${approvals.length} draft message${approvals.length > 1 ? 's' : ''} ready to review:`);
+      approvals.forEach((a) => lines.push(`- ${a}`));
+      lines.push('\nOpen The Claw app to approve before sending.');
+    }
+
+    return {
+      message: lines.join('\n'),
+      task_id: task.id,
+      approvals_created: approvals.length,
+    };
+  } catch (error) {
+    console.error('[Controller] Dispatch failed:', error);
+    await failTask(task.id, error);
+    return { message: 'Sorry, I had trouble processing that maintenance request. Try again.' };
+  }
 }
 
 /**

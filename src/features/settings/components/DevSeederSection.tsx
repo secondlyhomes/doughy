@@ -1,204 +1,84 @@
 // src/features/settings/components/DevSeederSection.tsx
-// Developer tools for seeding test data in both Landlord and Investor platforms
+// Developer tools for seeding demo data via server API
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Database, Trash2, Play, Home, TrendingUp, Sparkles, ChevronRight } from 'lucide-react-native';
+import { Database, Trash2, Play, RefreshCw, CheckCircle, Sparkles, ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { seedScenarios, runSeedScenario, clearAllLandlordData } from '../services/landlord-seeder';
-import { investorSeeder } from '@/features/admin/services';
-import { PORTFOLIO_DEALS_COUNT } from '@/features/admin/factories/testDataFactories';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { Card } from '@/components/ui';
 
-// Type-safe loading state - prevents typos and makes valid operations discoverable
-type LoadingOperation =
-  | 'investor-seed'
-  | 'investor-clear'
-  | 'landlord-clear'
-  | `landlord-${string}`; // For dynamic scenario IDs
+const OPENCLAW_URL = process.env.EXPO_PUBLIC_OPENCLAW_URL || 'https://openclaw.doughy.app';
 
-type LoadingState = LoadingOperation | null;
+type LoadingState = 'create' | 'delete' | 'reset' | 'verify' | null;
+
+async function callSeedApi(action: string): Promise<any> {
+  const res = await fetch(`${OPENCLAW_URL}/api/demo/seed-data`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  });
+  if (!res.ok) throw new Error(`Server error: ${res.status}`);
+  return res.json();
+}
 
 export function DevSeederSection() {
   const colors = useThemeColors();
   const router = useRouter();
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState<LoadingState>(null);
 
-  // ============================================
-  // Landlord Seeder Handlers
-  // ============================================
-  const handleLandlordSeed = async (scenarioId: string) => {
-    setIsLoading(`landlord-${scenarioId}`);
+  const handleCreate = async () => {
+    setIsLoading('create');
     try {
-      await runSeedScenario(scenarioId);
-      Alert.alert('Success', 'Landlord test data created successfully!');
-    } catch (error) {
-      console.error('[DevSeederSection] Landlord seed error:', {
-        scenarioId,
-        error,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        errorStack: error instanceof Error ? error.stack : undefined,
-      });
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to create landlord test data');
-    } finally {
-      setIsLoading(null);
-    }
-  };
-
-  const handleLandlordClear = () => {
-    Alert.alert(
-      'Clear All Landlord Data',
-      'This will delete all properties, inventory, vendors, maintenance, bookings, charges, turnovers, and conversations. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear All',
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoading('landlord-clear');
-            try {
-              await clearAllLandlordData();
-              Alert.alert('Success', 'All landlord data cleared!');
-            } catch (error) {
-              console.error('[DevSeederSection] Landlord clear error:', {
-                error,
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                errorStack: error instanceof Error ? error.stack : undefined,
-              });
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to clear landlord data');
-            } finally {
-              setIsLoading(null);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  // ============================================
-  // Investor Seeder Handlers
-  // ============================================
-  const handleInvestorSeed = async () => {
-    if (!user?.id) {
-      Alert.alert('Error', 'You must be logged in to seed data');
-      return;
-    }
-
-    // Check if seeding is allowed
-    const safetyCheck = investorSeeder.canSeedInvestorDatabase();
-    if (!safetyCheck.allowed) {
-      Alert.alert('Blocked', safetyCheck.reason || 'Seeding not allowed');
-      return;
-    }
-
-    setIsLoading('investor-seed');
-    try {
-      const result = await investorSeeder.seedInvestorData(user.id);
+      const result = await callSeedApi('create');
       if (result.success) {
-        // Build success message with optional warnings
-        let message =
-          `Investor data seeded!\n\n` +
-          `• ${result.counts.leads} leads\n` +
-          `• ${result.counts.properties} properties\n` +
-          `• ${result.counts.deals} deals (${PORTFOLIO_DEALS_COUNT} in portfolio)\n` +
-          `• ${result.counts.investorConversations} conversations\n` +
-          `• ${result.counts.investorMessages} messages\n` +
-          `• ${result.counts.captureItems} capture items`;
-
-        // Surface warnings to user if any
-        if (result.warnings && result.warnings.length > 0) {
-          message += `\n\nWarnings:\n${result.warnings.map(w => `• ${w}`).join('\n')}`;
-        }
-
-        Alert.alert('Success', message);
+        const items = Object.entries(result.counts)
+          .filter(([, v]) => (v as number) > 0)
+          .map(([k, v]) => `${v} ${k.replace(/_/g, ' ')}`)
+          .join('\n');
+        Alert.alert('Demo Data Seeded', items);
       } else {
-        // Clear failure - be explicit about what went wrong
-        const errorCount = result.errors?.length || 0;
-        const errorMessage = result.errors?.length
-          ? result.errors.join('\n')
-          : 'Seeding failed without specific error details. Check console for more information.';
-
-        console.error('[DevSeederSection] Investor seed failed:', {
-          result,
-          errors: result.errors,
-          counts: result.counts,
-        });
-
-        Alert.alert(
-          'Seeding Failed',
-          `${errorCount} error(s) occurred during seeding:\n\n${errorMessage}\n\nSome data may have been created. Consider clearing and trying again.`
-        );
+        Alert.alert('Partial Success', `Errors: ${result.errors?.join(', ') || 'Unknown'}`);
       }
     } catch (error) {
-      console.error('[DevSeederSection] Investor seed exception:', {
-        error,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        errorStack: error instanceof Error ? error.stack : undefined,
-      });
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to seed investor data');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Seed failed');
     } finally {
       setIsLoading(null);
     }
   };
 
-  const handleInvestorClear = () => {
-    if (!user?.id) {
-      Alert.alert('Error', 'You must be logged in to clear data');
-      return;
+  const handleReset = async () => {
+    setIsLoading('reset');
+    try {
+      const result = await callSeedApi('reset');
+      if (result.success) {
+        Alert.alert('Demo Data Reset', `Deleted ${result.deleted} old records.\nRe-seeded fresh data.`);
+      } else {
+        Alert.alert('Partial Success', `Errors: ${result.errors?.join(', ') || 'Unknown'}`);
+      }
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Reset failed');
+    } finally {
+      setIsLoading(null);
     }
+  };
 
+  const handleDelete = () => {
     Alert.alert(
-      'Clear All Investor Data',
-      'This will delete all your leads, properties, deals, conversations, and capture items. This cannot be undone.',
+      'Delete Demo Data',
+      'This will remove ALL demo-seeded records. Real data is not affected.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Clear All',
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            setIsLoading('investor-clear');
+            setIsLoading('delete');
             try {
-              const result = await investorSeeder.clearInvestorData(user.id);
-              if (result.success) {
-                // Build success message with optional warnings
-                let message =
-                  `Investor data cleared!\n\n` +
-                  `• ${result.counts.leads} leads\n` +
-                  `• ${result.counts.properties} properties\n` +
-                  `• ${result.counts.deals} deals\n` +
-                  `• ${result.counts.investorConversations} conversations\n` +
-                  `• ${result.counts.investorMessages} messages\n` +
-                  `• ${result.counts.captureItems} capture items`;
-
-                // Surface warnings to user if any
-                if (result.warnings && result.warnings.length > 0) {
-                  message += `\n\nWarnings:\n${result.warnings.map(w => `• ${w}`).join('\n')}`;
-                }
-
-                Alert.alert('Success', message);
-              } else {
-                // Clear failure - provide actionable error message
-                const errorMessage = result.errors?.length
-                  ? result.errors.join('\n')
-                  : 'Clear operation failed without specific error details. Check console for more information.';
-
-                console.error('[DevSeederSection] Investor clear failed:', {
-                  result,
-                  errors: result.errors,
-                  counts: result.counts,
-                });
-
-                Alert.alert('Clear Failed', errorMessage);
-              }
+              const result = await callSeedApi('delete');
+              Alert.alert('Demo Data Deleted', `Removed ${result.deleted} records.`);
             } catch (error) {
-              console.error('[DevSeederSection] Investor clear exception:', {
-                error,
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                errorStack: error instanceof Error ? error.stack : undefined,
-              });
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to clear investor data');
+              Alert.alert('Error', error instanceof Error ? error.message : 'Delete failed');
             } finally {
               setIsLoading(null);
             }
@@ -208,18 +88,30 @@ export function DevSeederSection() {
     );
   };
 
-  // Only show in dev mode
+  const handleVerify = async () => {
+    setIsLoading('verify');
+    try {
+      const result = await callSeedApi('verify');
+      const lines = Object.entries(result.checks)
+        .map(([k, v]: [string, any]) => `${v.ok ? '+' : '-'} ${k}: ${v.count}/${v.expected}`)
+        .join('\n');
+      Alert.alert(result.ready ? 'Ready' : 'Not Ready', lines);
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Verify failed');
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   if (!__DEV__) return null;
 
   return (
     <View className="p-4">
       <Text className="text-sm font-medium mb-2 px-2" style={{ color: colors.mutedForeground }}>
-        DEV TOOLS - TEST DATA SEEDERS
+        DEV TOOLS
       </Text>
 
-      {/* ============================================ */}
-      {/* SIMULATE INQUIRY */}
-      {/* ============================================ */}
+      {/* Simulate Inquiry */}
       <TouchableOpacity
         className="flex-row items-center p-4 rounded-lg mb-4"
         style={{ backgroundColor: colors.card }}
@@ -235,120 +127,95 @@ export function DevSeederSection() {
         <ChevronRight size={18} color={colors.mutedForeground} />
       </TouchableOpacity>
 
-      {/* ============================================ */}
-      {/* INVESTOR DATA SEEDER */}
-      {/* ============================================ */}
-      <View className="rounded-lg mb-4" style={{ backgroundColor: colors.card }}>
-        {/* Investor Header */}
+      {/* Demo Data Seeder */}
+      <Card variant="glass">
         <View className="flex-row items-center p-4 border-b" style={{ borderBottomColor: colors.border }}>
-          <TrendingUp size={20} color={colors.primary} />
+          <Database size={20} color={colors.primary} />
           <View className="flex-1 ml-3">
-            <Text style={{ color: colors.foreground, fontWeight: '600' }}>Investor Data Seeder</Text>
+            <Text style={{ color: colors.foreground, fontWeight: '600' }}>Demo Data</Text>
             <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-              60 leads, 100 properties, 50 deals ({PORTFOLIO_DEALS_COUNT} portfolio), 20 conversations
+              Leads, deals, properties, call transcript, connections
             </Text>
           </View>
         </View>
 
-        {/* Investor Seed Button */}
-        <TouchableOpacity
-          className="flex-row items-center p-4"
-          style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}
-          onPress={handleInvestorSeed}
+        {/* Seed */}
+        <SeedButton
+          icon={<Play size={18} color={colors.success} />}
+          label="Seed Demo Data"
+          subtitle="Create leads, properties, deal, call transcript, connections"
+          onPress={handleCreate}
+          loading={isLoading === 'create'}
           disabled={isLoading !== null}
-        >
-          <Database size={18} color={colors.primary} />
-          <View className="flex-1 ml-3">
-            <Text style={{ color: colors.foreground }}>Full Investor Dataset</Text>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-              Leads, properties, deals, conversations, capture items
-            </Text>
-          </View>
-          {isLoading === 'investor-seed' ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Play size={18} color={colors.success} />
-          )}
-        </TouchableOpacity>
+          colors={colors}
+        />
 
-        {/* Investor Clear Button */}
-        <TouchableOpacity
-          className="flex-row items-center p-4"
-          onPress={handleInvestorClear}
+        {/* Reset */}
+        <SeedButton
+          icon={<RefreshCw size={18} color={colors.info} />}
+          label="Reset Demo Data"
+          subtitle="Delete existing demo data and re-seed fresh"
+          onPress={handleReset}
+          loading={isLoading === 'reset'}
           disabled={isLoading !== null}
-        >
-          <Trash2 size={18} color={colors.destructive} />
-          <View className="flex-1 ml-3">
-            <Text style={{ color: colors.destructive }}>Clear Investor Data</Text>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-              Delete all leads, properties, deals, conversations
-            </Text>
-          </View>
-          {isLoading === 'investor-clear' && (
-            <ActivityIndicator size="small" color={colors.destructive} />
-          )}
-        </TouchableOpacity>
-      </View>
+          colors={colors}
+        />
 
-      {/* ============================================ */}
-      {/* LANDLORD DATA SEEDER */}
-      {/* ============================================ */}
-      <View className="rounded-lg" style={{ backgroundColor: colors.card }}>
-        {/* Landlord Header */}
-        <View className="flex-row items-center p-4 border-b" style={{ borderBottomColor: colors.border }}>
-          <Home size={20} color={colors.info} />
-          <View className="flex-1 ml-3">
-            <Text style={{ color: colors.foreground, fontWeight: '600' }}>Landlord Data Seeder</Text>
-            <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-              Properties, bookings, inventory, vendors, maintenance, charges
-            </Text>
-          </View>
-        </View>
-
-        {/* Landlord Seed Scenarios */}
-        {seedScenarios.map((scenario, index) => (
-          <TouchableOpacity
-            key={scenario.id}
-            className="flex-row items-center p-4"
-            style={index < seedScenarios.length - 1 ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
-            onPress={() => handleLandlordSeed(scenario.id)}
-            disabled={isLoading !== null}
-          >
-            <Database size={18} color={colors.info} />
-            <View className="flex-1 ml-3">
-              <Text style={{ color: colors.foreground }}>{scenario.name}</Text>
-              <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                {scenario.description}
-              </Text>
-            </View>
-            {isLoading === `landlord-${scenario.id}` ? (
-              <ActivityIndicator size="small" color={colors.info} />
-            ) : (
-              <Play size={18} color={colors.success} />
-            )}
-          </TouchableOpacity>
-        ))}
-
-        {/* Landlord Clear Button */}
-        <TouchableOpacity
-          className="flex-row items-center p-4 border-t"
-          style={{ borderTopColor: colors.border }}
-          onPress={handleLandlordClear}
+        {/* Verify */}
+        <SeedButton
+          icon={<CheckCircle size={18} color={colors.primary} />}
+          label="Verify Demo Data"
+          subtitle="Check that all demo records exist"
+          onPress={handleVerify}
+          loading={isLoading === 'verify'}
           disabled={isLoading !== null}
-        >
-          <Trash2 size={18} color={colors.destructive} />
-          <View className="flex-1 ml-3">
-            <Text style={{ color: colors.destructive }}>Clear Landlord Data</Text>
-            <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-              Delete all properties, inventory, vendors, maintenance, charges
-            </Text>
-          </View>
-          {isLoading === 'landlord-clear' && (
-            <ActivityIndicator size="small" color={colors.destructive} />
-          )}
-        </TouchableOpacity>
-      </View>
+          colors={colors}
+        />
+
+        {/* Delete */}
+        <SeedButton
+          icon={<Trash2 size={18} color={colors.destructive} />}
+          label="Delete Demo Data"
+          subtitle="Remove only demo-seeded records"
+          onPress={handleDelete}
+          loading={isLoading === 'delete'}
+          disabled={isLoading !== null}
+          colors={colors}
+          labelColor={colors.destructive}
+          hideBorder
+        />
+      </Card>
     </View>
+  );
+}
+
+function SeedButton({
+  icon, label, subtitle, onPress, loading, disabled, colors, labelColor, hideBorder,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  subtitle: string;
+  onPress: () => void;
+  loading: boolean;
+  disabled: boolean;
+  colors: any;
+  labelColor?: string;
+  hideBorder?: boolean;
+}) {
+  return (
+    <TouchableOpacity
+      className="flex-row items-center p-4"
+      style={!hideBorder ? { borderBottomWidth: 1, borderBottomColor: colors.border } : undefined}
+      onPress={onPress}
+      disabled={disabled}
+    >
+      {icon}
+      <View className="flex-1 ml-3">
+        <Text style={{ color: labelColor || colors.foreground }}>{label}</Text>
+        <Text className="text-xs" style={{ color: colors.mutedForeground }}>{subtitle}</Text>
+      </View>
+      {loading && <ActivityIndicator size="small" color={colors.primary} />}
+    </TouchableOpacity>
   );
 }
 

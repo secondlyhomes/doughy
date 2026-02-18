@@ -4,7 +4,8 @@
 import { Router, Request, Response } from 'express';
 import { config } from '../config.js';
 import { cpQuery, cpInsert, cpUpdate } from './db.js';
-import { schemaQuery } from '../claw/db.js';
+import { schemaQuery, schemaUpdate, clawInsert } from '../claw/db.js';
+import { broadcastMessage } from '../claw/broadcast.js';
 import { generatePreCallBriefing, generateCoachingCard, generatePostCallSummary } from './engines.js';
 import { initiateOutboundCall } from './voice.js';
 import { startCallSession, stopCallSession, endCallSession, getSessionInfo } from './session.js';
@@ -562,6 +563,178 @@ router.post('/:id/transcribe', requireAuth, async (req: Request, res: Response) 
   } catch (error) {
     console.error('[CallPilot] Transcribe error:', error);
     res.status(500).json({ error: 'Failed to transcribe recording' });
+  }
+});
+
+// ============================================================================
+// POST /api/calls/:id/approve-all — Batch approve action items + suggested CRM updates
+// ============================================================================
+
+router.post('/:id/approve-all', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const callId = param(req, 'id');
+
+    if (!UUID_RE.test(callId)) {
+      return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify call ownership
+    const calls = await cpQuery<{ id: string; lead_id: string | null }>(
+      'calls',
+      `id=eq.${callId}&user_id=eq.${userId}&select=id,lead_id&limit=1`
+    );
+    if (calls.length === 0) {
+      return res.status(404).json({ error: 'Call not found' });
+    }
+
+    const { approved_action_items = [], approved_updates = [] } = req.body;
+
+    // Validate all IDs are UUIDs
+    const allIds = [...approved_action_items, ...approved_updates];
+    if (allIds.some((id: string) => !UUID_RE.test(id))) {
+      return res.status(400).json({ error: 'Invalid ID in approval list' });
+    }
+
+    const now = new Date().toISOString();
+    let actionCount = 0;
+    let updateCount = 0;
+    const errors: string[] = [];
+
+    // 1. Approve action items
+    for (const actionId of approved_action_items) {
+      try {
+        await cpUpdate('action_items', actionId, {
+          status: 'approved',
+          approved_at: now,
+        });
+        actionCount++;
+      } catch (err) {
+        errors.push(`action_item ${actionId}: ${(err as Error).message}`);
+      }
+    }
+
+    // 2. Approve and apply suggested CRM updates
+    for (const updateId of approved_updates) {
+      try {
+        // Fetch the suggested update to get target info
+        const updates = await cpQuery<{
+          id: string;
+          target_table: string;
+          target_record_id: string;
+          field_name: string;
+          suggested_value: string;
+          status: string;
+        }>(
+          'suggested_updates',
+          `id=eq.${updateId}&call_id=eq.${callId}&deleted_at=is.null&limit=1`
+        );
+
+        if (updates.length === 0) {
+          errors.push(`suggested_update ${updateId}: not found`);
+          continue;
+        }
+
+        const update = updates[0];
+        if (update.status !== 'pending') {
+          errors.push(`suggested_update ${updateId}: already ${update.status}`);
+          continue;
+        }
+
+        // Parse target_table into schema.table
+        const [targetSchema, targetTable] = update.target_table.includes('.')
+          ? update.target_table.split('.')
+          : ['public', update.target_table];
+
+        // Apply the update to the target record
+        await schemaUpdate(
+          targetSchema,
+          targetTable,
+          update.target_record_id,
+          { [update.field_name]: update.suggested_value }
+        );
+
+        // Mark as approved
+        await cpUpdate('suggested_updates', updateId, {
+          status: 'approved',
+          approved_at: now,
+        });
+
+        updateCount++;
+      } catch (err) {
+        errors.push(`suggested_update ${updateId}: ${(err as Error).message}`);
+      }
+    }
+
+    // 3. Log activity to cost_log
+    try {
+      await clawInsert('cost_log', {
+        user_id: userId,
+        service: 'callpilot',
+        action: 'approve_all',
+        input_tokens: 0,
+        output_tokens: 0,
+        duration_seconds: 0,
+        cost_cents: 0,
+        metadata: {
+          call_id: callId,
+          action_items_approved: actionCount,
+          updates_applied: updateCount,
+          errors: errors.length,
+        },
+      });
+    } catch (err) {
+      console.error('[CallPilot] Failed to log cost:', err);
+    }
+
+    // 4. Broadcast notification
+    if (actionCount + updateCount > 0) {
+      try {
+        await broadcastMessage(userId, {
+          content: `Call summary approved: ${actionCount} action items, ${updateCount} CRM updates applied.`,
+        });
+      } catch (err) {
+        console.error('[CallPilot] Broadcast failed:', err);
+      }
+    }
+
+    res.json({
+      success: true,
+      action_items_approved: actionCount,
+      updates_applied: updateCount,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error('[CallPilot] Approve-all error:', error);
+    res.status(500).json({ error: 'Failed to process approvals' });
+  }
+});
+
+// ============================================================================
+// GET /api/calls/:id/suggested-updates — Get suggested CRM updates for a call
+// ============================================================================
+
+router.get('/:id/suggested-updates', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const callId = param(req, 'id');
+    if (!UUID_RE.test(callId)) {
+      return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify ownership
+    const calls = await cpQuery<{ id: string }>('calls', `id=eq.${callId}&user_id=eq.${userId}&select=id&limit=1`);
+    if (calls.length === 0) return res.status(404).json({ error: 'Call not found' });
+
+    const updates = await cpQuery(
+      'suggested_updates',
+      `call_id=eq.${callId}&deleted_at=is.null&order=created_at.asc`
+    );
+
+    res.json({ suggested_updates: updates });
+  } catch (error) {
+    console.error('[CallPilot] Get suggested updates error:', error);
+    res.status(500).json({ error: 'Failed to fetch suggested updates' });
   }
 });
 
