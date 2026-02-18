@@ -5,33 +5,16 @@
  * Accessed from Contact Detail → Call History → tap call → View Transcript.
  */
 
-import { useMemo } from 'react'
-import { View, ScrollView, TouchableOpacity } from 'react-native'
+import { useState, useEffect, useMemo } from 'react'
+import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useTheme } from '@/theme'
 import { Text, EmptyState } from '@/components'
+import { getTranscript } from '@/services/callsService'
+import { isMockMode } from '@/services/supabaseClient'
 import type { TranscriptLine } from '@/types'
-
-// Mock transcript — in production, loaded from callpilot.calls.full_transcript
-const MOCK_TRANSCRIPT: TranscriptLine[] = [
-  { speaker: 'user', text: "Hey Mike, it's Dino from Secondly Homes. Thanks for taking my call.", timestamp: 0 },
-  { speaker: 'lead', text: "Hey Dino, thanks for calling back. I've been meaning to reach out.", timestamp: 5 },
-  { speaker: 'user', text: "Of course. So tell me about the property on Oak St — you mentioned your parents left it to you?", timestamp: 12 },
-  { speaker: 'lead', text: "Yeah, my parents passed about a year ago and I inherited it. It's been sitting empty for about 6 months now. I live down in Texas so I can't really manage it.", timestamp: 18 },
-  { speaker: 'user', text: "I'm sorry to hear about your parents. That's a tough situation. So the property's been vacant — any maintenance issues you're aware of?", timestamp: 32 },
-  { speaker: 'lead', text: "The roof needs work, probably about fifteen grand in repairs. And the kitchen is pretty dated. Otherwise it's in okay shape.", timestamp: 40 },
-  { speaker: 'user', text: "Got it. And do you have a mortgage on it or is it free and clear?", timestamp: 52 },
-  { speaker: 'lead', text: "Yeah the mortgage is about 140 thousand. Monthly payment is around eleven hundred.", timestamp: 58 },
-  { speaker: 'user', text: "Okay, and what are you hoping to get for it?", timestamp: 65 },
-  { speaker: 'lead', text: "Honestly I just want to be done with it. Zillow says it's worth like 220 but I know it needs work. I'd take 180 probably.", timestamp: 70 },
-  { speaker: 'user', text: "I appreciate you being upfront. Let me run some numbers. With the repairs and holding costs, I could probably do $175k cash and close in about 3 weeks. How does that sound?", timestamp: 82 },
-  { speaker: 'lead', text: "That's close. Let me talk to my sister first — she's on the deed too. Can you send me the comps you mentioned?", timestamp: 95 },
-  { speaker: 'user', text: "Absolutely, I'll send those over today. And I can wait about 60 days but not much longer on this one. Take your time with your sister though.", timestamp: 105 },
-  { speaker: 'lead', text: "Sounds good. I'll get back to you by Thursday.", timestamp: 115 },
-  { speaker: 'user', text: "Perfect. Talk soon Mike. Take care.", timestamp: 120 },
-]
 
 const SPEAKER_LABELS: Record<string, string> = {
   user: 'You',
@@ -44,8 +27,32 @@ export default function TranscriptScreen() {
   const { theme } = useTheme()
   const router = useRouter()
 
-  // In production, fetch from callpilot.transcript_chunks or callpilot.calls.full_transcript
-  const transcript = MOCK_TRANSCRIPT
+  const [transcript, setTranscript] = useState<TranscriptLine[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!callId || isMockMode) {
+      setIsLoading(false)
+      return
+    }
+    let cancelled = false
+    async function load() {
+      try {
+        const lines = await getTranscript(callId!)
+        if (!cancelled) setTranscript(lines)
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load transcript')
+          if (__DEV__) console.warn('[TranscriptScreen] load failed:', err)
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+    load().catch(() => {})
+    return () => { cancelled = true }
+  }, [callId])
 
   const formattedLines = useMemo(() => {
     return transcript.map((line, i) => ({
@@ -81,11 +88,18 @@ export default function TranscriptScreen() {
         <View style={{ width: 28 }} />
       </View>
 
-      {transcript.length === 0 ? (
+      {isLoading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
+          <Text variant="bodySmall" color={theme.colors.text.tertiary} style={{ marginTop: theme.tokens.spacing[2] }}>
+            Loading transcript...
+          </Text>
+        </View>
+      ) : transcript.length === 0 ? (
         <EmptyState
           icon="document-text"
-          title="No Transcript"
-          description="Transcript will be available after the call is processed."
+          title={error ? 'Transcript Unavailable' : 'No Transcript'}
+          description={error || 'Transcript will be available after the call is processed.'}
         />
       ) : (
         <ScrollView

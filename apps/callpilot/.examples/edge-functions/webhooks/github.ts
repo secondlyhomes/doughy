@@ -12,9 +12,9 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 // Environment validation
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const SUPABASE_SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY');
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
   throw new Error('Missing required environment variables');
 }
 
@@ -78,7 +78,7 @@ interface GitHubIssueEvent {
 Deno.serve(async (req) => {
   try {
     // Get GitHub webhook secret from Vault
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
     const { data: secretData, error: secretError } = await supabase
       .from('vault.decrypted_secrets')

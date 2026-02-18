@@ -203,7 +203,7 @@ const REVENUECAT_WEBHOOK_SECRET = Deno.env.get('REVENUECAT_WEBHOOK_SECRET')!;
 // Create Supabase client outside handler for connection reuse
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  Deno.env.get('SUPABASE_SECRET_KEY')!
 );
 
 async function verifySignature(body: string, signature: string | null): Promise<boolean> {

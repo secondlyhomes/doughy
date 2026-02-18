@@ -86,7 +86,7 @@ supabase functions serve ai-chat
 
 Edge Functions automatically have access to:
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY`
 
 No additional environment variables needed since API keys come from Vault.
 

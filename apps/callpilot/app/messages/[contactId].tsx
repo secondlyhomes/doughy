@@ -21,6 +21,7 @@ import { Text, GlassButton } from '@/components'
 import { MessageBubble, ClawSuggestionCard, ChannelFilterPills } from '@/components/messages'
 import type { ChannelFilter } from '@/components/messages/ChannelFilterPills'
 import { useConversations, useContacts, useClawSuggestions } from '@/hooks'
+import { sendMessage } from '@/services/communicationsService'
 import { MODULE_ICONS } from '@/types/contact'
 import type { Message } from '@/types'
 
@@ -46,11 +47,12 @@ export default function ConversationThreadScreen() {
 
   // Compose state
   const [messageText, setMessageText] = useState('')
+  const [sending, setSending] = useState(false)
 
   // Claw suggestions — wired to Supabase (falls back to mock in dev)
-  const { suggestion: clawDraft, dismiss } = useClawSuggestions(contactId)
+  const { suggestion: clawDraft, dismiss, approve: approveDraft } = useClawSuggestions(contactId)
 
-  const canSend = messageText.trim().length > 0
+  const canSend = messageText.trim().length > 0 && !sending
 
   // Inverted FlatList: newest first, filtered by channel
   const sortedMessages = useMemo(() => {
@@ -73,19 +75,39 @@ export default function ConversationThreadScreen() {
   const keyExtractor = useCallback((item: Message) => item.id, [])
 
   // Send handler
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     const trimmed = messageText.trim()
-    if (!trimmed) return
+    if (!trimmed || !contactId) return
     triggerImpact(ImpactFeedbackStyle.Light)
     Keyboard.dismiss()
     setMessageText('')
-    Alert.alert('Coming Soon', `Messaging ${contactName} is coming soon.`)
-  }, [messageText, contactName])
+    setSending(true)
+    try {
+      await sendMessage(contactId, trimmed)
+      triggerImpact(ImpactFeedbackStyle.Medium)
+    } catch (err) {
+      Alert.alert('Send Failed', err instanceof Error ? err.message : 'Could not send message.')
+      setMessageText(trimmed)
+    } finally {
+      setSending(false)
+    }
+  }, [messageText, contactId])
 
-  const handleClawSend = useCallback(() => {
-    // Don't call approve() until sending is actually implemented — would corrupt DB state
-    Alert.alert('Not Yet Available', 'Sending AI-suggested replies is coming soon.')
-  }, [])
+  // Claw suggestion send — send first, approve on success (safe ordering)
+  const handleClawSend = useCallback(async () => {
+    if (!clawDraft || !contactId) return
+    triggerImpact(ImpactFeedbackStyle.Light)
+    setSending(true)
+    try {
+      await sendMessage(contactId, clawDraft.body)
+      await approveDraft(clawDraft.id)
+      triggerImpact(ImpactFeedbackStyle.Medium)
+    } catch (err) {
+      Alert.alert('Send Failed', err instanceof Error ? err.message : 'Could not send AI suggestion.')
+    } finally {
+      setSending(false)
+    }
+  }, [clawDraft, contactId, approveDraft])
 
   const handleClawEdit = useCallback(() => {
     if (clawDraft) {

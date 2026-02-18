@@ -16,7 +16,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 describe('Memory Manager Edge Function', () => {
   const baseUrl = process.env.SUPABASE_URL || 'http://localhost:54321';
   const functionUrl = `${baseUrl}/functions/v1/memory-manager`;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-key';
+  const serviceKey = process.env.SUPABASE_SECRET_KEY || 'test-key';
 
   describe('store_user_memory action', () => {
     it('should require authentication', async () => {
@@ -36,7 +36,7 @@ describe('Memory Manager Edge Function', () => {
       expect(response.status).toBe(401);
     });
 
-    it.skipIf(!process.env.SUPABASE_SERVICE_ROLE_KEY)('should store a memory', async () => {
+    it.skipIf(!process.env.SUPABASE_SECRET_KEY)('should store a memory', async () => {
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
@@ -61,7 +61,7 @@ describe('Memory Manager Edge Function', () => {
   });
 
   describe('get_user_context action', () => {
-    it.skipIf(!process.env.SUPABASE_SERVICE_ROLE_KEY)('should return user context', async () => {
+    it.skipIf(!process.env.SUPABASE_SECRET_KEY)('should return user context', async () => {
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
@@ -86,7 +86,7 @@ describe('Memory Manager Edge Function', () => {
   });
 
   describe('learn_from_outcome action', () => {
-    it.skipIf(!process.env.SUPABASE_SERVICE_ROLE_KEY)('should extract learnings from edited response', async () => {
+    it.skipIf(!process.env.SUPABASE_SECRET_KEY)('should extract learnings from edited response', async () => {
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {

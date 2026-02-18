@@ -307,7 +307,7 @@ async function runInteractiveTests() {
     console.log(`  npx ts-node test-harness.ts all       - Run all tests`);
     console.log(`\nEnvironment variables:`);
     console.log(`  SUPABASE_URL           - Your Supabase project URL`);
-    console.log(`  SUPABASE_SERVICE_ROLE_KEY - Service role key for Edge Functions`);
+    console.log(`  SUPABASE_SECRET_KEY      - Secret key for Edge Functions`);
     console.log(`  TEST_USER_ID           - User ID to test with`);
     console.log(`  TEST_USER_TOKEN        - Optional: user JWT for authenticated calls`);
   }

@@ -202,7 +202,7 @@ jobs:
           node scripts/db/migrate.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
           ENVIRONMENT: staging
 
       - name: Deploy edge functions
@@ -491,7 +491,7 @@ jobs:
         env:
           ENVIRONMENT: staging
           SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
 
       - name: Notify rollback
         run: node scripts/ci/notify.js

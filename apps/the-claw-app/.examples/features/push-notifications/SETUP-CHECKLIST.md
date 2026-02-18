@@ -82,7 +82,7 @@ npx expo install expo-notifications expo-device expo-constants
 - [ ] Deploy function: `supabase functions deploy send-notification`
 - [ ] Set environment variables in Supabase Dashboard:
   - [ ] `SUPABASE_URL`
-  - [ ] `SUPABASE_SERVICE_ROLE_KEY`
+  - [ ] `SUPABASE_SECRET_KEY`
 - [ ] Test function with cURL
 - [ ] Verify function appears in Supabase Dashboard → Edge Functions
 

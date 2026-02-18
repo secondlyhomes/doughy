@@ -9,7 +9,7 @@ import { assertEquals, assertExists } from 'https://deno.land/std@0.192.0/testin
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'http://localhost:54321';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const SUPABASE_SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY') || '';
 
 // Helper to generate unique test email
 function generateTestEmail(): string {
@@ -38,9 +38,9 @@ async function createTestUser() {
 
 // Helper to cleanup test user
 async function cleanupTestUser(email: string) {
-  if (!SUPABASE_SERVICE_ROLE_KEY) return;
+  if (!SUPABASE_SECRET_KEY) return;
 
-  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
   const { data: users } = await adminClient.auth.admin.listUsers();
   const testUser = users?.users.find(u => u.email === email);
   if (testUser) {

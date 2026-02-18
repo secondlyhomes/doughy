@@ -170,7 +170,7 @@ async function setupEnvironment() {
     envContent += '# Supabase\n'
     envContent += `SUPABASE_URL=${answers.supabaseUrl}\n`
     envContent += `SUPABASE_ANON_KEY=${answers.supabaseAnonKey || 'your-anon-key'}\n`
-    envContent += 'SUPABASE_SERVICE_ROLE_KEY=your-service-role-key\n'
+    envContent += 'SUPABASE_SECRET_KEY=your-service-role-key\n'
     envContent += 'SUPABASE_PROJECT_ID=your-project-id\n'
   }
 

@@ -23,7 +23,7 @@ export const config = {
 
   // Supabase
   supabaseUrl: requireEnv('SUPABASE_URL'),
-  supabaseServiceKey: requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
+  supabaseServiceKey: requireEnv('SUPABASE_SECRET_KEY'),
   supabaseAnonKey: optionalEnv('SUPABASE_ANON_KEY', ''),
 
   // Google OAuth

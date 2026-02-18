@@ -122,7 +122,7 @@ LIMIT 1;
 **Manual Trigger** (for testing, normally runs on cron):
 ```bash
 curl -X POST 'https://YOUR_PROJECT_ID.supabase.co/functions/v1/scheduled-reminders' \
-  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer YOUR_SECRET_KEY" \
   -H "Content-Type: application/json"
 ```
 
@@ -240,7 +240,7 @@ SELECT cron.schedule(
       url := 'https://YOUR_PROJECT_ID.supabase.co/functions/v1/scheduled-reminders',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || current_setting('app.service_role_key')
+        'Authorization', 'Bearer ' || current_setting('app.secret_key')
       )
     );
   $$
@@ -269,7 +269,7 @@ SELECT cron.schedule(
       url := 'https://YOUR_PROJECT_ID.supabase.co/functions/v1/scheduled-reminders',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || current_setting('app.service_role_key')
+        'Authorization', 'Bearer ' || current_setting('app.secret_key')
       )
     );
   $$
@@ -290,7 +290,7 @@ Ensure these environment variables are set in Supabase Dashboard â†’ Settings â†
 
 ### Required for All Functions
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY`
 - `ENVIRONMENT` (set to 'production' in prod)
 
 ### For Integration Health & OpenAI Functions
@@ -414,7 +414,7 @@ Before going to production:
 
 - [ ] `ENVIRONMENT=production` set in edge functions
 - [ ] All API keys encrypted in `api_keys` table
-- [ ] Service role key NOT exposed in client code
+- [ ] Secret key NOT exposed in client code
 - [ ] CORS origins restricted to production domains
 - [ ] RLS policies enabled on all tables
 - [ ] Webhook signature validation enabled

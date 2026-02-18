@@ -1,12 +1,18 @@
-import { ScrollView, View, Alert, TouchableOpacity } from 'react-native'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { ScrollView, View, Alert, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
+import { triggerImpact } from '@/utils/haptics'
+import { ImpactFeedbackStyle } from 'expo-haptics'
 import { useTheme } from '@/theme'
 import { callpilotColors } from '@/theme/callpilotColors'
 import { Text, Button, Card, SectionHeader, StatusBadge, EmptyState, GlassView } from '@/components'
 import { ActionItemCard, SentimentBadge, CrmPushCard } from '@/components/summaries'
 import { useMemos } from '@/hooks'
+import { getSuggestedUpdates, approveUpdates } from '@/services/callsService'
+import type { SuggestedUpdate } from '@/services/callsService'
+import { isMockMode } from '@/services/supabaseClient'
 import type { ExtractionField, ExtractionGroup } from '@/types'
 
 export default function CallSummaryScreen() {
@@ -42,41 +48,99 @@ export default function CallSummaryScreen() {
     year: 'numeric',
   })
 
-  // Mock extraction data — in production, loaded from claw.transcript_extractions
-  const mockExtractionGroups: ExtractionGroup[] = summary ? [
-    {
-      label: 'Property: 123 Oak St',
-      icon: '\uD83C\uDFE0',
-      entityId: null,
-      fields: [
-        { field: 'mortgage_balance', value: 140000, confidence: 'high', sourceQuote: 'Yeah the mortgage is about 140 thousand', targetTable: 'investor.properties', targetColumn: 'mortgage_info', targetPath: 'first_mortgage.balance', currentValue: null, action: 'fill_empty' },
-        { field: 'roof_repair_needed', value: 15000, confidence: 'high', sourceQuote: 'Roof needs about fifteen grand in work', targetTable: 'investor.properties', targetColumn: 'repair_estimate', targetPath: null, currentValue: null, action: 'fill_empty' },
-        { field: 'timeline', value: '60 days', confidence: 'high', sourceQuote: 'I can wait about 60 days but not much longer', targetTable: 'crm.leads', targetColumn: 'timeline', targetPath: null, currentValue: null, action: 'fill_empty' },
-      ],
-    },
-    {
-      label: summary.contactName,
-      icon: '\uD83D\uDC64',
-      entityId: null,
-      fields: [
-        { field: 'motivation', value: 'Inherited from parents, property empty 6 months', confidence: 'high', sourceQuote: 'My parents passed and I inherited it, been sitting empty', targetTable: 'crm.leads', targetColumn: 'notes', targetPath: null, currentValue: 'Inherited property', action: 'overwrite' },
-        { field: 'location', value: 'Lives in Texas', confidence: 'medium', sourceQuote: 'I am down in Texas', targetTable: 'crm.leads', targetColumn: 'mailing_address', targetPath: null, currentValue: null, action: 'fill_empty' },
-      ],
-    },
-  ] : []
+  // CRM push state
+  const [extractionGroups, setExtractionGroups] = useState<ExtractionGroup[]>([])
+  const [rawUpdates, setRawUpdates] = useState<SuggestedUpdate[]>([])
+  const rawUpdatesRef = useRef(rawUpdates)
+  rawUpdatesRef.current = rawUpdates
+  const [crmLoading, setCrmLoading] = useState(!isMockMode)
+  const [crmSynced, setCrmSynced] = useState(summary.crmSynced)
 
-  // TODO: Wire to POST /api/calls/approve-actions
-  function handleApproveField(field: ExtractionField) {
-    Alert.alert('Coming Soon', `CRM push for "${field.field}" is not yet connected. This will work once the server API is wired.`)
-  }
+  useEffect(() => {
+    if (!callId || isMockMode) {
+      setCrmLoading(false)
+      return
+    }
+    let cancelled = false
+    async function load() {
+      try {
+        const updates = await getSuggestedUpdates(callId!)
+        if (cancelled) return
+        setRawUpdates(updates)
+        // Group updates by target_table for display
+        const groupMap = new Map<string, { fields: ExtractionField[]; table: string }>()
+        for (const u of updates) {
+          const key = u.target_table || 'Other'
+          if (!groupMap.has(key)) groupMap.set(key, { fields: [], table: key })
+          groupMap.get(key)!.fields.push({
+            field: u.field_name,
+            value: u.suggested_value,
+            confidence: (u.confidence === 'high' || u.confidence === 'medium' || u.confidence === 'low')
+              ? u.confidence
+              : 'medium',
+            sourceQuote: u.source_quote || '',
+            targetTable: u.target_table,
+            targetColumn: u.field_name,
+            targetPath: null,
+            currentValue: u.current_value ?? null,
+            action: (u.current_value !== null && u.current_value !== undefined) ? 'overwrite' : 'fill_empty',
+          })
+        }
+        const groups: ExtractionGroup[] = Array.from(groupMap.entries()).map(([table, data]) => ({
+          label: table.includes('properties') ? 'Property' : table.includes('leads') ? (summary?.contactName ?? 'Contact') : table,
+          icon: table.includes('properties') ? '\uD83C\uDFE0' : '\uD83D\uDC64',
+          entityId: null,
+          fields: data.fields,
+        }))
+        setExtractionGroups(groups)
+      } catch (err) {
+        if (__DEV__ && !cancelled) console.warn('[CallSummary] getSuggestedUpdates failed:', err)
+      } finally {
+        if (!cancelled) setCrmLoading(false)
+      }
+    }
+    load().catch(() => {})
+    return () => { cancelled = true }
+  }, [callId, summary?.contactName])
 
-  function handleSkipField(_field: ExtractionField) {
-    Alert.alert('Coming Soon', 'Skipping CRM fields is not yet connected.')
-  }
+  const handleApproveField = useCallback(async (field: ExtractionField) => {
+    if (!callId) return
+    const update = rawUpdatesRef.current.find((u) => u.field_name === field.field)
+    if (!update) return
+    try {
+      await approveUpdates(callId, [update.id])
+      triggerImpact(ImpactFeedbackStyle.Medium)
+      setRawUpdates((prev) => prev.filter((u) => u.id !== update.id))
+      setExtractionGroups((prev) =>
+        prev.map((g) => ({ ...g, fields: g.fields.filter((f) => f.field !== field.field) }))
+          .filter((g) => g.fields.length > 0)
+      )
+    } catch (err) {
+      Alert.alert('Push Failed', err instanceof Error ? err.message : 'Could not push to CRM.')
+    }
+  }, [callId])
 
-  function handleApproveAllEmpty() {
-    Alert.alert('Coming Soon', 'Bulk CRM push is not yet connected.')
-  }
+  const handleSkipField = useCallback((_field: ExtractionField) => {
+    setExtractionGroups((prev) =>
+      prev.map((g) => ({ ...g, fields: g.fields.filter((f) => f.field !== _field.field) }))
+        .filter((g) => g.fields.length > 0)
+    )
+  }, [])
+
+  const handleApproveAllEmpty = useCallback(async () => {
+    if (!callId) return
+    const pendingIds = rawUpdatesRef.current.filter((u) => u.status !== 'approved').map((u) => u.id)
+    if (pendingIds.length === 0) return
+    try {
+      await approveUpdates(callId, pendingIds)
+      triggerImpact(ImpactFeedbackStyle.Heavy)
+      setCrmSynced(true)
+      setExtractionGroups([])
+      setRawUpdates([])
+    } catch (err) {
+      Alert.alert('Push Failed', err instanceof Error ? err.message : 'Could not push to CRM.')
+    }
+  }, [callId])
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -161,10 +225,15 @@ export default function CallSummaryScreen() {
         </View>
 
         {/* Push to CRM — Extraction Approval */}
-        {!summary.crmSynced && mockExtractionGroups.length > 0 && (
+        {!crmSynced && crmLoading && (
+          <View style={{ paddingHorizontal: theme.tokens.spacing[4], marginTop: theme.tokens.spacing[5], alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+          </View>
+        )}
+        {!crmSynced && !crmLoading && extractionGroups.length > 0 && (
           <View style={{ paddingHorizontal: theme.tokens.spacing[4], marginTop: theme.tokens.spacing[5] }}>
             <CrmPushCard
-              groups={mockExtractionGroups}
+              groups={extractionGroups}
               onApproveField={handleApproveField}
               onSkipField={handleSkipField}
               onApproveAllEmpty={handleApproveAllEmpty}
@@ -172,7 +241,7 @@ export default function CallSummaryScreen() {
           </View>
         )}
 
-        {summary.crmSynced && (
+        {crmSynced && (
           <View style={{ paddingHorizontal: theme.tokens.spacing[4], marginTop: theme.tokens.spacing[5] }}>
             <Button
               title="Synced to CRM"

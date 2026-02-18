@@ -32,9 +32,9 @@ interface RateLimitCheck {
 
 // Environment validation
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const SUPABASE_SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY');
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
   throw new Error('Missing required environment variables');
 }
 
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
 

@@ -316,7 +316,7 @@ Over time, the system adjusts confidence based on historical outcomes:
 ```bash
 # Set environment variables
 export SUPABASE_URL=https://your-project.supabase.co
-export SUPABASE_SERVICE_ROLE_KEY=your-key
+export SUPABASE_SECRET_KEY=your-key
 
 # Test email parser
 npx ts-node scripts/test-landlord-functions.ts parser
@@ -333,7 +333,7 @@ TEST_USER_ID=your-uuid npx ts-node scripts/test-landlord-functions.ts bridge
 ```bash
 # Set environment variables
 export SUPABASE_URL=https://your-project.supabase.co
-export SUPABASE_SERVICE_ROLE_KEY=your-key
+export SUPABASE_SECRET_KEY=your-key
 export TEST_USER_ID=your-uuid
 
 # Run all simulated email tests
@@ -445,7 +445,7 @@ RESEND_API_KEY=re_...           # For sending emails
 
 ```
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-key
+SUPABASE_SECRET_KEY=your-service-key
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 ANTHROPIC_API_KEY=sk-ant-...
@@ -456,7 +456,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-key
+SUPABASE_SECRET_KEY=your-service-key
 TEST_USER_ID=your-user-uuid
 TEST_PROPERTY_ID=your-property-uuid
 ```

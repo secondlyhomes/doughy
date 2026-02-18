@@ -68,7 +68,7 @@ export class RateLimiter {
   constructor() {
     this.supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get('SUPABASE_SECRET_KEY')!
     );
   }
 

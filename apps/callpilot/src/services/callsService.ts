@@ -6,7 +6,7 @@
  * falls back to mock data in mock mode.
  */
 
-import type { Call } from '@/types'
+import type { Call, TranscriptLine } from '@/types'
 import { mockCalls } from '@/mocks'
 import { callsFetch, isMockMode } from './callpilotApi'
 
@@ -26,6 +26,11 @@ interface ApiCall {
   created_at: string
 }
 
+const VALID_OUTCOMES: ReadonlySet<string> = new Set([
+  'interested', 'not_interested', 'follow_up', 'no_answer', 'left_voicemail',
+  'deal_made', 'callback_scheduled', 'wrong_number', 'do_not_call',
+])
+
 function mapApiCall(apiCall: ApiCall): Call {
   return {
     id: apiCall.id,
@@ -34,7 +39,9 @@ function mapApiCall(apiCall: ApiCall): Call {
     startedAt: apiCall.started_at || apiCall.created_at,
     endedAt: apiCall.ended_at || apiCall.created_at,
     duration: apiCall.duration_seconds || 0,
-    outcome: (apiCall.outcome as Call['outcome']) || 'follow_up',
+    outcome: (apiCall.outcome && VALID_OUTCOMES.has(apiCall.outcome)
+      ? apiCall.outcome
+      : 'follow_up') as Call['outcome'],
     hasVoiceMemo: false,
     hasSummary: apiCall.status === 'completed',
   }
@@ -79,4 +86,72 @@ export async function createCall(
     }),
   })
   return data.call
+}
+
+// --- Transcript ---
+
+interface TranscriptChunkApi {
+  speaker: string
+  content: string
+  timestamp_ms: number | null
+  duration_ms: number | null
+  confidence: number | null
+}
+
+interface TranscriptResponse {
+  chunks: TranscriptChunkApi[]
+  full_text: string
+}
+
+const VALID_SPEAKERS: ReadonlySet<string> = new Set(['user', 'lead', 'ai_bland'])
+
+export async function getTranscript(callId: string): Promise<TranscriptLine[]> {
+  if (isMockMode) throw new Error('Not available in mock mode')
+
+  const data = await callsFetch<TranscriptResponse>('/' + callId + '/transcript')
+  return data.chunks.map((chunk) => ({
+    speaker: (VALID_SPEAKERS.has(chunk.speaker) ? chunk.speaker : 'lead') as TranscriptLine['speaker'],
+    text: chunk.content,
+    timestamp: chunk.timestamp_ms != null ? chunk.timestamp_ms / 1000 : null,
+  }))
+}
+
+// --- CRM Push ---
+
+export interface SuggestedUpdate {
+  id: string
+  field_name: string
+  suggested_value: string | number | boolean | null
+  status: string
+  target_table: string
+  target_record_id: string | null
+  source_quote?: string
+  confidence?: string
+  current_value?: string | number | boolean | null
+}
+
+interface SuggestedUpdatesResponse {
+  suggested_updates: SuggestedUpdate[]
+}
+
+interface ApproveAllResponse {
+  success: boolean
+  updates_applied: number
+  errors?: string[]
+}
+
+export async function getSuggestedUpdates(callId: string): Promise<SuggestedUpdate[]> {
+  if (isMockMode) throw new Error('Not available in mock mode')
+
+  const data = await callsFetch<SuggestedUpdatesResponse>('/' + callId + '/suggested-updates')
+  return data.suggested_updates
+}
+
+export async function approveUpdates(callId: string, updateIds: string[]): Promise<ApproveAllResponse> {
+  if (isMockMode) throw new Error('Not available in mock mode')
+
+  return callsFetch<ApproveAllResponse>('/' + callId + '/approve-all', {
+    method: 'POST',
+    body: JSON.stringify({ approved_updates: updateIds }),
+  })
 }

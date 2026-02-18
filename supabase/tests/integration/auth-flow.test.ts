@@ -9,7 +9,7 @@ import { assertEquals, assertExists } from 'https://deno.land/std@0.192.0/testin
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'http://localhost:54321';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const SUPABASE_SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY') || '';
 
 // Helper to generate unique test email
 function generateTestEmail(): string {
@@ -48,8 +48,8 @@ Deno.test('Auth Flow: User signup creates profile automatically', async () => {
     assertEquals(profile.role, 'user', 'Default role should be "user"');
   } finally {
     // Cleanup: Delete test user (requires service role key)
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
       const testUser = users?.users.find(u => u.email === testEmail);
       if (testUser) {
@@ -88,8 +88,8 @@ Deno.test('Auth Flow: User can login with correct credentials', async () => {
     assertEquals(loginData.user?.email, testEmail, 'Logged in user should match');
   } finally {
     // Cleanup
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
       const testUser = users?.users.find(u => u.email === testEmail);
       if (testUser) {
@@ -125,8 +125,8 @@ Deno.test('Auth Flow: User cannot login with incorrect password', async () => {
     assertEquals(loginData.session, null, 'Should not return session for wrong password');
   } finally {
     // Cleanup
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
       const testUser = users?.users.find(u => u.email === testEmail);
       if (testUser) {
@@ -164,8 +164,8 @@ Deno.test('Auth Flow: User can view their own profile', async () => {
     assertEquals(profile.email, testEmail, 'Profile should match user');
   } finally {
     // Cleanup
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
       const testUser = users?.users.find(u => u.email === testEmail);
       if (testUser) {
@@ -214,8 +214,8 @@ Deno.test('Auth Flow: User cannot view other users profiles', async () => {
     );
   } finally {
     // Cleanup
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
 
       for (const email of [testEmail1, testEmail2]) {
@@ -257,8 +257,8 @@ Deno.test('Auth Flow: User can update their own profile', async () => {
     assertEquals(updatedProfile.full_name, 'Test User', 'Full name should be updated');
   } finally {
     // Cleanup
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
       const testUser = users?.users.find(u => u.email === testEmail);
       if (testUser) {
@@ -302,8 +302,8 @@ Deno.test('Auth Flow: User cannot escalate their own role', async () => {
     assertEquals(profile?.role, 'user', 'Role should remain as "user"');
   } finally {
     // Cleanup
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
       const testUser = users?.users.find(u => u.email === testEmail);
       if (testUser) {
@@ -343,8 +343,8 @@ Deno.test('Auth Flow: Session persists across requests', async () => {
     );
   } finally {
     // Cleanup
-    if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (SUPABASE_SECRET_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
       const { data: users } = await adminClient.auth.admin.listUsers();
       const testUser = users?.users.find(u => u.email === testEmail);
       if (testUser) {

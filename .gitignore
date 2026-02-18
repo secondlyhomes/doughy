@@ -51,6 +51,9 @@ coverage/
 .env.stage
 .env.example
 
+# Claude Code local settings (may contain secrets in permission rules)
+.claude/settings.local.json
+
 # Local Netlify folder
 .netlify
 

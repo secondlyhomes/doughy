@@ -97,10 +97,10 @@ echo ""
 
 # Test 5: Scheduled Reminders (Manual Trigger)
 echo -e "${YELLOW}Test 5: Scheduled Reminders (requires service role key)${NC}"
-echo "Note: This test requires SUPABASE_SERVICE_ROLE_KEY environment variable"
-if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+echo "Note: This test requires SUPABASE_SECRET_KEY environment variable"
+if [ -n "$SUPABASE_SECRET_KEY" ]; then
   response=$(curl -s -X POST "${BASE_URL}/scheduled-reminders" \
-    -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+    -H "Authorization: Bearer ${SUPABASE_SECRET_KEY}" \
     -H "Content-Type: application/json")
 
   if echo "$response" | grep -q "success"; then
@@ -111,7 +111,7 @@ if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
     echo "$response"
   fi
 else
-  echo -e "${YELLOW}⊘ Skipped - set SUPABASE_SERVICE_ROLE_KEY to test${NC}"
+  echo -e "${YELLOW}⊘ Skipped - set SUPABASE_SECRET_KEY to test${NC}"
 fi
 echo ""
 

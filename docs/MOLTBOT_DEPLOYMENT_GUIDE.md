@@ -299,7 +299,7 @@ SERVER_URL=https://moltbot.doughy.app
 
 # Supabase Configuration
 SUPABASE_URL=https://lqmbyobweeaigrwmvizo.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=your-secret-key
 SUPABASE_ANON_KEY=your-anon-key
 
 # Google OAuth Configuration (for Gmail)

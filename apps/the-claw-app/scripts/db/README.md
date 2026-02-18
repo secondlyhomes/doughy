@@ -591,7 +591,7 @@ Environment variables in `.env.local`:
 ```bash
 SUPABASE_URL=http://localhost:54321
 SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=your-service-role-key
 SUPABASE_PROJECT_ID=your-project-id
 ```
 

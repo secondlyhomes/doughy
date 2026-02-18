@@ -373,7 +373,7 @@ Then resolves contact names for follow-ups + lead names for deals needing action
 5. On reject: UPDATE status=rejected, decided_at
 6. On approve: UPDATE status=approved, draft_content (may be edited)
 7. executeSmsApproval():
-   - POST to twilio-sms edge function (service role key)
+   - POST to twilio-sms edge function (secret key)
    - Log to public.conversation_items (type: sms_sent, source: claw_approval)
 8. UPDATE status=executed, executed_at
 ```
@@ -443,7 +443,7 @@ Cleanup runs every 10 minutes to evict stale entries.
 ### Claw API Auth
 
 `routes.ts:requireAuth()`:
-- Validates Bearer token via `GET /auth/v1/user` with **anon key** (not service role)
+- Validates Bearer token via `GET /auth/v1/user` with **anon key** (not secret key)
 - UUID validation on returned user ID (defense against PostgREST injection)
 - Sets `req.userId` for downstream handlers
 
@@ -479,15 +479,15 @@ Skills are loaded per-platform per-context from `SKILL_REGISTRY`:
 
 ## Data Access Patterns
 
-The server uses **Supabase REST API** with service role key for all database operations:
+The server uses **Supabase REST API** with secret key for all database operations:
 
-### Cross-Schema Reads (service role key)
+### Cross-Schema Reads (secret key)
 ```
 Accept-Profile: {schema_name}
 GET /rest/v1/{table}?{postgrest_params}
 ```
 
-### Schema-Scoped Writes (service role key)
+### Schema-Scoped Writes (secret key)
 ```
 Content-Profile: {schema_name}
 Accept-Profile: {schema_name}
@@ -496,11 +496,11 @@ POST /rest/v1/{table}
 
 ### Edge Function Calls
 ```
-Authorization: Bearer {service_role_key}
+Authorization: Bearer {secret_key}
 POST /functions/v1/{function_name}
 ```
 
-**Important:** The server NEVER uses Supabase JS client — all calls are raw `fetch()` against the REST API. This is intentional (service role REST bypasses RLS, which is what we want for server-side operations).
+**Important:** The server NEVER uses Supabase JS client — all calls are raw `fetch()` against the REST API. This is intentional (secret key REST bypasses RLS, which is what we want for server-side operations).
 
 ---
 
@@ -511,7 +511,7 @@ POST /functions/v1/{function_name}
 | Variable | Description |
 |----------|-------------|
 | `SUPABASE_URL` | Supabase project URL (e.g., `https://lqmbyobweeaigrwmvizo.supabase.co`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (bypasses RLS) |
+| `SUPABASE_SECRET_KEY` | Service role key (bypasses RLS) |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID (for Gmail) |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `GOOGLE_CLOUD_PROJECT_ID` | GCP project ID (for Gmail Pub/Sub topic) |

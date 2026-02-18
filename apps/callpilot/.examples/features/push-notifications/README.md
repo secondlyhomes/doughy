@@ -156,7 +156,7 @@ In Supabase Dashboard → Edge Functions → Configuration:
 
 ```bash
 SUPABASE_URL=your-project-url
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=your-service-role-key
 ```
 
 ### 3. Test Edge Function

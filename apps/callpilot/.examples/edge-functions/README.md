@@ -132,7 +132,7 @@ Edge Functions have automatic access to:
 
 - `SUPABASE_URL` - Your project URL
 - `SUPABASE_ANON_KEY` - Public anonymous key
-- `SUPABASE_SERVICE_ROLE_KEY` - Admin key (server-side only)
+- `SUPABASE_SECRET_KEY` - Admin key (server-side only)
 
 ### Setting Secrets
 
@@ -279,7 +279,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  Deno.env.get('SUPABASE_SECRET_KEY')!
 );
 
 // Call another Edge Function

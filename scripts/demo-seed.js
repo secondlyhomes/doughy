@@ -14,8 +14,7 @@
  *
  * Requirements:
  *   - EXPO_PUBLIC_SUPABASE_URL in .env
- *   - SUPABASE_SECRET_KEY in .env (new format: sb_secret_...)
- *     Falls back to SUPABASE_SERVICE_ROLE_KEY (legacy JWT format)
+ *   - SUPABASE_SECRET_KEY in .env (format: sb_secret_...)
  *   - DB function public.seed_toggle_triggers() must exist (migration)
  */
 
@@ -26,8 +25,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-// Prefer new secret key format, fall back to legacy service_role JWT
-const SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
 if (!SUPABASE_URL || !SECRET_KEY) {
   console.error('Missing env vars. Add to .env:');

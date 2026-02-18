@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     // Get Stripe API key and webhook secret from Vault
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get('SUPABASE_SECRET_KEY')!
     )
 
     const [stripeKeyResult, webhookSecretResult] = await Promise.all([

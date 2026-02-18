@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
   // Create admin client with service_role key
   const supabaseAdmin = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!  // Server-side only
+    Deno.env.get('SUPABASE_SECRET_KEY')!  // Server-side only
   )
 
   // Retrieve decrypted secret from Vault

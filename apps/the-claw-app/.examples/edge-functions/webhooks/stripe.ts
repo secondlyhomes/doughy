@@ -13,16 +13,16 @@ import Stripe from 'https://esm.sh/stripe@14.17.0?target=deno';
 
 // Environment validation
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const SUPABASE_SECRET_KEY = Deno.env.get('SUPABASE_SECRET_KEY');
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
   throw new Error('Missing required environment variables');
 }
 
 Deno.serve(async (req) => {
   try {
     // Get Stripe API key and webhook secret from Vault
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
     const [stripeKeyResult, webhookSecretResult] = await Promise.all([
       supabase

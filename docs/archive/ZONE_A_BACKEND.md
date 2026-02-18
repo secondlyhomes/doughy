@@ -409,7 +409,7 @@ serve(async (req) => {
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // TODO: Call OpenAI GPT-4 to parse SMS text into structured lead/property data
@@ -489,7 +489,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get deals with upcoming actions (next 24 hours)

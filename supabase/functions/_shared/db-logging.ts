@@ -51,7 +51,7 @@ export function createLogger(config: LoggerConfig) {
 
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY');
 
       if (!supabaseUrl || !supabaseKey) return;
 

@@ -60,7 +60,7 @@ These are **server-side only** and never bundled into the client app. Use for se
 # ✅ Safe - Server-side only (Edge Functions, backend)
 OPENAI_API_KEY=sk-...
 STRIPE_SECRET_KEY=sk_live_...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...  # NEVER expose to client
+SUPABASE_SECRET_KEY=eyJ...  # NEVER expose to client
 DATABASE_PASSWORD=super-secret
 ```
 

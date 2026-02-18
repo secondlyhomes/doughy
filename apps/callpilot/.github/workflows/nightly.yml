@@ -425,7 +425,7 @@ jobs:
           node scripts/db/migrate.js status
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_STAGING_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
 
       - name: Validate RLS policies
         run: |

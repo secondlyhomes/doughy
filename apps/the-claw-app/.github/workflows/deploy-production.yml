@@ -114,7 +114,7 @@ jobs:
           node scripts/db/migrate.js status
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_PRODUCTION_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_PRODUCTION_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_PRODUCTION_SECRET_KEY }}
 
       - name: Generate deployment checklist
         run: |
@@ -190,7 +190,7 @@ jobs:
           # Add your backup logic here
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_PRODUCTION_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_PRODUCTION_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_PRODUCTION_SECRET_KEY }}
 
       - name: Run migrations
         run: |
@@ -198,7 +198,7 @@ jobs:
           node scripts/db/migrate.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_PRODUCTION_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_PRODUCTION_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_PRODUCTION_SECRET_KEY }}
           ENVIRONMENT: production
 
       - name: Verify migrations
@@ -207,7 +207,7 @@ jobs:
           node scripts/db/migrate.js status
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_PRODUCTION_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_PRODUCTION_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_PRODUCTION_SECRET_KEY }}
 
   # ====================
   # Build Production Apps

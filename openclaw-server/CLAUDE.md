@@ -56,7 +56,7 @@ npm test             # jest
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `SUPABASE_URL` | Yes | Supabase REST API base URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Bypasses RLS for server queries |
+| `SUPABASE_SECRET_KEY` | Yes | Bypasses RLS for server queries |
 | `GOOGLE_CLIENT_ID` | Yes | Gmail OAuth |
 | `GOOGLE_CLIENT_SECRET` | Yes | Gmail OAuth |
 | `GOOGLE_CLOUD_PROJECT_ID` | Yes | Gmail Pub/Sub topic |

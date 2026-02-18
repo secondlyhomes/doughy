@@ -123,7 +123,7 @@ The server needs a `.env` file with at minimum:
 ```
 # Required for server to start
 SUPABASE_URL=https://lqmbyobweeaigrwmvizo.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<staging service role key>
+SUPABASE_SECRET_KEY=<staging secret key>
 GOOGLE_CLIENT_ID=<from GCP console>
 GOOGLE_CLIENT_SECRET=<from GCP console>
 GOOGLE_CLOUD_PROJECT_ID=<GCP project ID>

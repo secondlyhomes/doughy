@@ -243,7 +243,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 Deno.serve(async (req) => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SECRET_KEY')!
   );
 
   // Get pending notifications that should be sent
@@ -368,7 +368,7 @@ const EXPO_RECEIPT_URL = 'https://exp.host/--/api/v2/push/getReceipts';
 Deno.serve(async (req) => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SECRET_KEY')!
   );
 
   // Get notifications with ticket IDs but no receipt

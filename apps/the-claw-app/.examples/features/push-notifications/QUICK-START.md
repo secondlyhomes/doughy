@@ -52,7 +52,7 @@ supabase functions deploy send-notification
 
 Set environment variables in Supabase Dashboard → Edge Functions:
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY`
 
 ## 5. Configure App (3 min)
 

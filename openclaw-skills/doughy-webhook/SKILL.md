@@ -178,7 +178,7 @@ Required for the webhook handler:
 
 ```
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=your-secret-key
 ANTHROPIC_API_KEY=your-anthropic-key (for ai-responder)
 ```
 
