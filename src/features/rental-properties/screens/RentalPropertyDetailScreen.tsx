@@ -22,8 +22,7 @@ import {
   ExternalLink,
   Trash2,
   Home,
-  ArrowLeft,
-  MoreVertical,
+  ChevronLeft,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -33,10 +32,12 @@ import {
   Button,
   BottomSheet,
   BottomSheetSection,
-  SimpleFAB,
   TAB_BAR_SAFE_PADDING,
   Separator,
   Card,
+  HeaderActionMenu,
+  ConfirmButton,
+  useToast,
 } from '@/components/ui';
 import { SPACING, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
@@ -91,8 +92,8 @@ export function RentalPropertyDetailScreen() {
   const insets = useSafeAreaInsets();
 
   const [showStatusSheet, setShowStatusSheet] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const { toast } = useToast();
 
   const {
     property,
@@ -169,14 +170,14 @@ export function RentalPropertyDetailScreen() {
   const handleDelete = useCallback(async () => {
     try {
       await deleteProperty();
-      setShowDeleteConfirm(false);
+      toast({ title: 'Property deleted', type: 'success' });
       router.back();
     } catch (err) {
       console.error('[RentalPropertyDetailScreen] Failed to delete property:', err);
       const message = err instanceof Error ? err.message : 'Unknown error';
       Alert.alert('Error', `Failed to delete property: ${message}`);
     }
-  }, [deleteProperty, router]);
+  }, [deleteProperty, router, toast]);
 
   const handleAddRoom = useCallback(() => {
     router.push(`/(tabs)/rental-properties/${propertyId}/rooms/add` as never);
@@ -215,15 +216,29 @@ export function RentalPropertyDetailScreen() {
       </View>
     ),
     headerLeft: () => (
-      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
-        <ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />
+      <TouchableOpacity
+        onPress={handleBack}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: `${colors.muted}80`,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ChevronLeft size={ICON_SIZES.xl} color={colors.foreground} />
       </TouchableOpacity>
     ),
     headerRight: property
       ? () => (
-          <TouchableOpacity onPress={() => setShowStatusSheet(true)} style={{ padding: SPACING.sm }}>
-            <MoreVertical size={ICON_SIZES.xl} color={colors.foreground} />
-          </TouchableOpacity>
+          <HeaderActionMenu
+            actions={[
+              { label: 'Edit', icon: Edit2, onPress: () => handleEdit() },
+              { label: 'Change Status', icon: Home, onPress: () => setShowStatusSheet(true) },
+              { label: 'Delete', icon: Trash2, onPress: () => handleDelete(), destructive: true },
+            ]}
+          />
         )
       : undefined,
   }), [colors, insets.top, property, handleBack]);
@@ -456,13 +471,6 @@ export function RentalPropertyDetailScreen() {
           </View>
         </ScrollView>
 
-        {/* Edit FAB */}
-        <SimpleFAB
-          icon={<Edit2 size={ICON_SIZES.xl} color={colors.primaryForeground} />}
-          onPress={handleEdit}
-          accessibilityLabel="Edit property"
-        />
-
         {/* Status Change Sheet */}
         <BottomSheet
           visible={showStatusSheet}
@@ -512,30 +520,6 @@ export function RentalPropertyDetailScreen() {
             </View>
           </BottomSheetSection>
 
-          {/* Danger Zone in sheet */}
-          <Separator className="my-4" />
-          <TouchableOpacity
-            onPress={() => {
-              setShowStatusSheet(false);
-              setTimeout(() => setShowDeleteConfirm(true), 300);
-            }}
-            className="flex-row items-center p-4 rounded-xl"
-            style={{ backgroundColor: withOpacity(colors.destructive, 'light') }}
-            disabled={isSaving}
-          >
-            <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />
-            <Text
-              style={{
-                color: colors.destructive,
-                fontSize: FONT_SIZES.base,
-                fontWeight: '500',
-                marginLeft: 12,
-              }}
-            >
-              Delete Property
-            </Text>
-          </TouchableOpacity>
-
           <View className="pt-4 pb-6">
             <Button
               variant="outline"
@@ -543,56 +527,6 @@ export function RentalPropertyDetailScreen() {
               className="w-full"
             >
               Cancel
-            </Button>
-          </View>
-        </BottomSheet>
-
-        {/* Delete Confirmation Sheet */}
-        <BottomSheet
-          visible={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          title="Delete Property"
-        >
-          <View className="py-4">
-            <Text
-              style={{
-                color: colors.foreground,
-                fontSize: FONT_SIZES.base,
-                textAlign: 'center',
-              }}
-            >
-              Are you sure you want to delete{' '}
-              <Text style={{ fontWeight: '700' }}>{property.name}</Text>?
-            </Text>
-            <Text
-              style={{
-                color: colors.mutedForeground,
-                fontSize: FONT_SIZES.sm,
-                textAlign: 'center',
-                marginTop: 8,
-              }}
-            >
-              This action cannot be undone. All associated rooms and bookings will
-              also be affected.
-            </Text>
-          </View>
-
-          <View className="flex-row gap-3 pt-4 pb-6">
-            <Button
-              variant="outline"
-              onPress={() => setShowDeleteConfirm(false)}
-              className="flex-1"
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onPress={handleDelete}
-              className="flex-1"
-              disabled={isSaving}
-            >
-              {isSaving ? 'Deleting...' : 'Delete'}
             </Button>
           </View>
         </BottomSheet>

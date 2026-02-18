@@ -40,7 +40,9 @@ export function PropertyHeader({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const images = property.images || [];
-  const hasImages = images.length > 0;
+  // Fall back to primary_image_url if no images in the joined table
+  const fallbackImageUrl = !images.length && property.primary_image_url ? property.primary_image_url : null;
+  const hasImages = images.length > 0 || !!fallbackImageUrl;
 
   // Handle image load failure
   const handleImageError = useCallback((imageKey: string) => {
@@ -60,7 +62,7 @@ export function PropertyHeader({
     <View>
       {/* Hero Image Section */}
       <View className="relative">
-        {hasImages ? (
+        {images.length > 0 ? (
           <ScrollView
             horizontal
             pagingEnabled
@@ -72,7 +74,6 @@ export function PropertyHeader({
               const hasFailed = failedImages.has(imageKey);
 
               if (hasFailed) {
-                // Fallback UI for failed images
                 return (
                   <View
                     key={imageKey}
@@ -98,6 +99,13 @@ export function PropertyHeader({
               );
             })}
           </ScrollView>
+        ) : fallbackImageUrl ? (
+          <Image
+            source={{ uri: fallbackImageUrl }}
+            style={{ width: SCREEN_WIDTH, height: 280 }}
+            resizeMode="cover"
+            onError={() => setFailedImages(prev => new Set(prev).add('fallback'))}
+          />
         ) : (
           <View
             className="items-center justify-center"

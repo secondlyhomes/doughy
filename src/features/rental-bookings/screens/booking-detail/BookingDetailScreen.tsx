@@ -1,11 +1,9 @@
 // src/features/rental-bookings/screens/booking-detail/BookingDetailScreen.tsx
 // Detailed view for managing a single rental booking
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import {
   Home,
   Calendar,
@@ -18,7 +16,6 @@ import {
   XCircle,
   LogIn,
   LogOut,
-  ArrowLeft,
 } from 'lucide-react-native';
 
 import { useThemeColors } from '@/contexts/ThemeContext';
@@ -27,18 +24,11 @@ import {
   LoadingSpinner,
   Button,
   TAB_BAR_SAFE_PADDING,
+  ConfirmButton,
+  useToast,
 } from '@/components/ui';
+import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '@/components/ui/AlertDialog';
 import { haptic } from '@/lib/haptics';
 
 import { useBooking, useBookingMutations } from '../../hooks/useRentalBookings';
@@ -52,14 +42,12 @@ import { formatDate, formatCurrency, formatRate, calculateDuration } from './uti
 export function BookingDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const bookingId = params.id as string;
 
   const { booking, isLoading, error, refetch } = useBooking(bookingId);
   const { updateStatus, cancelBooking, isSaving } = useBookingMutations();
-
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const { toast } = useToast();
 
   const handleStatusUpdate = useCallback(
     async (newStatus: BookingStatus, confirmMessage?: string) => {
@@ -113,15 +101,15 @@ export function BookingDetailScreen() {
 
     haptic.medium();
     const success = await cancelBooking(booking.id);
-    setShowCancelDialog(false);
 
     if (success) {
       haptic.success();
+      toast({ title: 'Booking cancelled', type: 'success' });
       await refetch();
     } else {
       Alert.alert('Error', 'Failed to cancel booking.');
     }
-  }, [booking, cancelBooking, refetch]);
+  }, [booking, cancelBooking, refetch, toast]);
 
   const handleNavigateToProperty = useCallback(() => {
     if (!booking?.property_id) return;
@@ -133,32 +121,10 @@ export function BookingDetailScreen() {
     ? `${booking.contact.first_name || ''} ${booking.contact.last_name || ''}`.trim() || 'Guest'
     : 'Booking';
 
-  const handleBack = useCallback(() => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/bookings');
-    }
-  }, [router]);
-
-  const headerOptions = useMemo((): NativeStackNavigationOptions => ({
-    headerShown: true,
-    headerStyle: { backgroundColor: colors.background },
-    headerShadowVisible: false,
-    headerStatusBarHeight: insets.top,
-    headerTitle: () => (
-      <View style={{ alignItems: 'center' }}>
-        <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.base }}>
-          {guestName}
-        </Text>
-      </View>
-    ),
-    headerLeft: () => (
-      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
-        <ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />
-      </TouchableOpacity>
-    ),
-  }), [colors, insets.top, guestName, handleBack]);
+  const { headerOptions, handleBack } = useNativeHeader({
+    title: guestName,
+    fallbackRoute: '/(tabs)/bookings',
+  });
 
   if (isLoading) {
     return (
@@ -226,9 +192,11 @@ export function BookingDetailScreen() {
         )}
 
         {!['completed', 'cancelled'].includes(status) && (
-          <Button variant="outline" onPress={() => setShowCancelDialog(true)} disabled={isSaving}>
-            Cancel Booking
-          </Button>
+          <ConfirmButton
+            label="Cancel Booking"
+            confirmLabel="Really Cancel?"
+            onConfirm={handleCancelBooking}
+          />
         )}
       </View>
     );
@@ -341,22 +309,6 @@ export function BookingDetailScreen() {
           <View className="pt-4">{renderActionButtons()}</View>
         </ScrollView>
 
-        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to cancel this booking? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onPress={() => setShowCancelDialog(false)}>Keep Booking</AlertDialogCancel>
-              <AlertDialogAction onPress={handleCancelBooking} disabled={isSaving}>
-                {isSaving ? <ActivityIndicator color={colors.destructiveForeground} /> : 'Cancel Booking'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </ThemedSafeAreaView>
     </>
   );

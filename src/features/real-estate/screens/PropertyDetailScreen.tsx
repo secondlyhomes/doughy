@@ -20,12 +20,12 @@ import {
 import { useRouter, useLocalSearchParams, usePathname, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { Edit2, ArrowLeft, MoreVertical } from 'lucide-react-native';
+import { ChevronLeft, MoreVertical } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { getShadowStyle } from '@/lib/design-utils';
 import { ThemedSafeAreaView } from '@/components';
-import { Button, LoadingSpinner, SimpleFAB, BottomSheet } from '@/components/ui';
-import { FAB_BOTTOM_OFFSET, FAB_SIZE } from '@/components/ui/FloatingGlassTabBar';
+import { Button, LoadingSpinner, BottomSheet, useToast } from '@/components/ui';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui/FloatingGlassTabBar';
 import { SPACING, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
 import {
   PropertyHeader,
@@ -138,8 +138,18 @@ export function PropertyDetailScreen() {
       </View>
     ),
     headerLeft: () => (
-      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
-        <ArrowLeft size={ICON_SIZES.xl} color={colors.foreground} />
+      <TouchableOpacity
+        onPress={handleBack}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: `${colors.muted}80`,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ChevronLeft size={ICON_SIZES.xl} color={colors.foreground} />
       </TouchableOpacity>
     ),
     headerRight: property
@@ -184,7 +194,7 @@ export function PropertyDetailScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 32, // Clear the FAB
+            paddingBottom: TAB_BAR_SAFE_PADDING,
           }}
           refreshControl={
             <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
@@ -236,12 +246,6 @@ export function PropertyDetailScreen() {
         </View>
       </ScrollView>
 
-        {/* Edit FAB - primary action */}
-        <SimpleFAB
-          icon={<Edit2 size={24} color="white" />}
-          onPress={handleEdit}
-          accessibilityLabel="Edit property"
-        />
       </View>
 
       {/* Property Actions Sheet */}

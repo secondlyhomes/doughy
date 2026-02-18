@@ -2,7 +2,7 @@
 // Platform switching context for multi-platform experience (RE Investor vs Landlord)
 // Part of Zone 3: UI scaffolding for the Doughy architecture refactor
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 
@@ -58,27 +58,23 @@ export function PlatformProvider({
   const [activePlatform, setActivePlatform] = useState<Platform>(defaultPlatform);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const currentUserIdRef = useRef<string | null>(null);
 
-  // Load settings from local storage first, then sync with database
+  // Load settings from local storage only (fast, no network/auth dependency).
+  // DB sync is handled by onAuthStateChange below.
+  // CRITICAL: Do NOT call getSession() here — it blocks on the Supabase init lock,
+  // which hangs all PostgREST queries if _recoverAndRefresh is slow (stale session).
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        // First, try to load from local storage for faster startup
         const localSettings = await AsyncStorage.getItem(STORAGE_KEY);
         if (localSettings) {
           const parsed = JSON.parse(localSettings);
           setEnabledPlatforms(parsed.enabledPlatforms || ['investor']);
           setActivePlatform(parsed.activePlatform || defaultPlatform);
         }
-
-        // Then try to sync with database if user is authenticated
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          await syncWithDatabase(session.user.id);
-        }
       } catch (err) {
         console.error('Error loading platform settings:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load platform settings');
       } finally {
         setIsLoading(false);
       }
@@ -87,17 +83,19 @@ export function PlatformProvider({
     loadSettings();
   }, [defaultPlatform]);
 
-  // Re-sync with database when auth state changes (e.g., after devBypassAuth completes)
-  // This fixes a race condition where PlatformProvider mounts and tries getSession()
-  // before AuthProvider has finished signing in, causing the DB sync to be skipped
+  // Sync with database when auth state changes.
+  // Handles both initial session recovery and explicit sign-in.
+  // Stores userId in ref so saveToDatabase/refreshSettings don't need getSession().
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
-          if (event === 'SIGNED_IN' && session?.user?.id) {
+          if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user?.id) {
+            currentUserIdRef.current = session.user.id;
             await syncWithDatabase(session.user.id);
           }
           if (event === 'SIGNED_OUT') {
+            currentUserIdRef.current = null;
             setEnabledPlatforms(['investor']);
             setActivePlatform(defaultPlatform);
             await AsyncStorage.removeItem(STORAGE_KEY);
@@ -164,21 +162,21 @@ export function PlatformProvider({
     }
   };
 
-  // Save settings to database
-  // Returns true on success, throws on error
+  // Save settings to database — uses cached userId ref instead of getSession()
+  // to avoid blocking on the Supabase init lock.
   const saveToDatabase = async (
     platforms: Platform[],
     active: Platform
   ): Promise<boolean> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
+    const userId = currentUserIdRef.current;
+    if (!userId) {
       return false; // Not authenticated, skip database sync
     }
 
     const { error: dbError } = await supabase
       .from('user_platform_settings')
       .upsert({
-        user_id: session.user.id,
+        user_id: userId,
         enabled_platforms: platforms,
         active_platform: active,
         updated_at: new Date().toISOString(),
@@ -274,15 +272,15 @@ export function PlatformProvider({
     }
   }, [enabledPlatforms, activePlatform]);
 
-  // Refresh settings from database
+  // Refresh settings from database — uses cached userId ref instead of getSession()
   const refreshSettings = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        await syncWithDatabase(session.user.id);
+      const userId = currentUserIdRef.current;
+      if (userId) {
+        await syncWithDatabase(userId);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to refresh platform settings');

@@ -244,6 +244,109 @@ WHERE user_id = '3aa71532-c4df-4b1a-aabf-6ed1d5efc7ce'
   AND created_at < now() - interval '1 hour';
 ```
 
+### Rule 7: All Auth Functions Need Ref-Based Re-Entry Guards
+Every function that calls `signInWithPassword` must check a shared ref (`signInInProgressRef`) and bail if already in progress. This prevents multiple taps from creating duplicate sessions. Use `useRef` (not state) because `useCallback` captures stale closures of state values.
+
+```typescript
+const signInInProgressRef = useRef(false);
+
+const signIn = useCallback(async (...) => {
+  if (signInInProgressRef.current) return; // bail
+  signInInProgressRef.current = true;
+  try { ... }
+  catch { signInInProgressRef.current = false; throw error; }
+  // Reset in onAuthStateChange finally block or timeout
+}, []);
+```
+
+### Rule 8: Never Set `isLoading(false)` on Success Path — Let `onAuthStateChange` Handle It
+After a successful `signInWithPassword`, do NOT call `setIsLoading(false)`. The `onAuthStateChange` callback sets it in its `finally` block after updating session/user/profile. Setting it early creates a brief `!isLoading && !isAuthenticated` window that triggers tab layout's auth guard → redirect to login.
+
+Add a 5-second safety timeout in case `onAuthStateChange` doesn't fire:
+```typescript
+setTimeout(() => {
+  setIsLoading((current) => {
+    if (current) console.warn('[auth] onAuthStateChange did not fire within 5s');
+    return false;
+  });
+  signInInProgressRef.current = false;
+}, 5000);
+```
+
+### Rule 9: Always Timeout `fetchProfile` Calls (3s Max)
+Every call to `fetchProfile` must be wrapped in `Promise.race` with a 3-second timeout. Without this, a network hang in profile fetch causes a permanent loading spinner. If the timeout wins, attach a `.catch()` to the background promise to avoid unhandled rejections.
+
+```typescript
+const profileTimeout = new Promise<'timeout'>((resolve) =>
+  setTimeout(() => resolve('timeout'), 3000)
+);
+const profilePromise = fetchProfile(userId, user);
+const result = await Promise.race([
+  profilePromise.then(() => 'done' as const),
+  profileTimeout,
+]);
+if (result === 'timeout') {
+  profilePromise.catch((err) => console.error('[auth] Background profile fetch failed:', err));
+}
+```
+
+### Rule 10: Root Index Must Be Auth-Aware
+`app/index.tsx` must check `isAuthenticated` and `isLoading` before redirecting. Unconditionally redirecting to `/(auth)/sign-in` flashes the login screen for authenticated users, creating a tappable window for duplicate sign-ins.
+
+```typescript
+if (isLoading) return null;           // splash stays visible
+if (isAuthenticated) return <Redirect href="/(tabs)" />;
+return <Redirect href="/(auth)/sign-in" />;
+```
+
+### Rule 11: Never Call `getSession()` in Providers or Eager Code
+`getSession()` blocks on the Supabase init lock (`initializePromise`). This lock is held while `_recoverAndRefresh` refreshes a stored session's token. **Every PostgREST query** (`supabase.from().select()`) also calls `getSession()` internally via `fetchWithAuth` → `_getAccessToken()`. If a provider calls `getSession()` during startup, its `isLoading` stays `true` until the lock releases, blocking the entire UI tree.
+
+```typescript
+// NEVER in providers or useEffect that runs on mount:
+const { data: { session } } = await supabase.auth.getSession();
+// This blocks until _recoverAndRefresh completes!
+
+// CORRECT — use onAuthStateChange to get session reactively:
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session?.user?.id) {
+    currentUserIdRef.current = session.user.id;
+    syncWithDatabase(session.user.id);
+  }
+});
+```
+
+### Rule 12: Automatic Session Cleanup with `signOut({ scope: 'others' })`
+Each `signInWithPassword` creates a NEW server-side session without revoking old ones. Hot reloads, app restarts, and auth retries accumulate stale sessions (138 at peak). After every SIGNED_IN event in dev mode, fire-and-forget `signOut({ scope: 'others' })` to revoke all sessions except the current one.
+
+```typescript
+if (event === 'SIGNED_IN' && __DEV__) {
+  supabase.auth.signOut({ scope: 'others' }).catch((err) => {
+    console.warn('[auth] Failed to clean up other sessions:', err);
+  });
+}
+```
+
+**Why dev-only:** In production, users may have multiple active sessions across devices. `scope: 'others'` would revoke those. In dev, there's one developer — cleanup is always safe.
+
+### Rule 13: Gate `isLoading=false` in `onAuthStateChange` on Init Lock Release
+
+`_recoverAndRefresh` fires `SIGNED_IN` **before** the init lock (`initializePromise`) releases. If `onAuthStateChange` sets `isLoading=false` at this point, tab screens mount and React Query hooks fire — but every REST query calls `_getAccessToken()` → `getSession()` → blocks on the still-held lock. Queries never reach the server.
+
+**Fix:** Use `initCompleteRef` — set to `true` only after `initializeAuth`'s `getSession()` returns (proving the lock is released). In `onAuthStateChange`'s `finally` block, only set `isLoading=false` if `initCompleteRef.current` is `true`.
+
+```typescript
+const initCompleteRef = useRef(false);
+
+// In initializeAuth, after getSession():
+initCompleteRef.current = true;
+
+// In onAuthStateChange finally:
+if (initCompleteRef.current) {
+  setIsLoading(false);
+}
+```
+
 ---
 
 ## Files Modified
@@ -255,6 +358,31 @@ WHERE user_id = '3aa71532-c4df-4b1a-aabf-6ed1d5efc7ce'
 | `app/(auth)/_layout.tsx` | Added auth guard (redirect authenticated users) |
 | `app/(tabs)/_layout.tsx` | Restored conversations hidden trigger (unrelated but kept) |
 
+### Second Fix (2026-02-17) — Session Accumulation Prevention
+
+| File | Change |
+|------|--------|
+| `src/features/auth/context/AuthProvider.tsx` | Re-entry guard ref, removed success-path isLoading reset, profile timeout in onAuthStateChange, TOKEN_REFRESHED/INITIAL_SESSION filtering, unhandled rejection fix, dep array fix |
+| `src/features/auth/screens/LoginScreen.tsx` | Dev buttons disabled with `isLoading` (not just `isSubmitting`), opacity visual feedback |
+| `app/index.tsx` | Auth-aware redirect (check isAuthenticated/isLoading before redirecting) |
+| `src/hooks/useAuthDeepLink.ts` | Added `.catch()` on `getInitialURL`, surface expired token errors via Alert |
+| `docs/DEBUG_AUTH_LOOP.md` | Added Rules 7-10 |
+
+### Third Fix (2026-02-17) — Data Loading Hang + Session Auto-Cleanup
+
+| File | Change |
+|------|--------|
+| `src/contexts/PlatformContext.tsx` | Removed all `getSession()` calls — loads from AsyncStorage only, uses `currentUserIdRef` for DB ops, syncs via `onAuthStateChange` |
+| `src/features/auth/context/AuthProvider.tsx` | Added `signOut({ scope: 'others' })` fire-and-forget on SIGNED_IN in dev mode |
+| `docs/DEBUG_AUTH_LOOP.md` | Added Rules 11-12 |
+
+### Fourth Fix (2026-02-17) — Init Lock Timing (Data Loading Hang)
+
+| File | Change |
+|------|--------|
+| `src/features/auth/context/AuthProvider.tsx` | Added `initCompleteRef` — gates `isLoading=false` in `onAuthStateChange` until `getSession()` proves init lock is released |
+| `docs/DEBUG_AUTH_LOOP.md` | Added Rule 13 |
+
 ## Supabase Auth-JS Internals Reference
 
 For future debugging, key facts about `@supabase/auth-js`:
@@ -262,5 +390,7 @@ For future debugging, key facts about `@supabase/auth-js`:
 - **`initializePromise`**: Internal lock that gates `getSession()`, `getUser()`, and other read operations until initial session recovery (`_recoverAndRefresh`) completes
 - **`_recoverAndRefresh`**: Reads session from storage → fires `SIGNED_IN` event → makes HTTP call to refresh token → releases lock
 - **`signInWithPassword`**: Direct HTTP POST to `/auth/v1/token?grant_type=password` — does NOT wait for `initializePromise`
+- **`signOut({ scope: 'others' })`**: Revokes all server-side sessions except the current one. Does NOT clear local state. Waits for `initializePromise`.
+- **`_getAccessToken()`**: Called by `fetchWithAuth` before EVERY PostgREST request. Internally calls `getSession()` which blocks on `initializePromise`. This means every `.from().select()` hangs when the init lock is held.
 - **`onAuthStateChange`**: Fires synchronously when session is read from storage (before token refresh completes). The callback's state updates are React-batched.
 - **Session storage**: Uses `ExpoSecureStoreAdapter` — SecureStore for items < 2KB, AsyncStorage for >= 2KB. Persists across app restarts and code changes.

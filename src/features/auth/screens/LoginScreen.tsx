@@ -80,9 +80,11 @@ export function LoginScreen() {
     router.push('/(auth)/sign-up');
   };
 
-  // Only use local isSubmitting — global isLoading blocks the form during
-  // background auth init (devBypassAuth, getSession) which makes the UI feel stuck
+  // Only use local isSubmitting for form elements — global isLoading blocks the
+  // form during background auth init which makes the UI feel stuck.
+  // Dev buttons use BOTH: form submission OR auth provider loading.
   const loading = isSubmitting;
+  const devLoading = loading || isLoading;
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
@@ -226,7 +228,7 @@ export function LoginScreen() {
               <View className="flex-row gap-3">
                 <TouchableOpacity
                   className="flex-1 rounded-lg py-3 items-center"
-                  style={{ backgroundColor: colors.primary }}
+                  style={{ backgroundColor: colors.primary, opacity: devLoading ? 0.5 : 1 }}
                   onPress={async () => {
                     try {
                       setPendingRedirect('/(tabs)');
@@ -236,7 +238,7 @@ export function LoginScreen() {
                       setError(`Dev auth failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
                     }
                   }}
-                  disabled={loading}
+                  disabled={devLoading}
                 >
                   <Text className="font-semibold text-sm" style={{ color: colors.primaryForeground }}>
                     User Console
@@ -244,7 +246,7 @@ export function LoginScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="flex-1 rounded-lg py-3 items-center"
-                  style={{ backgroundColor: colors.warning }}
+                  style={{ backgroundColor: colors.warning, opacity: devLoading ? 0.5 : 1 }}
                   onPress={async () => {
                     try {
                       setPendingRedirect('/(admin)');
@@ -254,7 +256,7 @@ export function LoginScreen() {
                       setError(`Dev auth failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
                     }
                   }}
-                  disabled={loading}
+                  disabled={devLoading}
                 >
                   <Text className="font-semibold text-sm" style={{ color: colors.primaryForeground }}>
                     Admin Console

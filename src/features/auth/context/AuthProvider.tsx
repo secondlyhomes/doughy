@@ -37,6 +37,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const hasInitializedRef = useRef(false);
+  const signInInProgressRef = useRef(false);
+  // Tracks whether getSession() has returned at least once, proving the
+  // Supabase init lock (initializePromise) is released. onAuthStateChange
+  // must NOT set isLoading=false until this is true, otherwise tabs mount
+  // before the lock releases and all REST queries hang on _getAccessToken().
+  const initCompleteRef = useRef(false);
 
   /**
    * Fetch user profile from Supabase
@@ -108,6 +114,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Sign in with email and password
    */
   const signIn = useCallback(async (email: string, password: string) => {
+    if (signInInProgressRef.current) {
+      console.warn('[auth] signIn already in progress, ignoring duplicate call');
+      return;
+    }
+    signInInProgressRef.current = true;
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -119,11 +130,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message);
       }
 
-      // Set loading false here as well - onAuthStateChange will also set it,
-      // but this ensures we don't get stuck if the event doesn't fire
-      setIsLoading(false);
+      // Let onAuthStateChange handle isLoading=false and state updates.
+      // Safety: if onAuthStateChange doesn't fire within 5s, unblock the UI.
+      setTimeout(() => {
+        setIsLoading((current) => {
+          if (current) console.warn('[auth] onAuthStateChange did not fire within 5s after signIn');
+          return false;
+        });
+        signInInProgressRef.current = false;
+      }, 5000);
     } catch (error) {
       setIsLoading(false);
+      signInInProgressRef.current = false;
       throw error;
     }
   }, []);
@@ -132,13 +150,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Sign up with email and password
    */
   const signUp = useCallback(async (email: string, password: string) => {
+    if (signInInProgressRef.current) {
+      console.warn('[auth] signUp already in progress, ignoring duplicate call');
+      return;
+    }
+    signInInProgressRef.current = true;
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // For mobile, we might want to handle email confirmation differently
           emailRedirectTo: undefined,
         },
       });
@@ -147,11 +169,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message);
       }
 
-      // Set loading false here as well - onAuthStateChange will also set it,
-      // but this ensures we don't get stuck if the event doesn't fire
-      setIsLoading(false);
+      // Let onAuthStateChange handle isLoading=false.
+      setTimeout(() => {
+        setIsLoading((current) => {
+          if (current) console.warn('[auth] onAuthStateChange did not fire within 5s after signUp');
+          return false;
+        });
+        signInInProgressRef.current = false;
+      }, 5000);
     } catch (error) {
       setIsLoading(false);
+      signInInProgressRef.current = false;
       throw error;
     }
   }, []);
@@ -199,6 +227,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
+    // Prevent concurrent calls — ref survives across renders (no stale closure issue)
+    if (signInInProgressRef.current) {
+      console.warn('[auth] Dev bypass already in progress, ignoring');
+      return;
+    }
+    signInInProgressRef.current = true;
+
     console.log('[auth] Dev bypass: Authenticating for testing');
 
     // If using mock data, update the mock auth state
@@ -239,6 +274,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         full_name: 'Dev User',
       });
       setIsLoading(false);
+      signInInProgressRef.current = false;
       return;
     }
 
@@ -260,20 +296,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         console.error('[auth] Dev sign-in failed:', error.message);
         setIsLoading(false);
+        signInInProgressRef.current = false;
         throw new Error(`Dev sign-in failed: ${error.message}`);
       }
 
       // Don't set state or isLoading here — onAuthStateChange handles it.
-      // isLoading stays true until onAuthStateChange's finally block,
-      // which ensures the tab layout shows a loading spinner (not a redirect)
-      // until session/user state has fully propagated.
+      // Safety: if onAuthStateChange doesn't fire within 5s, unblock the UI.
       console.log('[auth] Dev sign-in successful, waiting for auth state change...');
+      setTimeout(() => {
+        setIsLoading((current) => {
+          if (current) console.warn('[auth] onAuthStateChange did not fire within 5s after devBypassAuth');
+          return false;
+        });
+        signInInProgressRef.current = false;
+      }, 5000);
     } catch (error) {
       console.error('[auth] Exception during dev sign-in:', error);
       setIsLoading(false);
-      throw error; // Re-throw so callers (LoginScreen) can handle the error
+      signInInProgressRef.current = false;
+      throw error;
     }
-  }, [fetchProfile]);
+  }, []);  // M3: removed fetchProfile — not called in non-mock path
 
   /**
    * Send password reset email
@@ -319,6 +362,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        // getSession() blocks until initializePromise resolves. Once it
+        // returns, the Supabase init lock is released and REST queries
+        // (which call _getAccessToken → getSession) will no longer hang.
+        initCompleteRef.current = true;
 
         if (initialSession) {
           setSession(initialSession);
@@ -327,12 +374,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const profileTimeout = new Promise<'timeout'>((resolve) =>
             setTimeout(() => resolve('timeout'), 3000)
           );
+          const profilePromise = fetchProfile(initialSession.user.id, initialSession.user);
           const result = await Promise.race([
-            fetchProfile(initialSession.user.id, initialSession.user).then(() => 'done' as const),
+            profilePromise.then(() => 'done' as const),
             profileTimeout,
           ]);
           if (result === 'timeout') {
             console.warn('[auth] Profile fetch timed out after 3s — continuing with null profile. Fetch continues in background.');
+            // Catch the background promise so it doesn't become an unhandled rejection
+            profilePromise.catch((err) =>
+              console.error('[auth] Background profile fetch failed after timeout:', err)
+            );
           }
           setIsLoading(false);
         } else {
@@ -340,6 +392,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsLoading(false);
         }
       } catch (error) {
+        initCompleteRef.current = true; // Lock released even on error
         console.error('[auth] Error initializing auth:', error);
         setIsLoading(false);
       }
@@ -352,11 +405,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
       async (event, newSession) => {
         console.log('[auth] Auth state changed:', event);
 
+        // H2: TOKEN_REFRESHED fires every ~55min — just update session, skip profile refetch
+        if (event === 'TOKEN_REFRESHED') {
+          if (newSession) {
+            setSession(newSession);
+            setUser(newSession.user);
+          }
+          return;
+        }
+
+        // INITIAL_SESSION is handled by initializeAuth above — skip to avoid double profile fetch
+        if (event === 'INITIAL_SESSION') return;
+
         try {
           if (newSession) {
             setSession(newSession);
             setUser(newSession.user);
-            await fetchProfile(newSession.user.id, newSession.user);
+            // C4: Timeout profile fetch (same pattern as initializeAuth)
+            const profileTimeout = new Promise<'timeout'>((resolve) =>
+              setTimeout(() => resolve('timeout'), 3000)
+            );
+            const result = await Promise.race([
+              fetchProfile(newSession.user.id, newSession.user).then(() => 'done' as const),
+              profileTimeout,
+            ]);
+            if (result === 'timeout') {
+              console.warn('[auth] Profile fetch timed out in onAuthStateChange');
+            }
+            // Clean up stale sessions: revoke all sessions except the current one.
+            // Each signInWithPassword creates a new server-side session without revoking
+            // old ones. Hot reloads, app restarts, and auth retries accumulate sessions.
+            // scope:'others' keeps current session, revokes the rest. Dev-only to avoid
+            // logging out multi-device users in production.
+            if (event === 'SIGNED_IN' && __DEV__) {
+              supabase.auth.signOut({ scope: 'others' }).catch((err) => {
+                console.warn('[auth] Failed to clean up other sessions:', err);
+              });
+            }
           } else {
             setSession(null);
             setUser(null);
@@ -364,13 +449,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         } catch (error) {
           console.error('[auth] Error handling auth state change:', error);
-          // Still update session/user state even if profile fetch fails
           if (newSession) {
             setSession(newSession);
             setUser(newSession.user);
           }
         } finally {
-          setIsLoading(false);
+          // Only set isLoading=false if the Supabase init lock has been released.
+          // _recoverAndRefresh fires SIGNED_IN before the lock releases — if we
+          // set isLoading=false here, tabs mount and all REST queries hang on
+          // _getAccessToken() → getSession() → initializePromise (still held).
+          // initializeAuth handles setting isLoading=false during startup.
+          if (initCompleteRef.current) {
+            setIsLoading(false);
+          }
+          signInInProgressRef.current = false;
         }
       }
     );

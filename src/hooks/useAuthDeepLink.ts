@@ -3,6 +3,7 @@
 // Extracts tokens from URL fragment and establishes a session
 
 import { useEffect, useRef } from 'react';
+import { Alert } from 'react-native';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -58,6 +59,14 @@ export function useAuthDeepLink() {
 
         if (error) {
           console.error('[auth-deep-link] Error setting session:', error.message);
+          // Surface expired/invalid token errors to the user
+          if (error.message.includes('expired') || error.message.includes('invalid')) {
+            Alert.alert(
+              'Link Expired',
+              'This link has expired. Please request a new one.',
+              [{ text: 'OK' }]
+            );
+          }
           return;
         }
 
@@ -73,9 +82,13 @@ export function useAuthDeepLink() {
     };
 
     // Handle URL that launched the app (cold start)
-    Linking.getInitialURL().then((url) => {
-      if (url) handleUrl(url);
-    });
+    Linking.getInitialURL()
+      .then((url) => {
+        if (url) handleUrl(url);
+      })
+      .catch((err) => {
+        console.error('[auth-deep-link] Error getting initial URL:', err);
+      });
 
     // Handle URLs when the app is already open (warm start)
     const subscription = Linking.addEventListener('url', (event) => {

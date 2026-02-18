@@ -5,13 +5,13 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight, MoreVertical, Headphones } from 'lucide-react-native';
+import { Star, Building2, Edit2, Trash2, Tag, FileText, ArrowRight, Headphones } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { formatStatus, getStatusBadgeVariant } from '@/lib/formatters';
 import { ICON_SIZES } from '@/constants/design-tokens';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button, Badge, TAB_BAR_SAFE_PADDING, FAB_BOTTOM_OFFSET, FAB_SIZE, CallPilotActions } from '@/components/ui';
+import { LoadingSpinner, Button, Badge, TAB_BAR_SAFE_PADDING, CallPilotActions, HeaderActionMenu, useToast } from '@/components/ui';
 import { useNativeHeader } from '@/hooks';
 
 import { useLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
@@ -36,6 +36,7 @@ export function LeadDetailScreen() {
   const deleteLead = useDeleteLead();
   const createDeal = useCreateDeal();
 
+  const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showActivitySheet, setShowActivitySheet] = useState(false);
   const [activities, setActivities] = useState<LeadActivity[]>([]);
@@ -68,31 +69,19 @@ export function LeadDetailScreen() {
     }
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete Lead',
-      'Are you sure you want to delete this lead? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setIsDeleting(true);
-            try {
-              await deleteLead.mutateAsync(leadId);
-              router.back();
-            } catch (error) {
-              console.error('[LeadDetailScreen] Failed to delete lead:', error);
-              const message = error instanceof Error ? error.message : 'Unknown error';
-              Alert.alert('Error', `Failed to delete lead: ${message}`);
-            } finally {
-              setIsDeleting(false);
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteLead.mutateAsync(leadId);
+      toast({ title: 'Lead deleted', type: 'success' });
+      router.back();
+    } catch (error) {
+      console.error('[LeadDetailScreen] Failed to delete lead:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', `Failed to delete lead: ${message}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleConvertToDeal = async () => {
@@ -129,9 +118,6 @@ export function LeadDetailScreen() {
     );
   };
 
-  // Header actions
-  const [showActionsMenu, setShowActionsMenu] = useState(false);
-
   const { headerOptions } = useNativeHeader({
     title: lead?.name || 'Lead',
     subtitle: lead?.company || undefined,
@@ -141,12 +127,12 @@ export function LeadDetailScreen() {
         <TouchableOpacity onPress={handleToggleStar} accessibilityLabel={lead.starred ? `Remove ${lead.name} from starred` : `Star ${lead.name}`} accessibilityRole="button">
           <Star size={ICON_SIZES.xl} color={lead.starred ? colors.warning : colors.mutedForeground} fill={lead.starred ? colors.warning : 'transparent'} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push(`/(tabs)/leads/edit/${lead.id}`)} accessibilityLabel={`Edit ${lead.name}`} accessibilityRole="button">
-          <Edit2 size={ICON_SIZES.lg} color={colors.mutedForeground} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleDelete} disabled={isDeleting} accessibilityLabel={`Delete ${lead.name}`} accessibilityRole="button">
-          {isDeleting ? <ActivityIndicator size="small" color={colors.destructive} /> : <Trash2 size={ICON_SIZES.lg} color={colors.destructive} />}
-        </TouchableOpacity>
+        <HeaderActionMenu
+          actions={[
+            { label: 'Edit', icon: Edit2, onPress: () => router.push(`/(tabs)/leads/edit/${lead.id}`) },
+            { label: 'Delete', icon: Trash2, onPress: handleDelete, destructive: true, disabled: isDeleting },
+          ]}
+        />
       </View>
     ) : undefined,
   });
@@ -181,7 +167,7 @@ export function LeadDetailScreen() {
         <ScrollView
         className="flex-1"
         contentContainerStyle={{
-          paddingBottom: FAB_BOTTOM_OFFSET + FAB_SIZE + 16,  // Pattern 2: offset + height + breathing (172px)
+          paddingBottom: TAB_BAR_SAFE_PADDING,
         }}
       >
         {/* Lead Header */}

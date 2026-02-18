@@ -24,7 +24,7 @@ import {
   Check,
   ChevronRight,
   MoreHorizontal,
-  ArrowLeft,
+  ChevronLeft,
   Handshake,
   Building2,
   Plus,
@@ -179,8 +179,18 @@ export function DealCockpitScreen() {
       </View>
     ),
     headerLeft: () => (
-      <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
-        <ArrowLeft size={24} color={colors.foreground} />
+      <TouchableOpacity
+        onPress={handleBack}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: `${colors.muted}80`,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ChevronLeft size={24} color={colors.foreground} />
       </TouchableOpacity>
     ),
     headerRight: () => (

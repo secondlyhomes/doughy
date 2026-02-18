@@ -4,10 +4,10 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { CalendarClock, Trash2 } from 'lucide-react-native';
+import { CalendarClock, Trash2, Edit2 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
-import { LoadingSpinner, Button, Badge, Card, TAB_BAR_SAFE_PADDING, DestructiveActionSheet } from '@/components/ui';
+import { LoadingSpinner, Button, Badge, Card, TAB_BAR_SAFE_PADDING, HeaderActionMenu, ConfirmButton, useToast } from '@/components/ui';
 import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { useTurnover, useTurnoverMutations } from '../hooks/useTurnovers';
@@ -27,16 +27,15 @@ export function TurnoverDetailScreen() {
   const params = useLocalSearchParams();
   const turnoverId = params.turnoverId as string;
 
+  const { toast } = useToast();
   const [showScheduleSheet, setShowScheduleSheet] = useState(false);
-  const [showDeleteSheet, setShowDeleteSheet] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [inspectionNotes, setInspectionNotes] = useState('');
 
   const { data: turnover, isLoading, refetch, error } = useTurnover(turnoverId);
   const { scheduleCleaning, markCleaningDone, markInspected, markReady, deleteTurnover, isSaving } =
     useTurnoverMutations();
 
-  // Get status config for header badge (use default if turnover not loaded yet)
+  // Status config moved from header to content area
   const statusConfig = turnover ? TURNOVER_STATUS_CONFIG[turnover.status] : null;
 
   const { headerOptions, handleBack } = useNativeHeader({
@@ -44,11 +43,13 @@ export function TurnoverDetailScreen() {
     fallbackRoute: turnover?.property_id
       ? `/(tabs)/rental-properties/${turnover.property_id}/turnovers`
       : '/(tabs)/turnovers',
-    rightAction: statusConfig ? (
-      <Badge variant={statusConfig.color} size="sm">
-        {statusConfig.emoji} {statusConfig.label}
-      </Badge>
-    ) : undefined,
+    rightAction: (
+      <HeaderActionMenu
+        actions={[
+          { label: 'Delete', icon: Trash2, onPress: () => handleConfirmDelete(), destructive: true },
+        ]}
+      />
+    ),
   });
 
   const handleScheduleCleaning = useCallback(
@@ -86,21 +87,15 @@ export function TurnoverDetailScreen() {
     }
   }, [turnoverId, markReady, refetch]);
 
-  const handleDelete = useCallback(() => {
-    setShowDeleteSheet(true);
-  }, []);
-
   const handleConfirmDelete = useCallback(async () => {
-    setIsDeleting(true);
     try {
       await deleteTurnover(turnoverId);
-      setShowDeleteSheet(false);
+      toast({ title: 'Turnover deleted', type: 'success' });
       router.back();
     } catch {
       Alert.alert('Error', 'Failed to delete turnover');
-      setIsDeleting(false);
     }
-  }, [turnoverId, deleteTurnover, router]);
+  }, [turnoverId, deleteTurnover, router, toast]);
 
   // Loading state
   if (isLoading && !turnover) {
@@ -159,6 +154,15 @@ export function TurnoverDetailScreen() {
             <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />
           }
         >
+          {/* Status Badge */}
+          {statusConfig && (
+            <View className="flex-row items-center mb-4 mt-2">
+              <Badge variant={statusConfig.variant} size="lg">
+                {statusConfig.label}
+              </Badge>
+            </View>
+          )}
+
           {/* Property Info */}
           {turnover.property && (
             <PropertyInfoCard name={turnover.property.name} address={turnover.property.address} />
@@ -232,14 +236,9 @@ export function TurnoverDetailScreen() {
 
           {/* Delete */}
           {turnover.status !== 'ready' && (
-            <Button
-              variant="destructive"
-              onPress={handleDelete}
-              className="flex-row items-center justify-center gap-2"
-            >
-              <Trash2 size={16} color="white" />
-              <Text style={{ color: 'white', fontWeight: '600' }}>Delete Turnover</Text>
-            </Button>
+            <View className="mb-6">
+              <ConfirmButton label="Delete Turnover" onConfirm={handleConfirmDelete} />
+            </View>
           )}
         </ScrollView>
 
@@ -254,16 +253,6 @@ export function TurnoverDetailScreen() {
           onSchedule={handleScheduleCleaning}
         />
 
-        {/* Delete Confirmation Sheet */}
-        <DestructiveActionSheet
-          isOpen={showDeleteSheet}
-          onClose={() => setShowDeleteSheet(false)}
-          title="Delete Turnover"
-          description="Are you sure you want to delete this turnover? All associated cleaning schedules and inspection records will be removed."
-          confirmLabel="Delete"
-          onConfirm={handleConfirmDelete}
-          isLoading={isDeleting}
-        />
       </ThemedSafeAreaView>
     </>
   );

@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   MapPin,
   Tag,
+  Trash2,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
@@ -20,12 +21,13 @@ import {
   LoadingSpinner,
   Button,
   Badge,
-  SimpleFAB,
   TAB_BAR_SAFE_PADDING,
   Separator,
   PhotoGallery,
   Switch,
   DetailRow,
+  HeaderActionMenu,
+  ConfirmButton,
 } from '@/components/ui';
 import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
@@ -60,17 +62,26 @@ export function MaintenanceDetailScreen() {
   const { data: workOrder, isLoading, refetch, error } = useMaintenanceWorkOrder(workOrderId);
   const { updateStatus, updateWorkOrder, isUpdating } = useMaintenanceMutations(propertyId);
 
-  // Get status config for header badge (use default if workOrder not loaded yet)
+  // Get status config for inline badge (moved from header to content)
   const statusConfig = workOrder ? MAINTENANCE_STATUS_CONFIG[workOrder.status] : null;
+
+  const handleDelete = useCallback(async () => {
+    // TODO: implement work order deletion when mutation is available
+    Alert.alert('Not Available', 'Delete is not yet implemented for work orders.');
+  }, []);
 
   const { headerOptions, handleBack } = useNativeHeader({
     title: workOrder?.work_order_number || 'Work Order',
     fallbackRoute: `/(tabs)/rental-properties/${propertyId}/maintenance`,
-    rightAction: statusConfig ? (
-      <TouchableOpacity onPress={() => setShowStatusSheet(true)}>
-        <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
-      </TouchableOpacity>
-    ) : undefined,
+    rightAction: (
+      <HeaderActionMenu
+        actions={[
+          { label: 'Edit', icon: Edit2, onPress: handleEdit },
+          { label: 'Change Status', icon: CheckCircle2, onPress: () => setShowStatusSheet(true) },
+          { label: 'Delete', icon: Trash2, onPress: handleDelete, destructive: true },
+        ]}
+      />
+    ),
   });
 
   const handleEdit = useCallback(() => {
@@ -157,12 +168,17 @@ export function MaintenanceDetailScreen() {
           contentContainerStyle={{ paddingHorizontal: SPACING.md, paddingBottom: TAB_BAR_SAFE_PADDING }}
           refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />}
         >
-          {/* Title and Priority */}
+          {/* Title, Status, and Priority */}
           <View className="my-4">
             <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.xl, fontWeight: '700' }}>
               {workOrder.title}
             </Text>
-            <View className="flex-row items-center mt-2 gap-2">
+            <View className="flex-row items-center mt-2 gap-2 flex-wrap">
+              {statusConfig && (
+                <TouchableOpacity onPress={() => setShowStatusSheet(true)}>
+                  <Badge variant={statusConfig.variant} size="sm">{statusConfig.label}</Badge>
+                </TouchableOpacity>
+              )}
               <Badge variant={priorityConfig.variant} size="sm" style={{ borderWidth: 1, borderColor: priorityConfig.color }}>
                 {workOrder.priority === 'emergency' && <AlertTriangle size={12} color={priorityConfig.color} />}
                 <Text style={{ marginLeft: workOrder.priority === 'emergency' ? 4 : 0 }}>{priorityConfig.label}</Text>
@@ -255,8 +271,6 @@ export function MaintenanceDetailScreen() {
             </View>
           )}
         </ScrollView>
-
-        <SimpleFAB icon={<Edit2 size={24} color="white" />} onPress={handleEdit} accessibilityLabel="Edit work order" />
 
         <StatusChangeSheet
           visible={showStatusSheet}

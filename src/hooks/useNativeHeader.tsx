@@ -7,9 +7,10 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { ArrowLeft } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
+import { withOpacity } from '@/lib/design-utils';
 
 export interface UseNativeHeaderOptions {
   /** Main title text */
@@ -133,8 +134,16 @@ export function useNativeHeader({
       : hideBackButton
       ? undefined
       : () => (
-          <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
-            <ArrowLeft size={24} color={colors.foreground} />
+          <TouchableOpacity
+            onPress={handleBack}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: withOpacity(colors.muted, 'medium'),
+              },
+            ]}
+          >
+            <ChevronLeft size={ICON_SIZES.xl} color={colors.foreground} />
           </TouchableOpacity>
         ),
     headerRight: rightAction ? () => rightAction : undefined,
@@ -148,6 +157,8 @@ export function useNativeHeader({
   };
 }
 
+const BACK_BUTTON_SIZE = 36;
+
 const styles = StyleSheet.create({
   titleContainer: {
     alignItems: 'center',
@@ -160,7 +171,11 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.xs,
     marginTop: 2,
   },
-  headerButton: {
-    padding: SPACING.sm,
+  backButton: {
+    width: BACK_BUTTON_SIZE,
+    height: BACK_BUTTON_SIZE,
+    borderRadius: BACK_BUTTON_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

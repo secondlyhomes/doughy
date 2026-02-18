@@ -360,6 +360,14 @@ export type { OAuthConnectButtonProps } from './OAuthConnectButton';
 export { DestructiveActionSheet } from './DestructiveActionSheet';
 export type { DestructiveActionSheetProps } from './DestructiveActionSheet';
 
+// Header action menu (vertical "..." for detail screens)
+export { HeaderActionMenu } from './HeaderActionMenu';
+export type { HeaderActionMenuProps, HeaderAction } from './HeaderActionMenu';
+
+// Inline confirmation button (replaces modal delete confirmations)
+export { ConfirmButton } from './ConfirmButton';
+export type { ConfirmButtonProps } from './ConfirmButton';
+
 // Step-up verification (MFA for destructive actions)
 export { StepUpVerificationSheet } from './StepUpVerificationSheet';
 

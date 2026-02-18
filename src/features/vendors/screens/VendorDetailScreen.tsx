@@ -22,11 +22,13 @@ import { ThemedSafeAreaView } from '@/components';
 import {
   LoadingSpinner,
   Button,
-  SimpleFAB,
+  Badge,
   TAB_BAR_SAFE_PADDING,
   Separator,
-  BottomSheet,
   DetailRow,
+  HeaderActionMenu,
+  ConfirmButton,
+  useToast,
 } from '@/components/ui';
 import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
@@ -47,8 +49,8 @@ export function VendorDetailScreen() {
   const propertyId = params.id as string | undefined;
   const vendorId = params.vendorId as string;
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMessageSheet, setShowMessageSheet] = useState(false);
+  const { toast } = useToast();
 
   const { data: vendor, isLoading, refetch, error } = useVendor(vendorId);
   const { deleteVendor, setPrimaryVendor, isDeleting, isUpdating } =
@@ -62,21 +64,14 @@ export function VendorDetailScreen() {
   const { headerOptions, handleBack } = useNativeHeader({
     title: vendor?.name || 'Vendor',
     fallbackRoute,
-    rightAction: vendor?.is_primary ? (
-      <View className="flex-row items-center">
-        <Award size={16} color={colors.primary} />
-        <Text
-          style={{
-            color: colors.primary,
-            fontSize: FONT_SIZES.sm,
-            fontWeight: '600',
-            marginLeft: 4,
-          }}
-        >
-          Primary
-        </Text>
-      </View>
-    ) : undefined,
+    rightAction: (
+      <HeaderActionMenu
+        actions={[
+          { label: 'Edit', icon: Edit2, onPress: () => handleEdit() },
+          { label: 'Delete', icon: Trash2, onPress: () => handleDelete(), destructive: true },
+        ]}
+      />
+    ),
   });
 
   const handleEdit = useCallback(() => {
@@ -115,12 +110,12 @@ export function VendorDetailScreen() {
   const handleDelete = useCallback(async () => {
     try {
       await deleteVendor(vendorId);
-      setShowDeleteConfirm(false);
+      toast({ title: 'Vendor deleted', type: 'success' });
       router.back();
     } catch {
       Alert.alert('Error', 'Failed to delete vendor');
     }
-  }, [deleteVendor, vendorId, router]);
+  }, [deleteVendor, vendorId, router, toast]);
 
   // Loading state
   if (isLoading && !vendor) {
@@ -176,6 +171,20 @@ export function VendorDetailScreen() {
           }
         >
           <VendorHeaderCard vendor={vendor} />
+
+          {/* Primary Badge */}
+          {vendor.is_primary && (
+            <View className="flex-row items-center mb-3">
+              <Badge variant="success" size="lg">
+                <View className="flex-row items-center">
+                  <Award size={14} color={colors.success} />
+                  <Text style={{ color: colors.success, fontSize: FONT_SIZES.sm, fontWeight: '600', marginLeft: 4 }}>
+                    Primary Vendor
+                  </Text>
+                </View>
+              </Badge>
+            </View>
+          )}
 
           <QuickActions
             phone={vendor.phone}
@@ -260,35 +269,9 @@ export function VendorDetailScreen() {
               </Button>
             )}
 
-            <Button
-              variant="destructive"
-              onPress={() => setShowDeleteConfirm(true)}
-              className="flex-row items-center justify-center gap-2"
-            >
-              <Trash2 size={18} color="white" />
-              <Text style={{ color: 'white', fontWeight: '600' }}>Delete Vendor</Text>
-            </Button>
+            <ConfirmButton label="Delete Vendor" onConfirm={handleDelete} />
           </View>
         </ScrollView>
-
-        <SimpleFAB icon={<Edit2 size={24} color="white" />} onPress={handleEdit} accessibilityLabel="Edit vendor" />
-
-        {/* Delete Confirmation Sheet */}
-        <BottomSheet visible={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Vendor">
-          <View className="py-4">
-            <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.base, textAlign: 'center' }}>
-              Are you sure you want to delete <Text style={{ fontWeight: '700' }}>{vendor.name}</Text>?
-            </Text>
-          </View>
-          <View className="flex-row gap-3 pt-4 pb-6">
-            <Button variant="outline" onPress={() => setShowDeleteConfirm(false)} className="flex-1" disabled={isDeleting}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onPress={handleDelete} className="flex-1" disabled={isDeleting}>
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </View>
-        </BottomSheet>
 
         <MessageVendorSheet visible={showMessageSheet} onClose={() => setShowMessageSheet(false)} vendor={vendor} context={{ type: 'general' }} />
       </ThemedSafeAreaView>

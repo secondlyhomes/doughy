@@ -1,7 +1,7 @@
 // src/features/property-inventory/screens/inventory-detail/InventoryItemDetailScreen.tsx
 // Detail screen for viewing and editing an inventory item
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import {
@@ -22,12 +22,13 @@ import {
   LoadingSpinner,
   Button,
   Badge,
-  SimpleFAB,
   TAB_BAR_SAFE_PADDING,
   Separator,
   PhotoGallery,
-  BottomSheet,
   DetailRow,
+  HeaderActionMenu,
+  ConfirmButton,
+  useToast,
 } from '@/components/ui';
 import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
@@ -46,8 +47,7 @@ export function InventoryItemDetailScreen() {
   const params = useLocalSearchParams();
   const propertyId = params.id as string;
   const itemId = params.itemId as string;
-
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { toast } = useToast();
 
   const {
     data: item,
@@ -58,15 +58,21 @@ export function InventoryItemDetailScreen() {
 
   const { deleteItem, isDeleting } = useInventoryMutations(propertyId);
 
-  // Get condition config for header badge (use default if item not loaded yet)
+  // Condition config moved from header to content area
   const conditionConfig = item ? INVENTORY_CONDITION_CONFIG[item.condition] : null;
 
   const { headerOptions, handleBack } = useNativeHeader({
     title: item?.name || 'Inventory Item',
     fallbackRoute: `/(tabs)/rental-properties/${propertyId}/inventory`,
-    rightAction: conditionConfig ? (
-      <Badge variant={conditionConfig.variant}>{conditionConfig.label}</Badge>
-    ) : undefined,
+    rightAction: (
+      <HeaderActionMenu
+        actions={[
+          { label: 'Edit', icon: Edit2, onPress: () => handleEdit() },
+          { label: 'Log Maintenance', icon: Wrench, onPress: () => handleLogMaintenance() },
+          { label: 'Delete', icon: Trash2, onPress: () => handleDelete(), destructive: true },
+        ]}
+      />
+    ),
   });
 
   const handleEdit = useCallback(() => {
@@ -78,7 +84,7 @@ export function InventoryItemDetailScreen() {
   const handleDelete = useCallback(async () => {
     try {
       await deleteItem(itemId);
-      setShowDeleteConfirm(false);
+      toast({ title: 'Item deleted', type: 'success' });
       router.back();
     } catch (err) {
       Alert.alert(
@@ -86,7 +92,7 @@ export function InventoryItemDetailScreen() {
         err instanceof Error ? err.message : 'Failed to delete item'
       );
     }
-  }, [deleteItem, itemId, router]);
+  }, [deleteItem, itemId, router, toast]);
 
   const handleLogMaintenance = useCallback(() => {
     router.push(
@@ -168,8 +174,13 @@ export function InventoryItemDetailScreen() {
             />
           </View>
 
-          {/* Category Badge */}
-          <View className="flex-row items-center mb-4">
+          {/* Category & Condition Badges */}
+          <View className="flex-row items-center mb-4 flex-wrap gap-2">
+            {conditionConfig && (
+              <Badge variant={conditionConfig.variant} size="lg">
+                {conditionConfig.label}
+              </Badge>
+            )}
             <Badge variant="secondary" size="lg">
               {categoryLabel}
             </Badge>
@@ -386,72 +397,12 @@ export function InventoryItemDetailScreen() {
               </Text>
             </Button>
 
-            <Button
-              variant="destructive"
-              onPress={() => setShowDeleteConfirm(true)}
-              className="flex-row items-center justify-center gap-2"
-            >
-              <Trash2 size={18} color="white" />
-              <Text style={{ color: 'white', fontWeight: '600' }}>Delete Item</Text>
-            </Button>
+            <ConfirmButton
+              label="Delete Item"
+              onConfirm={handleDelete}
+            />
           </View>
         </ScrollView>
-
-        {/* Edit FAB */}
-        <SimpleFAB
-          icon={<Edit2 size={24} color="white" />}
-          onPress={handleEdit}
-          accessibilityLabel="Edit item"
-        />
-
-        {/* Delete Confirmation Sheet */}
-        <BottomSheet
-          visible={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          title="Delete Item"
-        >
-          <View className="py-4">
-            <Text
-              style={{
-                color: colors.foreground,
-                fontSize: FONT_SIZES.base,
-                textAlign: 'center',
-              }}
-            >
-              Are you sure you want to delete{' '}
-              <Text style={{ fontWeight: '700' }}>{item.name}</Text>?
-            </Text>
-            <Text
-              style={{
-                color: colors.mutedForeground,
-                fontSize: FONT_SIZES.sm,
-                textAlign: 'center',
-                marginTop: 8,
-              }}
-            >
-              This action cannot be undone.
-            </Text>
-          </View>
-
-          <View className="flex-row gap-3 pt-4 pb-6">
-            <Button
-              variant="outline"
-              onPress={() => setShowDeleteConfirm(false)}
-              className="flex-1"
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onPress={handleDelete}
-              className="flex-1"
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </View>
-        </BottomSheet>
       </ThemedSafeAreaView>
     </>
   );

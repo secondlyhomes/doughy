@@ -6,7 +6,7 @@ import { View, Text, ScrollView, Linking, TouchableOpacity, RefreshControl, Plat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { Phone, Mail, Building2, MapPin, Tag, Clock, ArrowLeft } from 'lucide-react-native';
+import { Phone, Mail, Building2, MapPin, Tag, Clock, ChevronLeft } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
 import { LoadingSpinner, ListEmptyState, Badge, Section, DetailRow, CallPilotActions } from '@/components/ui';
@@ -86,8 +86,18 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
         </View>
       ),
       headerLeft: () => (
-        <TouchableOpacity onPress={handleBack} style={{ padding: SPACING.sm }}>
-          <ArrowLeft size={24} color={colors.foreground} />
+        <TouchableOpacity
+          onPress={handleBack}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: `${colors.muted}80`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ChevronLeft size={24} color={colors.foreground} />
         </TouchableOpacity>
       ),
     }),
