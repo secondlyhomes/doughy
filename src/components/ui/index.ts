@@ -1,0 +1,416 @@
+// src/components/ui/index.ts
+// Export all UI components for easy importing
+
+// Base components
+export { Button } from './Button';
+export type { ButtonProps } from './Button';
+
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+
+export { DataCard } from './DataCard';
+export type { DataCardProps, DataCardField, DataCardBadge, DataCardAction } from './DataCard';
+
+export { DetailRow } from './DetailRow';
+export type { DetailRowProps } from './DetailRow';
+
+export { Section } from './Section';
+export type { SectionProps } from './Section';
+
+export { DocumentCard, DocumentCardCompact } from './DocumentCard';
+export type { DocumentCardProps, DocumentCardDocument } from './DocumentCard';
+
+export { PortfolioSummaryCard } from './PortfolioSummaryCard';
+export type { PortfolioSummaryCardProps, PortfolioMetrics } from './PortfolioSummaryCard';
+
+export { PortfolioPropertyCard } from './PortfolioPropertyCard';
+export type { PortfolioPropertyCardProps, PortfolioProperty, PropertyStatus } from './PortfolioPropertyCard';
+
+export { RelatedDealsCard } from './RelatedDealsCard';
+export type { RelatedDealsCardProps, RelatedDeal, RelatedDealType } from './RelatedDealsCard';
+
+export {
+  EmptyPortfolioState,
+  EmptyPortfolioFirstTime,
+  EmptyPortfolioFiltered,
+  EmptyPortfolioError,
+} from './EmptyPortfolioState';
+export type { EmptyPortfolioStateProps, EmptyPortfolioStateType, EmptyPortfolioAction } from './EmptyPortfolioState';
+
+// AI & Automation UI components
+export { VoiceRecordButton } from './VoiceRecordButton';
+export type { VoiceRecordButtonProps } from './VoiceRecordButton';
+
+export { PhotoCaptureButton } from './PhotoCaptureButton';
+export type { PhotoCaptureButtonProps } from './PhotoCaptureButton';
+
+export { AIExtractionPreview } from './AIExtractionPreview';
+export type { AIExtractionPreviewProps, ExtractedField, ConfidenceLevel } from './AIExtractionPreview';
+
+export { CalculationEvidence } from './CalculationEvidence';
+export type {
+  CalculationEvidenceProps,
+  CalculationStep,
+  EvidenceSource,
+  CalculationStatus,
+} from './CalculationEvidence';
+
+export { OverrideCalculationSheet } from './OverrideCalculationSheet';
+export type { OverrideCalculationSheetProps, CalculationOverride } from './OverrideCalculationSheet';
+
+export { Timeline } from './Timeline';
+export type { TimelineProps, TimelineEvent, TimelineEventConfig } from './Timeline';
+
+export { Input } from './Input';
+export type { InputProps } from './Input';
+
+export { FormField } from './FormField';
+export type { FormFieldProps } from './FormField';
+
+export { SearchBar } from './SearchBar';
+export type { SearchBarProps } from './SearchBar';
+
+export { FilterSearchBar } from './FilterSearchBar';
+export type { FilterSearchBarProps, FilterPill } from './FilterSearchBar';
+
+export { CallPilotActions } from './CallPilotActions';
+export type { CallPilotActionsProps } from './CallPilotActions';
+
+export { CommunicationHistory } from './CommunicationHistory';
+export type { CommunicationHistoryProps, CommunicationEntry } from './CommunicationHistory';
+
+export { TextArea } from './TextArea';
+export type { TextAreaProps } from './TextArea';
+
+export { Label } from './Label';
+export type { LabelProps } from './Label';
+
+export { Badge } from './Badge';
+export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
+
+export { Switch } from './Switch';
+export type { SwitchProps } from './Switch';
+
+export { Checkbox } from './Checkbox';
+export type { CheckboxProps } from './Checkbox';
+
+export { RadioGroup, RadioGroupItem } from './RadioGroup';
+export type { RadioGroupProps, RadioGroupItemProps } from './RadioGroup';
+
+export { Select } from './Select';
+export type { SelectProps, SelectOption } from './Select';
+
+// Layout components
+export { Separator } from './Separator';
+export type { SeparatorProps } from './Separator';
+
+export { Skeleton } from './Skeleton';
+export type { SkeletonProps } from './Skeleton';
+
+export {
+  PropertyCardSkeleton,
+  DealCardSkeleton,
+  LeadCardSkeleton,
+  DataCardSkeleton,
+  ListItemSkeleton,
+  SkeletonList,
+} from './CardSkeletons';
+
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
+export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps } from './Tabs';
+
+export { ContextSwitcher } from './ContextSwitcher';
+export type { ContextSwitcherProps, ContextOption } from './ContextSwitcher';
+
+export { PlatformSwitcher } from './PlatformSwitcher';
+export type { PlatformSwitcherProps } from './PlatformSwitcher';
+
+export { PlatformBadge } from './PlatformBadge';
+export type { PlatformBadgeProps } from './PlatformBadge';
+
+export { ScrollArea } from './ScrollArea';
+export type { ScrollAreaProps } from './ScrollArea';
+
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './Collapsible';
+export type { CollapsibleProps, CollapsibleTriggerProps, CollapsibleContentProps } from './Collapsible';
+
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './Accordion';
+export type { AccordionProps, AccordionItemProps, AccordionTriggerProps, AccordionContentProps } from './Accordion';
+
+// Feedback components
+export { Alert, AlertTitle, AlertDescription } from './Alert';
+export type { AlertProps, AlertTitleProps, AlertDescriptionProps } from './Alert';
+
+export { Progress } from './Progress';
+export type { ProgressProps } from './Progress';
+
+export { LoadingSpinner } from './LoadingSpinner';
+export type { LoadingSpinnerProps } from './LoadingSpinner';
+
+export { ToastProvider, useToast, toast } from './Toast';
+export type { ToastMessage, ToastType } from './Toast';
+
+// Overlay components
+export {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalTitle,
+  ModalDescription,
+  // Aliases for Dialog naming
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from './Modal';
+export type { ModalProps, ModalContentProps } from './Modal';
+
+export {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from './AlertDialog';
+export type {
+  AlertDialogProps,
+  AlertDialogContentProps,
+  AlertDialogHeaderProps,
+  AlertDialogFooterProps,
+  AlertDialogTitleProps,
+  AlertDialogDescriptionProps,
+  AlertDialogActionProps,
+  AlertDialogCancelProps,
+} from './AlertDialog';
+
+export { Popover, PopoverTrigger, PopoverContent } from './Popover';
+export type { PopoverProps, PopoverTriggerProps, PopoverContentProps } from './Popover';
+
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
+} from './DropdownMenu';
+export type {
+  DropdownMenuProps,
+  DropdownMenuTriggerProps,
+  DropdownMenuContentProps,
+  DropdownMenuItemProps,
+  DropdownMenuSeparatorProps,
+  DropdownMenuLabelProps,
+  DropdownMenuGroupProps,
+} from './DropdownMenu';
+
+export { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './Tooltip';
+export type { TooltipProps, TooltipProviderProps, TooltipTriggerProps, TooltipContentProps } from './Tooltip';
+
+// Display components
+export { Avatar, AvatarImage, AvatarFallback } from './Avatar';
+export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from './Avatar';
+
+export { EmptyState } from './EmptyState';
+export type { EmptyStateProps } from './EmptyState';
+
+export { ListEmptyState } from './ListEmptyState';
+export type { ListEmptyStateProps, ListEmptyAction, ListEmptyStateType } from './ListEmptyState';
+
+export { Table, TableRoot, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table';
+export type { TableProps, TableColumn } from './Table';
+
+export { Carousel, CarouselItem } from './Carousel';
+export type { CarouselProps, CarouselItemProps } from './Carousel';
+
+// Navigation components
+export {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from './Breadcrumb';
+export type {
+  BreadcrumbProps,
+  BreadcrumbItemProps,
+  BreadcrumbLinkProps,
+  BreadcrumbPageProps,
+  BreadcrumbSeparatorProps,
+  BreadcrumbEllipsisProps,
+} from './Breadcrumb';
+
+export { Pagination } from './Pagination';
+export type { PaginationProps } from './Pagination';
+
+// Date/Time components
+export { Calendar } from './Calendar';
+export type { CalendarProps, MarkedDateStyle } from './Calendar';
+
+export { DatePicker } from './DatePicker';
+export type { DatePickerProps } from './DatePicker';
+
+// File/Media components
+export { FileUpload } from './FileUpload';
+export type { FileUploadProps } from './FileUpload';
+
+export { ImagePicker } from './ImagePickerComponent';
+export type { ImagePickerProps } from './ImagePickerComponent';
+
+// Input components
+export { OTPInput } from './OTPInput';
+export type { OTPInputProps } from './OTPInput';
+
+export { AddressAutocomplete } from './AddressAutocomplete';
+export type { AddressAutocompleteProps, AddressValue } from './AddressAutocomplete';
+
+// New unified address autofill (combines DB + OSM with verification)
+export { AddressAutofill, AddressSuggestionItem, useAddressAutofill } from './AddressAutofill';
+export type {
+  AddressAutofillProps,
+  AddressValue as AddressAutofillValue,
+  AddressSource,
+  AddressSuggestion,
+} from './AddressAutofill';
+
+// Bottom Sheet
+export { BottomSheet, BottomSheetSection } from './BottomSheet';
+export type { BottomSheetProps, BottomSheetSectionProps } from './BottomSheet';
+
+// Focused Sheet (iOS Page Sheet for complex forms)
+export { FocusedSheet, FocusedSheetSection, FocusedSheetFooter } from './FocusedSheet';
+export type { FocusedSheetProps, FocusedSheetSectionProps, FocusedSheetFooterProps } from './FocusedSheet';
+
+// Filter Sheet (built on BottomSheet/Modal)
+export {
+  FilterSheet,
+  FilterSection,
+  FilterOptionButton,
+  FilterChip,
+  FilterToggleRow,
+} from './FilterSheet';
+export type {
+  FilterSheetProps,
+  FilterSectionProps,
+  FilterOptionButtonProps,
+  FilterChipProps,
+  FilterToggleRowProps,
+} from './FilterSheet';
+
+// Screen Header
+export { ScreenHeader } from './ScreenHeader';
+export type { ScreenHeaderProps } from './ScreenHeader';
+
+// Floating Action Button
+export { SimpleFAB } from './SimpleFAB';
+export type { SimpleFABProps } from './SimpleFAB';
+
+// Glass components
+export { GlassView, GlassBackdrop, isLiquidGlassSupported } from './GlassView';
+export type { GlassViewProps, GlassBackdropProps } from './GlassView';
+
+// Hub components (for Property Management dashboard)
+export { HubCard } from './HubCard';
+export type { HubCardProps } from './HubCard';
+
+export { PhotoGallery } from './PhotoGallery';
+export type { PhotoGalleryProps, PhotoItem } from './PhotoGallery';
+
+export { GlassButton } from './GlassButton';
+export type { GlassButtonProps } from './GlassButton';
+
+export { ConversationHeader } from './ConversationHeader';
+export type { ConversationHeaderProps } from './ConversationHeader';
+
+export { MessageBubble } from './MessageBubble';
+export type {
+  MessageBubbleProps,
+  MessageDirection,
+  MessageRole,
+  TimeFormat,
+} from './MessageBubble';
+
+// Property cards
+export { PropertyImageCard } from './PropertyImageCard';
+export type {
+  PropertyImageCardProps,
+  PropertyImageCardBadgeOverlay,
+  BadgeVariant as PropertyImageCardBadgeVariant,
+} from './PropertyImageCard';
+
+export { MetricsRow } from './MetricsRow';
+export type { MetricsRowProps, Metric } from './MetricsRow';
+
+// Header components
+export { HeaderBackButton } from './HeaderBackButton';
+export type { HeaderBackButtonProps } from './HeaderBackButton';
+
+// OAuth components
+export { OAuthConnectButton } from './OAuthConnectButton';
+export type { OAuthConnectButtonProps } from './OAuthConnectButton';
+
+// Action sheets
+export { DestructiveActionSheet } from './DestructiveActionSheet';
+export type { DestructiveActionSheetProps } from './DestructiveActionSheet';
+
+// Header action menu (vertical "..." for detail screens)
+export { HeaderActionMenu } from './HeaderActionMenu';
+export type { HeaderActionMenuProps, HeaderAction } from './HeaderActionMenu';
+
+// Inline confirmation button (replaces modal delete confirmations)
+export { ConfirmButton } from './ConfirmButton';
+export type { ConfirmButtonProps } from './ConfirmButton';
+
+// Step-up verification (MFA for destructive actions)
+export { StepUpVerificationSheet } from './StepUpVerificationSheet';
+
+// Filterable tabs
+export { FilterableTabs } from './FilterableTabs';
+export type { FilterableTabsProps, FilterableTab } from './FilterableTabs';
+
+// Navigation components
+export {
+  FloatingGlassTabBar,
+  TAB_BAR_HEIGHT,
+  TAB_BAR_BOTTOM_OFFSET,
+  TAB_BAR_SAFE_PADDING,
+  FAB_BOTTOM_OFFSET,
+  FAB_RIGHT_MARGIN,
+  FAB_LEFT_MARGIN,
+  FAB_Z_INDEX,
+  FAB_SIZE,
+} from './FloatingGlassTabBar';
+export type { FloatingGlassTabBarProps } from './FloatingGlassTabBar';
+
+// FAB Styling Utilities
+export { getFABShadowStyle } from './fab-styles';
+export type { FABShadowOptions } from './fab-styles';
+
+// Design System Utilities
+export { getShadowStyle, withOpacity } from '@/lib/design-utils';
+export type { ShadowOptions } from '@/lib/design-utils';
+
+// Design System Tokens
+export {
+  SPACING,
+  BORDER_RADIUS,
+  OPACITY,
+  OPACITY_VALUES,
+  GLASS_BLUR,
+  SHADOWS,
+  ICON_SIZES,
+  FONT_SIZES,
+  FONT_WEIGHTS,
+  LINE_HEIGHTS,
+  TOUCH_TARGETS,
+  DEFAULT_HIT_SLOP,
+  PRESS_OPACITY,
+  UI_TIMING,
+} from '@/constants/design-tokens';

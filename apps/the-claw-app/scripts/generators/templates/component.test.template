@@ -1,0 +1,48 @@
+/**
+ * {{NAME}} Component Tests
+ *
+ * Generated: {{DATE}}
+ */
+
+import React from 'react'
+import { render, screen } from '@testing-library/react-native'
+import { {{NAME}} } from '../{{NAME}}'
+import { ThemeProvider } from '@/theme'
+
+describe('{{NAME}}', () => {
+  it('renders correctly', () => {
+    render(
+      <ThemeProvider>
+        <{{NAME}} />
+      </ThemeProvider>
+    )
+
+    // Add assertions
+    expect(screen).toBeTruthy()
+  })
+
+  it('applies custom styles', () => {
+    const customStyle = { backgroundColor: 'red' }
+
+    const { container } = render(
+      <ThemeProvider>
+        <{{NAME}} style={customStyle} />
+      </ThemeProvider>
+    )
+
+    // Verify custom styles are applied
+    expect(container).toBeTruthy()
+  })
+
+  it('renders children', () => {
+    render(
+      <ThemeProvider>
+        <{{NAME}}>
+          <Text>Test Content</Text>
+        </{{NAME}}>
+      </ThemeProvider>
+    )
+
+    expect(screen.getByText('Test Content')).toBeTruthy()
+  })
+})

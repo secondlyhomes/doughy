@@ -1,0 +1,141 @@
+# CLAUDE.md - Claude-Specific Instructions
+
+> **Base Instructions:** See [AGENTS.md](AGENTS.md) for universal project context.
+
+This file extends AGENTS.md with features specific to Claude Code.
+
+---
+
+## Claude-Specific Features
+
+### 1. Extended Thinking Mode
+
+**Activate:** Press **Tab** key or use trigger phrases:
+- "think step by step"
+- "think harder"
+- "ultrathink"
+
+**Best for:** Complex reasoning tasks (debugging, architecture decisions, refactoring logic)
+
+### 2. Research Mode
+
+**Best for:** Tasks requiring 5+ tool calls (gathering info, analyzing multiple files)
+
+Research mode auto-enables extended thinking. Use together for complex features.
+
+### 3. Task Tool (Parallel Agents)
+
+Launch specialized agents for complex tasks:
+- **Explore agents:** "Where is X implemented?" (don't grep manually)
+- **Plan agents:** Design implementation before coding
+- **Feature-dev agents:** Guided feature development
+
+**Run agents in parallel** for independent tasks (use single message with multiple Task calls).
+
+### 4. Memory System
+
+**Location:** `.claude/memory/`
+- `MEMORY.md` - Auto-loaded at session start (keep under 200 lines)
+- `sessions/` - Daily session summaries
+- `decisions/` - Key architectural decisions
+
+**Skills:**
+- `/start-session` - Load context, check GitHub issues
+- `/wrap-up` - Update notes, close issues, sync memory
+
+### 5. MCP Servers
+
+**Available via `claude mcp add`:**
+- Pre-built: GitHub, Postgres, Git
+- Custom: Build your own for project-specific tools
+
+---
+
+## Claude-Optimized Workflows
+
+### Before Implementing Features
+
+1. **Use Explore agent** to understand existing code
+2. **Use Plan agent** to design approach
+3. **Get user approval** before writing code
+4. **Implement with verification**
+
+### For Complex Tasks
+
+- Enable extended thinking (Tab key)
+- Launch multiple agents in parallel if independent
+- Use TodoWrite to track progress
+- Update session notes with `/wrap-up`
+
+### Context Management
+
+**Watch token percentage in status bar:**
+- 0-70%: Work normally
+- 70%+: Consider `/compact`
+- 80%+: Exit and restart for complex work
+
+---
+
+## Claude Hooks Integration
+
+Configure hooks in `.claude/settings.json` for automation:
+
+**Example: Auto-format on edit**
+```json
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "command": "prettier --write \"$FILE_PATH\""
+    }]
+  }
+}
+```
+
+---
+
+## GitHub Integration
+
+Claude can interact with GitHub via `gh` CLI:
+
+```bash
+# Issues
+gh issue list
+gh issue view 123
+gh issue create --title "..." --body "..."
+
+# PRs
+gh pr list
+gh pr view 123
+gh pr create --title "..." --body "..."
+
+# Project boards
+gh project list --owner your-org
+```
+
+**Automatic:** Claude checks issues at session start if `/start-session` enabled.
+
+---
+
+## Skills Available
+
+Run skills with Skill tool:
+- `/start-session` - Start session with context
+- `/wrap-up` - End session, update notes
+- `/commit` - Create git commit
+- `/commit-push-pr` - Commit, push, create PR
+- `/review-pr` - Review pull request
+
+---
+
+## Best Practices with Claude
+
+1. **Always read files before editing** - Never propose changes to unread code
+2. **Use TodoWrite for complex tasks** - Track progress visibly
+3. **Launch agents proactively** - Don't grep/glob manually for open-ended searches
+4. **Verify before claiming complete** - Run commands, check output
+5. **Update memory after significant work** - Use `/wrap-up`
+
+---
+
+For universal project context, see [AGENTS.md](AGENTS.md).

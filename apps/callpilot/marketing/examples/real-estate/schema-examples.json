@@ -1,0 +1,85 @@
+{
+  "realEstateAgent": {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "[AGENCY-NAME]",
+    "description": "[AGENCY-DESCRIPTION]",
+    "url": "https://[YOUR-DOMAIN].com",
+    "telephone": "[PHONE]",
+    "email": "[EMAIL]",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "[STREET]",
+      "addressLocality": "[CITY]",
+      "addressRegion": "[STATE]",
+      "postalCode": "[ZIP]",
+      "addressCountry": "US"
+    },
+    "areaServed": [
+      { "@type": "City", "name": "[CITY-1], [STATE]" },
+      { "@type": "City", "name": "[CITY-2], [STATE]" }
+    ],
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "opens": "09:00",
+        "closes": "18:00"
+      }
+    ]
+  },
+  "realEstateListing": {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": "[BEDROOMS]BR [TYPE] for [RENT/SALE] in [CITY]",
+    "description": "[PROPERTY-DESCRIPTION]",
+    "url": "https://[YOUR-DOMAIN].com/listings/[SLUG]",
+    "datePosted": "[YYYY-MM-DD]",
+    "image": [
+      "https://[YOUR-DOMAIN].com/images/[LISTING-IMAGE-1].jpg"
+    ],
+    "offers": {
+      "@type": "Offer",
+      "price": "[PRICE]",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "[STREET]",
+      "addressLocality": "[CITY]",
+      "addressRegion": "[STATE]",
+      "postalCode": "[ZIP]",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "[LAT]",
+      "longitude": "[LNG]"
+    },
+    "numberOfRooms": "[BEDROOMS]",
+    "numberOfBathroomsTotal": "[BATHROOMS]",
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": "[SQFT]",
+      "unitCode": "FTK"
+    }
+  },
+  "neighborhood": {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    "name": "[NEIGHBORHOOD], [CITY], [STATE]",
+    "description": "[NEIGHBORHOOD-DESCRIPTION]",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "[CITY]",
+      "addressRegion": "[STATE]",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "[LAT]",
+      "longitude": "[LNG]"
+    }
+  }
+}

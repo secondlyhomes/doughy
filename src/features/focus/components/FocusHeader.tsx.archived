@@ -1,0 +1,144 @@
+// src/features/focus/components/FocusHeader.tsx
+// Header with mode switcher and property selector for Focus tab
+
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Target, Plus, ChevronDown } from 'lucide-react-native';
+import { useThemeColors } from '@/context/ThemeContext';
+import { useFocusMode, FocusTabMode, FocusedProperty } from '@/context/FocusModeContext';
+import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { withOpacity, getShadowStyle } from '@/lib/design-utils';
+import { ContextSwitcher } from '@/components/ui/ContextSwitcher';
+import { PropertySelector } from './PropertySelector';
+import { FocusedPropertyCard } from './FocusedPropertyCard';
+import { useRecentProperties } from '../hooks/useRecentProperties';
+
+interface FocusHeaderProps {
+  nudgeCount?: number;
+  inboxCount?: number;
+}
+
+export function FocusHeader({ nudgeCount = 0, inboxCount }: FocusHeaderProps) {
+  // Use inboxCount if provided, otherwise fall back to nudgeCount
+  const displayCount = inboxCount ?? nudgeCount;
+  const colors = useThemeColors();
+  const {
+    activeMode,
+    setActiveMode,
+    focusedProperty,
+    setFocusedProperty,
+  } = useFocusMode();
+  const { addRecentProperty } = useRecentProperties();
+  const [showPropertySelector, setShowPropertySelector] = useState(false);
+
+  const handleModeChange = (mode: string) => {
+    setActiveMode(mode as FocusTabMode);
+  };
+
+  const handleSelectProperty = (property: FocusedProperty) => {
+    setFocusedProperty(property);
+    addRecentProperty(property.id);
+    // Auto-switch to focus mode when property is selected
+    if (activeMode !== 'focus') {
+      setActiveMode('focus');
+    }
+  };
+
+  const handleClearProperty = () => {
+    setFocusedProperty(null);
+  };
+
+  const modeContexts = [
+    {
+      id: 'focus',
+      label: 'Focus',
+    },
+    {
+      id: 'inbox',
+      label: displayCount > 0 ? `Inbox (${displayCount})` : 'Inbox',
+    },
+  ];
+
+  return (
+    <View style={{ paddingHorizontal: SPACING.md, gap: SPACING.md }}>
+      {/* Mode Switcher */}
+      <View style={{ alignItems: 'center' }}>
+        <ContextSwitcher
+          contexts={modeContexts}
+          value={activeMode}
+          onChange={handleModeChange}
+          size="md"
+        />
+      </View>
+
+      {/* Focus Mode: Property selector or focused property card */}
+      {activeMode === 'focus' && (
+        <View>
+          {focusedProperty ? (
+            <FocusedPropertyCard
+              property={focusedProperty}
+              onClear={handleClearProperty}
+              onPress={() => setShowPropertySelector(true)}
+            />
+          ) : (
+            <TouchableOpacity
+              onPress={() => setShowPropertySelector(true)}
+              activeOpacity={0.8}
+              style={{
+                backgroundColor: colors.card,
+                borderRadius: BORDER_RADIUS.xl,
+                padding: SPACING.lg,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderStyle: 'dashed',
+                borderColor: colors.border,
+                gap: SPACING.sm,
+              }}
+            >
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: withOpacity(colors.primary, 'light'),
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Target size={ICON_SIZES.lg} color={colors.primary} />
+              </View>
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontWeight: '600',
+                  color: colors.foreground,
+                }}
+              >
+                Select a property to focus on
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: colors.mutedForeground,
+                  textAlign: 'center',
+                }}
+              >
+                All captures will be auto-linked to this property
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* Property Selector Sheet */}
+      <PropertySelector
+        visible={showPropertySelector}
+        onClose={() => setShowPropertySelector(false)}
+        onSelect={handleSelectProperty}
+      />
+    </View>
+  );
+}
+
+export default FocusHeader;

@@ -1,0 +1,44 @@
+/**
+ * {{NAME}} Hook Tests
+ *
+ * Generated: {{DATE}}
+ */
+
+import { renderHook, act } from '@testing-library/react-native'
+import { {{NAME}} } from '../{{CAMEL_NAME}}'
+
+describe('{{NAME}}', () => {
+  it('initializes with default value', () => {
+    const { result } = renderHook(() => {{NAME}}())
+
+    expect(result.current.value).toBe('')
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.error).toBe(null)
+  })
+
+  it('accepts initial value', () => {
+    const { result } = renderHook(() => {{NAME}}({ initialValue: 'test' }))
+
+    expect(result.current.value).toBe('test')
+  })
+
+  it('updates value', () => {
+    const { result } = renderHook(() => {{NAME}}())
+
+    act(() => {
+      result.current.setValue('new value')
+    })
+
+    expect(result.current.value).toBe('new value')
+  })
+
+  it('handles refresh', async () => {
+    const { result } = renderHook(() => {{NAME}}())
+
+    await act(async () => {
+      await result.current.refresh()
+    })
+
+    expect(result.current.error).toBe(null)
+  })
+})

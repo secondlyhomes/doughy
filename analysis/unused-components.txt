@@ -1,0 +1,56 @@
+Zone H: Unused Components Analysis
+Date: 2026-01-16 16:35:00
+
+Note: This is a preliminary analysis. Components may appear "unused"
+but are actually used via:
+- Navigation/routing configuration
+- Dynamic imports
+- Barrel exports (index.ts)
+- Entry points
+
+============================================
+Screen Components (56 total)
+============================================
+Screen components are typically entry points for navigation.
+Manual review recommended before any deletion.
+
+Categories:
+- Assistant: 1 (AssistantScreen)
+- Auth: 8 (LoginScreen, SignupScreen, etc.)
+- Settings: 7 (SettingsScreen, ProfileScreen, etc.)
+- Leads: 4 (LeadsListScreen, etc.)
+- Real Estate: 5 (PropertyListScreen, etc.)
+- Admin: 6 (AdminDashboardScreen, etc.)
+- Deals: 6 (DealsListScreen, DealCockpitScreen, etc.)
+- Dashboard: 1 (DashboardScreen)
+- Field Mode: 1 (FieldModeScreen)
+- Public: 10 (LandingScreen, PricingScreen, etc.)
+- Others: 7 (PortfolioScreen, AnalyticsScreen, etc.)
+
+============================================
+Card Components (13 total)
+============================================
+- LeadCard, SwipeableLeadCard
+- PropertyCard, CompCard, RelatedDealsCard
+- RepairSummaryCard, FinancingScenarioCard
+- IntegrationHealthCard
+- PhotoBucketCard
+- NotificationCard
+- PortfolioSummaryCard, PortfolioPropertyCard
+- SuggestionCard
+
+============================================
+Modal Components (1 total)
+============================================
+- AskDoughyModal
+
+============================================
+Summary
+============================================
+Total screens: 56
+Total cards: 13
+Total modals: 1
+
+IMPORTANT: Screen components are navigation entry points.
+Do NOT delete based on import analysis alone.
+Check src/navigation/ for routing references.

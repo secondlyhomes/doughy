@@ -1,0 +1,218 @@
+{
+  "React Native Screen": {
+    "prefix": "rnscreen",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "import { View, Text, StyleSheet } from 'react-native';",
+      "",
+      "export function ${1:ScreenName}Screen() {",
+      "  return (",
+      "    <View style={styles.container}>",
+      "      <Text>${1:ScreenName}</Text>",
+      "    </View>",
+      "  );",
+      "}",
+      "",
+      "const styles = StyleSheet.create({",
+      "  container: {",
+      "    flex: 1,",
+      "    justifyContent: 'center',",
+      "    alignItems: 'center',",
+      "  },",
+      "});",
+      "$0"
+    ],
+    "description": "Create a new React Native screen component"
+  },
+  "React Native Hook": {
+    "prefix": "rnhook",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "import { useState, useEffect } from 'react';",
+      "",
+      "export function use${1:HookName}() {",
+      "  const [${2:data}, set${2/(.*)/${1:/capitalize}/}] = useState${3:<${4:type}>}(${5:initialValue});",
+      "",
+      "  useEffect(() => {",
+      "    $0",
+      "  }, []);",
+      "",
+      "  return { ${2:data} };",
+      "}"
+    ],
+    "description": "Create a custom React hook"
+  },
+  "React Native Component": {
+    "prefix": "rncomp",
+    "scope": "typescriptreact",
+    "body": [
+      "import { View, StyleSheet } from 'react-native';",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  $2",
+      "}",
+      "",
+      "export function ${1:ComponentName}({ $3 }: ${1:ComponentName}Props) {",
+      "  return (",
+      "    <View style={styles.container}>",
+      "      $0",
+      "    </View>",
+      "  );",
+      "}",
+      "",
+      "const styles = StyleSheet.create({",
+      "  container: {},",
+      "});"
+    ],
+    "description": "Create a React Native component with props"
+  },
+  "Service Function": {
+    "prefix": "rnsvc",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "/**",
+      " * ${2:Description of function}",
+      " */",
+      "export async function ${1:functionName}(${3:params}): Promise<${4:void}> {",
+      "  try {",
+      "    $0",
+      "  } catch (error) {",
+      "    console.error('Error in ${1:functionName}:', error);",
+      "    throw error;",
+      "  }",
+      "}"
+    ],
+    "description": "Create a service function with error handling"
+  },
+  "Supabase Query": {
+    "prefix": "rnsupabase",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "const { data, error } = await supabase",
+      "  .from('${1:table_name}')",
+      "  .select('${2:*}')",
+      "  .${3|eq,neq,gt,gte,lt,lte,like,ilike,is,in|}('${4:column}', ${5:value});",
+      "",
+      "if (error) throw error;",
+      "return data;",
+      "$0"
+    ],
+    "description": "Create a Supabase query"
+  },
+  "Supabase Insert": {
+    "prefix": "rnsupabaseinsert",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "const { data, error } = await supabase",
+      "  .from('${1:table_name}')",
+      "  .insert({",
+      "    ${2:column}: ${3:value},",
+      "  })",
+      "  .select();",
+      "",
+      "if (error) throw error;",
+      "return data;",
+      "$0"
+    ],
+    "description": "Create a Supabase insert query"
+  },
+  "Supabase Update": {
+    "prefix": "rnsupabaseupdate",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "const { data, error } = await supabase",
+      "  .from('${1:table_name}')",
+      "  .update({ ${2:column}: ${3:value} })",
+      "  .eq('${4:id_column}', ${5:id})",
+      "  .select();",
+      "",
+      "if (error) throw error;",
+      "return data;",
+      "$0"
+    ],
+    "description": "Create a Supabase update query"
+  },
+  "Test Case": {
+    "prefix": "rntest",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "describe('${1:ComponentName}', () => {",
+      "  it('should ${2:test behavior}', () => {",
+      "    $0",
+      "    expect(${3:result}).toBe(${4:expected});",
+      "  });",
+      "});"
+    ],
+    "description": "Create a Jest test case"
+  },
+  "Test Case Async": {
+    "prefix": "rntestasync",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "describe('${1:ComponentName}', () => {",
+      "  it('should ${2:test behavior}', async () => {",
+      "    $0",
+      "    const result = await ${3:asyncFunction}();",
+      "    expect(result).toBe(${4:expected});",
+      "  });",
+      "});"
+    ],
+    "description": "Create an async Jest test case"
+  },
+  "React Native Context": {
+    "prefix": "rncontext",
+    "scope": "typescriptreact",
+    "body": [
+      "import { createContext, useContext, ReactNode } from 'react';",
+      "",
+      "interface ${1:Context}ContextValue {",
+      "  $2",
+      "}",
+      "",
+      "const ${1:Context}Context = createContext<${1:Context}ContextValue | undefined>(undefined);",
+      "",
+      "interface ${1:Context}ProviderProps {",
+      "  children: ReactNode;",
+      "}",
+      "",
+      "export function ${1:Context}Provider({ children }: ${1:Context}ProviderProps) {",
+      "  $0",
+      "",
+      "  const value: ${1:Context}ContextValue = {",
+      "    $3",
+      "  };",
+      "",
+      "  return <${1:Context}Context.Provider value={value}>{children}</${1:Context}Context.Provider>;",
+      "}",
+      "",
+      "export function use${1:Context}() {",
+      "  const context = useContext(${1:Context}Context);",
+      "  if (!context) {",
+      "    throw new Error('use${1:Context} must be used within ${1:Context}Provider');",
+      "  }",
+      "  return context;",
+      "}"
+    ],
+    "description": "Create a React Context with Provider and hook"
+  },
+  "TypeScript Interface": {
+    "prefix": "rninterface",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "export interface ${1:InterfaceName} {",
+      "  ${2:property}: ${3:type};",
+      "  $0",
+      "}"
+    ],
+    "description": "Create a TypeScript interface"
+  },
+  "TypeScript Type": {
+    "prefix": "rntype",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "export type ${1:TypeName} = ${2:type};",
+      "$0"
+    ],
+    "description": "Create a TypeScript type"
+  }
+}

@@ -1,0 +1,195 @@
+// src/features/field-mode/components/WalkthroughSummary.tsx
+// Component displaying AI-organized walkthrough summary
+
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  AlertTriangle,
+  HelpCircle,
+  ClipboardList,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+} from 'lucide-react-native';
+import { useThemeColors } from '@/contexts/ThemeContext';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { AISummary } from '../../deals/types';
+import { ICON_SIZES } from '@/constants/design-tokens';
+
+interface WalkthroughSummaryProps {
+  summary: AISummary;
+}
+
+export function WalkthroughSummary({ summary }: WalkthroughSummaryProps) {
+  const colors = useThemeColors();
+  const [expandedSections, setExpandedSections] = useState({
+    issues: true,
+    questions: true,
+    scope: true,
+  });
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  return (
+    <Card className="mb-4">
+      <CardHeader className="pb-2">
+        <View className="flex-row items-center gap-2">
+          <Sparkles size={ICON_SIZES.lg} color={colors.primary} />
+          <CardTitle className="text-lg">AI Summary</CardTitle>
+        </View>
+      </CardHeader>
+
+      <CardContent>
+        {/* Issues Section */}
+        <View className="mb-4">
+          <TouchableOpacity
+            className="flex-row items-center justify-between py-2"
+            onPress={() => toggleSection('issues')}
+            accessibilityLabel={`Issues section, ${summary.issues.length} items`}
+            accessibilityRole="button"
+          >
+            <View className="flex-row items-center gap-2">
+              <AlertTriangle size={ICON_SIZES.ml} color={colors.warning} />
+              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
+                Issues Found
+              </Text>
+              <View
+                className="px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: colors.warning + '20' }}
+              >
+                <Text className="text-xs font-medium" style={{ color: colors.warning }}>
+                  {summary.issues.length}
+                </Text>
+              </View>
+            </View>
+            {expandedSections.issues ? (
+              <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            ) : (
+              <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            )}
+          </TouchableOpacity>
+
+          {expandedSections.issues && (
+            <View className="ml-6 pl-2" style={{ borderLeftWidth: 2, borderLeftColor: colors.warning + '40' }}>
+              {summary.issues.map((issue, index) => (
+                <View key={index} className="py-1.5">
+                  <Text className="text-sm" style={{ color: colors.foreground }}>{issue}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Questions Section */}
+        <View className="mb-4">
+          <TouchableOpacity
+            className="flex-row items-center justify-between py-2"
+            onPress={() => toggleSection('questions')}
+            accessibilityLabel={`Questions section, ${summary.questions.length} items`}
+            accessibilityRole="button"
+          >
+            <View className="flex-row items-center gap-2">
+              <HelpCircle size={ICON_SIZES.ml} color={colors.info} />
+              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
+                Questions to Verify
+              </Text>
+              <View
+                className="px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: colors.info + '20' }}
+              >
+                <Text className="text-xs font-medium" style={{ color: colors.info }}>
+                  {summary.questions.length}
+                </Text>
+              </View>
+            </View>
+            {expandedSections.questions ? (
+              <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            ) : (
+              <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            )}
+          </TouchableOpacity>
+
+          {expandedSections.questions && (
+            <View className="ml-6 pl-2" style={{ borderLeftWidth: 2, borderLeftColor: colors.info + '40' }}>
+              {summary.questions.map((question, index) => (
+                <View key={index} className="py-1.5">
+                  <Text className="text-sm" style={{ color: colors.foreground }}>{question}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Scope of Work Section */}
+        <View>
+          <TouchableOpacity
+            className="flex-row items-center justify-between py-2"
+            onPress={() => toggleSection('scope')}
+            accessibilityLabel={`Scope of work section, ${summary.scope_bullets.length} items`}
+            accessibilityRole="button"
+          >
+            <View className="flex-row items-center gap-2">
+              <ClipboardList size={ICON_SIZES.ml} color={colors.success} />
+              <Text className="text-base font-semibold" style={{ color: colors.foreground }}>
+                Scope of Work
+              </Text>
+              <View
+                className="px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: colors.success + '20' }}
+              >
+                <Text className="text-xs font-medium" style={{ color: colors.success }}>
+                  {summary.scope_bullets.length}
+                </Text>
+              </View>
+            </View>
+            {expandedSections.scope ? (
+              <ChevronUp size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            ) : (
+              <ChevronDown size={ICON_SIZES.ml} color={colors.mutedForeground} />
+            )}
+          </TouchableOpacity>
+
+          {expandedSections.scope && (
+            <View className="ml-6 pl-2" style={{ borderLeftWidth: 2, borderLeftColor: colors.success + '40' }}>
+              {summary.scope_bullets.map((bullet, index) => (
+                <View key={index} className="py-1.5">
+                  <Text className="text-sm" style={{ color: colors.foreground }}>{bullet}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Empty state when no summary is available
+export function WalkthroughSummaryPlaceholder() {
+  const colors = useThemeColors();
+
+  return (
+    <Card className="mb-4">
+      <CardContent className="py-8 items-center">
+        <View
+          className="w-16 h-16 rounded-full items-center justify-center mb-4"
+          style={{ backgroundColor: colors.primary + '20' }}
+        >
+          <Sparkles size={ICON_SIZES['2xl']} color={colors.primary} />
+        </View>
+        <Text className="text-base font-semibold text-center mb-2" style={{ color: colors.foreground }}>
+          Ready to Organize
+        </Text>
+        <Text className="text-sm text-center px-4" style={{ color: colors.mutedForeground }}>
+          Add photos and voice memos, then tap "AI Organize" to generate an
+          intelligent summary of issues, questions, and scope of work.
+        </Text>
+      </CardContent>
+    </Card>
+  );
+}
