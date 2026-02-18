@@ -1,12 +1,14 @@
 // The Claw — API Routes
-// Express router for /api/claw: message, briefing, tasks, approvals
+// Express router for /api/claw: message, briefing, tasks, approvals,
+// connections, trust config, action queue, email scan
 
 import { Router, Request, Response } from 'express';
 import { config } from '../config.js';
 import { handleClawMessage } from './controller.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
-import { clawQuery, clawUpdate, clawInsert, publicInsert } from './db.js';
+import { clawQuery, clawUpdate, clawInsert, publicInsert, schemaQuery } from './db.js';
 import { callEdgeFunction } from './edge.js';
+import { captureInboundEmail } from '../services/email-capture.js';
 import type { ApprovalDecision } from './types.js';
 
 const router = Router();
@@ -587,6 +589,234 @@ router.delete('/kill-switch', requireAuth, async (req: Request, res: Response) =
   } catch (error) {
     console.error('[ClawAPI] Kill switch deactivate error:', error);
     res.status(500).json({ error: 'Failed to deactivate kill switch' });
+  }
+});
+
+// ============================================================================
+// GET /api/claw/connections — List channel connections
+// ============================================================================
+
+router.get('/connections', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const connections = await clawQuery(
+      'connections',
+      `user_id=eq.${userId}&select=id,channel,status,label,config,last_heartbeat_at,created_at,updated_at&order=channel.asc`
+    );
+    res.json({ connections });
+  } catch (error) {
+    console.error('[ClawAPI] Connections error:', error);
+    res.status(500).json({ error: 'Failed to fetch connections' });
+  }
+});
+
+// ============================================================================
+// PUT /api/claw/trust — Update trust level / action overrides
+// ============================================================================
+
+router.put('/trust', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const { global_level, action_overrides, queue_delay_seconds, daily_spend_limit_cents, daily_call_limit, daily_sms_limit } = req.body;
+
+    // Validate global_level if provided
+    const validLevels = ['locked', 'manual', 'guarded', 'autonomous'];
+    if (global_level && !validLevels.includes(global_level)) {
+      return res.status(400).json({ error: `global_level must be one of: ${validLevels.join(', ')}` });
+    }
+
+    // Build update payload (only include provided fields)
+    const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (global_level !== undefined) update.global_level = global_level;
+    if (action_overrides !== undefined) update.action_overrides = action_overrides;
+    if (queue_delay_seconds !== undefined) update.queue_delay_seconds = queue_delay_seconds;
+    if (daily_spend_limit_cents !== undefined) update.daily_spend_limit_cents = daily_spend_limit_cents;
+    if (daily_call_limit !== undefined) update.daily_call_limit = daily_call_limit;
+    if (daily_sms_limit !== undefined) update.daily_sms_limit = daily_sms_limit;
+
+    // Fetch existing trust_config for this user
+    const existing = await clawQuery<{ id: string }>('trust_config', `user_id=eq.${userId}&select=id&limit=1`);
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Trust config not found. Seed data first.' });
+    }
+
+    await clawUpdate('trust_config', existing[0].id, update);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[ClawAPI] Trust update error:', error);
+    res.status(500).json({ error: 'Failed to update trust config' });
+  }
+});
+
+// ============================================================================
+// GET /api/claw/trust — Get trust config
+// ============================================================================
+
+router.get('/trust', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const configs = await clawQuery(
+      'trust_config',
+      `user_id=eq.${userId}&select=*&limit=1`
+    );
+    if (configs.length === 0) {
+      return res.status(404).json({ error: 'Trust config not found' });
+    }
+    res.json({ trust_config: configs[0] });
+  } catch (error) {
+    console.error('[ClawAPI] Trust fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch trust config' });
+  }
+});
+
+// ============================================================================
+// GET /api/claw/queue — List pending action queue items
+// ============================================================================
+
+router.get('/queue', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const status = (req.query.status as string) || 'pending';
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+
+    const items = await clawQuery(
+      'action_queue',
+      `user_id=eq.${userId}&status=eq.${encodeURIComponent(status)}&select=*&order=execute_at.asc&limit=${limit}`
+    );
+    res.json({ queue: items });
+  } catch (error) {
+    console.error('[ClawAPI] Queue list error:', error);
+    res.status(500).json({ error: 'Failed to fetch action queue' });
+  }
+});
+
+// ============================================================================
+// POST /api/claw/queue/:id/approve — Approve a queued action (execute now)
+// ============================================================================
+
+router.post('/queue/:id/approve', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const itemId = req.params.id;
+    if (!UUID_RE.test(itemId)) {
+      return res.status(400).json({ error: 'Invalid queue item ID' });
+    }
+
+    // Verify ownership and pending status
+    const items = await clawQuery<{ id: string; user_id: string; status: string }>(
+      'action_queue',
+      `id=eq.${itemId}&user_id=eq.${userId}&status=eq.pending&limit=1`
+    );
+    if (items.length === 0) {
+      return res.status(404).json({ error: 'Queue item not found or not pending' });
+    }
+
+    // Set execute_at to now so the queue processor picks it up immediately
+    await clawUpdate('action_queue', itemId, {
+      execute_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    res.json({ success: true, message: 'Action approved — will execute shortly' });
+  } catch (error) {
+    console.error('[ClawAPI] Queue approve error:', error);
+    res.status(500).json({ error: 'Failed to approve queue item' });
+  }
+});
+
+// ============================================================================
+// POST /api/claw/queue/:id/cancel — Cancel a queued action
+// ============================================================================
+
+router.post('/queue/:id/cancel', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const itemId = req.params.id;
+    if (!UUID_RE.test(itemId)) {
+      return res.status(400).json({ error: 'Invalid queue item ID' });
+    }
+
+    // Verify ownership and pending status
+    const items = await clawQuery<{ id: string; user_id: string; status: string }>(
+      'action_queue',
+      `id=eq.${itemId}&user_id=eq.${userId}&status=eq.pending&limit=1`
+    );
+    if (items.length === 0) {
+      return res.status(404).json({ error: 'Queue item not found or not pending' });
+    }
+
+    await clawUpdate('action_queue', itemId, {
+      status: 'cancelled',
+      updated_at: new Date().toISOString(),
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[ClawAPI] Queue cancel error:', error);
+    res.status(500).json({ error: 'Failed to cancel queue item' });
+  }
+});
+
+// ============================================================================
+// POST /api/claw/email/scan — Trigger Gmail inbox scan using email rules
+// ============================================================================
+
+router.post('/email/scan', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+
+    // Load user's email rules
+    const rules = await clawQuery<{
+      id: string;
+      rule_name: string;
+      sender_patterns: string[];
+      subject_keywords: string[];
+      target_module: string;
+      is_active: boolean;
+    }>('email_rules', `user_id=eq.${userId}&is_active=eq.true&select=*`);
+
+    if (rules.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No active email rules configured',
+        emails_processed: 0,
+      });
+    }
+
+    // For now, return the rules — the actual Gmail scan requires OAuth tokens
+    // which are handled by the Gmail webhook flow. This endpoint lets the UI
+    // trigger a manual scan and see what rules are configured.
+    res.json({
+      success: true,
+      rules_loaded: rules.length,
+      rules: rules.map((r) => ({
+        name: r.rule_name,
+        sender_patterns: r.sender_patterns,
+        target_module: r.target_module,
+      })),
+      message: `${rules.length} email rules loaded. Gmail webhook processes emails automatically.`,
+    });
+  } catch (error) {
+    console.error('[ClawAPI] Email scan error:', error);
+    res.status(500).json({ error: 'Failed to scan emails' });
+  }
+});
+
+// ============================================================================
+// GET /api/claw/email/rules — List email rules
+// ============================================================================
+
+router.get('/email/rules', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const rules = await clawQuery(
+      'email_rules',
+      `user_id=eq.${userId}&select=*&order=rule_name.asc`
+    );
+    res.json({ rules });
+  } catch (error) {
+    console.error('[ClawAPI] Email rules error:', error);
+    res.status(500).json({ error: 'Failed to fetch email rules' });
   }
 });
 

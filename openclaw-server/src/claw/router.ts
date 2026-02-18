@@ -186,8 +186,32 @@ async function createDraftLead(
 }
 
 /**
+ * Demo prefix routing — strips LEAD:/TENANT:/VENDOR: prefixes from messages.
+ * In the demo, multiple personas text from the same phone number, so we use
+ * prefixes to differentiate. In production these would be different numbers.
+ */
+type DemoPersona = 'lead' | 'tenant' | 'vendor' | null;
+
+function extractDemoPrefix(body: string): { persona: DemoPersona; cleanBody: string } {
+  const prefixMap: Array<{ prefix: string; persona: DemoPersona }> = [
+    { prefix: 'LEAD:', persona: 'lead' },
+    { prefix: 'TENANT:', persona: 'tenant' },
+    { prefix: 'VENDOR:', persona: 'vendor' },
+  ];
+
+  for (const { prefix, persona } of prefixMap) {
+    if (body.toUpperCase().startsWith(prefix)) {
+      return { persona, cleanBody: body.slice(prefix.length).trim() };
+    }
+  }
+
+  return { persona: null, cleanBody: body };
+}
+
+/**
  * Smart message router — the main entry point for all inbound SMS/WhatsApp.
  *
+ * 0. Check for demo prefixes (LEAD:/TENANT:/VENDOR:) — route as that persona
  * 1. Is this from a known Claw user (phone in phoneUserMap)? → handleClawMessage
  * 2. Is this from a known lead/contact? → store, notify user, optionally generate draft reply
  * 3. Unknown sender? → create draft lead, notify
@@ -201,11 +225,68 @@ export async function routeInboundMessage(
 ): Promise<RoutingResult> {
   console.log(`[Router] Routing ${channel} from ${phoneFrom}: "${body.slice(0, 80)}"`);
 
-  // Step 1: Check if this is a known Claw user
+  // Step 0: Check for demo prefixes (LEAD: / TENANT: / VENDOR:)
+  const { persona, cleanBody } = extractDemoPrefix(body);
+
+  if (persona) {
+    console.log(`[Router] Demo prefix detected: ${persona.toUpperCase()}`);
+    // Find the default Claw user (owner of this system)
+    const ownerId = Object.values(config.phoneUserMap).find((id) => UUID_RE.test(id));
+
+    if (ownerId) {
+      // Try to match against existing CRM data by phone
+      const senderMatch = await matchSender(phoneFrom);
+
+      // Store in crm.messages as an inbound message from the persona
+      await storeCrmMessage({
+        userId: ownerId,
+        leadId: senderMatch?.lead?.id,
+        contactId: senderMatch?.contact?.id,
+        direction: 'inbound',
+        channel,
+        senderType: 'lead',
+        phoneFrom,
+        phoneTo,
+        body: cleanBody,
+      });
+
+      const senderName = senderMatch?.contact
+        ? [senderMatch.contact.first_name, senderMatch.contact.last_name].filter(Boolean).join(' ')
+        : senderMatch?.lead?.name || `Unknown ${persona}`;
+
+      // Notify user
+      await notifyLeadReply(
+        ownerId,
+        `[${persona.toUpperCase()}] ${senderName}`,
+        cleanBody,
+        senderMatch?.lead?.id,
+        senderMatch?.contact?.id
+      );
+
+      // Generate draft reply suggestion
+      const targetId = senderMatch?.lead?.id || senderMatch?.contact?.id;
+      if (targetId) {
+        createDraftSuggestion({
+          userId: ownerId,
+          leadId: targetId,
+          contactId: senderMatch?.contact?.id,
+          leadName: senderName,
+          leadPhone: phoneFrom,
+          triggerType: 'lead_reply',
+          conversationContext: `[Demo ${persona}] ${senderName} said: "${cleanBody.slice(0, 300)}"`,
+          channel,
+        }).catch((err) => console.error('[Router] Draft suggestion failed:', err));
+      }
+
+      return { type: 'lead_reply', userId: ownerId };
+    }
+  }
+
+  // Step 1: Check if this is a known Claw user (no prefix = owner command)
   const clawUserId = config.phoneUserMap[phoneFrom];
   if (clawUserId && UUID_RE.test(clawUserId)) {
     // This is the user themselves — route to The Claw controller
-    const response = await handleClawMessage(clawUserId, body, channel);
+    const response = await handleClawMessage(clawUserId, cleanBody, channel);
     return { type: 'claw_response', reply: response.message, userId: clawUserId };
   }
 

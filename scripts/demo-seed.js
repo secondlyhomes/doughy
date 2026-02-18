@@ -69,6 +69,15 @@ const IDS = {
   marcusCallSummary: 'a1b2c3d4-0012-4000-8000-000000000012',
   // Vendor
   mikeJohnsonVendor: 'a1b2c3d4-0015-4000-8000-000000000001',
+  // Email rules
+  ruleFurnishedFinder: 'a1b2c3d4-0020-4000-8000-000000000001',
+  ruleAirbnb: 'a1b2c3d4-0020-4000-8000-000000000002',
+  ruleVrbo: 'a1b2c3d4-0020-4000-8000-000000000003',
+  ruleTurboTenant: 'a1b2c3d4-0020-4000-8000-000000000004',
+  ruleZillow: 'a1b2c3d4-0020-4000-8000-000000000005',
+  ruleRealtor: 'a1b2c3d4-0020-4000-8000-000000000006',
+  // CallPilot profile
+  callpilotProfile: 'a1b2c3d4-0021-4000-8000-000000000001',
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -181,7 +190,9 @@ async function seedDelete() {
     'callpilot.call_summaries',
     'callpilot.transcript_chunks',
     'callpilot.calls',
+    'callpilot.user_profiles',
     // Claw
+    'claw.email_rules',
     'claw.cost_log',
     'claw.connections',
     // Investor (deal refs property + lead, images ref property)
@@ -962,6 +973,42 @@ function buildTranscriptChunks(callId, callStarted) {
   }));
 }
 
+// ─── Email Rules ──────────────────────────────────────────────────────────
+
+async function seedEmailRules() {
+  console.log('Seeding email rules...');
+
+  const rules = [
+    { id: IDS.ruleFurnishedFinder, user_id: USER_ID, rule_name: 'Furnished Finder', sender_patterns: ['@furnishedfinder.com'], subject_keywords: [], target_module: 'landlord', is_active: true },
+    { id: IDS.ruleAirbnb, user_id: USER_ID, rule_name: 'Airbnb', sender_patterns: ['@airbnb.com'], subject_keywords: [], target_module: 'landlord', is_active: true },
+    { id: IDS.ruleVrbo, user_id: USER_ID, rule_name: 'VRBO', sender_patterns: ['@vrbo.com'], subject_keywords: [], target_module: 'landlord', is_active: true },
+    { id: IDS.ruleTurboTenant, user_id: USER_ID, rule_name: 'TurboTenant', sender_patterns: ['@turbotenant.com'], subject_keywords: [], target_module: 'landlord', is_active: true },
+    { id: IDS.ruleZillow, user_id: USER_ID, rule_name: 'Zillow', sender_patterns: ['@zillow.com'], subject_keywords: [], target_module: 'investor', is_active: true },
+    { id: IDS.ruleRealtor, user_id: USER_ID, rule_name: 'Realtor.com', sender_patterns: ['@realtor.com'], subject_keywords: [], target_module: 'investor', is_active: true },
+  ];
+
+  await seedInsert('claw', 'email_rules', rules);
+}
+
+// ─── CallPilot User Profile ──────────────────────────────────────────────
+
+async function seedCallPilotProfile() {
+  console.log('Seeding CallPilot user profile...');
+
+  await seedInsert('callpilot', 'user_profiles', [{
+    id: IDS.callpilotProfile,
+    user_id: USER_ID,
+    display_name: 'Dino',
+    company_name: 'Doughy',
+    role: 'investor',
+    bio: 'Real estate investor and landlord',
+    interests: ['multifamily', 'short-term-rentals', 'fix-and-flip'],
+    location: 'Virginia Beach, VA',
+    buying_criteria: { min_price: 100000, max_price: 500000, property_types: ['single_family', 'multifamily'] },
+    talk_tracks: [],
+  }]);
+}
+
 // ─── Verify ────────────────────────────────────────────────────────────────
 
 async function verify() {
@@ -983,6 +1030,8 @@ async function verify() {
     { schema: 'callpilot', table: 'call_summaries', min: 1, label: 'Call summaries' },
     { schema: 'callpilot', table: 'action_items', min: 5, label: 'Action items' },
     { schema: 'callpilot', table: 'suggested_updates', min: 5, label: 'Suggested updates' },
+    { schema: 'callpilot', table: 'user_profiles', min: 1, label: 'CallPilot user profile' },
+    { schema: 'claw', table: 'email_rules', min: 6, label: 'Email rules' },
   ];
 
   for (const check of checks) {
@@ -1063,6 +1112,8 @@ async function create() {
   await seedTrustConfig();
   await seedCostLog();
   await seedStagedCallTranscript();
+  await seedEmailRules();
+  await seedCallPilotProfile();
 
   console.log('\nDemo seed complete!');
 }
