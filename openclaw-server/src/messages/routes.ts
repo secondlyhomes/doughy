@@ -201,6 +201,7 @@ router.post('/send', requireAuth, async (req: Request, res: Response) => {
       message_id: message.id,
       conversation_id: convId,
       delivered: !!deliveredAt,
+      created_at: message.created_at,
       error: failureReason,
     });
   } catch (error) {

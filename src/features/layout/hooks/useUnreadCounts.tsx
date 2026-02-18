@@ -30,12 +30,12 @@ interface UnreadCountsContextValue {
 const UnreadCountsContext = createContext<UnreadCountsContextValue | null>(null);
 
 const DEFAULT_COUNTS: UnreadCounts = {
-  leads: 3, // Mock: New leads
-  conversations: 2, // Mock: Unread conversations
-  notifications: 5, // Mock: Unread notifications
-  overdueDeals: 2, // Mock: Overdue deal actions
-  captureItems: 0, // Mock: Pending capture items
-  investorInbox: 0, // Lead inbox counts - set from real data
+  leads: 0,
+  conversations: 0,
+  notifications: 0,
+  overdueDeals: 0,
+  captureItems: 0,
+  investorInbox: 0,
 };
 
 interface UnreadCountsProviderProps {

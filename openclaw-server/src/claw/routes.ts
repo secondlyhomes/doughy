@@ -697,7 +697,7 @@ router.get('/queue', requireAuth, async (req: Request, res: Response) => {
 router.post('/queue/:id/approve', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const itemId = req.params.id;
+    const itemId = req.params.id as string;
     if (!UUID_RE.test(itemId)) {
       return res.status(400).json({ error: 'Invalid queue item ID' });
     }
@@ -731,7 +731,7 @@ router.post('/queue/:id/approve', requireAuth, async (req: Request, res: Respons
 router.post('/queue/:id/cancel', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const itemId = req.params.id;
+    const itemId = req.params.id as string;
     if (!UUID_RE.test(itemId)) {
       return res.status(400).json({ error: 'Invalid queue item ID' });
     }
