@@ -82,6 +82,10 @@ const IDS = {
   convoMarcus: 'a1b2c3d4-0030-4000-8000-000000000001',
   convoLinda: 'a1b2c3d4-0030-4000-8000-000000000002',
   convoRobert: 'a1b2c3d4-0030-4000-8000-000000000003',
+  // Draft suggestions
+  draftMarcus: 'a1b2c3d4-0032-4000-8000-000000000001',
+  draftRobert: 'a1b2c3d4-0032-4000-8000-000000000002',
+  draftLinda: 'a1b2c3d4-0032-4000-8000-000000000003',
   // Messages (investor.messages)
   msg01: 'a1b2c3d4-0031-4000-8000-000000000001',
   msg02: 'a1b2c3d4-0031-4000-8000-000000000002',
@@ -207,6 +211,7 @@ async function seedDelete() {
     'callpilot.calls',
     'callpilot.user_profiles',
     // Claw
+    'claw.draft_suggestions',
     'claw.email_rules',
     'claw.cost_log',
     'claw.connections',
@@ -1084,6 +1089,45 @@ async function seedMessages() {
   await seedInsert('investor', 'messages', messages);
 }
 
+// ─── Draft Suggestions ────────────────────────────────────────────────────
+
+async function seedDraftSuggestions() {
+  console.log('Seeding draft suggestions...');
+
+  const now = new Date();
+  const h = (hours) => new Date(now.getTime() - hours * 3600000).toISOString();
+  const futureH = (hours) => new Date(now.getTime() + hours * 3600000).toISOString();
+
+  const drafts = [
+    {
+      id: IDS.draftMarcus, user_id: USER_ID, lead_id: IDS.marcusThompson,
+      trigger_type: 'lead_reply',
+      draft_text: 'Hey Marcus! Thursday works great for a walkthrough. How does 2pm sound? I can meet you at 1247 Maple Drive. I\'ll bring the inspection report and recent comps.',
+      channel: 'sms', status: 'pending',
+      metadata: { context: 'Lead asked to meet Thursday to walk property' },
+      created_at: h(1), expires_at: futureH(23),
+    },
+    {
+      id: IDS.draftRobert, user_id: USER_ID, lead_id: IDS.robertDavis,
+      trigger_type: 'lead_reply',
+      draft_text: 'Thanks for the update Robert. I\'ll follow up with the listing agent directly to see where things stand. Will keep you posted!',
+      channel: 'sms', status: 'pending',
+      metadata: { context: 'Lead following up on offer status' },
+      created_at: h(0.5), expires_at: futureH(23.5),
+    },
+    {
+      id: IDS.draftLinda, user_id: USER_ID, lead_id: IDS.lindaChen,
+      trigger_type: 'follow_up',
+      draft_text: 'Hi Linda, here are the comps for the Oak Ave duplex as promised. 3 recent sales in the area put ARV at $380-390K. Rehab estimate: $45-55K depending on scope. Want to discuss next steps?',
+      channel: 'email', status: 'pending',
+      metadata: { context: 'Promised to send comps by EOD' },
+      created_at: h(4), expires_at: futureH(20),
+    },
+  ];
+
+  await seedInsert('claw', 'draft_suggestions', drafts);
+}
+
 // ─── Email Rules ──────────────────────────────────────────────────────────
 
 async function seedEmailRules() {
@@ -1141,6 +1185,7 @@ async function verify() {
     { schema: 'callpilot', table: 'call_summaries', min: 1, label: 'Call summaries' },
     { schema: 'callpilot', table: 'action_items', min: 5, label: 'Action items' },
     { schema: 'callpilot', table: 'suggested_updates', min: 5, label: 'Suggested updates' },
+    { schema: 'claw', table: 'draft_suggestions', min: 3, label: 'Claw draft suggestions' },
     { schema: 'investor', table: 'conversations', min: 3, label: 'Demo conversations' },
     { schema: 'investor', table: 'messages', min: 10, label: 'Demo messages' },
     { schema: 'callpilot', table: 'user_profiles', min: 1, label: 'CallPilot user profile' },
@@ -1227,6 +1272,7 @@ async function create() {
   await seedStagedCallTranscript();
   await seedConversations();
   await seedMessages();
+  await seedDraftSuggestions();
   await seedEmailRules();
   await seedCallPilotProfile();
 
