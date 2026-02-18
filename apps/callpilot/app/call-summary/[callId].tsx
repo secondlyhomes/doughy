@@ -55,6 +55,7 @@ export default function CallSummaryScreen() {
   rawUpdatesRef.current = rawUpdates
   const [crmLoading, setCrmLoading] = useState(!isMockMode)
   const [crmSynced, setCrmSynced] = useState(summary.crmSynced)
+  const [crmError, setCrmError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!callId || isMockMode) {
@@ -94,7 +95,8 @@ export default function CallSummaryScreen() {
         }))
         setExtractionGroups(groups)
       } catch (err) {
-        if (__DEV__ && !cancelled) console.warn('[CallSummary] getSuggestedUpdates failed:', err)
+        console.error('[CallSummary] getSuggestedUpdates failed:', err)
+        if (!cancelled) setCrmError(err instanceof Error ? err.message : 'Failed to load CRM suggestions')
       } finally {
         if (!cancelled) setCrmLoading(false)
       }
@@ -228,6 +230,15 @@ export default function CallSummaryScreen() {
         {!crmSynced && crmLoading && (
           <View style={{ paddingHorizontal: theme.tokens.spacing[4], marginTop: theme.tokens.spacing[5], alignItems: 'center' }}>
             <ActivityIndicator size="small" color={theme.colors.primary[500]} />
+          </View>
+        )}
+        {!crmSynced && !crmLoading && crmError && (
+          <View style={{ paddingHorizontal: theme.tokens.spacing[4], marginTop: theme.tokens.spacing[5] }}>
+            <Card variant="filled" padding="md">
+              <Text variant="bodySmall" color={theme.colors.text.secondary}>
+                Could not load CRM suggestions. They may become available when you revisit this summary.
+              </Text>
+            </Card>
           </View>
         )}
         {!crmSynced && !crmLoading && extractionGroups.length > 0 && (

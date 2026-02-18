@@ -32,8 +32,13 @@ export default function TranscriptScreen() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!callId || isMockMode) {
+    if (!callId) {
       setIsLoading(false)
+      return
+    }
+    if (isMockMode) {
+      setIsLoading(false)
+      setError('Transcripts are not available in offline mode.')
       return
     }
     let cancelled = false

@@ -59,7 +59,9 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
           .limit(1)
           .maybeSingle()
 
-        if (!cancelled && !error && data) {
+        if (error) {
+          console.error('[useClawSuggestions] query error:', error.message, error.code)
+        } else if (!cancelled && data) {
           setSuggestion({
             id: data.id,
             contactId: data.contact_id,
@@ -68,7 +70,7 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
           })
         }
       } catch (err) {
-        if (__DEV__) console.warn('[useClawSuggestions] fetch failed:', err)
+        console.error('[useClawSuggestions] fetch failed:', err)
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -101,8 +103,8 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
           }
         )
         .subscribe((status: string) => {
-          if (__DEV__ && (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')) {
-            console.warn('[useClawSuggestions] realtime subscription failed:', status)
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('[useClawSuggestions] realtime subscription failed:', status)
           }
         })
     }
@@ -128,7 +130,8 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
       if (error) throw error
     } catch (err) {
       setSuggestion(prev)
-      if (__DEV__) console.warn('[useClawSuggestions] approve failed:', err)
+      console.error('[useClawSuggestions] approve failed:', err)
+      throw err
     }
   }, [suggestion])
 
@@ -145,7 +148,8 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
       if (error) throw error
     } catch (err) {
       setSuggestion(prev)
-      if (__DEV__) console.warn('[useClawSuggestions] reject failed:', err)
+      console.error('[useClawSuggestions] reject failed:', err)
+      throw err
     }
   }, [suggestion])
 

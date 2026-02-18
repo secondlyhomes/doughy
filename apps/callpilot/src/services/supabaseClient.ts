@@ -19,6 +19,13 @@ const hasCredentials = supabaseUrl.length > 0 && supabaseAnonKey.length > 0
 
 export const isMockMode: boolean = !hasCredentials
 
+if (isMockMode) {
+  console.error(
+    '[CallPilot] Running in MOCK MODE — Supabase credentials missing. ' +
+    'Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.'
+  )
+}
+
 export const supabase: SupabaseClient | null = hasCredentials
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
