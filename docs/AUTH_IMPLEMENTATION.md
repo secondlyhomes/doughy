@@ -312,6 +312,23 @@ This is already configured on staging.
 | GET | `/api/calls/:id/transcript` | JWT | Get call transcript |
 | GET | `/api/calls/:id/session` | JWT | Get active session info |
 
+### Messages API (`/api/messages`)
+
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| POST | `/api/messages/send` | JWT | Send SMS/email to a lead or contact |
+
+**Payload for `/api/messages/send`:**
+```json
+{
+  "leadId": "uuid",       // OR contactId (one required)
+  "contactId": "uuid",
+  "channel": "sms",       // "sms" or "email"
+  "body": "message text",
+  "conversationId": "uuid" // optional — auto-creates if omitted
+}
+```
+
 ### Other Endpoints
 
 | Method | Path | Auth | Purpose |

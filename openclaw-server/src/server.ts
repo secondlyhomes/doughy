@@ -38,6 +38,7 @@ import { sendTwilioMessage } from './claw/twilio.js';
 import { logCost } from './claw/costs.js';
 import clawRoutes from './claw/routes.js';
 import callpilotRoutes from './callpilot/routes.js';
+import messageRoutes from './messages/routes.js';
 import { voiceWebhookRouter } from './callpilot/voice.js';
 import { initDiscordBot } from './claw/discord.js';
 import { startQueueProcessor, stopQueueProcessor } from './claw/queue.js';
@@ -938,6 +939,7 @@ app.use('/api/demo/seed-data', (req: Request, res: Response, next: NextFunction)
 
 app.use('/api/claw', clawRoutes);
 app.use('/api/calls', callpilotRoutes);
+app.use('/api/messages', messageRoutes);
 app.use('/webhooks/voice', voiceWebhookRouter);
 
 // ============================================================================

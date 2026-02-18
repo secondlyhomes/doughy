@@ -78,6 +78,21 @@ const IDS = {
   ruleRealtor: 'a1b2c3d4-0020-4000-8000-000000000006',
   // CallPilot profile
   callpilotProfile: 'a1b2c3d4-0021-4000-8000-000000000001',
+  // Conversations
+  convoMarcus: 'a1b2c3d4-0030-4000-8000-000000000001',
+  convoLinda: 'a1b2c3d4-0030-4000-8000-000000000002',
+  convoRobert: 'a1b2c3d4-0030-4000-8000-000000000003',
+  // Messages (investor.messages)
+  msg01: 'a1b2c3d4-0031-4000-8000-000000000001',
+  msg02: 'a1b2c3d4-0031-4000-8000-000000000002',
+  msg03: 'a1b2c3d4-0031-4000-8000-000000000003',
+  msg04: 'a1b2c3d4-0031-4000-8000-000000000004',
+  msg05: 'a1b2c3d4-0031-4000-8000-000000000005',
+  msg06: 'a1b2c3d4-0031-4000-8000-000000000006',
+  msg07: 'a1b2c3d4-0031-4000-8000-000000000007',
+  msg08: 'a1b2c3d4-0031-4000-8000-000000000008',
+  msg09: 'a1b2c3d4-0031-4000-8000-000000000009',
+  msg10: 'a1b2c3d4-0031-4000-8000-000000000010',
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -195,7 +210,9 @@ async function seedDelete() {
     'claw.email_rules',
     'claw.cost_log',
     'claw.connections',
-    // Investor (deal refs property + lead, images ref property)
+    // Investor (messages → conversations → deal refs property + lead, images ref property)
+    'investor.messages',
+    'investor.conversations',
     'investor.deals_pipeline',
     'investor.property_images',
     'investor.properties',
@@ -973,6 +990,100 @@ function buildTranscriptChunks(callId, callStarted) {
   }));
 }
 
+// ─── Conversations & Messages ─────────────────────────────────────────────
+
+async function seedConversations() {
+  console.log('Seeding conversations...');
+
+  const now = new Date();
+  const h = (hours) => new Date(now.getTime() - hours * 3600000).toISOString();
+
+  const conversations = [
+    {
+      id: IDS.convoMarcus, user_id: USER_ID, lead_id: IDS.marcusThompson,
+      channel: 'sms', status: 'active', unread_count: 1, message_count: 4,
+      last_message_at: h(2), last_message_preview: 'Can we meet Thursday to walk through the property?',
+    },
+    {
+      id: IDS.convoLinda, user_id: USER_ID, lead_id: IDS.lindaChen,
+      channel: 'email', status: 'active', unread_count: 0, message_count: 3,
+      last_message_at: h(18), last_message_preview: 'Sounds good, I\'ll have the comps ready by EOD.',
+    },
+    {
+      id: IDS.convoRobert, user_id: USER_ID, lead_id: IDS.robertDavis,
+      channel: 'sms', status: 'active', unread_count: 2, message_count: 3,
+      last_message_at: h(1), last_message_preview: 'Hey, just wanted to follow up on the offer.',
+    },
+  ];
+
+  await seedInsert('investor', 'conversations', conversations);
+}
+
+async function seedMessages() {
+  console.log('Seeding messages...');
+
+  const now = new Date();
+  const h = (hours) => new Date(now.getTime() - hours * 3600000).toISOString();
+
+  const messages = [
+    // Marcus Thompson conversation (4 messages)
+    {
+      id: IDS.msg01, conversation_id: IDS.convoMarcus, direction: 'inbound',
+      content: 'Hi, I saw your mailer about the Maple Drive property. Is it still available?',
+      content_type: 'text', sent_by: 'lead', created_at: h(48),
+    },
+    {
+      id: IDS.msg02, conversation_id: IDS.convoMarcus, direction: 'outbound',
+      content: 'Hi Marcus! Yes, 1247 Maple Drive is still available. It\'s a 3bd/2ba, 1,850 sqft — great bones with solid rental potential. Would you like to schedule a walkthrough?',
+      content_type: 'text', sent_by: 'user', delivered_at: h(47), created_at: h(47),
+    },
+    {
+      id: IDS.msg03, conversation_id: IDS.convoMarcus, direction: 'inbound',
+      content: 'Definitely interested. What are you asking?',
+      content_type: 'text', sent_by: 'lead', created_at: h(24),
+    },
+    {
+      id: IDS.msg04, conversation_id: IDS.convoMarcus, direction: 'inbound',
+      content: 'Can we meet Thursday to walk through the property?',
+      content_type: 'text', sent_by: 'lead', created_at: h(2),
+    },
+    // Linda Chen conversation (3 messages)
+    {
+      id: IDS.msg05, conversation_id: IDS.convoLinda, direction: 'outbound',
+      content: 'Hi Linda, following up on the Oak Ave duplex. I pulled some recent comps in the area — ARV looks solid at $385K. Want me to send them over?',
+      content_type: 'text', sent_by: 'user', delivered_at: h(24), created_at: h(24),
+    },
+    {
+      id: IDS.msg06, conversation_id: IDS.convoLinda, direction: 'inbound',
+      content: 'Yes please! Also curious what you think the rehab would run.',
+      content_type: 'text', sent_by: 'lead', created_at: h(20),
+    },
+    {
+      id: IDS.msg07, conversation_id: IDS.convoLinda, direction: 'outbound',
+      content: 'Sounds good, I\'ll have the comps ready by EOD.',
+      content_type: 'text', sent_by: 'user', delivered_at: h(18), created_at: h(18),
+    },
+    // Robert Davis conversation (3 messages)
+    {
+      id: IDS.msg08, conversation_id: IDS.convoRobert, direction: 'outbound',
+      content: 'Robert, I wanted to touch base about the Elm St property. We submitted the offer at $215K — have you heard back from the seller?',
+      content_type: 'text', sent_by: 'user', delivered_at: h(6), created_at: h(6),
+    },
+    {
+      id: IDS.msg09, conversation_id: IDS.convoRobert, direction: 'inbound',
+      content: 'Not yet, but my agent said they\'re reviewing offers this week.',
+      content_type: 'text', sent_by: 'lead', created_at: h(4),
+    },
+    {
+      id: IDS.msg10, conversation_id: IDS.convoRobert, direction: 'inbound',
+      content: 'Hey, just wanted to follow up on the offer.',
+      content_type: 'text', sent_by: 'lead', created_at: h(1),
+    },
+  ];
+
+  await seedInsert('investor', 'messages', messages);
+}
+
 // ─── Email Rules ──────────────────────────────────────────────────────────
 
 async function seedEmailRules() {
@@ -1030,6 +1141,8 @@ async function verify() {
     { schema: 'callpilot', table: 'call_summaries', min: 1, label: 'Call summaries' },
     { schema: 'callpilot', table: 'action_items', min: 5, label: 'Action items' },
     { schema: 'callpilot', table: 'suggested_updates', min: 5, label: 'Suggested updates' },
+    { schema: 'investor', table: 'conversations', min: 3, label: 'Demo conversations' },
+    { schema: 'investor', table: 'messages', min: 10, label: 'Demo messages' },
     { schema: 'callpilot', table: 'user_profiles', min: 1, label: 'CallPilot user profile' },
     { schema: 'claw', table: 'email_rules', min: 6, label: 'Email rules' },
   ];
@@ -1112,6 +1225,8 @@ async function create() {
   await seedTrustConfig();
   await seedCostLog();
   await seedStagedCallTranscript();
+  await seedConversations();
+  await seedMessages();
   await seedEmailRules();
   await seedCallPilotProfile();
 
