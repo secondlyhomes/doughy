@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import type { TextInput as TextInputType } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -108,7 +109,7 @@ export function SignupScreen() {
           Check Your Email
         </Text>
         <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
-          We've sent a confirmation link to {email}. Please check your email to verify your account.
+          We{'\''}ve sent a confirmation link to {email}. Please check your email to verify your account.
         </Text>
         <TouchableOpacity
           className="rounded-lg py-4 px-8"
@@ -305,12 +306,12 @@ export function SignupScreen() {
 
           {/* Terms Agreement */}
           <TouchableOpacity
-            className="flex-row items-center mb-6"
+            className="flex-row items-start mb-2"
             onPress={() => setAgreeToTerms(!agreeToTerms)}
             disabled={loading}
           >
             <View
-              className="w-5 h-5 rounded mr-3 items-center justify-center"
+              className="w-5 h-5 rounded mr-3 mt-0.5 items-center justify-center"
               style={{
                 backgroundColor: agreeToTerms ? colors.primary : 'transparent',
                 borderWidth: 1,
@@ -320,9 +321,27 @@ export function SignupScreen() {
               {agreeToTerms && <Check size={14} color={colors.primaryForeground} />}
             </View>
             <Text className="text-sm flex-1" style={{ color: colors.mutedForeground }}>
-              I agree to the Terms of Service and Privacy Policy
+              I agree to the{' '}
+              <Text
+                style={{ color: colors.primary }}
+                onPress={() => Linking.openURL('https://secondlyhomes.com/terms-of-service')}
+              >
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text
+                style={{ color: colors.primary }}
+                onPress={() => Linking.openURL('https://secondlyhomes.com/privacy-policy')}
+              >
+                Privacy Policy
+              </Text>
+              . I also consent to receiving text messages from Secondly Homes. Msg &amp; data rates may apply. Reply STOP to opt out.
             </Text>
           </TouchableOpacity>
+
+          <Text className="text-xs mb-6 ml-8" style={{ color: colors.mutedForeground }}>
+            SMS consent is not a condition of account creation.
+          </Text>
 
           {/* Sign Up Button */}
           <TouchableOpacity
