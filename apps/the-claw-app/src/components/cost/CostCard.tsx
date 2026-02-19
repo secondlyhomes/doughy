@@ -6,6 +6,7 @@
  */
 
 import { View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useTheme } from '@/theme'
 import { Text } from '../Text'
 import { Card } from '../Card/Card'
@@ -144,6 +145,14 @@ export function CostCard({ summary, loading, error }: CostCardProps) {
             </View>
           </>
         )}
+
+        {/* Disclaimer */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: theme.tokens.spacing[3] }}>
+          <Ionicons name="information-circle-outline" size={14} color={theme.colors.text.tertiary} />
+          <Text variant="caption" color={theme.colors.text.tertiary}>
+            Best-case estimates. Actual costs may vary.
+          </Text>
+        </View>
       </Card>
     </View>
   )

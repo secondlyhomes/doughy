@@ -4,7 +4,7 @@
 
 import { config } from '../config.js';
 import { handleClawMessage } from './controller.js';
-import { clawQuery, clawUpdate } from './db.js';
+import { clawQuery, clawUpdate, claimApproval } from './db.js';
 import { registerDiscordSender } from './broadcast.js';
 import { callEdgeFunction } from './edge.js';
 
@@ -159,31 +159,43 @@ async function handleSingleApproval(interaction: any, approvalId: string, action
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    // Fetch the approval first to verify it exists and is still pending
-    const approvals = await clawQuery<{
-      user_id: string;
-      status: string;
-      action_type: string;
-      draft_content: string;
-      recipient_phone: string | null;
-    }>('approvals', `id=eq.${approvalId}&status=eq.pending&limit=1`);
-
-    if (approvals.length === 0) {
-      await interaction.editReply('Approval not found or already decided.');
-      return;
-    }
-
-    const approval = approvals[0];
     const now = new Date().toISOString();
-    await clawUpdate('approvals', approvalId, {
-      status: action === 'approve' ? 'approved' : 'rejected',
-      decided_at: now,
-    });
 
-    if (action === 'approve') {
-      if (approval.action_type === 'send_sms' && approval.recipient_phone) {
-        // Execute via edge function
-        await executeSmsFromDiscord(approval.recipient_phone, approval.draft_content);
+    if (action === 'reject') {
+      // Reject doesn't need atomic claim — no send action
+      await clawUpdate('approvals', approvalId, { status: 'rejected', decided_at: now });
+      await interaction.editReply('Rejected. ❌');
+    } else {
+      // Discord doesn't have userId in context — fetch the approval to get it
+      const approvals = await clawQuery<{
+        user_id: string;
+        status: string;
+        action_type: string;
+        draft_content: string;
+        recipient_phone: string | null;
+      }>('approvals', `id=eq.${approvalId}&limit=1`);
+
+      if (approvals.length === 0) {
+        await interaction.editReply('Approval not found.');
+        return;
+      }
+
+      const approval = approvals[0];
+
+      if (approval.status !== 'pending') {
+        await interaction.editReply('Already handled from another channel.');
+        return;
+      }
+
+      // Atomically claim to prevent double-send from multiple channels
+      const claimed = await claimApproval<typeof approval>(approvalId, approval.user_id, { decided_at: now });
+      if (!claimed) {
+        await interaction.editReply('Already handled from another channel.');
+        return;
+      }
+
+      if (claimed.action_type === 'send_sms' && claimed.recipient_phone) {
+        await executeSmsFromDiscord(claimed.recipient_phone, claimed.draft_content);
         await clawUpdate('approvals', approvalId, {
           status: 'executed',
           executed_at: new Date().toISOString(),
@@ -191,8 +203,6 @@ async function handleSingleApproval(interaction: any, approvalId: string, action
       }
 
       await interaction.editReply('Approved and sent! ✅');
-    } else {
-      await interaction.editReply('Rejected. ❌');
     }
 
     // Update the original message to reflect the decision
@@ -231,28 +241,38 @@ async function handleBatchApprove(interaction: any, taskId: string): Promise<voi
       return;
     }
 
+    // Need userId from the first approval to do atomic claims
+    const firstFull = await clawQuery<{ user_id: string }>('approvals', `id=eq.${approvals[0].id}&limit=1`);
+    const userId = firstFull[0]?.user_id;
+    if (!userId) {
+      await interaction.editReply('Could not determine user for approvals.');
+      return;
+    }
+
     const results: string[] = [];
 
     for (const approval of approvals) {
       const now = new Date().toISOString();
-      await clawUpdate('approvals', approval.id, {
-        status: 'approved',
-        decided_at: now,
-      });
+      // Atomically claim each approval to prevent double-send
+      const claimed = await claimApproval<typeof approval & { user_id: string }>(approval.id, userId, { decided_at: now });
+      if (!claimed) {
+        results.push(`Already handled: ${approval.recipient_name || 'Unknown'}`);
+        continue;
+      }
 
-      if (approval.action_type === 'send_sms' && approval.recipient_phone) {
-        const sent = await executeSmsFromDiscord(approval.recipient_phone, approval.draft_content);
+      if (claimed.action_type === 'send_sms' && claimed.recipient_phone) {
+        const sent = await executeSmsFromDiscord(claimed.recipient_phone, claimed.draft_content);
         if (sent) {
           await clawUpdate('approvals', approval.id, {
             status: 'executed',
             executed_at: new Date().toISOString(),
           });
-          results.push(`✅ Sent to ${approval.recipient_name || approval.recipient_phone}`);
+          results.push(`✅ Sent to ${claimed.recipient_name || claimed.recipient_phone}`);
         } else {
-          results.push(`⚠️ Approved but send failed: ${approval.recipient_name || approval.recipient_phone}`);
+          results.push(`⚠️ Approved but send failed: ${claimed.recipient_name || claimed.recipient_phone}`);
         }
       } else {
-        results.push(`✅ Approved: ${approval.recipient_name || 'Unknown'}`);
+        results.push(`✅ Approved: ${claimed.recipient_name || 'Unknown'}`);
       }
     }
 

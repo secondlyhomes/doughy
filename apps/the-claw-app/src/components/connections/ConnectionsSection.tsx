@@ -7,6 +7,7 @@
 import { View } from 'react-native'
 import { useTheme } from '@/theme'
 import { Card } from '../Card/Card'
+import { Text } from '../Text'
 import { SectionHeader } from '../control-panel/SectionHeader'
 import { ConnectionCard } from './ConnectionCard'
 import { Divider } from '../Divider'
@@ -44,6 +45,12 @@ export function ConnectionsSection({ connections, onConnectionPress, loading }: 
       <SectionHeader title="Connections" count={loading ? undefined : connections.filter(c => c.status === 'connected').length} />
       {loading ? (
         <ConnectionsSkeleton />
+      ) : connections.length === 0 ? (
+        <Card variant="outlined" padding="md" style={{ marginHorizontal: theme.tokens.spacing[5], alignItems: 'center', paddingVertical: theme.tokens.spacing[6] }}>
+          <Text variant="body" color={theme.colors.text.tertiary} align="center">
+            No connections found
+          </Text>
+        </Card>
       ) : (
         <Card variant="outlined" padding="none" style={{ marginHorizontal: theme.tokens.spacing[5] }}>
           {connections.map((conn, i) => (

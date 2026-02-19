@@ -94,7 +94,7 @@ export function AddressSuggestionList({
               style={{ backgroundColor: colors.primary }}
               onPress={onManualEntry}
             >
-              <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>Use "{searchText}"</Text>
+              <Text className="text-sm font-medium" style={{ color: colors.primaryForeground }}>Use {'"'}{searchText}{'"'}</Text>
             </TouchableOpacity>
           )}
         </View>

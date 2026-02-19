@@ -71,12 +71,6 @@ export function PortfolioPropertyDetailScreen() {
     ) : undefined,
   });
 
-  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
-  // Must come AFTER all hook calls to follow React's rules of hooks
-  if (!isValidUUID) {
-    return <Redirect href="/(tabs)/pipeline" />;
-  }
-
   // Calculate ownership duration
   const ownershipDuration = useMemo(() => {
     if (!entry?.acquisition_date) return null;
@@ -102,7 +96,6 @@ export function PortfolioPropertyDetailScreen() {
       await Promise.all([refetch(), refetchPerformance()]);
     } catch (error) {
       console.error('[PortfolioPropertyDetailScreen] Refresh failed:', error);
-      // Show brief error feedback so user knows refresh failed
       Alert.alert('Refresh Failed', 'Could not refresh data. Please try again.');
     } finally {
       setRefreshing(false);
@@ -124,6 +117,12 @@ export function PortfolioPropertyDetailScreen() {
       Alert.alert('Error', `Failed to remove property: ${message}`);
     }
   }, [removeEntry, router]);
+
+  // Guard against invalid UUIDs (e.g., "add" being captured by this route)
+  // Must come AFTER all hook calls to follow React's rules of hooks
+  if (!isValidUUID) {
+    return <Redirect href="/(tabs)/pipeline" />;
+  }
 
   if (isLoading && !property) {
     return (

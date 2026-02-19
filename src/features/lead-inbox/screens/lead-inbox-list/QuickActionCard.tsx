@@ -123,7 +123,7 @@ export function QuickActionCard({
                 fontStyle: 'italic',
               }}
             >
-              "{pendingResponse.suggested_response.slice(0, 100)}..."
+              {'"'}{pendingResponse.suggested_response.slice(0, 100)}...{'"'}
             </Text>
           )}
         </View>

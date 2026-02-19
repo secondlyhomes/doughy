@@ -19,9 +19,53 @@ export default function CallSummaryScreen() {
   const { callId } = useLocalSearchParams<{ callId: string }>()
   const { theme } = useTheme()
   const router = useRouter()
-  const { getSummaryForCall } = useMemos()
+  const { getSummaryForCall, loadSummaryForCall, isLoading: memosLoading } = useMemos()
 
-  const summary = getSummaryForCall(callId ?? '')
+  // Try local cache first
+  const cachedSummary = getSummaryForCall(callId ?? '')
+  const [asyncSummary, setAsyncSummary] = useState<import('@/types').CallSummary | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(!cachedSummary && !!callId)
+
+  // If not in cache, load from server
+  useEffect(() => {
+    if (cachedSummary || !callId) {
+      setSummaryLoading(false)
+      return
+    }
+    let cancelled = false
+    async function load() {
+      try {
+        const result = await loadSummaryForCall(callId!)
+        if (!cancelled) setAsyncSummary(result || null)
+      } catch (err) {
+        if (__DEV__) console.warn('[CallSummary] async load failed:', err)
+      } finally {
+        if (!cancelled) setSummaryLoading(false)
+      }
+    }
+    load().catch(() => {})
+    return () => { cancelled = true }
+  }, [callId, cachedSummary, loadSummaryForCall])
+
+  const summary = cachedSummary || asyncSummary
+
+  if (summaryLoading || memosLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <View style={{ paddingHorizontal: theme.tokens.spacing[4], paddingTop: theme.tokens.spacing[2] }}>
+          <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Back" accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="chevron-back" size={28} color={theme.colors.primary[500]} />
+          </TouchableOpacity>
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
+          <Text variant="bodySmall" color={theme.colors.text.tertiary} style={{ marginTop: theme.tokens.spacing[2] }}>
+            Loading summary...
+          </Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   if (!summary) {
     return (

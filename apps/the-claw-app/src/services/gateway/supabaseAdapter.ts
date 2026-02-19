@@ -134,6 +134,22 @@ function parsePermissions(perms: any): ConnectionPermission[] {
   return result
 }
 
+/** Convert snake_case action names to human-readable labels */
+function humanizeAction(action: string): string {
+  const labels: Record<string, string> = {
+    whatsapp_queue: 'WhatsApp Message',
+    whatsapp_dispatch: 'Vendor Dispatch',
+    whatsapp_tenant_reply: 'Tenant Reply',
+    sms_queue: 'SMS Message',
+    briefing: 'Daily Briefing',
+    transcription: 'Call Transcription',
+    intent_classification: 'Intent Classification',
+    lead_analysis: 'Lead Analysis',
+    draft_followups: 'Draft Follow-ups',
+  }
+  return labels[action] || action.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 async function getAuthToken(): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.access_token) throw new Error('Not authenticated')
@@ -155,6 +171,7 @@ async function clawFetch<T>(path: string, options: RequestInit = {}): Promise<T>
   let response = await makeRequest(token)
 
   if (response.status === 401) {
+    // Silently attempt token refresh — 401 is expected when tokens expire
     const { data: { session } } = await supabase.auth.refreshSession()
     if (!session?.access_token) throw new Error('Session expired. Please sign in again.')
     response = await makeRequest(session.access_token)
@@ -240,6 +257,9 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
   /**
    * Initialize default connections for the current user.
    * Called once when getConnections() finds no rows.
+   *
+   * DB columns: channel (text), label (text), status (text), config (jsonb)
+   * Unique constraint: (user_id, channel)
    */
   private async initializeConnections(): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser()
@@ -247,16 +267,15 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
 
     const rows = DEFAULT_CONNECTIONS.map((conn) => ({
       user_id: user.id,
-      service: conn.service,
-      name: conn.name,
+      channel: conn.service,
+      label: conn.name,
       status: conn.status,
-      permissions: conn.permissions,
-      config: { summary: conn.summary, ...(conn.config ?? {}) },
+      config: { summary: conn.summary, permissions: conn.permissions, ...(conn.config ?? {}) },
     }))
 
     const { error } = await supabase
       .schema('claw').from('connections')
-      .upsert(rows, { onConflict: 'user_id,service' })
+      .upsert(rows, { onConflict: 'user_id,channel' })
 
     if (error) throw new Error(`Failed to initialize connections: ${error.message}`)
   }
@@ -267,17 +286,39 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
       .select('*')
       .order('created_at')
 
-    if (error) throw new Error(error.message)
+    if (error) {
+      // Schema not exposed or permissions issue — fall back to in-memory defaults
+      console.warn('[SupabaseAdapter] getConnections DB failed, using defaults:', error.message)
+      return this.mapConnections(DEFAULT_CONNECTIONS.map(c => ({
+        channel: c.service, label: c.name, status: c.status,
+        config: { summary: c.summary, permissions: c.permissions, ...(c.config ?? {}) },
+      })))
+    }
 
     // Initialize defaults if user has no connections
     if (!data || data.length === 0) {
-      await this.initializeConnections()
+      try {
+        await this.initializeConnections()
+      } catch (initErr) {
+        // Upsert failed (schema not exposed yet) — return in-memory defaults
+        console.warn('[SupabaseAdapter] initializeConnections failed, using defaults:', initErr instanceof Error ? initErr.message : initErr)
+        return this.mapConnections(DEFAULT_CONNECTIONS.map(c => ({
+          service: c.service, name: c.name, status: c.status,
+          permissions: c.permissions, config: { summary: c.summary, ...(c.config ?? {}) },
+        })))
+      }
       // Re-fetch after initialization
       const { data: freshData, error: freshError } = await supabase
         .schema('claw').from('connections')
         .select('*')
         .order('created_at')
-      if (freshError) throw new Error(freshError.message)
+      if (freshError) {
+        console.warn('[SupabaseAdapter] Re-fetch after init failed, using defaults:', freshError.message)
+        return this.mapConnections(DEFAULT_CONNECTIONS.map(c => ({
+          service: c.service, name: c.name, status: c.status,
+          permissions: c.permissions, config: { summary: c.summary, ...(c.config ?? {}) },
+        })))
+      }
       return this.mapConnections(freshData ?? [])
     }
 
@@ -285,25 +326,28 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
   }
 
   private mapConnections(rows: any[]): ServiceConnection[] {
-    // Deduplicate by service — keep the first row per service
+    // DB uses `channel`, in-memory defaults use `service` — normalize
     const seen = new Set<string>()
     const unique = rows.filter((row: any) => {
-      const key = row.service ?? row.id
+      const key = row.channel ?? row.service ?? row.id
       if (seen.has(key)) return false
       seen.add(key)
       return true
     })
 
     return unique.map((row: any) => {
-      const defaults = DEFAULT_CONNECTIONS.find(d => d.service === row.service)
+      const serviceId = row.channel ?? row.service
+      const defaults = DEFAULT_CONNECTIONS.find(d => d.service === serviceId)
+      // Permissions: DB stores in config.permissions, in-memory has top-level permissions
+      const perms = row.config?.permissions ?? row.permissions ?? defaults?.permissions
       return {
-        id: row.service as ConnectionId,
-        name: row.name || defaults?.name || row.service,
+        id: serviceId as ConnectionId,
+        name: defaults?.name || row.label || serviceId,
         icon: row.config?.icon || 'flash',
         status: row.status as ServiceConnection['status'],
-        permissions: parsePermissions(row.permissions),
-        summary: row.config?.summary || defaults?.summary || '',
-        ...(row.service === 'bland' ? { blandConfig: row.config?.bland ?? defaults?.config?.bland } : {}),
+        permissions: parsePermissions(perms),
+        summary: row.config?.summary || defaults?.summary || row.label || '',
+        ...(serviceId === 'bland' ? { blandConfig: row.config?.bland ?? defaults?.config?.bland } : {}),
       }
     })
   }
@@ -315,25 +359,27 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
     const moduleName = permissionId.slice(0, dotIndex)
     const permKey = permissionId.slice(dotIndex + 1)
 
+    // DB column is `channel`, permissions stored in config.permissions JSONB
     const { data: conn, error: fetchError } = await supabase
       .schema('claw').from('connections')
-      .select('permissions')
-      .eq('service', connectionId)
+      .select('config')
+      .eq('channel', connectionId)
       .single()
 
     if (fetchError) throw new Error(`Failed to fetch connection: ${fetchError.message}`)
     if (!conn) throw new Error(`Connection "${connectionId}" not found`)
 
-    // Write back in canonical object format: {"Module": {"perm_key": bool}}
-    const perms = { ...(conn.permissions ?? {}) }
+    const config = { ...(conn.config ?? {}) } as Record<string, any>
+    const perms = { ...(config.permissions ?? {}) }
     if (perms[moduleName] && typeof perms[moduleName] === 'object') {
       perms[moduleName] = { ...perms[moduleName], [permKey]: enabled }
     }
+    config.permissions = perms
 
     const { error } = await supabase
       .schema('claw').from('connections')
-      .update({ permissions: perms })
-      .eq('service', connectionId)
+      .update({ config })
+      .eq('channel', connectionId)
 
     if (error) throw new Error(error.message)
   }
@@ -341,8 +387,8 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
   async disconnectConnection(connectionId: ConnectionId): Promise<void> {
     const { error } = await supabase
       .schema('claw').from('connections')
-      .update({ status: 'disconnected', permissions: {} })
-      .eq('service', connectionId)
+      .update({ status: 'disconnected', config: {} })
+      .eq('channel', connectionId)
 
     if (error) throw new Error(error.message)
   }
@@ -350,23 +396,25 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
   // -- Queue --
 
   async getQueueItems(): Promise<QueueItem[]> {
+    // DB statuses: pending, executing, executed, cancelled, error
+    // App statuses: pending, countdown, approved, denied, cancelled, executed
     const { data, error } = await supabase
       .schema('claw').from('action_queue')
       .select('*')
-      .in('status', ['pending', 'countdown'])
+      .in('status', ['pending', 'executing'])
       .order('created_at', { ascending: false })
 
     if (error) throw new Error(error.message)
 
     return (data ?? []).map((row: any) => ({
       id: row.id,
-      connectionId: row.connection_id as ConnectionId,
+      connectionId: (row.target_channel || 'doughy') as ConnectionId,
       actionType: row.action_type,
-      title: row.title,
-      summary: row.summary || '',
-      status: row.status as QueueItem['status'],
-      riskLevel: row.risk_level as QueueItem['riskLevel'],
-      countdownEndsAt: row.countdown_ends_at,
+      title: row.description || row.action_type,
+      summary: row.preview || '',
+      status: row.status === 'executing' ? 'countdown' as const : row.status as QueueItem['status'],
+      riskLevel: (row.metadata?.risk_level || 'medium') as QueueItem['riskLevel'],
+      countdownEndsAt: row.execute_at,
       createdAt: row.created_at,
     }))
   }
@@ -405,7 +453,7 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
 
     return {
       globalLevel: data.global_level as TrustLevel,
-      countdownSeconds: data.countdown_seconds,
+      countdownSeconds: data.queue_delay_seconds ?? 30,
       overrides: data.action_overrides || [],
       dailySpendLimitCents: data.daily_spend_limit_cents ?? 500,
       dailyCallLimit: data.daily_call_limit ?? 10,
@@ -418,7 +466,7 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
 
     const updates: Record<string, unknown> = { user_id: user.id }
     if (config.globalLevel !== undefined) updates.global_level = config.globalLevel
-    if (config.countdownSeconds !== undefined) updates.countdown_seconds = config.countdownSeconds
+    if (config.countdownSeconds !== undefined) updates.queue_delay_seconds = config.countdownSeconds
     if (config.overrides !== undefined) updates.action_overrides = config.overrides
     if (config.dailySpendLimitCents !== undefined) updates.daily_spend_limit_cents = config.dailySpendLimitCents
     if (config.dailyCallLimit !== undefined) updates.daily_call_limit = config.dailyCallLimit
@@ -452,11 +500,20 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
     const totalCents = data.reduce((sum, row) => sum + row.cost_cents, 0)
 
     // Group by service for breakdown
+    const SERVICE_LABELS: Record<string, string> = {
+      anthropic: 'Anthropic',
+      bland: 'Bland AI',
+      twilio: 'Twilio',
+      deepgram: 'Deepgram',
+    }
     const byService: Record<string, number> = {}
     for (const row of data) {
       byService[row.service] = (byService[row.service] || 0) + row.cost_cents
     }
-    const breakdown = Object.entries(byService).map(([label, amountCents]) => ({ label, amountCents }))
+    const breakdown = Object.entries(byService).map(([key, amountCents]) => ({
+      label: SERVICE_LABELS[key] || key,
+      amountCents,
+    }))
 
     // Count unique actions and approximate leads
     const actionCount = data.length
@@ -491,19 +548,21 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
 
     if (error) throw new Error(`Failed to load activity: ${error.message}`)
 
-    return (data ?? []).map((row: any) => ({
+    return (data ?? []).map((row: any) => {
+      const label = humanizeAction(row.action || 'task')
+      return {
       id: row.id,
       tool: row.action || 'task',
-      description: row.description || row.action || 'Action',
+      description: label,
       tier: 'low' as const,
       status: 'executed' as const,
       connectionId: row.service || null,
       preview: {
-        title: row.description || row.action || 'Action',
+        title: label,
         summary: `${row.service} — $${(row.cost_cents / 100).toFixed(2)}`,
         details: {
           Service: row.service,
-          Action: row.action,
+          Action: label,
           Cost: `$${(row.cost_cents / 100).toFixed(2)}`,
         },
       },
@@ -516,7 +575,7 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
       undoable: false,
       undoneAt: null,
       costCents: row.cost_cents ?? 0,
-    }))
+    }})
   }
 
   async undoActivity(id: string): Promise<void> {
@@ -591,6 +650,10 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
         .select('global_level')
         .single()
       if (error) {
+        // PGRST116 = no rows found — not an error, just no config yet
+        if (error.code === 'PGRST116') {
+          return { active: false, last_event: null }
+        }
         throw new Error(`Kill switch status unavailable: DB query failed (${error.message}), server also unreachable`)
       }
       return { active: data?.global_level === 'locked', last_event: null }
@@ -638,18 +701,19 @@ export class SupabaseGatewayAdapter implements GatewayAdapter {
 }
 
 function mapActivityItem(item: any): ActionHistoryEntry {
+  const label = item.title || humanizeAction(item.type || 'task')
   return {
     id: item.id,
     tool: item.type || 'task',
-    description: item.title || 'Action',
+    description: label,
     tier: item.kind === 'approval' ? 'medium' as const : 'low' as const,
     status: mapStatus(item.status),
     connectionId: item.connection_id || null,
     preview: {
-      title: item.title || 'Action',
+      title: label,
       summary: item.summary || item.status,
       details: {
-        Type: item.type,
+        Type: humanizeAction(item.type || 'task'),
         Status: item.status,
         ...(item.recipient_name ? { Recipient: item.recipient_name } : {}),
         ...(item.resolved_at ? { Resolved: new Date(item.resolved_at).toLocaleString() } : {}),

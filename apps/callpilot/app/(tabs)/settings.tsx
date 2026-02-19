@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { ScrollView, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useTheme } from '@/theme'
@@ -40,6 +40,7 @@ function Divider() {
 export default function SettingsScreen() {
   const { theme } = useTheme()
   const router = useRouter()
+  const insets = useSafeAreaInsets()
   const { profile } = useProfile()
 
   const [draftSuggestions, setDraftSuggestions] = useState(true)
@@ -68,7 +69,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: theme.tokens.spacing[8] }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 60 }} showsVerticalScrollIndicator={false}>
         {/* Profile */}
         <View style={{ paddingHorizontal: theme.tokens.spacing[4], paddingTop: theme.tokens.spacing[3] }}>
           <GlassView intensity="medium" style={{ padding: theme.tokens.spacing[4] }}>

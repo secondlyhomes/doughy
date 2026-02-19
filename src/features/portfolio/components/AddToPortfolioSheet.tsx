@@ -168,7 +168,7 @@ export function AddToPortfolioSheet({
           {properties.length === 0 && !propertiesLoading && (
             <View className="mt-2 p-3 rounded-lg" style={{ backgroundColor: colors.muted }}>
               <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-                No available properties. Switch to "New Property" to add one.
+                No available properties. Switch to {'"'}New Property{'"'} to add one.
               </Text>
             </View>
           )}

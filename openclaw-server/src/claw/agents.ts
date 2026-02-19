@@ -5,6 +5,7 @@ import { config } from '../config.js';
 import { TOOL_REGISTRY } from './tools.js';
 import { clawQuery, clawInsert, clawUpdate } from './db.js';
 import { logClaudeCost, estimateClaudeCost } from './costs.js';
+import { getApiKey } from '../services/api-keys.js';
 import type { AgentProfile, AgentToolCall } from './types.js';
 
 /**
@@ -293,7 +294,8 @@ export async function runAgent(options: {
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
+    const apiKey = await getApiKey(userId, 'anthropic');
+    const client = new Anthropic({ apiKey, timeout: 30_000 });
 
     // Build messages — uses `any` because Anthropic SDK message types are complex
     // and we dynamically push tool_result blocks into the conversation

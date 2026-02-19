@@ -4,6 +4,7 @@
 import { config } from '../config.js';
 import { schemaQuery } from '../claw/db.js';
 import { cpQuery, cpInsert, cpUpdate } from './db.js';
+import { getApiKey } from '../services/api-keys.js';
 
 // ============================================================================
 // Pre-Call Briefing Engine (Sonnet — generates rich briefing from lead context)
@@ -15,8 +16,9 @@ export async function generatePreCallBriefing(userId: string, params: {
   contact_id?: string;
   deal_id?: string;
 }): Promise<Record<string, unknown>> {
-  if (!config.anthropicApiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
+  const apiKey = await getApiKey(userId, 'anthropic');
+  if (!apiKey) {
+    throw new Error('No Anthropic API key available');
   }
   console.log('[CallPilot] Generating pre-call briefing...');
 
@@ -79,7 +81,7 @@ export async function generatePreCallBriefing(userId: string, params: {
 
   // Call Claude Sonnet to generate briefing
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
-  const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
+  const client = new Anthropic({ apiKey, timeout: 30_000 });
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-5-20250929',
@@ -130,13 +132,14 @@ export async function generateCoachingCard(userId: string, callId: string, param
   questions_asked?: string[];
   call_context?: Record<string, unknown>;
 }): Promise<Record<string, unknown> | null> {
-  if (!config.anthropicApiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
+  const apiKey = await getApiKey(userId, 'anthropic');
+  if (!apiKey) {
+    throw new Error('No Anthropic API key available');
   }
   console.log(`[CallPilot] Generating coaching card at ${params.elapsed_seconds}s...`);
 
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
-  const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
+  const client = new Anthropic({ apiKey, timeout: 30_000 });
 
   // Load the pre-call briefing for context
   const briefings = await cpQuery<{ briefing_content: Record<string, unknown> }>(
@@ -207,8 +210,9 @@ export async function generatePostCallSummary(userId: string, callId: string): P
   summary: Record<string, unknown>;
   action_items: Record<string, unknown>[];
 }> {
-  if (!config.anthropicApiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
+  const apiKey = await getApiKey(userId, 'anthropic');
+  if (!apiKey) {
+    throw new Error('No Anthropic API key available');
   }
   console.log('[CallPilot] Generating post-call summary...');
 
@@ -225,7 +229,7 @@ export async function generatePostCallSummary(userId: string, callId: string): P
   if (!call) throw new Error('Call not found');
 
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
-  const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
+  const client = new Anthropic({ apiKey, timeout: 30_000 });
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-5-20250929',

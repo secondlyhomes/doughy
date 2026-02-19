@@ -34,14 +34,14 @@ async function requireAuth(req: Request, res: Response, next: () => void): Promi
 
   const token = authHeader.slice(7);
   try {
-    if (!config.supabaseAnonKey) {
+    if (!config.supabasePublishableKey) {
       res.status(500).json({ error: 'Server misconfiguration' });
       return;
     }
 
     const response = await fetch(`${config.supabaseUrl}/auth/v1/user`, {
       headers: {
-        apikey: config.supabaseAnonKey,
+        apikey: config.supabasePublishableKey,
         Authorization: `Bearer ${token}`,
       },
     });

@@ -5,6 +5,7 @@ import React, { useCallback, useState } from 'react';
 import { View, FlatList, RefreshControl } from 'react-native';
 import { ThemedSafeAreaView } from '@/components';
 import { SearchBar, SimpleFAB, TAB_BAR_SAFE_PADDING, PropertyImageCard } from '@/components/ui';
+import { PropertyCardSkeleton, SkeletonList } from '@/components/ui/CardSkeletons';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, GLASS_INTENSITY } from '@/constants/design-tokens';
@@ -77,29 +78,37 @@ export function PropertyListScreen() {
 
   return (
     <ThemedSafeAreaView className="flex-1" edges={['top']}>
-      {/* Search Bar - in normal document flow */}
-      <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search properties..."
-          size="md"
-          glass={true}
-          onFilter={() => setShowFiltersSheet(true)}
-          hasActiveFilters={hasActiveFilters}
-        />
-      </View>
+      <View style={{ flex: 1 }}>
+        {/* Search Bar — floats above content with glass blur */}
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: SPACING.md, paddingTop: SPACING.sm }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search properties..."
+            size="md"
+            glass={true}
+            onFilter={() => setShowFiltersSheet(true)}
+            hasActiveFilters={hasActiveFilters}
+          />
+        </View>
 
-      <FlatList
-        data={filteredProperties}
-        renderItem={renderPropertyItem}
-        keyExtractor={keyExtractor}
-        numColumns={viewMode === 'grid' ? 2 : 1}
-        key={viewMode}
-        contentContainerStyle={{
-          paddingHorizontal: SPACING.md,
-          paddingBottom: TAB_BAR_SAFE_PADDING,
-        }}
+        {isLoading && !properties?.length ? (
+          <View style={{ paddingHorizontal: SPACING.md, paddingTop: 64 + SPACING.md }}>
+            <SkeletonList count={5} component={PropertyCardSkeleton} />
+          </View>
+        ) : (
+          <FlatList
+          data={filteredProperties}
+          renderItem={renderPropertyItem}
+          keyExtractor={keyExtractor}
+          numColumns={viewMode === 'grid' ? 2 : 1}
+          key={viewMode}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: SPACING.md,
+            paddingTop: 64 + SPACING.md,
+            paddingBottom: TAB_BAR_SAFE_PADDING,
+          }}
         contentInsetAdjustmentBehavior="automatic"
         columnWrapperStyle={viewMode === 'grid' ? { gap: 12 } : undefined}
         ItemSeparatorComponent={viewMode === 'list' ? ItemSeparator : undefined}
@@ -126,6 +135,8 @@ export function PropertyListScreen() {
         windowSize={5}
         removeClippedSubviews={true}
       />
+        )}
+      </View>
 
       <SimpleFAB onPress={handleAddProperty} accessibilityLabel="Add property" />
 

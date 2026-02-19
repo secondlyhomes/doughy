@@ -139,8 +139,12 @@ jest.mock('@/components/ui/CardSkeletons', () => {
 jest.mock('lucide-react-native', () => {
   const React = require('react');
   const { View } = require('react-native');
-  const createIcon = (name: string) => (props: any) =>
-    React.createElement(View, { testID: `icon-${name}`, ...props });
+  const createIcon = (name: string) => {
+    const Icon = (props: any) =>
+      React.createElement(View, { testID: `icon-${name}`, ...props });
+    Icon.displayName = name;
+    return Icon;
+  };
   return {
     MessageSquare: createIcon('message-square'),
     Bot: createIcon('bot'),

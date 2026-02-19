@@ -146,7 +146,7 @@ export function PropertyFormStep3({ data, onChange, errors }: PropertyFormStep3P
           )}
 
           <Text className="text-xs mt-2" style={{ color: colors.mutedForeground }}>
-            The price you're paying or planning to pay for the property.
+            The price you{'\''}re paying or planning to pay for the property.
           </Text>
         </View>
 

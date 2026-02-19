@@ -374,7 +374,7 @@ export function EvidenceTrailModal({
                         </View>
                         {override.reason && (
                           <Text style={{ fontSize: 13, color: colors.mutedForeground, fontStyle: 'italic' }}>
-                            "{override.reason}"
+                            {'"'}{override.reason}{'"'}
                           </Text>
                         )}
                       </View>

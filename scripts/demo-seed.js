@@ -45,6 +45,7 @@ const USER_ID = '3aa71532-c4df-4b1a-aabf-6ed1d5efc7ce';
 const WORKSPACE_ID = '90886395-a5ba-48c1-b72b-8cdfa07d3854';
 const SEED_BATCH = 'demo-feb20';
 const USER_PHONE = '+17574723676';
+const DEMO_GOOGLE_VOICE = '+17036798951'; // Google Voice number for demo texting
 
 // Deterministic UUIDs for cross-referencing (always the same on every run)
 const IDS = {

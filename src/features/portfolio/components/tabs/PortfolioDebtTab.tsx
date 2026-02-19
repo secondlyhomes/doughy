@@ -164,7 +164,7 @@ export function PortfolioDebtTab({
             <CardTitle className="flex-row items-center gap-2">
               <Calendar size={18} color={colors.primary} />
               <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '600' }}>
-                This Month's Payment
+                This Month{'\''} Payment
               </Text>
             </CardTitle>
           </CardHeader>

@@ -39,7 +39,7 @@ export function QueueSection({
 
   if (trustLevel === 'locked') {
     return (
-      <View style={{ marginBottom: theme.tokens.spacing[6] }}>
+      <View style={{ marginTop: theme.tokens.spacing[2], marginBottom: theme.tokens.spacing[6] }}>
         <SectionHeader title="Queue" />
         <Card variant="filled" padding="md" style={{ marginHorizontal: theme.tokens.spacing[5] }}>
           <Text variant="body" weight="semibold" style={{ marginBottom: theme.tokens.spacing[1] }}>
@@ -55,7 +55,7 @@ export function QueueSection({
 
   if (trustLevel === 'autonomous') {
     return (
-      <View style={{ marginBottom: theme.tokens.spacing[6] }}>
+      <View style={{ marginTop: theme.tokens.spacing[2], marginBottom: theme.tokens.spacing[6] }}>
         <SectionHeader title="Queue" />
         <Card variant="filled" padding="md" style={{ marginHorizontal: theme.tokens.spacing[5] }}>
           <Text variant="body" weight="semibold" style={{ marginBottom: theme.tokens.spacing[1] }}>
@@ -75,7 +75,7 @@ export function QueueSection({
 
   if (totalItems === 0) {
     return (
-      <View style={{ marginBottom: theme.tokens.spacing[6] }}>
+      <View style={{ marginTop: theme.tokens.spacing[2], marginBottom: theme.tokens.spacing[6] }}>
         <SectionHeader title={sectionTitle} />
         <View style={{ paddingHorizontal: theme.tokens.spacing[5], paddingVertical: theme.tokens.spacing[3] }}>
           <Text variant="bodySmall" color={theme.colors.text.tertiary} align="center">
@@ -87,7 +87,7 @@ export function QueueSection({
   }
 
   return (
-    <View style={{ marginBottom: theme.tokens.spacing[6] }}>
+    <View style={{ marginTop: theme.tokens.spacing[2], marginBottom: theme.tokens.spacing[6] }}>
       <SectionHeader title={sectionTitle} count={totalItems} />
 
       {/* Guarded mode: countdown cards */}

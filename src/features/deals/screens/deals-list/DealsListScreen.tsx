@@ -124,33 +124,36 @@ export function DealsListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Search Bar */}
-        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search by address or lead..."
-            size="md"
-            glass={true}
-            onFilter={() => setShowFiltersSheet(true)}
-            hasActiveFilters={searchQuery.trim().length > 0 || activeStage !== 'all'}
-          />
-        </View>
-
-        {/* Deals List */}
-        {isLoading && !deals?.length ? (
-          <View style={{ paddingHorizontal: SPACING.md }}>
-            <SkeletonList count={5} component={DealCardSkeleton} />
+        <View style={{ flex: 1 }}>
+          {/* Search Bar — floats above content with glass blur */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: SPACING.md, paddingTop: SPACING.sm }}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search by address or lead..."
+              size="md"
+              glass={true}
+              onFilter={() => setShowFiltersSheet(true)}
+              hasActiveFilters={searchQuery.trim().length > 0 || activeStage !== 'all'}
+            />
           </View>
-        ) : (
-          <FlatList
-            data={deals}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            contentContainerStyle={{
-              paddingHorizontal: SPACING.md,
-              paddingBottom: TAB_BAR_SAFE_PADDING,
-            }}
+
+          {/* Deals List */}
+          {isLoading && !deals?.length ? (
+            <View style={{ paddingHorizontal: SPACING.md, paddingTop: 64 + SPACING.md }}>
+              <SkeletonList count={5} component={DealCardSkeleton} />
+            </View>
+          ) : (
+            <FlatList
+              data={deals}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: SPACING.md,
+                paddingTop: 64 + SPACING.md,
+                paddingBottom: TAB_BAR_SAFE_PADDING,
+              }}
             contentInsetAdjustmentBehavior="automatic"
             ItemSeparatorComponent={ItemSeparator}
             initialNumToRender={10}
@@ -184,6 +187,7 @@ export function DealsListScreen() {
             }
           />
         )}
+        </View>
 
         {/* Floating Action Button */}
         <SimpleFAB onPress={handleAddDeal} accessibilityLabel="Add new deal" />

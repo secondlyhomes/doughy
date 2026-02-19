@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "postinstall": "patch-package",
-    "start": "expo start",
+    "start": "npx expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

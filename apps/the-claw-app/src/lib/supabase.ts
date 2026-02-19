@@ -28,7 +28,7 @@ if (!supabaseUrl || supabaseUrl === 'undefined') {
  */
 const ExpoSecureStoreAdapter = {
   getItem: async (key: string): Promise<string | null> => {
-    if (Platform.OS === 'web') return localStorage.getItem(key)
+    if (Platform.OS === 'web') return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null
 
     // Try SecureStore first (preferred for small values)
     try {
@@ -49,7 +49,7 @@ const ExpoSecureStoreAdapter = {
 
   setItem: async (key: string, value: string): Promise<void> => {
     if (Platform.OS === 'web') {
-      localStorage.setItem(key, value)
+      if (typeof localStorage !== 'undefined') localStorage.setItem(key, value)
       return
     }
 
@@ -76,7 +76,7 @@ const ExpoSecureStoreAdapter = {
 
   removeItem: async (key: string): Promise<void> => {
     if (Platform.OS === 'web') {
-      localStorage.removeItem(key)
+      if (typeof localStorage !== 'undefined') localStorage.removeItem(key)
       return
     }
 

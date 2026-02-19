@@ -71,7 +71,7 @@ interface StatCardProps {
   };
 }
 
-const StatCard = React.memo<StatCardProps>(({ title, value, icon, trend }) => {
+const StatCard = React.memo<StatCardProps>(function StatCard({ title, value, icon, trend }) {
   const colors = useThemeColors();
   return (
     <View className="rounded-xl p-4 flex-1 min-w-[45%]" style={{ backgroundColor: colors.card }}>
@@ -102,7 +102,7 @@ const StatCard = React.memo<StatCardProps>(({ title, value, icon, trend }) => {
   );
 });
 
-const ActionIcon = React.memo<{ category: ActionCategory; color: string; size?: number }>(({ category, color, size = ICON_SIZES.md }) => {
+const ActionIcon = React.memo<{ category: ActionCategory; color: string; size?: number }>(function ActionIcon({ category, color, size = ICON_SIZES.md }) {
   switch (category) {
     case 'contact':
       return <Phone size={size} color={color} />;
@@ -253,7 +253,7 @@ export function DashboardScreen() {
         <View className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.card }}>
           <View className="flex-row items-center mb-2">
             <Clock size={ICON_SIZES.lg} color={colors.primary} />
-            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Today's Actions</Text>
+            <Text className="text-lg font-semibold ml-2" style={{ color: colors.foreground }}>Today{'\''} Actions</Text>
           </View>
           <Text className="text-sm mb-4" style={{ color: colors.mutedForeground }}>
             Top deals requiring your attention

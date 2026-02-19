@@ -1,7 +1,8 @@
 /**
  * Contacts Service
  *
- * Queries CRM contacts from Supabase (crm.contacts).
+ * Queries CRM contacts (crm.contacts) AND leads (crm.leads) from Supabase.
+ * Merges both into a unified Contact type for CallPilot's UI.
  * Falls back to mock data when Supabase credentials are not configured.
  */
 
@@ -33,6 +34,24 @@ interface CrmContact {
   updated_at: string | null
 }
 
+interface CrmLead {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  company: string | null
+  source: string | null
+  status: string
+  tags: string[] | null
+  city: string | null
+  state: string | null
+  score: number | null
+  module: string
+  notes: string | null
+  created_at: string | null
+  updated_at: string
+}
+
 const SOURCE_MAP: Record<string, ContactSource> = {
   referral: 'referral',
   cold_call: 'cold',
@@ -47,11 +66,13 @@ const SOURCE_MAP: Record<string, ContactSource> = {
 const STATUS_MAP: Record<string, ContactStatus> = {
   new: 'prospect',
   contacted: 'prospect',
+  active: 'prospect',
   qualified: 'quoted',
   negotiating: 'negotiating',
   closed_won: 'won',
   closed_lost: 'lost',
   unresponsive: 'lost',
+  dead: 'lost',
 }
 
 function computeTemperature(status: ContactStatus, score: number | null, lastContactDate: string): ContactTemperature {
@@ -126,6 +147,49 @@ function mapCrmToContact(row: CrmContact): Contact {
   }
 }
 
+function mapLeadToContact(row: CrmLead): Contact {
+  const status = STATUS_MAP[row.status || ''] || 'prospect'
+  const lastContactDate = row.updated_at || row.created_at || new Date().toISOString()
+  const score = row.score ?? null
+  const module = (row.module || 'investor') as ContactModule
+
+  // Split lead name into first/last
+  const nameParts = row.name.trim().split(/\s+/)
+  const firstName = nameParts[0] || ''
+  const lastName = nameParts.slice(1).join(' ')
+
+  return {
+    id: row.id,
+    firstName,
+    lastName,
+    company: row.company || '',
+    role: '',
+    phone: row.phone || '',
+    email: row.email || '',
+    source: SOURCE_MAP[row.source || ''] || 'cold',
+    policyType: '',
+    estimatedPremium: 0,
+    lastContactDate,
+    nextFollowUp: '',
+    callCount: 0,
+    status,
+    notes: row.notes || '',
+    keyFacts: [],
+    objections: [],
+    optStatus: null,
+    tags: row.tags,
+    communicationStats: null,
+    preferredChannel: null,
+    score,
+    temperature: computeTemperature(status, score, lastContactDate),
+    address: buildAddress(row.city, row.state),
+    module,
+    contactType: null,
+    leaseInfo: null,
+    contractorInfo: null,
+  }
+}
+
 // ============================================================================
 // Service functions
 // ============================================================================
@@ -140,34 +204,67 @@ export async function getContacts(module: 'investor' | 'landlord' = 'investor'):
   if (authError) throw new Error(`Authentication failed: ${authError.message}`)
   if (!user?.user) throw new Error('Not authenticated')
 
-  const { data, error } = await supabase
-    .schema('crm')
-    .from('contacts')
-    .select('*')
-    .eq('module', module)
-    .is('deleted_at', null)
-    .order('score', { ascending: false })
-    .limit(50)
+  // Query both crm.contacts and crm.leads in parallel
+  const [contactsResult, leadsResult] = await Promise.all([
+    supabase
+      .schema('crm')
+      .from('contacts')
+      .select('*')
+      .eq('module', module)
+      .eq('is_deleted', false)
+      .order('score', { ascending: false })
+      .limit(50),
+    supabase
+      .schema('crm')
+      .from('leads')
+      .select('id, name, email, phone, company, source, status, tags, city, state, score, module, notes, created_at, updated_at')
+      .eq('module', module)
+      .eq('is_deleted', false)
+      .order('score', { ascending: false })
+      .limit(50),
+  ])
 
-  if (error) throw new Error(`Failed to load contacts: ${error.message}`)
+  if (contactsResult.error) throw new Error(`Failed to load contacts: ${contactsResult.error.message}`)
+  if (leadsResult.error) throw new Error(`Failed to load leads: ${leadsResult.error.message}`)
 
-  return (data || []).map(mapCrmToContact)
+  const contacts = (contactsResult.data || []).map(mapCrmToContact)
+  const leads = (leadsResult.data || []).map((row: any) => mapLeadToContact(row as CrmLead))
+
+  // Merge and dedupe (leads that share a phone with a contact are likely the same person)
+  const contactPhones = new Set(contacts.map((c) => c.phone).filter(Boolean))
+  const uniqueLeads = leads.filter((l) => !l.phone || !contactPhones.has(l.phone))
+
+  return [...contacts, ...uniqueLeads]
 }
 
 export async function getContact(id: string): Promise<Contact | undefined> {
   if (isMockMode || !supabase) return mockContacts.find((c) => c.id === id)
 
+  // Try crm.contacts first
   const { data, error } = await supabase
     .schema('crm')
     .from('contacts')
     .select('*')
     .eq('id', id)
-    .is('deleted_at', null)
-    .single()
+    .eq('is_deleted', false)
+    .maybeSingle()
 
   if (error) throw new Error(`Failed to load contact: ${error.message}`)
-  if (!data) return undefined
-  return mapCrmToContact(data as CrmContact)
+  if (data) return mapCrmToContact(data as CrmContact)
+
+  // Fall back to crm.leads
+  const { data: lead, error: leadError } = await supabase
+    .schema('crm')
+    .from('leads')
+    .select('id, name, email, phone, company, source, status, tags, city, state, score, module, notes, created_at, updated_at')
+    .eq('id', id)
+    .eq('is_deleted', false)
+    .maybeSingle()
+
+  if (leadError) throw new Error(`Failed to load lead: ${leadError.message}`)
+  if (lead) return mapLeadToContact(lead as CrmLead)
+
+  return undefined
 }
 
 export async function searchContacts(query: string, module: 'investor' | 'landlord' = 'investor'): Promise<Contact[]> {
@@ -185,19 +282,38 @@ export async function searchContacts(query: string, module: 'investor' | 'landlo
   // Sanitize: allow only alphanumeric, spaces, hyphens, and apostrophes
   const sanitized = query.replace(/[^a-zA-Z0-9\s'-]/g, '')
   const q = `%${sanitized}%`
-  const { data, error } = await supabase
-    .schema('crm')
-    .from('contacts')
-    .select('*')
-    .eq('module', module)
-    .is('deleted_at', null)
-    .or(`first_name.ilike.${q},last_name.ilike.${q},company.ilike.${q}`)
-    .order('score', { ascending: false })
-    .limit(20)
 
-  if (error) throw new Error(`Search failed: ${error.message}`)
+  const [contactsResult, leadsResult] = await Promise.all([
+    supabase
+      .schema('crm')
+      .from('contacts')
+      .select('*')
+      .eq('module', module)
+      .eq('is_deleted', false)
+      .or(`first_name.ilike.${q},last_name.ilike.${q},company.ilike.${q}`)
+      .order('score', { ascending: false })
+      .limit(20),
+    supabase
+      .schema('crm')
+      .from('leads')
+      .select('id, name, email, phone, company, source, status, tags, city, state, score, module, notes, created_at, updated_at')
+      .eq('module', module)
+      .eq('is_deleted', false)
+      .or(`name.ilike.${q},company.ilike.${q}`)
+      .order('score', { ascending: false })
+      .limit(20),
+  ])
 
-  return (data || []).map(mapCrmToContact)
+  if (contactsResult.error) throw new Error(`Search failed: ${contactsResult.error.message}`)
+  if (leadsResult.error) throw new Error(`Lead search failed: ${leadsResult.error.message}`)
+
+  const contacts = (contactsResult.data || []).map(mapCrmToContact)
+  const leads = (leadsResult.data || []).map((row: any) => mapLeadToContact(row as CrmLead))
+
+  const contactPhones = new Set(contacts.map((c) => c.phone).filter(Boolean))
+  const uniqueLeads = leads.filter((l) => !l.phone || !contactPhones.has(l.phone))
+
+  return [...contacts, ...uniqueLeads]
 }
 
 export async function getOverdueFollowUps(): Promise<Contact[]> {
@@ -225,7 +341,7 @@ export async function getOverdueFollowUps(): Promise<Contact[]> {
     .from('contacts')
     .select('*')
     .in('id', contactIds)
-    .is('deleted_at', null)
+    .eq('is_deleted', false)
 
   if (error) throw new Error(`Failed to load overdue contacts: ${error.message}`)
   return (data || []).map(mapCrmToContact)
@@ -295,7 +411,7 @@ export async function deleteContact(id: string): Promise<void> {
   const { error } = await supabase
     .schema('crm')
     .from('contacts')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({ is_deleted: true, updated_at: new Date().toISOString() })
     .eq('id', id)
 
   if (error) throw new Error(error.message)

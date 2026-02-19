@@ -105,8 +105,8 @@ export default function MessagesScreen() {
         <View style={{ flex: 1, paddingTop: listTopPadding }}>
           <EmptyState
             title="No messages yet"
-            description="Start a conversation by tapping \uD83D\uDCAC on a contact."
-            icon="chatbubble"
+            description={"Start a conversation by tapping 💬 on a contact."}
+            icon="💬"
           />
         </View>
       ) : (
@@ -118,7 +118,7 @@ export default function MessagesScreen() {
           ItemSeparatorComponent={renderSeparator}
           contentContainerStyle={{
             paddingTop: listTopPadding,
-            paddingBottom: theme.tokens.spacing[4],
+            paddingBottom: insets.bottom + 60,
           }}
           showsVerticalScrollIndicator={false}
         />

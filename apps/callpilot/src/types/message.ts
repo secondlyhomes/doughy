@@ -17,6 +17,7 @@ export interface Message {
   id: string;
   contactId: string;
   type: UIMessageType;
+  channel: CommunicationChannel;
   content: string;
   timestamp: string;
   sender: string;
@@ -53,6 +54,7 @@ export interface Conversation {
 export function mapChannelToUIType(channel: CommunicationChannel): UIMessageType {
   switch (channel) {
     case 'sms':
+    case 'whatsapp':
       return 'text';
     case 'email':
       return 'email';
@@ -70,6 +72,7 @@ export function convertCommunicationToMessage(comm: Communication): Message {
     id: comm.id,
     contactId: comm.contactId,
     type: mapChannelToUIType(comm.channel),
+    channel: comm.channel,
     content: comm.body,
     timestamp: comm.createdAt,
     sender: comm.direction === 'outgoing' ? 'You' : 'Contact',

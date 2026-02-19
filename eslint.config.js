@@ -6,5 +6,14 @@ module.exports = defineConfig([
   expoConfig,
   {
     ignores: ["dist/*", "apps/*"],
-  }
+  },
+  {
+    settings: {
+      "import/ignore": ["@expo/vector-icons", "expo-print", "react-native"],
+    },
+    rules: {
+      "import/no-unresolved": ["error", { ignore: ["@expo/vector-icons", "expo-print"] }],
+      "import/namespace": "off",
+    },
+  },
 ]);

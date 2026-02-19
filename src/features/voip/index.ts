@@ -4,8 +4,8 @@
 // Screens
 export { InCallScreen } from './screens/InCallScreen';
 
-// Components
-export { CallControls, LiveTranscript, AISuggestions } from './components';
+// Components (CallControls component — type of same name exported from ./types)
+export { CallControls as CallControlsComponent, LiveTranscript, AISuggestions } from './components';
 
 // Hooks
 export { useVoipCall, useLiveTranscription, useAISuggestions } from './hooks';
@@ -16,5 +16,5 @@ export { useVoipCallStore } from './stores/voip-call-store';
 // Services
 export * from './services/twilioService';
 
-// Types
+// Types (includes CallControls interface)
 export * from './types';

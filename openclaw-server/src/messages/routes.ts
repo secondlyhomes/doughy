@@ -4,7 +4,7 @@
 
 import { Router, Request, Response } from 'express';
 import { config } from '../config.js';
-import { schemaQuery, schemaInsert, schemaUpdate } from '../claw/db.js';
+import { schemaQuery, rpcCall } from '../claw/db.js';
 import { sendSms } from '../claw/twilio.js';
 import { logCost } from '../claw/costs.js';
 
@@ -26,14 +26,22 @@ async function requireAuth(req: Request, res: Response, next: () => void): Promi
   const token = authHeader.slice(7);
 
   try {
+    if (!config.supabasePublishableKey) {
+      console.error('[MessagesAPI] SUPABASE_PUBLISHABLE_KEY not configured');
+      res.status(500).json({ error: 'Server misconfiguration' });
+      return;
+    }
+
     const userRes = await fetch(`${config.supabaseUrl}/auth/v1/user`, {
       headers: {
-        apikey: config.supabaseServiceKey,
+        apikey: config.supabasePublishableKey,
         Authorization: `Bearer ${token}`,
       },
     });
 
     if (!userRes.ok) {
+      const body = await userRes.text().catch(() => '');
+      console.error(`[MessagesAPI] Auth verify failed: ${userRes.status} ${body.slice(0, 200)}`);
       res.status(401).json({ error: 'Invalid or expired token' });
       return;
     }
@@ -58,7 +66,7 @@ async function requireAuth(req: Request, res: Response, next: () => void): Promi
 router.post('/send', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const { leadId, contactId, channel, body, conversationId } = req.body;
+    const { leadId, contactId, channel, body } = req.body;
 
     // Validate required fields
     if (!body || typeof body !== 'string' || body.trim().length === 0) {
@@ -94,45 +102,33 @@ router.post('/send', requireAuth, async (req: Request, res: Response) => {
       if (!UUID_RE.test(contactId)) {
         return res.status(400).json({ error: 'Invalid contactId' });
       }
+      // Try crm.contacts first
       const contacts = await schemaQuery<{ id: string; first_name: string | null; last_name: string | null; phone: string | null; user_id: string }>(
         'crm', 'contacts', `id=eq.${contactId}&user_id=eq.${userId}&select=id,first_name,last_name,phone,user_id&limit=1`
       );
-      if (contacts.length === 0) {
-        return res.status(404).json({ error: 'Contact not found' });
+      if (contacts.length > 0) {
+        recipientPhone = contacts[0].phone;
+        recipientName = [contacts[0].first_name, contacts[0].last_name].filter(Boolean).join(' ') || 'Unknown';
+      } else {
+        // Fall back to crm.leads (CallPilot sends contactId for both contacts and leads)
+        const leads = await schemaQuery<{ id: string; name: string; phone: string | null; user_id: string }>(
+          'crm', 'leads', `id=eq.${contactId}&user_id=eq.${userId}&select=id,name,phone,user_id&limit=1`
+        );
+        if (leads.length === 0) {
+          return res.status(404).json({ error: 'Contact not found' });
+        }
+        recipientPhone = leads[0].phone;
+        recipientName = leads[0].name;
+        // Reclassify as a lead for conversation/message storage
+        (req as any).resolvedLeadId = contactId;
       }
-      recipientPhone = contacts[0].phone;
-      recipientName = [contacts[0].first_name, contacts[0].last_name].filter(Boolean).join(' ') || 'Unknown';
     }
 
     if (channel === 'sms' && !recipientPhone) {
       return res.status(400).json({ error: `No phone number on file for ${recipientName}` });
     }
 
-    // Find or create conversation
-    let convId = conversationId;
-    if (!convId && leadId) {
-      // Look for existing conversation with this lead
-      const convos = await schemaQuery<{ id: string }>(
-        'investor', 'conversations',
-        `user_id=eq.${userId}&lead_id=eq.${leadId}&channel=eq.${channel}&status=eq.active&select=id&order=updated_at.desc&limit=1`
-      );
-      if (convos.length > 0) {
-        convId = convos[0].id;
-      } else {
-        // Create new conversation
-        const newConvo = await schemaInsert<{ id: string }>(
-          'investor', 'conversations', {
-            user_id: userId,
-            lead_id: leadId,
-            channel,
-            status: 'active',
-            unread_count: 0,
-            message_count: 0,
-          }
-        );
-        convId = newConvo.id;
-      }
-    }
+    const effectiveLeadId = leadId || (req as any).resolvedLeadId;
 
     // Send via Twilio (SMS only for now)
     let deliveredAt: string | null = null;
@@ -155,51 +151,28 @@ router.post('/send', requireAuth, async (req: Request, res: Response) => {
       }
     }
 
-    // Store message in investor.messages
-    const message = await schemaInsert<{ id: string; created_at: string }>(
-      'investor', 'messages', {
-        conversation_id: convId,
-        direction: 'outbound',
-        content: body.trim(),
-        content_type: 'text',
-        sent_by: 'user',
-        delivered_at: deliveredAt,
-        failed_at: failedAt,
-        failure_reason: failureReason,
-        metadata: twilioSid ? { twilio_sid: twilioSid } : {},
-      }
-    );
-
-    // Update conversation
-    if (convId) {
-      schemaUpdate('investor', 'conversations', convId, {
-        last_message_at: new Date().toISOString(),
-        last_message_preview: body.trim().slice(0, 100),
-        message_count: undefined, // Will use raw SQL increment in future
-        updated_at: new Date().toISOString(),
-      }).catch((err) => console.error('[Messages] Conversation update failed:', err));
-    }
-
-    // Also store in crm.messages for the unified CRM view
-    schemaInsert('crm', 'messages', {
-      user_id: userId,
-      lead_id: leadId || null,
-      contact_id: contactId || null,
-      direction: 'outbound',
-      channel,
-      sender_type: 'user',
-      phone_from: config.twilioPhoneNumber || null,
-      phone_to: recipientPhone,
-      body: body.trim(),
-      status: deliveredAt ? 'delivered' : (failedAt ? 'failed' : 'sent'),
-    }).catch((err) => console.error('[Messages] CRM message store failed:', err));
+    // Store message in crm.messages via RPC (bypasses PostgREST Content-Profile
+    // schema resolution which is unreliable when multiple schemas have a "messages" table)
+    const rpcResult = await rpcCall('insert_crm_outbound_message', {
+      p_user_id: userId,
+      p_lead_id: effectiveLeadId || null,
+      p_contact_id: (effectiveLeadId ? null : contactId) || null,
+      p_direction: 'outbound',
+      p_channel: channel,
+      p_sender_type: 'user',
+      p_phone_from: config.twilioPhoneNumber || null,
+      p_phone_to: recipientPhone,
+      p_body: body.trim(),
+      p_status: deliveredAt ? 'delivered' : (failedAt ? 'failed' : 'sent'),
+      p_metadata: twilioSid ? { twilio_sid: twilioSid } : {},
+    });
+    const message = (Array.isArray(rpcResult) ? rpcResult[0] : rpcResult) as { id: string; created_at: string };
 
     console.log(`[Messages] ${channel} sent to ${recipientName} (${recipientPhone}) by ${userId}`);
 
     res.json({
       success: !failedAt,
       message_id: message.id,
-      conversation_id: convId,
       delivered: !!deliveredAt,
       created_at: message.created_at,
       error: failureReason,

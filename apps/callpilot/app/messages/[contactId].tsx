@@ -11,7 +11,7 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react'
 import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Keyboard, Alert, ActionSheetIOS, Platform, Linking } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { triggerImpact } from '@/utils/haptics'
@@ -29,7 +29,6 @@ export default function ConversationThreadScreen() {
   const { contactId } = useLocalSearchParams<{ contactId: string }>()
   const { theme, isDark } = useTheme()
   const router = useRouter()
-  const insets = useSafeAreaInsets()
   const { getMessagesForContact } = useConversations()
   const { getContact } = useContacts()
   const flatListRef = useRef<FlatList<Message>>(null)
@@ -172,7 +171,7 @@ export default function ConversationThreadScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
       {/* Header — glass buttons, channel pills */}
       <View style={{ paddingHorizontal: theme.tokens.spacing[3], paddingVertical: theme.tokens.spacing[2] }}>
         {/* Top row: back, name, menu */}
@@ -209,7 +208,7 @@ export default function ConversationThreadScreen() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 44 : 0}
+        keyboardVerticalOffset={0}
       >
         {/* Messages — inverted FlatList */}
         {sortedMessages.length === 0 ? (
@@ -254,7 +253,7 @@ export default function ConversationThreadScreen() {
           alignItems: 'flex-end',
           paddingHorizontal: theme.tokens.spacing[3],
           paddingVertical: theme.tokens.spacing[2],
-          paddingBottom: insets.bottom + theme.tokens.spacing[2],
+          paddingBottom: theme.tokens.spacing[2],
           borderTopWidth: 1,
           borderTopColor: theme.colors.border,
           backgroundColor: theme.colors.background,

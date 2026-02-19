@@ -1,4 +1,4 @@
-export type CommunicationChannel = 'sms' | 'email' | 'call' | 'transcript';
+export type CommunicationChannel = 'sms' | 'email' | 'whatsapp' | 'call' | 'transcript';
 export type CommunicationDirection = 'incoming' | 'outgoing';
 export type CommunicationStatus = 'sent' | 'delivered' | 'read' | 'error';
 

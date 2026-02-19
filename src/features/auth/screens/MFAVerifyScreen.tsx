@@ -170,7 +170,7 @@ export function MFAVerifyScreen() {
           {/* Help text */}
           <Text className="text-sm text-center mt-8" style={{ color: colors.mutedForeground }}>
             Open your authenticator app to view your code.
-            {'\n'}If you've lost access, contact support.
+            {'\n'}If you{'\''} lost access, contact support.
           </Text>
         </View>
       </KeyboardAvoidingView>

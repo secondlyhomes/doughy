@@ -239,7 +239,7 @@ export function NudgeSettingsScreen() {
                 >
                   <Text className="text-sm" style={{ color: colors.mutedForeground }}>
                     Smart nudges help you stay on top of your leads and deals by
-                    surfacing reminders in the Focus tab's Inbox mode. Nudges are
+                    surfacing reminders in the Focus tab{'\''} Inbox mode. Nudges are
                     generated based on activity data and the thresholds you set above.
                   </Text>
                 </View>

@@ -5,13 +5,14 @@ import { config } from '../config.js';
 import { INTENT_CLASSIFIER_PROMPT, formatHelpText } from './prompts.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
 import { runAgent } from './agents.js';
-import { clawInsert, clawUpdate, clawQuery, schemaQuery, schemaInsert, schemaUpdate } from './db.js';
+import { clawInsert, clawUpdate, clawQuery, schemaQuery, schemaInsert, schemaUpdate, claimApproval } from './db.js';
 import { createApproval } from './tools.js';
 import { broadcastMessage } from './broadcast.js';
 import { sendWhatsApp } from './twilio.js';
 import { callEdgeFunction } from './edge.js';
 import { logClaudeCost, logCost, getTodayCosts, getMonthlyCosts } from './costs.js';
 import { enforceAction, getTrustConfig, type TrustLevel } from './trust.js';
+import { getApiKey } from '../services/api-keys.js';
 import type { ClawIntent, ClawChannel, ClawResponse, ClawSmsInbound } from './types.js';
 
 /**
@@ -40,16 +41,18 @@ async function loadRecentMessages(
  * Includes recent conversation history for context-aware classification
  */
 async function classifyIntent(
+  userId: string,
   message: string,
   conversationHistory: Array<{ role: string; content: string }> = []
 ): Promise<ClawIntent> {
-  if (!config.anthropicApiKey) {
+  const apiKey = await getApiKey(userId, 'anthropic');
+  if (!apiKey) {
     return guessIntentFromKeywords(message);
   }
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
+    const client = new Anthropic({ apiKey, timeout: 30_000 });
 
     // Build messages with conversation context
     let classifierInput: string;
@@ -220,7 +223,7 @@ export async function handleClawMessage(
   }
 
   // Classify intent with conversation context
-  const intent = await classifyIntent(message, conversationHistory);
+  const intent = await classifyIntent(userId, message, conversationHistory);
   console.log(`[Controller] Intent: ${intent}`);
 
   let response: ClawResponse;
@@ -303,7 +306,8 @@ async function handleBriefing(userId: string): Promise<ClawResponse> {
 
   try {
     const data = await generateBriefingData(userId);
-    const briefingText = await formatBriefing(data, config.anthropicApiKey, userId);
+    const apiKey = await getApiKey(userId, 'anthropic');
+    const briefingText = await formatBriefing(data, apiKey, userId);
 
     await clawUpdate('tasks', task.id, {
       status: 'done',
@@ -545,20 +549,25 @@ async function handleApproval(
 
     for (const approval of pendingApprovals) {
       try {
-        await clawUpdate('approvals', approval.id, {
-          status: 'approved',
+        // Atomically claim: only succeeds if still pending (prevents double-send)
+        const claimed = await claimApproval<typeof approval>(approval.id, userId, {
           decided_at: now,
         });
 
+        if (!claimed) {
+          results.push(`Already handled: ${approval.recipient_name || approval.title}`);
+          continue;
+        }
+
         // Execute if it's a send action
-        if (approval.action_type === 'send_sms' && approval.recipient_phone) {
-          const sent = await executeApprovedAction(userId, approval);
+        if (claimed.action_type === 'send_sms' && claimed.recipient_phone) {
+          const sent = await executeApprovedAction(userId, claimed);
           results.push(sent
-            ? `WhatsApp sent to ${approval.recipient_name || approval.recipient_phone}`
-            : `Approved: ${approval.recipient_name || 'Unknown'} (send failed — retry from the app)`
+            ? `WhatsApp sent to ${claimed.recipient_name || claimed.recipient_phone}`
+            : `Approved: ${claimed.recipient_name || 'Unknown'} (send failed — retry from the app)`
           );
         } else {
-          results.push(`Approved: ${approval.title}`);
+          results.push(`Approved: ${claimed.title}`);
         }
       } catch (err) {
         console.error(`[Controller] Approval ${approval.id} failed:`, err);
@@ -594,15 +603,15 @@ async function handleApproval(
     const index = parseInt(numberMatch[1]) - 1;
     if (index >= 0 && index < pendingApprovals.length) {
       const approval = pendingApprovals[index];
-      await clawUpdate('approvals', approval.id, {
-        status: 'approved',
-        decided_at: now,
-      });
-      const sent = await executeApprovedAction(userId, approval);
+      const claimed = await claimApproval<typeof approval>(approval.id, userId, { decided_at: now });
+      if (!claimed) {
+        return { message: 'That approval was already handled.' };
+      }
+      const sent = await executeApprovedAction(userId, claimed);
       return {
         message: sent
-          ? `Sent to ${approval.recipient_name || approval.recipient_phone}! ✅`
-          : `Approved: ${approval.title} ✅`,
+          ? `Sent to ${claimed.recipient_name || claimed.recipient_phone}! ✅`
+          : `Approved: ${claimed.title} ✅`,
       };
     }
   }
@@ -620,14 +629,15 @@ async function handleApproval(
       const results: string[] = [];
       for (const approval of matched) {
         try {
-          await clawUpdate('approvals', approval.id, {
-            status: 'approved',
-            decided_at: now,
-          });
-          const sent = await executeApprovedAction(userId, approval);
+          const claimed = await claimApproval<typeof approval>(approval.id, userId, { decided_at: now });
+          if (!claimed) {
+            results.push(`Already handled: ${approval.recipient_name || 'Unknown'}`);
+            continue;
+          }
+          const sent = await executeApprovedAction(userId, claimed);
           results.push(sent
-            ? `Sent to ${approval.recipient_name}`
-            : `Approved: ${approval.recipient_name}`
+            ? `Sent to ${claimed.recipient_name}`
+            : `Approved: ${claimed.recipient_name}`
           );
         } catch (err) {
           console.error(`[Controller] Approve ${approval.id} (by name) failed:`, err);
@@ -893,9 +903,10 @@ async function handleDispatch(
       location: string | null;
     };
 
-    if (config.anthropicApiKey) {
+    const dispatchApiKey = await getApiKey(userId, 'anthropic');
+    if (dispatchApiKey) {
       const { default: Anthropic } = await import('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 15_000 });
+      const client = new Anthropic({ apiKey: dispatchApiKey, timeout: 15_000 });
 
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',

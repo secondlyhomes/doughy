@@ -16,12 +16,29 @@ import { withOpacity } from '@/utils/formatters'
 import { formatTimestamp, getSenderLabel } from './messageUtils'
 import { AICallResultCard } from './AICallResultCard'
 import type { Message, MessageSender } from '@/types'
+import type { CommunicationChannel } from '@/types/communication'
 
 export interface MessageBubbleProps {
   message: Message
   onFeedback?: (messageId: string, feedback: 'thumbs_up' | 'thumbs_down') => void
   showFeedback?: boolean
   contactName?: string
+}
+
+function getChannelIconName(channel: CommunicationChannel): keyof typeof Ionicons.glyphMap | null {
+  switch (channel) {
+    case 'email':
+      return 'mail-outline'
+    case 'whatsapp':
+      return 'logo-whatsapp'
+    case 'call':
+      return 'call-outline'
+    case 'transcript':
+      return 'document-text-outline'
+    case 'sms':
+    default:
+      return null // SMS is the default, no icon needed
+  }
 }
 
 function getSenderIconName(sentBy: MessageSender) {
@@ -57,6 +74,7 @@ export const MessageBubble = memo(function MessageBubble({
 
   const senderIconName = getSenderIconName(message.sentBy)
   const senderLabel = getSenderLabel(message, contactName)
+  const channelIcon = getChannelIconName(message.channel)
 
   const timeAgo = formatTimestamp(message.timestamp)
 
@@ -182,6 +200,9 @@ export const MessageBubble = memo(function MessageBubble({
             isOutbound ? styles.outboundStatusRow : styles.inboundStatusRow,
           ]}
         >
+          {channelIcon && (
+            <Ionicons name={channelIcon} size={10} color={theme.colors.text.tertiary} />
+          )}
           <Text style={[styles.timeText, { color: theme.colors.text.tertiary }]}>
             {timeAgo}
           </Text>

@@ -77,7 +77,7 @@ export function ForgotPasswordScreen() {
           Check Your Email
         </Text>
         <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
-          We've sent password reset instructions to {email}. Please check your inbox.
+          We{'\''} sent password reset instructions to {email}. Please check your inbox.
         </Text>
         <TouchableOpacity
           className="rounded-lg py-4 px-8"
@@ -119,7 +119,7 @@ export function ForgotPasswordScreen() {
               Forgot Password?
             </Text>
             <Text className="text-base mt-2" style={{ color: colors.mutedForeground }}>
-              No worries, we'll send you reset instructions.
+              No worries, we{'\''}ll send you reset instructions.
             </Text>
           </View>
 

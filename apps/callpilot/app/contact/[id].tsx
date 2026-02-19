@@ -25,6 +25,7 @@ import { TemperatureBadge } from '@/components/TemperatureBadge'
 import { SettingsGroup } from '@/components/settings/SettingsGroup'
 import { MODULE_ICONS, CONTACT_TYPE_LABELS } from '@/types/contact'
 import { useContacts, useCalls } from '@/hooks'
+import type { Call } from '@/types'
 
 export default function ContactDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -86,6 +87,11 @@ export default function ContactDetailScreen() {
 
   function handleMessage() {
     router.push({ pathname: '/messages/[contactId]', params: { contactId: contact!.id } })
+  }
+
+  function handleCallHistoryPress(call: Call) {
+    triggerImpact(ImpactFeedbackStyle.Light)
+    router.push({ pathname: '/call-summary/[callId]', params: { callId: call.id } })
   }
 
   function handleMenuPress() {
@@ -267,7 +273,7 @@ export default function ContactDetailScreen() {
           {contactCalls.length > 0 ? (
             <SettingsGroup>
               {contactCalls.map((call) => (
-                <CallHistoryRow key={call.id} call={call} />
+                <CallHistoryRow key={call.id} call={call} onPress={handleCallHistoryPress} />
               ))}
             </SettingsGroup>
           ) : (

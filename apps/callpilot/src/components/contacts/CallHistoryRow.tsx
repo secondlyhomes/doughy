@@ -4,7 +4,7 @@
  * Lightweight row for inline call history: date, caller, duration, outcome badge.
  */
 
-import { View } from 'react-native'
+import { View, TouchableOpacity } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useTheme } from '@/theme'
 import { callpilotColors } from '@/theme/callpilotColors'
@@ -14,6 +14,7 @@ import type { Call } from '@/types'
 
 export interface CallHistoryRowProps {
   call: Call
+  onPress?: (call: Call) => void
 }
 
 function formatDuration(seconds: number): string {
@@ -41,11 +42,11 @@ const OUTCOME_LABELS: Record<Call['outcome'], string> = {
   follow_up: 'Follow-up',
 }
 
-export function CallHistoryRow({ call }: CallHistoryRowProps) {
+export function CallHistoryRow({ call, onPress }: CallHistoryRowProps) {
   const { theme } = useTheme()
   const outcomeColor = callpilotColors.outcome[call.outcome]
 
-  return (
+  const content = (
     <View
       style={{
         flexDirection: 'row',
@@ -77,6 +78,20 @@ export function CallHistoryRow({ call }: CallHistoryRowProps) {
           {OUTCOME_LABELS[call.outcome]}
         </Text>
       </View>
+
+      {onPress && (
+        <Ionicons name="chevron-forward" size={14} color={theme.colors.text.tertiary} />
+      )}
     </View>
   )
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={() => onPress(call)} accessibilityRole="button" accessibilityLabel={`View call from ${formatDate(call.startedAt)}`}>
+        {content}
+      </TouchableOpacity>
+    )
+  }
+
+  return content
 }

@@ -102,7 +102,7 @@ export default function TranscriptScreen() {
         </View>
       ) : transcript.length === 0 ? (
         <EmptyState
-          icon="document-text"
+          icon="📄"
           title={error ? 'Transcript Unavailable' : 'No Transcript'}
           description={error || 'Transcript will be available after the call is processed.'}
         />

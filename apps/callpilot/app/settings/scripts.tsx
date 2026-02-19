@@ -57,7 +57,7 @@ export default function ScriptsScreen() {
           <EmptyState
             title="No scripts"
             description="Create your first call script template"
-            icon="document-text"
+            icon="📄"
           />
         }
         showsVerticalScrollIndicator={false}

@@ -222,7 +222,7 @@ export function AdminDashboardScreen() {
             Access Denied
           </Text>
           <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
-            You don't have permission to access the admin dashboard.
+            You don{'\''} have permission to access the admin dashboard.
           </Text>
           <Button onPress={() => router.back()} className="mt-6">
             Go Back

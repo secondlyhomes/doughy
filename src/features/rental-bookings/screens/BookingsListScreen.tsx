@@ -175,50 +175,36 @@ export function BookingsListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Search Bar - in normal document flow */}
-        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search bookings..."
-            size="md"
-            glass={true}
-            onFilter={() => setShowFiltersSheet(true)}
-            hasActiveFilters={hasActiveFilters}
-          />
-        </View>
-
-        {/* Error Banner */}
-        {error && (
-          <View style={{ paddingHorizontal: SPACING.md }}>
-            <Alert variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
-              <AlertDescription variant="destructive">{error}</AlertDescription>
-              <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm }}>
-                <Button size="sm" variant="outline" onPress={handleRefresh}>
-                  Try Again
-                </Button>
-                <Button size="sm" variant="ghost" onPress={clearError}>
-                  Dismiss
-                </Button>
-              </View>
-            </Alert>
+        <View style={{ flex: 1 }}>
+          {/* Search Bar — floats above content with glass blur */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: SPACING.md, paddingTop: SPACING.sm }}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search bookings..."
+              size="md"
+              glass={true}
+              onFilter={() => setShowFiltersSheet(true)}
+              hasActiveFilters={hasActiveFilters}
+            />
           </View>
-        )}
 
-        {/* Bookings List */}
-        {isLoading && !bookings?.length ? (
-          <View style={{ paddingHorizontal: SPACING.md }}>
-            <SkeletonList count={5} component={LeadCardSkeleton} />
-          </View>
-        ) : (
-          <FlatList
-            data={displayBookings}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            contentContainerStyle={{
-              paddingHorizontal: SPACING.md,
-              paddingBottom: TAB_BAR_SAFE_PADDING,
-            }}
+          {/* Bookings List */}
+          {isLoading && !bookings?.length ? (
+            <View style={{ paddingHorizontal: SPACING.md, paddingTop: 64 + SPACING.md }}>
+              <SkeletonList count={5} component={LeadCardSkeleton} />
+            </View>
+          ) : (
+            <FlatList
+              data={displayBookings}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: SPACING.md,
+                paddingTop: 64 + SPACING.md,
+                paddingBottom: TAB_BAR_SAFE_PADDING,
+              }}
             contentInsetAdjustmentBehavior="automatic"
             ItemSeparatorComponent={ItemSeparator}
             initialNumToRender={10}
@@ -231,6 +217,23 @@ export function BookingsListScreen() {
                 onRefresh={handleRefresh}
                 tintColor={colors.info}
               />
+            }
+            ListHeaderComponent={
+              error ? (
+                <View style={{ marginBottom: SPACING.md }}>
+                  <Alert variant="destructive" icon={<WifiOff size={18} color={colors.destructive} />}>
+                    <AlertDescription variant="destructive">{error}</AlertDescription>
+                    <View style={{ flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.sm }}>
+                      <Button size="sm" variant="outline" onPress={handleRefresh}>
+                        Try Again
+                      </Button>
+                      <Button size="sm" variant="ghost" onPress={clearError}>
+                        Dismiss
+                      </Button>
+                    </View>
+                  </Alert>
+                </View>
+              ) : null
             }
             ListEmptyComponent={
               <ListEmptyState
@@ -250,6 +253,7 @@ export function BookingsListScreen() {
             }
           />
         )}
+        </View>
 
         {/* Floating Action Button */}
         <SimpleFAB onPress={handleAddBooking} accessibilityLabel="Add new booking" />

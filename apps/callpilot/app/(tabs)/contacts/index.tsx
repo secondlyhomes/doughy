@@ -180,7 +180,7 @@ export default function ContactsScreen() {
           <EmptyState
             title="Couldn't load contacts"
             description="There was a problem loading your contacts. Please try again."
-            icon="alert-circle"
+            icon="⚠️"
             actionLabel="Retry"
             onAction={refresh}
           />
@@ -211,7 +211,7 @@ export default function ContactsScreen() {
                 ? 'Connect your CRM to see your leads here.'
                 : `No ${filterModule} contacts match your filters.`
             }
-            icon="people"
+            icon="👥"
             actionLabel="Go to Settings"
             onAction={() => router.push('/(tabs)/settings')}
           />
@@ -256,7 +256,7 @@ export default function ContactsScreen() {
           }
           contentContainerStyle={{
             paddingTop: listTopPadding,
-            paddingBottom: theme.tokens.spacing[4],
+            paddingBottom: insets.bottom + 60,
           }}
           showsVerticalScrollIndicator={false}
           stickySectionHeadersEnabled={false}

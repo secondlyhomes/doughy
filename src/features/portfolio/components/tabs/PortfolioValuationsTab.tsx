@@ -271,7 +271,7 @@ export function PortfolioValuationsTab({
                 No valuations recorded yet.
               </Text>
               <Text style={{ color: colors.mutedForeground, fontSize: 12, marginTop: 4 }}>
-                Track your property's value over time.
+                Track your property{'\''} value over time.
               </Text>
             </View>
           )}
