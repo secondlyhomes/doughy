@@ -170,6 +170,7 @@ supabase/              # Migrations and edge functions
 | Security checklist | `docs/09-security/SECURITY-CHECKLIST.md` |
 | Anti-patterns | `docs/anti-patterns/WHAT-NOT-TO-DO.md` |
 | Supabase reference | `docs/SUPABASE_REFERENCE.md` |
+| Troubleshooting (server + mobile) | `docs/TROUBLESHOOTING.md` |
 
 ## Before PR
 
@@ -195,6 +196,44 @@ supabase/              # Migrations and edge functions
 **Pre-commit:** Husky runs secret scanning + type checking before every commit
 
 ## Session Changelog
+
+### 2026-02-20 — doughy-tasks.md Completion (25/25 tasks)
+
+**All 25 tasks from `doughy-tasks.md` completed across 5 groups.**
+
+**Group A (Demo Readiness):**
+- Mock call system rebuilt in CallPilot (active call → summary → CRM push)
+- Marcus/Mike reconciliation verified (separate investor/landlord personas)
+- Sarah Martinez pipe-break flow confirmed working (dispatch handler dual-action)
+- Bookings seeded with Sarah + James, linked to properties
+
+**Group B (UI/UX — 10 tasks):**
+- Back button overlay, menu oval→circle, safe area violations (6 screens)
+- Header race condition, empty state centering, property tabs overflow
+- CallPilot: BottomSheet (new), SearchBar aligned, name flash fixed, phone formatting
+
+**Group C (Messaging):**
+- SMS fixed: `SERVER_URL` was missing from production `.env` → Twilio sig validation always failed
+- PostgREST `callpilot` schema cache reloaded
+- Deep linking with Expo Go fallback
+- A2P assessment documented
+
+**Group D (Data/Schema):**
+- Removed `due_diligence` deal stage, removed AI from deals, fixed repairs route
+
+**Group E (Claw AI):**
+- Conversation context increased from 4-8 to 10 messages across all handlers
+
+**Server:**
+- Added `POST /api/calls/:id/push-extractions` endpoint (CallPilot→Claw extraction flow)
+- Deployed all changes to production droplet
+- Added `SERVER_URL=https://openclaw.doughy.app` to production env
+
+**Documentation:**
+- `docs/TROUBLESHOOTING.md` — added server production issues section
+- `docs/DEPLOYMENT.md` — updated deploy commands (rsync, --update-env)
+- `docs/DECISIONS.md` — added decisions #16 (context window) and #17 (SERVER_URL)
+- `openclaw-server/CLAUDE.md` — added SERVER_URL and Discord env vars
 
 ### 2026-02-17 — UI Reorganization & Polish
 

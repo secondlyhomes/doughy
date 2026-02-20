@@ -107,7 +107,7 @@ export default {
     ],
     extra: {
       eas: {
-        projectId: 'YOUR_EAS_PROJECT_ID', // Get this after running: eas init
+        projectId: '080a65e7-9a02-4c29-ac97-7ffcf3b751b6',
       },
     },
   },

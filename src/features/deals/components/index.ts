@@ -5,7 +5,6 @@ export { DealTimeline } from './DealTimeline';
 export { AddDealEventSheet } from './AddDealEventSheet';
 export { StageStepper } from './StageStepper';
 export type { StageStepperProps } from './StageStepper';
-export { SuggestionCard, SuggestionList } from './SuggestionCard';
 export { OfferTermsForm } from './OfferTermsForm';
 export { OfferPreview } from './OfferPreview';
 export { ShareReportSheet } from './ShareReportSheet';

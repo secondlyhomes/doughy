@@ -2,7 +2,7 @@
 // Deal Cockpit - The main "Apple screen" for managing a single deal
 // Components extracted to ./cockpit/ for maintainability
 
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -50,9 +50,7 @@ import {
   StageStepper,
   DealActionsSheet,
 } from '../components';
-import { getSuggestionsForDeal, AISuggestion } from '../services/ai-suggestions';
-import { ConversationsView } from '@/features/conversations/components';
-import { useDealConversations } from '@/features/conversations/hooks';
+
 import { DealAssistant } from '@/features/assistant/components';
 import { useDealCockpitHandlers, OverviewTab, OffersTab } from './cockpit';
 
@@ -61,7 +59,6 @@ const TAB_LABELS = {
   overview: 'Overview',
   underwrite: 'Underwrite',
   offers: 'Offers',
-  conversations: 'Convos',
   docs: 'Docs',
 } as const;
 
@@ -76,16 +73,6 @@ export function DealCockpitScreen() {
 
   const { deal, isLoading, error, refetch } = useDeal(dealId);
 
-  // Fetch conversations for this deal
-  const {
-    conversations,
-    isLoading: loadingConversations,
-    refetch: refetchConversations,
-  } = useDealConversations({
-    dealId,
-    leadId: deal?.lead_id,
-  });
-
   // Focus Mode from context
   const { focusMode } = useFocusMode();
 
@@ -99,7 +86,6 @@ export function DealCockpitScreen() {
     handleDocs,
     handleLeadPress,
     handlePropertyPress,
-    handleSuggestionAction,
   } = useDealCockpitHandlers({ deal });
 
   // Local UI state
@@ -204,35 +190,6 @@ export function DealCockpitScreen() {
     field: 'mao' | 'profit' | 'risk' | null;
   }>({ visible: false, field: null });
 
-  // AI Suggestions state
-  const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
-
-  // Fetch AI suggestions when deal changes
-  // Using a stable serialization of deal properties to avoid stale closure issues
-  const dealKey = deal ? `${deal.id}-${deal.stage}-${deal.lead_id ?? ''}-${deal.strategy ?? ''}` : null;
-
-  useEffect(() => {
-    if (!deal || isDealClosed(deal)) {
-      setSuggestions([]);
-      return;
-    }
-
-    let mounted = true;
-    getSuggestionsForDeal(deal)
-      .then((results) => {
-        if (mounted) setSuggestions(results);
-      })
-      .catch((err) => {
-        console.error('[DealCockpit] Error fetching suggestions:', err);
-      });
-
-    return () => {
-      mounted = false;
-    };
-    // Use dealKey which captures all relevant deal properties in a stable string
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dealKey]);
-
   // Evidence modal handlers
   const handleEvidencePress = useCallback(
     (field: 'mao' | 'profit' | 'risk') => {
@@ -243,10 +200,6 @@ export function DealCockpitScreen() {
 
   const handleCloseEvidenceModal = useCallback(() => {
     setEvidenceModal({ visible: false, field: null });
-  }, []);
-
-  const handleSuggestionDismiss = useCallback((suggestion: AISuggestion) => {
-    setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
   }, []);
 
   // Loading state
@@ -367,12 +320,9 @@ export function DealCockpitScreen() {
           {activeTab === 'overview' && (
             <OverviewTab
               deal={deal}
-              suggestions={suggestions}
               onNextAction={handleNextAction}
               onEvidencePress={handleEvidencePress}
               onAddActivity={() => setShowAddEventSheet(true)}
-              onSuggestionAction={handleSuggestionAction}
-              onSuggestionDismiss={handleSuggestionDismiss}
               onLeadPress={handleLeadPress}
               onPropertyPress={handlePropertyPress}
               onRefetch={refetch}
@@ -403,26 +353,6 @@ export function DealCockpitScreen() {
 
           {activeTab === 'offers' && (
             <OffersTab deal={deal} onOfferPress={handleOffer} />
-          )}
-
-          {activeTab === 'conversations' && (
-            <ConversationsView
-              items={conversations}
-              isLoading={loadingConversations}
-              onRefresh={refetchConversations}
-              onAddConversation={(type) => {
-                Alert.alert('Add Conversation', `Would add ${type}`, [
-                  { text: 'OK' },
-                ]);
-              }}
-              onItemPress={(item) => {
-                Alert.alert(
-                  'Conversation',
-                  item.content || item.transcript || 'No content',
-                  [{ text: 'OK' }]
-                );
-              }}
-            />
           )}
 
           {activeTab === 'docs' && (

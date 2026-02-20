@@ -281,16 +281,24 @@ supabase db push --project-ref lqmbyobweeaigrwmvizo
 ### OpenClaw Server (DO Droplet)
 
 ```bash
-# Local: build & upload
+# Local: build & upload (code only, not .env)
 cd openclaw-server
 npm run build
-scp -r dist/ package.json package-lock.json claw:/var/www/openclaw/
+rsync -avz --exclude='node_modules' --exclude='.env' dist/ claw:/var/www/openclaw/dist/
 
-# On server: install deps & restart
-ssh claw "cd /var/www/openclaw && npm install --production && pm2 restart openclaw"
+# If package.json changed (new deps):
+scp package.json package-lock.json claw:/var/www/openclaw/
+ssh claw "cd /var/www/openclaw && npm install --production"
+
+# IMPORTANT: Always use --update-env so PM2 picks up any .env changes
+ssh claw "pm2 restart openclaw --update-env"
+
+# Verify:
+ssh claw "curl -s http://localhost:3000/health"
 ```
 
 > **SSH alias:** `claw` → `root@157.245.218.123` (key: `~/.ssh/do_claw`)
+> **Troubleshooting:** See `docs/TROUBLESHOOTING.md` "OpenClaw Server — Production Issues" section
 
 ### Mobile App (EAS)
 

@@ -23,6 +23,14 @@ export interface GlassViewProps extends ViewProps {
   children?: React.ReactNode;
 }
 
+// Map effect type to iOS system material tint for native chrome look
+function getIOSMaterialTint(effect: 'clear' | 'regular', isDark: boolean): string {
+  if (effect === 'clear') {
+    return isDark ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight';
+  }
+  return isDark ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight';
+}
+
 export function GlassView({
   intensity = 50,
   tint,
@@ -34,7 +42,6 @@ export function GlassView({
 }: GlassViewProps) {
   const { isDark } = useTheme();
   const colors = useThemeColors();
-  const effectiveTint = tint ?? (isDark ? 'dark' : 'light');
 
   // iOS 26+ with Liquid Glass support
   if (Platform.OS === 'ios' && isLiquidGlassSupported) {
@@ -51,8 +58,24 @@ export function GlassView({
     );
   }
 
-  // iOS < 26 or Android - use expo-blur
+  // iOS without liquid glass — use system material tints for native chrome look
+  if (Platform.OS === 'ios') {
+    const materialTint = tint ?? getIOSMaterialTint(effect, isDark);
+    return (
+      <BlurView
+        intensity={intensity}
+        tint={materialTint as any}
+        style={[style, { overflow: 'hidden' }]}
+        {...props}
+      >
+        {children}
+      </BlurView>
+    );
+  }
+
+  // Android - use expo-blur with standard tint
   if (Platform.OS !== 'web') {
+    const effectiveTint = tint ?? (isDark ? 'dark' : 'light');
     return (
       <BlurView
         intensity={intensity}

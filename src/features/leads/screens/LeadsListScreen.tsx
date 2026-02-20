@@ -215,7 +215,7 @@ export function LeadsListScreen() {
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               style={{ flex: 1 }}
-              contentContainerStyle={{ paddingHorizontal: SPACING.md, paddingTop: 64 + SPACING.md, paddingBottom: TAB_BAR_SAFE_PADDING }}
+              contentContainerStyle={{ flexGrow: 1, paddingHorizontal: SPACING.md, paddingTop: 64 + SPACING.md, paddingBottom: TAB_BAR_SAFE_PADDING }}
             contentInsetAdjustmentBehavior="automatic"
             ItemSeparatorComponent={ItemSeparator}
             initialNumToRender={10}

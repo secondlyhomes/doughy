@@ -58,8 +58,8 @@ async function classifyIntent(
     let classifierInput: string;
     if (conversationHistory.length > 0) {
       const historyText = conversationHistory
-        .slice(-6) // Last 3 exchanges max for the classifier
-        .map((m) => `${m.role}: ${m.content.slice(0, 200)}`)
+        .slice(-10) // Last 5 exchanges for better context continuity
+        .map((m) => `${m.role}: ${m.content.slice(0, 300)}`)
         .join('\n');
       classifierInput = `Recent conversation:\n${historyText}\n\n<user_message>\n${message}\n</user_message>`;
     } else {
@@ -336,7 +336,7 @@ async function handleDraftFollowups(
   try {
     // Build conversation context for the agents
     const recentContext = conversationHistory.length > 0
-      ? conversationHistory.slice(-4).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
+      ? conversationHistory.slice(-10).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
       : undefined;
 
     // Step 1: Lead Ops agent reads data and identifies warm leads
@@ -413,7 +413,7 @@ async function handleQuery(
 
   try {
     const recentContext = conversationHistory.length > 0
-      ? conversationHistory.slice(-4).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
+      ? conversationHistory.slice(-10).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
       : undefined;
 
     const result = await runAgent({
@@ -450,7 +450,7 @@ async function handleAction(
 
   try {
     const recentContext = conversationHistory.length > 0
-      ? conversationHistory.slice(-4).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
+      ? conversationHistory.slice(-10).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
       : undefined;
 
     // Use lead-ops first for context, then action agent for execution
@@ -489,7 +489,7 @@ async function handleChat(
 
   try {
     const recentContext = conversationHistory.length > 0
-      ? conversationHistory.slice(-6).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
+      ? conversationHistory.slice(-10).map((m) => `${m.role}: ${m.content.slice(0, 300)}`).join('\n')
       : undefined;
 
     // Chat agent with read-only tools for data context

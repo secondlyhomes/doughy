@@ -8,8 +8,6 @@ import type { Deal } from '../../types';
 import { getNextStages, DEAL_STAGE_CONFIG } from '../../types';
 import { useUpdateDealStage } from '../../hooks/useDeals';
 import { useNextAction, type NextAction } from '../../hooks/useNextAction';
-import type { AISuggestion } from '../../services/ai-suggestions';
-
 interface UseDealCockpitHandlersProps {
   deal: Deal | null | undefined;
 }
@@ -103,34 +101,6 @@ export function useDealCockpitHandlers({ deal }: UseDealCockpitHandlersProps) {
     router.push(`/(tabs)/deals/property/${deal.property_id}`);
   }, [deal?.property_id, router]);
 
-  // AI Suggestion handlers
-  const handleSuggestionAction = useCallback(
-    (suggestion: AISuggestion) => {
-      switch (suggestion.category) {
-        case 'contact':
-        case 'followup':
-          handleCallSeller();
-          break;
-        case 'walkthrough':
-          handleWalkthrough();
-          break;
-        case 'underwrite':
-        case 'analyze':
-          handleUnderwrite();
-          break;
-        case 'offer':
-          handleOffer();
-          break;
-        case 'document':
-          handleDocs();
-          break;
-        default:
-          Alert.alert('Action', suggestion.action, [{ text: 'OK' }]);
-      }
-    },
-    [handleCallSeller, handleWalkthrough, handleUnderwrite, handleOffer, handleDocs]
-  );
-
   return {
     nextActionData,
     handleBack,
@@ -144,6 +114,5 @@ export function useDealCockpitHandlers({ deal }: UseDealCockpitHandlersProps) {
     handleCallSeller,
     handleLeadPress,
     handlePropertyPress,
-    handleSuggestionAction,
   };
 }

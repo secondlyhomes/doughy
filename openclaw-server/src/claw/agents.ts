@@ -28,7 +28,7 @@ const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<stri
     type: 'object',
     properties: {
       limit: { type: 'number', description: 'Max results (default 20)' },
-      stage: { type: 'string', description: 'Filter by stage (e.g. "negotiation", "due_diligence")' },
+      stage: { type: 'string', description: 'Filter by stage (e.g. "negotiating", "under_contract", "offer_sent")' },
     },
   },
   read_leads: {
@@ -169,7 +169,7 @@ const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<stri
     type: 'object',
     properties: {
       deal_id: { type: 'string', description: 'Deal UUID to update' },
-      stage: { type: 'string', description: 'New stage (e.g. "due_diligence", "under_contract")' },
+      stage: { type: 'string', description: 'New stage (e.g. "analyzing", "offer_sent", "negotiating", "under_contract")' },
       next_action: { type: 'string', description: 'Next action to take' },
       next_action_due: { type: 'string', description: 'Due date (ISO format)' },
     },

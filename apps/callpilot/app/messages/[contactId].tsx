@@ -23,10 +23,11 @@ import type { ChannelFilter } from '@/components/messages/ChannelFilterPills'
 import { useConversations, useContacts, useClawSuggestions } from '@/hooks'
 import { sendMessage } from '@/services/communicationsService'
 import { MODULE_ICONS } from '@/types/contact'
+import { formatPhoneNumber } from '@/utils/formatters'
 import type { Message } from '@/types'
 
 export default function ConversationThreadScreen() {
-  const { contactId } = useLocalSearchParams<{ contactId: string }>()
+  const { contactId, contactName: paramName } = useLocalSearchParams<{ contactId: string; contactName?: string }>()
   const { theme, isDark } = useTheme()
   const router = useRouter()
   const { getMessagesForContact } = useConversations()
@@ -35,8 +36,8 @@ export default function ConversationThreadScreen() {
 
   const contact = getContact(contactId ?? '')
   const contactName = contact
-    ? `${contact.firstName} ${contact.lastName}`
-    : 'Unknown'
+    ? `${contact.firstName} ${contact.lastName}`.trim() || formatPhoneNumber(contact.phone)
+    : paramName || formatPhoneNumber(contactId) || 'Loading...'
   const moduleIcon = contact ? MODULE_ICONS[contact.module] : ''
 
   const messages = getMessagesForContact(contactId ?? '')

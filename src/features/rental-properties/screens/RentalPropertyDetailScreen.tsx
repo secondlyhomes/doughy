@@ -441,6 +441,7 @@ export function RentalPropertyDetailScreen() {
       <ThemedSafeAreaView className="flex-1" edges={[]}>
         <ScrollView
           className="flex-1"
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={{
             paddingBottom: TAB_BAR_SAFE_PADDING,
           }}

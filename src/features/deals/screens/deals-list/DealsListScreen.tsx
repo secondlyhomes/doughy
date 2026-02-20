@@ -150,6 +150,7 @@ export function DealsListScreen() {
               keyExtractor={keyExtractor}
               style={{ flex: 1 }}
               contentContainerStyle={{
+                flexGrow: 1,
                 paddingHorizontal: SPACING.md,
                 paddingTop: 64 + SPACING.md,
                 paddingBottom: TAB_BAR_SAFE_PADDING,
