@@ -7,142 +7,24 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, ViewStyle } from 'react-native';
+import { View, Image } from 'react-native';
 import {
-  FileText,
-  Image as ImageIcon,
-  File,
   Download,
   Trash2,
   Link as LinkIcon,
   Eye,
-  MoreVertical,
 } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
+import { BORDER_RADIUS } from '@/constants/design-tokens';
 import { DataCard, DataCardField, DataCardAction, DataCardBadge } from './DataCard';
-import { Badge } from './Badge';
+import { getDocumentTypeIcon, getDocumentTypeLabel, formatFileSize, formatDate } from '@/components/ui/document-card-helpers';
 
-export interface DocumentCardDocument {
-  id: string;
-  title: string;
-  type: string;
-  file_url: string;
-  created_at: string;
-  file_size?: number;
-  thumbnail_url?: string;
-}
+// Re-export types and compact variant for barrel exports
+export type { DocumentCardDocument, DocumentCardProps } from '@/components/ui/document-card-types';
+export { DocumentCardCompact } from '@/components/ui/DocumentCardCompact';
 
-export interface DocumentCardProps {
-  /** Document data */
-  document: DocumentCardDocument;
-
-  /** Whether to show badge indicating document is linked to multiple properties */
-  showLinkBadge?: boolean;
-
-  /** Number of properties this document is linked to */
-  linkedPropertiesCount?: number;
-
-  /** Whether this is the primary property for this document */
-  isPrimary?: boolean;
-
-  /** Action handlers */
-  onView?: () => void;
-  onDownload?: () => void;
-  onDelete?: () => void;
-  onLink?: () => void;
-
-  /** Whether the card is in read-only mode (no delete/link actions) */
-  readOnly?: boolean;
-
-  /** Custom styling */
-  style?: ViewStyle;
-
-  /** Card variant */
-  variant?: 'default' | 'glass';
-}
-
-/**
- * Get icon for document type
- */
-function getDocumentTypeIcon(type: string) {
-  const lowerType = type.toLowerCase();
-
-  if (lowerType.includes('image') || lowerType.includes('photo') || lowerType.includes('jpg') || lowerType.includes('png')) {
-    return ImageIcon;
-  }
-
-  if (lowerType.includes('pdf')) {
-    return FileText;
-  }
-
-  return File;
-}
-
-/**
- * Get user-friendly document type label
- */
-function getDocumentTypeLabel(type: string): string {
-  const typeMap: Record<string, string> = {
-    id: 'ID',
-    tax_return: 'Tax Return',
-    bank_statement: 'Bank Statement',
-    w9: 'W-9',
-    death_cert: 'Death Certificate',
-    poa: 'Power of Attorney',
-    inspection: 'Inspection Report',
-    appraisal: 'Appraisal',
-    title_search: 'Title Search',
-    survey: 'Survey',
-    photo: 'Photo',
-    comp: 'Comp',
-    offer: 'Offer',
-    counter_offer: 'Counter Offer',
-    purchase_agreement: 'Purchase Agreement',
-    addendum: 'Addendum',
-    closing_statement: 'Closing Statement',
-    hud1: 'HUD-1',
-    deed: 'Deed',
-    contract: 'Contract',
-    receipt: 'Receipt',
-    other: 'Other',
-  };
-
-  return typeMap[type.toLowerCase()] || type;
-}
-
-/**
- * Format file size for display
- */
-function formatFileSize(bytes?: number): string {
-  if (!bytes) return '';
-
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-/**
- * Format date for display
- */
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-  });
-}
+import type { DocumentCardProps } from '@/components/ui/document-card-types';
 
 export function DocumentCard({
   document,
@@ -273,107 +155,5 @@ export function DocumentCard({
         ) : undefined
       }
     />
-  );
-}
-
-/**
- * Compact variant for list views
- */
-export function DocumentCardCompact({
-  document,
-  showLinkBadge = false,
-  linkedPropertiesCount = 0,
-  onPress,
-  style,
-}: Pick<DocumentCardProps, 'document' | 'showLinkBadge' | 'linkedPropertiesCount' | 'style'> & {
-  onPress?: () => void;
-}) {
-  const colors = useThemeColors();
-  const DocIcon = getDocumentTypeIcon(document.type);
-  const typeLabel = getDocumentTypeLabel(document.type);
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={PRESS_OPACITY.DEFAULT}
-      style={[
-        {
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: SPACING.md,
-          borderRadius: BORDER_RADIUS.lg,
-          backgroundColor: colors.card,
-          borderWidth: 1,
-          borderColor: colors.border,
-        },
-        style,
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={`Document: ${document.title}`}
-    >
-      {/* Icon */}
-      <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: BORDER_RADIUS.md,
-          backgroundColor: withOpacity(colors.primary, 'muted'),
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: SPACING.md,
-        }}
-      >
-        <DocIcon size={ICON_SIZES.lg} color={colors.primary} />
-      </View>
-
-      {/* Content */}
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: '600',
-            color: colors.foreground,
-            marginBottom: SPACING.xxs,
-          }}
-          numberOfLines={1}
-        >
-          {document.title}
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
-          <Text
-            style={{
-              fontSize: 12,
-              color: colors.mutedForeground,
-            }}
-          >
-            {typeLabel}
-          </Text>
-          {showLinkBadge && linkedPropertiesCount > 1 && (
-            <>
-              <Text style={{ color: colors.mutedForeground }}>•</Text>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: colors.info,
-                }}
-              >
-                {linkedPropertiesCount} properties
-              </Text>
-            </>
-          )}
-        </View>
-      </View>
-
-      {/* Date */}
-      <Text
-        style={{
-          fontSize: 12,
-          color: colors.mutedForeground,
-          marginLeft: SPACING.sm,
-        }}
-      >
-        {formatDate(document.created_at)}
-      </Text>
-    </TouchableOpacity>
   );
 }
