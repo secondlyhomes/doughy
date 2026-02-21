@@ -2,66 +2,16 @@
 // Bottom sheet for logging call touches (smart touch tracking)
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import {
-  Phone,
-  PhoneCall,
-  Voicemail,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  MessageSquare,
-} from 'lucide-react-native';
+import { View, TextInput, Text, Alert } from 'react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { BottomSheet, BottomSheetSection, Button } from '@/components/ui';
-import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 import { useCreateTouch, TouchType, TouchOutcome } from '../hooks/useContactTouches';
-import { FocusedProperty } from '@/contexts/FocusModeContext';
-
-// ============================================
-// Types
-// ============================================
-
-interface TouchLogSheetProps {
-  visible: boolean;
-  onClose: () => void;
-  focusedProperty?: FocusedProperty | null;
-  onSuccess?: () => void;
-}
-
-interface TouchTypeOption {
-  value: TouchType;
-  label: string;
-  icon: React.ComponentType<{ size: number; color: string }>;
-}
-
-interface OutcomeOption {
-  value: TouchOutcome;
-  label: string;
-  icon: React.ComponentType<{ size: number; color: string }>;
-}
-
-// ============================================
-// Constants
-// ============================================
-
-const TOUCH_TYPES: TouchTypeOption[] = [
-  { value: 'first_call', label: 'First Call', icon: Phone },
-  { value: 'follow_up', label: 'Follow-up', icon: PhoneCall },
-  { value: 'voicemail', label: 'Voicemail', icon: Voicemail },
-];
-
-const OUTCOMES: OutcomeOption[] = [
-  { value: 'connected', label: 'Connected', icon: CheckCircle2 },
-  { value: 'no_answer', label: 'No Answer', icon: XCircle },
-  { value: 'voicemail_left', label: 'Left Voicemail', icon: Voicemail },
-  { value: 'callback_scheduled', label: 'Callback Scheduled', icon: Clock },
-];
-
-// ============================================
-// Component
-// ============================================
+import { TouchLogSheetProps, TOUCH_TYPES } from './touch-log-types';
+import { TouchTypeSelector } from './TouchTypeSelector';
+import { OutcomeSelector } from './OutcomeSelector';
+import { RespondedToggle } from './RespondedToggle';
 
 export function TouchLogSheet({
   visible,
@@ -155,164 +105,11 @@ export function TouchLogSheet({
         </View>
       )}
 
-      {/* Touch Type Selection */}
-      <BottomSheetSection title="Call Type">
-        <View style={{ flexDirection: 'row', gap: SPACING.sm, flexWrap: 'wrap' }}>
-          {TOUCH_TYPES.map((type) => {
-            const isSelected = touchType === type.value;
-            const IconComponent = type.icon;
-            return (
-              <TouchableOpacity
-                key={type.value}
-                onPress={() => setTouchType(type.value)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: SPACING.xs,
-                  paddingHorizontal: SPACING.md,
-                  paddingVertical: SPACING.sm,
-                  borderRadius: BORDER_RADIUS.full,
-                  backgroundColor: isSelected ? colors.primary : colors.muted,
-                  borderWidth: 1,
-                  borderColor: isSelected ? colors.primary : colors.border,
-                }}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: isSelected }}
-              >
-                <IconComponent
-                  size={ICON_SIZES.sm}
-                  color={isSelected ? colors.primaryForeground : colors.foreground}
-                />
-                <Text
-                  style={{
-                    fontSize: FONT_SIZES.sm,
-                    fontWeight: '500',
-                    color: isSelected ? colors.primaryForeground : colors.foreground,
-                  }}
-                >
-                  {type.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </BottomSheetSection>
+      <TouchTypeSelector touchType={touchType} onSelect={setTouchType} />
 
-      {/* Outcome Selection */}
-      <BottomSheetSection title="Outcome">
-        <View style={{ flexDirection: 'row', gap: SPACING.sm, flexWrap: 'wrap' }}>
-          {OUTCOMES.map((o) => {
-            const isSelected = outcome === o.value;
-            const IconComponent = o.icon;
-            return (
-              <TouchableOpacity
-                key={o.value}
-                onPress={() => handleOutcomeChange(o.value)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: SPACING.xs,
-                  paddingHorizontal: SPACING.md,
-                  paddingVertical: SPACING.sm,
-                  borderRadius: BORDER_RADIUS.full,
-                  backgroundColor: isSelected
-                    ? o.value === 'connected' ? colors.success
-                    : o.value === 'no_answer' ? colors.warning
-                    : colors.primary
-                    : colors.muted,
-                  borderWidth: 1,
-                  borderColor: isSelected
-                    ? o.value === 'connected' ? colors.success
-                    : o.value === 'no_answer' ? colors.warning
-                    : colors.primary
-                    : colors.border,
-                }}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: isSelected }}
-              >
-                <IconComponent
-                  size={ICON_SIZES.sm}
-                  color={isSelected ? colors.primaryForeground : colors.foreground}
-                />
-                <Text
-                  style={{
-                    fontSize: FONT_SIZES.sm,
-                    fontWeight: '500',
-                    color: isSelected ? colors.primaryForeground : colors.foreground,
-                  }}
-                >
-                  {o.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </BottomSheetSection>
+      <OutcomeSelector outcome={outcome} onSelect={handleOutcomeChange} />
 
-      {/* Responded Toggle */}
-      <BottomSheetSection title="Did they engage?">
-        <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
-          <TouchableOpacity
-            onPress={() => setResponded(true)}
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: SPACING.xs,
-              paddingVertical: SPACING.md,
-              borderRadius: BORDER_RADIUS.md,
-              backgroundColor: responded ? colors.success : colors.muted,
-              borderWidth: 1,
-              borderColor: responded ? colors.success : colors.border,
-            }}
-          >
-            <CheckCircle2
-              size={ICON_SIZES.sm}
-              color={responded ? colors.primaryForeground : colors.foreground}
-            />
-            <Text
-              style={{
-                fontSize: FONT_SIZES.sm,
-                fontWeight: '600',
-                color: responded ? colors.primaryForeground : colors.foreground,
-              }}
-            >
-              Yes
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setResponded(false)}
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: SPACING.xs,
-              paddingVertical: SPACING.md,
-              borderRadius: BORDER_RADIUS.md,
-              backgroundColor: !responded ? colors.destructive : colors.muted,
-              borderWidth: 1,
-              borderColor: !responded ? colors.destructive : colors.border,
-            }}
-          >
-            <XCircle
-              size={ICON_SIZES.sm}
-              color={!responded ? colors.destructiveForeground : colors.foreground}
-            />
-            <Text
-              style={{
-                fontSize: FONT_SIZES.sm,
-                fontWeight: '600',
-                color: !responded ? colors.destructiveForeground : colors.foreground,
-              }}
-            >
-              No
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheetSection>
+      <RespondedToggle responded={responded} onToggle={setResponded} />
 
       {/* Notes (Optional) */}
       <BottomSheetSection title="Notes (optional)">
