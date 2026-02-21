@@ -6,3 +6,6 @@ export * from './constants';
 export { InboxModeControl } from './InboxModeControl';
 export { QuickActionCard } from './QuickActionCard';
 export { SectionHeader } from './SectionHeader';
+export { InboxFiltersSheet } from './InboxFiltersSheet';
+export { InboxErrorBanner } from './InboxErrorBanner';
+export { useInboxListState } from './useInboxListState';

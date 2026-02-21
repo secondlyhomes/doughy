@@ -3,56 +3,18 @@
 // Shows enabled platforms with toggle switches and current active platform
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { TrendingUp, Home, Check, ChevronRight, AlertCircle } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { AlertCircle } from 'lucide-react-native';
 import { usePlatform, Platform } from '@/contexts/PlatformContext';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { Switch } from '@/components/ui/Switch';
-import { PlatformSwitcher } from '@/components/ui/PlatformSwitcher';
 import { withOpacity } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES } from '@/constants/design-tokens';
+import { ICON_SIZES } from '@/constants/design-tokens';
+import { PlatformSettingsSectionProps, platformConfigs } from './platform-settings-types';
+import { styles } from './platform-settings-styles';
+import { PlatformToggleRow } from './PlatformToggleRow';
+import { ActivePlatformSection } from './ActivePlatformSection';
 
-// ============================================
-// Types
-// ============================================
-
-export interface PlatformSettingsSectionProps {
-  /** Optional className for container */
-  className?: string;
-}
-
-interface PlatformConfig {
-  id: Platform;
-  label: string;
-  description: string;
-  icon: (color: string) => React.ReactNode;
-  color: string;
-}
-
-// ============================================
-// Platform Configurations
-// ============================================
-
-const platformConfigs: PlatformConfig[] = [
-  {
-    id: 'investor',
-    label: 'Real Estate Investor',
-    description: 'Track deals, analyze properties, and manage your investment portfolio',
-    icon: (color: string) => <TrendingUp size={ICON_SIZES.xl} color={color} />,
-    color: '#3b82f6', // blue-500
-  },
-  {
-    id: 'landlord',
-    label: 'Landlord',
-    description: 'Manage rental properties, tenants, and maintenance requests',
-    icon: (color: string) => <Home size={ICON_SIZES.xl} color={color} />,
-    color: '#22c55e', // green-500
-  },
-];
-
-// ============================================
-// PlatformSettingsSection Component
-// ============================================
+export type { PlatformSettingsSectionProps } from './platform-settings-types';
 
 export function PlatformSettingsSection({ className }: PlatformSettingsSectionProps) {
   const colors = useThemeColors();
@@ -156,63 +118,18 @@ export function PlatformSettingsSection({ className }: PlatformSettingsSectionPr
       </Text>
 
       <View style={[styles.card, { backgroundColor: colors.card }]}>
-        {platformConfigs.map((config, index) => {
-          const isEnabled = enabledPlatforms.includes(config.id);
-          const isActive = activePlatform === config.id;
-          const isOnlyPlatform = enabledPlatforms.length === 1 && isEnabled;
-          const isCurrentlyToggling = isToggling === config.id;
-
-          return (
-            <View
-              key={config.id}
-              style={[
-                styles.platformRow,
-                index < platformConfigs.length - 1 && {
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.border,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.iconContainer,
-                  { backgroundColor: withOpacity(config.color, 'medium') },
-                ]}
-              >
-                {config.icon(config.color)}
-              </View>
-
-              <View style={styles.platformInfo}>
-                <View style={styles.platformHeader}>
-                  <Text style={[styles.platformLabel, { color: colors.foreground }]}>
-                    {config.label}
-                  </Text>
-                  {isActive && (
-                    <View
-                      style={[
-                        styles.activeBadge,
-                        { backgroundColor: withOpacity(colors.success, 'medium') },
-                      ]}
-                    >
-                      <Text style={[styles.activeBadgeText, { color: colors.success }]}>
-                        Active
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={[styles.platformDescription, { color: colors.mutedForeground }]}>
-                  {config.description}
-                </Text>
-              </View>
-
-              <Switch
-                checked={isEnabled}
-                onCheckedChange={(checked) => handleTogglePlatform(config.id, checked)}
-                disabled={isOnlyPlatform || isCurrentlyToggling}
-              />
-            </View>
-          );
-        })}
+        {platformConfigs.map((config, index) => (
+          <PlatformToggleRow
+            key={config.id}
+            config={config}
+            isEnabled={enabledPlatforms.includes(config.id)}
+            isActive={activePlatform === config.id}
+            isOnlyPlatform={enabledPlatforms.length === 1 && enabledPlatforms.includes(config.id)}
+            isCurrentlyToggling={isToggling === config.id}
+            showDivider={index < platformConfigs.length - 1}
+            onToggle={handleTogglePlatform}
+          />
+        ))}
       </View>
 
       {/* Warning for single platform */}
@@ -225,200 +142,17 @@ export function PlatformSettingsSection({ className }: PlatformSettingsSectionPr
         </View>
       )}
 
-      {/* Section Header: Active Platform */}
+      {/* Active Platform Section (only when multiple platforms enabled) */}
       {hasMultiplePlatforms && (
-        <>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground, marginTop: SPACING['2xl'] }]}>
-            ACTIVE PLATFORM
-          </Text>
-
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <View style={styles.switcherContainer}>
-              <Text style={[styles.switcherLabel, { color: colors.foreground }]}>
-                Switch between platforms
-              </Text>
-              <PlatformSwitcher mode="full" showLabels />
-            </View>
-
-            {/* Platform Selection List */}
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-            {platformConfigs
-              .filter((config) => enabledPlatforms.includes(config.id))
-              .map((config, index, arr) => {
-                const isActive = activePlatform === config.id;
-
-                return (
-                  <TouchableOpacity
-                    key={config.id}
-                    style={[
-                      styles.selectableRow,
-                      index < arr.length - 1 && {
-                        borderBottomWidth: 1,
-                        borderBottomColor: colors.border,
-                      },
-                    ]}
-                    onPress={() => handleSelectPlatform(config.id)}
-                    accessibilityLabel={`Select ${config.label} as active platform`}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: isActive }}
-                  >
-                    <View
-                      style={[
-                        styles.smallIconContainer,
-                        { backgroundColor: withOpacity(config.color, 'medium') },
-                      ]}
-                    >
-                      {config.icon(config.color)}
-                    </View>
-
-                    <Text style={[styles.selectableLabel, { color: colors.foreground }]}>
-                      {config.label}
-                    </Text>
-
-                    {isActive ? (
-                      <Check size={ICON_SIZES.lg} color={colors.success} />
-                    ) : (
-                      <ChevronRight size={ICON_SIZES.lg} color={colors.mutedForeground} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-          </View>
-
-          <Text style={[styles.helpText, { color: colors.mutedForeground }]}>
-            Your active platform determines which features and data you see throughout the app.
-          </Text>
-        </>
+        <ActivePlatformSection
+          platformConfigs={platformConfigs}
+          enabledPlatforms={enabledPlatforms}
+          activePlatform={activePlatform}
+          onSelectPlatform={handleSelectPlatform}
+        />
       )}
     </View>
   );
 }
-
-// ============================================
-// Styles
-// ============================================
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    padding: SPACING.lg,
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: FONT_SIZES.sm,
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-    marginBottom: SPACING.lg,
-    gap: SPACING.sm,
-  },
-  errorText: {
-    flex: 1,
-    fontSize: FONT_SIZES.sm,
-  },
-  dismissText: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-  },
-  sectionLabel: {
-    fontSize: FONT_SIZES.xs,
-    fontWeight: '500',
-    marginBottom: SPACING.md,
-    letterSpacing: 0.5,
-  },
-  card: {
-    borderRadius: BORDER_RADIUS.lg,
-    overflow: 'hidden',
-  },
-  platformRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.lg,
-    gap: SPACING.md,
-  },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: BORDER_RADIUS.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  platformInfo: {
-    flex: 1,
-  },
-  platformHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  platformLabel: {
-    fontSize: FONT_SIZES.base,
-    fontWeight: '600',
-  },
-  activeBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.full,
-  },
-  activeBadgeText: {
-    fontSize: FONT_SIZES['2xs'],
-    fontWeight: '600',
-  },
-  platformDescription: {
-    fontSize: FONT_SIZES.sm,
-    marginTop: 2,
-  },
-  warningContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    marginTop: SPACING.md,
-    gap: SPACING.sm,
-  },
-  warningText: {
-    flex: 1,
-    fontSize: FONT_SIZES.sm,
-  },
-  switcherContainer: {
-    padding: SPACING.lg,
-    gap: SPACING.md,
-  },
-  switcherLabel: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-  },
-  selectableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.lg,
-    gap: SPACING.md,
-  },
-  smallIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: BORDER_RADIUS.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectableLabel: {
-    flex: 1,
-    fontSize: FONT_SIZES.base,
-    fontWeight: '500',
-  },
-  helpText: {
-    fontSize: FONT_SIZES.sm,
-    textAlign: 'center',
-    marginTop: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-  },
-});
 
 export default PlatformSettingsSection;
