@@ -18,8 +18,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import {
   Edit2,
-  MapPin,
-  ExternalLink,
   Trash2,
   Home,
   ChevronLeft,
@@ -30,19 +28,12 @@ import { DetailTabBar, type TabConfig } from '@/components/navigation';
 import {
   LoadingSpinner,
   Button,
-  BottomSheet,
-  BottomSheetSection,
   TAB_BAR_SAFE_PADDING,
-  Separator,
-  Card,
   HeaderActionMenu,
-  ConfirmButton,
   useToast,
 } from '@/components/ui';
-import { SPACING, FONT_SIZES, ICON_SIZES, PRESS_OPACITY } from '@/constants/design-tokens';
-import { withOpacity } from '@/lib/design-utils';
+import { SPACING, FONT_SIZES, ICON_SIZES } from '@/constants/design-tokens';
 import { RentalPropertyHeader } from '../components/RentalPropertyHeader';
-import { PropertyHubGrid } from '../components/PropertyHubGrid';
 import { RoomsList } from '../components/RoomsList';
 import {
   useRentalPropertyDetail,
@@ -61,11 +52,10 @@ import { useNextTurnover } from '@/features/turnovers';
 // Extracted components and utilities
 import {
   UUID_REGEX,
-  formatCurrency,
-  formatRateType,
-  getStatusInfo,
-  FinancialRow,
-  AmenityChip,
+  OverviewTab,
+  FinancialsTab,
+  ListingsTab,
+  StatusBottomSheet,
 } from './rental-property-detail';
 
 // Tab types
@@ -293,92 +283,20 @@ export function RentalPropertyDetailScreen() {
     switch (activeTab) {
       case 'overview':
         return (
-          <>
-            {/* Property Management Hub Grid (2x2) */}
-            <PropertyHubGrid
-              propertyId={propertyId}
-              maintenanceCount={maintenanceCount}
-              vendorCount={vendorCount}
-              nextTurnover={nextTurnover ?? undefined}
-              bookingsCount={upcomingBookings.length}
-              isLoading={isLoadingHubCounts}
-              variant="glass"
-            />
-
-            {/* Address Card (always visible) */}
-            <TouchableOpacity
-              onPress={handleOpenMap}
-              className="p-4 rounded-xl flex-row items-center justify-between mb-4"
-              style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}
-              activeOpacity={PRESS_OPACITY.DEFAULT}
-            >
-              <View className="flex-row items-center flex-1">
-                <MapPin size={ICON_SIZES.lg} color={colors.primary} />
-                <View className="ml-3 flex-1">
-                  <Text
-                    style={{
-                      color: colors.foreground,
-                      fontSize: FONT_SIZES.base,
-                      fontWeight: '500',
-                    }}
-                    numberOfLines={1}
-                  >
-                    {property.address}
-                  </Text>
-                  <Text
-                    style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm }}
-                    numberOfLines={1}
-                  >
-                    {property.city}, {property.state} {property.zip || ''}
-                  </Text>
-                </View>
-              </View>
-              <ExternalLink size={ICON_SIZES.ml} color={colors.mutedForeground} />
-            </TouchableOpacity>
-
-            {/* Amenities (always visible) */}
-            {property.amenities && property.amenities.length > 0 && (
-              <View className="mb-4">
-                <Text
-                  style={{
-                    color: colors.foreground,
-                    fontSize: FONT_SIZES.lg,
-                    fontWeight: '600',
-                    marginBottom: SPACING.sm,
-                  }}
-                >
-                  Amenities
-                </Text>
-                <View className="flex-row flex-wrap">
-                  {property.amenities.map((amenity, index) => (
-                    <AmenityChip key={index} amenity={amenity} />
-                  ))}
-                </View>
-              </View>
-            )}
-          </>
+          <OverviewTab
+            property={property}
+            propertyId={propertyId}
+            maintenanceCount={maintenanceCount}
+            vendorCount={vendorCount}
+            nextTurnover={nextTurnover ?? undefined}
+            bookingsCount={upcomingBookings.length}
+            isLoadingHubCounts={isLoadingHubCounts}
+            onOpenMap={handleOpenMap}
+          />
         );
 
       case 'financials':
-        return (
-          <Card variant="glass" className="p-4">
-            <FinancialRow
-              label="Base Rate"
-              value={`${formatCurrency(property.base_rate)}${formatRateType(property.rate_type)}`}
-              valueColor={colors.success}
-            />
-            <Separator className="my-1" />
-            <FinancialRow
-              label="Cleaning Fee"
-              value={formatCurrency(property.cleaning_fee)}
-            />
-            <Separator className="my-1" />
-            <FinancialRow
-              label="Security Deposit"
-              value={formatCurrency(property.security_deposit)}
-            />
-          </Card>
-        );
+        return <FinancialsTab property={property} />;
 
       case 'rooms':
         return (
@@ -402,33 +320,7 @@ export function RentalPropertyDetailScreen() {
         );
 
       case 'listings':
-        return (
-          <Card variant="glass" className="p-4">
-            {property.listing_urls &&
-              Object.entries(property.listing_urls).map(
-                ([platform, url]) =>
-                  url && (
-                    <TouchableOpacity
-                      key={platform}
-                      onPress={() => Linking.openURL(url)}
-                      className="flex-row items-center justify-between py-3"
-                      activeOpacity={PRESS_OPACITY.DEFAULT}
-                    >
-                      <Text
-                        style={{
-                          color: colors.foreground,
-                          fontSize: FONT_SIZES.base,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {platform}
-                      </Text>
-                      <ExternalLink size={ICON_SIZES.md} color={colors.primary} />
-                    </TouchableOpacity>
-                  )
-              )}
-          </Card>
-        );
+        return <ListingsTab property={property} />;
 
       default:
         return null;
@@ -473,64 +365,13 @@ export function RentalPropertyDetailScreen() {
         </ScrollView>
 
         {/* Status Change Sheet */}
-        <BottomSheet
+        <StatusBottomSheet
           visible={showStatusSheet}
           onClose={() => setShowStatusSheet(false)}
-          title="Property Options"
-        >
-          <BottomSheetSection title="Status">
-            <View className="gap-2">
-              {(['active', 'inactive', 'maintenance'] as PropertyStatus[]).map(
-                (status) => {
-                  const info = getStatusInfo(status);
-                  const isActive = property.status === status;
-                  const StatusIcon = info.icon;
-
-                  return (
-                    <TouchableOpacity
-                      key={status}
-                      onPress={() => handleStatusChange(status)}
-                      className="flex-row items-center p-4 rounded-xl"
-                      style={{
-                        backgroundColor: isActive
-                          ? withOpacity(colors.primary, 'light')
-                          : colors.muted,
-                        borderWidth: isActive ? 1 : 0,
-                        borderColor: colors.primary,
-                      }}
-                      disabled={isSaving}
-                    >
-                      <StatusIcon
-                        size={ICON_SIZES.lg}
-                        color={isActive ? colors.primary : colors.foreground}
-                      />
-                      <Text
-                        style={{
-                          color: isActive ? colors.primary : colors.foreground,
-                          fontSize: FONT_SIZES.base,
-                          fontWeight: '500',
-                          marginLeft: 12,
-                        }}
-                      >
-                        {info.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
-              )}
-            </View>
-          </BottomSheetSection>
-
-          <View className="pt-4 pb-6">
-            <Button
-              variant="outline"
-              onPress={() => setShowStatusSheet(false)}
-              className="w-full"
-            >
-              Cancel
-            </Button>
-          </View>
-        </BottomSheet>
+          currentStatus={property.status}
+          onStatusChange={handleStatusChange}
+          isSaving={isSaving}
+        />
       </ThemedSafeAreaView>
     </>
   );

@@ -3,26 +3,24 @@
 // Follows ADHD-friendly design: list view for quick browsing, focused sheet for editing
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert, FlatList } from 'react-native';
+import { View, Text, Alert, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useThemeColors } from '@/contexts/ThemeContext';
 import {
   BottomSheet,
   FocusedSheet,
-  FocusedSheetSection,
   Button,
-  FormField,
-  Select,
-  Switch,
-  Badge,
   StepUpVerificationSheet,
 } from '@/components/ui';
 import { useStepUpAuth } from '@/features/auth/hooks';
-import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
+import { SPACING, ICON_SIZES } from '@/constants/design-tokens';
 import { supabase } from '@/lib/supabase';
 
 import type { SecurityPattern } from './types';
+import { PatternListItem } from './PatternListItem';
+import { PatternFormSection } from './PatternFormSection';
+import { PatternTestSection } from './PatternTestSection';
 
 interface PatternEditorSheetProps {
   visible: boolean;
@@ -32,22 +30,6 @@ interface PatternEditorSheetProps {
 }
 
 type EditorMode = 'list' | 'add' | 'edit';
-
-const SEVERITY_OPTIONS = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-];
-
-const THREAT_TYPE_OPTIONS = [
-  { value: 'prompt_injection', label: 'Prompt Injection' },
-  { value: 'jailbreak', label: 'Jailbreak Attempt' },
-  { value: 'data_exfiltration', label: 'Data Exfiltration' },
-  { value: 'harmful_content', label: 'Harmful Content' },
-  { value: 'abuse', label: 'Abuse/Misuse' },
-  { value: 'other', label: 'Other' },
-];
 
 export function PatternEditorSheet({
   visible,
@@ -256,100 +238,6 @@ export function PatternEditorSheet({
     cancelStepUp();
   }, [cancelStepUp]);
 
-  const getSeverityColor = (sev: string | undefined | null): string => {
-    if (sev === 'critical') return colors.destructive;
-    if (sev === 'high') return colors.warning;
-    if (sev === 'medium') return '#f59e0b';
-    return colors.mutedForeground;
-  };
-
-  const formatThreatType = (type: string | undefined | null): string => {
-    if (!type) return 'unknown';
-    return type.replace(/_/g, ' ');
-  };
-
-  const renderPatternItem = ({ item }: { item: SecurityPattern }) => {
-    const severityLabel = item.severity || 'unknown';
-    const severityColor = getSeverityColor(item.severity);
-
-    return (
-      <View
-        style={{
-          backgroundColor: colors.card,
-          borderRadius: BORDER_RADIUS.lg,
-          padding: 12,
-          marginBottom: 8,
-        }}
-      >
-        <View
-          style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}
-        >
-          <View style={{ flex: 1, marginRight: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-              <Badge
-                variant="outline"
-                style={{
-                  backgroundColor: severityColor + '20',
-                  borderColor: severityColor,
-                  marginRight: 6,
-                }}
-              >
-                <Text style={{ fontSize: 10, color: severityColor, fontWeight: '600' }}>
-                  {severityLabel.toUpperCase()}
-                </Text>
-              </Badge>
-              <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
-                {formatThreatType(item.threatType)}
-              </Text>
-            </View>
-            <Text
-              style={{ fontSize: 12, color: colors.foreground, fontFamily: 'monospace' }}
-              numberOfLines={2}
-            >
-              {item.pattern}
-            </Text>
-            {item.description && (
-              <Text
-                style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 4 }}
-                numberOfLines={1}
-              >
-                {item.description}
-              </Text>
-            )}
-            <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>
-              {item.hitCount} hits
-            </Text>
-          </View>
-
-          <View style={{ alignItems: 'flex-end', gap: 8 }}>
-            {togglingId === item.id ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Switch checked={item.isActive} onCheckedChange={() => handleToggleActive(item)} />
-            )}
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity
-                onPress={() => {
-                  setEditingPattern(item);
-                  setMode('edit');
-                }}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="pencil" size={ICON_SIZES.md} color={colors.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleDelete(item)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="trash-outline" size={ICON_SIZES.md} color={colors.destructive} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
   // Determine if step-up sheet should be visible
   const showStepUpSheet = stepUpState.isRequired || stepUpState.status === 'mfa_not_configured';
 
@@ -381,7 +269,18 @@ export function PatternEditorSheet({
             <FlatList
               data={patterns}
               keyExtractor={(item) => item.id}
-              renderItem={renderPatternItem}
+              renderItem={({ item }) => (
+                <PatternListItem
+                  item={item}
+                  togglingId={togglingId}
+                  onToggleActive={handleToggleActive}
+                  onEdit={(editItem) => {
+                    setEditingPattern(editItem);
+                    setMode('edit');
+                  }}
+                  onDelete={handleDelete}
+                />
+              )}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <View style={{ alignItems: 'center', paddingVertical: 32 }}>
@@ -426,109 +325,22 @@ export function PatternEditorSheet({
         doneDisabled={!pattern.trim()}
         isSubmitting={isSubmitting}
       >
-        <FocusedSheetSection title="Pattern Details">
-          <FormField
-            label="Regex Pattern"
-            required
-            value={pattern}
-            onChangeText={setPattern}
-            placeholder="e\.g\. (ignore|forget).*instructions"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={{ fontFamily: 'monospace' }}
-          />
+        <PatternFormSection
+          pattern={pattern}
+          onPatternChange={setPattern}
+          severity={severity}
+          onSeverityChange={setSeverity}
+          threatType={threatType}
+          onThreatTypeChange={setThreatType}
+          description={description}
+          onDescriptionChange={setDescription}
+        />
 
-          <View style={{ flexDirection: 'row', gap: 12, marginTop: SPACING.md }}>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: colors.foreground,
-                  marginBottom: 6,
-                }}
-              >
-                Severity *
-              </Text>
-              <Select value={severity} onValueChange={setSeverity} options={SEVERITY_OPTIONS} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: colors.foreground,
-                  marginBottom: 6,
-                }}
-              >
-                Threat Type *
-              </Text>
-              <Select
-                value={threatType}
-                onValueChange={setThreatType}
-                options={THREAT_TYPE_OPTIONS}
-              />
-            </View>
-          </View>
-
-          <View style={{ marginTop: SPACING.md }}>
-            <FormField
-              label="Description"
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Brief description of what this pattern detects"
-            />
-          </View>
-        </FocusedSheetSection>
-
-        <FocusedSheetSection title="Test Pattern">
-          <FormField
-            label="Test Input"
-            value={testInput}
-            onChangeText={setTestInput}
-            placeholder="Enter text to test against the pattern"
-            multiline
-            numberOfLines={3}
-          />
-
-          {testResult && (
-            <View
-              style={{
-                marginTop: SPACING.sm,
-                padding: 12,
-                borderRadius: BORDER_RADIUS.md,
-                backgroundColor: testResult.error
-                  ? colors.destructive + '20'
-                  : testResult.matches
-                    ? colors.success + '20'
-                    : colors.muted,
-              }}
-            >
-              {testResult.error ? (
-                <Text style={{ color: colors.destructive, fontSize: 13 }}>
-                  Error: {testResult.error}
-                </Text>
-              ) : (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons
-                    name={testResult.matches ? 'checkmark-circle' : 'close-circle'}
-                    size={ICON_SIZES.ml}
-                    color={testResult.matches ? colors.success : colors.mutedForeground}
-                  />
-                  <Text
-                    style={{
-                      marginLeft: 8,
-                      color: testResult.matches ? colors.success : colors.mutedForeground,
-                      fontSize: 13,
-                    }}
-                  >
-                    {testResult.matches ? 'Pattern matches!' : 'No match'}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </FocusedSheetSection>
+        <PatternTestSection
+          testInput={testInput}
+          onTestInputChange={setTestInput}
+          testResult={testResult}
+        />
       </FocusedSheet>
 
       {/* Step-up verification sheet for MFA on destructive actions - rendered outside to avoid nesting issues */}

@@ -1,19 +1,40 @@
 # Architecture Overview
 
-> Last updated: 2026-02-17 by querying Supabase staging (`lqmbyobweeaigrwmvizo`) directly.
+> Last updated: 2026-02-21
 
 ## Three-Product Ecosystem
 
-| Product | Role | Analogy | Stack | Repo |
-|---------|------|---------|-------|------|
-| **Doughy** | Source of truth — all data lives here | The brain | Expo 54 + RN + Supabase + TypeScript | `doughy-app-mobile` |
-| **The Claw** | Nervous system — AI control plane | The nervous system | Expo + RN + Zustand + custom theme | `the-claw-app` |
-| **CallPilot** | Communication companion — calling | The voice | Expo + RN + hooks+Context | `callpilot` |
-| **OpenClaw Server** | AI gateway for all 3 apps | The spine | Express + Anthropic SDK + Twilio | `doughy-app-mobile/openclaw-server/` |
+| Product | Role | Analogy | Stack | Location |
+|---------|------|---------|-------|----------|
+| **Doughy** | Source of truth — all data lives here | The brain | Expo 54 + RN + Supabase + TypeScript | Root (`/`) |
+| **The Claw** | Nervous system — AI control plane | The nervous system | Expo 54 + RN + Zustand + custom theme | `apps/the-claw-app/` |
+| **CallPilot** | Communication companion — calling | The voice | Expo 54 + RN + hooks+Context | `apps/callpilot/` |
+| **OpenClaw Server** | AI gateway for all 3 apps | The spine | Express + Anthropic SDK + Twilio | `openclaw-server/` |
 
 All apps share **one Supabase instance** (staging: `lqmbyobweeaigrwmvizo`). Auth is shared via Supabase Auth. Schemas are separated by data ownership.
 
 **Design philosophy:** ADHD-friendly. One screen, three answers. Three taps or less. Cards over tables. Progressive disclosure.
+
+## Monorepo Structure
+
+```
+doughy-app-mobile/                  # Root = Doughy app
+├── src/                            # Doughy source
+├── app/                            # Doughy screens (Expo Router)
+├── apps/
+│   ├── callpilot/                  # CallPilot (standalone product, brought in for dev convenience)
+│   └── the-claw-app/               # The Claw (Doughy's AI nervous system)
+├── packages/
+│   └── design-tokens/              # @secondly/design-tokens — shared colors, spacing, glass
+├── openclaw-server/                # Express AI gateway (deployed to DigitalOcean)
+├── openclaw-skills/                # 9 prompt-based AI skills
+└── supabase/                       # Migrations and edge functions
+```
+
+**Separation strategy:**
+- **CallPilot** = standalone product under the Secondly brand. Has its own repo (`callpilot`), brought into this monorepo for development convenience. Will eventually sync back and operate as a CRM-agnostic communication companion.
+- **The Claw** = tightly coupled to Doughy. It IS Doughy's AI nervous system — no standalone use case.
+- **Shared code** lives in `packages/` — currently just design tokens. Apps are NOT npm workspaces themselves (avoids Expo/Metro hoisting conflicts).
 
 ## What Runs Where
 
@@ -113,13 +134,18 @@ Auth flow:
                   │    - Supabase JS client + anon key + RLS         │
                   │    - Zustand (client state) + React Query (server)│
                   │    - NativeWind + useThemeColors()                │
+                  │    Investor tabs: Leads | Properties | Deals | Settings │
+                  │    Landlord tabs: People | Properties | Bookings | Settings │
                   │                                                   │
-                  │  The Claw: Agent monitoring + approval + chat UI  │
-                  │    - Live API via clawFetch → openclaw server     │
-                  │    - Chat, activity, approvals, control tabs      │
+                  │  The Claw: Single-screen control panel            │
+                  │    - Supabase adapter (real DB, no mock adapter)  │
+                  │    - PinnedHeader + Queue + Connections + Activity + Cost │
+                  │    - Trust levels, kill switch, approval gates    │
                   │                                                   │
-                  │  CallPilot: Call coaching + CRM integration       │
-                  │    - API client via callsFetch + mock fallback    │
+                  │  CallPilot: Unified call stream                   │
+                  │    - 3 tabs: Contacts | Messages | Settings       │
+                  │    - Module-aware (investor/landlord contacts)    │
+                  │    - Post-call CRM push with extraction approval  │
                   └──────────────────────────────────────────────────┘
 ```
 
@@ -300,7 +326,7 @@ All CRM queries in The Claw tools and briefings filter by module. CallPilot scri
 
 ## CallPilot Architecture
 
-Call coaching platform with 3 AI engines and 6 server modules. See `docs/CALLPILOT.md` for full details.
+Unified call stream with module-aware contacts, post-call CRM extraction, and 3 AI engines. See `docs/CALLPILOT.md` for full details.
 
 ```
 User → CallPilot App → Supabase (crm.contacts) → Select contact
@@ -309,6 +335,7 @@ User → CallPilot App → Supabase (crm.contacts) → Select contact
                      → [Optional] POST /:id/connect → Twilio outbound call
                      → During call: GET /:id/coaching → live coaching cards (Haiku)
                      → POST /:id/end → transcription (Deepgram) + summary (Sonnet) + Claw task
+                     → POST /:id/push-extractions → CRM data push to claw.transcript_extractions
 ```
 
 ### Server Modules (`openclaw-server/src/callpilot/`)
@@ -378,4 +405,4 @@ Budget enforcement via `claw.budget_limits` (per-user, per-service). See `docs/R
 - Source of truth for CRM data (crm.contacts, crm.leads)
 - Source of truth for investor data (deals_pipeline, properties, follow_ups)
 - Source of truth for landlord data (bookings, maintenance, vendors)
-- Design system source of truth (tokens, colors, components) — CallPilot and The Claw match these
+- Design system source of truth — shared via `@secondly/design-tokens` package (`packages/design-tokens/`)

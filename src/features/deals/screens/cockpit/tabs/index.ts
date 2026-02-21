@@ -3,3 +3,5 @@
 
 export { OverviewTab } from './OverviewTab';
 export { OffersTab } from './OffersTab';
+export { UnderwriteTab } from './UnderwriteTab';
+export { DocsTab } from './DocsTab';
