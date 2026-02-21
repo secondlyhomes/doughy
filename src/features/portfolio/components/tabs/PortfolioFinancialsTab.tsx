@@ -2,21 +2,20 @@
 // Financials tab showing monthly history, actuals vs projections
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
-import { DollarSign, Plus, TrendingUp, TrendingDown, Home, PieChart, Calendar } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { DollarSign, Plus, TrendingUp, Home, PieChart, Calendar } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { SPACING } from '@/constants/design-tokens';
-import { usePortfolioMonthlyRecords, formatMonth, getMonthFirstDay } from '../../hooks/usePortfolioMonthlyRecords';
-import type { PortfolioEntry, PortfolioMonthlyRecord } from '../../types';
+import { usePortfolioMonthlyRecords, getMonthFirstDay } from '../../hooks/usePortfolioMonthlyRecords';
+import type { PortfolioMonthlyRecord } from '../../types';
 import { MonthlyRecordSheet } from '../MonthlyRecordSheet';
-
-interface PortfolioFinancialsTabProps {
-  portfolioEntryId?: string;
-  entry?: PortfolioEntry;
-}
+import type { PortfolioFinancialsTabProps } from './financials-types';
+import { formatCurrency } from './financials-helpers';
+import { ExpenseRow } from './ExpenseRow';
+import { MonthlyHistoryRow } from './MonthlyHistoryRow';
+import { ComparisonRow } from './ComparisonRow';
 
 export function PortfolioFinancialsTab({
   portfolioEntryId,
@@ -51,15 +50,6 @@ export function PortfolioFinancialsTab({
     setEditingRecord(record);
     setShowAddSheet(true);
   }, []);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   if (!portfolioEntryId) {
     return (
@@ -354,136 +344,6 @@ export function PortfolioFinancialsTab({
         } : undefined}
         isLoading={isCreating}
       />
-    </View>
-  );
-}
-
-// Expense row with percentage bar
-function ExpenseRow({
-  label,
-  amount,
-  total,
-  colors,
-}: {
-  label: string;
-  amount: number;
-  total: number;
-  colors: ReturnType<typeof useThemeColors>;
-}) {
-  const percentage = total > 0 ? (amount / total) * 100 : 0;
-
-  return (
-    <View className="gap-1">
-      <View className="flex-row justify-between">
-        <Text style={{ color: colors.foreground, fontSize: 13 }}>{label}</Text>
-        <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: '500' }}>
-          ${amount.toFixed(0)} ({percentage.toFixed(0)}%)
-        </Text>
-      </View>
-      <View
-        className="h-2 rounded-full overflow-hidden"
-        style={{ backgroundColor: colors.muted }}
-      >
-        <View
-          className="h-full rounded-full"
-          style={{
-            width: `${percentage}%`,
-            backgroundColor: colors.primary,
-          }}
-        />
-      </View>
-    </View>
-  );
-}
-
-// Monthly history row
-function MonthlyHistoryRow({
-  record,
-  onPress,
-  colors,
-}: {
-  record: PortfolioMonthlyRecord;
-  onPress: () => void;
-  colors: ReturnType<typeof useThemeColors>;
-}) {
-  const netCashFlow = record.rent_collected - (record.expenses.total || 0);
-  const isPositive = netCashFlow >= 0;
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      className="flex-row items-center justify-between py-2 px-3 rounded-lg"
-      style={{ backgroundColor: colors.muted }}
-    >
-      <View className="flex-row items-center gap-3">
-        <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '500', minWidth: 70 }}>
-          {formatMonth(record.month)}
-        </Text>
-        {record.occupancy_status !== 'occupied' && (
-          <Badge variant="secondary" size="sm">
-            {record.occupancy_status === 'vacant' ? 'Vacant' : 'Partial'}
-          </Badge>
-        )}
-      </View>
-      <View className="flex-row items-center gap-2">
-        <Text
-          style={{
-            color: isPositive ? colors.success : colors.destructive,
-            fontSize: 15,
-            fontWeight: '600',
-          }}
-        >
-          {isPositive ? '+' : ''}${netCashFlow.toFixed(0)}
-        </Text>
-        {isPositive ? (
-          <TrendingUp size={14} color={colors.success} />
-        ) : (
-          <TrendingDown size={14} color={colors.destructive} />
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// Comparison row for actuals vs projected
-function ComparisonRow({
-  label,
-  projected,
-  actual,
-  invertColors,
-  colors,
-}: {
-  label: string;
-  projected: number;
-  actual: number;
-  invertColors?: boolean;
-  colors: ReturnType<typeof useThemeColors>;
-}) {
-  const diff = actual - projected;
-  const percentDiff = projected > 0 ? ((diff / projected) * 100) : 0;
-  const isPositive = invertColors ? diff <= 0 : diff >= 0;
-
-  return (
-    <View className="flex-row justify-between items-center">
-      <View className="flex-1">
-        <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '500' }}>{label}</Text>
-        <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
-          Projected: ${projected.toFixed(0)}/mo
-        </Text>
-      </View>
-      <View className="items-end">
-        <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: '600' }}>
-          ${actual.toFixed(0)}/mo
-        </Text>
-        <Text
-          style={{
-            color: isPositive ? colors.success : colors.destructive,
-            fontSize: 12,
-          }}
-        >
-          {diff >= 0 ? '+' : ''}${diff.toFixed(0)} ({percentDiff.toFixed(1)}%)
-        </Text>
-      </View>
     </View>
   );
 }

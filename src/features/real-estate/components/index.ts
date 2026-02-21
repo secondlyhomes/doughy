@@ -24,6 +24,9 @@ export { PropertyDocsTab } from './PropertyDocsTab';
 
 // Form Wizard Components
 export { PropertyFormWizard } from './PropertyFormWizard';
+export type { PropertyFormWizardProps } from './wizard-form-types';
+export { WizardNavigation } from './WizardNavigation';
+export { WizardQuickCapture } from './WizardQuickCapture';
 export { FormStepProgress, PROPERTY_FORM_STEPS } from './FormStepProgress';
 export type { FormStep } from './FormStepProgress';
 export { PropertyFormStep1 } from './PropertyFormStep1';

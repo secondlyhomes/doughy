@@ -2,20 +2,9 @@
 // Multi-step form wizard for creating/editing properties
 
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  Alert,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
+import { View, Alert, ScrollView } from 'react-native';
 import { haptic } from '@/lib/haptics';
-import { ArrowLeft, ArrowRight, Check, X, Mic, Camera } from 'lucide-react-native';
-import { useThemeColors } from '@/contexts/ThemeContext';
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
-import { withOpacity } from '@/lib/design-utils';
-import { Button } from '@/components/ui';
 import { FormStepProgress, PROPERTY_FORM_STEPS } from './FormStepProgress';
 import { PropertyFormStep1, Step1Data } from './PropertyFormStep1';
 import { PropertyFormStep2, Step2Data } from './PropertyFormStep2';
@@ -31,47 +20,16 @@ import {
   propertyStep2Schema,
   propertyStep3Schema,
 } from '@/lib/validation/schemas/propertySchema';
-
-interface PropertyFormWizardProps {
-  initialData?: Partial<Property>;
-  onSubmit: (data: Partial<Property>) => Promise<void>;
-  onCancel: () => void;
-  isLoading?: boolean;
-  submitLabel?: string;
-}
-
-// Initial data for each step
-const initialStep1Data: Step1Data = {
-  address: '',
-  address_line_2: '',
-  city: '',
-  state: '',
-  zip: '',
-  county: '',
-  propertyType: 'single_family',
-};
-
-const initialStep2Data: Step2Data = {
-  bedrooms: '',
-  bathrooms: '',
-  square_feet: '',
-  lot_size: '',
-  year_built: '',
-};
-
-const initialStep3Data: Step3Data = {
-  arv: '',
-  purchase_price: '',
-  repair_cost: '',
-};
-
-const initialStep4Data: Step4Data = {
-  images: [],
-};
-
-const initialStep5Data: Step5Data = {
-  notes: '',
-};
+import { PropertyFormWizardProps } from './wizard-form-types';
+import {
+  initialStep1Data,
+  initialStep2Data,
+  initialStep3Data,
+  initialStep4Data,
+  initialStep5Data,
+} from './wizard-form-constants';
+import { WizardNavigation } from './WizardNavigation';
+import { WizardQuickCapture } from './WizardQuickCapture';
 
 export function PropertyFormWizard({
   initialData,
@@ -80,7 +38,6 @@ export function PropertyFormWizard({
   isLoading = false,
   submitLabel = 'Create Property',
 }: PropertyFormWizardProps) {
-  const colors = useThemeColors();
   const { contentPadding } = useTabBarPadding();
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -346,58 +303,13 @@ export function PropertyFormWizard({
 
       {/* AI Quick Capture - Only show on first step */}
       {currentStep === 0 && (
-        <View className="mx-4 mt-4 mb-2 p-4 rounded-xl" style={{ backgroundColor: withOpacity(colors.primary, 'muted') }}>
-          <Text className="text-base font-semibold mb-2" style={{ color: colors.foreground }}>
-            Quick Capture
-          </Text>
-          <Text className="text-sm mb-3" style={{ color: colors.mutedForeground }}>
-            Use voice or scan MLS/tax documents to auto-fill property details
-          </Text>
-          <View className="flex-row gap-3">
-            {/* Voice Capture Button */}
-            <TouchableOpacity
-              className="flex-1 flex-row items-center justify-center py-3 px-4 rounded-lg"
-              style={{ backgroundColor: voiceCapture.state.isRecording ? colors.destructive : colors.primary }}
-              onPress={handleVoiceCapture}
-              disabled={voiceCapture.state.isTranscribing || voiceCapture.state.isExtracting}
-            >
-              {voiceCapture.state.isTranscribing || voiceCapture.state.isExtracting ? (
-                <ActivityIndicator size="small" color={colors.primaryForeground} />
-              ) : (
-                <>
-                  <Mic size={18} color={colors.primaryForeground} />
-                  <Text className="ml-2 font-medium" style={{ color: colors.primaryForeground }}>
-                    {voiceCapture.state.isRecording ? 'Stop' : 'Voice'}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            {/* Photo Capture Button */}
-            <TouchableOpacity
-              className="flex-1 flex-row items-center justify-center py-3 px-4 rounded-lg"
-              style={{ backgroundColor: colors.primary }}
-              onPress={handlePhotoCapture}
-              disabled={photoExtract.state.isCapturing || photoExtract.state.isExtracting}
-            >
-              {photoExtract.state.isCapturing || photoExtract.state.isExtracting ? (
-                <ActivityIndicator size="small" color={colors.primaryForeground} />
-              ) : (
-                <>
-                  <Camera size={18} color={colors.primaryForeground} />
-                  <Text className="ml-2 font-medium" style={{ color: colors.primaryForeground }}>
-                    Scan
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-          {voiceCapture.state.isRecording && (
-            <Text className="text-xs mt-2 text-center" style={{ color: colors.mutedForeground }}>
-              Recording: {voiceCapture.formatDuration(voiceCapture.state.duration)}
-            </Text>
-          )}
-        </View>
+        <WizardQuickCapture
+          voiceState={voiceCapture.state}
+          photoState={photoExtract.state}
+          onVoiceCapture={handleVoiceCapture}
+          onPhotoCapture={handlePhotoCapture}
+          formatDuration={voiceCapture.formatDuration}
+        />
       )}
 
       {/* Scrollable Step Content with Navigation Buttons */}
@@ -414,50 +326,16 @@ export function PropertyFormWizard({
         </View>
 
         {/* Navigation Buttons - scroll with content */}
-        <View className="flex-row gap-3 px-4 pt-2 pb-4">
-          {currentStep === 0 ? (
-            <Button
-              variant="secondary"
-              onPress={handleCancel}
-              disabled={isLoading}
-              className="flex-1"
-            >
-              <X size={20} color={colors.foreground} />
-              Cancel
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              onPress={handleBack}
-              disabled={isLoading}
-              className="flex-1"
-            >
-              <ArrowLeft size={20} color={colors.foreground} />
-              Back
-            </Button>
-          )}
-
-          {isLastStep ? (
-            <Button
-              onPress={handleSubmit}
-              disabled={isLoading}
-              loading={isLoading}
-              className="flex-1"
-            >
-              {!isLoading && <Check size={20} color={colors.primaryForeground} />}
-              {submitLabel}
-            </Button>
-          ) : (
-            <Button
-              onPress={handleNext}
-              disabled={isLoading}
-              className="flex-1"
-            >
-              Next
-              <ArrowRight size={20} color={colors.primaryForeground} />
-            </Button>
-          )}
-        </View>
+        <WizardNavigation
+          currentStep={currentStep}
+          isLastStep={isLastStep}
+          isLoading={isLoading}
+          submitLabel={submitLabel}
+          onCancel={handleCancel}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSubmit={handleSubmit}
+        />
       </ScrollView>
     </View>
   );
