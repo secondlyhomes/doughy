@@ -1,0 +1,95 @@
+/**
+ * {{BASE_NAME}} Service
+ *
+ * Generated: {{DATE}}
+ */
+
+export interface {{BASE_NAME}}Data {
+  id: string
+  name: string
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * {{BASE_NAME}} Service
+ *
+ * Handles {{CAMEL_NAME}} business logic and data operations
+ */
+export const {{CAMEL_NAME}}Service = {
+  /**
+   * Get all items
+   */
+  async getAll(): Promise<{{BASE_NAME}}Data[]> {
+    try {
+      // Implement data fetching
+      return []
+    } catch (error) {
+      console.error('Failed to fetch {{CAMEL_NAME}}s:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Get item by ID
+   */
+  async getById(id: string): Promise<{{BASE_NAME}}Data | null> {
+    try {
+      // Implement data fetching
+      return null
+    } catch (error) {
+      console.error('Failed to fetch {{CAMEL_NAME}}:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Create new item
+   */
+  async create(data: Partial<{{BASE_NAME}}Data>): Promise<{{BASE_NAME}}Data> {
+    try {
+      // Implement creation
+      const newItem: {{BASE_NAME}}Data = {
+        id: Date.now().toString(),
+        name: data.name || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      return newItem
+    } catch (error) {
+      console.error('Failed to create {{CAMEL_NAME}}:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Update item
+   */
+  async update(id: string, data: Partial<{{BASE_NAME}}Data>): Promise<{{BASE_NAME}}Data> {
+    try {
+      // Implement update
+      const updated: {{BASE_NAME}}Data = {
+        id,
+        name: data.name || '',
+        created_at: '',
+        updated_at: new Date().toISOString(),
+      }
+      return updated
+    } catch (error) {
+      console.error('Failed to update {{CAMEL_NAME}}:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Delete item
+   */
+  async remove(id: string): Promise<void> {
+    try {
+      // Implement deletion
+    } catch (error) {
+      console.error('Failed to delete {{CAMEL_NAME}}:', error)
+      throw error
+    }
+  },
+}

@@ -1,16 +1,19 @@
 # Deployment
 
-> Last verified: 2026-02-16 by querying Supabase staging + production via MCP.
+> Last verified: 2026-02-22
 
 ## Current State
 
 | Component | Status | Location |
 |-----------|--------|----------|
-| **Doughy Mobile App** | Active, iOS-first | Expo Dev Client, local |
-| **The Claw App** | UI complete, mock data | Local dev only |
-| **CallPilot App** | UI complete, mock data | Local dev only |
-| **OpenClaw Server** | **Deployed** on DO droplet | `openclaw-server/` in repo, `157.245.218.123` |
-| **Supabase (Staging)** | Active, 7 schemas, 154 tables, 62 edge functions | `us-east-1` |
+| **Doughy Mobile App** | Active, iOS-first | `apps/doughy/`, Expo Dev Client |
+| **Bouncer App** | UI complete, wiring to OpenClaw API | `apps/bouncer/`, local dev |
+| **CallPilot App** | UI complete, mock data | `apps/callpilot/`, local dev |
+| **Custom OpenClaw Server** | **Deployed** on DO droplet (legacy) | `openclaw-server/` + `legacy/custom-claw/` |
+| **OpenClaw Platform** | Migration in progress | `server/openclaw/` |
+| **Webhook Bridge** | Scaffold created | `server/webhook-bridge/` |
+| **Supabase MCP Server** | Scaffold created | `server/tools/` |
+| **Supabase (Staging)** | Active, 9 schemas, 170 tables, 62 edge functions | `us-east-1` |
 | **Supabase (Production)** | Active, public schema only, ~42 tables | `us-west-2` |
 | **DigitalOcean Droplet** | **Active** | `openclaw.doughy.app` (`157.245.218.123`) |
 
@@ -30,9 +33,9 @@
 | DB Host | `db.lqmbyobweeaigrwmvizo.supabase.co` |
 | Postgres | 17.6.1.063 |
 | Created | 2025-04-13 |
-| Schemas | 7 (claw, ai, investor, landlord, crm, integrations, public) |
-| Tables | 154 |
-| RLS | 152/154 tables |
+| Schemas | 9 (claw, callpilot, ai, investor, landlord, crm, integrations, callpilot, public) |
+| Tables | 170 |
+| RLS | Enabled on all tables |
 | Edge Functions | 62 deployed, all ACTIVE |
 | Organization | `zcldhvcjdmrqhqqezjsq` |
 
@@ -91,6 +94,7 @@
 | Property | Value |
 |----------|-------|
 | OS | Ubuntu 24.04 LTS |
+| Specs | 4GB RAM / 2 vCPU |
 | IP | `157.245.218.123` |
 | SSH | `ssh claw` (alias in `~/.ssh/config`, key: `~/.ssh/do_claw`) |
 | Domain | `openclaw.doughy.app` |
@@ -100,7 +104,28 @@
 | Process Manager | PM2 |
 | Reverse Proxy | Nginx |
 | SSL | Let's Encrypt via Certbot |
-| Port | 3000 (internal), 443 (public) |
+| Port | 3000 (custom server), 443 (public) |
+
+### Services Running During Migration
+
+| Service | Port | RAM (est.) | Status |
+|---------|------|------------|--------|
+| Custom Express server | 3000 | ~104MB | Active (legacy) |
+| OpenClaw gateway | 18789 | ~200-400MB | Pending deployment |
+| Webhook bridge | 3001 | ~50MB | Pending |
+| LiteLLM proxy | 4000 | ~100-200MB | Pending |
+| Squid proxy | 3128 | ~50MB | Pending |
+| Queue processor | -- | ~30MB | Pending |
+
+Total estimated: ~600-800MB. The 4GB droplet handles this comfortably.
+
+### Tailscale VPN (Required for OpenClaw)
+
+OpenClaw gateway binds to `127.0.0.1:18789` only -- NOT accessible from public internet. All API access goes through Tailscale VPN.
+
+- Install: `curl -fsSL https://tailscale.com/install.sh | sh && tailscale up`
+- UFW: `ufw default deny incoming && ufw allow in on tailscale0 && ufw enable`
+- SSH remains available via Tailscale (disable direct SSH after migration)
 
 ### Deploy Scripts
 

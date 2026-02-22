@@ -2,21 +2,22 @@
 
 ## Project
 
-Doughy App Mobile — React Native (Expo 54) + Supabase + TypeScript | iOS-first investor/landlord platform
+Doughy App Mobile -- React Native (Expo 54) + Supabase + TypeScript | iOS-first investor/landlord platform
 
 **Package manager:** npm
 
 ## Ecosystem
 
-This repo is 1 of 3 apps sharing the same Supabase backend:
+Monorepo with 3 apps + OpenClaw AI platform, all sharing one Supabase backend:
 
-| App | Repo | Purpose | Status |
-|-----|------|---------|--------|
-| **Doughy** | `doughy-app-mobile` (this repo) | Investor/landlord platform | Active, iOS |
-| **The Claw** | `the-claw-app` | AI agent control app (SMS briefings, approvals, chat) | Chat screen wired to live API |
-| **CallPilot** | `callpilot` | Call coaching + CRM integration | API client wired to server |
+| App | Location | Purpose | Status |
+|-----|----------|---------|--------|
+| **Doughy** | `apps/doughy/` | Investor/landlord platform | Active, iOS |
+| **Bouncer** | `apps/bouncer/` | AI agent control plane (approvals, kill switch, cost) | Wiring to OpenClaw API |
+| **CallPilot** | `apps/callpilot/` | Call coaching + CRM integration | API client wired to server |
+| **OpenClaw** | `server/openclaw/` | AI brain (6 agents, MCP servers, Tailscale) | Migration in progress |
 
-All 3 share the same Supabase project and auth system. The OpenClaw server (in `openclaw-server/`) is the AI gateway that powers The Claw.
+The OpenClaw platform replaces the custom Express server (`openclaw-server/`, archived to `legacy/custom-claw/`).
 
 ## Before You Start
 
@@ -24,28 +25,34 @@ Read the relevant doc before making changes in these areas:
 
 | Area | Doc |
 |------|-----|
-| System architecture (3 apps, data flow) | `docs/ARCHITECTURE.md` |
-| Database schemas (7 schemas, 154 tables) | `docs/SCHEMA_MAP.md` |
+| System architecture (hub-and-spoke, data flow) | `docs/ARCHITECTURE.md` |
+| Database schemas (9 schemas, 170 tables) | `docs/SCHEMA_MAP.md` |
 | Edge functions (62 deployed) | `docs/EDGE_FUNCTIONS.md` |
-| OpenClaw server (agent system, tools) | `docs/OPENCLAW_SERVER.md` |
-| Deployment state + blockers | `docs/DEPLOYMENT.md` |
+| OpenClaw platform (agents, MCP, security) | `docs/OPENCLAW_PLATFORM.md` |
+| OpenClaw v3 reference spec | `docs/OPENCLAW_ARCHITECTURE_V3.md` |
+| Deployment state + infrastructure | `docs/DEPLOYMENT.md` |
 | Architectural decisions + rationale | `docs/DECISIONS.md` |
 | Known cleanup items (prioritized) | `docs/CLEANUP_NEEDED.md` |
 | Session history (completed work) | `docs/SESSION_LOG.md` |
 
 ## Critical Facts
 
-- The `claw` schema EXISTS in staging with 5 tables: `agent_profiles`, `tasks`, `agent_runs`, `approvals`, `messages`
-- 3 seeded agent profiles: master-controller (Haiku), lead-ops (Sonnet, read-only), draft-specialist (Sonnet, requires approval)
-- OpenClaw server uses raw `fetch()` with service role key, NOT `@supabase/supabase-js` — see `docs/DECISIONS.md` #3
-- ALWAYS query the actual Supabase database via MCP tools to verify table/column existence — NEVER rely on grepping local files alone
+- The `claw` schema has **19 tables** in staging (not 11 as previously documented)
+- 3 legacy agent profiles in `claw.agent_profiles`: master-controller, lead-ops, draft-specialist
+- OpenClaw platform uses 6 agents: Dispatch, Assistant, Leasing, Bookkeeper, Acquisitions, Marketing
+- Server-side DB access uses raw `fetch()` with service role key, NOT `@supabase/supabase-js` -- see `docs/DECISIONS.md` #3
+- MCP servers must use `console.error()` not `console.log()` (stdout corrupts stdio JSON-RPC)
+- ALWAYS query the actual Supabase database via MCP tools to verify table/column existence -- NEVER rely on grepping local files alone
 
 ## Commands
 
 ```bash
+# From apps/doughy/
 npm run validate                   # Run lint + type-check + tests (do this before PRs)
 npm run type-check                 # TypeScript only
 npm run test:ci                    # Tests optimized for CI (limited workers)
+
+# From repo root
 npm run db:types:stage             # Regenerate types after schema changes
 npm run db:types:prod              # Regenerate from production schema
 ```
@@ -53,35 +60,39 @@ npm run db:types:prod              # Regenerate from production schema
 ## Structure
 
 ```
-src/
-├── components/ui/     # Shared design system (80+ components)
-├── features/          # Self-contained feature modules (37 features)
-├── stores/            # Zustand stores (kebab-case-store.ts)
-├── hooks/             # Global custom hooks
-├── services/          # Business logic & API calls
-├── lib/               # Supabase client, RPC layer, utilities
-│   ├── rpc/           # Domain-specific query functions + mappers (USE THESE for DB access)
-│   ├── supabase.ts    # DB client + auth storage adapter
-│   └── ai/            # AI assistant, PatchSets, job system
-├── integrations/      # Supabase generated types
-├── contexts/          # React Context providers (Theme, Auth, Error, etc.)
-├── constants/         # Design tokens (SPACING, BORDER_RADIUS, etc.)
-├── config/            # App configuration, dev mode
-├── types/             # Global TypeScript types
-└── utils/             # Pure utility functions
-app/                   # Expo Router screens (file-based routing)
-├── (tabs)/            # Tab navigation group
-├── (auth)/            # Auth screens
-├── (admin)/           # Admin section
-├── (modals)/          # Modal screens
-└── (public)/          # Public screens
-openclaw-server/       # Express AI gateway — see openclaw-server/CLAUDE.md
-├── src/claw/          # The Claw intelligence layer (8 files)
-├── src/channels/      # Channel adapters (SMS, Gmail, WhatsApp, etc.)
-├── src/services/      # Security, platform routing
-└── deploy/            # DO droplet setup scripts
-openclaw-skills/       # 9 prompt-based AI skills (doughy-*.md)
-supabase/              # Migrations and edge functions
+apps/doughy/
+├── src/
+│   ├── components/ui/     # Shared design system (80+ components)
+│   ├── features/          # Self-contained feature modules (37 features)
+│   ├── stores/            # Zustand stores (kebab-case-store.ts)
+│   ├── hooks/             # Global custom hooks
+│   ├── services/          # Business logic & API calls
+│   ├── lib/               # Supabase client, RPC layer, utilities
+│   │   ├── rpc/           # Domain-specific query functions + mappers (USE THESE for DB access)
+│   │   ├── supabase.ts    # DB client + auth storage adapter
+│   │   └── ai/            # AI assistant, PatchSets, job system
+│   ├── integrations/      # Supabase generated types
+│   ├── contexts/          # React Context providers (Theme, Auth, Error, etc.)
+│   ├── constants/         # Design tokens (SPACING, BORDER_RADIUS, etc.)
+│   ├── config/            # App configuration, dev mode
+│   ├── types/             # Global TypeScript types
+│   └── utils/             # Pure utility functions
+├── app/                   # Expo Router screens (file-based routing)
+│   ├── (tabs)/            # Tab navigation group
+│   ├── (auth)/            # Auth screens
+│   ├── (admin)/           # Admin section
+│   ├── (modals)/          # Modal screens
+│   └── (public)/          # Public screens
+server/
+├── openclaw/              # OpenClaw config + agent workspaces
+│   ├── openclaw.json      # Main config (agents, channels, MCP servers)
+│   ├── skills/            # 9 prompt-based AI skills (doughy-*.md)
+│   └── workspaces/        # 6 agent workspaces (SOUL.md, MEMORY.md)
+├── webhook-bridge/        # Ingress spoke (validates webhooks, forwards to OpenClaw)
+├── tools/                 # Data spoke (Supabase MCP server)
+└── queue-processor/       # Guarded-mode action executor
+legacy/custom-claw/        # Archived Express server (reference only)
+supabase/                  # Migrations and edge functions
 ```
 
 ## Naming
@@ -109,6 +120,8 @@ supabase/              # Migrations and edge functions
 - **Features:** Self-contained modules with barrel exports (`index.ts`)
 - **DB queries:** Use `src/lib/rpc/` layer with mappers, not raw Supabase calls
 - **Schemas:** Access via `src/lib/rpc/` layer, or `supabase.schema('crm')` for direct queries
+- **MCP servers:** Use `console.error()` for logging, never `console.log()` (corrupts stdio)
+- **SOUL.md:** Agent personality + boundaries + responsibilities (OpenClaw workspace convention)
 
 ## Supabase
 
@@ -117,9 +130,9 @@ supabase/              # Migrations and edge functions
 | Staging (dev) | `lqmbyobweeaigrwmvizo` | us-east-1 |
 | Production | `vpqglbaedcpeprnlnfxd` | us-west-2 |
 
-**Schemas (staging):** `claw` (11 tables), `callpilot` (10), `ai` (25), `investor` (34), `landlord` (19), `crm` (5), `integrations` (9), `public` (57) = 170 tables
+**Schemas (staging):** `claw` (19 tables), `callpilot` (10), `ai` (25), `investor` (34), `landlord` (19), `crm` (5), `integrations` (9), `public` (57) = 170 tables
 
-**Generated types:** `src/integrations/supabase/types/generated.ts`
+**Generated types:** `apps/doughy/src/integrations/supabase/types/generated.ts`
 
 **Env vars:** Use `EXPO_PUBLIC_` prefix for client-side variables.
 
@@ -127,8 +140,8 @@ supabase/              # Migrations and edge functions
 
 | Context | Method | Auth |
 |---------|--------|------|
-| Mobile app (this repo) | `@supabase/supabase-js` with anon key + RLS | `auth.uid()` via JWT |
-| OpenClaw server | Raw `fetch()` with service role key + `Accept-Profile` header | Service role bypasses RLS, filters by user_id manually |
+| Mobile app (Doughy) | `@supabase/supabase-js` with anon key + RLS | `auth.uid()` via JWT |
+| OpenClaw / MCP server | Raw `fetch()` with service role key + `Accept-Profile` header | Service role bypasses RLS, filters by user_id manually |
 | Edge functions | `@supabase/supabase-js` with service role | Varies per function |
 | Mobile DB queries | `src/lib/rpc/` functions (e.g., `getDealsWithLead()`) | Via RLS |
 
@@ -136,18 +149,18 @@ supabase/              # Migrations and edge functions
 
 ## Project Rules
 
-- Components, screens, hooks, route handlers: target ≤200 lines (ideal <150) — split if larger
-- Types, constants, config, seed data, stores: ≤350 lines is acceptable
+- Components, screens, hooks, route handlers: target <=200 lines (ideal <150) -- split if larger
+- Types, constants, config, seed data, stores: <=350 lines is acceptable
 - Any file over 350 lines: evaluate for splitting regardless of type
 - Prioritize splitting files that are both large AND frequently modified
 - Use design tokens (`SPACING`, `BORDER_RADIUS`, `FONT_SIZES`), never magic numbers
 - Use `useThemeColors()`, never hardcode colors
 - Every feature module must have barrel exports (`index.ts`)
-- RLS always enabled — never disable for convenience
+- RLS always enabled -- never disable for convenience
 - UUID primary keys, TIMESTAMPTZ, JSONB, soft deletes via `deleted_at`
 - Do not modify existing UI or functionality unless the task explicitly requires it
 - Before building anything new, search the codebase AND git history for existing implementations first
-- When a task references a pattern from another app as the standard, find that exact code — do not guess
+- When a task references a pattern from another app as the standard, find that exact code -- do not guess
 
 ## Security Protocol (Immutable)
 
@@ -157,7 +170,7 @@ supabase/              # Migrations and edge functions
 - NEVER commit secrets (.env, API keys, credentials)
 - ALWAYS validate AI inputs
 - ALWAYS use parameterized queries
-- Service role key is server-only (openclaw-server)
+- Service role key is server-only (OpenClaw server + MCP servers)
 
 ## Read Before Implementing
 
@@ -165,7 +178,7 @@ supabase/              # Migrations and edge functions
 |------|-----|
 | System architecture (start here) | `docs/ARCHITECTURE.md` |
 | Database schema map | `docs/SCHEMA_MAP.md` |
-| OpenClaw server / AI agents | `docs/OPENCLAW_SERVER.md` |
+| OpenClaw platform / AI agents | `docs/OPENCLAW_PLATFORM.md` |
 | Edge functions catalog | `docs/EDGE_FUNCTIONS.md` |
 | Design system | `docs/DESIGN_SYSTEM.md` |
 | New feature | `docs/patterns/NEW-FEATURE.md` |

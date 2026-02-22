@@ -71,3 +71,16 @@ apps/*/android/
 apps/*/.metro-health-check*
 apps/*/coverage/
 apps/*/*.tsbuildinfo
+
+# Server components
+server/**/build/
+server/**/.env
+server/**/node_modules/
+
+# Legacy archive (keep in git for reference)
+legacy/custom-claw/node_modules/
+legacy/custom-claw/dist/
+legacy/custom-claw/.env
+
+# Stale analysis output
+analysis/

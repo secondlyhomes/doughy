@@ -1,0 +1,227 @@
+name: Bug Report
+description: Report a bug or issue with the Mobile App Blueprint
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the form below to help us fix it quickly.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported
+          required: true
+        - label: I have tested with the latest version of the blueprint
+          required: true
+        - label: I have reviewed the documentation and troubleshooting guides
+          required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Bug Severity
+      description: How severe is this bug?
+      options:
+        - Critical - App crashes or data loss
+        - High - Major feature broken, no workaround
+        - Medium - Feature broken, workaround exists
+        - Low - Minor issue or cosmetic bug
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Bug Category
+      description: Which area does this bug affect?
+      options:
+        - Authentication & Authorization
+        - Database & Queries
+        - UI Components
+        - Navigation
+        - File Upload/Storage
+        - Push Notifications
+        - Real-time Features
+        - Edge Functions
+        - Build & Deployment
+        - TypeScript Types
+        - Testing
+        - Performance
+        - Security
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug
+      placeholder: |
+        Example: "When uploading images larger than 5MB, the upload fails silently without showing an error message."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the bug
+      placeholder: |
+        1. Navigate to profile screen
+        2. Tap "Upload Photo" button
+        3. Select image larger than 5MB
+        4. Tap "Save"
+        5. Notice upload fails silently
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: |
+        Example: "The upload should either succeed or show a clear error message indicating the file is too large."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: |
+        Example: "The upload fails silently. No error is shown, but the image doesn't appear in the profile."
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your development environment details
+      value: |
+        - Blueprint Version: [e.g., 1.0.0]
+        - Expo SDK Version: [e.g., 54.0.0]
+        - React Native Version: [e.g., 0.76.0]
+        - Supabase Version: [e.g., 2.48.0]
+        - Node Version: [e.g., 20.11.0]
+        - OS: [e.g., macOS 14.0]
+        - Device: [e.g., iPhone 15 Pro, Pixel 7]
+        - iOS/Android Version: [e.g., iOS 17.0]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Which platform(s) does this bug affect?
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - Web
+        - All platforms
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build-type
+    attributes:
+      label: Build Type
+      description: Which build type are you using?
+      options:
+        - Expo Go
+        - Development Build
+        - Production Build (TestFlight/Internal Testing)
+        - Production Build (App Store/Play Store)
+    validations:
+      required: true
+
+  - type: textarea
+    id: code-snippet
+    attributes:
+      label: Code Snippet
+      description: Relevant code that demonstrates the issue
+      render: typescript
+      placeholder: |
+        // Example code that reproduces the bug
+        const handleUpload = async (file: File) => {
+          const { error } = await supabase.storage
+            .from('avatars')
+            .upload(`${user.id}/${file.name}`, file);
+
+          if (error) {
+            console.error(error);
+          }
+        };
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Logs
+      description: Any relevant error messages or stack traces
+      render: shell
+      placeholder: |
+        Paste error logs here...
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem
+      placeholder: Drag and drop images here or paste image URLs
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Have you found a temporary workaround?
+      placeholder: |
+        Example: "I can work around this by validating file size client-side before upload."
+
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Regression
+      description: Did this work in a previous version?
+      options:
+        - "Yes - This is a regression"
+        - "No - This never worked"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+      placeholder: |
+        - Related issues or PRs
+        - External resources
+        - Configuration files
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to help fix this bug?
+      options:
+        - label: I'm willing to submit a PR for this fix
+        - label: I can help with testing the fix
+        - label: I need help fixing this

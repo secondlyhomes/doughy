@@ -1,0 +1,9 @@
+# Add these lines to your supabase/config.toml file
+
+[db]
+seed_sql_paths = [
+  "seed.sql",
+  "seeds/01-users.sql",
+  "seeds/02-profiles.sql",
+  "seeds/03-example-data.sql"
+]

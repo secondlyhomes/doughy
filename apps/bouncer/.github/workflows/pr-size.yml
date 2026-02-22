@@ -1,0 +1,137 @@
+name: PR Size Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR stats
+        id: pr-stats
+        run: |
+          # Get base and head commits
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          # Count changed lines (additions + deletions)
+          STATS=$(git diff --numstat $BASE_SHA..$HEAD_SHA | awk '{added+=$1; deleted+=$2} END {print added, deleted, added+deleted}')
+          ADDED=$(echo $STATS | cut -d' ' -f1)
+          DELETED=$(echo $STATS | cut -d' ' -f2)
+          TOTAL=$(echo $STATS | cut -d' ' -f3)
+
+          # Count changed files
+          FILES=$(git diff --name-only $BASE_SHA..$HEAD_SHA | wc -l)
+
+          echo "added=$ADDED" >> $GITHUB_OUTPUT
+          echo "deleted=$DELETED" >> $GITHUB_OUTPUT
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+
+      - name: Check PR size
+        env:
+          ADDED: ${{ steps.pr-stats.outputs.added }}
+          DELETED: ${{ steps.pr-stats.outputs.deleted }}
+          TOTAL: ${{ steps.pr-stats.outputs.total }}
+          FILES: ${{ steps.pr-stats.outputs.files }}
+        run: |
+          echo "📊 PR Statistics:"
+          echo "  • Added lines: $ADDED"
+          echo "  • Deleted lines: $DELETED"
+          echo "  • Total changed: $TOTAL"
+          echo "  • Files changed: $FILES"
+          echo ""
+
+          # Thresholds
+          MAX_LINES=400
+          WARN_LINES=300
+
+          if [ "$TOTAL" -gt "$MAX_LINES" ]; then
+            echo "❌ PR is too large!"
+            echo ""
+            echo "This PR changes $TOTAL lines, which exceeds the $MAX_LINES line limit."
+            echo ""
+            echo "📋 Why smaller PRs are better:"
+            echo "  • Faster review cycles"
+            echo "  • Easier to spot bugs"
+            echo "  • Less merge conflicts"
+            echo "  • Simpler to revert if needed"
+            echo ""
+            echo "💡 Suggestions:"
+            echo "  1. Split into smaller, focused PRs"
+            echo "  2. Separate refactoring from feature work"
+            echo "  3. Extract documentation updates to separate PR"
+            echo "  4. If this is a migration or generated code, add a comment explaining why"
+            echo ""
+            exit 1
+          elif [ "$TOTAL" -gt "$WARN_LINES" ]; then
+            echo "⚠️  PR is getting large"
+            echo ""
+            echo "This PR changes $TOTAL lines (warning threshold: $WARN_LINES)."
+            echo "Consider splitting it up if possible."
+            echo ""
+          else
+            echo "✅ PR size is reasonable ($TOTAL lines)"
+          fi
+
+      - name: Add comment on large PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const total = ${{ steps.pr-stats.outputs.total }};
+            const files = ${{ steps.pr-stats.outputs.files }};
+
+            const comment = `## 📏 PR Size Check Failed
+
+This PR changes **${total} lines** across **${files} files**, which exceeds our 400-line limit.
+
+### Why This Matters
+
+Smaller PRs are:
+- ✅ **Faster to review** - Reviewers can focus and provide better feedback
+- ✅ **Easier to test** - Less surface area for bugs
+- ✅ **Lower risk** - Simpler to revert if issues arise
+- ✅ **Better for collaboration** - Fewer merge conflicts
+
+### How to Fix
+
+1. **Split by feature** - Separate independent changes into different PRs
+2. **Separate refactoring** - Move code cleanup to its own PR
+3. **Extract documentation** - Put doc updates in a separate PR
+4. **Use feature flags** - Ship incrementally with flags
+
+### Exceptions
+
+If this PR **must** be large (e.g., migration, generated code, urgent hotfix):
+1. Add a comment explaining why
+2. Request manual override from a maintainer
+3. Ensure extra thorough testing
+
+### Resources
+
+- [CONTRIBUTING.md](https://github.com/${{ github.repository }}/blob/main/CONTRIBUTING.md)
+- [Git workflow guide](https://github.com/${{ github.repository }}/blob/main/docs/00-getting-started/)
+
+*This check can be overridden by a maintainer if necessary.*
+`;
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+      - name: PR size summary
+        if: always()
+        run: |
+          echo "::notice title=PR Size::Changed ${{ steps.pr-stats.outputs.total }} lines across ${{ steps.pr-stats.outputs.files }} files"
