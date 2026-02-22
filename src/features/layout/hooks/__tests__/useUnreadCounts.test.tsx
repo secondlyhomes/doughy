@@ -12,10 +12,12 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <UnreadCountsProvider>{children}</UnreadCountsProvider>
 );
 
-const customWrapper = (initialCounts: { leads: number; conversations: number; notifications: number }) =>
-  ({ children }: { children: React.ReactNode }) => (
+const customWrapper = (initialCounts: { leads: number; conversations: number; notifications: number }) => {
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <UnreadCountsProvider initialCounts={initialCounts}>{children}</UnreadCountsProvider>
   );
+  return Wrapper;
+};
 
 describe('useUnreadCounts', () => {
   describe('hook functionality', () => {

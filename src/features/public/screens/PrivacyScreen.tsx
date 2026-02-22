@@ -1,77 +1,13 @@
 // src/features/public/screens/PrivacyScreen.tsx
-// Privacy policy page for public website
-//
-// NOTE: Public marketing page - hardcoded brand colors intentional
-import { View, Text } from 'react-native';
+// Privacy policy screen — links to full policy on secondlyhomes.com
+import { View, Text, TouchableOpacity, Linking } from 'react-native';
+import { ExternalLink } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 
-const sections = [
-  {
-    title: 'Information We Collect',
-    content: `We collect information you provide directly to us, such as when you create an account, make a purchase, or contact us for support. This may include:
-
-• Name and contact information
-• Account credentials
-• Payment information
-• Communication preferences
-• Any other information you choose to provide`,
-  },
-  {
-    title: 'How We Use Your Information',
-    content: `We use the information we collect to:
-
-• Provide, maintain, and improve our services
-• Process transactions and send related information
-• Send technical notices, updates, and support messages
-• Respond to your comments, questions, and requests
-• Monitor and analyze trends, usage, and activities
-• Detect, investigate, and prevent security incidents`,
-  },
-  {
-    title: 'Information Sharing',
-    content: `We do not sell, trade, or otherwise transfer your personal information to outside parties except in the following circumstances:
-
-• With your consent
-• To comply with legal obligations
-• To protect our rights and safety
-• With service providers who assist in our operations
-• In connection with a merger, acquisition, or sale of assets`,
-  },
-  {
-    title: 'Data Security',
-    content: `We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the Internet is 100% secure.`,
-  },
-  {
-    title: 'Your Rights',
-    content: `Depending on your location, you may have certain rights regarding your personal information, including:
-
-• Access to your personal data
-• Correction of inaccurate data
-• Deletion of your data
-• Data portability
-• Objection to processing
-• Withdrawal of consent`,
-  },
-  {
-    title: 'Cookies and Tracking',
-    content: `We use cookies and similar tracking technologies to collect and track information about your browsing activity. You can control cookies through your browser settings.`,
-  },
-  {
-    title: 'Changes to This Policy',
-    content: `We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last Updated" date.`,
-  },
-  {
-    title: 'Contact Us',
-    content: `If you have any questions about this Privacy Policy, please contact us at:
-
-Email: privacy@doughy.com
-Address: 123 Dough Street, San Francisco, CA 94107`,
-  },
-];
+const PRIVACY_URL = 'https://secondlyhomes.com/privacy-policy';
 
 export function PrivacyScreen() {
   const colors = useThemeColors();
-  const lastUpdated = 'January 1, 2025';
 
   return (
     <View className="flex-1 py-12" style={{ backgroundColor: colors.background }}>
@@ -80,21 +16,51 @@ export function PrivacyScreen() {
           <Text className="text-4xl font-bold text-center mb-4" style={{ color: colors.foreground }}>
             Privacy Policy
           </Text>
-          <Text className="text-center mb-12" style={{ color: colors.mutedForeground }}>
-            Last updated: {lastUpdated}
+          <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
+            Secondly Homes LLC
           </Text>
 
-          <Text className="mb-8" style={{ color: colors.foreground }}>
-            At Doughy, we take your privacy seriously. This Privacy Policy explains how we collect,
-            use, disclose, and safeguard your information when you use our platform.
+          <Text className="mb-6 text-base leading-6" style={{ color: colors.foreground }}>
+            Our Privacy Policy covers how we collect, use, and protect your information across all
+            Secondly services including this app (Doughy), CallPilot, The Claw AI system, and our
+            website.
           </Text>
 
-          {sections.map((section, index) => (
-            <View key={index} className="mb-8">
-              <Text className="text-xl font-semibold mb-4" style={{ color: colors.foreground }}>{section.title}</Text>
-              <Text className="whitespace-pre-line" style={{ color: colors.mutedForeground }}>{section.content}</Text>
-            </View>
-          ))}
+          <Text className="mb-6 text-base leading-6" style={{ color: colors.foreground }}>
+            Key points:
+          </Text>
+
+          <View className="mb-6">
+            {[
+              'We do not sell or rent your personal information',
+              'AI processes your data only to provide services — never for model training',
+              'All AI-generated outbound messages require your approval before sending',
+              'SMS: Reply STOP to opt out, HELP for support. Msg & data rates may apply',
+              'We will not share your mobile number with third parties for marketing',
+              'Your data is stored with Row Level Security — only you can access it',
+              'Call recordings are retained per your configurable settings',
+            ].map((point, index) => (
+              <View key={index} className="flex-row mb-3">
+                <Text style={{ color: colors.mutedForeground }}>{'\u2022  '}</Text>
+                <Text className="flex-1 text-base" style={{ color: colors.mutedForeground }}>{point}</Text>
+              </View>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            className="flex-row items-center justify-center rounded-lg py-4 px-6 mb-6"
+            style={{ backgroundColor: colors.primary }}
+            onPress={() => Linking.openURL(PRIVACY_URL)}
+          >
+            <Text className="font-semibold text-base mr-2" style={{ color: colors.primaryForeground }}>
+              Read Full Privacy Policy
+            </Text>
+            <ExternalLink size={18} color={colors.primaryForeground} />
+          </TouchableOpacity>
+
+          <Text className="text-center text-sm" style={{ color: colors.mutedForeground }}>
+            Questions? Contact us at contact@secondlyhomes.com
+          </Text>
         </View>
       </View>
     </View>

@@ -217,6 +217,15 @@ Design tokens match Doughy: primary sage `#4d7c5f`, glass intensities, spacing s
 - Deleted unused tabs (Activity, Calls, Timeline, Analytics, Dashboard)
 - Created documentation: README, ARCHITECTURE, SCHEMA_MAP, ROADMAP, DECISIONS
 
+### 2026-02-20 (Session 3) — BottomSheet + Server Fixes
+- Added BottomSheet component (adapted from Doughy's 320-line version for CallPilot theme)
+- Added BottomSheetSection companion component
+- Server: Added `POST /api/calls/:id/push-extractions` for CallPilot→Claw transcript extraction push
+- Server: Fixed SMS — added missing `SERVER_URL` env var (Twilio sig validation was always failing)
+- Server: Fixed PostgREST schema cache for `callpilot` schema
+- Server: Deployed latest code to production droplet
+- Server: Increased conversation context window from 6-8 to 10 messages in all Claw handlers
+
 ## Instructions for Next Session
 
 - **Wire Supabase**: Replace mock data layer with live `crm.contacts` queries

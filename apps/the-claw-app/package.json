@@ -4,7 +4,7 @@
   "description": "Mobile control interface for OpenClaw AI assistant — toggle integrations, approve actions, stay in control",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "npx expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -90,6 +90,7 @@
   "license": "MIT",
   "dependencies": {
     "@bottom-tabs/react-navigation": "^1.1.0",
+    "@secondly/design-tokens": "file:../../packages/design-tokens",
     "@expo/config-plugins": "~54.0.4",
     "@react-native-async-storage/async-storage": "^2.1.0",
     "@react-navigation/drawer": "^7.8.1",

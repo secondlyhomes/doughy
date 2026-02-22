@@ -190,6 +190,7 @@ export function SmartHomeHubScreen() {
       <ThemedSafeAreaView className="flex-1" edges={[]}>
         <ScrollView
           className="flex-1"
+          contentInsetAdjustmentBehavior="automatic"
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }

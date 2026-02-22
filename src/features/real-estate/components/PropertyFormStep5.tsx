@@ -268,7 +268,7 @@ Examples:
           }}
         >
           <Text className="text-sm" style={{ color: colors.foreground }}>
-            Click "Create Property" below to save this property. You can always edit the details later.
+            Click {'"'}Create Property{'"'} below to save this property. You can always edit the details later.
           </Text>
         </View>
       </View>

@@ -50,7 +50,7 @@ export function AdminGuard({
           Access Denied
         </Text>
         <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
-          You don't have permission to access this area.
+          You don{'\''}t have permission to access this area.
           {'\n'}Please contact an administrator if you believe this is an error.
         </Text>
       </View>

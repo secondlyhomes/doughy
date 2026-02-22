@@ -11,77 +11,16 @@
 // - Glass variant for iOS 26 Liquid Glass
 
 import React, { memo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Bot, User } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { SPACING, BORDER_RADIUS, FONT_SIZES, LINE_HEIGHTS } from '@/constants/design-tokens';
+import { BORDER_RADIUS } from '@/constants/design-tokens';
 import { withOpacity } from '@/lib/design-utils';
 
-export type MessageDirection = 'inbound' | 'outbound';
-export type MessageRole = 'user' | 'assistant' | 'system';
-export type TimeFormat = 'absolute' | 'relative';
-
-export interface MessageBubbleProps {
-  /** Message content text */
-  content: string;
-  /** Timestamp string (ISO or parseable date) */
-  timestamp: string;
-  /**
-   * Message direction for inbox-style chats.
-   * 'outbound' = sent by user/AI, 'inbound' = received from contact
-   * If not provided, derives from role prop.
-   */
-  direction?: MessageDirection;
-  /**
-   * Message role for assistant-style chats.
-   * 'user' | 'assistant' | 'system'
-   * If not provided, derives from direction prop.
-   */
-  role?: MessageRole;
-  /** Whether this message was sent by AI (shows AI indicator) */
-  isAI?: boolean;
-  /** Show the AI indicator badge. Default: true when isAI=true */
-  showAIIndicator?: boolean;
-  /** Show avatar icons for user/assistant. Default: false */
-  showAvatar?: boolean;
-  /** Time format: 'absolute' (2:30 PM) or 'relative' (2m ago). Default: 'absolute' */
-  timeFormat?: TimeFormat;
-  /** Show sender label below timestamp. Default: true for outbound */
-  showSenderLabel?: boolean;
-  /** Custom sender label override */
-  senderLabel?: string;
-}
-
-// Format time in absolute format (e.g., "2:30 PM")
-function formatTimeAbsolute(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
-
-// Format time in relative format (e.g., "2m ago", "Just now")
-function formatTimeRelative(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffMins < 1440) {
-    const hours = Math.floor(diffMins / 60);
-    return `${hours}h ago`;
-  }
-
-  // Fallback to absolute for older messages
-  return date.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+export type { MessageBubbleProps, MessageDirection, MessageRole, TimeFormat } from './message-bubble-types';
+import type { MessageBubbleProps } from './message-bubble-types';
+import { formatTimeAbsolute, formatTimeRelative } from './message-bubble-helpers';
+import { styles } from './message-bubble-styles';
 
 /**
  * MessageBubble - Unified chat message component
@@ -280,86 +219,6 @@ export const MessageBubble = memo(function MessageBubble({
       </View>
     </View>
   );
-});
-
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: SPACING.xs,
-    maxWidth: '85%',
-  },
-  containerInbound: {
-    alignSelf: 'flex-start',
-    marginLeft: SPACING.md,
-  },
-  containerOutbound: {
-    alignSelf: 'flex-end',
-    marginRight: SPACING.md,
-  },
-  bubbleRow: {
-    alignItems: 'flex-end',
-    gap: SPACING.xs,
-  },
-  avatar: {
-    borderRadius: 999,
-    padding: 6,
-    marginBottom: SPACING.xs,
-  },
-  bubble: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderTopLeftRadius: BORDER_RADIUS.xl,
-    borderTopRightRadius: BORDER_RADIUS.xl,
-    minWidth: 60,
-    flexShrink: 1,
-  },
-  aiIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: SPACING.xs,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.sm,
-    marginBottom: SPACING.xs,
-    gap: 2,
-  },
-  aiIndicatorText: {
-    fontSize: FONT_SIZES['2xs'],
-    fontWeight: '600',
-  },
-  messageText: {
-    fontSize: FONT_SIZES.base,
-    lineHeight: FONT_SIZES.base * LINE_HEIGHTS.normal,
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: SPACING.xs,
-    gap: SPACING.sm,
-  },
-  metaInbound: {
-    justifyContent: 'flex-start',
-  },
-  metaOutbound: {
-    justifyContent: 'flex-end',
-  },
-  timestamp: {
-    fontSize: FONT_SIZES.xs,
-  },
-  senderLabel: {
-    fontSize: FONT_SIZES.xs,
-    fontStyle: 'italic',
-  },
-  systemContainer: {
-    alignItems: 'center',
-    paddingVertical: SPACING.sm,
-  },
-  systemText: {
-    fontSize: FONT_SIZES.xs,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
 });
 
 export default MessageBubble;

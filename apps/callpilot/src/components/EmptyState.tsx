@@ -38,6 +38,8 @@ export function EmptyState({
         <Text
           style={{
             fontSize: 48,
+            lineHeight: 64,
+            textAlign: 'center',
             marginBottom: theme.tokens.spacing[4],
           }}
         >

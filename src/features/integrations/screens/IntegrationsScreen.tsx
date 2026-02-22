@@ -2,42 +2,28 @@
 // Screen for managing third-party integrations (Seam, Tracerfy)
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Alert, Switch, TouchableOpacity } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
-import {
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Trash2,
-} from 'lucide-react-native';
+import { View, Text, ScrollView, Alert } from 'react-native';
+import { Stack } from 'expo-router';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { ThemedSafeAreaView } from '@/components';
 import {
   LoadingSpinner,
-  Button,
-  Badge,
-  Card,
-  Input,
-  FormField,
   TAB_BAR_SAFE_PADDING,
 } from '@/components/ui';
 import { useNativeHeader } from '@/hooks';
 import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
-import { withOpacity } from '@/lib/design-utils';
 import {
   useIntegrations,
   useIntegrationMutations,
 } from '../hooks/useIntegrations';
 import {
   IntegrationProvider,
-  IntegrationStatus,
   INTEGRATION_PROVIDERS,
 } from '../types';
+import { SeamIntegrationCard } from '../components/SeamIntegrationCard';
+import { TracerfyIntegrationCard } from '../components/TracerfyIntegrationCard';
 
 export function IntegrationsScreen() {
-  const router = useRouter();
   const colors = useThemeColors();
 
   const { data, isLoading, refetch } = useIntegrations();
@@ -140,31 +126,6 @@ export function IntegrationsScreen() {
     }
   };
 
-  const getStatusIcon = (status: IntegrationStatus) => {
-    switch (status) {
-      case 'connected':
-        return <CheckCircle2 size={20} color={colors.success} />;
-      case 'error':
-        return <AlertCircle size={20} color={colors.destructive} />;
-      default:
-        return <XCircle size={20} color={colors.mutedForeground} />;
-    }
-  };
-
-  const getStatusBadge = (status: IntegrationStatus, enabled: boolean) => {
-    if (!enabled) {
-      return <Badge variant="secondary">Disabled</Badge>;
-    }
-    switch (status) {
-      case 'connected':
-        return <Badge variant="success">Connected</Badge>;
-      case 'error':
-        return <Badge variant="destructive">Error</Badge>;
-      default:
-        return <Badge variant="warning">Not Connected</Badge>;
-    }
-  };
-
   if (isLoading && !data) {
     return (
       <>
@@ -191,307 +152,30 @@ export function IntegrationsScreen() {
         }}
       >
         {/* Seam - Smart Home */}
-        <Card className="mb-4">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center gap-3">
-              <View
-                className="w-12 h-12 rounded-full items-center justify-center"
-                style={{ backgroundColor: colors.muted }}
-              >
-                <Text style={{ fontSize: 24 }}>🔐</Text>
-              </View>
-              <View>
-                <Text
-                  style={{
-                    color: colors.foreground,
-                    fontSize: FONT_SIZES.lg,
-                    fontWeight: '600',
-                  }}
-                >
-                  Seam
-                </Text>
-                <Text
-                  style={{
-                    color: colors.mutedForeground,
-                    fontSize: FONT_SIZES.xs,
-                  }}
-                >
-                  Smart Locks (Schlage)
-                </Text>
-              </View>
-            </View>
-            {seam && getStatusBadge(seam.status, seam.enabled)}
-          </View>
-
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              fontSize: FONT_SIZES.sm,
-              marginBottom: SPACING.md,
-            }}
-          >
-            Control smart locks and generate access codes for guests. Currently supporting Schlage locks.
-          </Text>
-
-          <FormField label="API Key" className="mb-3">
-            <View className="flex-row gap-2">
-              <View className="flex-1">
-                <Input
-                  value={seamApiKey}
-                  onChangeText={setSeamApiKey}
-                  placeholder="Enter Seam API key..."
-                  secureTextEntry={!showSeamKey}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-              <TouchableOpacity
-                onPress={() => setShowSeamKey(!showSeamKey)}
-                className="p-3 rounded-lg items-center justify-center"
-                style={{ backgroundColor: colors.muted }}
-              >
-                {showSeamKey ? (
-                  <EyeOff size={20} color={colors.mutedForeground} />
-                ) : (
-                  <Eye size={20} color={colors.mutedForeground} />
-                )}
-              </TouchableOpacity>
-            </View>
-          </FormField>
-
-          <View className="flex-row gap-2">
-            <Button
-              onPress={handleSaveSeam}
-              disabled={isSaving || !seamApiKey.trim()}
-              className="flex-1"
-            >
-              {isSaving ? 'Saving...' : seam?.status === 'connected' ? 'Update' : 'Connect'}
-            </Button>
-            {seam?.status === 'connected' && (
-              <Button
-                variant="destructive"
-                onPress={() => handleDisconnect('seam')}
-                disabled={isSaving}
-              >
-                <Trash2 size={18} color="white" />
-              </Button>
-            )}
-          </View>
-
-          {seam?.error && (
-            <View
-              className="mt-3 p-3 rounded-lg flex-row items-center gap-2"
-              style={{ backgroundColor: withOpacity(colors.destructive, 'light') }}
-            >
-              <AlertCircle size={16} color={colors.destructive} />
-              <Text
-                style={{
-                  color: colors.destructive,
-                  fontSize: FONT_SIZES.sm,
-                  flex: 1,
-                }}
-              >
-                {seam.error}
-              </Text>
-            </View>
-          )}
-        </Card>
+        <SeamIntegrationCard
+          seam={seam}
+          seamApiKey={seamApiKey}
+          setSeamApiKey={setSeamApiKey}
+          showSeamKey={showSeamKey}
+          setShowSeamKey={setShowSeamKey}
+          isSaving={isSaving}
+          onSave={handleSaveSeam}
+          onDisconnect={() => handleDisconnect('seam')}
+        />
 
         {/* Tracerfy - Skip Tracing */}
-        <Card className="mb-4">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center gap-3">
-              <View
-                className="w-12 h-12 rounded-full items-center justify-center"
-                style={{ backgroundColor: colors.muted }}
-              >
-                <Text style={{ fontSize: 24 }}>🔍</Text>
-              </View>
-              <View>
-                <Text
-                  style={{
-                    color: colors.foreground,
-                    fontSize: FONT_SIZES.lg,
-                    fontWeight: '600',
-                  }}
-                >
-                  Tracerfy
-                </Text>
-                <Text
-                  style={{
-                    color: colors.mutedForeground,
-                    fontSize: FONT_SIZES.xs,
-                  }}
-                >
-                  Skip Tracing
-                </Text>
-              </View>
-            </View>
-            {tracerfy && getStatusBadge(tracerfy.status, tracerfy.enabled)}
-          </View>
-
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              fontSize: FONT_SIZES.sm,
-              marginBottom: SPACING.md,
-            }}
-          >
-            Find contact information for leads and automatically match them to property addresses.
-          </Text>
-
-          <FormField label="API Key" className="mb-3">
-            <View className="flex-row gap-2">
-              <View className="flex-1">
-                <Input
-                  value={tracerfyApiKey}
-                  onChangeText={setTracerfyApiKey}
-                  placeholder="Enter Tracerfy API key..."
-                  secureTextEntry={!showTracerfyKey}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-              <TouchableOpacity
-                onPress={() => setShowTracerfyKey(!showTracerfyKey)}
-                className="p-3 rounded-lg items-center justify-center"
-                style={{ backgroundColor: colors.muted }}
-              >
-                {showTracerfyKey ? (
-                  <EyeOff size={20} color={colors.mutedForeground} />
-                ) : (
-                  <Eye size={20} color={colors.mutedForeground} />
-                )}
-              </TouchableOpacity>
-            </View>
-          </FormField>
-
-          {/* Tracerfy Settings */}
-          {tracerfy?.status === 'connected' && (
-            <View className="mb-3">
-              <View
-                className="flex-row items-center justify-between p-3 rounded-lg mb-2"
-                style={{ backgroundColor: colors.muted }}
-              >
-                <View className="flex-1 mr-3">
-                  <Text
-                    style={{
-                      color: colors.foreground,
-                      fontSize: FONT_SIZES.sm,
-                      fontWeight: '500',
-                    }}
-                  >
-                    Auto Skip Trace
-                  </Text>
-                  <Text
-                    style={{
-                      color: colors.mutedForeground,
-                      fontSize: FONT_SIZES.xs,
-                    }}
-                  >
-                    Automatically search for contact info on new leads
-                  </Text>
-                </View>
-                <Switch
-                  value={tracerfy.autoSkipTrace}
-                  onValueChange={handleToggleTracerfyAutoSkipTrace}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={colors.card}
-                />
-              </View>
-
-              <View
-                className="flex-row items-center justify-between p-3 rounded-lg"
-                style={{ backgroundColor: colors.muted }}
-              >
-                <View className="flex-1 mr-3">
-                  <Text
-                    style={{
-                      color: colors.foreground,
-                      fontSize: FONT_SIZES.sm,
-                      fontWeight: '500',
-                    }}
-                  >
-                    Auto Match to Property
-                  </Text>
-                  <Text
-                    style={{
-                      color: colors.mutedForeground,
-                      fontSize: FONT_SIZES.xs,
-                    }}
-                  >
-                    Automatically link leads to property addresses
-                  </Text>
-                </View>
-                <Switch
-                  value={tracerfy.autoMatchToProperty}
-                  onValueChange={handleToggleTracerfyAutoMatch}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={colors.card}
-                />
-              </View>
-
-              {tracerfy.creditsRemaining !== undefined && (
-                <View className="mt-2 p-3 rounded-lg" style={{ backgroundColor: colors.muted }}>
-                  <Text
-                    style={{
-                      color: colors.mutedForeground,
-                      fontSize: FONT_SIZES.xs,
-                    }}
-                  >
-                    Credits Remaining
-                  </Text>
-                  <Text
-                    style={{
-                      color: colors.foreground,
-                      fontSize: FONT_SIZES.lg,
-                      fontWeight: '600',
-                    }}
-                  >
-                    {tracerfy.creditsRemaining}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          <View className="flex-row gap-2">
-            <Button
-              onPress={handleSaveTracerfy}
-              disabled={isSaving || !tracerfyApiKey.trim()}
-              className="flex-1"
-            >
-              {isSaving ? 'Saving...' : tracerfy?.status === 'connected' ? 'Update' : 'Connect'}
-            </Button>
-            {tracerfy?.status === 'connected' && (
-              <Button
-                variant="destructive"
-                onPress={() => handleDisconnect('tracerfy')}
-                disabled={isSaving}
-              >
-                <Trash2 size={18} color="white" />
-              </Button>
-            )}
-          </View>
-
-          {tracerfy?.error && (
-            <View
-              className="mt-3 p-3 rounded-lg flex-row items-center gap-2"
-              style={{ backgroundColor: withOpacity(colors.destructive, 'light') }}
-            >
-              <AlertCircle size={16} color={colors.destructive} />
-              <Text
-                style={{
-                  color: colors.destructive,
-                  fontSize: FONT_SIZES.sm,
-                  flex: 1,
-                }}
-              >
-                {tracerfy.error}
-              </Text>
-            </View>
-          )}
-        </Card>
+        <TracerfyIntegrationCard
+          tracerfy={tracerfy}
+          tracerfyApiKey={tracerfyApiKey}
+          setTracerfyApiKey={setTracerfyApiKey}
+          showTracerfyKey={showTracerfyKey}
+          setShowTracerfyKey={setShowTracerfyKey}
+          isSaving={isSaving}
+          onSave={handleSaveTracerfy}
+          onDisconnect={() => handleDisconnect('tracerfy')}
+          onToggleAutoSkipTrace={handleToggleTracerfyAutoSkipTrace}
+          onToggleAutoMatch={handleToggleTracerfyAutoMatch}
+        />
 
         {/* Help Text */}
         <View className="px-2">

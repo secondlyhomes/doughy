@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "postinstall": "patch-package",
-    "start": "expo start",
+    "start": "npx expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -91,6 +91,7 @@
   "license": "MIT",
   "dependencies": {
     "@callstack/liquid-glass": "^0.7.0",
+    "@secondly/design-tokens": "file:../../packages/design-tokens",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "^2.45.0",
     "expo": "~54.0.33",

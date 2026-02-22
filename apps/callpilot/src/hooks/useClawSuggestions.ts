@@ -52,7 +52,7 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
         const { data, error } = await supabase
           .schema('claw' as any)
           .from('draft_suggestions')
-          .select('id, contact_id, body, created_at')
+          .select('id, contact_id, draft_text, created_at')
           .eq('contact_id', contactId!)
           .eq('status', 'pending')
           .order('created_at', { ascending: false })
@@ -65,7 +65,7 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
           setSuggestion({
             id: data.id,
             contactId: data.contact_id,
-            body: data.body,
+            body: data.draft_text,
             createdAt: data.created_at,
           })
         }
@@ -96,7 +96,7 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
               setSuggestion({
                 id: payload.new.id,
                 contactId: payload.new.contact_id,
-                body: payload.new.body,
+                body: payload.new.draft_text,
                 createdAt: payload.new.created_at,
               })
             }
@@ -125,7 +125,7 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
       const { error } = await supabase
         .schema('claw' as any)
         .from('draft_suggestions')
-        .update({ status: 'approved' })
+        .update({ status: 'sent' })
         .eq('id', id)
       if (error) throw error
     } catch (err) {
@@ -143,7 +143,7 @@ export function useClawSuggestions(contactId: string | undefined): UseClawSugges
       const { error } = await supabase
         .schema('claw' as any)
         .from('draft_suggestions')
-        .update({ status: 'rejected' })
+        .update({ status: 'dismissed' })
         .eq('id', id)
       if (error) throw error
     } catch (err) {

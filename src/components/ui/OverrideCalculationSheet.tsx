@@ -23,9 +23,8 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   ScrollView,
-  ViewStyle,
 } from 'react-native';
-import { X, ArrowRight, AlertTriangle } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -37,82 +36,21 @@ import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, OPACITY_VALUES } from '@/constants/design-tokens';
 import { useKeyboardAvoidance } from '@/hooks/useKeyboardAvoidance';
-import { Card } from './Card';
 import { Input } from './Input';
-import { Button } from './Button';
-import { Badge } from './Badge';
+import { formatInput } from './override-calculation-types';
+import { OverrideWarningBanner } from './OverrideWarningBanner';
+import { OverrideComparisonCard } from './OverrideComparisonCard';
+import { OverrideSheetActions } from './OverrideSheetActions';
 
-export interface CalculationOverride {
-  /** Calculation field name */
-  fieldName: string;
+export type { CalculationOverride, OverrideCalculationSheetProps } from './override-calculation-types';
 
-  /** Current AI-calculated value */
-  aiValue: string;
+export { OverrideWarningBanner } from './OverrideWarningBanner';
+export { OverrideComparisonCard } from './OverrideComparisonCard';
+export type { OverrideComparisonCardProps } from './OverrideComparisonCard';
+export { OverrideSheetActions } from './OverrideSheetActions';
+export type { OverrideSheetActionsProps } from './OverrideSheetActions';
 
-  /** Unit/suffix (e.g., "$", "%", "sqft") */
-  unit?: string;
-
-  /** Input type */
-  inputType?: 'currency' | 'percentage' | 'number' | 'text';
-
-  /** Validation function */
-  validate?: (value: string) => boolean;
-
-  /** Helper text */
-  helperText?: string;
-}
-
-export interface OverrideCalculationSheetProps {
-  /** Whether sheet is visible */
-  isVisible: boolean;
-
-  /** Callback when sheet is closed */
-  onClose: () => void;
-
-  /** Callback when override is saved */
-  onSave: (newValue: string, reason: string) => void;
-
-  /** Calculation to override */
-  calculation: CalculationOverride;
-
-  /** Whether save is in progress */
-  isSaving?: boolean;
-
-  /** Custom style */
-  style?: ViewStyle;
-}
-
-/**
- * Formats input based on type
- */
-function formatInput(value: string, type?: 'currency' | 'percentage' | 'number' | 'text'): string {
-  if (!type || type === 'text') return value;
-
-  // Remove non-numeric characters except decimal point
-  const cleaned = value.replace(/[^0-9.]/g, '');
-
-  if (type === 'currency') {
-    // Format as currency without symbol (will be added in display)
-    const num = parseFloat(cleaned);
-    if (isNaN(num)) return '';
-    return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  }
-
-  if (type === 'percentage') {
-    // Format as percentage without symbol
-    const num = parseFloat(cleaned);
-    if (isNaN(num)) return '';
-    return num.toFixed(2);
-  }
-
-  if (type === 'number') {
-    const num = parseFloat(cleaned);
-    if (isNaN(num)) return '';
-    return num.toLocaleString('en-US');
-  }
-
-  return cleaned;
-}
+import type { OverrideCalculationSheetProps } from './override-calculation-types';
 
 export function OverrideCalculationSheet({
   isVisible,
@@ -191,26 +129,6 @@ export function OverrideCalculationSheet({
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslateY.value }],
   }));
-
-  const getDisplayValue = (value: string) => {
-    if (!calculation.unit && calculation.inputType !== 'currency' && calculation.inputType !== 'percentage') {
-      return value;
-    }
-
-    if (calculation.inputType === 'currency') {
-      // Parse and format currency value
-      const cleaned = value.replace(/[^0-9.]/g, '');
-      const num = parseFloat(cleaned);
-      if (isNaN(num)) return value;
-      return `$${num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-    }
-
-    if (calculation.inputType === 'percentage') {
-      return `${value}%`;
-    }
-
-    return `${value} ${calculation.unit || ''}`;
-  };
 
   return (
     <Modal
@@ -314,80 +232,12 @@ export function OverrideCalculationSheet({
 
             {/* Content */}
             <View style={{ padding: SPACING.lg, gap: SPACING.lg }}>
-              {/* Warning Banner */}
-              <Card variant="default" style={{ backgroundColor: withOpacity(colors.warning, 'subtle') }}>
-                <View
-                  style={{
-                    padding: SPACING.md,
-                    flexDirection: 'row',
-                    alignItems: 'flex-start',
-                    gap: SPACING.sm,
-                  }}
-                >
-                  <AlertTriangle size={ICON_SIZES.md} color={colors.warning} />
-                  <Text style={{ flex: 1, fontSize: 13, color: colors.foreground, lineHeight: 18 }}>
-                    Overriding AI calculations may affect accuracy. Please provide a detailed reason for
-                    this change.
-                  </Text>
-                </View>
-              </Card>
+              <OverrideWarningBanner />
 
-              {/* Before/After Comparison */}
-              <View style={{ gap: SPACING.md }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
-                  Value Comparison
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: SPACING.md,
-                  }}
-                >
-                  {/* AI Value */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: SPACING.xs }}>
-                      AI Calculated
-                    </Text>
-                    <Card variant="default">
-                      <View style={{ padding: SPACING.md, alignItems: 'center' }}>
-                        <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground }}>
-                          {getDisplayValue(calculation.aiValue)}
-                        </Text>
-                        <Badge variant="outline" size="sm" style={{ marginTop: SPACING.xs }}>
-                          Current
-                        </Badge>
-                      </View>
-                    </Card>
-                  </View>
-
-                  {/* Arrow */}
-                  <ArrowRight size={ICON_SIZES.lg} color={colors.mutedForeground} />
-
-                  {/* New Value */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: SPACING.xs }}>
-                      Your Override
-                    </Text>
-                    <Card variant="default">
-                      <View style={{ padding: SPACING.md, alignItems: 'center' }}>
-                        {newValue ? (
-                          <>
-                            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.primary }}>
-                              {getDisplayValue(newValue)}
-                            </Text>
-                            <Badge variant="default" size="sm" style={{ marginTop: SPACING.xs }}>
-                              New
-                            </Badge>
-                          </>
-                        ) : (
-                          <Text style={{ fontSize: 14, color: colors.mutedForeground }}>Enter value</Text>
-                        )}
-                      </View>
-                    </Card>
-                  </View>
-                </View>
-              </View>
+              <OverrideComparisonCard
+                calculation={calculation}
+                newValue={newValue}
+              />
 
               {/* New Value Input */}
               <View style={{ gap: SPACING.sm }}>
@@ -430,44 +280,14 @@ export function OverrideCalculationSheet({
                 />
               </View>
 
-              {/* Error Message */}
-              {error && (
-                <View
-                  style={{
-                    padding: SPACING.md,
-                    borderRadius: BORDER_RADIUS.md,
-                    backgroundColor: withOpacity(colors.destructive, 'subtle'),
-                    borderWidth: 1,
-                    borderColor: withOpacity(colors.destructive, 'light'),
-                  }}
-                >
-                  <Text style={{ fontSize: 13, color: colors.destructive }}>
-                    {error}
-                  </Text>
-                </View>
-              )}
-
-              {/* Actions */}
-              <View style={{ flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.md }}>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onPress={onClose}
-                  style={{ flex: 1 }}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="default"
-                  size="lg"
-                  onPress={handleSave}
-                  style={{ flex: 1 }}
-                  disabled={isSaving || !newValue.trim() || !reason.trim()}
-                >
-                  {isSaving ? 'Saving...' : 'Save Override'}
-                </Button>
-              </View>
+              <OverrideSheetActions
+                error={error}
+                isSaving={isSaving}
+                newValue={newValue}
+                reason={reason}
+                onClose={onClose}
+                onSave={handleSave}
+              />
             </View>
           </ScrollView>
         </Animated.View>

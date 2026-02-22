@@ -7,7 +7,7 @@ import { ChevronRight } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { withOpacity } from '@/lib/design-utils';
 import { useFocusMode } from '@/contexts/FocusModeContext';
-import { DealTimeline, SuggestionList } from '../../../components';
+import { DealTimeline } from '../../../components';
 import { NextActionButton } from '../NextActionButton';
 import { DealMetrics } from '../DealMetrics';
 import type { Deal } from '../../../types';
@@ -16,16 +16,12 @@ import {
   getDealAddress,
   getDealLeadName,
 } from '../../../types';
-import type { AISuggestion } from '../../../services/ai-suggestions';
 
 interface OverviewTabProps {
   deal: Deal;
-  suggestions: AISuggestion[];
   onNextAction: () => void;
   onEvidencePress: (field: 'mao' | 'profit' | 'risk') => void;
   onAddActivity: () => void;
-  onSuggestionAction: (suggestion: AISuggestion) => void;
-  onSuggestionDismiss: (suggestion: AISuggestion) => void;
   onLeadPress: () => void;
   onPropertyPress: () => void;
   onRefetch: () => void;
@@ -33,12 +29,9 @@ interface OverviewTabProps {
 
 export function OverviewTab({
   deal,
-  suggestions,
   onNextAction,
   onEvidencePress,
   onAddActivity,
-  onSuggestionAction,
-  onSuggestionDismiss,
   onLeadPress,
   onPropertyPress,
 }: OverviewTabProps) {
@@ -126,20 +119,7 @@ export function OverviewTab({
       {/* Next Action Button */}
       <NextActionButton deal={deal} onPress={onNextAction} />
 
-      {/* AI Suggestions - Zone G Week 9 */}
-      {suggestions.length > 0 && !focusMode && (
-        <View className="mb-4">
-          <SuggestionList
-            suggestions={suggestions}
-            onAction={onSuggestionAction}
-            onDismiss={onSuggestionDismiss}
-            title="AI Suggestions"
-            maxVisible={3}
-          />
-        </View>
-      )}
-
-      {/* Key Metrics - Zone G Progressive Disclosure */}
+      {/* Key Metrics */}
       <DealMetrics deal={deal} onEvidencePress={onEvidencePress} />
 
       {/* Deal Timeline */}

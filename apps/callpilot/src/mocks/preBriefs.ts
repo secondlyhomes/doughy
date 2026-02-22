@@ -146,4 +146,137 @@ export const mockPreBriefs: PreCallBrief[] = [
     ],
     relationshipStrength: 'new',
   },
+  {
+    id: 'brief-6',
+    contactId: 'contact-3',
+    contactName: 'James Thornton',
+    generatedAt: '2026-02-10T08:00:00Z',
+    lastConversation: {
+      title: 'Last conversation (Feb 8)',
+      items: [
+        'Met James at the local REIA meeting — he specializes in REO and short sale listings in Loudoun County',
+        'He mentioned having 3 pocket listings coming soon and is looking for a reliable investor buyer',
+        'Wants exclusivity in exchange for first look at off-market deals',
+      ],
+    },
+    keyFacts: [
+      'Keller Williams agent, Loudoun and western Fairfax',
+      'Specializes in REO and short sale listings',
+      '3 pocket listings coming soon',
+      'Skeptical of our closing timeline claims',
+    ],
+    suggestedApproach:
+      'Show proof of recent closings with timelines to build credibility. Propose a trial period — first 2 deals as exclusive, then evaluate the relationship.',
+    watchOutFor: [
+      'He wants full exclusivity upfront — negotiate a trial period instead',
+      'May test your seriousness by sending a marginal deal first',
+    ],
+    relationshipStrength: 'new',
+  },
+  {
+    id: 'brief-7',
+    contactId: 'contact-8',
+    contactName: 'Angela Foster',
+    generatedAt: '2026-02-10T08:00:00Z',
+    lastConversation: {
+      title: 'Last conversation (Feb 13)',
+      items: [
+        'Angela reported a leaky kitchen faucet — sent Mike Torres to fix it same day',
+        'She was happy with the quick response and mentioned the garbage disposal is also making a noise',
+        'Lease renewal coming up next month — good time to discuss terms',
+      ],
+    },
+    keyFacts: [
+      'Tenant since August 2025 at 789 Elm St, Fairfax',
+      'Two kids and a dog',
+      'Works as a nurse — available mornings',
+      'Lease ends July 2026',
+      'Happy with maintenance response time',
+    ],
+    suggestedApproach:
+      'Ask about the garbage disposal issue and schedule a repair. Use the positive interaction to start the lease renewal conversation early.',
+    watchOutFor: [
+      'May ask for rent reduction in exchange for renewal — our area rents have gone up 3%',
+    ],
+    relationshipStrength: 'established',
+  },
+  {
+    id: 'brief-8',
+    contactId: 'contact-9',
+    contactName: 'Mike Torres',
+    generatedAt: '2026-02-10T08:00:00Z',
+    lastConversation: {
+      title: 'Last conversation (Feb 13)',
+      items: [
+        'Dispatched Mike to fix the leaky faucet at Angela Foster\'s unit in Fairfax',
+        'He completed the repair in under an hour and invoiced $280',
+        'Mentioned he\'s booked solid next week but can handle emergencies',
+      ],
+    },
+    keyFacts: [
+      'Owner of Mike\'s Plumbing — licensed and insured',
+      'Handles all plumbing across our properties',
+      'Usually responds within 2 hours',
+      'Gives us a 10% landlord discount',
+      '12 completed jobs, average cost $340',
+    ],
+    suggestedApproach:
+      'Check if he can handle the garbage disposal issue at Angela\'s unit. Discuss scheduling a preventive inspection across all properties before spring.',
+    watchOutFor: [
+      'He\'s getting busier — may need to lock in a preferred vendor agreement to guarantee response times',
+    ],
+    relationshipStrength: 'strong',
+  },
+  {
+    id: 'brief-9',
+    contactId: 'contact-10',
+    contactName: 'Tom Bradley',
+    generatedAt: '2026-02-10T08:00:00Z',
+    lastConversation: {
+      title: 'Last conversation (Feb 1)',
+      items: [
+        'Tom completed the electrical panel upgrade at 789 Elm St in Fairfax',
+        'Work passed inspection on first try — very clean install',
+        'He mentioned he can also do smart home wiring if we\'re interested',
+      ],
+    },
+    keyFacts: [
+      'Licensed master electrician at Bradley Electric',
+      'Referred by Mike Torres',
+      'Did panel upgrade at Fairfax property',
+      'Average job cost $580, responds within 1 day',
+    ],
+    suggestedApproach:
+      'Thank him for the clean panel work. Ask about smart home wiring options and pricing for our properties.',
+    watchOutFor: [
+      'His rates are slightly higher than average — worth it for quality but negotiate on multi-property packages',
+    ],
+    relationshipStrength: 'building',
+  },
+  {
+    id: 'brief-10',
+    contactId: 'contact-11',
+    contactName: 'Jessica Park',
+    generatedAt: '2026-02-10T08:00:00Z',
+    lastConversation: {
+      title: 'Last contact (Feb 9)',
+      items: [
+        'Jessica submitted a rental application for Unit 1 at 456 Oak Ave',
+        'Credit check came back clean — score 720+, income verified at $75k/yr',
+        'She\'s currently in an apartment in DC and wants to move to the suburbs',
+      ],
+    },
+    keyFacts: [
+      'Applied for Unit 1 at 456 Oak Ave, Woodbridge',
+      'Credit score 720+, income $75k/yr',
+      'Moving from DC apartment',
+      'No pets mentioned on application',
+    ],
+    suggestedApproach:
+      'Schedule an in-person showing this week. She looks like a strong applicant — move quickly before she finds another place.',
+    watchOutFor: [
+      'She may be looking at multiple properties — emphasize our responsive management and the neighborhood',
+    ],
+    relationshipStrength: 'new',
+  },
 ];

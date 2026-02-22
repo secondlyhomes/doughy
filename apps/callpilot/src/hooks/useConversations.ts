@@ -9,6 +9,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { useCommunications } from './useCommunications'
 import { useContacts } from './useContacts'
 import { convertCommunicationToMessage } from '@/types/message'
+import { formatPhoneNumber } from '@/utils/formatters'
 import type { Conversation, Message, ContactModule } from '@/types'
 
 type InboxFilter = 'all' | 'sms' | 'email'
@@ -63,8 +64,8 @@ export function useConversations(): UseConversationsReturn {
 
       const contact = getContact(contactId)
       const contactName = contact
-        ? `${contact.firstName} ${contact.lastName}`
-        : 'Unknown'
+        ? `${contact.firstName} ${contact.lastName}`.trim() || formatPhoneNumber(contact.phone)
+        : formatPhoneNumber(contactId) || 'Unknown'
 
       // Mock unread: incoming messages that are 'delivered' (not yet 'read')
       const unreadCount = comms.filter(

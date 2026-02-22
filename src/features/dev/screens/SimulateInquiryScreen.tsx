@@ -7,37 +7,27 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform as RNPlatform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
-import {
-  Play,
-  Sparkles,
-  Mail,
-  User,
-  Calendar,
-  ChevronDown,
-  Loader2,
-  CheckCircle2,
-  ArrowRight,
-} from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 
 import { ThemedSafeAreaView } from '@/components';
-import { Button, TAB_BAR_SAFE_PADDING, BottomSheet } from '@/components/ui';
+import { TAB_BAR_SAFE_PADDING } from '@/components/ui';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { withOpacity, getShadowStyle } from '@/lib/design-utils';
-import { SPACING, BORDER_RADIUS, FONT_SIZES } from '@/constants/design-tokens';
+import { SPACING, FONT_SIZES } from '@/constants/design-tokens';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 import {
   PLATFORM_CONFIGS,
-  PresetButton,
   useInquiryCreation,
+  QuickTestSection,
+  CustomInquiryForm,
+  SuccessToast,
+  PlatformSelectionSheet,
   type Platform,
 } from './simulate-inquiry';
 
@@ -119,271 +109,31 @@ export function SimulateInquiryScreen() {
             </Text>
           </View>
 
-          {/* Quick Test Section */}
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.md,
-              marginBottom: SPACING.lg,
-              ...getShadowStyle(colors, { size: 'sm' }),
-            }}
-          >
-            <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.lg, marginBottom: SPACING.sm }}>
-              Quick Test
-            </Text>
-            <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginBottom: SPACING.md }}>
-              One tap to create a test inquiry with sample data
-            </Text>
+          <QuickTestSection isCreating={isCreating} onQuickTest={onQuickTest} />
 
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm }}>
-              {PLATFORM_CONFIGS.slice(0, 4).map((config) => (
-                <TouchableOpacity
-                  key={config.id}
-                  onPress={() => onQuickTest(config.id)}
-                  disabled={isCreating}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: SPACING.md,
-                    paddingVertical: SPACING.sm,
-                    borderRadius: BORDER_RADIUS.md,
-                    backgroundColor: colors.muted,
-                    gap: SPACING.xs,
-                  }}
-                >
-                  <Text style={{ fontSize: 16 }}>{config.icon}</Text>
-                  <Text style={{ color: colors.foreground, fontWeight: '500' }}>{config.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+          <CustomInquiryForm
+            platformConfig={platformConfig}
+            contactName={contactName}
+            contactEmail={contactEmail}
+            checkInDate={checkInDate}
+            checkOutDate={checkOutDate}
+            messageContent={messageContent}
+            userEmail={user?.email}
+            isCreating={isCreating}
+            onOpenPlatformSheet={() => setShowPlatformSheet(true)}
+            onContactNameChange={setContactName}
+            onContactEmailChange={setContactEmail}
+            onOpenCheckInPicker={() => setShowCheckInPicker(true)}
+            onOpenCheckOutPicker={() => setShowCheckOutPicker(true)}
+            onMessageContentChange={setMessageContent}
+            onCreateInquiry={onCreateInquiry}
+          />
 
-          {/* Custom Form Section */}
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: BORDER_RADIUS.lg,
-              padding: SPACING.md,
-              ...getShadowStyle(colors, { size: 'sm' }),
-            }}
-          >
-            <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: FONT_SIZES.lg, marginBottom: SPACING.md }}>
-              Custom Inquiry
-            </Text>
-
-            {/* Platform Selector */}
-            <View style={{ marginBottom: SPACING.md }}>
-              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginBottom: SPACING.xs }}>
-                Platform
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowPlatformSheet(true)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: SPACING.md,
-                  borderRadius: BORDER_RADIUS.md,
-                  backgroundColor: colors.muted,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <Text style={{ fontSize: 20, marginRight: SPACING.sm }}>{platformConfig.icon}</Text>
-                <Text style={{ flex: 1, color: colors.foreground }}>{platformConfig.name}</Text>
-                <ChevronDown size={18} color={colors.mutedForeground} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Contact Name */}
-            <View style={{ marginBottom: SPACING.md }}>
-              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginBottom: SPACING.xs }}>
-                Contact Name *
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: SPACING.md,
-                  borderRadius: BORDER_RADIUS.md,
-                  backgroundColor: colors.muted,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <User size={18} color={colors.mutedForeground} style={{ marginRight: SPACING.sm }} />
-                <TextInput
-                  value={contactName}
-                  onChangeText={setContactName}
-                  placeholder="e.g., Sarah Johnson"
-                  placeholderTextColor={colors.mutedForeground}
-                  style={{ flex: 1, color: colors.foreground }}
-                />
-              </View>
-            </View>
-
-            {/* Contact Email */}
-            <View style={{ marginBottom: SPACING.md }}>
-              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginBottom: SPACING.xs }}>
-                Contact Email *
-              </Text>
-              <Text style={{ color: colors.info, fontSize: FONT_SIZES['2xs'], marginBottom: 4 }}>
-                Use YOUR email to receive the test response
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: SPACING.md,
-                  borderRadius: BORDER_RADIUS.md,
-                  backgroundColor: colors.muted,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <Mail size={18} color={colors.mutedForeground} style={{ marginRight: SPACING.sm }} />
-                <TextInput
-                  value={contactEmail}
-                  onChangeText={setContactEmail}
-                  placeholder={user?.email || 'your-email@example.com'}
-                  placeholderTextColor={colors.mutedForeground}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  style={{ flex: 1, color: colors.foreground }}
-                />
-              </View>
-            </View>
-
-            {/* Check-in / Check-out Dates */}
-            <View style={{ flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.md }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginBottom: SPACING.xs }}>
-                  Check-in
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowCheckInPicker(true)}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: SPACING.md,
-                    borderRadius: BORDER_RADIUS.md,
-                    backgroundColor: colors.muted,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Calendar size={18} color={colors.mutedForeground} style={{ marginRight: SPACING.xs }} />
-                  <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm }}>
-                    {checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginBottom: SPACING.xs }}>
-                  Check-out
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowCheckOutPicker(true)}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: SPACING.md,
-                    borderRadius: BORDER_RADIUS.md,
-                    backgroundColor: colors.muted,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Calendar size={18} color={colors.mutedForeground} style={{ marginRight: SPACING.xs }} />
-                  <Text style={{ color: colors.foreground, fontSize: FONT_SIZES.sm }}>
-                    {checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Message Content */}
-            <View style={{ marginBottom: SPACING.lg }}>
-              <Text style={{ color: colors.mutedForeground, fontSize: FONT_SIZES.sm, marginBottom: SPACING.xs }}>
-                Message *
-              </Text>
-              <View
-                style={{
-                  padding: SPACING.md,
-                  borderRadius: BORDER_RADIUS.md,
-                  backgroundColor: colors.muted,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  minHeight: 120,
-                }}
-              >
-                <TextInput
-                  value={messageContent}
-                  onChangeText={setMessageContent}
-                  placeholder="The inquiry message from the prospective tenant..."
-                  placeholderTextColor={colors.mutedForeground}
-                  multiline
-                  textAlignVertical="top"
-                  style={{ flex: 1, color: colors.foreground }}
-                />
-              </View>
-            </View>
-
-            {/* Reply Method Info */}
-            {platformConfig.replyMethod === 'platform_only' && (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: SPACING.md,
-                  borderRadius: BORDER_RADIUS.md,
-                  backgroundColor: withOpacity(colors.warning, 'light'),
-                  marginBottom: SPACING.md,
-                }}
-              >
-                <Text style={{ color: colors.warning, fontSize: FONT_SIZES.sm }}>
-                  {platformConfig.name} requires in-platform messaging. The approved response will be shown for you to copy.
-                </Text>
-              </View>
-            )}
-
-            {/* Create Button */}
-            <Button onPress={onCreateInquiry} disabled={isCreating} className="w-full">
-              {isCreating ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
-                  <Loader2 size={18} color={colors.primaryForeground} />
-                  <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>Creating...</Text>
-                </View>
-              ) : (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
-                  <Play size={18} color={colors.primaryForeground} />
-                  <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>Create Test Inquiry</Text>
-                </View>
-              )}
-            </Button>
-          </View>
-
-          {/* Success Toast */}
           {lastCreatedConversationId && (
-            <TouchableOpacity
+            <SuccessToast
+              conversationId={lastCreatedConversationId}
               onPress={() => router.push(`/(tabs)/landlord-inbox/${lastCreatedConversationId}`)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                padding: SPACING.md,
-                borderRadius: BORDER_RADIUS.lg,
-                backgroundColor: withOpacity(colors.success, 'light'),
-                marginTop: SPACING.md,
-                gap: SPACING.sm,
-              }}
-            >
-              <CheckCircle2 size={20} color={colors.success} />
-              <Text style={{ flex: 1, color: colors.success, fontWeight: '500' }}>
-                Last inquiry created! Tap to view.
-              </Text>
-              <ArrowRight size={18} color={colors.success} />
-            </TouchableOpacity>
+            />
           )}
         </ScrollView>
 
@@ -414,23 +164,12 @@ export function SimulateInquiryScreen() {
           />
         )}
 
-        {/* Platform Selection Sheet */}
-        <BottomSheet
+        <PlatformSelectionSheet
           visible={showPlatformSheet}
+          selectedPlatform={selectedPlatform}
           onClose={() => setShowPlatformSheet(false)}
-          title="Select Platform"
-        >
-          <View style={{ paddingBottom: SPACING.xl }}>
-            {PLATFORM_CONFIGS.map((config) => (
-              <PresetButton
-                key={config.id}
-                config={config}
-                isSelected={selectedPlatform === config.id}
-                onPress={() => applyPreset(config.id)}
-              />
-            ))}
-          </View>
-        </BottomSheet>
+          onSelect={applyPreset}
+        />
       </KeyboardAvoidingView>
     </ThemedSafeAreaView>
   );

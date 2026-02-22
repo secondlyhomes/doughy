@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useTheme } from '@/theme'
 import { callpilotColors } from '@/theme/callpilotColors'
-import { Text, Button, Card, SectionHeader, StatusBadge, EmptyState, GlassView } from '@/components'
+import { Text, Button, Card, SectionHeader, StatusBadge, GlassView } from '@/components'
 import { BriefSection, KeyInsightBadge } from '@/components/briefs'
 import { MODULE_ICONS } from '@/types/contact'
 import { useBriefs, useContacts } from '@/hooks'
@@ -22,6 +22,10 @@ export default function PreCallBriefScreen() {
   const moduleIcon = contact ? MODULE_ICONS[contact.module] : ''
 
   if (!brief) {
+    const contactName = contact
+      ? `${contact.firstName ?? ''} ${contact.lastName ?? ''}`.trim() || 'this contact'
+      : 'this contact'
+
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <View style={{ paddingHorizontal: theme.tokens.spacing[2], paddingTop: theme.tokens.spacing[1] }}>
@@ -29,13 +33,26 @@ export default function PreCallBriefScreen() {
             <Ionicons name="chevron-back" size={28} color={theme.colors.primary[500]} />
           </TouchableOpacity>
         </View>
-        <EmptyState
-          icon={'\uD83D\uDCCB'}
-          title="No Brief Available"
-          description="Brief not available for this contact yet"
-          actionLabel="Go Back"
-          onAction={() => router.back()}
-        />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: theme.tokens.spacing[6] }}>
+          <Text variant="h3" style={{ textAlign: 'center' }}>No Brief Yet</Text>
+          <Text variant="body" color={theme.colors.text.secondary} style={{ textAlign: 'center', marginTop: theme.tokens.spacing[2] }}>
+            A pre-call brief hasn&apos;t been generated for {contactName}. You can still start the call.
+          </Text>
+          <View style={{ width: '100%', marginTop: theme.tokens.spacing[6] }}>
+            <Button
+              title="Call Without Brief"
+              onPress={() => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                router.push({ pathname: '/active-call/[contactId]', params: { contactId: contactId ?? '' } })
+              }}
+              size="lg"
+              style={{ backgroundColor: theme.colors.success[600] }}
+            />
+          </View>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginTop: theme.tokens.spacing[3] }}>
+            <Text variant="body" color={theme.colors.primary[500]}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     )
   }

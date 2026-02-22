@@ -52,70 +52,94 @@ export function ClawSuggestionCard({ draft, onSend, onEdit, onDismiss }: ClawSug
       paddingBottom: theme.tokens.spacing[2],
     }}>
       <GlassView
-        intensity="medium"
+        intensity="subtle"
         style={{
           borderRadius: theme.tokens.borderRadius.lg,
-          padding: theme.tokens.spacing[3],
-          borderWidth: 1,
-          borderColor: theme.colors.info[200],
+          overflow: 'hidden',
         }}
       >
-        {/* Header */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.tokens.spacing[2] }}>
-          <Text variant="caption" weight="semibold" color={theme.colors.info[500]}>
-            {'\uD83E\uDD16'} Suggested reply
-          </Text>
-          <View style={{ flex: 1 }} />
-          <TouchableOpacity
-            onPress={handleDismiss}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            accessibilityLabel="Dismiss suggestion"
-            accessibilityRole="button"
-          >
-            <Ionicons name="close" size={16} color={theme.colors.text.tertiary} />
-          </TouchableOpacity>
-        </View>
+        <View style={{
+          flexDirection: 'row',
+        }}>
+          {/* Left accent strip */}
+          <View style={{
+            width: 3,
+            backgroundColor: theme.colors.primary[500],
+          }} />
 
-        {/* Draft text */}
-        <Text variant="body" color={theme.colors.text.primary} style={{ marginBottom: theme.tokens.spacing[3] }}>
-          {draft.body}
-        </Text>
+          {/* Content */}
+          <View style={{ flex: 1, padding: theme.tokens.spacing[3] }}>
+            {/* Header row: branding + dismiss */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.tokens.spacing[2] }}>
+              <Text variant="caption" weight="semibold" color={theme.colors.primary[500]}>
+                {'\u2726'} The Claw
+              </Text>
+              <View style={{ flex: 1 }} />
+              <TouchableOpacity
+                onPress={handleDismiss}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityLabel="Dismiss suggestion"
+                accessibilityRole="button"
+              >
+                <Ionicons name="close" size={16} color={theme.colors.text.tertiary} />
+              </TouchableOpacity>
+            </View>
 
-        {/* Actions */}
-        <View style={{ flexDirection: 'row', gap: theme.tokens.spacing[2] }}>
-          <TouchableOpacity
-            onPress={handleSend}
-            accessibilityLabel="Send suggested reply"
-            accessibilityRole="button"
-            style={{
-              flex: 1,
-              paddingVertical: theme.tokens.spacing[2],
-              borderRadius: theme.tokens.borderRadius.md,
-              backgroundColor: theme.colors.primary[500],
-              alignItems: 'center',
-            }}
-          >
-            <Text variant="bodySmall" weight="semibold" color={theme.tokens.colors.white}>
-              Send
+            {/* Draft text */}
+            <Text
+              variant="bodySmall"
+              color={theme.colors.text.secondary}
+              style={{ marginBottom: theme.tokens.spacing[3], fontStyle: 'italic' }}
+            >
+              {draft.body}
             </Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={handleEdit}
-            accessibilityLabel="Edit suggested reply"
-            accessibilityRole="button"
-            style={{
-              flex: 1,
-              paddingVertical: theme.tokens.spacing[2],
-              borderRadius: theme.tokens.borderRadius.md,
-              backgroundColor: theme.colors.surfaceSecondary,
-              alignItems: 'center',
-            }}
-          >
-            <Text variant="bodySmall" weight="semibold" color={theme.colors.text.primary}>
-              Edit
-            </Text>
-          </TouchableOpacity>
+            {/* Actions: Edit (ghost) + Send (primary) */}
+            <View style={{ flexDirection: 'row', gap: theme.tokens.spacing[2] }}>
+              <TouchableOpacity
+                onPress={handleEdit}
+                accessibilityLabel="Edit suggested reply"
+                accessibilityRole="button"
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  paddingVertical: theme.tokens.spacing[2],
+                  borderRadius: theme.tokens.borderRadius.md,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }}
+              >
+                <Ionicons name="create-outline" size={14} color={theme.colors.text.secondary} />
+                <Text variant="bodySmall" weight="semibold" color={theme.colors.text.secondary}>
+                  Edit
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleSend}
+                accessibilityLabel="Send suggested reply"
+                accessibilityRole="button"
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  paddingVertical: theme.tokens.spacing[2],
+                  borderRadius: theme.tokens.borderRadius.md,
+                  backgroundColor: theme.colors.primary[500],
+                }}
+              >
+                <Ionicons name="arrow-up" size={14} color={theme.tokens.colors.white} />
+                <Text variant="bodySmall" weight="semibold" color={theme.tokens.colors.white}>
+                  Send
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </GlassView>
     </View>

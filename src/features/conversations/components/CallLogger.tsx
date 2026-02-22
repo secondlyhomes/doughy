@@ -5,180 +5,19 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Phone, Clock, ArrowUpRight, ArrowDownLeft, X, Check, User, StickyNote } from 'lucide-react-native';
+import { X, Check, User, StickyNote } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { useKeyboardAvoidance } from '@/hooks';
-import { withOpacity, getShadowStyle } from '@/lib/design-utils';
+import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
-import { Button, Badge } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { DirectionToggle } from './DirectionToggle';
+import { DurationPicker } from './DurationPicker';
+import { OutcomeSelector } from './OutcomeSelector';
+import type { CallLoggerProps, CallOutcome } from './call-logger-types';
 
-// ============================================
-// Types
-// ============================================
-
-export interface CallLogData {
-  direction: 'inbound' | 'outbound';
-  durationSeconds: number;
-  notes: string;
-  outcome?: 'answered' | 'voicemail' | 'no_answer' | 'busy';
-  followUpRequired?: boolean;
-}
-
-export interface CallLoggerProps {
-  /** Contact name */
-  contactName: string;
-
-  /** Contact phone number */
-  phoneNumber: string;
-
-  /** Callback when call is logged */
-  onSave: (data: CallLogData) => void;
-
-  /** Callback when cancelled */
-  onCancel: () => void;
-
-  /** Pre-fill direction */
-  initialDirection?: 'inbound' | 'outbound';
-}
-
-// ============================================
-// Duration Picker
-// ============================================
-
-interface DurationPickerProps {
-  value: number;
-  onChange: (seconds: number) => void;
-}
-
-function DurationPicker({ value, onChange }: DurationPickerProps) {
-  const colors = useThemeColors();
-
-  const presets = [
-    { label: '1 min', seconds: 60 },
-    { label: '5 min', seconds: 300 },
-    { label: '10 min', seconds: 600 },
-    { label: '15 min', seconds: 900 },
-    { label: '30 min', seconds: 1800 },
-  ];
-
-  const handlePresetPress = useCallback((seconds: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onChange(seconds);
-  }, [onChange]);
-
-  // Format custom display
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    if (secs === 0) return `${mins} min`;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  return (
-    <View style={{ gap: SPACING.sm }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
-        <Clock size={ICON_SIZES.sm} color={colors.mutedForeground} />
-        <Text style={{ fontSize: 13, fontWeight: '500', color: colors.mutedForeground }}>
-          Duration
-        </Text>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.foreground, marginLeft: 'auto' }}>
-          {formatDuration(value)}
-        </Text>
-      </View>
-
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs }}>
-        {presets.map((preset) => (
-          <TouchableOpacity
-            key={preset.seconds}
-            onPress={() => handlePresetPress(preset.seconds)}
-            style={{
-              paddingHorizontal: SPACING.sm,
-              paddingVertical: SPACING.xs,
-              borderRadius: BORDER_RADIUS.full,
-              backgroundColor: value === preset.seconds ? colors.primary : colors.muted,
-              borderWidth: 1,
-              borderColor: value === preset.seconds ? colors.primary : colors.border,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: '500',
-                color: value === preset.seconds ? colors.primaryForeground : colors.foreground,
-              }}
-            >
-              {preset.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ============================================
-// Outcome Selector
-// ============================================
-
-interface OutcomeSelectorProps {
-  value?: 'answered' | 'voicemail' | 'no_answer' | 'busy';
-  onChange: (outcome: 'answered' | 'voicemail' | 'no_answer' | 'busy') => void;
-}
-
-function OutcomeSelector({ value, onChange }: OutcomeSelectorProps) {
-  const colors = useThemeColors();
-
-  const outcomes = [
-    { value: 'answered' as const, label: 'Answered', color: colors.success },
-    { value: 'voicemail' as const, label: 'Voicemail', color: colors.warning },
-    { value: 'no_answer' as const, label: 'No Answer', color: colors.destructive },
-    { value: 'busy' as const, label: 'Busy', color: colors.mutedForeground },
-  ];
-
-  const handlePress = useCallback((outcome: 'answered' | 'voicemail' | 'no_answer' | 'busy') => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onChange(outcome);
-  }, [onChange]);
-
-  return (
-    <View style={{ gap: SPACING.sm }}>
-      <Text style={{ fontSize: 13, fontWeight: '500', color: colors.mutedForeground }}>
-        Outcome
-      </Text>
-      <View style={{ flexDirection: 'row', gap: SPACING.xs }}>
-        {outcomes.map((outcome) => (
-          <TouchableOpacity
-            key={outcome.value}
-            onPress={() => handlePress(outcome.value)}
-            style={{
-              flex: 1,
-              paddingVertical: SPACING.sm,
-              borderRadius: BORDER_RADIUS.md,
-              backgroundColor: value === outcome.value ? withOpacity(outcome.color, 'light') : colors.muted,
-              borderWidth: 1,
-              borderColor: value === outcome.value ? outcome.color : colors.border,
-              alignItems: 'center',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: '500',
-                color: value === outcome.value ? outcome.color : colors.foreground,
-              }}
-            >
-              {outcome.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ============================================
-// Main Component
-// ============================================
+// Re-export types for barrel consumers
+export type { CallLogData, CallLoggerProps } from './call-logger-types';
 
 export function CallLogger({
   contactName,
@@ -193,14 +32,8 @@ export function CallLogger({
   const [direction, setDirection] = useState<'inbound' | 'outbound'>(initialDirection);
   const [duration, setDuration] = useState(300); // 5 min default
   const [notes, setNotes] = useState('');
-  const [outcome, setOutcome] = useState<'answered' | 'voicemail' | 'no_answer' | 'busy'>('answered');
+  const [outcome, setOutcome] = useState<CallOutcome>('answered');
   const [followUpRequired, setFollowUpRequired] = useState(false);
-
-  // Toggle direction
-  const toggleDirection = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setDirection((prev) => (prev === 'inbound' ? 'outbound' : 'inbound'));
-  }, []);
 
   // Toggle follow-up
   const toggleFollowUp = useCallback(() => {
@@ -285,66 +118,7 @@ export function CallLogger({
         </View>
 
         {/* Direction Toggle */}
-        <View style={{ gap: SPACING.sm }}>
-          <Text style={{ fontSize: 13, fontWeight: '500', color: colors.mutedForeground }}>
-            Direction
-          </Text>
-          <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
-            <TouchableOpacity
-              onPress={() => setDirection('outbound')}
-              style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: SPACING.xs,
-                paddingVertical: SPACING.md,
-                borderRadius: BORDER_RADIUS.md,
-                backgroundColor: direction === 'outbound' ? withOpacity(colors.primary, 'light') : colors.muted,
-                borderWidth: 1,
-                borderColor: direction === 'outbound' ? colors.primary : colors.border,
-              }}
-            >
-              <ArrowUpRight size={18} color={direction === 'outbound' ? colors.primary : colors.foreground} />
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: direction === 'outbound' ? colors.primary : colors.foreground,
-                }}
-              >
-                Outbound
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setDirection('inbound')}
-              style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: SPACING.xs,
-                paddingVertical: SPACING.md,
-                borderRadius: BORDER_RADIUS.md,
-                backgroundColor: direction === 'inbound' ? withOpacity(colors.success, 'light') : colors.muted,
-                borderWidth: 1,
-                borderColor: direction === 'inbound' ? colors.success : colors.border,
-              }}
-            >
-              <ArrowDownLeft size={18} color={direction === 'inbound' ? colors.success : colors.foreground} />
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: direction === 'inbound' ? colors.success : colors.foreground,
-                }}
-              >
-                Inbound
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <DirectionToggle value={direction} onChange={setDirection} />
 
         {/* Duration */}
         <DurationPicker value={duration} onChange={setDuration} />

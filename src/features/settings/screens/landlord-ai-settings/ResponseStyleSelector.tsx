@@ -40,7 +40,7 @@ export function ResponseStyleSelector({ currentStyle, onStyleChange }: ResponseS
                   {info.title}
                 </Text>
                 <Text className="text-sm italic mt-1" style={{ color: colors.mutedForeground }}>
-                  "{info.example}"
+                  {'"'}{info.example}{'"'}
                 </Text>
               </View>
               {isSelected && <Check size={20} color={colors.primary} />}

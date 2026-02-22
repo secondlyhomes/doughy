@@ -24,7 +24,7 @@ export const config = {
   // Supabase
   supabaseUrl: requireEnv('SUPABASE_URL'),
   supabaseServiceKey: requireEnv('SUPABASE_SECRET_KEY'),
-  supabaseAnonKey: optionalEnv('SUPABASE_ANON_KEY', ''),
+  supabasePublishableKey: optionalEnv('SUPABASE_PUBLISHABLE_KEY', optionalEnv('SUPABASE_ANON_KEY', '')),
 
   // Google OAuth
   googleClientId: requireEnv('GOOGLE_CLIENT_ID'),
@@ -40,6 +40,9 @@ export const config = {
 
   // Anthropic
   anthropicApiKey: optionalEnv('ANTHROPIC_API_KEY', ''),
+
+  // Encryption (for decrypting per-user API keys from security_api_keys)
+  keySecret: optionalEnv('KEY_SECRET', ''),
 
   // Twilio (for The Claw SMS)
   twilioAccountSid: optionalEnv('TWILIO_ACCOUNT_SID', ''),
@@ -86,12 +89,17 @@ export const config = {
 // Production environment validation — fail fast at startup
 if (config.nodeEnv === 'production') {
   const missing: string[] = [];
-  if (!config.supabaseAnonKey) missing.push('SUPABASE_ANON_KEY');
+  if (!config.supabasePublishableKey) missing.push('SUPABASE_PUBLISHABLE_KEY');
   if (!config.cronSecret) missing.push('CRON_SECRET');
-  if (!config.anthropicApiKey) missing.push('ANTHROPIC_API_KEY');
+  if (!config.keySecret) missing.push('KEY_SECRET');
   if (missing.length > 0) {
     throw new Error(`FATAL: Missing required production env vars: ${missing.join(', ')}`);
   }
+}
+
+// Warn if Claw is enabled but no API key source is available
+if (config.clawEnabled && !config.anthropicApiKey && !config.keySecret) {
+  console.warn('[Config] WARNING: CLAW_ENABLED=true but neither ANTHROPIC_API_KEY nor KEY_SECRET is set. AI features will not work (no way to obtain API keys).');
 }
 
 export default config;

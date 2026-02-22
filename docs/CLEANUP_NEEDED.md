@@ -13,41 +13,15 @@
 
 ---
 
-## P0: Deploy Script Rename (moltbot → openclaw)
+## ~~P0: Deploy Script Rename (moltbot → openclaw)~~ ✅ DONE
 
-All three deploy scripts still reference `moltbot`:
-
-| File | References |
-|------|-----------|
-| `openclaw-server/deploy/setup.sh` | `moltbot` in banner, `/var/www/moltbot`, `/var/log/moltbot`, SCP paths |
-| `openclaw-server/deploy/nginx.conf` | `moltbot.doughy.app` (4 occurrences), `/var/log/nginx/moltbot.*` |
-| `openclaw-server/deploy/gcloud-setup.sh` | `moltbot.doughy.app`, `MoltBot` in banner, `doughy-moltbot` example |
-
-**Fix:** Find-and-replace `moltbot` → `openclaw` in all three files.
+Deploy scripts already reference `openclaw` — no `moltbot` references remain.
 
 ---
 
-## P1: Dead `db.*` Helpers in supabase.ts
+## ~~P1: Dead `db.*` Helpers in supabase.ts~~ ✅ DONE
 
-`src/lib/supabase.ts` contains **93 helper functions** across `db.investor.*` (26 tables) and `db.landlord.*` (18 tables) that are **never imported by any other file**.
-
-These were created during the schema separation migration but the codebase uses `src/lib/rpc/` query functions instead.
-
-**Examples of dead helpers:**
-```typescript
-db.investor.deals_pipeline     // 0 imports — app uses getDealsWithLead() RPC
-db.investor.conversations      // 0 imports — app uses getLeadInbox() RPC
-db.landlord.properties         // 0 imports — app uses getRentalProperties() RPC
-db.landlord.bookings           // 0 imports — app uses getBookings() RPC
-```
-
-**Fix:** Delete the entire `db.investor` and `db.landlord` blocks from `supabase.ts`. Keep only:
-- `supabase` client export
-- `SUPABASE_URL` export
-- `realEstateDB` export (if used)
-- Schema-specific client creators if any code references them
-
-**Risk:** Low. Verify with `yarn type-check` after deletion.
+The `db.investor.*` and `db.landlord.*` helpers were already removed. `supabase.ts` is now 154 lines containing only the client, storage adapter, and exports. Also removed dead `vendors-store.ts` (278 lines, 0 imports — replaced by React Query hooks).
 
 ---
 

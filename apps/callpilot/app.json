@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#121212"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.secondlyhomes.callpilot",
@@ -51,7 +53,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "776f15ea-d30b-4746-9254-e9d41df1547f"
       }
-    }
+    },
+    "owner": "dinothesecond"
   }
 }

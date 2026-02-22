@@ -4,9 +4,12 @@
 
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, Linking, Alert } from 'react-native';
+import Constants from 'expo-constants';
 import { Phone, MessageSquare } from 'lucide-react-native';
 import { useThemeColors } from '@/contexts/ThemeContext';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, FONT_SIZES, ICON_CONTAINER_SIZES } from '@/constants/design-tokens';
+
+const isExpoGo = Constants.appOwnership === 'expo';
 
 export interface CallPilotActionsProps {
   /** Contact/lead ID to pass to CallPilot */
@@ -31,6 +34,16 @@ export function CallPilotActions({
   const colors = useThemeColors();
 
   const openInCallPilot = useCallback(async (action: 'call' | 'message') => {
+    // Deep links don't work between Expo Go instances
+    if (isExpoGo) {
+      Alert.alert(
+        'Open CallPilot',
+        `Deep links require a standalone build. Open CallPilot and navigate to ${contactName} to ${action === 'call' ? 'start a call' : 'send a message'}.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     const deepLink = `callpilot://${action}/${contactId}`;
     try {
       const canOpen = await Linking.canOpenURL(deepLink);

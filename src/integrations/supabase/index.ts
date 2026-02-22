@@ -5,5 +5,4 @@
 export { supabase, SUPABASE_URL } from '@/lib/supabase';
 
 // Export types
-export type { Database } from './types';
 export * from './types/index';

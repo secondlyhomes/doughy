@@ -56,7 +56,7 @@ export function AboutScreen() {
             <View className={`${isMobile ? 'w-full' : 'flex-1'}`}>
               <Text className="text-3xl font-bold mb-6" style={{ color: colors.foreground }}>Our Mission</Text>
               <Text className="mb-4" style={{ color: colors.foreground }}>
-                At Doughy, we're on a mission to simplify and enhance the real estate investment process
+                At Doughy, we{'\''}re on a mission to simplify and enhance the real estate investment process
                 through intelligent lead management solutions. We understand the complex pain points that
                 real estate investors face daily, from managing leads to analyzing deals.
               </Text>
@@ -90,11 +90,11 @@ export function AboutScreen() {
             </Text>
             <Text className="mb-4" style={{ color: colors.foreground }}>
               We understood from the start that addressing the complex challenges of real estate lead
-              management would require innovative approaches. That's why we've embraced AI technology
+              management would require innovative approaches. That{'\''}s why we{'\''}ve embraced AI technology
               and modern software development practices.
             </Text>
             <Text style={{ color: colors.foreground }}>
-              Today, we're a growing team passionate about leveraging AI agents and cutting-edge
+              Today, we{'\''}re a growing team passionate about leveraging AI agents and cutting-edge
               technologies to improve complex pain points in the real estate industry.
             </Text>
           </View>

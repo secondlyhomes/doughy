@@ -56,6 +56,21 @@ export function withOpacity(hexColor: string, opacityKey: 'subtle' | 'muted' | '
 }
 
 /**
+ * Format a phone number for display: +15551234567 → (555) 123-4567
+ */
+export function formatPhoneNumber(phone: string | undefined | null): string {
+  if (!phone) return ''
+  const cleaned = phone.replace(/\D/g, '')
+  if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+  }
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    return `(${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`
+  }
+  return phone
+}
+
+/**
  * Format bytes to human readable size
  */
 export function formatBytes(bytes: number): string {

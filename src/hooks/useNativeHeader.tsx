@@ -139,7 +139,9 @@ export function useNativeHeader({
             style={[
               styles.backButton,
               {
-                backgroundColor: withOpacity(colors.muted, 'medium'),
+                backgroundColor: shouldUseGlass
+                  ? 'transparent'
+                  : withOpacity(colors.muted, 'medium'),
               },
             ]}
           >

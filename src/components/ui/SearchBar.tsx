@@ -149,7 +149,8 @@ export function SearchBar({
       <GlassView
         intensity={GLASS_INTENSITY.light}
         effect="regular"
-        style={{ borderRadius: 9999, overflow: 'hidden' }}
+        className={cn('rounded-full', config.paddingClass)}
+        style={{ borderRadius: 9999 }}
       >
         {searchBarContent}
       </GlassView>

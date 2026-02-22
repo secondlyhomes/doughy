@@ -15,8 +15,8 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ViewStyle } from 'react-native';
-import { Calculator, ChevronDown, CheckCircle2, AlertCircle, Info } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Calculator, ChevronDown } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -28,98 +28,18 @@ import { withOpacity } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES } from '@/constants/design-tokens';
 import { Card } from './Card';
 import { Badge } from './Badge';
+import { CalculationStepItem } from './CalculationStepItem';
+import { getStatusConfig } from './calculation-evidence-helpers';
 
-export type CalculationStatus = 'verified' | 'estimated' | 'needs_review';
-export type ConfidenceLevel = 'high' | 'medium' | 'low';
+export type {
+  CalculationStatus,
+  ConfidenceLevel,
+  EvidenceSource,
+  CalculationStep,
+  CalculationEvidenceProps,
+} from './calculation-evidence-types';
 
-export interface EvidenceSource {
-  /** Source label (e.g., "County Tax Records", "MLS Listing") */
-  label: string;
-
-  /** Confidence level */
-  confidence: ConfidenceLevel;
-
-  /** Specific value or detail from source */
-  value?: string;
-
-  /** When the data was retrieved/verified */
-  timestamp?: string;
-}
-
-export interface CalculationStep {
-  /** Step label */
-  label: string;
-
-  /** Formula or calculation description */
-  formula?: string;
-
-  /** Result value */
-  result: string;
-
-  /** Evidence sources for this step */
-  sources?: EvidenceSource[];
-
-  /** Additional explanation */
-  explanation?: string;
-}
-
-export interface CalculationEvidenceProps {
-  /** Calculation title (e.g., "ARV Calculation", "ROI Analysis") */
-  title: string;
-
-  /** Final result to display */
-  finalResult: string;
-
-  /** Calculation status */
-  status: CalculationStatus;
-
-  /** Breakdown steps */
-  steps: CalculationStep[];
-
-  /** Card variant */
-  variant?: 'default' | 'glass';
-
-  /** Start collapsed */
-  startCollapsed?: boolean;
-
-  /** Custom style */
-  style?: ViewStyle;
-}
-
-/**
- * Gets status badge configuration
- */
-function getStatusConfig(status: CalculationStatus): {
-  variant: 'success' | 'warning' | 'outline';
-  label: string;
-  icon: React.ComponentType<any>;
-} {
-  switch (status) {
-    case 'verified':
-      return { variant: 'success', label: 'Verified', icon: CheckCircle2 };
-    case 'estimated':
-      return { variant: 'warning', label: 'Estimated', icon: Info };
-    case 'needs_review':
-      return { variant: 'outline', label: 'Needs Review', icon: AlertCircle };
-  }
-}
-
-/**
- * Gets confidence badge variant
- */
-function getConfidenceBadge(confidence: ConfidenceLevel): {
-  variant: 'success' | 'warning' | 'destructive';
-  label: string;
-} {
-  switch (confidence) {
-    case 'high':
-      return { variant: 'success', label: 'High' };
-    case 'medium':
-      return { variant: 'warning', label: 'Medium' };
-    case 'low':
-      return { variant: 'destructive', label: 'Low' };
-  }
-}
+import type { CalculationEvidenceProps } from './calculation-evidence-types';
 
 export function CalculationEvidence({
   title,
@@ -238,113 +158,7 @@ export function CalculationEvidence({
 
           {/* Step Items */}
           {steps.map((step, index) => (
-            <View
-              key={index}
-              style={{
-                padding: SPACING.md,
-                borderRadius: BORDER_RADIUS.md,
-                backgroundColor: withOpacity(colors.primary, 'subtle'),
-                borderWidth: 1,
-                borderColor: withOpacity(colors.primary, 'light'),
-                gap: SPACING.sm,
-              }}
-            >
-              {/* Step Label */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
-                  {index + 1}. {step.label}
-                </Text>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.primary }}>
-                  {step.result}
-                </Text>
-              </View>
-
-              {/* Formula */}
-              {step.formula && (
-                <View
-                  style={{
-                    padding: SPACING.sm,
-                    borderRadius: BORDER_RADIUS.sm,
-                    backgroundColor: colors.card,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      fontFamily: 'monospace',
-                      color: colors.mutedForeground,
-                    }}
-                  >
-                    {step.formula}
-                  </Text>
-                </View>
-              )}
-
-              {/* Explanation */}
-              {step.explanation && (
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, lineHeight: 18 }}>
-                  {step.explanation}
-                </Text>
-              )}
-
-              {/* Evidence Sources */}
-              {step.sources && step.sources.length > 0 && (
-                <View style={{ gap: SPACING.xs, marginTop: SPACING.xs }}>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: '500',
-                      color: colors.mutedForeground,
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.3,
-                    }}
-                  >
-                    Evidence Sources
-                  </Text>
-                  {step.sources.map((source, sourceIndex) => {
-                    const confidenceBadge = getConfidenceBadge(source.confidence);
-                    return (
-                      <View
-                        key={sourceIndex}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          paddingVertical: SPACING.xs,
-                          borderBottomWidth: sourceIndex < step.sources!.length - 1 ? 1 : 0,
-                          borderBottomColor: withOpacity(colors.border, 'light'),
-                        }}
-                      >
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 13, fontWeight: '500', color: colors.foreground }}>
-                            {source.label}
-                          </Text>
-                          {source.value && (
-                            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
-                              {source.value}
-                            </Text>
-                          )}
-                          {source.timestamp && (
-                            <Text
-                              style={{
-                                fontSize: 11,
-                                color: colors.mutedForeground,
-                                marginTop: 2,
-                              }}
-                            >
-                              Verified: {source.timestamp}
-                            </Text>
-                          )}
-                        </View>
-                        <Badge variant={confidenceBadge.variant} size="sm">
-                          {confidenceBadge.label}
-                        </Badge>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
+            <CalculationStepItem key={index} step={step} index={index} />
           ))}
         </View>
       )}

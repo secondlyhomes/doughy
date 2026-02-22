@@ -36,7 +36,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "b062be67-f94b-4995-a04b-c8c4a364dde4"
       }
-    }
+    },
+    "owner": "dinothesecond"
   }
 }

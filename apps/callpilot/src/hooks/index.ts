@@ -19,6 +19,8 @@ export * from './useCallCoaching'
 export * from './useConversations'
 export * from './useKeyboardAvoidance'
 export * from './useClawSuggestions'
+export * from './useMockCallSimulation'
+export * from './useCallStream'
 
 // Mock hooks (kept for tests — types re-exported from production hooks above)
 export { useMockContacts } from './useMockContacts'

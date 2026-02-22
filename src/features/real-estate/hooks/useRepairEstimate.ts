@@ -97,7 +97,7 @@ export function useRepairEstimate({ propertyId }: UseRepairEstimateOptions): Use
       const typedRepairs: RepairEstimate[] = (data || []).map(record => ({
         ...record,
         category: toRepairCategory(record.category),
-        completed: record.completed ?? false,
+        completed: record.is_completed ?? false,
         priority: (record.priority as RepairEstimate['priority']) || 'medium',
       }));
       setRepairs(typedRepairs);
@@ -194,7 +194,7 @@ export function useRepairEstimateMutations() {
         description: repairData.description || '',
         estimate: repairData.estimate || 0,
         notes: repairData.notes || null,
-        completed: repairData.completed || false,
+        is_completed: repairData.completed || false,
         priority: repairData.priority || 'medium',
       };
 
@@ -212,7 +212,7 @@ export function useRepairEstimateMutations() {
       return {
         ...data,
         category: toRepairCategory(data.category),
-        completed: data.completed ?? false,
+        completed: data.is_completed ?? false,
         priority: (data.priority as RepairEstimate['priority']) || 'medium',
       };
     } catch (err) {
@@ -233,7 +233,7 @@ export function useRepairEstimateMutations() {
       setIsLoading(true);
       setError(null);
 
-      const updateData: Partial<RepairEstimate> & { updated_at: string } = {
+      const updateData: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -241,12 +241,12 @@ export function useRepairEstimateMutations() {
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.estimate !== undefined) updateData.estimate = updates.estimate;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
-      if (updates.completed !== undefined) updateData.completed = updates.completed;
+      if (updates.completed !== undefined) updateData.is_completed = updates.completed;
       if (updates.priority !== undefined) updateData.priority = updates.priority;
 
       const { data, error: updateError } = await supabase
         .schema('investor').from('repair_estimates')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', repairId)
         .select()
         .single();
@@ -259,7 +259,7 @@ export function useRepairEstimateMutations() {
       return {
         ...data,
         category: toRepairCategory(data.category),
-        completed: data.completed ?? false,
+        completed: data.is_completed ?? false,
         priority: (data.priority as RepairEstimate['priority']) || 'medium',
       };
     } catch (err) {

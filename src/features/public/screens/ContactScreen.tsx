@@ -116,7 +116,7 @@ export function ContactScreen() {
               Get in Touch With Us
             </Text>
             <Text className="text-lg text-center" style={{ color: colors.mutedForeground }}>
-              We'd love to hear from you. Reach out to our team for support, inquiries, or partnerships.
+              We{'\''}d love to hear from you. Reach out to our team for support, inquiries, or partnerships.
             </Text>
           </View>
         </View>
@@ -149,7 +149,7 @@ export function ContactScreen() {
             Send Us a Message
           </Text>
           <Text className="text-center mb-8" style={{ color: colors.mutedForeground }}>
-            Fill out the form below and we'll get back to you as soon as possible.
+            Fill out the form below and we{'\''}ll get back to you as soon as possible.
           </Text>
 
           <View className="gap-4">

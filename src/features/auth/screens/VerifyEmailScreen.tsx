@@ -131,7 +131,7 @@ export function VerifyEmailScreen() {
               Verify Your Email
             </Text>
             <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
-              We've sent a verification link to
+              We{'\''}ve sent a verification link to
             </Text>
             <Text className="font-medium text-center mt-1" style={{ color: colors.foreground }}>
               {user?.email || 'your email'}
@@ -142,7 +142,7 @@ export function VerifyEmailScreen() {
           <View className="rounded-lg p-4 mb-6" style={{ backgroundColor: withOpacity(colors.muted, 'opaque') }}>
             <Text className="text-sm text-center" style={{ color: colors.mutedForeground }}>
               Click the link in your email to verify your account.
-              {'\n'}Check your spam folder if you don't see it.
+              {'\n'}Check your spam folder if you don{'\''}t see it.
             </Text>
           </View>
 

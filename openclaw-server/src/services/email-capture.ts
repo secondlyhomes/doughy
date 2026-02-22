@@ -4,6 +4,7 @@
 
 import { config } from '../config.js';
 import { schemaQuery, schemaInsert, schemaUpdate } from '../claw/db.js';
+import { getApiKey } from './api-keys.js';
 
 interface CapturedEmail {
   from: string;
@@ -58,7 +59,7 @@ export async function captureInboundEmail(
   // 3. Analyze email with AI (quick Haiku analysis)
   let analysis: { sentiment?: string; intent?: string; key_points?: string[]; urgency?: string } = {};
   try {
-    analysis = await analyzeEmail(email);
+    analysis = await analyzeEmail(userId, email);
   } catch (err) {
     console.error('[EmailCapture] AI analysis failed:', err);
   }
@@ -184,16 +185,17 @@ async function createContactFromEmail(userId: string, email: CapturedEmail): Pro
  * Quick AI analysis of email content using Haiku
  * Returns sentiment, intent, key points, and urgency
  */
-async function analyzeEmail(email: CapturedEmail): Promise<{
+async function analyzeEmail(userId: string, email: CapturedEmail): Promise<{
   sentiment?: string;
   intent?: string;
   key_points?: string[];
   urgency?: string;
 }> {
-  if (!config.anthropicApiKey) return {};
+  const apiKey = await getApiKey(userId, 'anthropic');
+  if (!apiKey) return {};
 
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
-  const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
+  const client = new Anthropic({ apiKey, timeout: 30_000 });
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',

@@ -190,3 +190,21 @@
 **Decision:** Both Pipeline and Properties screens show a "Needs Attention" card section at the top, before any other content. Items are color-coded by urgency (red=high, yellow=medium, blue=low) with a maximum of 3 visible items and "+N more" overflow.
 
 **Why:** ADHD-friendly design requires: urgent items first (not buried in lists), visual urgency encoding (color = meaning), and progressive disclosure (show 3, reveal more on demand). This pattern is used consistently across both investor and landlord modules.
+
+### 16. Conversation Context Window = 10 Messages
+
+**Decision:** All Claw agent handlers pass the last 10 messages (5 exchanges) as context, including the intent classifier.
+
+**Previous:** Classifier used 6 messages (3 exchanges, 200 char limit), handlers used 4-8 messages (300 char limit).
+
+**Why:** 3 exchanges wasn't enough for the classifier to understand follow-up questions like "what about that deal?" after a briefing. 5 exchanges gives much better conversational continuity while staying within Haiku's context limits. All handlers are now consistent at 10 messages / 300 chars.
+
+**Trade-off:** Slightly more tokens per classification call (~$0.001/call increase). Negligible given Haiku's pricing.
+
+### 17. SERVER_URL Required for Webhook Validation
+
+**Decision:** `SERVER_URL` environment variable is required in production. Without it, Twilio webhook signature validation always fails because the middleware reconstructs the URL as `config.serverUrl + req.originalUrl`.
+
+**Why this was missed:** In local dev, `SERVER_URL` defaults to `http://localhost:3000` and Twilio signature validation is skipped when no auth token is configured. In production, both are set but the URL mismatch (`http://localhost:3000` vs `https://openclaw.doughy.app`) causes HMAC-SHA1 to fail silently.
+
+**Lesson:** Any middleware that reconstructs a URL for cryptographic validation MUST have an explicit public URL config, never inferred from the request object (which sees `http://` behind nginx SSL termination).

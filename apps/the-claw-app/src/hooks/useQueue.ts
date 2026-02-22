@@ -20,13 +20,13 @@ import type { ConnectionId, QueueItem } from '@/types'
 function rowToQueueItem(row: any): QueueItem {
   return {
     id: row.id,
-    connectionId: row.connection_id as ConnectionId,
+    connectionId: (row.target_channel || 'doughy') as ConnectionId,
     actionType: row.action_type,
-    title: row.title,
-    summary: row.summary || '',
-    status: row.status as QueueItem['status'],
-    riskLevel: row.risk_level as QueueItem['riskLevel'],
-    countdownEndsAt: row.countdown_ends_at,
+    title: row.description || row.action_type,
+    summary: row.preview || '',
+    status: row.status === 'executing' ? 'countdown' as const : row.status as QueueItem['status'],
+    riskLevel: (row.metadata?.risk_level || 'medium') as QueueItem['riskLevel'],
+    countdownEndsAt: row.execute_at,
     createdAt: row.created_at,
   }
 }
@@ -138,8 +138,8 @@ export const useQueue = () => {
             }
           } else if (payload.eventType === 'UPDATE') {
             state.updateItem(payload.new.id, {
-              status: payload.new.status,
-              countdownEndsAt: payload.new.countdown_ends_at,
+              status: payload.new.status === 'executing' ? 'countdown' : payload.new.status,
+              countdownEndsAt: payload.new.execute_at,
             })
           } else if (payload.eventType === 'DELETE') {
             state.setItems(state.items.filter(i => i.id !== payload.old.id))
@@ -151,8 +151,7 @@ export const useQueue = () => {
           console.warn('[Queue Realtime] Subscription status:', status, err.message)
         }
         if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-          console.error('[Queue Realtime] Subscription ended:', status)
-          useQueueStore.getState().setError('Live updates disconnected. Pull to refresh.')
+          console.warn('[Queue Realtime] Subscription ended:', status)
         }
       })
 

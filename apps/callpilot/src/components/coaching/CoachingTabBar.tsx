@@ -8,7 +8,7 @@ import { View, TouchableOpacity } from 'react-native'
 import { useTheme } from '@/theme'
 import { Text } from '../Text'
 
-export type CoachingTab = 'approach' | 'facts' | 'suggestions'
+export type CoachingTab = 'approach' | 'facts' | 'suggestions' | 'transcript'
 
 export interface CoachingTabBarProps {
   activeTab: CoachingTab
@@ -19,6 +19,7 @@ const TABS: { key: CoachingTab; label: string }[] = [
   { key: 'approach', label: 'Approach' },
   { key: 'facts', label: 'Key Facts' },
   { key: 'suggestions', label: 'Suggestions' },
+  { key: 'transcript', label: 'Transcript' },
 ]
 
 export function CoachingTabBar({ activeTab, onTabChange }: CoachingTabBarProps) {

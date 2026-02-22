@@ -45,6 +45,7 @@ const USER_ID = '3aa71532-c4df-4b1a-aabf-6ed1d5efc7ce';
 const WORKSPACE_ID = '90886395-a5ba-48c1-b72b-8cdfa07d3854';
 const SEED_BATCH = 'demo-feb20';
 const USER_PHONE = '+17574723676';
+const DEMO_GOOGLE_VOICE = '+17036798951'; // Google Voice number for demo texting
 
 // Deterministic UUIDs for cross-referencing (always the same on every run)
 const IDS = {
@@ -74,6 +75,9 @@ const IDS = {
   ruleTurboTenant: 'a1b2c3d4-0020-4000-8000-000000000004',
   ruleZillow: 'a1b2c3d4-0020-4000-8000-000000000005',
   ruleRealtor: 'a1b2c3d4-0020-4000-8000-000000000006',
+  // Bookings
+  sarahBooking: 'a1b2c3d4-0013-4000-8000-000000000001',
+  jamesBooking: 'a1b2c3d4-0013-4000-8000-000000000002',
   // CallPilot profile
   callpilotProfile: 'a1b2c3d4-0021-4000-8000-000000000001',
   // Conversations
@@ -220,6 +224,7 @@ async function seedDelete() {
     'investor.property_images',
     'investor.properties',
     // Landlord
+    'landlord.bookings',
     'landlord.vendors',
     'landlord.properties',
     // CRM (leads + contacts are leaf-ish)
@@ -233,6 +238,7 @@ async function seedDelete() {
     'investor.property_images',
     'investor.deals_pipeline',
     'landlord.properties',
+    'landlord.bookings',
     'landlord.vendors',
   ];
 
@@ -361,7 +367,7 @@ async function seedContacts() {
       user_id: USER_ID,
       first_name: 'Sarah',
       last_name: 'Martinez',
-      phone: '+15715558888',
+      phone: '+14095551234',
       email: 'sarah.m@email.com',
       module: 'landlord',
       contact_types: ['tenant'],
@@ -574,7 +580,7 @@ async function seedDeal() {
         lead_id: IDS.marcusThompson,
         property_id: IDS.mapleDriveProperty,
         status: 'active',
-        stage: 'due_diligence',
+        stage: 'under_contract',
         title: 'Marcus Thompson — 8234 Maple Drive (Subject-To)',
         estimated_value: 175000,
         probability: 75,
@@ -616,6 +622,58 @@ async function seedVendor() {
         total_jobs: 8,
         is_active: true,
         notes: 'Preferred plumber. Fast response, fair prices. Has done 8 jobs for us. Average cost $340.',
+      },
+    ],
+    { disableTriggers: true }
+  );
+}
+
+async function seedBookings() {
+  console.log('\nSeeding landlord bookings...');
+
+  await seedInsert(
+    'landlord',
+    'bookings',
+    [
+      {
+        id: IDS.sarahBooking,
+        user_id: USER_ID,
+        workspace_id: WORKSPACE_ID,
+        contact_id: IDS.sarahMartinez,
+        property_id: IDS.oakAveProperty,
+        booking_type: 'lease',
+        start_date: '2026-01-01',
+        end_date: '2027-02-28',
+        rate: 1700,
+        rate_type: 'monthly',
+        total_amount: 23800,
+        deposit: 1700,
+        deposit_status: 'received',
+        status: 'active',
+        source: 'direct',
+        notes: 'Unit 3. Medium-term lease. Auto-renew option.',
+        internal_notes: 'Excellent tenant. Always pays early. Keep happy.',
+        confirmed_at: '2025-12-20T12:00:00Z',
+      },
+      {
+        id: IDS.jamesBooking,
+        user_id: USER_ID,
+        workspace_id: WORKSPACE_ID,
+        contact_id: IDS.jamesWilson,
+        property_id: IDS.elmStProperty,
+        booking_type: 'reservation',
+        start_date: '2026-03-01',
+        end_date: '2026-05-31',
+        rate: 1800,
+        rate_type: 'monthly',
+        total_amount: 5400,
+        deposit: 1800,
+        deposit_status: 'pending',
+        status: 'pending',
+        source: 'furnishedfinder',
+        notes: 'Travel nurse. 3-month stay. Budget $1800/mo.',
+        guest_notes: 'Arriving March 1. Will need parking spot.',
+        internal_notes: 'Furnished Finder lead. Verify employment before confirming.',
       },
     ],
     { disableTriggers: true }
@@ -910,8 +968,8 @@ async function seedStagedCallTranscript() {
       target_table: 'investor.deals_pipeline',
       target_record_id: IDS.marcusDeal,
       field_name: 'stage',
-      current_value: 'due_diligence',
-      suggested_value: 'due_diligence',
+      current_value: 'under_contract',
+      suggested_value: 'under_contract',
       confidence: 'high',
       source_quote: null,
       status: 'pending',
@@ -1174,6 +1232,7 @@ async function verify() {
     { schema: 'investor', table: 'properties', min: 1, label: 'Investor properties' },
     { schema: 'landlord', table: 'properties', min: 2, label: 'Landlord properties' },
     { schema: 'landlord', table: 'vendors', min: 1, label: 'Landlord vendors' },
+    { schema: 'landlord', table: 'bookings', min: 2, label: 'Landlord bookings' },
     { schema: 'investor', table: 'deals_pipeline', min: 1, label: 'Active deals' },
     { schema: 'claw', table: 'connections', min: 6, label: 'Claw connections' },
     { schema: 'claw', table: 'cost_log', min: 3, label: 'Cost log entries' },
@@ -1263,6 +1322,7 @@ async function create() {
   await seedPropertyImages();
   await seedLandlordProperties();
   await seedVendor();
+  await seedBookings();
   await seedDeal();
   await seedConnections();
   await seedTrustConfig();

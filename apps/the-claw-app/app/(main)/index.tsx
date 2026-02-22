@@ -2,7 +2,7 @@
  * Control Panel Screen
  *
  * THE single-screen control panel. ScrollView with compact pinned header.
- * Sections: Queue -> Connections -> Activity -> Cost.
+ * Sections: Queue -> Activity -> Connections -> Cost.
  * Overlays: TrustLevelPicker, AutonomousConsentModal, SearchFilterSheet.
  */
 
@@ -224,19 +224,19 @@ export default function ControlPanelScreen() {
               />
             )}
 
-            {(!hasActiveSearch || hasConnectionResults) && (
-              <ConnectionsSection
-                connections={hasActiveSearch ? filteredConnections : connections}
-                onConnectionPress={handleConnectionPress}
-                loading={connectionsLoading}
-              />
-            )}
-
             {(!hasActiveSearch || hasActivityResults) && (
               <ActivitySection
                 entries={hasActiveSearch ? filteredActivity : entries}
                 onEntryPress={handleActivityPress}
                 onUndo={undoEntry}
+              />
+            )}
+
+            {(!hasActiveSearch || hasConnectionResults) && (
+              <ConnectionsSection
+                connections={hasActiveSearch ? filteredConnections : connections}
+                onConnectionPress={handleConnectionPress}
+                loading={connectionsLoading}
               />
             )}
 

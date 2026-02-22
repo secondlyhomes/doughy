@@ -2,7 +2,7 @@
  * Memos Hook
  *
  * Production hook that loads voice memos and call summaries from memosService.
- * Same return type as useMockMemos.
+ * Supports on-demand server loading for individual call summaries.
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -14,6 +14,7 @@ export interface UseMemosReturn {
   callSummaries: CallSummary[]
   getMemoForCall: (callId: string) => VoiceMemo | undefined
   getSummaryForCall: (callId: string) => CallSummary | undefined
+  loadSummaryForCall: (callId: string) => Promise<CallSummary | undefined>
   isRecording: boolean
   recordingDuration: number
   startRecording: () => void
@@ -66,6 +67,26 @@ export function useMemos(): UseMemosReturn {
     [callSummaries]
   )
 
+  const loadSummaryForCall = useCallback(
+    async (callId: string): Promise<CallSummary | undefined> => {
+      // Check local cache first
+      const cached = callSummaries.find((s) => s.callId === callId)
+      if (cached) return cached
+
+      // Fetch from server
+      const summary = await memosService.getSummaryForCall(callId)
+      if (summary) {
+        // Add to local cache
+        setCallSummaries((prev) => {
+          if (prev.some((s) => s.callId === callId)) return prev
+          return [...prev, summary]
+        })
+      }
+      return summary
+    },
+    [callSummaries]
+  )
+
   const startRecording = useCallback((): void => {
     setIsRecording(true)
     setRecordingDuration(0)
@@ -80,6 +101,7 @@ export function useMemos(): UseMemosReturn {
     callSummaries,
     getMemoForCall,
     getSummaryForCall,
+    loadSummaryForCall,
     isRecording,
     recordingDuration,
     startRecording,

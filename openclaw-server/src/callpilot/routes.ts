@@ -34,14 +34,14 @@ async function requireAuth(req: Request, res: Response, next: () => void): Promi
 
   const token = authHeader.slice(7);
   try {
-    if (!config.supabaseAnonKey) {
+    if (!config.supabasePublishableKey) {
       res.status(500).json({ error: 'Server misconfiguration' });
       return;
     }
 
     const response = await fetch(`${config.supabaseUrl}/auth/v1/user`, {
       headers: {
-        apikey: config.supabaseAnonKey,
+        apikey: config.supabasePublishableKey,
         Authorization: `Bearer ${token}`,
       },
     });
@@ -735,6 +735,78 @@ router.get('/:id/suggested-updates', requireAuth, async (req: Request, res: Resp
   } catch (error) {
     console.error('[CallPilot] Get suggested updates error:', error);
     res.status(500).json({ error: 'Failed to fetch suggested updates' });
+  }
+});
+
+// ============================================================================
+// POST /api/calls/:id/push-extractions — Push transcript extractions to Doughy via The Claw
+// Creates claw.transcript_extractions record for human review in Doughy
+// ============================================================================
+
+router.post('/:id/push-extractions', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const callId = param(req, 'id');
+
+    if (!UUID_RE.test(callId)) {
+      return res.status(400).json({ error: 'Invalid call ID' });
+    }
+
+    // Verify call ownership
+    const calls = await cpQuery<{ id: string; lead_id: string | null; deal_id: string | null }>(
+      'calls',
+      `id=eq.${callId}&user_id=eq.${userId}&select=id,lead_id,deal_id&limit=1`
+    );
+    if (calls.length === 0) {
+      return res.status(404).json({ error: 'Call not found' });
+    }
+
+    const call = calls[0];
+    const { extractions, lead_id, property_id, deal_id } = req.body;
+
+    if (!extractions || !Array.isArray(extractions)) {
+      return res.status(400).json({ error: 'extractions must be an array' });
+    }
+
+    // Validate optional IDs
+    if (lead_id && !UUID_RE.test(lead_id)) {
+      return res.status(400).json({ error: 'Invalid lead_id' });
+    }
+    if (property_id && !UUID_RE.test(property_id)) {
+      return res.status(400).json({ error: 'Invalid property_id' });
+    }
+    if (deal_id && !UUID_RE.test(deal_id)) {
+      return res.status(400).json({ error: 'Invalid deal_id' });
+    }
+
+    // Insert into claw.transcript_extractions
+    const extraction = await clawInsert<{ id: string }>('transcript_extractions', {
+      user_id: userId,
+      call_id: callId,
+      lead_id: lead_id || call.lead_id || null,
+      property_id: property_id || null,
+      deal_id: deal_id || call.deal_id || null,
+      extractions,
+      status: 'pending_review',
+    });
+
+    // Broadcast notification
+    try {
+      await broadcastMessage(userId, {
+        content: `New call extractions ready for review (${extractions.length} fields). Open Doughy to approve.`,
+      });
+    } catch (err) {
+      console.error('[CallPilot] Broadcast failed:', err);
+    }
+
+    res.json({
+      success: true,
+      extraction_id: extraction.id,
+      fields_count: extractions.length,
+    });
+  } catch (error) {
+    console.error('[CallPilot] Push extractions error:', error);
+    res.status(500).json({ error: 'Failed to push extractions' });
   }
 });
 

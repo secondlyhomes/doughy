@@ -6,9 +6,10 @@ import { Router, Request, Response } from 'express';
 import { config } from '../config.js';
 import { handleClawMessage } from './controller.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
-import { clawQuery, clawUpdate, clawInsert, publicInsert, schemaQuery } from './db.js';
+import { clawQuery, clawUpdate, clawInsert, publicInsert, schemaQuery, claimApproval } from './db.js';
 import { callEdgeFunction } from './edge.js';
 import { captureInboundEmail } from '../services/email-capture.js';
+import { getApiKey } from '../services/api-keys.js';
 import type { ApprovalDecision } from './types.js';
 
 const router = Router();
@@ -30,20 +31,22 @@ async function requireAuth(req: Request, res: Response, next: () => void): Promi
 
   try {
     // Verify token with Supabase auth — always use anon key, never service key
-    if (!config.supabaseAnonKey) {
-      console.error('[ClawAPI] SUPABASE_ANON_KEY not configured');
+    if (!config.supabasePublishableKey) {
+      console.error('[ClawAPI] SUPABASE_PUBLISHABLE_KEY not configured');
       res.status(500).json({ error: 'Server misconfiguration' });
       return;
     }
 
     const response = await fetch(`${config.supabaseUrl}/auth/v1/user`, {
       headers: {
-        apikey: config.supabaseAnonKey,
+        apikey: config.supabasePublishableKey,
         Authorization: `Bearer ${token}`,
       },
     });
 
     if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      console.error(`[ClawAPI] Auth verify failed: ${response.status} ${body.slice(0, 200)}`);
       res.status(401).json({ error: 'Invalid token' });
       return;
     }
@@ -98,7 +101,8 @@ router.get('/briefing', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
     const data = await generateBriefingData(userId);
-    const text = await formatBriefing(data, config.anthropicApiKey);
+    const apiKey = await getApiKey(userId, 'anthropic');
+    const text = await formatBriefing(data, apiKey, userId);
 
     res.json({ briefing: text, data });
   } catch (error) {
@@ -172,8 +176,21 @@ router.post('/approvals/:id/decide', requireAuth, async (req: Request, res: Resp
       return res.status(400).json({ error: 'edited_content must be a string of 2000 characters or less.' });
     }
 
-    // Verify the approval belongs to this user and is pending
-    const approvals = await clawQuery<{
+    const now = new Date().toISOString();
+
+    if (action === 'reject') {
+      // For reject, use atomic claim-style update (pending → rejected)
+      await clawUpdate('approvals', approvalId, {
+        status: 'rejected',
+        decided_at: now,
+      });
+      return res.json({ success: true, status: 'rejected' });
+    }
+
+    // Approve: atomically claim the approval (pending → approved)
+    // If another path already claimed it, claimApproval returns null
+    const finalContent = edited_content; // may be undefined — we'll merge below
+    const claimed = await claimApproval<{
       id: string;
       user_id: string;
       status: string;
@@ -183,38 +200,22 @@ router.post('/approvals/:id/decide', requireAuth, async (req: Request, res: Resp
       recipient_phone: string | null;
       recipient_name: string | null;
       action_payload: Record<string, unknown>;
-    }>(
-      'approvals',
-      `id=eq.${approvalId}&user_id=eq.${userId}&status=eq.pending&limit=1`
-    );
-
-    if (approvals.length === 0) {
-      return res.status(404).json({ error: 'Approval not found or already decided' });
-    }
-
-    const approval = approvals[0];
-    const now = new Date().toISOString();
-
-    if (action === 'reject') {
-      await clawUpdate('approvals', approvalId, {
-        status: 'rejected',
-        decided_at: now,
-      });
-      return res.json({ success: true, status: 'rejected' });
-    }
-
-    // Approve: update the approval status
-    const finalContent = edited_content || approval.draft_content;
-    await clawUpdate('approvals', approvalId, {
-      status: 'approved',
-      draft_content: finalContent,
+    }>(approvalId, userId, {
+      draft_content: finalContent, // undefined fields are ignored by PostgREST
       decided_at: now,
     });
 
+    if (!claimed) {
+      return res.status(409).json({ error: 'Approval already decided or not found' });
+    }
+
+    // Use the content returned from DB (has edited_content if we sent it, or original)
+    const contentToSend = finalContent || claimed.draft_content;
+
     // Execute the approved action
     let executed = false;
-    if (approval.action_type === 'send_sms' && approval.recipient_phone) {
-      executed = await executeSmsApproval(userId, approval.recipient_phone, finalContent);
+    if (claimed.action_type === 'send_sms' && claimed.recipient_phone) {
+      executed = await executeSmsApproval(userId, claimed.recipient_phone, contentToSend);
     }
 
     // Update to executed if the action was performed

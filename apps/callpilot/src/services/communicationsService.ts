@@ -2,7 +2,7 @@
  * Communications Service
  *
  * Unified communication retrieval across channels.
- * Uses Supabase crm.messages when connected, mock data in dev.
+ * Uses crm.messages when connected, mock data in dev.
  */
 
 import type { Communication, CommunicationChannel } from '@/types'
@@ -14,6 +14,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 const VALID_CHANNELS: ReadonlySet<CommunicationChannel> = new Set(['sms', 'email', 'call', 'transcript'])
 
+const CRM_MSG_SELECT = 'id, contact_id, lead_id, channel, direction, sender_type, body, status, created_at'
+
 interface CrmMessage {
   id: string
   contact_id: string | null
@@ -22,10 +24,8 @@ interface CrmMessage {
   direction: string
   sender_type: string | null
   body: string
-  subject: string | null
-  status: string
-  created_at: string
-  updated_at: string | null
+  status: string | null
+  created_at: string | null
 }
 
 function mapCrmMessage(row: CrmMessage): Communication {
@@ -42,9 +42,9 @@ function mapCrmMessage(row: CrmMessage): Communication {
       ? row.status
       : 'sent',
     body: row.body || '',
-    subject: row.subject || null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at || row.created_at,
+    subject: null,
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.created_at || new Date().toISOString(),
     duration: null,
     outcome: null,
     recordingUrl: null,
@@ -59,7 +59,7 @@ export async function getCommunications(): Promise<Communication[]> {
   const { data, error } = await supabase
     .schema('crm' as any)
     .from('messages')
-    .select('id, contact_id, lead_id, channel, direction, sender_type, body, subject, status, created_at, updated_at')
+    .select(CRM_MSG_SELECT)
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -84,7 +84,7 @@ export async function getByContact(
   const { data, error } = await supabase
     .schema('crm' as any)
     .from('messages')
-    .select('id, contact_id, lead_id, channel, direction, sender_type, body, subject, status, created_at, updated_at')
+    .select(CRM_MSG_SELECT)
     .or(`contact_id.eq.${contactId},lead_id.eq.${contactId}`)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -107,7 +107,7 @@ export async function getRecent(limit: number): Promise<Communication[]> {
   const { data, error } = await supabase
     .schema('crm' as any)
     .from('messages')
-    .select('id, contact_id, lead_id, channel, direction, sender_type, body, subject, status, created_at, updated_at')
+    .select(CRM_MSG_SELECT)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -122,7 +122,6 @@ export async function getRecent(limit: number): Promise<Communication[]> {
 interface SendMessageResponse {
   success: boolean
   message_id: string
-  conversation_id: string
   delivered: boolean
   created_at: string
   error?: string

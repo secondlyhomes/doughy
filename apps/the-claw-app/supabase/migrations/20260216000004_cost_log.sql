@@ -6,7 +6,10 @@ CREATE TABLE IF NOT EXISTS claw.cost_log (
   user_id UUID NOT NULL REFERENCES auth.users(id),
   service TEXT NOT NULL,         -- 'bland', 'twilio', 'deepgram', 'anthropic'
   action TEXT NOT NULL,          -- 'outbound_call', 'sms', 'whatsapp', 'transcription', 'briefing'
-  cost_cents INTEGER NOT NULL,
+  cost_cents NUMERIC NOT NULL DEFAULT 0,
+  input_tokens INTEGER DEFAULT 0,
+  output_tokens INTEGER DEFAULT 0,
+  duration_seconds INTEGER DEFAULT 0,
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

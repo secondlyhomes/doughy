@@ -47,6 +47,14 @@ import { runMorningBriefings, runFollowUpNudges } from './claw/scheduler.js';
 import { captureInboundEmail } from './services/email-capture.js';
 import { demoDataRouter } from './demo-data.js';
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Server] Unhandled rejection:', reason);
+});
+process.on('uncaughtException', (error) => {
+  console.error('[Server] Uncaught exception:', error);
+  process.exit(1);
+});
+
 const app = express();
 
 /** Escape special characters for safe XML/TwiML embedding */

@@ -23,14 +23,15 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "discord.js": "^14.25.1",
     "dotenv": "^16.4.5",
-    "express": "^4.21.2",
-    "googleapis": "^144.0.0"
+    "express": "^4.21.2"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
+    "@anthropic-ai/sdk": "^0.77.0",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.10.5",
+    "googleapis": "^171.4.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

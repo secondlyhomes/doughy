@@ -3,8 +3,8 @@
 // Three-state expandable card: Collapsed -> Expanded (breakdown) -> Actionable
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ViewStyle } from 'react-native';
-import { ChevronDown, ChevronUp, Info } from 'lucide-react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { ChevronDown } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,125 +13,22 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useThemeColors } from '@/contexts/ThemeContext';
-import { withOpacity, getShadowStyle } from '@/lib/design-utils';
+import { getShadowStyle } from '@/lib/design-utils';
 import { SPACING, BORDER_RADIUS, ICON_SIZES, PRESS_OPACITY, DEFAULT_HIT_SLOP } from '@/constants/design-tokens';
-import { Button } from '@/components/ui';
+import { getConfidenceColors, getConfidenceLabel, formatValue } from './metric-card-helpers';
+import { MetricCardCompact } from './MetricCardCompact';
+import { MetricCardBreakdown } from './MetricCardBreakdown';
+import { MetricCardActions } from './MetricCardActions';
+import type { MetricCardProps, CardState } from './metric-card-types';
 
-// ============================================
-// Types
-// ============================================
-
-export type ConfidenceLevel = 'high' | 'medium' | 'low';
-
-export interface BreakdownItem {
-  label: string;
-  value: string | number;
-  isSubtraction?: boolean;
-}
-
-export interface MetricBreakdown {
-  formula: string;
-  items: BreakdownItem[];
-}
-
-export interface MetricAction {
-  label: string;
-  onPress: () => void;
-  variant?: 'default' | 'outline' | 'ghost';
-}
-
-export interface MetricCardProps {
-  /** Label for the metric (e.g., "MAO", "Net Profit") */
-  label: string;
-
-  /** Main value to display */
-  value: string | number;
-
-  /** Icon to display next to label */
-  icon?: React.ReactNode;
-
-  /** Optional breakdown showing calculation details */
-  breakdown?: MetricBreakdown;
-
-  /** Optional actions when fully expanded */
-  actions?: MetricAction[];
-
-  /** Confidence level for color coding */
-  confidence?: ConfidenceLevel;
-
-  /** Compact mode for sticky headers */
-  compact?: boolean;
-
-  /** Whether card is disabled */
-  disabled?: boolean;
-
-  /** Custom style */
-  style?: ViewStyle;
-
-  /** Callback when evidence info is pressed */
-  onEvidencePress?: () => void;
-}
-
-// ============================================
-// Card State Enum
-// ============================================
-
-type CardState = 'collapsed' | 'expanded' | 'actionable';
-
-// ============================================
-// Helper Functions
-// ============================================
-
-function getConfidenceColors(confidence: ConfidenceLevel, colors: ReturnType<typeof useThemeColors>) {
-  switch (confidence) {
-    case 'high':
-      return {
-        bg: withOpacity(colors.success, 'subtle'),
-        border: withOpacity(colors.success, 'light'),
-        indicator: colors.success,
-      };
-    case 'medium':
-      return {
-        bg: withOpacity(colors.warning, 'subtle'),
-        border: withOpacity(colors.warning, 'light'),
-        indicator: colors.warning,
-      };
-    case 'low':
-      return {
-        bg: withOpacity(colors.destructive, 'subtle'),
-        border: withOpacity(colors.destructive, 'light'),
-        indicator: colors.destructive,
-      };
-    default:
-      return {
-        bg: colors.card,
-        border: colors.border,
-        indicator: colors.mutedForeground,
-      };
-  }
-}
-
-function getConfidenceLabel(confidence: ConfidenceLevel): string {
-  switch (confidence) {
-    case 'high':
-      return 'High confidence';
-    case 'medium':
-      return 'Medium confidence';
-    case 'low':
-      return 'Low confidence';
-  }
-}
-
-function formatValue(value: string | number): string {
-  if (typeof value === 'number') {
-    return value.toLocaleString();
-  }
-  return value;
-}
-
-// ============================================
-// MetricCard Component
-// ============================================
+// Re-export types for consumers
+export type {
+  ConfidenceLevel,
+  BreakdownItem,
+  MetricBreakdown,
+  MetricAction,
+  MetricCardProps,
+} from './metric-card-types';
 
 export function MetricCard({
   label,
@@ -214,36 +111,14 @@ export function MetricCard({
   // Compact mode rendering
   if (compact) {
     return (
-      <View
-        style={[
-          {
-            flex: 1,
-            alignItems: 'center',
-            paddingVertical: SPACING.sm,
-            paddingHorizontal: SPACING.sm,
-          },
-          style,
-        ]}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
-          {icon}
-          <Text style={{ fontSize: 11, color: colors.mutedForeground }}>{label}</Text>
-        </View>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground, marginTop: SPACING.xxs }}>
-          {formatValue(value)}
-        </Text>
-        {confidence && (
-          <View
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: confidenceColors.indicator,
-              marginTop: SPACING.xs,
-            }}
-          />
-        )}
-      </View>
+      <MetricCardCompact
+        label={label}
+        value={value}
+        icon={icon}
+        confidence={confidence}
+        confidenceIndicatorColor={confidenceColors.indicator}
+        style={style}
+      />
     );
   }
 
@@ -317,108 +192,19 @@ export function MetricCard({
         {/* Expanded Content */}
         {isExpandable && state !== 'collapsed' && (
           <Animated.View style={expandedContentStyle}>
-            {/* Breakdown Section */}
             {breakdown && (
-              <View
-                style={{
-                  padding: SPACING.md,
-                  borderRadius: BORDER_RADIUS.md,
-                  backgroundColor: withOpacity(colors.background, 'medium'),
-                  gap: SPACING.sm,
-                }}
-              >
-                {/* Formula */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                      color: colors.mutedForeground,
-                    }}
-                  >
-                    {breakdown.formula}
-                  </Text>
-                  {onEvidencePress && (
-                    <TouchableOpacity
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        onEvidencePress();
-                      }}
-                      hitSlop={DEFAULT_HIT_SLOP}
-                    >
-                      <Info size={ICON_SIZES.sm} color={colors.primary} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Breakdown Items */}
-                {breakdown.items.map((item) => (
-                  <View
-                    key={`${item.label}-${item.value}`}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingVertical: SPACING.xs,
-                      borderTopWidth: 1,
-                      borderTopColor: withOpacity(colors.border, 'light'),
-                    }}
-                  >
-                    <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
-                      {item.isSubtraction ? '−' : '+'} {item.label}
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        fontWeight: '600',
-                        color: item.isSubtraction ? colors.destructive : colors.foreground,
-                      }}
-                    >
-                      {formatValue(item.value)}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              <MetricCardBreakdown
+                breakdown={breakdown}
+                onEvidencePress={onEvidencePress}
+              />
             )}
 
-            {/* Actions Section (only in actionable state) */}
-            {state === 'actionable' && actions && actions.length > 0 && (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  gap: SPACING.sm,
-                  marginTop: SPACING.sm,
-                }}
-              >
-                {actions.map((action, index) => (
-                  <Button
-                    key={index}
-                    variant={action.variant || 'outline'}
-                    size="sm"
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      action.onPress();
-                    }}
-                  >
-                    {action.label}
-                  </Button>
-                ))}
-              </View>
-            )}
-
-            {/* Hint to expand to actions */}
-            {state === 'expanded' && hasActions && (
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: colors.mutedForeground,
-                  textAlign: 'center',
-                  marginTop: SPACING.sm,
-                }}
-              >
-                Tap again for actions
-              </Text>
+            {actions && actions.length > 0 && (
+              <MetricCardActions
+                actions={actions}
+                state={state}
+                hasActions={hasActions}
+              />
             )}
           </Animated.View>
         )}
