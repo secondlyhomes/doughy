@@ -1,154 +1,249 @@
 {
-  "gateway": {
-    "port": 18789,
-    "bind": "loopback",
-    "auth": {
-      "mode": "token",
-      "token": "${OPENCLAW_GATEWAY_TOKEN}"
-    },
-    "tailscale": { "mode": "serve" }
+  "meta": {
+    "lastTouchedVersion": "2026.2.21-2",
+    "lastTouchedAt": "2026-02-22T10:04:33.292Z"
   },
-
-  "channels": {
-    "telegram": {
-      "enabled": true,
-      "dmPolicy": "allowlist",
-      "allowFrom": ["${TELEGRAM_DINO_ID}"]
+  "wizard": {
+    "lastRunAt": "2026-02-22T07:50:55.135Z",
+    "lastRunVersion": "2026.2.21-2",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "models": {
+    "providers": {
+      "litellm": {
+        "baseUrl": "http://127.0.0.1:4000/v1",
+        "apiKey": "81a0fa1df8194501453ede3485efd93f",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "anthropic/claude-sonnet-4-6",
+            "name": "Claude Sonnet 4.6",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "anthropic/claude-sonnet-4-5-20250929",
+            "name": "Claude Sonnet 4.5",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "anthropic/claude-haiku-4-5-20251001",
+            "name": "Claude Haiku 4.5",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "anthropic/claude-opus-4-6",
+            "name": "Claude Opus 4.6",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          }
+        ]
+      }
     }
   },
-
   "agents": {
     "defaults": {
-      "model": { "primary": "anthropic/claude-sonnet-4-5-20250929" },
-      "contextTokens": 200000,
-      "maxConcurrent": 3,
-      "timeoutSeconds": 600
+      "model": {
+        "primary": "litellm/anthropic/claude-sonnet-4-6",
+        "fallbacks": [
+          "litellm/anthropic/claude-haiku-4-5-20251001"
+        ]
+      },
+      "workspace": "/root/.openclaw/workspace",
+      "maxConcurrent": 3
     },
     "list": [
       {
         "id": "dispatch",
-        "workspace": "./workspaces/dispatch",
+        "default": true,
+        "workspace": "~/.openclaw/workspace-dispatch",
         "model": {
-          "primary": "anthropic/claude-sonnet-4-5-20250929"
+          "primary": "litellm/anthropic/claude-haiku-4-5-20251001"
+        },
+        "subagents": {
+          "allowAgents": [
+            "assistant",
+            "leasing",
+            "bookkeeper",
+            "acquisitions",
+            "marketing"
+          ]
         },
         "tools": {
-          "allow": ["mcp:supabase:read_*", "agentToAgent"],
-          "deny": ["exec", "write", "edit", "apply_patch"]
+          "allow": [
+            "read",
+            "group:sessions"
+          ],
+          "deny": [
+            "exec",
+            "write",
+            "edit",
+            "apply_patch"
+          ]
         }
       },
       {
         "id": "assistant",
-        "workspace": "./workspaces/assistant",
+        "workspace": "~/.openclaw/workspace-assistant",
         "model": {
-          "primary": "anthropic/claude-sonnet-4-5-20250929",
-          "fallbacks": ["anthropic/claude-haiku-4-5-20251001"]
+          "primary": "litellm/anthropic/claude-sonnet-4-6",
+          "fallbacks": [
+            "litellm/anthropic/claude-haiku-4-5-20251001"
+          ]
         },
         "tools": {
-          "allow": ["mcp:supabase:*", "agentToAgent"],
-          "elevated": ["mcp:supabase:send_*", "mcp:supabase:create_*"]
+          "allow": [
+            "read",
+            "write",
+            "exec"
+          ]
         }
       },
       {
         "id": "leasing",
-        "workspace": "./workspaces/leasing",
+        "workspace": "~/.openclaw/workspace-leasing",
         "tools": {
           "allow": [
-            "mcp:supabase:read_bookings",
-            "mcp:supabase:read_maintenance",
-            "mcp:supabase:read_vendors",
-            "mcp:supabase:read_leads",
-            "mcp:supabase:read_contacts_detail",
-            "mcp:supabase:create_maintenance_request",
-            "mcp:supabase:add_note",
-            "agentToAgent"
+            "read",
+            "exec"
           ],
-          "elevated": ["mcp:supabase:create_*", "mcp:supabase:send_*"]
+          "deny": [
+            "write",
+            "edit",
+            "apply_patch"
+          ]
         }
       },
       {
         "id": "bookkeeper",
-        "workspace": "./workspaces/bookkeeper",
+        "workspace": "~/.openclaw/workspace-bookkeeper",
+        "model": {
+          "primary": "litellm/anthropic/claude-haiku-4-5-20251001"
+        },
         "tools": {
           "allow": [
-            "mcp:supabase:read_deals",
-            "mcp:supabase:read_portfolio",
-            "mcp:supabase:read_documents",
-            "mcp:supabase:read_campaigns",
-            "agentToAgent"
+            "read"
           ],
-          "deny": ["mcp:supabase:create_*", "mcp:supabase:update_*", "mcp:supabase:send_*"]
+          "deny": [
+            "exec",
+            "write",
+            "edit",
+            "apply_patch"
+          ]
         }
       },
       {
         "id": "acquisitions",
-        "workspace": "./workspaces/acquisitions",
+        "workspace": "~/.openclaw/workspace-acquisitions",
         "tools": {
           "allow": [
-            "mcp:supabase:read_deals",
-            "mcp:supabase:read_leads",
-            "mcp:supabase:read_contacts_detail",
-            "mcp:supabase:read_portfolio",
-            "mcp:supabase:read_comps",
-            "mcp:supabase:read_documents",
-            "mcp:supabase:update_deal_stage",
-            "mcp:supabase:add_note",
-            "agentToAgent"
+            "read",
+            "exec"
           ],
-          "elevated": ["mcp:supabase:update_deal_stage"]
+          "deny": [
+            "write",
+            "edit",
+            "apply_patch"
+          ]
         }
       },
       {
         "id": "marketing",
-        "workspace": "./workspaces/marketing",
+        "workspace": "~/.openclaw/workspace-marketing",
         "tools": {
           "allow": [
-            "mcp:supabase:read_campaigns",
-            "mcp:supabase:read_leads",
-            "mcp:supabase:read_conversations",
-            "agentToAgent"
+            "read"
           ],
-          "deny": ["mcp:supabase:create_*", "mcp:supabase:update_*", "mcp:supabase:send_*"]
+          "deny": [
+            "exec",
+            "write",
+            "edit",
+            "apply_patch"
+          ]
         }
       }
     ]
   },
-
-  "bindings": [
-    { "channel": "telegram", "agentId": "dispatch" }
-  ],
-
-  "models": {
-    "providers": {
-      "anthropic": { "apiKey": "${ANTHROPIC_API_KEY}" }
+  "tools": {
+    "agentToAgent": {
+      "enabled": false
     }
   },
-
-  "mcpServers": {
-    "supabase": {
-      "command": "node",
-      "args": ["./tools/build/index.js"],
-      "env": {
-        "SUPABASE_URL": "${SUPABASE_URL}",
-        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}"
+  "bindings": [
+    {
+      "agentId": "dispatch",
+      "match": {
+        "channel": "telegram"
       }
     }
+  ],
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
   },
-
   "session": {
-    "dmScope": "per-channel-peer",
-    "reset": { "mode": "idle", "idleMinutes": 60 }
+    "dmScope": "per-channel-peer"
   },
-
   "cron": {
-    "morning_briefing": {
-      "schedule": "0 7 * * * America/New_York",
-      "agent": "assistant",
-      "message": "Generate and deliver the morning briefing using the generate_briefing tool."
+    "enabled": true,
+    "maxConcurrentRuns": 2
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "botToken": "8516801454:AAGnY2Iez9N33vgzermgqhQJ3eSkTBlWmQg",
+      "allowFrom": [
+        "8212940595"
+      ],
+      "groupPolicy": "allowlist",
+      "streaming": false
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "none",
+      "token": "4a20f986e4ba629531bc201d0ddaaa42b60db8366dd97ffe"
     },
-    "afternoon_followups": {
-      "schedule": "0 14 * * * America/New_York",
-      "agent": "assistant",
-      "message": "Check for overdue follow-ups using read_follow_ups with overdue_only=true and summarize any that need attention."
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      }
     }
   }
 }

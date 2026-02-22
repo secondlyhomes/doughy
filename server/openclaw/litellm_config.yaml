@@ -1,12 +1,9 @@
-# LiteLLM Proxy — Model Spoke Configuration
-# Credential brokering + budget caps for OpenClaw agents.
-# OpenClaw NEVER sees real API keys — only talks to LiteLLM.
-#
-# Deploy: pip install litellm[proxy]
-# Run:    litellm --config litellm_config.yaml --port 4000 --host 127.0.0.1
-
 model_list:
-  # Primary — Anthropic
+  - model_name: anthropic/claude-sonnet-4-6
+    litellm_params:
+      model: claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
   - model_name: anthropic/claude-sonnet-4-5-20250929
     litellm_params:
       model: claude-sonnet-4-5-20250929
@@ -22,25 +19,21 @@ model_list:
       model: claude-opus-4-6
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  # Fast/cheap — Google
   - model_name: google/gemini-2.0-flash-lite
     litellm_params:
       model: gemini/gemini-2.0-flash-lite
       api_key: os.environ/GOOGLE_AI_API_KEY
 
-  # Fast/cheap — Groq
   - model_name: groq/llama-3.1-8b-instant
     litellm_params:
       model: groq/llama-3.1-8b-instant
       api_key: os.environ/GROQ_API_KEY
 
-  # Fast/cheap — Mistral
   - model_name: mistral/ministral-3b-latest
     litellm_params:
       model: mistral/ministral-3b-latest
       api_key: os.environ/MISTRAL_API_KEY
 
-  # Research — Perplexity
   - model_name: perplexity/sonar
     litellm_params:
       model: perplexity/sonar
@@ -54,13 +47,14 @@ model_list:
 litellm_settings:
   drop_params: true
   set_verbose: false
+  cache: true
+  cache_params:
+    type: local
+    ttl: 3600
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 
-# Budget controls
-# Week 1: $5/day total, $3/day Anthropic
-# Week 2+: raise to $10/day
 router_settings:
   routing_strategy: simple-shuffle
   num_retries: 2
