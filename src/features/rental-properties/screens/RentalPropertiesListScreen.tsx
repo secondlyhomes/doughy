@@ -90,9 +90,28 @@ export function RentalPropertiesListScreen() {
     []
   );
 
-  // Header component with Needs Attention + Portfolio Stats
+  // Header component with Error Banner + Needs Attention + Portfolio Stats
   const ListHeader = useCallback(() => (
     <View>
+      {/* Error Banner */}
+      {error && (
+        <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
+          <View
+            style={{
+              backgroundColor: withOpacity(colors.destructive, 'light'),
+              borderRadius: BORDER_RADIUS.md,
+              padding: SPACING.sm,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: colors.destructive, flex: 1, fontSize: FONT_SIZES.sm }}>
+              Failed to load properties. Pull down to retry.
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Needs Attention Section */}
       <LandlordNeedsAttention
         items={attentionItems}
@@ -127,62 +146,41 @@ export function RentalPropertiesListScreen() {
         </Text>
       </View>
     </View>
-  ), [attentionItems, attentionLoading, properties, searchQuery, colors]);
+  ), [error, attentionItems, attentionLoading, properties, searchQuery, colors]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Search Bar */}
-        <View
-          style={{
-            paddingHorizontal: SPACING.md,
-            paddingTop: SPACING.sm,
-            paddingBottom: SPACING.sm,
-          }}
-        >
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search properties..."
-            size="md"
-            glass={true}
-            onFilter={() => setShowFiltersSheet(true)}
-            hasActiveFilters={hasActiveFilters}
-          />
-        </View>
+        <View style={{ flex: 1 }}>
+          {/* Search Bar — floats above content with glass blur */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: SPACING.md, paddingTop: SPACING.sm }}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search properties..."
+              size="md"
+              glass={true}
+              onFilter={() => setShowFiltersSheet(true)}
+              hasActiveFilters={hasActiveFilters}
+            />
+          </View>
 
-        {/* Error Banner */}
-        {error && (
-          <View style={{ paddingHorizontal: SPACING.md, paddingBottom: SPACING.sm }}>
-            <View
-              style={{
-                backgroundColor: withOpacity(colors.destructive, 'light'),
-                borderRadius: BORDER_RADIUS.md,
-                padding: SPACING.sm,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: colors.destructive, flex: 1, fontSize: FONT_SIZES.sm }}>
-                Failed to load properties. Pull down to retry.
-              </Text>
+          {/* Properties List with Needs Attention Header */}
+          {isLoading && !properties?.length ? (
+            <View style={{ paddingHorizontal: SPACING.md, paddingTop: 64 + SPACING.md }}>
+              <SkeletonList count={5} component={DataCardSkeleton} />
             </View>
-          </View>
-        )}
-
-        {/* Properties List with Needs Attention Header */}
-        {isLoading && !properties?.length ? (
-          <View style={{ paddingHorizontal: SPACING.md }}>
-            <SkeletonList count={5} component={DataCardSkeleton} />
-          </View>
         ) : (
           <FlatList
             data={filteredProperties}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             ListHeaderComponent={ListHeader}
+            style={{ flex: 1 }}
             contentContainerStyle={{
+              flexGrow: 1,
               paddingHorizontal: SPACING.md,
+              paddingTop: 64 + SPACING.md,
               paddingBottom: TAB_BAR_SAFE_PADDING,
             }}
             contentInsetAdjustmentBehavior="automatic"
@@ -216,6 +214,7 @@ export function RentalPropertiesListScreen() {
             }
           />
         )}
+        </View>
 
         {/* Floating Action Button */}
         <SimpleFAB onPress={handleAddProperty} accessibilityLabel="Add new property" />

@@ -1,0 +1,101 @@
+-- Seed file: Test users
+-- Creates development/test user accounts
+
+-- Clear existing auth users (local dev only)
+DO $$
+BEGIN
+  IF current_database() = 'postgres' THEN
+    TRUNCATE auth.users CASCADE;
+  END IF;
+END $$;
+
+-- Create test users
+-- Password for all test users: "Test1234!"
+
+-- Test User 1: Admin/Primary
+INSERT INTO auth.users (
+  id,
+  instance_id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  role
+) VALUES (
+  '550e8400-e29b-41d4-a716-446655440000',
+  '00000000-0000-0000-0000-000000000000',
+  'test@example.com',
+  crypt('Test1234!', gen_salt('bf')),
+  NOW(),
+  NOW(),
+  NOW(),
+  '{"provider":"email","providers":["email"]}',
+  '{"name":"Test User"}',
+  false,
+  'authenticated'
+);
+
+-- Test User 2: Secondary user for testing multi-user features
+INSERT INTO auth.users (
+  id,
+  instance_id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  role
+) VALUES (
+  '550e8400-e29b-41d4-a716-446655440001',
+  '00000000-0000-0000-0000-000000000000',
+  'test2@example.com',
+  crypt('Test1234!', gen_salt('bf')),
+  NOW(),
+  NOW(),
+  NOW(),
+  '{"provider":"email","providers":["email"]}',
+  '{"name":"Test User 2"}',
+  false,
+  'authenticated'
+);
+
+-- Test User 3: For testing edge cases
+INSERT INTO auth.users (
+  id,
+  instance_id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  created_at,
+  updated_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  is_super_admin,
+  role
+) VALUES (
+  '550e8400-e29b-41d4-a716-446655440002',
+  '00000000-0000-0000-0000-000000000000',
+  'test3@example.com',
+  crypt('Test1234!', gen_salt('bf')),
+  NOW(),
+  NOW(),
+  NOW(),
+  '{"provider":"email","providers":["email"]}',
+  '{"name":"Test User 3"}',
+  false,
+  'authenticated'
+);
+
+-- Log result
+DO $$
+BEGIN
+  RAISE NOTICE 'Created % test users', (SELECT COUNT(*) FROM auth.users);
+  RAISE NOTICE 'Test login: test@example.com / Test1234!';
+END $$;

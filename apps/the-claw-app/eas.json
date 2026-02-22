@@ -1,0 +1,101 @@
+{
+  "cli": {
+    "version": ">= 13.2.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Debug",
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug",
+        "resourceClass": "medium"
+      },
+      "env": {
+        "ENVIRONMENT": "development"
+      },
+      "channel": "development"
+    },
+    "development-device": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Debug",
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug",
+        "resourceClass": "medium"
+      },
+      "env": {
+        "ENVIRONMENT": "development"
+      },
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "resourceClass": "medium"
+      },
+      "env": {
+        "ENVIRONMENT": "preview"
+      },
+      "channel": "preview"
+    },
+    "staging": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "resourceClass": "m-large",
+        "autoIncrement": "buildNumber"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "resourceClass": "large",
+        "autoIncrement": "versionCode"
+      },
+      "env": {
+        "ENVIRONMENT": "staging",
+        "EXPO_PUBLIC_ENVIRONMENT": "staging"
+      },
+      "channel": "staging"
+    },
+    "production": {
+      "distribution": "store",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release",
+        "resourceClass": "m-large",
+        "autoIncrement": "buildNumber"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease",
+        "resourceClass": "large",
+        "autoIncrement": "versionCode"
+      },
+      "env": {
+        "ENVIRONMENT": "production",
+        "EXPO_PUBLIC_ENVIRONMENT": "production"
+      },
+      "channel": "production"
+    }
+  }
+}

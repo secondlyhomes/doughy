@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "features": "node scripts/features.js",
+    "features:list": "node scripts/features.js list",
+    "features:enable": "node scripts/features.js enable",
+    "features:disable": "node scripts/features.js disable"
+  },
+  "_comment": "Add these scripts to your package.json to enable interactive feature management"
+}

@@ -213,7 +213,7 @@ export function LoginScreen() {
 
           {/* Sign Up Link */}
           <View className="flex-row justify-center mt-6">
-            <Text style={{ color: colors.mutedForeground }}>Don't have an account? </Text>
+            <Text style={{ color: colors.mutedForeground }}>Don{'\''}t have an account? </Text>
             <TouchableOpacity onPress={handleSignUp} disabled={loading}>
               <Text className="font-medium" style={{ color: colors.primary }}>Sign up</Text>
             </TouchableOpacity>

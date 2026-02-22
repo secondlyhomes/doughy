@@ -1,0 +1,42 @@
+diff --git a/node_modules/react-native-screens/ios/RNSScreenStackHeaderConfig.mm b/node_modules/react-native-screens/ios/RNSScreenStackHeaderConfig.mm
+index 57ff861..4ecd03a 100644
+--- a/node_modules/react-native-screens/ios/RNSScreenStackHeaderConfig.mm
++++ b/node_modules/react-native-screens/ios/RNSScreenStackHeaderConfig.mm
+@@ -444,18 +444,27 @@ RNS_IGNORE_SUPER_CALL_END
+   UINavigationBarAppearance *appearance = [UINavigationBarAppearance new];
+ 
+   if (config.backgroundColor && CGColorGetAlpha(config.backgroundColor.CGColor) == 0.) {
+-    // Preserve the shadow properties in case the user wants to show the shadow on scroll.
+-    UIColor *shadowColor = appearance.shadowColor;
+-    UIImage *shadowImage = appearance.shadowImage;
+-    // transparent background color
+-    [appearance configureWithTransparentBackground];
+-
+-    if (!config.hideShadow) {
+-      appearance.shadowColor = shadowColor;
+-      appearance.shadowImage = shadowImage;
++    if (@available(iOS 26.0, *)) {
++      // On iOS 26+, use default background to preserve Liquid Glass.
++      [appearance configureWithDefaultBackground];
++    } else {
++      // Preserve the shadow properties in case the user wants to show the shadow on scroll.
++      UIColor *shadowColor = appearance.shadowColor;
++      UIImage *shadowImage = appearance.shadowImage;
++      // transparent background color
++      [appearance configureWithTransparentBackground];
++
++      if (!config.hideShadow) {
++        appearance.shadowColor = shadowColor;
++        appearance.shadowImage = shadowImage;
++      }
+     }
+   } else {
+-    [appearance configureWithOpaqueBackground];
++    if (@available(iOS 26.0, *)) {
++      [appearance configureWithDefaultBackground];
++    } else {
++      [appearance configureWithOpaqueBackground];
++    }
+   }
+ 
+   // set background color if specified

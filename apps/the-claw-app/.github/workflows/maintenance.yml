@@ -1,0 +1,333 @@
+name: Automated Maintenance
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      create_issues:
+        description: 'Create GitHub issues for findings'
+        required: false
+        default: 'true'
+        type: boolean
+      skip_checks:
+        description: 'Checks to skip (comma-separated: staleness,versions,docs,coverage,navigation)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  maintenance-dashboard:
+    name: Run Maintenance Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Run staleness check
+        id: staleness
+        if: ${{ !contains(github.event.inputs.skip_checks, 'staleness') }}
+        continue-on-error: true
+        run: |
+          node scripts/maintenance/check-staleness.js \
+            --format json \
+            --output .maintenance/staleness.json
+
+      - name: Run version check
+        id: versions
+        if: ${{ !contains(github.event.inputs.skip_checks, 'versions') }}
+        continue-on-error: true
+        run: |
+          node scripts/maintenance/check-versions.js \
+            --format json \
+            --output .maintenance/versions.json
+
+      - name: Run documentation check
+        id: docs
+        if: ${{ !contains(github.event.inputs.skip_checks, 'docs') }}
+        continue-on-error: true
+        run: |
+          node scripts/maintenance/check-docs.js \
+            --format json \
+            --output .maintenance/documentation.json \
+            --check-examples
+
+      - name: Run test coverage
+        id: coverage-test
+        if: ${{ !contains(github.event.inputs.skip_checks, 'coverage') }}
+        continue-on-error: true
+        run: npm run test:coverage
+
+      - name: Analyze coverage
+        id: coverage
+        if: ${{ !contains(github.event.inputs.skip_checks, 'coverage') }}
+        continue-on-error: true
+        run: |
+          node scripts/maintenance/analyze-coverage.js \
+            --format json \
+            --output .maintenance/coverage.json
+
+      - name: Run navigation check
+        id: navigation
+        if: ${{ !contains(github.event.inputs.skip_checks, 'navigation') }}
+        continue-on-error: true
+        run: |
+          node scripts/maintenance/check-navigation.js \
+            --format json \
+            --output .maintenance/navigation.json
+
+      - name: Generate maintenance dashboard
+        id: dashboard
+        continue-on-error: true
+        run: |
+          node scripts/maintenance/dashboard.js \
+            --output .maintenance \
+            --format html \
+            ${{ github.event.inputs.create_issues == 'true' && '--create-issues' || '' }}
+
+      - name: Upload maintenance reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maintenance-reports
+          path: .maintenance/
+          retention-days: 90
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## 🔧 Maintenance Dashboard Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f .maintenance/dashboard.md ]; then
+            cat .maintenance/dashboard.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Dashboard generation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment on PR (if triggered by PR)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '## 🔧 Maintenance Check Results\n\n';
+
+            if (fs.existsSync('.maintenance/dashboard.md')) {
+              const dashboard = fs.readFileSync('.maintenance/dashboard.md', 'utf8');
+              body += dashboard;
+            } else {
+              body += '⚠️ Dashboard generation failed. Check workflow logs.';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Deploy dashboard to GitHub Pages
+        if: github.ref == 'refs/heads/master' && always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .maintenance
+          destination_dir: maintenance
+          keep_files: true
+          commit_message: 'Update maintenance dashboard'
+
+  create-maintenance-pr:
+    name: Create Maintenance PR
+    runs-on: ubuntu-latest
+    needs: maintenance-dashboard
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download maintenance reports
+        uses: actions/download-artifact@v4
+        with:
+          name: maintenance-reports
+          path: .maintenance
+
+      - name: Check for critical issues
+        id: check-critical
+        run: |
+          if [ -f .maintenance/dashboard.json ]; then
+            CRITICAL_COUNT=$(jq '.summary.criticalIssues' .maintenance/dashboard.json)
+            HIGH_COUNT=$(jq '.summary.highIssues' .maintenance/dashboard.json)
+            echo "critical=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+            echo "high=$HIGH_COUNT" >> $GITHUB_OUTPUT
+
+            if [ "$CRITICAL_COUNT" -gt 0 ] || [ "$HIGH_COUNT" -gt 3 ]; then
+              echo "needs_pr=true" >> $GITHUB_OUTPUT
+            else
+              echo "needs_pr=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Create branch for updates
+        if: steps.check-critical.outputs.needs_pr == 'true'
+        run: |
+          BRANCH_NAME="maintenance/automated-$(date +%Y-%m-%d)"
+          git checkout -b $BRANCH_NAME
+
+          # Copy reports to docs
+          mkdir -p docs/maintenance-reports
+          cp .maintenance/*.md docs/maintenance-reports/ || true
+
+          # Update last check timestamp in config
+          if [ -f .maintenance-config.json ]; then
+            jq '.lastCheck = "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"' .maintenance-config.json > .maintenance-config.json.tmp
+            mv .maintenance-config.json.tmp .maintenance-config.json
+            git add .maintenance-config.json
+          fi
+
+          git add docs/maintenance-reports/ || true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: automated maintenance report $(date +%Y-%m-%d)" || true
+          git push origin $BRANCH_NAME || true
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check-critical.outputs.needs_pr == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: maintenance/automated-${{ github.run_number }}
+          title: '[Maintenance] Automated maintenance report - ${{ github.run_number }}'
+          body: |
+            ## 🔧 Automated Maintenance Report
+
+            This PR contains the latest maintenance dashboard report.
+
+            ### Summary
+            - 🔴 Critical Issues: ${{ steps.check-critical.outputs.critical }}
+            - 🟡 High Priority: ${{ steps.check-critical.outputs.high }}
+
+            ### What's Included
+            - Latest staleness report
+            - Dependency version check
+            - Documentation health check
+            - Test coverage analysis
+            - Navigation structure review
+
+            ### Next Steps
+            1. Review the maintenance reports in `docs/maintenance-reports/`
+            2. Address critical and high-priority issues
+            3. Update stale documentation
+            4. Merge this PR to track the maintenance check
+
+            ---
+            🤖 This PR was automatically generated by the maintenance workflow.
+          labels: |
+            maintenance
+            automated
+            documentation
+          assignees: ''
+          reviewers: ''
+
+  notify-on-critical:
+    name: Notify on Critical Issues
+    runs-on: ubuntu-latest
+    needs: maintenance-dashboard
+    if: always()
+
+    steps:
+      - name: Download reports
+        uses: actions/download-artifact@v4
+        with:
+          name: maintenance-reports
+          path: .maintenance
+
+      - name: Check for critical issues
+        id: check
+        run: |
+          if [ -f .maintenance/dashboard.json ]; then
+            CRITICAL=$(jq '.summary.criticalIssues' .maintenance/dashboard.json)
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "has_critical=true" >> $GITHUB_OUTPUT
+              echo "critical_count=$CRITICAL" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Create issue for critical findings
+        if: steps.check.outputs.has_critical == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = `## 🚨 Critical Maintenance Issues Detected\n\n`;
+            body += `**Critical Issues:** ${process.env.CRITICAL_COUNT}\n\n`;
+
+            if (fs.existsSync('.maintenance/dashboard.md')) {
+              const dashboard = fs.readFileSync('.maintenance/dashboard.md', 'utf8');
+              body += dashboard;
+            }
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Critical Maintenance Issues - ${new Date().toISOString().split('T')[0]}`,
+              body: body,
+              labels: ['maintenance', 'critical', 'automated']
+            });
+        env:
+          CRITICAL_COUNT: ${{ steps.check.outputs.critical_count }}
+
+  cleanup-old-reports:
+    name: Cleanup Old Reports
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Remove old maintenance reports
+        run: |
+          # Keep last 30 days of reports
+          find docs/maintenance-reports -type f -mtime +30 -delete || true
+
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/maintenance-reports/
+          git commit -m "chore: cleanup old maintenance reports" || echo "No reports to clean"
+          git push || echo "Nothing to push"

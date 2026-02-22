@@ -206,7 +206,7 @@ export function BookingDetailScreen() {
     <>
       <Stack.Screen options={headerOptions} />
       <ThemedSafeAreaView className="flex-1" edges={[]}>
-        <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
+        <ScrollView className="flex-1" contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingBottom: TAB_BAR_SAFE_PADDING }}>
           <View className="px-4 pt-4">
             <GuestInfoCard
               contactId={booking.contact_id}

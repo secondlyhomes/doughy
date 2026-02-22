@@ -162,6 +162,7 @@ export function VendorDetailScreen() {
       <ThemedSafeAreaView className="flex-1" edges={[]}>
         <ScrollView
           className="flex-1"
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={{
             paddingHorizontal: SPACING.md,
             paddingBottom: TAB_BAR_SAFE_PADDING,

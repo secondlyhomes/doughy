@@ -69,14 +69,16 @@ export async function sendTwilioMessage(opts: {
  * Send an SMS message (auto-truncates to 1500 chars).
  */
 export function sendSms(phone: string, content: string): Promise<TwilioSendResult> {
-  const body = content.length > 1500
-    ? content.slice(0, 1450) + '\n\n[Open the app for full details.]'
+  const footer = '\nReply STOP to opt out';
+  const maxLen = 1500 - footer.length;
+  const trimmed = content.length > maxLen
+    ? content.slice(0, maxLen - 50) + '\n\n[Open the app for full details.]'
     : content;
 
   return sendTwilioMessage({
     from: config.twilioPhoneNumber,
     to: phone,
-    body,
+    body: trimmed + footer,
   });
 }
 

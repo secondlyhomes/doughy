@@ -9,10 +9,10 @@
 | **Doughy Mobile App** | Active, iOS-first | Expo Dev Client, local |
 | **The Claw App** | UI complete, mock data | Local dev only |
 | **CallPilot App** | UI complete, mock data | Local dev only |
-| **OpenClaw Server** | Code complete, **NOT deployed** | `openclaw-server/` in repo |
+| **OpenClaw Server** | **Deployed** on DO droplet | `openclaw-server/` in repo, `157.245.218.123` |
 | **Supabase (Staging)** | Active, 7 schemas, 154 tables, 62 edge functions | `us-east-1` |
 | **Supabase (Production)** | Active, public schema only, ~42 tables | `us-west-2` |
-| **DigitalOcean Droplet** | **NOT provisioned** | Target: `openclaw.doughy.app` |
+| **DigitalOcean Droplet** | **Active** | `openclaw.doughy.app` (`157.245.218.123`) |
 
 ---
 
@@ -84,13 +84,15 @@
 
 ---
 
-## DigitalOcean Droplet (NOT YET PROVISIONED)
+## DigitalOcean Droplet (ACTIVE)
 
-### Planned Configuration
+### Configuration
 
 | Property | Value |
 |----------|-------|
 | OS | Ubuntu 24.04 LTS |
+| IP | `157.245.218.123` |
+| SSH | `ssh claw` (alias in `~/.ssh/config`, key: `~/.ssh/do_claw`) |
 | Domain | `openclaw.doughy.app` |
 | App Path | `/var/www/openclaw/` |
 | Log Path | `/var/log/openclaw/` |
@@ -102,67 +104,32 @@
 
 ### Deploy Scripts
 
-All scripts in `openclaw-server/deploy/` still reference `moltbot` naming and need updating:
+Scripts in `openclaw-server/deploy/`:
 
-| Script | Purpose | Needs Update |
-|--------|---------|-------------|
-| `setup.sh` | Ubuntu droplet bootstrap (Node, PM2, Nginx, Certbot) | Yes — `moltbot` → `openclaw` |
-| `nginx.conf` | Nginx reverse proxy config | Yes — `moltbot.doughy.app` → `openclaw.doughy.app` |
-| `gcloud-setup.sh` | Google Cloud Pub/Sub for Gmail | Yes — `moltbot.doughy.app` → `openclaw.doughy.app` |
-
----
-
-## Blockers for "Brief Me" (SMS → Briefing Demo)
-
-Three things must be set up before the end-to-end SMS flow works:
-
-### 1. Environment Variables on Server
-
-The server needs a `.env` file with at minimum:
-
-```
-# Required for server to start
-SUPABASE_URL=https://lqmbyobweeaigrwmvizo.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<staging service role key>
-GOOGLE_CLIENT_ID=<from GCP console>
-GOOGLE_CLIENT_SECRET=<from GCP console>
-GOOGLE_CLOUD_PROJECT_ID=<GCP project ID>
-
-# Required for The Claw features
-ANTHROPIC_API_KEY=<Anthropic API key>
-SUPABASE_ANON_KEY=<staging anon key>
-
-# Required for SMS
-TWILIO_ACCOUNT_SID=<Twilio SID>
-TWILIO_AUTH_TOKEN=<Twilio auth token>
-TWILIO_PHONE_NUMBER=<+1XXXXXXXXXX>
-
-# The Claw config
-CLAW_ENABLED=true
-CLAW_PHONE_USER_MAP={"<Dino's phone>":"<Dino's Supabase user UUID>"}
-SERVER_URL=https://openclaw.doughy.app
-```
-
-### 2. CLAW_PHONE_USER_MAP
-
-This JSON env var maps phone numbers to Supabase user UUIDs. Without it, inbound SMS messages are silently ignored (phone→user lookup returns null).
-
-Format: `{"<E.164 phone number>":"<UUID>"}`
-
-To get Dino's UUID: Query `auth.users` for the user matching the staging login email.
-
-### 3. Twilio Webhook URL
-
-Twilio must be configured to POST inbound SMS to the server:
-- **Webhook URL:** `https://openclaw.doughy.app/webhooks/sms`
-- **Method:** HTTP POST
-- Configured in Twilio Console → Phone Numbers → Active Numbers → select number → Messaging → "A MESSAGE COMES IN" webhook
-
-This requires the droplet to be provisioned, DNS configured, and SSL certificate obtained first.
+| Script | Purpose |
+|--------|---------|
+| `setup.sh` | Ubuntu droplet bootstrap (Node, PM2, Nginx, Certbot) |
+| `nginx.conf` | Nginx reverse proxy config |
+| `gcloud-setup.sh` | Google Cloud Pub/Sub for Gmail |
 
 ---
 
-## Deployment Steps (from zero to demo)
+## SMS Flow (Deployed & Working)
+
+The end-to-end SMS → Briefing flow is operational. Key configuration (on the droplet at `/var/www/openclaw/.env`):
+
+- `SUPABASE_URL`, `SUPABASE_SECRET_KEY` — staging Supabase
+- `ANTHROPIC_API_KEY` — Claude API for The Claw
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` — SMS
+- `CLAW_PHONE_USER_MAP` — JSON mapping E.164 phone → Supabase user UUID
+- `CLAW_ENABLED=true`
+- `SERVER_URL=https://openclaw.doughy.app`
+
+**Twilio webhook:** `https://openclaw.doughy.app/webhooks/sms` (HTTP POST)
+
+---
+
+## Initial Setup Steps (already completed)
 
 ### Step 1: Provision DigitalOcean Droplet
 
@@ -314,17 +281,24 @@ supabase db push --project-ref lqmbyobweeaigrwmvizo
 ### OpenClaw Server (DO Droplet)
 
 ```bash
-# Local: build
+# Local: build & upload (code only, not .env)
 cd openclaw-server
 npm run build
+rsync -avz --exclude='node_modules' --exclude='.env' dist/ claw:/var/www/openclaw/dist/
 
-# Upload
-scp -r dist/ root@<droplet-ip>:/var/www/openclaw/
+# If package.json changed (new deps):
+scp package.json package-lock.json claw:/var/www/openclaw/
+ssh claw "cd /var/www/openclaw && npm install --production"
 
-# On server: restart
-cd /var/www/openclaw
-pm2 restart openclaw
+# IMPORTANT: Always use --update-env so PM2 picks up any .env changes
+ssh claw "pm2 restart openclaw --update-env"
+
+# Verify:
+ssh claw "curl -s http://localhost:3000/health"
 ```
+
+> **SSH alias:** `claw` → `root@157.245.218.123` (key: `~/.ssh/do_claw`)
+> **Troubleshooting:** See `docs/TROUBLESHOOTING.md` "OpenClaw Server — Production Issues" section
 
 ### Mobile App (EAS)
 

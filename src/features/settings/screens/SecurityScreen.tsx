@@ -253,7 +253,7 @@ export function SecurityScreen() {
               • Enable two-factor authentication
             </Text>
             <Text className="text-sm mb-2" style={{ color: colors.foreground }}>
-              • Don't share your login credentials
+              • Don{'\''} share your login credentials
             </Text>
             <Text className="text-sm" style={{ color: colors.foreground }}>
               • Sign out from shared devices

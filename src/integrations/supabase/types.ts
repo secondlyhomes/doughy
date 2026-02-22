@@ -10465,7 +10465,6 @@ export type Database = {
         | "appointment_set"
         | "offer_made"
         | "under_contract"
-        | "due_diligence"
         | "closed"
         | "dead"
       investor_deal_type:
@@ -10946,7 +10945,6 @@ export const Constants = {
         "appointment_set",
         "offer_made",
         "under_contract",
-        "due_diligence",
         "closed",
         "dead",
       ],

@@ -140,6 +140,7 @@ export function ContactDetailScreen({ contactId }: ContactDetailScreenProps) {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + SPACING.xl }]}
+          contentInsetAdjustmentBehavior="automatic"
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl

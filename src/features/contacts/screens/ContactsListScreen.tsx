@@ -161,33 +161,36 @@ export function ContactsListScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemedSafeAreaView className="flex-1" edges={['top']}>
-        {/* Search Bar */}
-        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: SPACING.xs }}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search contacts..."
-            size="md"
-            glass={true}
-            onFilter={() => setShowFiltersSheet(true)}
-            hasActiveFilters={hasActiveFilters}
-          />
-        </View>
-
-        {/* Contacts List */}
-        {isLoading && !contacts?.length ? (
-          <View style={{ paddingHorizontal: SPACING.md }}>
-            <SkeletonList count={5} component={LeadCardSkeleton} />
+        <View style={{ flex: 1 }}>
+          {/* Search Bar — floats above content with glass blur */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: SPACING.md, paddingTop: SPACING.sm }}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search contacts..."
+              size="md"
+              glass={true}
+              onFilter={() => setShowFiltersSheet(true)}
+              hasActiveFilters={hasActiveFilters}
+            />
           </View>
-        ) : (
-          <FlatList
-            data={filteredContacts}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            contentContainerStyle={{
-              paddingHorizontal: SPACING.md,
-              paddingBottom: TAB_BAR_SAFE_PADDING,
-            }}
+
+          {/* Contacts List */}
+          {isLoading && !contacts?.length ? (
+            <View style={{ paddingHorizontal: SPACING.md, paddingTop: 64 + SPACING.md }}>
+              <SkeletonList count={5} component={LeadCardSkeleton} />
+            </View>
+          ) : (
+            <FlatList
+              data={filteredContacts}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: SPACING.md,
+                paddingTop: 64 + SPACING.md,
+                paddingBottom: TAB_BAR_SAFE_PADDING,
+              }}
             contentInsetAdjustmentBehavior="automatic"
             ItemSeparatorComponent={ItemSeparator}
             initialNumToRender={10}
@@ -215,6 +218,7 @@ export function ContactsListScreen() {
             }
           />
         )}
+        </View>
 
         {/* Floating Action Button */}
         <SimpleFAB onPress={() => setShowAddContactSheet(true)} accessibilityLabel="Add new contact" />

@@ -56,7 +56,7 @@ npm test             # jest
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `SUPABASE_URL` | Yes | Supabase REST API base URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Bypasses RLS for server queries |
+| `SUPABASE_SECRET_KEY` | Yes | Bypasses RLS for server queries |
 | `GOOGLE_CLIENT_ID` | Yes | Gmail OAuth |
 | `GOOGLE_CLIENT_SECRET` | Yes | Gmail OAuth |
 | `GOOGLE_CLOUD_PROJECT_ID` | Yes | Gmail Pub/Sub topic |
@@ -64,9 +64,12 @@ npm test             # jest
 | `TWILIO_ACCOUNT_SID` | No* | SMS sending (*required for SMS) |
 | `TWILIO_AUTH_TOKEN` | No* | Twilio auth (*required for SMS) |
 | `TWILIO_PHONE_NUMBER` | No* | Outbound SMS number (*required for SMS) |
+| `SERVER_URL` | Yes* | Public URL (e.g. `https://openclaw.doughy.app`) — *required for Twilio signature validation. Without it, ALL inbound SMS is rejected. |
 | `CLAW_PHONE_USER_MAP` | No | JSON mapping phone→user UUID |
 | `CLAW_ENABLED` | No | Enable The Claw (default: `true`) |
 | `CLAW_DEFAULT_MODEL` | No | Default Claude model (default: `claude-sonnet-4-5-20250929`) |
+| `DISCORD_BOT_TOKEN` | No* | Discord bot token (*required for Discord integration) |
+| `DISCORD_CHANNEL_ID` | No* | Discord channel for The Claw (*required for Discord) |
 
 ## Key Architecture Decisions
 

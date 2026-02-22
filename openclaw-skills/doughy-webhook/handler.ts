@@ -6,7 +6,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 // Configuration - set these via environment variables
 const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SECRET_KEY!;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!;
 
 // Default confidence threshold (can be overridden per user via settings)

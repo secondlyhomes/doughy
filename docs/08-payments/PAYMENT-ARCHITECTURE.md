@@ -185,7 +185,7 @@ CREATE POLICY "Users can view own subscriptions"
   ON subscriptions FOR SELECT
   USING (auth.uid() = user_id);
 
--- Only server can modify (via service role)
+-- Only server can modify (via secret key)
 CREATE POLICY "Server can manage subscriptions"
   ON subscriptions FOR ALL
   USING (auth.jwt()->>'role' = 'service_role');
@@ -203,7 +203,7 @@ const REVENUECAT_WEBHOOK_SECRET = Deno.env.get('REVENUECAT_WEBHOOK_SECRET')!;
 // Create Supabase client outside handler for connection reuse
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  Deno.env.get('SUPABASE_SECRET_KEY')!
 );
 
 async function verifySignature(body: string, signature: string | null): Promise<boolean> {
@@ -347,7 +347,7 @@ const response = await fetch('/api/premium-content', {
 1. **Verify signatures** - Always validate webhook signatures
 2. **Use HTTPS** - Never accept webhooks over HTTP
 3. **Idempotency** - Handle duplicate webhooks gracefully
-4. **Service role** - Use service role key for database updates
+4. **Secret key** - Use secret key for database updates
 
 ### Receipt Validation
 

@@ -81,7 +81,11 @@ export function HeaderActionMenu({ actions, iconSize = ICON_SIZES.xl }: HeaderAc
 
 const styles = StyleSheet.create({
   trigger: {
-    padding: SPACING.sm,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   list: {
     paddingBottom: SPACING.lg,

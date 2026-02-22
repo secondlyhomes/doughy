@@ -44,13 +44,10 @@
       },
       "ios": {
         "autoIncrement": true,
-        "resourceClass": "m-large",
-        "config": {
-          "usesNonExemptEncryption": false
-        }
+        "resourceClass": "m-large"
       },
       "android": {
-        "buildType": "aab",
+        "buildType": "app-bundle",
         "autoIncrement": true,
         "resourceClass": "large"
       }

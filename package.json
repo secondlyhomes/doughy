@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "npx expo start --port 8081 --go",
+    "start:claw": "npm start --prefix apps/the-claw-app -- --port 8082 --go",
+    "start:callpilot": "npm start --prefix apps/callpilot -- --port 8083 --go",
+    "start:dev": "npx expo start --port 8081 --dev-client",
+    "start:dev:claw": "npm start --prefix apps/the-claw-app -- --port 8082 --dev-client",
+    "start:dev:callpilot": "npm start --prefix apps/callpilot -- --port 8083 --dev-client",
+    "start:fresh": "npx expo start --port 8081 --clear --go",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -74,6 +80,7 @@
     "expo-secure-store": "~15.0.8",
     "expo-sharing": "~14.0.8",
     "expo-status-bar": "~3.0.9",
+    "expo-updates": "~29.0.16",
     "expo-web-browser": "~15.0.10",
     "lodash": "^4.17.21",
     "lucide-react-native": "^0.562.0",
@@ -114,5 +121,8 @@
     "react-native-worklets": "0.5.1",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
 }

@@ -1,24 +1,14 @@
 // src/features/real-estate/index.ts
 // Main entry point for the real-estate feature module
 
-// Export types
+// Export types (includes IProperty*, IBuyingCriteria, KeyPropertyValues, PROPERTY_EVENTS)
 export * from './types';
 
-// Export stores
+// Export stores (types already exported from ./types above)
 export {
   usePropertyStore,
   propertyEvents,
-  PROPERTY_EVENTS,
   useDrawerStore,
-} from './stores';
-export type {
-  IPropertyBasicInfo,
-  IPropertyRepairItem,
-  IPropertyDebtItem,
-  IPropertyFinancials,
-  IBuyingCriteria,
-  IProperty,
-  KeyPropertyValues,
 } from './stores';
 
 // Export hooks

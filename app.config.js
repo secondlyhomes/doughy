@@ -39,6 +39,7 @@ export default {
       supportsTablet: true,
       bundleIdentifier: variant.bundleId,
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         NSLocationWhenInUseUsageDescription:
           'This app uses your location to show nearby properties on the map.',
         NSCameraUsageDescription:
@@ -105,9 +106,15 @@ export default {
       'expo-web-browser',
       'expo-font',
     ],
+    updates: {
+      url: 'https://u.expo.dev/080a65e7-9a02-4c29-ac97-7ffcf3b751b6',
+    },
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
     extra: {
       eas: {
-        projectId: 'YOUR_EAS_PROJECT_ID', // Get this after running: eas init
+        projectId: '080a65e7-9a02-4c29-ac97-7ffcf3b751b6',
       },
     },
   },

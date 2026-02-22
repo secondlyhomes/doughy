@@ -165,8 +165,8 @@ supabase start
 Scripts use these environment variables (optional):
 
 ```bash
-# Supabase Service Role Key (for testing scheduled-reminders)
-export SUPABASE_SERVICE_ROLE_KEY="eyJhbGc..."
+# Supabase Secret Key (for testing scheduled-reminders)
+export SUPABASE_SECRET_KEY="sb_secret_..."
 
 # Default project ID (avoids passing as argument)
 export SUPABASE_PROJECT_ID="vpqglbaedcpeprnlnfxd"

@@ -7,7 +7,7 @@
 // This replaces the simple phone→userId lookup in handleClawSms.
 
 import { config } from '../config.js';
-import { schemaQuery, schemaInsert } from './db.js';
+import { schemaQuery, schemaInsert, rpcCall } from './db.js';
 import { handleClawMessage } from './controller.js';
 import { broadcastMessage } from './broadcast.js';
 import { callEdgeFunction } from './edge.js';
@@ -65,23 +65,106 @@ async function storeCrmMessage(params: {
   clawDraftId?: string;
 }): Promise<string | null> {
   try {
-    const msg = await schemaInsert<{ id: string }>('crm', 'messages', {
-      user_id: params.userId,
-      lead_id: params.leadId || null,
-      contact_id: params.contactId || null,
-      direction: params.direction,
-      channel: params.channel,
-      sender_type: params.senderType,
-      phone_from: params.phoneFrom || null,
-      phone_to: params.phoneTo || null,
-      body: params.body,
-      status: 'delivered',
-      claw_draft_id: params.clawDraftId || null,
+    const result = await rpcCall('insert_crm_outbound_message', {
+      p_user_id: params.userId,
+      p_lead_id: params.leadId || null,
+      p_contact_id: params.contactId || null,
+      p_direction: params.direction,
+      p_channel: params.channel,
+      p_sender_type: params.senderType,
+      p_phone_from: params.phoneFrom || null,
+      p_phone_to: params.phoneTo || null,
+      p_body: params.body,
+      p_status: 'delivered',
     });
+    const msg = (Array.isArray(result) ? result[0] : result) as { id: string };
     return msg.id;
   } catch (err) {
     console.error('[Router] Failed to store CRM message:', err);
     return null;
+  }
+}
+
+/**
+ * Store a message in schema-specific conversation/message tables for Doughy inbox.
+ * Determines schema from contactId (landlord) or leadId (investor).
+ * Non-blocking — errors are logged but don't propagate.
+ */
+async function storeSchemaMessage(params: {
+  userId: string;
+  leadId?: string;
+  contactId?: string;
+  direction: 'inbound' | 'outbound';
+  channel: string;
+  senderType: string;
+  body: string;
+}): Promise<void> {
+  const { userId, leadId, contactId, direction, channel, body } = params;
+
+  // Determine schema + entity key
+  let schema: 'investor' | 'landlord';
+  let entityKey: 'lead_id' | 'contact_id';
+  let entityId: string;
+  let sentBy: string;
+
+  if (contactId) {
+    schema = 'landlord';
+    entityKey = 'contact_id';
+    entityId = contactId;
+    sentBy = params.senderType === 'lead' || params.senderType === 'contact' ? 'contact' : params.senderType;
+  } else if (leadId) {
+    schema = 'investor';
+    entityKey = 'lead_id';
+    entityId = leadId;
+    sentBy = params.senderType === 'contact' ? 'lead' : params.senderType;
+  } else {
+    return; // No entity to link — skip
+  }
+
+  // Normalize channel to match schema enum
+  const validChannels: Record<string, Record<string, string>> = {
+    investor: { sms: 'sms', email: 'email', whatsapp: 'whatsapp', phone: 'phone' },
+    landlord: { sms: 'sms', email: 'email', whatsapp: 'whatsapp', phone: 'phone', telegram: 'telegram', imessage: 'imessage', discord: 'discord', webchat: 'webchat' },
+  };
+  const normalizedChannel = validChannels[schema][channel] || 'sms';
+
+  try {
+    // Find existing conversation for this entity + channel
+    const conversations = await schemaQuery<{ id: string }>(
+      schema,
+      'conversations',
+      `user_id=eq.${userId}&${entityKey}=eq.${entityId}&channel=eq.${normalizedChannel}&select=id&limit=1`
+    );
+
+    let conversationId: string;
+
+    if (conversations.length > 0) {
+      conversationId = conversations[0].id;
+    } else {
+      // Create new conversation
+      const conv = await schemaInsert<{ id: string }>(schema, 'conversations', {
+        user_id: userId,
+        [entityKey]: entityId,
+        channel: normalizedChannel,
+        status: 'active',
+        message_count: 0,
+      });
+      conversationId = conv.id;
+    }
+
+    // Insert message (triggers auto-update last_message_at, last_message_preview, unread_count)
+    await schemaInsert(schema, 'messages', {
+      conversation_id: conversationId,
+      direction,
+      content: body,
+      content_type: 'text',
+      sent_by: sentBy,
+    });
+
+    console.log(`[Router] Schema message stored: ${schema}.messages (conversation ${conversationId})`);
+  } catch (err) {
+    // Non-blocking — log and continue
+    console.error(`[Router] Failed to store schema message (${schema}):`, err);
   }
 }
 
@@ -101,7 +184,7 @@ async function matchSender(phone: string): Promise<{
     const contacts = await schemaQuery<ContactMatch>(
       'crm',
       'contacts',
-      `or=(phone.ilike.%${normalized}%)&select=id,first_name,last_name,phone,user_id,module&limit=1`
+      `or=(phone.ilike.*${normalized}*)&select=id,first_name,last_name,phone,user_id,module&limit=1`
     );
     if (contacts.length > 0) {
       return { contact: contacts[0], userId: contacts[0].user_id || undefined };
@@ -115,7 +198,7 @@ async function matchSender(phone: string): Promise<{
     const leads = await schemaQuery<LeadMatch>(
       'crm',
       'leads',
-      `or=(phone.ilike.%${normalized}%)&is_deleted=eq.false&select=id,name,phone,user_id,module&limit=1`
+      `or=(phone.ilike.*${normalized}*)&is_deleted=eq.false&select=id,name,phone,user_id,module&limit=1`
     );
     if (leads.length > 0) {
       return { lead: leads[0], userId: leads[0].user_id || undefined };
@@ -250,6 +333,17 @@ export async function routeInboundMessage(
         body: cleanBody,
       });
 
+      // Dual-write to schema-specific tables for Doughy inbox (non-blocking)
+      storeSchemaMessage({
+        userId: ownerId,
+        leadId: senderMatch?.lead?.id,
+        contactId: senderMatch?.contact?.id,
+        direction: 'inbound',
+        channel,
+        senderType: 'lead',
+        body: cleanBody,
+      }).catch((err) => console.error('[Router] Schema message failed:', err));
+
       const senderName = senderMatch?.contact
         ? [senderMatch.contact.first_name, senderMatch.contact.last_name].filter(Boolean).join(' ')
         : senderMatch?.lead?.name || `Unknown ${persona}`;
@@ -285,7 +379,23 @@ export async function routeInboundMessage(
   // Step 1: Check if this is a known Claw user (no prefix = owner command)
   const clawUserId = config.phoneUserMap[phoneFrom];
   if (clawUserId && UUID_RE.test(clawUserId)) {
-    // This is the user themselves — route to The Claw controller
+    // Dual-write to crm.messages so CallPilot can see the message
+    const senderMatch = await matchSender(phoneFrom);
+    if (senderMatch) {
+      storeCrmMessage({
+        userId: clawUserId,
+        leadId: senderMatch.lead?.id,
+        contactId: senderMatch.contact?.id,
+        direction: 'inbound',
+        channel,
+        senderType: 'lead',
+        phoneFrom,
+        phoneTo,
+        body: cleanBody,
+      }).catch(err => console.error('[Router] CRM dual-write failed:', err));
+    }
+
+    // Route to The Claw controller
     const response = await handleClawMessage(clawUserId, cleanBody, channel);
     return { type: 'claw_response', reply: response.message, userId: clawUserId };
   }
@@ -311,6 +421,17 @@ export async function routeInboundMessage(
       phoneTo,
       body,
     });
+
+    // Dual-write to schema-specific tables for Doughy inbox (non-blocking)
+    storeSchemaMessage({
+      userId,
+      leadId: match.lead?.id,
+      contactId: match.contact?.id,
+      direction: 'inbound',
+      channel,
+      senderType: 'lead',
+      body,
+    }).catch((err) => console.error('[Router] Schema message failed:', err));
 
     // Notify user
     await notifyLeadReply(userId, senderName, body, match.lead?.id, match.contact?.id);
@@ -353,6 +474,18 @@ export async function routeInboundMessage(
       phoneTo,
       body,
     });
+
+    // Dual-write to schema-specific tables for Doughy inbox (non-blocking)
+    if (leadId) {
+      storeSchemaMessage({
+        userId: defaultUserId,
+        leadId,
+        direction: 'inbound',
+        channel,
+        senderType: 'lead',
+        body,
+      }).catch((err) => console.error('[Router] Schema message failed:', err));
+    }
 
     // Notify
     callEdgeFunction('notification-push', {

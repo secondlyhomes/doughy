@@ -174,6 +174,36 @@ export const clawInsert = <T>(table: string, data: Record<string, unknown>) => s
 export const clawUpdate = (table: string, id: string, data: Record<string, unknown>) => schemaUpdate('claw', table, id, data);
 
 /**
+ * Atomically claim an approval by transitioning status from 'pending' to 'approved'.
+ * Uses PostgREST filtering on PATCH so only the first caller succeeds.
+ * Returns the claimed row, or null if already claimed/decided by another path.
+ */
+export async function claimApproval<T>(approvalId: string, userId: string, data: Record<string, unknown>): Promise<T | null> {
+  const response = await fetch(
+    `${config.supabaseUrl}/rest/v1/approvals?id=eq.${approvalId}&user_id=eq.${userId}&status=eq.pending`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: config.supabaseServiceKey,
+        Authorization: `Bearer ${config.supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+        'Content-Profile': 'claw',
+        'Accept-Profile': 'claw',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({ ...data, status: 'approved' }),
+    }
+  );
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    console.error(`[DB] claimApproval ${approvalId} failed: ${response.status} - ${text}`);
+    return null;
+  }
+  const rows = await response.json() as T[];
+  return rows.length > 0 ? rows[0] : null;
+}
+
+/**
  * Look up a user_id and channel_config by their channel identifier.
  * Queries claw.channel_preferences where channel_config contains the identifier.
  */

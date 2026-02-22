@@ -1,0 +1,196 @@
+# AGENTS.md
+
+> Universal AI agent instructions. Read by Claude, Cursor, Copilot, Windsurf, and other AI tools.
+
+## Project Context
+
+This is a **React Native + Expo + Supabase** mobile app blueprint for rapid production app development.
+
+**Stack:**
+- React Native (Expo SDK 54+)
+- Supabase (PostgreSQL + Auth + Storage)
+- TypeScript (strict mode)
+
+**Platform Priority:** iOS first, Android support
+
+**Key Patterns:** See `docs/patterns/` for copy-paste implementation guides
+
+---
+
+## Agent Guidelines
+
+### 1. Read Documentation First
+
+Before implementing features, **always** read relevant docs:
+- `docs/patterns/NEW-FEATURE.md` - Feature implementation guide
+- `docs/patterns/NEW-SCREEN.md` - Screen creation guide
+- `docs/patterns/SUPABASE-TABLE.md` - Database table setup
+- `docs/patterns/AI-API-CALL.md` - AI integration patterns
+
+### 2. Follow Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | PascalCase | `TaskCard.tsx` |
+| Hooks | camelCase with `use` prefix | `useTaskOperations.ts` |
+| Services | camelCase | `storage.ts`, `aiClient.ts` |
+| Types | PascalCase, export from index | `types/index.ts` |
+| Tests | `*.test.ts` in `__tests__/` | `storage.test.ts` |
+
+### 3. Use Named Exports (Not Default)
+
+```typescript
+// ✅ GOOD - Named export
+export function TaskCard({ task }: Props) { ... }
+export function useTaskOperations() { ... }
+
+// ❌ BAD - Default export
+export default function TaskCard() { ... }
+```
+
+**Why?** Better refactoring, explicit imports, easier to grep.
+
+### 4. Testing Requirements
+
+- **Unit tests:** 70% coverage baseline
+- **Critical paths (utils):** 90%+ coverage
+- **Test files:** `src/__tests__/*.test.ts`
+
+**Before committing:**
+```bash
+npm test
+npx tsc --noEmit
+```
+
+### 5. Anti-Patterns to Avoid
+
+**TypeScript:**
+- ❌ Never use `any` type - define proper interfaces
+- ❌ Never use deprecated methods (`substr` → `substring`)
+- ❌ Never skip null checks on optional values
+
+**React Native:**
+- ❌ Never store secrets in code - use `.env` with `EXPO_PUBLIC_` prefix
+- ❌ Never create components over 200 lines - split them (target 150)
+- ❌ Never skip cleanup in useEffect subscriptions
+- ❌ Never use inline styles for theming - use theme system
+
+**Supabase:**
+- ❌ Never disable RLS for convenience - always have policies
+- ❌ Never use service role key on client - use anon key
+- ❌ Never skip input validation on edge functions
+
+**Performance:**
+- ❌ Never create objects/arrays in render - use useMemo/useCallback
+- ❌ Never fetch on every render - use useEffect with deps
+- ❌ Never skip `useNativeDriver: true` for animations
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/       # Shared UI components
+├── contexts/         # React Context providers
+├── hooks/            # Custom React hooks (useXxx.ts)
+├── screens/          # Screen components (one per route)
+├── services/         # Business logic and API calls
+├── types/            # TypeScript types (export from index.ts)
+└── utils/            # Pure utility functions
+
+docs/                 # Read these for patterns and best practices
+templates/            # Config file templates
+```
+
+---
+
+## Common Commands
+
+```bash
+npm start              # Start Expo dev server
+npm test               # Run Jest tests
+npm test -- --watch    # Watch mode
+npx tsc --noEmit       # TypeScript check
+npx expo-doctor        # Check for issues
+npx expo run:ios       # Build for iOS device
+```
+
+---
+
+## Code Style Guidelines
+
+### Component Structure
+
+```tsx
+// 1. Imports (external, then internal)
+import { View, Text } from 'react-native';
+import { useAuth } from '@/hooks/useAuth';
+
+// 2. Types
+interface Props {
+  title: string;
+  onPress: () => void;
+}
+
+// 3. Component
+export function MyComponent({ title, onPress }: Props) {
+  // 4. Hooks (useState, useEffect, custom hooks)
+  const { user } = useAuth();
+
+  // 5. Event handlers
+  const handlePress = () => {
+    onPress();
+  };
+
+  // 6. Render
+  return (
+    <View>
+      <Text>{title}</Text>
+    </View>
+  );
+}
+
+// 7. Styles (if using StyleSheet)
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+});
+```
+
+### File Organization
+
+**One component per file:**
+```
+components/
+├── TaskCard/
+│   ├── TaskCard.tsx         # Component
+│   ├── TaskCard.test.tsx    # Tests
+│   └── index.ts             # Re-export
+└── index.ts                 # Barrel export
+```
+
+---
+
+## ADHD-Friendly UX Principles
+
+When building UI, follow these principles:
+1. **No negative feedback** - Only celebrate wins, never shame
+2. **Reduce cognitive load** - One action at a time
+3. **Instant feedback** - Haptics + micro-animations (200ms)
+4. **Clear hierarchy** - Large touch targets (48pt minimum)
+5. **Gentle motion** - Spring physics, not linear
+6. **Safety net** - 10-second undo for impulsive actions
+
+See `docs/05-ui-ux/DESIGN-PHILOSOPHY.md` for full guide.
+
+---
+
+## Tool-Specific Notes
+
+**Claude Code:** See `CLAUDE.md` for Claude-specific features (extended thinking, Task tool, memory system)
+
+**Cursor:** Enable `.cursorrules` in Settings → Rules for AI
+
+**GitHub Copilot:** Restart VS Code if copilot-instructions.md doesn't load
+
+**Windsurf / Cline:** Should automatically detect AGENTS.md

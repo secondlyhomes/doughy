@@ -345,10 +345,10 @@ const { data: otherDeals } = await supabase
 
 ### Admin Access (Service Role)
 
-For admin operations, use the **service role key** (bypasses RLS):
+For admin operations, use the **secret key** (bypasses RLS):
 
 ```typescript
-const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
 // Service role bypasses RLS - can access ALL data
 const { data: allDeals } = await adminClient
@@ -356,7 +356,7 @@ const { data: allDeals } = await adminClient
   .select('*');  // Returns ALL users' deals
 ```
 
-**⚠️ WARNING:** Never expose the service role key to client-side code!
+**⚠️ WARNING:** Never expose the secret key to client-side code!
 
 ---
 
@@ -476,7 +476,7 @@ if (!user) {
 SELECT id, email, role FROM profiles WHERE id = 'admin-user-id';
 -- Should return role = 'admin'
 
--- If not, update role (requires service role key):
+-- If not, update role (requires secret key):
 UPDATE profiles SET role = 'admin' WHERE id = 'admin-user-id';
 ```
 
@@ -518,15 +518,15 @@ WHERE message LIKE '%row-level security%'
 ORDER BY created_at DESC;
 ```
 
-### 5. Use Service Role Key Only Server-Side
+### 5. Use Secret Key Only Server-Side
 
 ```typescript
 // ✅ Correct - server-side only
 // In edge function or API route
-const adminClient = createClient(url, serviceRoleKey);
+const adminClient = createClient(url, secretKey);
 
 // ❌ NEVER in client code
-// import { SUPABASE_SERVICE_ROLE_KEY } from './config';  // NEVER!
+// import { SUPABASE_SECRET_KEY } from './config';  // NEVER!
 ```
 
 ---

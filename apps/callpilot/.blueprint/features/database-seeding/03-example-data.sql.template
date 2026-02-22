@@ -1,0 +1,44 @@
+-- Seed file: Example application data
+-- Add your app-specific seed data here
+
+-- Example: Tasks, posts, comments, etc.
+
+DO $$
+BEGIN
+  RAISE NOTICE 'Example data seeding placeholder';
+  RAISE NOTICE 'Add your application-specific seed data to this file';
+END $$;
+
+-- Example template:
+/*
+-- Clear existing data (local dev only)
+DO $$
+BEGIN
+  IF current_database() = 'postgres' THEN
+    TRUNCATE your_table_name CASCADE;
+  END IF;
+END $$;
+
+-- Insert example data
+INSERT INTO your_table_name (id, column1, column2, user_id, created_at) VALUES
+  (
+    '550e8400-e29b-41d4-a716-446655440200',
+    'Example Value 1',
+    'Example Value 2',
+    '550e8400-e29b-41d4-a716-446655440000', -- test@example.com
+    NOW()
+  ),
+  (
+    '550e8400-e29b-41d4-a716-446655440201',
+    'Example Value 3',
+    'Example Value 4',
+    '550e8400-e29b-41d4-a716-446655440001', -- test2@example.com
+    NOW()
+  );
+*/
+
+-- Log result
+DO $$
+BEGIN
+  RAISE NOTICE 'Example data seeding complete (or skipped if not configured)';
+END $$;

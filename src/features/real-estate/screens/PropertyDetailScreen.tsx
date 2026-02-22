@@ -193,6 +193,7 @@ export function PropertyDetailScreen() {
         <View style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={{
             paddingBottom: TAB_BAR_SAFE_PADDING,
           }}

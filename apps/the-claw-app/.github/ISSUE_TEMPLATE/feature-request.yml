@@ -1,0 +1,171 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for the Mobile App Blueprint
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new feature! Please fill out the form below.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested
+          required: true
+        - label: I have checked the documentation to confirm this feature doesn't exist
+          required: true
+        - label: This feature aligns with the project's goals (React Native + Expo + Supabase)
+          required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which category does this feature belong to?
+      options:
+        - Authentication & User Management
+        - Database & Data Management
+        - UI/UX & Components
+        - Navigation & Routing
+        - Performance & Optimization
+        - Security & Privacy
+        - Testing & Quality Assurance
+        - DevOps & Deployment
+        - Third-Party Integrations
+        - AI & Machine Learning
+        - Analytics & Monitoring
+        - Payments & Monetization
+        - Real-time Features
+        - Storage & File Management
+        - Push Notifications
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve?
+      placeholder: |
+        Example: "As a developer building a social app, I need a way to implement user blocking functionality, but the current blueprint doesn't provide guidance on this pattern."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like to see this feature implemented?
+      placeholder: |
+        Example: "Add a comprehensive example showing:
+        - Database schema for blocked users
+        - RLS policies to hide content
+        - UI components for blocking/unblocking
+        - Edge function for batch operations"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternative solutions or workarounds have you considered?
+      placeholder: |
+        Example: "I could implement this manually, but having a standardized pattern would help ensure security best practices are followed."
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact Assessment
+      description: How would this feature benefit the community?
+      options:
+        - Critical - Blocks common use cases
+        - High - Significantly improves developer experience
+        - Medium - Nice to have, improves certain workflows
+        - Low - Minor improvement or niche use case
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe 2-3 real-world scenarios where this feature would be useful
+      placeholder: |
+        1. Social media app needs user blocking
+        2. Marketplace app needs seller blocking
+        3. Community app needs member muting
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Implementation Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - Simple - Can be done in a day
+        - Moderate - Requires a few days
+        - Complex - Requires a week or more
+        - Very Complex - Major undertaking
+        - Unknown
+
+  - type: textarea
+    id: technical-details
+    attributes:
+      label: Technical Details
+      description: Any technical considerations, dependencies, or constraints?
+      placeholder: |
+        - Requires Supabase version 2.0+
+        - May need new database migration
+        - Should work with existing auth system
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to contribute to this feature?
+      options:
+        - label: I'm willing to submit a PR for this feature
+        - label: I can help with documentation
+        - label: I can help with testing
+        - label: I can provide code review
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples
+      placeholder: |
+        - Links to similar implementations
+        - Screenshots or mockups
+        - Code examples from other projects
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this feature for your project?
+      options:
+        - Urgent - Blocking current development
+        - High - Needed within a month
+        - Medium - Needed within a quarter
+        - Low - Nice to have eventually
+
+  - type: checkboxes
+    id: platform
+    attributes:
+      label: Platform
+      description: Which platforms would this feature target?
+      options:
+        - label: iOS
+        - label: Android
+        - label: Web
+        - label: All platforms

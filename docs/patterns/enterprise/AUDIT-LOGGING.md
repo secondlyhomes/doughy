@@ -51,7 +51,7 @@ CREATE POLICY "View tenant audit logs"
     )
   );
 
--- Only service role can insert (via Edge Functions)
+-- Only secret key can insert (via Edge Functions)
 CREATE POLICY "Service role inserts logs"
   ON audit_logs FOR INSERT
   WITH CHECK (auth.role() = 'service_role');
@@ -116,7 +116,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 Deno.serve(async (req) => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SECRET_KEY')!
   );
 
   // Get user from JWT

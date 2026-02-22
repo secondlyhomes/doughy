@@ -45,7 +45,7 @@ export function WeHandleToggles({
       <CardHeader className="pb-2">
         <CardTitle className="text-base">What We Handle</CardTitle>
         <Text className="text-xs" style={{ color: colors.mutedForeground }}>
-          Select what you'll cover as the buyer
+          Select what you{'\''} cover as the buyer
         </Text>
       </CardHeader>
       <CardContent>

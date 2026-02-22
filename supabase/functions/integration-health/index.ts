@@ -71,7 +71,7 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const supabaseKey = Deno.env.get('SUPABASE_SECRET_KEY');
 
   // Verify the token with Supabase Auth
   if (supabaseUrl && supabaseKey) {
@@ -115,7 +115,7 @@ serve(async (req) => {
     if (!supabaseUrl || !supabaseKey) {
       log.error("Missing required environment variables", {
         SUPABASE_URL: supabaseUrl ? "set" : "MISSING",
-        SUPABASE_SERVICE_ROLE_KEY: supabaseKey ? "set" : "MISSING",
+        SUPABASE_SECRET_KEY: supabaseKey ? "set" : "MISSING",
       });
       return addCorsHeaders(
         new Response(

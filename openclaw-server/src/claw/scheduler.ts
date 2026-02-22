@@ -6,6 +6,7 @@ import { config } from '../config.js';
 import { generateBriefingData, formatBriefing } from './briefing.js';
 import { clawInsert, clawQuery, schemaQuery } from './db.js';
 import { sendProactiveMessage } from './broadcast.js';
+import { getApiKey } from '../services/api-keys.js';
 
 /**
  * Generate and send morning briefings to all active users
@@ -44,7 +45,8 @@ export async function runMorningBriefings(): Promise<{
     try {
       // Generate briefing data
       const data = await generateBriefingData(userId);
-      const briefingText = await formatBriefing(data, config.anthropicApiKey);
+      const apiKey = await getApiKey(userId, 'anthropic');
+      const briefingText = await formatBriefing(data, apiKey, userId);
 
       // Save as system message
       await clawInsert('messages', {

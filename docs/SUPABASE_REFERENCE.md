@@ -862,7 +862,7 @@ USING (workspace_id = (SELECT workspace_id FROM profiles WHERE id = auth.uid()))
 ### Debugging RLS Issues
 
 ```sql
--- Check if RLS is blocking (run as service_role in SQL Editor)
+-- Check if RLS is blocking (run as service role in SQL Editor)
 SELECT * FROM your_table LIMIT 5;
 
 -- See all policies for a table
@@ -961,7 +961,7 @@ Supabase pauses free-tier projects after **7 days of inactivity**. A GitHub Acti
 **Required GitHub Secrets:**
 | Secret | Value | Where to find |
 |--------|-------|---------------|
-| `SUPABASE_STAGE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxbWJ5b2J3ZWVhaWdyd212aXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1ODQxMDksImV4cCI6MjA2MDE2MDEwOX0.BH_AE4GPGrUnwRlExMt6vQkX2Dqpzdg1ckn_0w4yii4` | `.env.prod` or Supabase Dashboard → Settings → API |
+| `SUPABASE_STAGE_PUBLISHABLE_KEY` | `sb_publishable_...` (get from Dashboard → Settings → API Keys) | Supabase Dashboard → Settings → API Keys |
 | `SUPABASE_PROD_ANON_KEY` | Get from Supabase Dashboard | Dashboard → Project vpqglbaedcpeprnlnfxd → Settings → API |
 
 **To add secrets:**

@@ -9,6 +9,7 @@ import { sendWhatsApp, sendSms } from './twilio.js';
 import { callEdgeFunction } from './edge.js';
 import { logCost } from './costs.js';
 import { getTrustConfig } from './trust.js';
+import { getApiKey } from '../services/api-keys.js';
 
 interface DraftSuggestion {
   id: string;
@@ -33,15 +34,20 @@ interface LeadInfo {
  * Generate a draft reply using Claude Haiku (fast, cheap).
  */
 async function generateDraftReply(
+  userId: string,
   leadName: string,
   conversationContext: string,
   triggerType: string
 ): Promise<string | null> {
-  if (!config.anthropicApiKey) return null;
+  const apiKey = await getApiKey(userId, 'anthropic');
+  if (!apiKey) {
+    console.warn('[Drafts] No Anthropic API key available — cannot generate drafts');
+    return null;
+  }
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 15_000 });
+    const client = new Anthropic({ apiKey, timeout: 15_000 });
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -84,9 +90,10 @@ export async function createDraftSuggestion(params: {
   channel?: string;
 }): Promise<DraftSuggestion | null> {
   const { userId, leadId, contactId, leadName, leadPhone, triggerType, conversationContext, channel } = params;
+  console.log('[Drafts] createDraftSuggestion called:', { userId, leadId, contactId, triggerType });
 
   // Generate the draft text
-  const draftText = await generateDraftReply(leadName, conversationContext, triggerType);
+  const draftText = await generateDraftReply(userId, leadName, conversationContext, triggerType);
   if (!draftText) {
     console.warn('[Drafts] No draft generated, skipping');
     return null;

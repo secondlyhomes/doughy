@@ -97,7 +97,7 @@ export function LandingScreen() {
               Lead Management
             </Text>
             <Text className="text-lg md:text-xl text-center mb-10 max-w-2xl" style={{ color: colors.mutedForeground }}>
-              Unlock growth potential with Doughy's intelligent platform designed exclusively for real estate investors to capture, nurture, and convert more leads.
+              Unlock growth potential with Doughy{'\''} intelligent platform designed exclusively for real estate investors to capture, nurture, and convert more leads.
             </Text>
             <View className={`${isMobile ? 'flex-col' : 'flex-row'} gap-4 items-center justify-center`}>
               <Link href={isAuthenticated ? '/(tabs)' : '/pricing'} asChild>
@@ -195,7 +195,7 @@ export function LandingScreen() {
               Trusted by Real Estate Professionals
             </Text>
             <Text className="text-lg text-center max-w-2xl" style={{ color: colors.mutedForeground }}>
-              Join hundreds of successful real estate investors who've transformed their businesses with Doughy
+              Join hundreds of successful real estate investors who{'\''}ve transformed their businesses with Doughy
             </Text>
           </View>
 
@@ -207,7 +207,7 @@ export function LandingScreen() {
                     <Star key={i} size={20} color="#eab308" fill="#eab308" />
                   ))}
                 </View>
-                <Text className="mb-4 italic" style={{ color: colors.foreground }}>"{testimonial.quote}"</Text>
+                <Text className="mb-4 italic" style={{ color: colors.foreground }}>{'"'}{testimonial.quote}{'"'}</Text>
                 <View className="flex-row items-center">
                   <View className="h-10 w-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: colors.primary + '33' }}>
                     <Text className="font-semibold" style={{ color: colors.primary }}>{testimonial.name.charAt(0)}</Text>
@@ -253,9 +253,9 @@ export function LandingScreen() {
       <View className="py-16 md:py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.card }}>
         <View className="max-w-[1200px] mx-auto">
           <View className="max-w-3xl mx-auto items-center">
-            <Text className="text-6xl mb-4" style={{ color: colors.secondary + '4D' }}>"</Text>
+            <Text className="text-6xl mb-4" style={{ color: colors.secondary + '4D' }}>{'"'}</Text>
             <Text className="text-xl md:text-2xl text-center italic mb-8" style={{ color: colors.foreground }}>
-              Doughy has completely transformed how I manage my investment leads. I've seen a 30% increase in deal closings since implementing their system.
+              Doughy has completely transformed how I manage my investment leads. I{'\''}ve seen a 30% increase in deal closings since implementing their system.
             </Text>
             <View className="h-px w-24 mb-8" style={{ backgroundColor: colors.primary }} />
             <Text className="font-medium" style={{ color: colors.foreground }}>Sarah Johnson</Text>

@@ -186,7 +186,7 @@ export function WalkthroughSummaryPlaceholder() {
           Ready to Organize
         </Text>
         <Text className="text-sm text-center px-4" style={{ color: colors.mutedForeground }}>
-          Add photos and voice memos, then tap "AI Organize" to generate an
+          Add photos and voice memos, then tap {'"'}AI Organize{'"'} to generate an
           intelligent summary of issues, questions, and scope of work.
         </Text>
       </CardContent>

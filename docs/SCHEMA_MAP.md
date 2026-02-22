@@ -43,7 +43,7 @@ Key enums used across the system — see full list in generated types. Notable o
 - `ai_mode`: training, assisted, autonomous
 - `ai_queue_status`: pending, approved, edited, rejected, expired, sent
 - `rental_booking_status`: inquiry, pending, confirmed, active, completed, cancelled
-- `investor_deal_stage`: lead, prospect, appointment_set, offer_made, under_contract, due_diligence, closed, dead
+- `investor_deal_stage`: lead, prospect, appointment_set, offer_made, under_contract, closed, dead
 - `lead_status`: active, inactive, do_not_contact, new, follow-up
 - `drip_channel`: sms, email, direct_mail, meta_dm, phone_reminder
 

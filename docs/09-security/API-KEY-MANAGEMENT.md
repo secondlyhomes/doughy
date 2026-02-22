@@ -185,7 +185,7 @@ ALTER DATABASE postgres SET log_statement = 'all';
 -- View encrypted secrets (you'll see encrypted values, not plaintext)
 SELECT id, name, description, created_at FROM vault.secrets;
 
--- ❌ This will NOT show decrypted secrets (requires service_role)
+-- ❌ This will NOT show decrypted secrets (requires secret key)
 SELECT secret FROM vault.secrets WHERE name = 'openai_api_key';
 ```
 
@@ -207,10 +207,10 @@ Secrets can **ONLY** be retrieved server-side. **NEVER** in client code.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 Deno.serve(async (req) => {
-  // Create admin client with service_role key
+  // Create admin client with secret key
   const supabaseAdmin = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!  // Server-side only
+    Deno.env.get('SUPABASE_SECRET_KEY')!  // Server-side only
   )
 
   // Retrieve decrypted secret from Vault
@@ -320,7 +320,7 @@ const stripeKey = secrets.stripe_secret_key
 
 ### RLS Policies for `vault.secrets`
 
-**Default behavior:** Only `service_role` can access `vault.secrets`.
+**Default behavior:** Only the `secret` key (service role) can access `vault.secrets`.
 
 **Verify RLS is enabled:**
 
@@ -341,7 +341,7 @@ Should show `rowsecurity = true`.
 -- Enable RLS (if not already enabled)
 ALTER TABLE vault.secrets ENABLE ROW LEVEL SECURITY;
 
--- Deny all user access (only service_role can access)
+-- Deny all user access (only secret key / service_role can access)
 CREATE POLICY "No user access to secrets"
   ON vault.secrets
   USING (false);
@@ -356,7 +356,7 @@ CREATE POLICY "Service role only"
 
 ### Edge Function Permissions
 
-Only Edge Functions with **service_role key** can access `vault.decrypted_secrets`.
+Only Edge Functions with the **secret key** can access `vault.decrypted_secrets`.
 
 **❌ Client code cannot access Vault:**
 
@@ -372,8 +372,8 @@ const { data, error } = await supabase  // Using anon key
 **✅ Only server-side code can access Vault:**
 
 ```typescript
-// ✅ This works in Edge Functions (service_role key)
-const supabaseAdmin = createClient(url, serviceRoleKey)
+// ✅ This works in Edge Functions (secret key)
+const supabaseAdmin = createClient(url, secretKey)
 const { data, error } = await supabaseAdmin
   .from('vault.decrypted_secrets')
   .select('*')
@@ -655,7 +655,7 @@ INSERT INTO vault.secrets (name, secret, description) VALUES
 ### ✅ DO
 
 - **Store ALL sensitive API keys in Vault** - Never in environment variables or code
-- **Use service_role key ONLY server-side** - Edge Functions, backend services
+- **Use secret key ONLY server-side** - Edge Functions, backend services
 - **Disable logging before inserting secrets** - Prevent secrets in logs
 - **Rotate keys every 90 days** - Minimize risk window
 - **Document which Edge Function uses which secret** - Audit trail
@@ -672,7 +672,7 @@ INSERT INTO vault.secrets (name, secret, description) VALUES
 - **Never store secrets in .env files accessible to client** - Compiled into bundle
 - **Never log API keys** - Even in server logs
 - **Never commit Vault secrets to git** - Defeats the purpose
-- **Never expose service_role key to client code** - Full database access
+- **Never expose secret key to client code** - Full database access
 - **Never use anon key to access Vault** - Will fail with permission error
 - **Never hardcode secrets in Edge Functions** - Use Vault instead
 - **Never share secrets via Slack/email** - Use secure channels (1Password, Vault)
@@ -688,7 +688,7 @@ INSERT INTO vault.secrets (name, secret, description) VALUES
 
 **Symptom:** Query fails when trying to access Vault.
 
-**Cause:** Using anon key instead of service_role key.
+**Cause:** Using anon key instead of secret key.
 
 **Solution:**
 
@@ -700,8 +700,8 @@ const { data, error } = await supabase
   .select('*')
 // Error: Permission denied
 
-// ✅ Correct: Using service_role key (server-side)
-const supabaseAdmin = createClient(url, serviceRoleKey)
+// ✅ Correct: Using secret key (server-side)
+const supabaseAdmin = createClient(url, secretKey)
 const { data, error } = await supabaseAdmin
   .from('vault.decrypted_secrets')
   .select('*')
@@ -839,7 +839,7 @@ INSERT INTO vault.secrets (name, secret) VALUES ('broken_secret', 'new-value');
 **Key Takeaways:**
 
 1. **Never store API keys in client code** - Always use Vault
-2. **Server-side only** - Edge Functions with service_role key
+2. **Server-side only** - Edge Functions with secret key
 3. **Disable logging before inserting** - Prevent secrets in logs
 4. **Rotate every 90 days** - Minimize exposure window
 5. **Cache secrets** - Optimize Edge Function performance

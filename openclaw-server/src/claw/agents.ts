@@ -5,6 +5,7 @@ import { config } from '../config.js';
 import { TOOL_REGISTRY } from './tools.js';
 import { clawQuery, clawInsert, clawUpdate } from './db.js';
 import { logClaudeCost, estimateClaudeCost } from './costs.js';
+import { getApiKey } from '../services/api-keys.js';
 import type { AgentProfile, AgentToolCall } from './types.js';
 
 /**
@@ -27,7 +28,7 @@ const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<stri
     type: 'object',
     properties: {
       limit: { type: 'number', description: 'Max results (default 20)' },
-      stage: { type: 'string', description: 'Filter by stage (e.g. "negotiation", "due_diligence")' },
+      stage: { type: 'string', description: 'Filter by stage (e.g. "negotiating", "under_contract", "offer_sent")' },
     },
   },
   read_leads: {
@@ -168,7 +169,7 @@ const TOOL_INPUT_SCHEMAS: Record<string, { type: string; properties: Record<stri
     type: 'object',
     properties: {
       deal_id: { type: 'string', description: 'Deal UUID to update' },
-      stage: { type: 'string', description: 'New stage (e.g. "due_diligence", "under_contract")' },
+      stage: { type: 'string', description: 'New stage (e.g. "analyzing", "offer_sent", "negotiating", "under_contract")' },
       next_action: { type: 'string', description: 'Next action to take' },
       next_action_due: { type: 'string', description: 'Due date (ISO format)' },
     },
@@ -293,7 +294,8 @@ export async function runAgent(options: {
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: config.anthropicApiKey, timeout: 30_000 });
+    const apiKey = await getApiKey(userId, 'anthropic');
+    const client = new Anthropic({ apiKey, timeout: 30_000 });
 
     // Build messages — uses `any` because Anthropic SDK message types are complex
     // and we dynamically push tool_result blocks into the conversation

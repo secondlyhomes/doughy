@@ -20,7 +20,7 @@ export async function logCost(
       user_id: userId,
       service,
       action,
-      cost_cents: Math.round(costCents * 100) / 100, // Fractional cents allowed
+      cost_cents: costCents,
       input_tokens: metadata?.input_tokens || 0,
       output_tokens: metadata?.output_tokens || 0,
       duration_seconds: metadata?.duration_seconds || 0,

@@ -217,7 +217,7 @@ SERVER_URL=https://openclaw.doughy.app
 
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-key
+SUPABASE_SECRET_KEY=your-secret-key
 
 # Google OAuth (Gmail)
 GOOGLE_CLIENT_ID=your-client-id

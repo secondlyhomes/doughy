@@ -962,6 +962,114 @@ The `hasNavigationHeader` option adds 44pt (standard iOS nav bar height) to the 
 
 ---
 
+## OpenClaw Server — Production Issues
+
+### SMS: Twilio Signature Validation Always Fails
+
+**Symptom:** Server logs show `[Security] Invalid Twilio signature — rejecting webhook` for every incoming SMS. Or SMS just silently gets rejected.
+
+**Root cause:** `SERVER_URL` env var missing or wrong on the droplet. The Twilio signature middleware reconstructs the webhook URL as `config.serverUrl + req.originalUrl`. Without `SERVER_URL`, it defaults to `http://localhost:3000`, which never matches what Twilio signed against (`https://openclaw.doughy.app/webhooks/sms`).
+
+**Fix:**
+```bash
+ssh claw
+# Check current value:
+grep SERVER_URL /var/www/openclaw/.env
+# If missing or wrong:
+echo 'SERVER_URL=https://openclaw.doughy.app' >> /var/www/openclaw/.env
+pm2 restart openclaw --update-env
+```
+
+**Verify:** Send a text, then `ssh claw "pm2 logs openclaw --lines 20 --nostream"` — should see `[SMS] Message from +1XXX: <text>`.
+
+**Note:** `[Security] Missing X-Twilio-Signature header` in logs is normal — that's bots/scanners, not real Twilio traffic.
+
+**Related env vars for SMS:**
+- `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_PHONE_NUMBER` — Twilio credentials
+- `CLAW_PHONE_USER_MAP` — JSON mapping E.164 phones to Supabase user UUIDs
+- `SERVER_URL` — **must** match the public URL Twilio sends webhooks to
+
+---
+
+### PostgREST: "Invalid schema" Error for Existing Schemas
+
+**Symptom:** Server logs show `PGRST106 — Invalid schema: callpilot` (or any schema) even though the schema exists and is in `pgrst.db_schemas`.
+
+**Root cause:** PostgREST caches its schema list. After adding a new schema to the exposed list, the cache must be explicitly reloaded.
+
+**Fix (via Supabase SQL editor or MCP):**
+```sql
+NOTIFY pgrst, 'reload schema';
+```
+
+If the schema was just added to `pgrst.db_schemas`:
+```sql
+NOTIFY pgrst, 'reload config';
+NOTIFY pgrst, 'reload schema';
+```
+
+**Full manual fix:**
+```sql
+ALTER ROLE authenticator SET pgrst.db_schemas = 'public, graphql_public, investor, landlord, ai, crm, integrations, claw, callpilot';
+NOTIFY pgrst, 'reload config';
+NOTIFY pgrst, 'reload schema';
+```
+
+**Current exposed schemas (Feb 2026):** `public, graphql_public, investor, landlord, ai, crm, integrations, claw, callpilot`
+
+---
+
+### Discord Bot: Messages Not Being Processed
+
+**Symptom:** Bot shows as online, can send messages, but incoming messages aren't flowing into the app.
+
+**Possible causes:**
+1. **User not linked:** Discord user ID must exist in `claw.channel_preferences` with `channel = 'discord'`. Without it, bot replies "I don't recognize your account."
+2. **Wrong channel:** Bot only responds in `DISCORD_CHANNEL_ID` or DMs. Messages in other channels are silently ignored.
+3. **v15 deprecation:** Bot uses `ready` event (should be `clientReady` for discord.js v15). Still works but generates a warning — not the cause of message issues.
+
+**Diagnosis:**
+```bash
+ssh claw "pm2 logs openclaw --lines 100 --nostream 2>&1 | grep Discord"
+```
+
+---
+
+### PM2 Not Picking Up New Environment Variables
+
+**Symptom:** After editing `.env`, server behavior doesn't change.
+
+**Root cause:** PM2 caches the env from when the process was first started.
+
+**Fix:** Always use `--update-env`:
+```bash
+pm2 restart openclaw --update-env
+```
+
+---
+
+### Supabase 502/503 in Queue Processor
+
+**Symptom:** `[Queue] processQueue error: 502 Bad gateway` or `PGRST002`.
+
+**Root cause:** Transient Supabase/Cloudflare issue. Queue runs every 5 seconds and auto-recovers.
+
+**Action:** None needed. If persistent (>10 min), check [status.supabase.com](https://status.supabase.com/).
+
+---
+
+### Server Deployment — Common Gotchas
+
+| Gotcha | What Happens | Fix |
+|--------|-------------|-----|
+| Forgot `--update-env` on pm2 restart | New env vars not picked up | `pm2 restart openclaw --update-env` |
+| Rsync'd `.env` file | Overwrote production secrets | Always exclude: `--exclude='.env'` |
+| Added npm dependency but didn't install on server | `Module not found` crash | Rsync `package.json` + `package-lock.json`, run `npm install --production` on server |
+| Forgot to build before deploying | Old code still runs | `npm run build` locally first, then rsync `dist/` |
+| Schema not exposed after migration | `PGRST106 Invalid schema` | `NOTIFY pgrst, 'reload config'; NOTIFY pgrst, 'reload schema';` |
+
+---
+
 ## References
 
 - [NativeWind Dark Mode Docs](https://www.nativewind.dev/docs/core-concepts/dark-mode)

@@ -40,9 +40,10 @@ const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 
 // Helper to create wrapper with provider
 const createWrapper = (defaultPlatform?: Platform) => {
-  return ({ children }: { children: React.ReactNode }) => (
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <PlatformProvider defaultPlatform={defaultPlatform}>{children}</PlatformProvider>
   );
+  return Wrapper;
 };
 
 // Reset mocks before each test

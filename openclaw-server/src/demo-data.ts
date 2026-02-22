@@ -472,7 +472,7 @@ function getDeal() {
   return {
     id: IDS.marcusDeal, user_id: USER_ID, workspace_id: WORKSPACE_ID,
     lead_id: IDS.marcusThompson, property_id: IDS.mapleDriveProperty,
-    status: 'active', stage: 'due_diligence',
+    status: 'active', stage: 'under_contract',
     title: 'Marcus Thompson — 8234 Maple Drive (Subject-To)',
     estimated_value: 175000, probability: 75, expected_close_date: '2026-03-15',
     next_action: 'Schedule inspection walkthrough',
@@ -577,7 +577,7 @@ function getSuggestedUpdates() {
     { id: 'a1b2c3d4-0050-4000-8000-000000000001', call_id: IDS.marcusCall, user_id: USER_ID, target_table: 'crm.leads', target_record_id: IDS.marcusThompson, field_name: 'tags', current_value: 'hot, creative_finance, inherited', suggested_value: 'hot, creative_finance, inherited, motivated_seller, tax_delinquent', confidence: 'high', source_quote: "I really want to get this done in the next 60 days... the taxes are killing me", status: 'pending' },
     { id: 'a1b2c3d4-0050-4000-8000-000000000002', call_id: IDS.marcusCall, user_id: USER_ID, target_table: 'crm.leads', target_record_id: IDS.marcusThompson, field_name: 'notes', current_value: null, suggested_value: 'Timeline: 60 days. Asking $180k flexible. Behind on taxes 2 years. Sister on deed (FL, on board). Open to subject-to + seller finance.', confidence: 'high', source_quote: null, status: 'pending' },
     { id: 'a1b2c3d4-0050-4000-8000-000000000003', call_id: IDS.marcusCall, user_id: USER_ID, target_table: 'investor.properties', target_record_id: IDS.mapleDriveProperty, field_name: 'notes', current_value: null, suggested_value: 'Roof: full replacement needed. HVAC: original 1998. Vacant 8 months. Back taxes: 2 years.', confidence: 'high', source_quote: "The roof definitely needs to be completely replaced", status: 'pending' },
-    { id: 'a1b2c3d4-0050-4000-8000-000000000004', call_id: IDS.marcusCall, user_id: USER_ID, target_table: 'investor.deals_pipeline', target_record_id: IDS.marcusDeal, field_name: 'stage', current_value: 'due_diligence', suggested_value: 'due_diligence', confidence: 'high', source_quote: null, status: 'pending' },
+    { id: 'a1b2c3d4-0050-4000-8000-000000000004', call_id: IDS.marcusCall, user_id: USER_ID, target_table: 'investor.deals_pipeline', target_record_id: IDS.marcusDeal, field_name: 'stage', current_value: 'under_contract', suggested_value: 'under_contract', confidence: 'high', source_quote: null, status: 'pending' },
     { id: 'a1b2c3d4-0050-4000-8000-000000000005', call_id: IDS.marcusCall, user_id: USER_ID, target_table: 'investor.properties', target_record_id: IDS.mapleDriveProperty, field_name: 'mortgage_info', current_value: null, suggested_value: JSON.stringify({ existing_balance: 95000, interest_rate: 3.5, type: 'subject_to', seller_finance_amount: 80000, seller_finance_rate: 5.0, seller_finance_term_years: 15 }), confidence: 'high', source_quote: "There's still about 95 thousand on the mortgage at three and a half percent", status: 'pending' },
     { id: 'a1b2c3d4-0050-4000-8000-000000000006', call_id: IDS.marcusCall, user_id: USER_ID, target_table: 'crm.leads', target_record_id: IDS.marcusThompson, field_name: 'score', current_value: '92', suggested_value: '95', confidence: 'medium', source_quote: null, status: 'pending' },
   ];

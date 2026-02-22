@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Pre-commit hook for mobile-app-blueprint
+# Runs linting, formatting, and type checking on staged files
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged
+npx --no-install lint-staged
+
+# TypeScript type check (full project, not just staged files)
+echo "🔷 Type checking..."
+npx tsc --noEmit
+
+# Optional: Run tests for changed files (commented out by default for speed)
+# Uncomment if you want tests in pre-commit:
+# echo "🧪 Running tests..."
+# npm test -- --bail --findRelatedTests --passWithNoTests
+
+echo "✅ Pre-commit checks passed!"

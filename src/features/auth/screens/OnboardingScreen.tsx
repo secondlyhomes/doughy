@@ -168,7 +168,7 @@ export function OnboardingScreen() {
                 <Sparkles size={ICON_SIZES['2xl']} color={colors.info} />
               </View>
               <Text className="text-xl font-semibold text-center" style={{ color: colors.foreground }}>
-                Let's personalize your experience
+                Let{'\''} personalize your experience
               </Text>
               <Text className="text-center mt-2" style={{ color: colors.mutedForeground }}>
                 Answer a few quick questions to help us serve you better

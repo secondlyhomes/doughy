@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -c:*)",
+      "Bash(git push:*)",
+      "Bash(tree:*)",
+      "Read(//c/Users/Dino/.claude/projects/**)",
+      "Bash(wc:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(npx expo install:*)",
+      "Bash(node -e:*)",
+      "Bash(npm view:*)",
+      "Bash(npm info:*)",
+      "Bash(npx expo start:*)",
+      "Bash(npm ls:*)",
+      "Bash(test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(findstr:*)",
+      "Bash(npm pack:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:oss.callstack.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git clone:*)",
+      "Bash(cat:*)",
+      "Bash(npx eas-cli:*)"
+    ]
+  }
+}

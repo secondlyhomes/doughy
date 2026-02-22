@@ -11,7 +11,7 @@ EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_vMs0P31fv8Vn2TsH0MmvqA_vUMPD
 
 Legacy anon key (also works, many LLMs are trained on this format):
 ```env
-EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxbWJ5b2J3ZWVhaWdyd212aXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1ODQxMDksImV4cCI6MjA2MDE2MDEwOX0.BH_AE4GPGrUnwRlExMt6vQkX2Dqpzdg1ckn_0w4yii4
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-publishable-key
 ```
 
 The Claw server URL:
