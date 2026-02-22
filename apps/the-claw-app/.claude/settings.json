@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(winget install:*)",
-      "WebFetch(domain:www.builder.io)"
-    ]
-  }
-}

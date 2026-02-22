@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Validate conventional commit format
-node scripts/validate-commit-msg.js "$1"

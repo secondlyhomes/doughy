@@ -1,8 +1,0 @@
-{
-  "scripts": {
-    "db:reset": "supabase db reset",
-    "db:seed": "supabase db reset --db-only",
-    "db:migrate": "supabase migration up",
-    "db:generate": "supabase gen types typescript --local > src/types/database.ts"
-  }
-}
