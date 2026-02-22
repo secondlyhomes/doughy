@@ -15,7 +15,7 @@ export interface OverviewTabProps {
   propertyId: string;
   maintenanceCount: number;
   vendorCount: number;
-  nextTurnover: { id: string; checkout_date: string } | undefined;
+  nextTurnover: string | undefined;
   bookingsCount: number;
   isLoadingHubCounts: boolean;
   onOpenMap: () => void;

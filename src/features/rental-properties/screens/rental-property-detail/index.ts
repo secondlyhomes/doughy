@@ -11,3 +11,7 @@ export { OverviewTab, type OverviewTabProps } from './OverviewTab';
 export { FinancialsTab, type FinancialsTabProps } from './FinancialsTab';
 export { ListingsTab, type ListingsTabProps } from './ListingsTab';
 export { StatusBottomSheet, type StatusBottomSheetProps } from './StatusBottomSheet';
+export { usePropertyDetailHeader } from './usePropertyDetailHeader';
+export { usePropertyDetailActions } from './usePropertyDetailActions';
+export { type TabKey, TAB_LABELS } from './detail-types';
+export { PropertyTabContent, type PropertyTabContentProps } from './PropertyTabContent';
