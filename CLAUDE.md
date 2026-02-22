@@ -37,7 +37,6 @@ Read the relevant doc before making changes in these areas:
 
 - The `claw` schema EXISTS in staging with 5 tables: `agent_profiles`, `tasks`, `agent_runs`, `approvals`, `messages`
 - 3 seeded agent profiles: master-controller (Haiku), lead-ops (Sonnet, read-only), draft-specialist (Sonnet, requires approval)
-- The 93 `db.investor.*` / `db.landlord.*` helpers in `supabase.ts` are **dead code** (0 imports) — use `src/lib/rpc/` instead
 - OpenClaw server uses raw `fetch()` with service role key, NOT `@supabase/supabase-js` — see `docs/DECISIONS.md` #3
 - ALWAYS query the actual Supabase database via MCP tools to verify table/column existence — NEVER rely on grepping local files alone
 
@@ -62,7 +61,7 @@ src/
 ├── services/          # Business logic & API calls
 ├── lib/               # Supabase client, RPC layer, utilities
 │   ├── rpc/           # Domain-specific query functions + mappers (USE THESE for DB access)
-│   ├── supabase.ts    # DB client — db.investor.*/db.landlord.* are DEAD CODE, ignore them
+│   ├── supabase.ts    # DB client + auth storage adapter
 │   └── ai/            # AI assistant, PatchSets, job system
 ├── integrations/      # Supabase generated types
 ├── contexts/          # React Context providers (Theme, Auth, Error, etc.)
@@ -109,7 +108,7 @@ supabase/              # Migrations and edge functions
 - **Colors:** Always via `useThemeColors()` hook, never hardcode hex values
 - **Features:** Self-contained modules with barrel exports (`index.ts`)
 - **DB queries:** Use `src/lib/rpc/` layer with mappers, not raw Supabase calls
-- **Schemas:** `db.investor.*`, `db.landlord.*`, `supabase.schema('crm')`, etc.
+- **Schemas:** Access via `src/lib/rpc/` layer, or `supabase.schema('crm')` for direct queries
 
 ## Supabase
 
@@ -133,7 +132,7 @@ supabase/              # Migrations and edge functions
 | Edge functions | `@supabase/supabase-js` with service role | Varies per function |
 | Mobile DB queries | `src/lib/rpc/` functions (e.g., `getDealsWithLead()`) | Via RLS |
 
-**DO NOT** use `db.investor.*` or `db.landlord.*` from `supabase.ts` — they are dead code with 0 imports.
+**Always** use `src/lib/rpc/` functions for DB access, not raw Supabase calls.
 
 ## Project Rules
 
