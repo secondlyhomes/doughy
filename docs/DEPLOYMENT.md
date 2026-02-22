@@ -9,10 +9,11 @@
 | **Doughy Mobile App** | Active, iOS-first | `apps/doughy/`, Expo Dev Client |
 | **Bouncer App** | UI complete, wiring to OpenClaw API | `apps/bouncer/`, local dev |
 | **CallPilot App** | UI complete, mock data | `apps/callpilot/`, local dev |
-| **Custom OpenClaw Server** | **Deployed** on DO droplet (legacy) | `openclaw-server/` + `legacy/custom-claw/` |
-| **OpenClaw Platform** | Migration in progress | `server/openclaw/` |
-| **Webhook Bridge** | Scaffold created | `server/webhook-bridge/` |
-| **Supabase MCP Server** | Scaffold created | `server/tools/` |
+| **Custom OpenClaw Server** | Running (legacy, port 3000) | `legacy/custom-claw/` |
+| **OpenClaw Platform** | **LIVE** v2026.2.21-2 (gateway, 6 agents, cron) | `server/openclaw/` |
+| **Webhook Bridge** | **Deployed** (port 3001, PM2) | `server/webhook-bridge/` |
+| **Supabase MCP Server** | **Deployed** (23 tools, CLI wrapper) | `server/tools/` |
+| **Queue Processor** | **Deployed** (PM2, 4 action handlers) | `server/queue-processor/` |
 | **Supabase (Staging)** | Active, 9 schemas, 170 tables, 62 edge functions | `us-east-1` |
 | **Supabase (Production)** | Active, public schema only, ~42 tables | `us-west-2` |
 | **DigitalOcean Droplet** | **Active** | `openclaw.doughy.app` (`157.245.218.123`) |
@@ -94,7 +95,7 @@
 | Property | Value |
 |----------|-------|
 | OS | Ubuntu 24.04 LTS |
-| Specs | 4GB RAM / 2 vCPU |
+| Specs | 1GB RAM / 2 vCPU (tight but stable at ~760MB used) |
 | IP | `157.245.218.123` |
 | SSH | `ssh claw` (alias in `~/.ssh/config`, key: `~/.ssh/do_claw`) |
 | Domain | `openclaw.doughy.app` |
@@ -106,18 +107,19 @@
 | SSL | Let's Encrypt via Certbot |
 | Port | 3000 (custom server), 443 (public) |
 
-### Services Running During Migration
+### Running Services
 
-| Service | Port | RAM (est.) | Status |
-|---------|------|------------|--------|
-| Custom Express server | 3000 | ~104MB | Active (legacy) |
-| OpenClaw gateway | 18789 | ~200-400MB | Pending deployment |
-| Webhook bridge | 3001 | ~50MB | Pending |
-| LiteLLM proxy | 4000 | ~100-200MB | Pending |
-| Squid proxy | 3128 | ~50MB | Pending |
-| Queue processor | -- | ~30MB | Pending |
+| Service | Port | Process | Status |
+|---------|------|---------|--------|
+| Custom Express server | 3000 | PM2 cluster | Active (legacy) |
+| OpenClaw gateway | 18789 (loopback) | systemd | **LIVE** v2026.2.21-2 |
+| Webhook bridge | 3001 | PM2 fork | **LIVE** |
+| Queue processor | -- | PM2 fork | **LIVE** |
+| LiteLLM proxy | 4000 (localhost) | systemd | **LIVE** (4 Anthropic models) |
+| Squid proxy | 3128 (localhost) | systemd | **LIVE** (deny-by-default) |
+| Tailscale | -- | systemd | Installed (needs `tailscale up --ssh`) |
 
-Total estimated: ~600-800MB. The 4GB droplet handles this comfortably.
+Total RAM usage: ~760MB of 1GB. Stable but tight — no room for memory leaks.
 
 ### Tailscale VPN (Required for OpenClaw)
 
@@ -351,3 +353,73 @@ eas submit --platform ios
 - **Nginx logs:** `/var/log/nginx/openclaw.access.log`, `/var/log/nginx/openclaw.error.log`
 - **Supabase logs:** `get_logs` MCP tool (last 24 hours, by service type)
 - **Security events:** `ai.openclaw_security_events` table (logged by `logSecurityEvent()`)
+
+---
+
+## Next Steps (User Action Required)
+
+### WhatsApp Channel Setup
+
+OpenClaw supports native WhatsApp via Baileys (unofficial WhatsApp Web protocol). Config is ready to add to `openclaw.json`:
+
+```json
+// Add to channels section of server/openclaw/openclaw.json
+"whatsapp": {
+  "enabled": true,
+  "dmPolicy": "allowlist",
+  "allowFrom": ["YOUR_PHONE_NUMBER_HERE"]
+}
+```
+
+**Steps:**
+1. Decide which phone number to use for WhatsApp (recommend a dedicated number, not personal)
+2. Update `allowFrom` in the config above with your number
+3. Deploy config: `./deploy.sh config`
+4. SSH to server: `ssh claw`
+5. Run: `openclaw channels login whatsapp` and scan QR code with your phone
+6. Test by sending a message from your WhatsApp
+
+**Gotchas:**
+- Uses Baileys (unofficial WhatsApp Web protocol) — works but technically violates WhatsApp ToS
+- Phone must stay online; disconnects after ~14 days of phone being offline
+- Session can corrupt on unclean shutdown (#3942) — may need re-pairing
+- Credentials stored at `~/.openclaw/credentials/whatsapp-creds.json` (cleartext)
+- Recommend a dedicated phone number, not personal
+
+### Cost Optimization (Dispatch Routing)
+
+**Current state:** Dispatch routes on Claude Haiku 4.5 ($0.80/$4.00 per MTok)
+**Target:** Groq Llama 3.1 8B ($0.05/$0.08 per MTok) = **93% savings on routing**
+
+**Steps:**
+1. Sign up at https://console.groq.com (free tier available)
+2. Sign up at https://aistudio.google.com (free tier available)
+3. SSH to server: `ssh claw`
+4. Add keys to `/opt/litellm/.env`:
+   ```
+   GROQ_API_KEY=gsk_...
+   GOOGLE_AI_API_KEY=AIza...
+   ```
+5. Restart LiteLLM: `systemctl restart litellm`
+6. Update Dispatch model in `server/openclaw/openclaw.json`:
+   ```json
+   "model": {
+     "primary": "litellm/groq/llama-3.1-8b-instant",
+     "fallbacks": ["litellm/anthropic/claude-haiku-4-5-20251001"]
+   }
+   ```
+7. Deploy config: `./deploy.sh config`
+8. Restart OpenClaw gateway
+
+**Additional optimizations (no keys needed):**
+- Anthropic prompt caching for SOUL.md + TOOLS.md (90% cache hit savings)
+- LiteLLM per-agent budget tracking via tags
+- System prompt compression (20-30% token reduction)
+
+**Cost comparison table:**
+| Model | Input/MTok | Output/MTok | Use Case |
+|-------|-----------|------------|----------|
+| Groq Llama 3.1 8B | $0.05 | $0.08 | Dispatch routing (target) |
+| Gemini Flash-Lite | $0.075 | $0.30 | Heartbeats, simple tasks |
+| Claude Haiku 4.5 | $0.80 | $4.00 | Current dispatch (expensive for routing) |
+| Claude Sonnet 4.6 | $3.00 | $15.00 | Specialist agents (appropriate) |

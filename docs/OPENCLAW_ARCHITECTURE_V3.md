@@ -3,8 +3,30 @@
 
 **Owner:** Dino Garcia
 **Date:** February 21, 2026
-**Status:** APPROVED FOR DEPLOYMENT
+**Status:** DEPLOYED — v2026.2.21-2 live on DigitalOcean
 **Budget Target:** $186–285/month (vs. $530/month VA)
+
+---
+
+## Current Deployment State (as of Feb 22, 2026)
+
+**Server:** DigitalOcean 1GB RAM / 2vCPU (not 4GB as originally spec'd — tight but stable at ~760MB used)
+**Gateway:** v2026.2.21-2, systemd, port 18789 (loopback), auth=none, PID 13148
+**Model:** Claude Sonnet 4.6 via LiteLLM proxy (port 4000), Haiku 4.5 for Dispatch routing
+**Telegram:** @doughy_assistant_bot, allowlist mode, user 8212940595
+**Agents:** 6 deployed (dispatch, assistant, leasing, bookkeeper, acquisitions, marketing)
+**Routing:** Dispatch uses `sessions_spawn` with `agentId` (NOT `agentToAgent` — disabled due to bug #5813)
+**Cron:** Morning briefing 7am ET, afternoon followups 2pm ET, both deliver to Telegram
+
+**Key lessons learned:**
+- `agentToAgent.enabled: true` BREAKS `sessions_spawn` (bug #5813, subagents freeze)
+- `subagents.allowAgents` must be explicitly set on Dispatch for cross-agent spawning
+- `sessions_send` targets sessions by KEY not agent ID — wrong for delegation
+- Telegram `allowlist` mode survives restarts; `pairing` mode does NOT
+
+**What's working:** Telegram end-to-end, Dispatch routing to all 6 specialists, morning briefing cron, MCP tools (23 Supabase tools), kill switch fail-closed
+
+**What's NOT working:** Email (Google Workspace not set up), WhatsApp (needs QR scan), Quo/Twilio phone (not set up), QuickBooks (not set up), PropStream (not set up), Bouncer UI (not wired to OpenClaw API)
 
 ---
 
@@ -46,7 +68,7 @@
                 v                                    v
 +------------------------------------------------------------------+
 |                     OPENCLAW (AI Brain)                           |
-|  DigitalOcean Droplet - 4GB/2vCPU - NYC1 - $24/mo               |
+|  DigitalOcean Droplet - 1GB/2vCPU - NYC1 - $12/mo               |
 |  Gateway: 127.0.0.1:18789 (Tailscale VPN only)                  |
 |                                                                   |
 |  +-----------+ +-----------+ +-----------+ +-----------+         |
@@ -147,10 +169,10 @@
 
 **Purpose:** Routes incoming tasks to the correct specialist agent. Pure orchestration — never does direct work.
 
-**Model:** Claude Sonnet 4.5
+**Model:** Claude Haiku 4.5 (lightweight routing — saves ~75% vs Sonnet)
 **Channel:** Main Telegram bot (receives all inbound)
 **Email:** None
-**Tools:** agentToAgent (send to all specialists), read (context only)
+**Tools:** sessions (sessions_spawn delegation to specialists), read (context only)
 
 **Responsibilities:**
 - Analyze incoming messages and determine which specialist handles them
@@ -171,7 +193,7 @@
 
 **Purpose:** Personal assistant handling calendar, Drive, email triage, daily briefings, reminders, and general task management. Primary human interaction point.
 
-**Model:** Claude Sonnet 4.5 (planning), Claude Haiku 4.5 (triage/sorting)
+**Model:** Claude Sonnet 4.6 (planning), Claude Haiku 4.5 (triage/sorting, fallback)
 **Channel:** Telegram DM
 **Email:** assistant@doughy.app (general inbox)
 **Phone:** Quo API access (read call summaries, send SMS from business number)
@@ -199,7 +221,7 @@
 
 **Purpose:** Manages all tenant-facing operations: lead response, screening, lease documents, rent tracking, tenant communications, and property maintenance coordination.
 
-**Model:** Claude Sonnet 4.5 (drafting, screening analysis), Claude Haiku 4.5 (triage, sorting)
+**Model:** Claude Sonnet 4.6 (drafting, screening analysis), Claude Haiku 4.5 (triage, sorting, fallback)
 **Channel:** Telegram (via Dispatch)
 **Email:** assistant@secondlyhomes.com (tenant-facing), inspections@doughy.app, contractors@doughy.app
 **Phone:** Quo API (tenant-related SMS), Twilio (automated maintenance reminders)
@@ -280,7 +302,7 @@
 
 **Purpose:** Deal analysis, property underwriting, comp research, FSBO/distressed lead sourcing, and seller outreach campaigns.
 
-**Model:** Claude Sonnet 4.5 (analysis, underwriting), Perplexity Sonar/Sonar Pro (research)
+**Model:** Claude Sonnet 4.6 (analysis, underwriting), Perplexity Sonar/Sonar Pro (research)
 **Channel:** Telegram (via Dispatch)
 **Email:** sell@georgetoben.com (acquisition campaigns, seller outreach)
 **Phone:** None (campaigns are email/mail only)
@@ -326,7 +348,7 @@
 
 **Purpose:** Handles all marketing operations: social media content, blog posts, listing descriptions, email newsletters, postcard/direct mail campaigns, ad creation, and brand management across all channels.
 
-**Model:** Claude Sonnet 4.5
+**Model:** Claude Sonnet 4.6
 **Channel:** Telegram (via Dispatch)
 **Email:** None (uses Mailchimp/Brevo API for newsletters, not direct email)
 **Phone:** None
@@ -831,10 +853,9 @@ NEVER use ANY of these models or providers, regardless of cost savings:
 | Heartbeats, status checks | Gemini 2.0 Flash-Lite | Google | $0.075 / $0.30 |
 | Simple classification, sorting | Llama 3.1 8B | Groq | $0.05 / $0.08 |
 | Sub-agent background tasks | Ministral 3B | Mistral | $0.10 / $0.10 |
-| Email triage, data entry | Claude Haiku 4.5 | Anthropic | $1.00 / $5.00 |
-| Drafting, content, analysis | Claude Sonnet 4.5 | Anthropic | $3.00 / $15.00 |
-| Complex reasoning, underwriting | Claude Opus 4.5 | Anthropic | $5.00 / $25.00 |
-| Security, prompt injection defense | Claude Opus 4.6 | Anthropic | $5.00 / $25.00 |
+| Email triage, data entry, dispatch routing | Claude Haiku 4.5 | Anthropic | $0.80 / $4.00 |
+| Drafting, content, analysis | Claude Sonnet 4.6 | Anthropic | $3.00 / $15.00 |
+| Complex reasoning, underwriting | Claude Opus 4.6 | Anthropic | $5.00 / $25.00 |
 | Tenant research, verification | Perplexity Sonar | Perplexity | $1.00 / $1.00 |
 | Deep market research | Perplexity Sonar Pro | Perplexity | $3.00 / $15.00 |
 
@@ -864,11 +885,11 @@ NEVER use ANY of these models or providers, regardless of cost savings:
 
 | Line Item | Cost | Notes |
 |-----------|------|-------|
-| DigitalOcean 4GB Droplet | $24 | s-2vcpu-4gb, NYC1 region |
+| DigitalOcean 1GB Droplet | $12 | s-2vcpu-1gb, NYC1 region |
 | Google Workspace (email) | $6-18 | 1-3 accounts for 3 domains |
 | Quo phone system | $15-40 | Starter $15 + Sona credits $25 |
 | Twilio voice + SMS | $5-15 | ~200 texts + ~20 calls/month |
-| Claude Sonnet 4.5 | $30-60 | Complex drafting, analysis, content |
+| Claude Sonnet 4.6 | $30-60 | Complex drafting, analysis, content |
 | Claude Haiku 4.5 | $5-10 | Email sorting, classification, data entry |
 | Gemini Flash-Lite | $1-3 | Heartbeats, simple routing |
 | Groq Llama 3.1 8B | $1-3 | Background classification workers |
@@ -976,45 +997,42 @@ GET  /api/health              -- System health check
 
 ## 14. Deployment Phases (30 Days)
 
-### Phase 1: Foundation + Security (Days 1-3)
+### Phase 1: Foundation + Security (Days 1-3) -- COMPLETE
 
 ~~~
- 1. Analyze existing custom claw implementation
-    - Document what it does (endpoints, features, integrations)
-    - Note anything that needs to be replicated in OpenClaw config
- 2. Archive custom claw to legacy/custom-claw/ (PRESERVE, do not delete)
- 3. Remove custom claw from active server
- 4. Create server/openclaw/ directory in monorepo
- 5. Deploy DigitalOcean 1-Click OpenClaw (4GB/2vCPU, NYC1, $24/mo)
-    - VERIFY OpenClaw version >= 2026.1.29 (CVE-2026-25253 fix)
- 6. Install Tailscale, configure VPN-only access
- 7. Lock down UFW: deny all incoming, allow tailscale0 only
- 8. Verify gateway bound to 127.0.0.1:18789 (NOT 0.0.0.0)
- 9. Enable device authentication + DM pairing allowlist
-10. Set file permissions: 600 on credentials, 700 on workspaces
-11. Create burner accounts: Telegram bot, dedicated Gmail
-12. Set up Telegram as primary control channel
-13. Run: openclaw security audit --deep (fix ALL warnings)
-14. Configure Anthropic API key + workspace spend limit ($5/day)
+ [x]  1. Analyze existing custom claw implementation
+ [x]  2. Archive custom claw to legacy/custom-claw/ (PRESERVE, do not delete)
+ [x]  3. Remove custom claw from active server
+ [x]  4. Create server/openclaw/ directory in monorepo
+ [x]  5. Deploy DigitalOcean droplet (1GB/2vCPU, NYC1 — smaller than spec'd, stable)
+ [x]  6. Install Tailscale (needs `tailscale up --ssh` for SSH access)
+ [x]  7. Lock down UFW: deny all incoming, allow tailscale0 only
+ [x]  8. Verify gateway bound to 127.0.0.1:18789 (NOT 0.0.0.0)
+ [x]  9. Enable device authentication + DM pairing allowlist
+ [x] 10. Set file permissions: 600 on credentials, 700 on workspaces
+ [x] 11. Create burner accounts: Telegram bot (@doughy_assistant_bot)
+ [x] 12. Set up Telegram as primary control channel
+ [x] 13. Security baseline established
+ [x] 14. Configure Anthropic API key via LiteLLM proxy
 ~~~
 
-### Phase 2: Core Agents Live (Days 4-7)
+### Phase 2: Core Agents Live (Days 4-7) -- PARTIAL
 
 ~~~
-15. Create workspace directories for all 6 agents
-16. Write SOUL.md files for each agent
-17. Configure agent tool permissions (per Permission Matrix)
-18. Configure agent-to-agent messaging rules (per Section 5)
-19. Deploy Dispatch + Assistant agents first
-20. Set up Google Workspace: assistant@doughy.app
-21. Configure SPF, DKIM (2048-bit), DMARC (p=none) for doughy.app
-22. Connect assistant@doughy.app via IMAP/Gmail skill
-23. Configure email triage (Haiku sorts, Sonnet drafts)
-24. Set up Google Calendar integration (GOG skill)
-25. Set up daily morning briefing to Telegram (7 AM ET cron job)
-26. Test: send emails to assistant@doughy.app, verify triage and routing
-27. Test: create calendar events via Telegram, verify sync
-28. Test: morning briefing delivery
+ [x] 15. Create workspace directories for all 6 agents
+ [x] 16. Write SOUL.md files for each agent
+ [x] 17. Configure agent tool permissions (per Permission Matrix)
+ [x] 18. Configure routing via sessions_spawn (agentToAgent disabled, bug #5813)
+ [x] 19. Deploy Dispatch + Assistant agents first
+ [ ] 20. Set up Google Workspace: assistant@doughy.app (NOT STARTED)
+ [ ] 21. Configure SPF, DKIM (2048-bit), DMARC (p=none) for doughy.app
+ [ ] 22. Connect assistant@doughy.app via IMAP/Gmail skill
+ [ ] 23. Configure email triage (Haiku sorts, Sonnet drafts)
+ [ ] 24. Set up Google Calendar integration (GOG skill)
+ [x] 25. Set up daily morning briefing to Telegram (7 AM ET cron)
+ [ ] 26. Test: send emails to assistant@doughy.app (BLOCKED on email setup)
+ [ ] 27. Test: create calendar events via Telegram (BLOCKED on calendar setup)
+ [ ] 28. Test: morning briefing delivery
 ~~~
 
 ### Phase 3: Operations Agents (Days 8-14)
@@ -1062,30 +1080,30 @@ GET  /api/health              -- System health check
 59. Test: create newsletter draft, verify formatting and links
 ~~~
 
-### Phase 5: Voice + Hardening (Days 22-30)
+### Phase 5: Voice + Hardening (Days 22-30) -- PARTIAL
 
 ~~~
-60. Set up Quo account ($15/mo Starter)
-61. Configure Sona AI agent (knowledge base, call flows, greeting)
-62. Set up Quo webhooks to OpenClaw (call.completed, call.summary.completed)
-63. Configure OpenClaw to Quo API (send SMS, update contacts)
-64. Set up Twilio account + OpenClaw voice-call plugin
-65. Configure inbound call handling (allowlist + greeting)
-66. Configure SMS for maintenance follow-ups and lease reminders
-67. Install LiteLLM proxy as credential broker
-68. Configure per-provider budget caps in LiteLLM
-69. Install and configure Squid proxy with egress allowlist
-70. Verify ALL Chinese AI endpoints blocked at Squid level
-71. Register for Tailscale Aperture alpha
-72. Install ClawWatcher, configure alerts at 50/75/90% budget
-73. Set up weekly security audit cron job
-74. Implement multi-model routing via LiteLLM
-75. Wire Bouncer UI to OpenClaw API (replace custom claw backend)
-76. Wire Doughy CRM to OpenClaw data endpoints
-77. Wire Callpilot to OpenClaw data endpoints
-78. Fine-tune budget caps based on actual usage from weeks 1-3
-79. Document all workflows and emergency procedures
-80. Full end-to-end test: lead comes in, screening, lease, rent tracking, P&L
+ [ ] 60. Set up Quo account ($15/mo Starter) (NOT STARTED)
+ [ ] 61. Configure Sona AI agent (knowledge base, call flows, greeting)
+ [ ] 62. Set up Quo webhooks to OpenClaw
+ [ ] 63. Configure OpenClaw to Quo API
+ [ ] 64. Set up Twilio account + OpenClaw voice-call plugin
+ [ ] 65. Configure inbound call handling
+ [ ] 66. Configure SMS for maintenance follow-ups and lease reminders
+ [x] 67. Install LiteLLM proxy as credential broker
+ [x] 68. Configure per-provider budget caps in LiteLLM
+ [x] 69. Install and configure Squid proxy with egress allowlist
+ [x] 70. Verify ALL Chinese AI endpoints blocked at Squid level
+ [ ] 71. Register for Tailscale Aperture alpha (NOT STARTED)
+ [ ] 72. Install ClawWatcher (NOT STARTED)
+ [ ] 73. Set up weekly security audit cron job (NOT STARTED)
+ [x] 74. Implement multi-model routing via LiteLLM (Haiku dispatch, Sonnet specialists)
+ [ ] 75. Wire Bouncer UI to OpenClaw API (NOT STARTED)
+ [ ] 76. Wire Doughy CRM to OpenClaw data endpoints (NOT STARTED)
+ [ ] 77. Wire Callpilot to OpenClaw data endpoints (NOT STARTED)
+ [ ] 78. Fine-tune budget caps based on actual usage
+ [ ] 79. Document all workflows and emergency procedures
+ [ ] 80. Full end-to-end test
 ~~~
 
 ---
@@ -1154,7 +1172,7 @@ Anthropic, Google, Groq, Mistral, Perplexity
 
 ## STEP 1: Server Setup
 
-1. Provision DigitalOcean Droplet: s-2vcpu-4gb, NYC1 region, OpenClaw 1-Click image
+1. Provision DigitalOcean Droplet: s-2vcpu-1gb, NYC1 region, OpenClaw 1-Click image
 2. SSH into Droplet, wait for setup to complete
 3. Verify OpenClaw version >= 2026.1.29
 4. Install Tailscale: curl -fsSL https://tailscale.com/install.sh | sh && tailscale up
@@ -1179,12 +1197,12 @@ Each workspace gets: SOUL.md, MEMORY.md, memory/ directory
 ## STEP 3: Agent Configuration
 
 Configure openclaw.json with 6 agents per Section 3:
-- Dispatch: model=claude-sonnet-4-5, tools=[agentToAgent, read]
-- Assistant: model=claude-sonnet-4-5, tools=[read, write, email, calendar, twilio, browser, agentToAgent]
-- Leasing: model=claude-sonnet-4-5, tools=[read, write, email, calendar, twilio, browser]
-- Bookkeeper: model=claude-haiku-4-5, tools=[read, write, quickbooks]
-- Acquisitions: model=claude-sonnet-4-5, tools=[read, write, email, browser]
-- Marketing: model=claude-sonnet-4-5, tools=[read, write, mailchimp, social_media]
+- Dispatch: model=claude-haiku-4-5, tools=[sessions, read] (uses sessions_spawn for delegation)
+- Assistant: model=claude-sonnet-4-6, tools=[read, write, exec]
+- Leasing: model=claude-sonnet-4-6, tools=[read, exec]
+- Bookkeeper: model=claude-haiku-4-5, tools=[read]
+- Acquisitions: model=claude-sonnet-4-6, tools=[read, exec]
+- Marketing: model=claude-sonnet-4-6, tools=[read]
 
 Configure agent-to-agent messaging per Section 5 rules.
 Configure per-agent sandbox and filesystem restrictions per Section 4.
@@ -1202,9 +1220,9 @@ Configure per-agent sandbox and filesystem restrictions per Section 4.
 
 1. Install LiteLLM: pip install litellm[proxy]
 2. Configure litellm_config.yaml with approved models only:
-   - anthropic/claude-sonnet-4-5-20250929
+   - anthropic/claude-sonnet-4-6
    - anthropic/claude-haiku-4-5-20251001
-   - anthropic/claude-opus-4-6
+   - anthropic/claude-opus-4-6 (reserved for complex reasoning)
    - google/gemini-2.0-flash-lite
    - groq/llama-3.1-8b-instant
    - mistral/ministral-3b-latest
