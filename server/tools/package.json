@@ -1,0 +1,19 @@
+{
+  "name": "openclaw-supabase-mcp",
+  "version": "1.0.0",
+  "description": "Data spoke: Supabase MCP server for OpenClaw agents",
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "~5.9.2"
+  }
+}

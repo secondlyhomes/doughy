@@ -1,0 +1,15 @@
+{
+  "name": "openclaw-queue-processor",
+  "version": "1.0.0",
+  "description": "Guarded mode action executor — polls claw.action_queue and executes after countdown",
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "~5.9.2"
+  }
+}

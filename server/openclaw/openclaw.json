@@ -1,0 +1,154 @@
+{
+  "gateway": {
+    "port": 18789,
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    },
+    "tailscale": { "mode": "serve" }
+  },
+
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "allowFrom": ["${TELEGRAM_DINO_ID}"]
+    }
+  },
+
+  "agents": {
+    "defaults": {
+      "model": { "primary": "anthropic/claude-sonnet-4-5-20250929" },
+      "contextTokens": 200000,
+      "maxConcurrent": 3,
+      "timeoutSeconds": 600
+    },
+    "list": [
+      {
+        "id": "dispatch",
+        "workspace": "./workspaces/dispatch",
+        "model": {
+          "primary": "anthropic/claude-sonnet-4-5-20250929"
+        },
+        "tools": {
+          "allow": ["mcp:supabase:read_*", "agentToAgent"],
+          "deny": ["exec", "write", "edit", "apply_patch"]
+        }
+      },
+      {
+        "id": "assistant",
+        "workspace": "./workspaces/assistant",
+        "model": {
+          "primary": "anthropic/claude-sonnet-4-5-20250929",
+          "fallbacks": ["anthropic/claude-haiku-4-5-20251001"]
+        },
+        "tools": {
+          "allow": ["mcp:supabase:*", "agentToAgent"],
+          "elevated": ["mcp:supabase:send_*", "mcp:supabase:create_*"]
+        }
+      },
+      {
+        "id": "leasing",
+        "workspace": "./workspaces/leasing",
+        "tools": {
+          "allow": [
+            "mcp:supabase:read_bookings",
+            "mcp:supabase:read_maintenance",
+            "mcp:supabase:read_vendors",
+            "mcp:supabase:read_leads",
+            "mcp:supabase:read_contacts_detail",
+            "mcp:supabase:create_maintenance_request",
+            "mcp:supabase:add_note",
+            "agentToAgent"
+          ],
+          "elevated": ["mcp:supabase:create_*", "mcp:supabase:send_*"]
+        }
+      },
+      {
+        "id": "bookkeeper",
+        "workspace": "./workspaces/bookkeeper",
+        "tools": {
+          "allow": [
+            "mcp:supabase:read_deals",
+            "mcp:supabase:read_portfolio",
+            "mcp:supabase:read_documents",
+            "mcp:supabase:read_campaigns",
+            "agentToAgent"
+          ],
+          "deny": ["mcp:supabase:create_*", "mcp:supabase:update_*", "mcp:supabase:send_*"]
+        }
+      },
+      {
+        "id": "acquisitions",
+        "workspace": "./workspaces/acquisitions",
+        "tools": {
+          "allow": [
+            "mcp:supabase:read_deals",
+            "mcp:supabase:read_leads",
+            "mcp:supabase:read_contacts_detail",
+            "mcp:supabase:read_portfolio",
+            "mcp:supabase:read_comps",
+            "mcp:supabase:read_documents",
+            "mcp:supabase:update_deal_stage",
+            "mcp:supabase:add_note",
+            "agentToAgent"
+          ],
+          "elevated": ["mcp:supabase:update_deal_stage"]
+        }
+      },
+      {
+        "id": "marketing",
+        "workspace": "./workspaces/marketing",
+        "tools": {
+          "allow": [
+            "mcp:supabase:read_campaigns",
+            "mcp:supabase:read_leads",
+            "mcp:supabase:read_conversations",
+            "agentToAgent"
+          ],
+          "deny": ["mcp:supabase:create_*", "mcp:supabase:update_*", "mcp:supabase:send_*"]
+        }
+      }
+    ]
+  },
+
+  "bindings": [
+    { "channel": "telegram", "agentId": "dispatch" }
+  ],
+
+  "models": {
+    "providers": {
+      "anthropic": { "apiKey": "${ANTHROPIC_API_KEY}" }
+    }
+  },
+
+  "mcpServers": {
+    "supabase": {
+      "command": "node",
+      "args": ["./tools/build/index.js"],
+      "env": {
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}"
+      }
+    }
+  },
+
+  "session": {
+    "dmScope": "per-channel-peer",
+    "reset": { "mode": "idle", "idleMinutes": 60 }
+  },
+
+  "cron": {
+    "morning_briefing": {
+      "schedule": "0 7 * * * America/New_York",
+      "agent": "assistant",
+      "message": "Generate and deliver the morning briefing using the generate_briefing tool."
+    },
+    "afternoon_followups": {
+      "schedule": "0 14 * * * America/New_York",
+      "agent": "assistant",
+      "message": "Check for overdue follow-ups using read_follow_ups with overdue_only=true and summarize any that need attention."
+    }
+  }
+}

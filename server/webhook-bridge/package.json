@@ -1,0 +1,21 @@
+{
+  "name": "openclaw-webhook-bridge",
+  "version": "1.0.0",
+  "description": "Ingress spoke: validates webhooks, forwards to OpenClaw gateway",
+  "type": "module",
+  "main": "build/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/server.js",
+    "dev": "tsx --watch src/server.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "~5.9.2"
+  }
+}
