@@ -406,3 +406,122 @@ Budget enforcement via `claw.budget_limits` (per-user, per-service). See `docs/R
 - Source of truth for investor data (deals_pipeline, properties, follow_ups)
 - Source of truth for landlord data (bookings, maintenance, vendors)
 - Design system source of truth — shared via `@secondly/design-tokens` package (`packages/design-tokens/`)
+
+## Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | PascalCase | `ContactCard.tsx`, `FilterSheet.tsx` |
+| Hooks | `use` prefix, camelCase | `useRentalProperties.ts`, `useThemeColors.ts` |
+| Stores | kebab-case + `-store` | `rental-properties-store.ts`, `booking-charges-store.ts` |
+| Screens (app/) | kebab-case | `sign-in.tsx`, `forgot-password.tsx` |
+| Services | camelCase | `conversationDeletionService.ts`, `googleAuth.ts` |
+| Features | kebab-case folders | `rental-properties/`, `skip-tracing/`, `lead-inbox/` |
+| Route groups | parentheses | `(tabs)`, `(auth)`, `(modals)`, `(admin)` |
+| Dynamic routes | brackets | `[userId].tsx`, `[callId].tsx` |
+| Types files | kebab-case | `filter-sheet-types.ts`, `detail-types.ts` |
+| Helper files | kebab-case | `call-summary-helpers.ts`, `metric-card-helpers.ts` |
+| Style files | kebab-case + `-styles` | `focused-sheet-styles.ts`, `ask-tab-styles.ts` |
+| Constants files | kebab-case + `-constants` | `add-lead-constants.ts`, `stage-stepper-constants.ts` |
+| DB columns | snake_case | `created_at`, `user_id`, `checkout_date` |
+| DB tables | snake_case | `deals_pipeline`, `agent_profiles` |
+| DB schemas | lowercase | `investor`, `landlord`, `claw`, `callpilot` |
+
+**Exports:** Named exports for shared code (`src/`). Default exports for Expo Router screens (`app/`).
+
+**Import alias:** Always use `@/` (e.g., `import { Button } from '@/components/ui'`).
+
+## Environment & Setup
+
+### Supabase Projects
+
+| Environment | Project ID | Region | URL |
+|------------|-----------|--------|-----|
+| Staging (dev) | `lqmbyobweeaigrwmvizo` | us-east-1 | `https://lqmbyobweeaigrwmvizo.supabase.co` |
+| Production | `vpqglbaedcpeprnlnfxd` | us-west-2 | `https://vpqglbaedcpeprnlnfxd.supabase.co` |
+
+### Environment Variables
+
+Client-side (Expo): prefix with `EXPO_PUBLIC_`
+
+| Variable | Where | Purpose |
+|----------|-------|---------|
+| `EXPO_PUBLIC_SUPABASE_URL` | `.env` | Supabase project URL |
+| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `.env` | Supabase anon key |
+| `EXPO_PUBLIC_USE_MOCK_DATA` | `.env` | Set `true` for mock data mode |
+
+Server-side (openclaw-server):
+
+| Variable | Where | Purpose |
+|----------|-------|---------|
+| `SUPABASE_URL` | `.env` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | `.env` | Service role key (bypasses RLS) |
+| `ANTHROPIC_API_KEY` | `.env` | Claude API access |
+| `TWILIO_ACCOUNT_SID` | `.env` | Twilio SMS/voice |
+| `TWILIO_AUTH_TOKEN` | `.env` | Twilio signature validation |
+| `SERVER_URL` | `.env` | Must be `https://openclaw.doughy.app` (Twilio signature validation) |
+
+### Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Start Doughy app
+npx expo start
+
+# Start CallPilot
+cd apps/callpilot && npx expo start
+
+# Start The Claw
+cd apps/the-claw-app && npx expo start
+
+# Regenerate Supabase types (after schema changes)
+npm run db:types:stage        # from staging
+npm run db:types:prod         # from production
+
+# Validate before PR
+npm run validate              # lint + type-check + tests
+```
+
+### OpenClaw Server Deployment
+
+```bash
+# Build locally
+cd openclaw-server && npm run build
+
+# Deploy to DigitalOcean
+rsync -avz --exclude='node_modules' --exclude='.env' dist/ claw:/var/www/openclaw/dist/
+ssh claw "pm2 restart openclaw --update-env"
+
+# Check logs
+ssh claw "pm2 logs openclaw --lines 50 --nostream"
+```
+
+## Seed Data
+
+### Demo User
+
+| Field | Value |
+|-------|-------|
+| User ID | `3aa71532-c4df-4b1a-aabf-6ed1d5efc7ce` |
+| Workspace ID | `90886395-a5ba-48c1-b72b-8cdfa07d5854` |
+
+### Demo Contacts
+
+| Name | Role | Phone | Module |
+|------|------|-------|--------|
+| Sarah Martinez | Tenant | +14095551234 | landlord |
+| Mike Johnson | Plumber (Johnson Plumbing LLC) | +17574723676 | landlord |
+
+### Running the Seed
+
+```bash
+# Create demo data
+node scripts/demo-seed.js create
+
+# Reset demo data
+node scripts/demo-seed.js delete && node scripts/demo-seed.js create
+```
+
+The seed creates: demo user, workspace, contacts (Sarah + Mike), sample properties, bookings, and maintenance requests. All data is scoped to the demo workspace.
