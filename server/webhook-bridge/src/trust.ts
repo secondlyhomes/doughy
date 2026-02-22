@@ -6,6 +6,8 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
 
 type TrustLevel = "locked" | "manual" | "guarded" | "autonomous";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Check if the kill switch is active.
  * Queries claw.kill_switch_log for the most recent event.
@@ -44,6 +46,9 @@ export async function isKillSwitchActive(): Promise<boolean> {
  */
 export async function checkTrustLevel(userId: string | undefined): Promise<TrustLevel> {
   if (!userId) return "manual";
+
+  // Validate UUID to prevent PostgREST query injection
+  if (!UUID_RE.test(userId)) return "manual";
 
   try {
     const response = await fetch(

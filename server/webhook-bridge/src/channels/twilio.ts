@@ -51,7 +51,15 @@ function validateTwilioSignature(req: Request): boolean {
     .update(url + paramString)
     .digest("base64");
 
-  return signature === expected;
+  // Timing-safe comparison to prevent timing attacks
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signature, "utf-8"),
+      Buffer.from(expected, "utf-8")
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
